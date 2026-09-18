@@ -54,6 +54,11 @@ export const MANAGEMENT_NODE_TYPES = [
   'stop_processing' as any,
   'rate_counter' as any,
   'comment' as any,
+  'send_invoice' as any,
+  'create_invoice_link' as any,
+  'refund_stars' as any,
+  'edit_star_subscription' as any,
+  'get_star_balance' as any,
 ] as const;
 
 /**
@@ -87,6 +92,7 @@ export const TRIGGER_NODE_TYPES = [
   'schedule_trigger' as any,
   'api_trigger' as any,
   'userbot_edit_trigger' as any,
+  'successful_payment_trigger' as any,
 ] as const;
 
 /**

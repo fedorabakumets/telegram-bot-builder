@@ -37,6 +37,11 @@ export interface ButtonWithShortId extends Button {
   suggestedBotName?: string;
   /** Предложенный username для создаваемого управляемого бота (Bot API 9.6) */
   suggestedBotUsername?: string;
+  /**
+   * Группа радиовыбора для selection при multi-select
+   * (одинаковое значение = один выбор, префиксы 🔘/⚪️)
+   */
+  selectionGroup?: string;
 }
 
 /** Условное сообщение */
@@ -71,6 +76,12 @@ export interface KeyboardTemplateParams {
   allowMultipleSelection?: boolean;
   /** Переменная для хранения выборов */
   multiSelectVariable?: string;
+  /** Символ выбранной галочки (без группы) */
+  checkmarkSymbol?: string;
+  /** Символ выбранного радио */
+  radioSelectedSymbol?: string;
+  /** Символ невыбранного радио */
+  radioUnselectedSymbol?: string;
   /** ID узла для callback_data */
   nodeId?: string;
   /** Кнопка завершения выбора */

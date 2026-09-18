@@ -138,6 +138,13 @@ export function NodeHeader({ node, onMove }: NodeHeaderProps) {
             🤖 {getNodeName('managed_bot_updated_trigger')}
           </span>
         );
+      /** Заголовок триггера успешной оплаты */
+      case 'successful_payment_trigger' as any:
+        return (
+          <span className="font-semibold text-yellow-700 dark:text-yellow-300">
+            {getNodeName('successful_payment_trigger')}
+          </span>
+        );
       case 'http_request':
         return (
           <span className="font-semibold text-cyan-700 dark:text-cyan-300">
@@ -177,6 +184,40 @@ export function NodeHeader({ node, onMove }: NodeHeaderProps) {
         return (
           <span className="font-semibold text-indigo-700 dark:text-indigo-300">
             {getNodeName('code')}
+          </span>
+        );
+      /** Заголовок узла счёта в звёздах */
+      case 'send_invoice' as any:
+        return (
+          <span className="font-semibold text-yellow-700 dark:text-yellow-300">
+            {getNodeName('send_invoice')}
+          </span>
+        );
+      case 'create_invoice_link' as any:
+        return (
+          <span className="font-semibold text-yellow-700 dark:text-yellow-300">
+            {getNodeName('create_invoice_link')}
+          </span>
+        );
+      /** Заголовок узла возврата звёзд */
+      case 'refund_stars' as any:
+        return (
+          <span className="font-semibold text-yellow-700 dark:text-yellow-300">
+            {getNodeName('refund_stars')}
+          </span>
+        );
+      /** Заголовок управления подпиской Stars */
+      case 'edit_star_subscription' as any:
+        return (
+          <span className="font-semibold text-yellow-700 dark:text-yellow-300">
+            {getNodeName('edit_star_subscription')}
+          </span>
+        );
+      /** Заголовок баланса звёзд бота */
+      case 'get_star_balance' as any:
+        return (
+          <span className="font-semibold text-yellow-700 dark:text-yellow-300">
+            {getNodeName('get_star_balance')}
           </span>
         );
       default:

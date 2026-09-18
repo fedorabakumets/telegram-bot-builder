@@ -186,3 +186,26 @@ export const nodesWithRequiresAuth: Node[] = [
   }),
   makeNode('msg_profile', 'message', {}),
 ];
+
+/** Триггер с сохранением аргументов команды */
+export const validParamsSaveCommandArgs: CommandTriggerTemplateParams = {
+  entries: [
+    {
+      nodeId: 'trigger_donate',
+      command: '/donate',
+      targetNodeId: 'msg_donate',
+      targetNodeType: 'message',
+      saveCommandArgsTo: 'donate_amount',
+    },
+  ],
+};
+
+/** Узлы с saveCommandArgsTo */
+export const nodesWithSaveCommandArgs: Node[] = [
+  makeNode('trigger_donate', 'command_trigger', {
+    command: '/donate',
+    autoTransitionTo: 'msg_donate',
+    saveCommandArgsTo: 'donate_amount',
+  }),
+  makeNode('msg_donate', 'message', {}),
+];

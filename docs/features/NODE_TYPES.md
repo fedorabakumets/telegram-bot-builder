@@ -14,8 +14,9 @@
 
 | Настройка | Описание |
 |-----------|----------|
-| Команда | Текст команды (например `/start`) |
-| Описание | Отображается в меню команд Telegram |
+| Команда | Текст команды: только латиница (`/start`, `/buy`). Кириллица недопустима |
+| Описание | Отображается в меню команд Telegram (можно по-русски) |
+| Аргументы → переменная | `saveCommandArgsTo`: для `/donate 777` сохранит `777` |
 | Показать в меню | Добавить команду в список меню бота |
 | Автопереход | Узел, на который перейти после срабатывания |
 
@@ -273,9 +274,11 @@ keyboard (кнопка с customCallbackData: "approve_{user_id}")
 | Скопировать текст | Копирует текст в буфер обмена |
 | Запросить контакт | Запрашивает номер телефона |
 | Запросить геолокацию | Запрашивает местоположение |
+| Выбор (selection) | При multi-select — галочка `✅`; с полем «Группа (радио)» (`selectionGroup`) — один выбор в группе (`🔘`/`⚪️`) |
+| Готово (complete) | Завершает multi-select и переходит дальше |
 | Создать бота | Запрос на создание управляемого бота |
 
-Дополнительно: перемешивание кнопок (`shuffleButtons`) для квизов и капч.
+Дополнительно: перемешивание кнопок (`shuffleButtons`) для квизов и капч; `allowMultipleSelection` на узле — мультивыбор; `selectionGroup` у selection-кнопок — радиогруппа (один активный пункт в группе). Символы отметки настраиваются на ноде: `checkmarkSymbol`, `radioSelectedSymbol`, `radioUnselectedSymbol` (дефолты `✅` / `🔘` / `⚪️`).
 
 ---
 
@@ -512,6 +515,127 @@ In-memory счётчик событий в **скользящем временн
 | Время | Значение (поддерживает `{переменные}`; для секунд — дробные, напр. `0.1`) |
 | Единица | Секунды / минуты / часы / дни / недели |
 | Режим | **Блокирующий** — ждёт, потом продолжает. **Фоновый** — текущая цепочка завершается, переход через N времени |
+
+---
+
+### ⭐ Выставить счёт (`send_invoice`)
+
+Выставляет счёт в текущий чат: **XTR** (звёзды) или фиат (ISO 4217 из [Telegram Payments](https://core.telegram.org/bots/payments#supported-currencies), напр. EUR / RUB / USD / GBP / UAH…) через провайдера из BotFather → Payments. **При добавлении** рядом создаётся узел **Клавиатура** с одной кнопкой «Оплатить» (`action: pay`, нельзя убрать); можно добавить «Отмена» и другие ниже. Связь — через `keyboardNodeId`. Без клавиатуры кнопку оплаты нарисует Телеграм сам. Клавиатура только **inline**. Переход по `autoTransitionTo` — **после успешной оплаты**, не с кнопки «Оплатить».
+
+| Настройка | Описание |
+|-----------|----------|
+| Валюта | `invoiceCurrency`: `XTR` или код из Bot Payments; либо `{переменная}` (код подставится при оплате) |
+| Токен провайдера | При не-XTR: `invoiceProviderSource` = `inline` (поле `invoiceProviderToken`) или `env` (`invoiceProviderTokenEnv`, напр. `PAYMENT_PROVIDER_TOKEN`). Для продакшена предпочтителен `env` — при `inline` токен попадает в project.json и код |
+| Название | Заголовок карточки, 1–32 знака (`invoiceTitle`) |
+| Описание | Текст под названием, 1–255 (`invoiceDescription`) |
+| Цена | Одна сумма `invoiceAmount` или список `invoicePrices: [{ id, label, amount }, …]` → несколько `LabeledPrice`. Для XTR — только одна строка. Label/amount допускают `{переменные}` |
+| Картинка | `invoicePhotoUrl` (+ опц. `invoicePhotoSize` / `Width` / `Height`); для `/uploads/` бот добавит `API_BASE_URL` |
+| Скрытая метка | Payload покупки; пусто = id узла (`invoicePayload`) |
+| Защита / deep-link | `invoiceProtectContent` → `protect_content`; `invoiceStartParameter` |
+| Доставка в чат | Только этот узел: `invoiceMessageThreadId`, `invoiceDirectMessagesTopicId`, тихая отправка, reply-to, effect, paid broadcast, JSON `invoiceSuggestedPostParams` |
+| Сохранить сумму | Имя переменной для `total_amount` (`savePaymentAmountTo`) |
+| Сохранить код покупки | Имя переменной для `telegram_payment_charge_id` (`savePaymentChargeIdTo`) |
+| Запросить контакты | Только фиат: `invoiceNeedName` / `Email` / `Phone` / `Shipping`; `invoiceIsFlexible`; `send_*_to_provider`; tips (`invoiceMaxTipAmount`, `invoiceSuggestedTipAmounts`); `invoiceProviderData` |
+| Сохранить order_info | После оплаты: `saveOrderNameTo` / `saveOrderEmailTo` / `saveOrderPhoneTo` ← `order_info` |
+| Клавиатура | При добавлении — соседний `keyboard` с «Оплатить»; стрелка «после оплаты» от кнопки pay |
+| Следующий узел | `autoTransitionTo` + `enableAutoTransition: true` — после оплаты |
+
+Если в проекте есть хотя бы один `send_invoice` или `create_invoice_link`, бот отвечает на `pre_checkout_query` всегда «да» (лимит Телеграма — 10 секунд). **Подписка на 30 дней в чат не ставится** — Telegram отвечает `SUBSCRIPTION_EXPORT_MISSING`; только узел «Ссылка на счёт» и только при `XTR`. Отмена автопродления — узел `edit_star_subscription`.
+
+Для ботов с цифровой оплатой Телеграм требует `/paysupport` (и обычно `/terms`) — сделайте их обычными `command_trigger` + `message`.
+
+---
+
+### 🔗 Ссылка на счёт (`create_invoice_link`)
+
+Создаёт URL оплаты через Bot API `createInvoiceLink` (не карточку в чат). Те же валюта и токен провайдера, что у `send_invoice`. Кладёт ссылку в переменную и **сразу** идёт на `autoTransitionTo`. После оплаты — `afterPaymentTo` (если сессия ещё жива) или триггер «Успешная оплата».
+
+| Настройка | Описание |
+|-----------|----------|
+| Валюта / токен | Как у `send_invoice` (`invoiceCurrency`, `invoiceProviderSource`, …) |
+| Название / описание / цена / картинка / метка | Как у `send_invoice` (`invoicePrices`, photo sizes) |
+| Подписка на 30 дней | `invoiceSubscription: true` → `subscription_period: 2592000`. **Только при XTR** |
+| Сохранить ссылку | `saveInvoiceLinkTo` — имя переменной под URL |
+| Сохранить сумму / код | После оплаты (`savePaymentAmountTo`, `savePaymentChargeIdTo`) |
+| Запросить / сохранить контакты | Как у `send_invoice` (need_*, shipping, flexible, tips, provider_data, send_*_to_provider) — только фиат |
+| Без полей чата | Нет protect / start_parameter / thread / silent / reply (только у `send_invoice`) |
+| После создания | `autoTransitionTo` + `enableAutoTransition` — сразу после URL |
+| После оплаты | `afterPaymentTo` — опционально |
+
+Клавиатуру pay не создаёт. Типичная цепочка: `/buy` → `create_invoice_link` → `message` без голого URL + inline url-кнопка «Оплатить» с `{invoice_url}`.
+
+При фиате runtime читает те же `shop_need_name` / `email` / `phone` / `shipping` / `photo`, что и `send_invoice` (переменные после multi-select магазина).
+
+---
+
+### ⭐ Успешная оплата (`successful_payment_trigger`)
+
+Срабатывает, когда пришла оплата звёздами, а счёт **не из текущей сессии** бота (ссылка, старый счёт после рестарта, другой поток). Если payload есть в `_stars_payment_targets` текущего запуска — сработает выход у `send_invoice` / `create_invoice_link`, не этот триггер.
+
+Один общий обработчик `successful_payment`: сначала счёт/ссылка, иначе первый подходящий триггер. Порядок фильтров: `exact` → `starts_with` → `all`. `pre_checkout` — при наличии `send_invoice` или `create_invoice_link`.
+
+| Настройка | Описание |
+|-----------|----------|
+| Фильтр метки | `payloadFilter`: `all` / `exact` / `starts_with` |
+| Значение метки | `payloadValue` — для exact / starts_with |
+| Сохранить сумму | `savePaymentAmountTo` |
+| Сохранить код покупки | `savePaymentChargeIdTo` |
+| Следующий узел | `autoTransitionTo` (порт `trigger-next`) |
+
+---
+
+### ↩️ Вернуть звёзды (`refund_stars`)
+
+Возвращает звёзды покупателю за покупку **в этом боте** по коду `telegram_payment_charge_id` (метод `refundStarPayment`). Не путать с «отправить звёзды» — произвольного перевода нет.
+
+| Настройка | Описание |
+|-----------|----------|
+| Кому | Текущий пользователь или ID / `{переменная}` (`refundUserSource`, `refundUserId`) |
+| Код покупки | Строка с `{переменными}` (`refundChargeId`) — обычно из `savePaymentChargeIdTo` у счёта |
+| Успех | `autoTransitionTo` + `enableAutoTransition: true` |
+| Пустой код | выход `refundEmptyTarget` (порт «Пустой код») |
+| Код не найден | выход `refundNotFoundTarget` (`CHARGE_NOT_FOUND` и прочие) |
+| Уже возвращён | выход `refundAlreadyRefundedTarget` (`CHARGE_ALREADY_REFUNDED`) |
+| Fallback-тексты | `refundMsg*` — только если соответствующий выход не подключён |
+| Без выхода ошибки | `ignoreErrors` — после fallback-текста идти на «Успех» |
+
+Типично: `/back КОД` → `refund_stars` → сообщения по выходам. Демо на 1⭐: после оплаты сразу `refund_stars` с `{payment_charge_id}`.
+Бот **не** делает `raise` при ошибке возврата.
+
+---
+
+### 🔄 Подписка за звёзды (`edit_star_subscription`)
+
+Отменяет или снова разрешает **автопродление** Stars-подписки (Bot API `editUserStarSubscription`). Не возврат денег и не выставление счёта — нужен `telegram_payment_charge_id` из оплаты подписки (ссылка с `invoiceSubscription`).
+
+| Настройка | Описание |
+|-----------|----------|
+| Действие | `subscriptionAction`: `cancel` → `is_canceled=True`; `enable` → `False` |
+| Кому | Текущий / ID / `{var}` (`subscriptionUserSource`, `subscriptionUserId`) |
+| Код покупки | `subscriptionChargeId` |
+| Успех | `autoTransitionTo` + `enableAutoTransition` |
+| Пустой код | `subscriptionEmptyTarget` |
+| Ошибка API | `subscriptionErrorTarget` |
+| Fallback-тексты | `subscriptionMsgEmpty`, `subscriptionMsgError` |
+| ignoreErrors | После текста ошибки идти на успех, если задан |
+
+Типично: `/cancel_sub` → `edit_star_subscription` (cancel, `{payment_charge_id}`) → сообщение.
+
+---
+
+### 💰 Баланс звёзд (`get_star_balance`)
+
+Запрашивает **баланс звёзд на счету бота** (Bot API `getMyStarBalance`), не баланс пользователя. Целое `amount` (может быть отрицательным) сохраняется в переменную.
+
+| Настройка | Описание |
+|-----------|----------|
+| Сохранить баланс | `saveStarBalanceTo` (по умолчанию `star_balance`) |
+| Успех | `autoTransitionTo` + `enableAutoTransition` |
+| Ошибка API | `balanceErrorTarget` |
+| Fallback-текст | `balanceMsgError` |
+| ignoreErrors | После текста ошибки идти на успех, если задан |
+
+Типично: `/balance` → `get_star_balance` → сообщение «На боте {star_balance} ⭐»; перед `refund_stars` — `condition` по балансу.
 
 ---
 

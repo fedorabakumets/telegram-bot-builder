@@ -39,6 +39,8 @@ export const importsParamsSchema = z.object({
   hasUserbotNodes: z.boolean().default(false),
   /** Есть ли узлы rate_counter (нужен deque и time) */
   hasRateCounterNodes: z.boolean().default(false),
+  /** Есть ли узлы send_invoice (нужен LabeledPrice) */
+  hasSendInvoiceNodes: z.boolean().default(false),
   /** Есть ли таймаут ожидания ввода или сбор ответов */
   hasInputTimeoutNodes: z.boolean().default(false),
 });

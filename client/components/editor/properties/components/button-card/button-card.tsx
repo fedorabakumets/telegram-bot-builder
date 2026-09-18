@@ -11,7 +11,9 @@ import { ButtonActionSelector } from './button-action-selector';
 import { ButtonCallbackField } from './button-callback-field';
 import { ButtonHideAfterClickToggle } from './button-hide-after-click-toggle';
 import { GotoTargetSection } from '../navigation/goto-target-section';
+import { InvoicePayTargetSection } from '../navigation/invoice-pay-target-section';
 import { ButtonRequestManagedBotFields } from './button-request-managed-bot-fields';
+import { ButtonSelectionGroupField } from './button-selection-group-field';
 import type { Button } from '@shared/schema';
 import type { ProjectVariable } from '../../utils/variables-utils';
 import type { Node } from '@shared/schema';
@@ -43,6 +45,12 @@ interface ButtonCardProps {
   hideExtras?: boolean;
   /** Показывать селектор стиля даже при hideExtras */
   showStyle?: boolean;
+  /** Заблокировать удаление/дублирование/смену типа (кнопка «Оплатить») */
+  lockPayButton?: boolean;
+  /** Цель после оплаты (autoTransitionTo счёта) — только для pay */
+  invoiceAfterPayTarget?: string;
+  /** Обновление цели после оплаты на send_invoice */
+  onInvoiceAfterPayTargetChange?: (targetNodeId: string) => void;
 }
 
 /**
@@ -64,6 +72,9 @@ export function ButtonCard({
   allowedActions,
   hideExtras = false,
   showStyle = false,
+  lockPayButton = false,
+  invoiceAfterPayTarget,
+  onInvoiceAfterPayTargetChange,
 }: ButtonCardProps) {
   return (
     <div
@@ -75,8 +86,8 @@ export function ButtonCard({
         button={button}
         textVariables={textVariables}
         onButtonUpdate={onButtonUpdate}
-        onDelete={() => onButtonDelete(nodeId, button.id)}
-        onDuplicate={() => onButtonDuplicate(nodeId, button)}
+        onDelete={lockPayButton ? undefined : () => onButtonDelete(nodeId, button.id)}
+        onDuplicate={lockPayButton ? undefined : () => onButtonDuplicate(nodeId, button)}
       />
 
       <div className="border-t border-border/20 my-3"></div>
@@ -88,7 +99,16 @@ export function ButtonCard({
         allowMultipleSelection={selectedNode.data.allowMultipleSelection ?? false}
         keyboardType={keyboardType}
         allowedActions={allowedActions}
+        disabled={lockPayButton}
       />
+
+      {selectedNode.data.allowMultipleSelection && (
+        <ButtonSelectionGroupField
+          nodeId={nodeId}
+          button={button}
+          onButtonUpdate={onButtonUpdate}
+        />
+      )}
 
       {/* Селектор стиля кнопки (Bot API 9.4) */}
       {(!hideExtras || showStyle) && (
@@ -130,10 +150,22 @@ export function ButtonCard({
         </>
       )}
 
+      {button.action === 'pay' && onInvoiceAfterPayTargetChange && (
+        <>
+          <div className="border-t border-border/20 my-3"></div>
+          <InvoicePayTargetSection
+            keyboardNodeId={nodeId}
+            targetNodeId={invoiceAfterPayTarget || ''}
+            getAllNodesFromAllSheets={getAllNodesFromAllSheets}
+            onTargetChange={onInvoiceAfterPayTargetChange}
+          />
+        </>
+      )}
+
       {/* Поле callback_data: скрыто для url/contact/location/copy_text/web_app/request_managed_bot.
           В обычной панели (hideExtras=false) показывается как раньше; в диалоге (hideExtras=true)
           появляется только для действия default — у goto уже есть селектор цели. */}
-      {!['url', 'contact', 'location', 'copy_text', 'web_app', 'request_managed_bot'].includes(button.action) &&
+      {!['url', 'contact', 'location', 'copy_text', 'web_app', 'request_managed_bot', 'pay'].includes(button.action) &&
         (!hideExtras || button.action === 'default') && (
         <>
           <div className="border-t border-border/20 my-3"></div>

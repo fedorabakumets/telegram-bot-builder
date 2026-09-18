@@ -16,14 +16,14 @@ export const MESSAGE_KEYBOARD_PORT_OFFSET_Y = 28;
 /**
  * Проверяет, можно ли провести клавиатурную связь между двумя узлами.
  *
- * Разрешён только сценарий `message -> keyboard`.
+ * Разрешены сценарии `message -> keyboard` и `send_invoice -> keyboard`.
  *
  * @param fromType - Тип исходного узла
  * @param toType - Тип целевого узла
  * @returns `true`, если связь разрешена
  */
 export function isKeyboardConnectionAllowed(fromType: string, toType: string): boolean {
-  return fromType === 'message' && toType === 'keyboard';
+  return (fromType === 'message' || fromType === 'send_invoice') && toType === 'keyboard';
 }
 
 /**

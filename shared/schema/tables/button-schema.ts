@@ -12,7 +12,7 @@ export const buttonSchema = z.object({
   /** Текст кнопки */
   text: z.string(),
   /** Действие кнопки (в легаси может отсутствовать — тогда переход) */
-  action: z.enum(['goto', 'command', 'url', 'contact', 'location', 'selection', 'complete', 'default', 'copy_text', 'web_app', 'request_managed_bot']).optional().default('goto'),
+  action: z.enum(['goto', 'command', 'url', 'contact', 'location', 'selection', 'complete', 'default', 'copy_text', 'web_app', 'request_managed_bot', 'pay']).optional().default('goto'),
   /** Текст для копирования в буфер обмена (только для copy_text) */
   copyText: z.string().optional(),
   /** URL для Telegram Mini App (только для web_app, требует HTTPS) */
@@ -39,6 +39,11 @@ export const buttonSchema = z.object({
   suggestedBotName: z.string().optional(),
   /** Предложенный username для создаваемого управляемого бота */
   suggestedBotUsername: z.string().optional(),
+  /**
+   * Группа радиовыбора для action=selection при allowMultipleSelection.
+   * Кнопки с одинаковым непустым значением — один выбор (🔘/⚪️); без группы — мультивыбор (✅).
+   */
+  selectionGroup: z.string().optional(),
 });
 
 /** Тип кнопки бота */

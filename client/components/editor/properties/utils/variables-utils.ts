@@ -755,6 +755,144 @@ export function extractVariables(allNodes: Node[], botTables?: BotTableForVariab
     }
   });
 
+  // Добавляем переменные от send_invoice (сумма и код покупки)
+  allNodes.forEach(node => {
+    if ((node.type as string) !== 'send_invoice') return;
+    const data = node.data as any;
+    if (data.savePaymentAmountTo?.trim()) {
+      const key = `send_invoice_amount__${node.id}`;
+      if (!variablesMap.has(key)) {
+        variablesMap.set(key, {
+          name: data.savePaymentAmountTo,
+          nodeId: node.id,
+          nodeType: 'send_invoice' as any,
+          sourceTable: 'bot_users',
+          description: 'Сумма оплаты в звёздах',
+        });
+      }
+    }
+    if (data.savePaymentChargeIdTo?.trim()) {
+      const key = `send_invoice_charge__${node.id}`;
+      if (!variablesMap.has(key)) {
+        variablesMap.set(key, {
+          name: data.savePaymentChargeIdTo,
+          nodeId: node.id,
+          nodeType: 'send_invoice' as any,
+          sourceTable: 'bot_users',
+          description: 'Код покупки для возврата',
+        });
+      }
+    }
+  });
+
+  // Переменные create_invoice_link (URL + сумма/код после оплаты)
+  allNodes.forEach(node => {
+    if ((node.type as string) !== 'create_invoice_link') return;
+    const data = node.data as any;
+    if (data.saveInvoiceLinkTo?.trim()) {
+      const key = `create_invoice_link_url__${node.id}`;
+      if (!variablesMap.has(key)) {
+        variablesMap.set(key, {
+          name: data.saveInvoiceLinkTo,
+          nodeId: node.id,
+          nodeType: 'create_invoice_link' as any,
+          sourceTable: 'bot_users',
+          description: 'Ссылка на счёт в звёздах',
+        });
+      }
+    }
+    if (data.savePaymentAmountTo?.trim()) {
+      const key = `create_invoice_link_amount__${node.id}`;
+      if (!variablesMap.has(key)) {
+        variablesMap.set(key, {
+          name: data.savePaymentAmountTo,
+          nodeId: node.id,
+          nodeType: 'create_invoice_link' as any,
+          sourceTable: 'bot_users',
+          description: 'Сумма оплаты в звёздах',
+        });
+      }
+    }
+    if (data.savePaymentChargeIdTo?.trim()) {
+      const key = `create_invoice_link_charge__${node.id}`;
+      if (!variablesMap.has(key)) {
+        variablesMap.set(key, {
+          name: data.savePaymentChargeIdTo,
+          nodeId: node.id,
+          nodeType: 'create_invoice_link' as any,
+          sourceTable: 'bot_users',
+          description: 'Код покупки для возврата',
+        });
+      }
+    }
+  });
+
+  // Переменные get_star_balance (целое amount баланса бота)
+  allNodes.forEach(node => {
+    if ((node.type as string) !== 'get_star_balance') return;
+    const data = node.data as any;
+    if (data.saveStarBalanceTo?.trim()) {
+      const key = `get_star_balance__${node.id}`;
+      if (!variablesMap.has(key)) {
+        variablesMap.set(key, {
+          name: data.saveStarBalanceTo,
+          nodeId: node.id,
+          nodeType: 'get_star_balance' as any,
+          sourceTable: 'bot_users',
+          description: 'Баланс звёзд бота',
+        });
+      }
+    }
+  });
+
+  // Переменные триггера успешной оплаты
+  allNodes.forEach(node => {
+    if ((node.type as string) !== 'successful_payment_trigger') return;
+    const data = node.data as any;
+    if (data.savePaymentAmountTo?.trim()) {
+      const key = `spt_amount__${node.id}`;
+      if (!variablesMap.has(key)) {
+        variablesMap.set(key, {
+          name: data.savePaymentAmountTo,
+          nodeId: node.id,
+          nodeType: 'successful_payment_trigger' as any,
+          sourceTable: 'bot_users',
+          description: 'Сумма оплаты (триггер)',
+        });
+      }
+    }
+    if (data.savePaymentChargeIdTo?.trim()) {
+      const key = `spt_charge__${node.id}`;
+      if (!variablesMap.has(key)) {
+        variablesMap.set(key, {
+          name: data.savePaymentChargeIdTo,
+          nodeId: node.id,
+          nodeType: 'successful_payment_trigger' as any,
+          sourceTable: 'bot_users',
+          description: 'Код покупки (триггер)',
+        });
+      }
+    }
+  });
+
+  // Аргументы команды (/donate 777 → переменная)
+  allNodes.forEach(node => {
+    if (node.type !== 'command_trigger') return;
+    const data = node.data as any;
+    const varName = typeof data?.saveCommandArgsTo === 'string' ? data.saveCommandArgsTo.trim() : '';
+    if (!varName) return;
+    const key = `command_args__${node.id}`;
+    if (!variablesMap.has(key)) {
+      variablesMap.set(key, {
+        name: varName,
+        nodeId: node.id,
+        nodeType: 'command_trigger' as any,
+        sourceTable: 'bot_users',
+        description: `Аргументы ${data.command || 'команды'}`,
+      });
+    }
+  });
+
   // Разделяем на текстовые и медиа
   const all = Array.from(variablesMap.values());
   return { textVariables: all.filter(v => !v.mediaType), mediaVariables: all.filter(v => v.mediaType) };

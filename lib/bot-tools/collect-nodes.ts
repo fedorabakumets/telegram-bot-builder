@@ -59,6 +59,21 @@ export function collectNodeTransitions(node: Node): Array<{ label: string; targe
   if (data.inputTargetNodeId) {
     transitions.push({ label: 'inputTargetNodeId', target: data.inputTargetNodeId });
   }
+  if ((data as any).refundEmptyTarget) {
+    transitions.push({ label: 'refundEmptyTarget', target: (data as any).refundEmptyTarget });
+  }
+  if ((data as any).refundNotFoundTarget) {
+    transitions.push({
+      label: 'refundNotFoundTarget',
+      target: (data as any).refundNotFoundTarget,
+    });
+  }
+  if ((data as any).refundAlreadyRefundedTarget) {
+    transitions.push({
+      label: 'refundAlreadyRefundedTarget',
+      target: (data as any).refundAlreadyRefundedTarget,
+    });
+  }
 
   for (const btn of data.buttons ?? []) {
     if (btn.target) {

@@ -13,6 +13,8 @@ import {
   validParamsWithLayout,
   validParamsEmpty,
   validParamsCustomIndent,
+  validParamsRadioGroup,
+  validParamsCustomCheckmark,
   invalidParamsMissingNodes,
   invalidParamsWrongType,
 } from './multi-select-callback.fixture';
@@ -24,7 +26,7 @@ describe('multi-select-callback.py.jinja2 шаблон', () => {
       it('должен генерировать обработчик для базового multi-select узла', () => {
         const result = generateMultiSelectCallback(validParamsBasic);
 
-        assert.ok(result.includes('# Обработка выбора опции'));
+        assert.ok(result.includes('handle_multi_select_option'));
         assert.ok(result.includes('callback_data.startswith("ms_")'));
         assert.ok(result.includes('InlineKeyboardBuilder()'));
       });
@@ -61,10 +63,8 @@ describe('multi-select-callback.py.jinja2 шаблон', () => {
       it('должен использовать custom indent', () => {
         const result = generateMultiSelectCallback(validParamsCustomIndent);
 
-        const lines = result.split('\n').filter(line => line.trim().length > 0);
-        if (lines.length > 0) {
-          assert.ok(lines[0].startsWith('        '));
-        }
+        assert.ok(result.includes('        await callback_query.answer()'));
+        assert.ok(result.includes('        user_id = callback_query.from_user.id'));
       });
     });
 
@@ -85,8 +85,8 @@ describe('multi-select-callback.py.jinja2 шаблон', () => {
       it('должен генерировать поиск узла по короткому ID', () => {
         const result = generateMultiSelectCallback(validParamsBasic);
 
-        assert.ok(result.includes('short_node_id = parts[1]'));
-        assert.ok(result.includes('button_id = "_".join(parts[2:])'));
+        assert.ok(result.includes('_ms_rest.startswith("abc123_")'));
+        assert.ok(result.includes('button_id = _ms_rest[len(short_node_id) + 1:]'));
       });
     });
 
@@ -117,8 +117,42 @@ describe('multi-select-callback.py.jinja2 шаблон', () => {
       it('должен генерировать кнопки с галочками', () => {
         const result = generateMultiSelectCallback(validParamsBasic);
 
-        assert.ok(result.includes("f\"{'✅ ' if '"));
-        assert.ok(result.includes('in selected_list else \'\''));
+        assert.ok(result.includes('"✅ " if _sel_text in selected_list else ""'));
+      });
+
+      it('должен генерировать радиогруппу selectionGroup', () => {
+        const result = generateMultiSelectCallback(validParamsRadioGroup);
+
+        assert.ok(result.includes('_btn_group'));
+        assert.ok(result.includes('_group_peers'));
+        assert.ok(result.includes('"currency"'));
+        assert.ok(result.includes('"🔘 " if _sel_text in selected_list else "⚪️ "'));
+        assert.ok(result.includes('"✅ " if _sel_text in selected_list else ""'));
+      });
+
+      it('должен использовать кастомный checkmarkSymbol', () => {
+        const result = generateMultiSelectCallback(validParamsCustomCheckmark);
+
+        assert.ok(result.includes('"⭐ " if _sel_text in selected_list else ""'));
+        assert.ok(!result.includes('"✅ " if _sel_text in selected_list else ""'));
+      });
+
+      it('должен генерировать style у completeButton при rebuild', () => {
+        const withStyle = {
+          ...validParamsBasic,
+          multiSelectNodes: [
+            {
+              ...validParamsBasic.multiSelectNodes[0],
+              completeButton: {
+                text: 'Готово',
+                target: 'next_node',
+                style: 'success' as const,
+              },
+            },
+          ],
+        };
+        const result = generateMultiSelectCallback(withStyle);
+        assert.ok(result.includes('style="success"'));
       });
 
       it('должен генерировать escaped текст для кнопок', () => {
@@ -205,14 +239,20 @@ describe('multi-select-callback.py.jinja2 шаблон', () => {
         const result = generateMultiSelectCallback(validParamsBasic);
         const lines = result.split('\n');
 
-        // Проверяем что все непустые строки имеют правильные отступы
+        // Модульный уровень (комментарий, декоратор, def) без отступа; тело — с indentLevel
         for (const line of lines) {
-          if (line.trim().length > 0) {
-            assert.ok(
-              line.startsWith('    ') || line.startsWith('        ') || line.startsWith('            '),
-              `Строка должна иметь правильные отступы: "${line}"`
-            );
-          }
+          const trimmed = line.trim();
+          if (trimmed.length === 0) continue;
+          const isModuleLevel =
+            trimmed.startsWith('#') ||
+            trimmed.startsWith('@') ||
+            trimmed.startsWith('async def ') ||
+            trimmed.startsWith('def ');
+          if (isModuleLevel) continue;
+          assert.ok(
+            line.startsWith('    '),
+            `Строка должна иметь правильные отступы: "${line.replace(/\r$/, '')}"`
+          );
         }
       });
     });

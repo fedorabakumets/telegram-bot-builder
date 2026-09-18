@@ -1,62 +1,39 @@
 {#
   Шаблон генерации обработчика callback для multi-select кнопок
 
-  @fileoverview Генерирует Python код для обработки выбора кнопок с галочками (✓/✗)
+  @fileoverview Генерирует Python код для обработки выбора кнопок с галочками / радио
   @param {array} multiSelectNodes - Массив узлов с множественным выбором
   @param {array} allNodeIds - Массив всех ID узлов для генерации коротких ID
   @param {string} indentLevel - Уровень отступа (по умолчанию '    ')
-
-  @example
-  ```jinja2
-  {% include 'handlers/multi-select-callback/multi-select-callback.py.jinja2' %}
-  ```
 #}
 
 {% set indent = indentLevel or '    ' %}
 
 {% if multiSelectNodes and multiSelectNodes|length > 0 %}
-{{ indent }}# Обработка выбора опции
+# Обработчик выбора опций multi-select (✅ / 🔘 на кнопках)
+@dp.callback_query(lambda c: c.data and (c.data.startswith("ms_") or c.data.startswith("multi_select_")))
+async def handle_multi_select_option(callback_query: types.CallbackQuery, state: FSMContext = None):
+{{ indent }}await callback_query.answer()
+{{ indent }}user_id = callback_query.from_user.id
+{{ indent }}callback_data = callback_query.data
+{{ indent }}node_id = None
+{{ indent }}button_id = None
 {{ indent }}logging.info(f"📱 Обрабатываем callback_data: {callback_data}")
-{{ indent }}
 
-{{ indent }}# Поддерживаем и новый формат ms_ и старый multi_select_
 {{ indent }}if callback_data.startswith("ms_"):
-{{ indent }}    # Новый короткий формат: ms_shortNodeId_shortTarget
-{{ indent }}    parts = callback_data.split("_")
-{{ indent }}    if len(parts) >= 3:
-{{ indent }}        short_node_id = parts[1]
-{{ indent }}        button_id = "_".join(parts[2:])  # Используем полное имя для совместимости
-{{ indent }}        # Находим полный node_id по короткому суффиксу
-{{ indent }}        node_id = None
-{{ indent }}        logging.info(f"🔍 Ищем узел по короткому ID: {short_node_id}")
-{{ indent }}
-
-{{ indent }}        # Для станций метро ищем по содержимому кнопки, а не по короткому ID
-{{ indent }}        if short_node_id == "stations":
-{{ indent }}            # Проверяем каждый узел станций на наличие нужной кнопки
+{{ indent }}    _ms_rest = callback_data[3:]
+{{ indent }}    short_node_id = None
+{{ indent }}    button_id = None
 {% for node in multiSelectNodes %}
-{% if node.shortNodeId == 'stations' %}
-{{ indent }}            # Проверяем узел {{ node.id }}
-{% for button in node.selectionButtons %}
-{{ indent }}            if button_id == "{{ button.value }}" or button_id == "{{ button.valueTruncated }}":
-{{ indent }}                node_id = "{{ node.id }}"
-{{ indent }}                logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+{{ indent }}    if short_node_id is None and _ms_rest.startswith("{{ node.shortNodeId }}_"):
+{{ indent }}        short_node_id = "{{ node.shortNodeId }}"
+{{ indent }}        button_id = _ms_rest[len(short_node_id) + 1:]
+{{ indent }}        node_id = "{{ node.id }}"
 {% endfor %}
-{% endif %}
-{% endfor %}
-{{ indent }}            pass
-{{ indent }}        else:
-{{ indent }}            # Обычная логика для других узлов
-{% for node in multiSelectNodes %}
-{% if node.shortNodeId != 'stations' %}
-{{ indent }}            if short_node_id == "{{ node.shortNodeId }}":
-{{ indent }}                node_id = "{{ node.id }}"
-{{ indent }}                logging.info(f"✅ Найден узел: {node_id}")
-{% endif %}
-{% endfor %}
-{{ indent }}            pass
+{{ indent }}    if short_node_id is None and "_" in _ms_rest:
+{{ indent }}        short_node_id, button_id = _ms_rest.split("_", 1)
+{{ indent }}        logging.info(f"🔍 Fallback parse ms_: node={short_node_id} btn={button_id}")
 {{ indent }}elif callback_data.startswith("multi_select_"):
-{{ indent }}    # Старый формат для обратной совместимости
 {{ indent }}    parts = callback_data.split("_")
 {{ indent }}    if len(parts) >= 3:
 {{ indent }}        node_id = parts[2]
@@ -64,99 +41,119 @@
 {{ indent }}else:
 {{ indent }}    logging.warning(f"⚠️ Неизвестный формат callback_data: {callback_data}")
 {{ indent }}    return
-{{ indent }}
 
 {{ indent }}if not node_id:
-{{ indent }}    # Резервный поиск: ищем узел, который содержит кнопку с target, совпадающим с button_id
-{{ indent }}    logging.info(f"🔍 Резервный поиск узла по button_id: {button_id}")
 {% for node in multiSelectNodes %}
 {% for button in node.selectionButtons %}
 {{ indent }}    if not node_id and (button_id == "{{ button.value }}" or button_id == "{{ button.valueTruncated }}"):
 {{ indent }}        node_id = "{{ node.id }}"
-{{ indent }}        logging.info(f"✅ Найден узел по target кнопки: {node_id}")
 {% endfor %}
 {% endfor %}
-{{ indent }}
 
 {{ indent }}if not node_id:
 {{ indent }}    logging.warning(f"⚠️ Не удалось найти node_id для callback_data: {callback_data}")
 {{ indent }}    return
-{{ indent }}
 
-{{ indent }}logging.info(f"📱 Определили node_id: {node_id}, button_id: {button_id}")
-{{ indent }}
-
-{{ indent }}# Инициализируем список выбранных опций с восстановлением из БД
 {{ indent }}if user_id not in user_data:
 {{ indent }}    user_data[user_id] = {}
-{{ indent }}
 
-{{ indent }}# Восстанавливаем ранее выбранные опции из базы данных
+{{ indent }}# Восстанавливаем выбор: память → переменная → БД → галочки на сообщении
 {{ indent }}if f"multi_select_{node_id}" not in user_data[user_id]:
-{{ indent }}    # Загружаем сохраненные данные из базы
-{{ indent }}    user_vars = await get_user_from_db(user_id)
 {{ indent }}    saved_selections = []
-{{ indent }}
-
-{{ indent }}    if user_vars:
-{{ indent }}        # Ищем переменную с интересами
-{{ indent }}        for var_name, var_data in user_vars.items():
-{{ indent }}            if "интерес" in var_name.lower() or var_name == "interests" or var_name.startswith("multi_select_"):
-{{ indent }}                if isinstance(var_data, dict) and "value" in var_data:
-{{ indent }}                    saved_str = var_data["value"]
-{{ indent }}                elif isinstance(var_data, str):
-{{ indent }}                    saved_str = var_data
-{{ indent }}                else:
-{{ indent }}                    saved_str = str(var_data) if var_data else ""
-{{ indent }}
-
-{{ indent }}                if saved_str:
-{{ indent }}                    saved_selections = [item.strip() for item in saved_str.split(",")]
-{{ indent }}                    break
-{{ indent }}
-
+{{ indent }}    _ms_var = None
+{% for node in multiSelectNodes %}
+{{ indent }}    if node_id == "{{ node.id }}":
+{{ indent }}        _ms_var = "{{ node.variableName or '' }}"
+{% endfor %}
+{{ indent }}    _ms_raw = user_data[user_id].get(_ms_var) if _ms_var else None
+{{ indent }}    if _ms_raw is None and _ms_var:
+{{ indent }}        try:
+{{ indent }}            _db_row = await get_user_from_db(user_id)
+{{ indent }}            if isinstance(_db_row, dict):
+{{ indent }}                _ms_raw = _db_row.get(_ms_var)
+{{ indent }}                if _ms_raw is None and isinstance(_db_row.get("user_data"), dict):
+{{ indent }}                    _ms_raw = _db_row["user_data"].get(_ms_var)
+{{ indent }}        except Exception as _e:
+{{ indent }}            logging.warning(f"⚠️ multi-select: не удалось прочитать БД: {_e}")
+{{ indent }}    if isinstance(_ms_raw, dict):
+{{ indent }}        _ms_raw = _ms_raw.get("value")
+{{ indent }}    if isinstance(_ms_raw, str) and _ms_raw.strip():
+{{ indent }}        saved_selections = [x.strip() for x in _ms_raw.split(",") if x.strip()]
+{{ indent }}    if not saved_selections and callback_query.message and getattr(callback_query.message, "reply_markup", None):
+{{ indent }}        try:
+{% for node in multiSelectNodes %}
+{{ indent }}            if node_id == "{{ node.id }}":
+{{ indent }}                _pfx_chk = "{{ node.checkmarkSymbol or '✅' }} "
+{{ indent }}                _pfx_rad = "{{ node.radioSelectedSymbol or '🔘' }} "
+{{ indent }}                for _row in callback_query.message.reply_markup.inline_keyboard or []:
+{{ indent }}                    for _btn in _row:
+{{ indent }}                        _t = (_btn.text or "").strip()
+{{ indent }}                        if _t.startswith(_pfx_chk):
+{{ indent }}                            saved_selections.append(_t[len(_pfx_chk):].strip())
+{{ indent }}                        elif _t.startswith(_pfx_rad):
+{{ indent }}                            saved_selections.append(_t[len(_pfx_rad):].strip())
+{% endfor %}
+{{ indent }}        except Exception:
+{{ indent }}            pass
 {{ indent }}    user_data[user_id][f"multi_select_{node_id}"] = saved_selections
-{{ indent }}
+{{ indent }}    logging.info(f"♻️ multi-select восстановлен ({node_id}): {saved_selections}")
 
-{{ indent }}# Находим текст кнопки по button_id
 {{ indent }}button_text = None
+{{ indent }}_btn_group = None
+{{ indent }}_group_peers = []
 {% for node in multiSelectNodes %}
 {% if node.selectionButtons and node.selectionButtons|length > 0 %}
 {{ indent }}if node_id == "{{ node.id }}":
 {% for button in node.selectionButtons %}
 {{ indent }}    if button_id == "{{ button.value }}" or button_id == "{{ button.valueTruncated }}":
 {{ indent }}        button_text = {{ button.text|escape_python_string }}
+{% if button.selectionGroup %}
+{{ indent }}        _btn_group = {{ button.selectionGroup|tojson }}
+{{ indent }}        _group_peers = [
+{%- for peer in node.selectionButtons -%}
+{%- if peer.selectionGroup == button.selectionGroup -%}
+{{ indent }}            {{ peer.text|escape_python_string }},
+{%- endif -%}
+{%- endfor %}
+{{ indent }}        ]
+{% endif %}
 {% endfor %}
 {% endif %}
 {% endfor %}
 
-{{ indent }}
-
 {{ indent }}if button_text:
-{{ indent }}    logging.info(f"🔘 Обрабатываем кнопку: {button_text}")
 {{ indent }}    selected_list = user_data[user_id][f"multi_select_{node_id}"]
-{{ indent }}    if button_text in selected_list:
-{{ indent }}        selected_list.remove(button_text)
-{{ indent }}        logging.info(f"➖ Убрали выбор: {button_text}")
+{{ indent }}    if _btn_group:
+{{ indent }}        # Радиогруппа: повторный клик снимает, иначе один выбор в группе
+{{ indent }}        if button_text in selected_list:
+{{ indent }}            selected_list.remove(button_text)
+{{ indent }}        else:
+{{ indent }}            for _peer in _group_peers:
+{{ indent }}                while _peer in selected_list:
+{{ indent }}                    selected_list.remove(_peer)
+{{ indent }}            selected_list.append(button_text)
 {{ indent }}    else:
-{{ indent }}        selected_list.append(button_text)
-{{ indent }}        logging.info(f"➕ Добавили выбор: {button_text}")
-{{ indent }}
-
+{{ indent }}        if button_text in selected_list:
+{{ indent }}            selected_list.remove(button_text)
+{{ indent }}        else:
+{{ indent }}            selected_list.append(button_text)
 {{ indent }}    logging.info(f"📋 Текущие выборы: {selected_list}")
-{{ indent }}
 
-{{ indent }}    # Обновляем клавиатуру с галочками
 {{ indent }}    builder = InlineKeyboardBuilder()
 {% for node in multiSelectNodes %}
 {{ indent }}    if node_id == "{{ node.id }}":
 {% if node.selectionButtons and node.selectionButtons|length > 0 %}
 {% for button in node.selectionButtons %}
 {{ indent }}        _sel_text = {{ button.text|escape_python_string }}
-{{ indent }}        builder.add(InlineKeyboardButton(text=("✅ " if _sel_text in selected_list else "") + _sel_text, callback_data="{{ button.callbackData }}"))
+{% if button.selectionGroup %}
+{{ indent }}        _sel_pfx = ("{{ node.radioSelectedSymbol or '🔘' }} " if _sel_text in selected_list else "{{ node.radioUnselectedSymbol or '⚪️' }} ")
+{% else %}
+{{ indent }}        _sel_pfx = ("{{ node.checkmarkSymbol or '✅' }} " if _sel_text in selected_list else "")
+{% endif %}
+{{ indent }}        builder.add(InlineKeyboardButton(text=_sel_pfx + _sel_text, callback_data="{{ button.callbackData }}"))
 {% endfor %}
 {% else %}
-{{ indent }}        pass  # нет кнопок selection для этого узла
+{{ indent }}        pass
 {% endif %}
 {% for button in node.regularButtons %}
 {% if button.action == 'goto' %}
@@ -166,21 +163,19 @@
 {% endif %}
 {% endfor %}
 {% if node.completeButton %}
-{{ indent }}        builder.add(InlineKeyboardButton(text="{{ node.completeButton.text }}", callback_data="{{ node.doneCallbackData }}"))
+{{ indent }}        builder.add(InlineKeyboardButton(text="{{ node.completeButton.text }}", callback_data="{{ node.doneCallbackData }}"{% if node.completeButton.style %}, style="{{ node.completeButton.style }}"{% endif %}))
 {% endif %}
 {% if node.hasKeyboardLayout and not node.keyboardLayoutAuto %}
 {{ indent }}        builder.adjust({{ node.adjustCode }})
 {% else %}
-{{ indent }}        total_buttons_with_done = {{ node.totalButtonsCount }}
-{{ indent }}        optimal_columns_with_done = calculate_optimal_columns(total_buttons_with_done)
-{{ indent }}        builder.adjust(optimal_columns_with_done)
+{{ indent }}        builder.adjust(calculate_optimal_columns({{ node.totalButtonsCount }}))
 {% endif %}
 {% endfor %}
-
-{{ indent }}
-{{ indent }}    keyboard = builder.as_markup()
-{{ indent }}    logging.info(f"🔄 ОБНОВЛЯЕМ клавиатуру для узла {node_id} с галочками")
-{{ indent }}    await callback_query.message.edit_reply_markup(reply_markup=keyboard)
-{{ indent }}
+{{ indent }}    try:
+{{ indent }}        await callback_query.message.edit_reply_markup(reply_markup=builder.as_markup())
+{{ indent }}    except TelegramBadRequest as e:
+{{ indent }}        if "message is not modified" not in str(e):
+{{ indent }}            raise
+{{ indent }}        logging.info(f"ℹ️ multi-select: разметка не изменилась ({callback_data})")
 
 {% endif %}

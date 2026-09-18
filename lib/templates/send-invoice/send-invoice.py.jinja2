@@ -1,0 +1,459 @@
+{#
+  @fileoverview Шаблон счетов в чат, ссылок на счёт и общего роутера оплаты.
+  1) handle_callback — answer_invoice (send_invoice)
+  2) handle_callback — create_invoice_link + save URL + переход
+  3) pre_checkout — если есть счёт или ссылка
+  4) successful_payment — targets → триггер
+
+  @param {array} sendInvoiceEntries
+  @param {array} createInvoiceLinkEntries
+  @param {array} successfulPaymentTriggerEntries
+#}
+
+{%- set has_chat = sendInvoiceEntries and sendInvoiceEntries|length > 0 -%}
+{%- set has_links = createInvoiceLinkEntries and createInvoiceLinkEntries|length > 0 -%}
+{%- set has_invoices = has_chat or has_links -%}
+{%- set has_triggers = successfulPaymentTriggerEntries and successfulPaymentTriggerEntries|length > 0 -%}
+
+{% if has_invoices or has_triggers %}
+# Маршруты оплаты: payload → настройки узла счёта / ссылки
+_stars_payment_targets = {}
+{% endif %}
+
+{% if has_chat %}
+# Обработчики счетов в звёздах (send_invoice)
+{% for entry in sendInvoiceEntries %}
+{%- set sanitized_node_id = entry.nodeId | safe_name %}
+@dp.callback_query(lambda c: c.data == "{{ entry.nodeId }}")
+async def handle_callback_{{ sanitized_node_id }}(callback_query: types.CallbackQuery, state: FSMContext = None):
+    """Выставляет счёт в звёздах — узел {{ entry.nodeId }}"""
+    user_id = callback_query.from_user.id
+    await init_user_variables(user_id, callback_query.from_user)
+    try:
+        await callback_query.answer()
+    except Exception:
+        pass
+
+    _all_vars = await init_all_user_vars(user_id)
+    if state is not None:
+        try:
+            _fsm_data = await state.get_data()
+            if _fsm_data:
+                _all_vars.update(_fsm_data)
+        except Exception:
+            pass
+
+    _title = replace_variables_in_text({{ entry.title | tojson }}, _all_vars, {})
+    _description = replace_variables_in_text({{ entry.description | tojson }}, _all_vars, {})
+
+    _payload = replace_variables_in_text({{ entry.payload | tojson }}, _all_vars, {}) or "{{ entry.nodeId }}"
+    _payload = str(_payload)[:128]
+{% if entry.photoUrl %}
+    _photo_url = replace_variables_in_text({{ entry.photoUrl | tojson }}, _all_vars, {})
+    if isinstance(_photo_url, str) and _photo_url.startswith("/uploads/"):
+        _api_base = (os.getenv("API_BASE_URL") or "").rstrip("/")
+        if _api_base:
+            _photo_url = f"{_api_base}{_photo_url}"
+        else:
+            logging.warning(
+                f"⭐ send_invoice [{{ entry.nodeId }}]: нет API_BASE_URL — картинка /uploads/ пропущена"
+            )
+            _photo_url = ""
+{% else %}
+    _photo_url = ""
+{% endif %}
+
+    _currency = str(replace_variables_in_text({{ entry.currency | tojson }}, _all_vars, {}) or "XTR").upper().strip() or "XTR"
+    # Неподставленный {var} / мусор → CURRENCY_INVALID у Telegram
+    import re as _re_cur
+    if "{" in _currency or not _re_cur.fullmatch(r"[A-Z]{3}", _currency):
+        logging.error(
+            f"❌ send_invoice [{{ entry.nodeId }}]: некорректная валюта {_currency!r} (проверьте переменную invoiceCurrency)"
+        )
+        await callback_query.message.answer(
+            "Не задана валюта счёта. Выберите валюту в меню или задайте invoiceCurrency."
+        )
+        return
+{% if entry.providerSource == 'env' %}
+    _provider_token = "" if _currency == "XTR" else (os.getenv({{ entry.providerTokenEnv | tojson }}) or "")
+{% else %}
+    _provider_token = "" if _currency == "XTR" else {{ entry.providerToken | tojson }}
+{% endif %}
+    if _currency != "XTR" and not str(_provider_token or "").strip():
+        logging.error(
+            f"❌ send_invoice [{{ entry.nodeId }}]: пустой provider_token для валюты {_currency}"
+        )
+        await callback_query.message.answer(
+            "Не задан токен платёжного провайдера. Укажите его в ноде или в переменной окружения бота."
+        )
+        return
+
+    _invoice_kwargs = {
+        "title": (_title or "Товар")[:32],
+        "description": (_description or "Описание")[:255],
+        "payload": _payload,
+        "provider_token": _provider_token,
+        "currency": _currency,
+    }
+{% include 'send-invoice/invoice-kwargs-common.py.jinja2' %}
+{# Подписка только через createInvoiceLink: sendInvoice → SUBSCRIPTION_EXPORT_MISSING #}
+{% if entry.protectContent %}
+    _invoice_kwargs["protect_content"] = True
+{% endif %}
+{% if entry.disableNotification %}
+    _invoice_kwargs["disable_notification"] = True
+{% endif %}
+{% if entry.allowPaidBroadcast %}
+    _invoice_kwargs["allow_paid_broadcast"] = True
+{% endif %}
+{% if entry.startParameter %}
+    _sp = replace_variables_in_text({{ entry.startParameter | tojson }}, _all_vars, {})
+    if str(_sp or "").strip():
+        _invoice_kwargs["start_parameter"] = str(_sp)
+{% endif %}
+{% if entry.messageThreadId %}
+    try:
+        _tid = int(float(str(replace_variables_in_text({{ entry.messageThreadId | tojson }}, _all_vars, {}) or "0")))
+        if _tid > 0:
+            _invoice_kwargs["message_thread_id"] = _tid
+    except (ValueError, TypeError):
+        pass
+{% endif %}
+{% if entry.directMessagesTopicId %}
+    try:
+        _dmt = int(float(str(replace_variables_in_text({{ entry.directMessagesTopicId | tojson }}, _all_vars, {}) or "0")))
+        if _dmt > 0:
+            _invoice_kwargs["direct_messages_topic_id"] = _dmt
+    except (ValueError, TypeError):
+        pass
+{% endif %}
+{% if entry.replyToMessageId %}
+    try:
+        _rid = int(float(str(replace_variables_in_text({{ entry.replyToMessageId | tojson }}, _all_vars, {}) or "0")))
+        if _rid > 0:
+            _invoice_kwargs["reply_to_message_id"] = _rid
+    except (ValueError, TypeError):
+        pass
+{% endif %}
+{% if entry.messageEffectId %}
+    _eff = replace_variables_in_text({{ entry.messageEffectId | tojson }}, _all_vars, {})
+    if str(_eff or "").strip():
+        _invoice_kwargs["message_effect_id"] = str(_eff)
+{% endif %}
+{% if entry.suggestedPostParams %}
+    _spp = replace_variables_in_text({{ entry.suggestedPostParams | tojson }}, _all_vars, {})
+    if str(_spp or "").strip():
+        try:
+            import json as _json_spp
+            _invoice_kwargs["suggested_post_parameters"] = _json_spp.loads(str(_spp))
+        except Exception:
+            logging.warning(f"⭐ send_invoice [{{ entry.nodeId }}]: некорректный suggested_post_parameters JSON")
+{% endif %}
+
+    _stars_payment_targets[_payload] = {
+        "node_id": "{{ entry.nodeId }}",
+        "save_amount_to": {{ entry.savePaymentAmountTo | tojson }},
+        "save_charge_to": {{ entry.savePaymentChargeIdTo | tojson }},
+        "save_name_to": {{ entry.saveOrderNameTo | tojson }},
+        "save_email_to": {{ entry.saveOrderEmailTo | tojson }},
+        "save_phone_to": {{ entry.saveOrderPhoneTo | tojson }},
+        "next_node": {{ entry.autoTransitionTo | tojson }},
+    }
+
+{% if entry.hasKeyboard %}
+    all_user_vars = _all_vars
+{%- set nodeId = entry.nodeId -%}
+{%- set keyboardType = 'inline' -%}
+{%- set buttons = entry.buttons -%}
+{%- set keyboardLayout = entry.keyboardLayout -%}
+{%- set adjustStr = entry.adjustStr -%}
+{%- set allowMultipleSelection = false -%}
+{%- set enableDynamicButtons = false -%}
+{%- set shuffleButtons = false -%}
+{%- filter indent(4) %}{% include 'keyboard/keyboard.py.jinja2' %}{% endfilter %}
+    _invoice_kwargs["reply_markup"] = keyboard
+{% endif %}
+
+    try:
+        await callback_query.message.answer_invoice(**_invoice_kwargs)
+        logging.info(
+            f"⭐ send_invoice [{{ entry.nodeId }}]: счёт {_amount} {_currency} для {user_id}, payload={_payload}"
+        )
+    except Exception as e:
+        logging.error(f"❌ Ошибка send_invoice [{{ entry.nodeId }}]: {e}")
+
+{% endfor %}
+{% endif %}
+
+{% if has_links %}
+# Обработчики ссылок на счёт (create_invoice_link)
+{% for entry in createInvoiceLinkEntries %}
+{%- set sanitized_node_id = entry.nodeId | safe_name %}
+@dp.callback_query(lambda c: c.data == "{{ entry.nodeId }}")
+async def handle_callback_{{ sanitized_node_id }}(callback_query: types.CallbackQuery, state: FSMContext = None):
+    """Создаёт ссылку на счёт — узел {{ entry.nodeId }}"""
+    user_id = callback_query.from_user.id
+    await init_user_variables(user_id, callback_query.from_user)
+    try:
+        await callback_query.answer()
+    except Exception:
+        pass
+
+    _all_vars = await init_all_user_vars(user_id)
+    if state is not None:
+        try:
+            _fsm_data = await state.get_data()
+            if _fsm_data:
+                _all_vars.update(_fsm_data)
+        except Exception:
+            pass
+
+    _title = replace_variables_in_text({{ entry.title | tojson }}, _all_vars, {})
+    _description = replace_variables_in_text({{ entry.description | tojson }}, _all_vars, {})
+
+    _payload = replace_variables_in_text({{ entry.payload | tojson }}, _all_vars, {}) or "{{ entry.nodeId }}"
+    _payload = str(_payload)[:128]
+{% if entry.photoUrl %}
+    _photo_url = replace_variables_in_text({{ entry.photoUrl | tojson }}, _all_vars, {})
+    if isinstance(_photo_url, str) and _photo_url.startswith("/uploads/"):
+        _api_base = (os.getenv("API_BASE_URL") or "").rstrip("/")
+        if _api_base:
+            _photo_url = f"{_api_base}{_photo_url}"
+        else:
+            logging.warning(
+                f"⭐ create_invoice_link [{{ entry.nodeId }}]: нет API_BASE_URL — картинка /uploads/ пропущена"
+            )
+            _photo_url = ""
+{% else %}
+    _photo_url = ""
+{% endif %}
+
+    _currency = str(replace_variables_in_text({{ entry.currency | tojson }}, _all_vars, {}) or "XTR").upper().strip() or "XTR"
+    import re as _re_cur_link
+    if "{" in _currency or not _re_cur_link.fullmatch(r"[A-Z]{3}", _currency):
+        logging.error(
+            f"❌ create_invoice_link [{{ entry.nodeId }}]: некорректная валюта {_currency!r}"
+        )
+        await callback_query.message.answer(
+            "Не задана валюта счёта. Выберите валюту в меню или задайте invoiceCurrency."
+        )
+        return
+{% if entry.providerSource == 'env' %}
+    _provider_token = "" if _currency == "XTR" else (os.getenv({{ entry.providerTokenEnv | tojson }}) or "")
+{% else %}
+    _provider_token = "" if _currency == "XTR" else {{ entry.providerToken | tojson }}
+{% endif %}
+    if _currency != "XTR" and not str(_provider_token or "").strip():
+        logging.error(
+            f"❌ create_invoice_link [{{ entry.nodeId }}]: пустой provider_token для валюты {_currency}"
+        )
+        await callback_query.message.answer(
+            "Не задан токен платёжного провайдера. Укажите его в ноде или в переменной окружения бота."
+        )
+        return
+
+    _invoice_kwargs = {
+        "title": (_title or "Товар")[:32],
+        "description": (_description or "Описание")[:255],
+        "payload": _payload,
+        "provider_token": _provider_token,
+        "currency": _currency,
+    }
+{% include 'send-invoice/invoice-kwargs-common.py.jinja2' %}
+{% if entry.subscription %}
+    if _currency == "XTR":
+        _invoice_kwargs["subscription_period"] = 2592000
+{% endif %}
+
+    _stars_payment_targets[_payload] = {
+        "node_id": "{{ entry.nodeId }}",
+        "save_amount_to": {{ entry.savePaymentAmountTo | tojson }},
+        "save_charge_to": {{ entry.savePaymentChargeIdTo | tojson }},
+        "save_name_to": {{ entry.saveOrderNameTo | tojson }},
+        "save_email_to": {{ entry.saveOrderEmailTo | tojson }},
+        "save_phone_to": {{ entry.saveOrderPhoneTo | tojson }},
+        "next_node": {{ entry.afterPaymentTo | tojson }},
+    }
+
+    try:
+        # Глобальный bot: MockCallback (из command_trigger) не имеет .bot
+        _invoice_link = await bot.create_invoice_link(**_invoice_kwargs)
+        logging.info(
+            f"⭐ create_invoice_link [{{ entry.nodeId }}]: ссылка {_amount} {_currency} для {user_id}, payload={_payload}"
+        )
+    except Exception as e:
+        logging.error(f"❌ Ошибка create_invoice_link [{{ entry.nodeId }}]: {e}")
+        return
+
+    if user_id not in user_data:
+        user_data[user_id] = {}
+{% if entry.saveInvoiceLinkTo %}
+    user_data[user_id][{{ entry.saveInvoiceLinkTo | tojson }}] = _invoice_link
+{% endif %}
+
+{% if entry.autoTransitionTo %}
+{%- set sanitized_next_id = entry.autoTransitionTo | safe_name %}
+    class FakeCallbackQuery:
+        def __init__(self, user, msg, data):
+            self.from_user = user
+            self.message = msg
+            self.data = data
+            self._is_fake = True
+
+        async def answer(self, *args, **kwargs):
+            pass
+
+    fake_cb = FakeCallbackQuery(callback_query.from_user, callback_query.message, "{{ entry.autoTransitionTo }}")
+    await handle_callback_{{ sanitized_next_id }}(fake_cb, state=state)
+{% endif %}
+
+{% endfor %}
+{% endif %}
+
+{% if has_invoices %}
+@dp.pre_checkout_query()
+async def on_pre_checkout_query_stars(pre_checkout_query: types.PreCheckoutQuery):
+    """Проверка перед списанием звёзд — всегда разрешаем"""
+    logging.info(
+        f"⭐ pre_checkout: payload={pre_checkout_query.invoice_payload} amount={pre_checkout_query.total_amount}"
+    )
+    await pre_checkout_query.answer(ok=True)
+
+@dp.shipping_query()
+async def on_shipping_query_stars(shipping_query: types.ShippingQuery):
+    """Демо-доставка: один бесплатный вариант (для need_shipping_address)"""
+    from aiogram.types import LabeledPrice as _LP, ShippingOption as _SO
+    try:
+        await bot.answer_shipping_query(
+            shipping_query_id=shipping_query.id,
+            ok=True,
+            shipping_options=[
+                _SO(id="free", title="Бесплатная доставка", prices=[_LP(label="Доставка", amount=0)])
+            ],
+        )
+    except Exception as _ship_err:
+        logging.error(f"❌ shipping_query: {_ship_err}")
+{% endif %}
+
+{%- if has_invoices or has_triggers %}
+@dp.message(F.successful_payment)
+async def on_successful_payment_stars(message: types.Message, state: FSMContext = None):
+    """Успешная оплата звёздами — счёт/ссылка, иначе триггер по метке"""
+    payment = message.successful_payment
+    if not payment:
+        return
+    payload = payment.invoice_payload or ""
+    user_id = message.from_user.id
+    await init_user_variables(user_id, message.from_user)
+    logging.info(
+        f"⭐ successful_payment: payload={payload} amount={payment.total_amount} charge={payment.telegram_payment_charge_id}"
+    )
+
+    if user_id not in user_data:
+        user_data[user_id] = {}
+
+    class FakeCallbackQuery:
+        """Фейковый callback для перехода после оплаты"""
+        def __init__(self, user, msg, data):
+            self.from_user = user
+            self.message = msg
+            self.data = data
+            self._is_fake = True
+
+        async def answer(self, *args, **kwargs):
+            pass
+
+    _route = _stars_payment_targets.get(payload)
+    if _route:
+        _amount_var = _route.get("save_amount_to") or ""
+        if _amount_var:
+            user_data[user_id][_amount_var] = payment.total_amount
+
+        _charge_var = _route.get("save_charge_to") or ""
+        if _charge_var:
+            user_data[user_id][_charge_var] = payment.telegram_payment_charge_id
+
+        _oi = getattr(payment, "order_info", None)
+        _name_var = _route.get("save_name_to") or ""
+        if _name_var:
+            user_data[user_id][_name_var] = getattr(_oi, "name", None) or ""
+        _email_var = _route.get("save_email_to") or ""
+        if _email_var:
+            user_data[user_id][_email_var] = getattr(_oi, "email", None) or ""
+        _phone_var = _route.get("save_phone_to") or ""
+        if _phone_var:
+            user_data[user_id][_phone_var] = getattr(_oi, "phone_number", None) or ""
+
+        _next = _route.get("next_node") or ""
+        if not _next:
+            return
+
+        fake_cb = FakeCallbackQuery(message.from_user, message, _next)
+{% for entry in sendInvoiceEntries %}
+{%- if entry.autoTransitionTo %}
+{%- set sanitized_target_id = entry.autoTransitionTo | safe_name %}
+        if _next == "{{ entry.autoTransitionTo }}":
+            await handle_callback_{{ sanitized_target_id }}(fake_cb, state=state)
+            return
+{% endif %}
+{% endfor %}
+{% for entry in createInvoiceLinkEntries %}
+{%- if entry.afterPaymentTo %}
+{%- set sanitized_target_id = entry.afterPaymentTo | safe_name %}
+        if _next == "{{ entry.afterPaymentTo }}":
+            await handle_callback_{{ sanitized_target_id }}(fake_cb, state=state)
+            return
+{% endif %}
+{% endfor %}
+        return
+
+{% if has_triggers %}
+    _spt = None
+{% for entry in successfulPaymentTriggerEntries %}
+{% if entry.payloadFilter == 'exact' %}
+    if _spt is None and payload == {{ entry.payloadValue | tojson }}:
+{% elif entry.payloadFilter == 'starts_with' %}
+    if _spt is None and str(payload).startswith({{ entry.payloadValue | tojson }}):
+{% else %}
+    if _spt is None:
+{% endif %}
+        _spt = {
+            "node_id": "{{ entry.nodeId }}",
+            "save_amount_to": {{ entry.savePaymentAmountTo | tojson }},
+            "save_charge_to": {{ entry.savePaymentChargeIdTo | tojson }},
+            "next_node": {{ entry.targetNodeId | tojson }},
+        }
+{% endfor %}
+
+    if _spt is None:
+        logging.warning(f"⭐ successful_payment: неизвестный payload={payload!r}, триггер не найден")
+        return
+
+    logging.info(f"⭐ successful_payment_trigger [{_spt.get('node_id')}]: payload={payload!r}")
+
+    _amount_var = _spt.get("save_amount_to") or ""
+    if _amount_var:
+        user_data[user_id][_amount_var] = payment.total_amount
+
+    _charge_var = _spt.get("save_charge_to") or ""
+    if _charge_var:
+        user_data[user_id][_charge_var] = payment.telegram_payment_charge_id
+
+    _next = _spt.get("next_node") or ""
+    if not _next:
+        return
+
+    fake_cb = FakeCallbackQuery(message.from_user, message, _next)
+{% for entry in successfulPaymentTriggerEntries %}
+{%- if entry.targetNodeId %}
+{%- set sanitized_target_id = entry.targetNodeId | safe_name %}
+    if _next == "{{ entry.targetNodeId }}":
+        await handle_callback_{{ sanitized_target_id }}(fake_cb, state=state)
+        return
+{% endif %}
+{% endfor %}
+{% else %}
+    logging.warning(f"⭐ successful_payment: неизвестный payload={payload!r}")
+{% endif %}
+
+{%- endif %}

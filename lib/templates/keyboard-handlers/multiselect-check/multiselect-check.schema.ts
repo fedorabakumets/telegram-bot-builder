@@ -22,6 +22,7 @@ const nodeDataSchema = z.object({
   multiSelectVariable: z.string().optional(),
   continueButtonText: z.string().optional(),
   continueButtonTarget: z.string().optional(),
+  checkmarkSymbol: z.string().optional(),
 });
 
 const multiSelectNodeSchema = z.object({

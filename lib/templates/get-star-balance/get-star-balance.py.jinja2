@@ -1,0 +1,47 @@
+{#
+  @fileoverview Обработчики get_star_balance (getMyStarBalance).
+  @param {array} entries - GetStarBalanceEntry[]
+#}
+
+# Баланс звёзд бота (get_star_balance)
+{% for entry in entries -%}
+{%- set sanitized_node_id = entry.nodeId | safe_name -%}
+{%- set sanitized_target_id = entry.targetNodeId | safe_name -%}
+{%- set sanitized_error_id = entry.balanceErrorTarget | safe_name -%}
+{%- set _msg_error = entry.balanceMsgError | default('Не удалось получить баланс звёзд') -%}
+{%- set _save_to = entry.saveStarBalanceTo | default('star_balance') -%}
+
+@dp.callback_query(lambda c: c.data == "{{ entry.nodeId }}")
+async def handle_callback_{{ sanitized_node_id }}(callback_query: types.CallbackQuery, state: FSMContext = None):
+    """Баланс звёзд бота — узел {{ entry.nodeId }}"""
+    user_id = callback_query.from_user.id
+    await init_user_variables(user_id, callback_query.from_user)
+    try:
+        await callback_query.answer()
+    except Exception:
+        pass
+
+    try:
+        _bal = await bot.get_my_star_balance()
+        _amount = getattr(_bal, "amount", None)
+        if _amount is None and isinstance(_bal, dict):
+            _amount = _bal.get("amount", 0)
+        user_data[user_id][{{ _save_to | tojson }}] = str(_amount if _amount is not None else 0)
+        logging.info(
+            f"⭐ get_star_balance [{{ entry.nodeId }}]: amount={user_data[user_id][{{ _save_to | tojson }}]}"
+        )
+        {% if entry.targetNodeId %}
+        await handle_callback_{{ sanitized_target_id }}(callback_query, state=state)
+        {% endif %}
+    except Exception as _e:
+        logging.error(f"❌ Ошибка get_star_balance [{{ entry.nodeId }}]: {_e}")
+        {% if entry.balanceErrorTarget %}
+        await handle_callback_{{ sanitized_error_id }}(callback_query, state=state)
+        {% else %}
+        await callback_query.message.answer({{ _msg_error | escape_python_string }})
+        {% if entry.ignoreErrors and entry.targetNodeId %}
+        await handle_callback_{{ sanitized_target_id }}(callback_query, state=state)
+        {% endif %}
+        {% endif %}
+
+{% endfor %}

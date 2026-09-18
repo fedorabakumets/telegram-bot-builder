@@ -22,6 +22,8 @@ export const commandTriggerEntrySchema = z.object({
   deepLinkSaveToVar: z.boolean().optional(),
   /** Имя переменной для сохранения значения deep link */
   deepLinkVarName: z.string().optional(),
+  /** Имя переменной для аргументов команды (после пробела) */
+  saveCommandArgsTo: z.string().optional().default(''),
 });
 
 export const commandTriggerParamsSchema = z.object({

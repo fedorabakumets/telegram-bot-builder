@@ -14,6 +14,11 @@
 
 import { Node } from '@/types/bot';
 import { CanvasSheet } from '@shared/schema';
+import {
+  findInvoiceHostForKeyboard,
+  findPayButtonOnKeyboard,
+  invoiceUsesPayButtonVisual,
+} from '@/components/editor/properties/utils/invoice-pay-connection';
 
 /**
  * Одна кросс-листовая связь от ноды на текущем листе к ноде на другом листе
@@ -127,7 +132,14 @@ export function collectCrossSheetLinks(
       'schedule_trigger', 'userbot_edit_trigger',
     ].includes(type);
 
-    if (data?.enableAutoTransition && data?.autoTransitionTo && type !== 'loop' && !isTrigger) {
+    if (
+      data?.enableAutoTransition
+      && data?.autoTransitionTo
+      && type !== 'loop'
+      && !isTrigger
+      && type !== 'create_invoice_link'
+      && !(type === 'send_invoice' && invoiceUsesPayButtonVisual(node, currentNodes))
+    ) {
       tryAddLink(links, node.id, data.autoTransitionTo, 'auto-transition', currentNodeIds, otherNodesMap);
     }
 
@@ -136,6 +148,18 @@ export function collectCrossSheetLinks(
     for (const btn of buttons) {
       if (btn.action === 'goto' && btn.target) {
         tryAddLink(links, node.id, btn.target, 'button-goto', currentNodeIds, otherNodesMap);
+      }
+    }
+
+    // 2.1 pay у клавиатуры счёта → autoTransitionTo счёта (другой лист)
+    if (type === 'keyboard') {
+      const payBtn = findPayButtonOnKeyboard(node);
+      const invoiceHost = findInvoiceHostForKeyboard(node.id, currentNodes);
+      const payTarget = invoiceHost?.data?.autoTransitionTo
+        ? String(invoiceHost.data.autoTransitionTo).trim()
+        : '';
+      if (payBtn && payTarget) {
+        tryAddLink(links, node.id, payTarget, 'button-goto', currentNodeIds, otherNodesMap);
       }
     }
 
@@ -165,6 +189,39 @@ export function collectCrossSheetLinks(
     if (type === 'loop') {
       tryAddLink(links, node.id, data?.afterLoopTo, 'auto-transition', currentNodeIds, otherNodesMap);
       tryAddLink(links, node.id, data?.autoTransitionTo, 'auto-transition', currentNodeIds, otherNodesMap);
+    }
+
+    // 6b. refund_stars: выходы ошибок
+    if (type === 'refund_stars') {
+      tryAddLink(links, node.id, data?.refundEmptyTarget, 'button-goto', currentNodeIds, otherNodesMap);
+      tryAddLink(links, node.id, data?.refundNotFoundTarget, 'button-goto', currentNodeIds, otherNodesMap);
+      tryAddLink(
+        links,
+        node.id,
+        data?.refundAlreadyRefundedTarget,
+        'button-goto',
+        currentNodeIds,
+        otherNodesMap,
+      );
+    }
+
+    // 6b2. edit_star_subscription
+    if (type === 'edit_star_subscription') {
+      tryAddLink(links, node.id, data?.autoTransitionTo, 'button-goto', currentNodeIds, otherNodesMap);
+      tryAddLink(links, node.id, data?.subscriptionEmptyTarget, 'button-goto', currentNodeIds, otherNodesMap);
+      tryAddLink(links, node.id, data?.subscriptionErrorTarget, 'button-goto', currentNodeIds, otherNodesMap);
+    }
+
+    // 6b3. get_star_balance
+    if (type === 'get_star_balance') {
+      tryAddLink(links, node.id, data?.autoTransitionTo, 'button-goto', currentNodeIds, otherNodesMap);
+      tryAddLink(links, node.id, data?.balanceErrorTarget, 'button-goto', currentNodeIds, otherNodesMap);
+    }
+
+    // 6c. create_invoice_link: после создания и после оплаты
+    if (type === 'create_invoice_link') {
+      tryAddLink(links, node.id, data?.autoTransitionTo, 'button-goto', currentNodeIds, otherNodesMap);
+      tryAddLink(links, node.id, data?.afterPaymentTo, 'button-goto', currentNodeIds, otherNodesMap);
     }
 
     // 7. Триггеры: autoTransitionTo
@@ -222,8 +279,15 @@ export function collectIncomingCrossSheetLinks(
         'schedule_trigger', 'userbot_edit_trigger',
       ].includes(type);
 
-      // 1. Автопереход
-      if (data?.enableAutoTransition && data?.autoTransitionTo && type !== 'loop' && !isTrigger) {
+      // 1. Автопереход (счёт с pay-клавиатурой — портал от кнопки, не от счёта)
+      if (
+        data?.enableAutoTransition
+        && data?.autoTransitionTo
+        && type !== 'loop'
+        && !isTrigger
+        && type !== 'create_invoice_link'
+        && !(type === 'send_invoice' && invoiceUsesPayButtonVisual(node, sheetNodes))
+      ) {
         if (currentNodeIds.has(data.autoTransitionTo)) {
           links.push({ sourceNodeId: node.id, targetNodeId: data.autoTransitionTo, targetSheetId: sheet.id, targetSheetName: sheet.name, connectionType: 'auto-transition' });
         }
@@ -234,6 +298,46 @@ export function collectIncomingCrossSheetLinks(
       for (const btn of buttons) {
         if (btn.action === 'goto' && btn.target && currentNodeIds.has(btn.target)) {
           links.push({ sourceNodeId: node.id, targetNodeId: btn.target, targetSheetId: sheet.id, targetSheetName: sheet.name, connectionType: 'button-goto' });
+        }
+      }
+
+      // 2.1 pay у клавиатуры счёта
+      if (type === 'keyboard') {
+        const payBtn = findPayButtonOnKeyboard(node);
+        const invoiceHost = findInvoiceHostForKeyboard(node.id, sheetNodes);
+        const payTarget = invoiceHost?.data?.autoTransitionTo
+          ? String(invoiceHost.data.autoTransitionTo).trim()
+          : '';
+        if (payBtn && payTarget && currentNodeIds.has(payTarget)) {
+          links.push({
+            sourceNodeId: node.id,
+            targetNodeId: payTarget,
+            targetSheetId: sheet.id,
+            targetSheetName: sheet.name,
+            connectionType: 'button-goto',
+          });
+        }
+      }
+
+      // 2.2 create_invoice_link
+      if (type === 'create_invoice_link') {
+        if (data?.autoTransitionTo && currentNodeIds.has(data.autoTransitionTo)) {
+          links.push({
+            sourceNodeId: node.id,
+            targetNodeId: data.autoTransitionTo,
+            targetSheetId: sheet.id,
+            targetSheetName: sheet.name,
+            connectionType: 'button-goto',
+          });
+        }
+        if (data?.afterPaymentTo && currentNodeIds.has(data.afterPaymentTo)) {
+          links.push({
+            sourceNodeId: node.id,
+            targetNodeId: data.afterPaymentTo,
+            targetSheetId: sheet.id,
+            targetSheetName: sheet.name,
+            connectionType: 'button-goto',
+          });
         }
       }
 

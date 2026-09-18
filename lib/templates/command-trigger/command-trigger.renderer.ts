@@ -38,6 +38,7 @@ export function collectCommandTriggerEntries(nodes: Node[]): CommandTriggerEntry
       deepLinkParam: (node.data as any).deepLinkParam,
       deepLinkSaveToVar: (node.data as any).deepLinkSaveToVar,
       deepLinkVarName: (node.data as any).deepLinkVarName,
+      saveCommandArgsTo: (node.data as any).saveCommandArgsTo || '',
     });
   }
 

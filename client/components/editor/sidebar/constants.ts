@@ -9,7 +9,7 @@ import { textMessage, mediaMessage, keyboardMessage, saveAnswerNode } from './ma
 import { allCommandPresets } from './massive/commands';
 import type { CommandPreset } from './massive/commands';
 import { broadcastNode } from '@/components/editor/canvas/canvas-node/broadcast-node';
-import { commandTrigger, textTrigger, anyMessageTrigger, groupMessageTrigger, memberTrigger, callbackTrigger, incomingCallbackTrigger, outgoingMessageTrigger, managedBotUpdatedTrigger, scheduleTrigger, apiTrigger } from './massive/triggers';
+import { commandTrigger, textTrigger, anyMessageTrigger, groupMessageTrigger, memberTrigger, callbackTrigger, incomingCallbackTrigger, outgoingMessageTrigger, managedBotUpdatedTrigger, scheduleTrigger, apiTrigger, successfulPaymentTrigger } from './massive/triggers';
 import { apiResponseNode } from './massive/api-response/api-response-node';
 import { conditionNode, setVariableNode, loopNode, delayNode, codeNode, parallelSplitNode, stopProcessingNode, rateCounterNode } from './massive/logic';
 import { forwardMessage, createForumTopicNode, deleteMessage } from './massive/content-management';
@@ -22,6 +22,7 @@ import { answerCallbackQueryNode, editMessageNode } from './massive/actions';
 import { userbotMessage, userbotClickButton, userbotInlineQuery, userbotEditTrigger } from './massive/userbot';
 import { banUser, unbanUser, muteUser, unmuteUser, kickUser, promoteUser, demoteUser, adminRights } from './massive/user-management';
 import { commentNode } from './massive/utility';
+import { sendInvoiceNode, createInvoiceLinkNode, refundStarsNode, editStarSubscriptionNode, getStarBalanceNode } from './massive/payments';
 
 /**
  * Группировка компонентов по категориям для удобной навигации
@@ -56,6 +57,10 @@ export const componentCategories: Array<{
   {
     title: 'Внешний API',
     components: [apiTrigger, apiResponseNode]
+  },
+  {
+    title: 'Платежи',
+    components: [sendInvoiceNode, createInvoiceLinkNode, refundStarsNode, editStarSubscriptionNode, getStarBalanceNode, successfulPaymentTrigger]
   },
   {
     title: 'Интеграции',

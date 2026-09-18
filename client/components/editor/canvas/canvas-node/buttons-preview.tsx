@@ -10,6 +10,7 @@ import { OutputPort } from './output-port';
 import { PortType } from './port-colors';
 import { getDynamicButtonsSummary, normalizeDynamicButtonsConfig } from '@/components/editor/properties/utils/dynamic-buttons';
 import { resolveKeyboardPreviewParams } from '../utils/resolve-keyboard-preview-buttons';
+import { isInvoicePayKeyboard, findPayButtonOnKeyboard } from '@/components/editor/properties/utils/invoice-pay-connection';
 
 interface ButtonsPreviewProps {
   node: Node;
@@ -21,6 +22,16 @@ interface ButtonsPreviewProps {
 
 export function ButtonsPreview({ node, allNodes, onPortMouseDown, isConnectionSource, onButtonPortMount }: ButtonsPreviewProps) {
   const previewParams = useMemo(() => resolveKeyboardPreviewParams(node), [node]);
+  /**
+   * Порт у pay нужен на keyboard с кнопкой оплаты, привязанной к счёту.
+   * Без порта offset не регистрируется → стрелка button-goto не рисуется.
+   */
+  const showPayPort = useMemo(() => {
+    if (node.type !== 'keyboard') return false;
+    if (!findPayButtonOnKeyboard(node)) return false;
+    if (!allNodes?.length) return true;
+    return isInvoicePayKeyboard(node, allNodes);
+  }, [allNodes, node]);
 
   if (!previewParams) {
     return null;
@@ -41,6 +52,11 @@ export function ButtonsPreview({ node, allNodes, onPortMouseDown, isConnectionSo
 
   const hasOptionButtons = staticButtons.some((button: any) => button.action === 'selection');
   const isMultiSelect = !enableDynamicButtons && hasOptionButtons && (node.data as any).allowMultipleSelection;
+  const selectionSymbols = {
+    checkmarkSymbol: (node.data as any).checkmarkSymbol,
+    radioSelectedSymbol: (node.data as any).radioSelectedSymbol,
+    radioUnselectedSymbol: (node.data as any).radioUnselectedSymbol,
+  };
 
   const completeButton = useMemo(
     () => (isMultiSelect ? staticButtons.find((button: any) => button.action === 'complete') : undefined),
@@ -49,6 +65,14 @@ export function ButtonsPreview({ node, allNodes, onPortMouseDown, isConnectionSo
   void completeButton;
 
   const dynamicSummary = enableDynamicButtons ? getDynamicButtonsSummary(dynamicButtons) : '';
+
+  /**
+   * Нужен ли выходной порт у кнопки (goto или pay у счёта)
+   * @param button - Кнопка
+   * @returns true если показывать порт
+   */
+  const hasButtonPort = (button: { action?: string }) =>
+    button.action === 'goto' || (button.action === 'pay' && showPayPort);
 
   return (
     <div className="space-y-3 mb-1">
@@ -75,11 +99,11 @@ export function ButtonsPreview({ node, allNodes, onPortMouseDown, isConnectionSo
           buttonClassName=""
           renderButton={(button: any) => {
             if (button.action === 'complete') return <DoneButton button={button} />;
-            if (button.action === 'selection') return <OptionButton button={button} />;
+            if (button.action === 'selection') return <OptionButton button={button} symbols={selectionSymbols} />;
             return (
               <div className="relative">
                 <InlineButton button={button} allNodes={allNodes} />
-                {button.action === 'goto' && (
+                {hasButtonPort(button) && (
                   <OutputPort portType="button-goto" buttonId={button.id} onPortMouseDown={onPortMouseDown} isActive={isConnectionSource} onMount={onButtonPortMount} />
                 )}
               </div>

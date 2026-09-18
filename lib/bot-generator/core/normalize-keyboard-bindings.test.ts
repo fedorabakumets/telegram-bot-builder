@@ -388,4 +388,36 @@ describe('normalizeKeyboardBindings', () => {
     assert.equal(message.data.enableDynamicButtons, true);
     assert.ok(message.data.dynamicButtons !== undefined, 'dynamicButtons должен быть перенесён');
   });
+
+  it('переносит клавиатуру на send_invoice и ставит pay первой', () => {
+    const nodes = [
+      {
+        id: 'inv_1',
+        type: 'send_invoice' as any,
+        position: { x: 0, y: 0 },
+        data: {
+          keyboardNodeId: 'kbd_1',
+          keyboardType: 'none',
+          buttons: [],
+          invoiceTitle: 'T',
+          invoiceDescription: 'D',
+          invoiceAmount: '1',
+        },
+      } as Node,
+      makeKeyboardNode('kbd_1', {
+        keyboardType: 'inline',
+        buttons: [
+          { id: 'c1', text: 'Отмена', action: 'goto', target: 'msg' },
+        ],
+      }),
+    ];
+
+    const normalized = normalizeKeyboardBindings(nodes, []);
+    const inv = normalized.find(node => node.id === 'inv_1') as Node;
+    const buttons = inv.data.buttons as any[];
+    assert.equal(inv.data.keyboardType, 'inline');
+    assert.ok(buttons.length >= 2);
+    assert.equal(buttons[0].action, 'pay');
+    assert.equal(buttons[1].text, 'Отмена');
+  });
 });

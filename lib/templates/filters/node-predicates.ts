@@ -255,6 +255,16 @@ export function hasGetManagedBotTokenNodes(nodes: Node[]): boolean {
 }
 
 /**
+ * Проверяет наличие узлов get_star_balance в массиве узлов
+ * @param nodes - Массив узлов для проверки
+ * @returns true если есть хотя бы один узел типа get_star_balance
+ */
+export function hasGetStarBalanceNodes(nodes: Node[]): boolean {
+  if (!nodes || nodes.length === 0) return false;
+  return nodes.filter(n => n != null).some(node => (node.type as string) === 'get_star_balance');
+}
+
+/**
  * Проверяет наличие узлов answer_callback_query в массиве узлов
  * @param nodes - Массив узлов для проверки
  * @returns true если есть хотя бы один узел типа answer_callback_query
@@ -354,6 +364,29 @@ export function hasBotTableNodes(nodes: Node[]): boolean {
  */
 export function hasDelayNodes(nodes: Node[]): boolean {
   return nodes.filter(n => n != null).some(node => (node.type as string) === 'delay');
+}
+
+/**
+ * Проверяет наличие узлов счёта в звёздах (чат или ссылка)
+ * @param nodes - Массив узлов
+ * @returns true, если есть send_invoice или create_invoice_link
+ */
+export function hasSendInvoiceNodes(nodes: Node[]): boolean {
+  return nodes.filter(n => n != null).some(node => {
+    const t = node.type as string;
+    return t === 'send_invoice' || t === 'create_invoice_link';
+  });
+}
+
+/**
+ * Проверяет наличие узлов successful_payment_trigger
+ * @param nodes - Массив узлов
+ * @returns true, если есть хотя бы один триггер успешной оплаты
+ */
+export function hasSuccessfulPaymentTriggerNodes(nodes: Node[]): boolean {
+  return nodes
+    .filter(n => n != null)
+    .some(node => (node.type as string) === 'successful_payment_trigger');
 }
 
 /**

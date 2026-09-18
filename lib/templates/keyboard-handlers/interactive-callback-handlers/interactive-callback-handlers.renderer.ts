@@ -40,6 +40,12 @@ const NODE_TYPES_WITH_DEDICATED_HANDLERS = new Set<string>([
   'answer_callback_query', // собственный обработчик генерируется шаблоном answer-callback-query.py.jinja2
   'bot_table', // собственный обработчик генерируется шаблоном bot-table.py.jinja2
   'delay', // собственный обработчик генерируется шаблоном delay.py.jinja2
+  'send_invoice', // собственный обработчик генерируется шаблоном send-invoice.py.jinja2
+  'create_invoice_link', // createInvoiceLink в send-invoice.py.jinja2
+  'successful_payment_trigger', // роутер в send-invoice.py.jinja2 (fallback после счёта)
+  'refund_stars', // собственный обработчик генерируется шаблоном refund-stars.py.jinja2
+  'edit_star_subscription', // editUserStarSubscription
+  'get_star_balance', // getMyStarBalance
   'stop_processing', // собственный обработчик генерируется шаблоном stop-processing.py.jinja2
   'rate_counter', // собственный обработчик генерируется шаблоном rate-counter.py.jinja2
   'code', // собственный обработчик генерируется шаблоном code.py.jinja2

@@ -10,6 +10,7 @@ import { keyboardParamsSchema } from './keyboard.schema';
 import { renderPartialTemplate } from '../template-renderer';
 import { normalizeDynamicButtonsConfig, shouldUseDynamicButtons } from './dynamic-buttons';
 import { buildStaticRowsAroundDynamic } from './keyboard-layout-rows';
+import { resolveSelectionMarkSymbols } from './selection-mark-symbols';
 
 /** Специальный ID виртуального ряда динамических кнопок */
 const DYNAMIC_PLACEHOLDER = '__dynamic__';
@@ -162,8 +163,10 @@ export function generateKeyboard(params: KeyboardTemplateParams): string {
   }
 
   const adjustStr = computeAdjustStr(params.keyboardLayout);
+  const marks = resolveSelectionMarkSymbols(params);
   const withSortedButtons = {
     ...params,
+    ...marks,
     keyboardType: useDynamicButtons ? 'inline' : params.keyboardType,
     buttons: sortedButtons,
     dynamicButtons: dynamicButtons ?? undefined,

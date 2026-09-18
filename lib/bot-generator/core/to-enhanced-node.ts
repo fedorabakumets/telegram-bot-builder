@@ -44,6 +44,11 @@ function normalizeButtons(buttons: any[]): Button[] {
     suggestedBotName: btn.suggestedBotName,
     /** Предложенный username для создаваемого управляемого бота (Bot API 9.6) */
     suggestedBotUsername: btn.suggestedBotUsername,
+    /**
+     * Группа радиовыбора для selection при multi-select
+     * (одинаковое значение = один выбор, префиксы 🔘/⚪️)
+     */
+    selectionGroup: typeof btn.selectionGroup === 'string' ? btn.selectionGroup : undefined,
   }));
 }
 

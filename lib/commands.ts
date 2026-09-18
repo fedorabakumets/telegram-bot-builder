@@ -138,42 +138,93 @@ export const COMMAND_CATEGORIES = {
   admin: 'Администрирование'
 };
 
-// Валидация команды
+/**
+ * Латинские команды из стандартного списка Telegram (для list_commands / подсказок).
+ * Свои команды тоже только латиница (a-z, 0-9, _) — ограничение Bot API / setMyCommands.
+ */
+export const LATIN_TELEGRAM_COMMANDS = new Set<string>([
+  ...STANDARD_COMMANDS.map((c) => c.command.toLowerCase()),
+  '/paysupport',
+  '/terms',
+]);
+
+/**
+ * Проверяет, что строка команды подходит для setMyCommands (только a-z0-9_)
+ * @param command - Команда с ведущим `/` или без
+ * @returns true, если Telegram примет команду в меню
+ */
+export function isLatinMenuCommand(command: string): boolean {
+  const bare = command.replace(/^\//, '').toLowerCase();
+  return /^[a-z][a-z0-9_]{0,31}$/.test(bare);
+}
+
+/**
+ * Проверяет, есть ли в команде кириллица
+ * @param command - Текст команды
+ * @returns true при наличии русских букв
+ */
+export function hasCyrillicInCommand(command: string): boolean {
+  return /[а-яёА-ЯЁ]/.test(command);
+}
+
+/**
+ * Валидация текста команды бота
+ * Telegram Bot API: только латинские a-z, цифры и `_` (1–32 символа после `/`).
+ * Кириллица в командах запрещена. Описание (description) может быть на русском.
+ * @param command - Текст команды с `/`
+ * @returns Результат валидации и список ошибок
+ */
 export function validateCommand(command: string): { isValid: boolean; errors: string[] } {
   const errors: string[] = [];
-  
+
   if (!command) {
     errors.push('Команда не может быть пустой');
     return { isValid: false, errors };
   }
-  
+
   if (!command.startsWith('/')) {
     errors.push('Команда должна начинаться с символа "/"');
   }
-  
+
   if (command.length < 2) {
     errors.push('Команда должна содержать хотя бы один символ после "/"');
   }
-  
-  if (command.length > 32) {
-    errors.push('Команда не может быть длиннее 32 символов');
+
+  if (command.length > 33) {
+    errors.push('Команда не может быть длиннее 32 символов после "/"');
   }
-  
-  // Проверка на допустимые символы
-  const validPattern = /^\/[a-zA-Z][a-zA-Z0-9_]*$/;
-  if (!validPattern.test(command)) {
-    errors.push('Команда может содержать только латинские буквы, цифры и подчёркивания');
+
+  if (hasCyrillicInCommand(command)) {
+    errors.push(
+      'Команды только на английском (латиница): /buy, /refund. Кириллица недопустима (/купить нельзя)',
+    );
   }
-  
-  // Проверка на зарезервированные команды Telegram
-  const reservedCommands = ['/newbot', '/mybots', '/setname', '/setdescription', '/setabouttext', '/setuserpic', '/setinline', '/setjoingroups', '/setprivacy'];
-  if (reservedCommands.includes(command.toLowerCase())) {
+
+  const lower = command.toLowerCase();
+  if (!isLatinMenuCommand(command) && command.startsWith('/') && !hasCyrillicInCommand(command)) {
+    errors.push(
+      'Команда: / + латиница a-z, цифры и _; начинается с буквы (например /buy, /my_shop)',
+    );
+  }
+
+  const reservedCommands = [
+    '/newbot',
+    '/mybots',
+    '/setname',
+    '/setdescription',
+    '/setabouttext',
+    '/setuserpic',
+    '/setinline',
+    '/setjoingroups',
+    '/setprivacy',
+  ];
+  if (reservedCommands.includes(lower)) {
     errors.push('Эта команда зарезервирована системой Telegram');
   }
-  
+
   return {
     isValid: errors.length === 0,
-    errors
+    errors,
   };
 }
 

@@ -1,0 +1,99 @@
+{#
+  Общие поля _invoice_kwargs после title/description/payload/provider/currency.
+  Ожидает: entry с priceLines, photo*, need*, tips, providerData; _all_vars; _currency; _photo_url уже задан.
+  Режим: set invoice_kind = 'send' | 'link'
+#}
+    _price_items = []
+{% for pl in entry.priceLines %}
+    _pl_label = replace_variables_in_text({{ pl.label | tojson }}, _all_vars, {}) or {{ pl.label | tojson }}
+    _pl_amt_raw = replace_variables_in_text({{ pl.amount | tojson }}, _all_vars, {}) or "1"
+    try:
+        _pl_amt = int(float(str(_pl_amt_raw).strip()))
+    except (ValueError, TypeError):
+        _pl_amt = 1
+    if _pl_amt < 1:
+        _pl_amt = 1
+    _price_items.append(LabeledPrice(label=str(_pl_label)[:128] or _currency, amount=_pl_amt))
+{% endfor %}
+    if not _price_items:
+        _price_items = [LabeledPrice(label=_currency, amount=1)]
+    if _currency == "XTR" and len(_price_items) > 1:
+        _price_items = _price_items[:1]
+    _invoice_kwargs["prices"] = _price_items
+    _amount = sum(p.amount for p in _price_items)
+
+    if _photo_url:
+        _invoice_kwargs["photo_url"] = _photo_url
+    elif str(_all_vars.get("shop_need_photo") or "").lower() in ("1", "true", "yes"):
+        _invoice_kwargs["photo_url"] = str(_all_vars.get("shop_photo_url") or "https://cdn.pixabay.com/photo/2017/01/31/16/59/robot-2025475_640.png")
+{% if entry.photoSize %}
+    try:
+        _ps = int(float(str(replace_variables_in_text({{ entry.photoSize | tojson }}, _all_vars, {}) or "0")))
+        if _ps > 0:
+            _invoice_kwargs["photo_size"] = _ps
+    except (ValueError, TypeError):
+        pass
+{% endif %}
+{% if entry.photoWidth %}
+    try:
+        _pw = int(float(str(replace_variables_in_text({{ entry.photoWidth | tojson }}, _all_vars, {}) or "0")))
+        if _pw > 0:
+            _invoice_kwargs["photo_width"] = _pw
+    except (ValueError, TypeError):
+        pass
+{% endif %}
+{% if entry.photoHeight %}
+    try:
+        _ph = int(float(str(replace_variables_in_text({{ entry.photoHeight | tojson }}, _all_vars, {}) or "0")))
+        if _ph > 0:
+            _invoice_kwargs["photo_height"] = _ph
+    except (ValueError, TypeError):
+        pass
+{% endif %}
+{% if entry.providerData %}
+    _pd = replace_variables_in_text({{ entry.providerData | tojson }}, _all_vars, {})
+    if str(_pd or "").strip():
+        _invoice_kwargs["provider_data"] = str(_pd)
+{% endif %}
+    if _currency != "XTR":
+{% if entry.needName %}
+        _invoice_kwargs["need_name"] = True
+{% endif %}
+{% if entry.needEmail %}
+        _invoice_kwargs["need_email"] = True
+{% endif %}
+{% if entry.needPhone %}
+        _invoice_kwargs["need_phone_number"] = True
+{% endif %}
+{% if entry.needShipping %}
+        _invoice_kwargs["need_shipping_address"] = True
+{% endif %}
+{% if entry.isFlexible %}
+        _invoice_kwargs["is_flexible"] = True
+{% endif %}
+{% if entry.sendPhoneToProvider %}
+        _invoice_kwargs["send_phone_number_to_provider"] = True
+{% endif %}
+{% if entry.sendEmailToProvider %}
+        _invoice_kwargs["send_email_to_provider"] = True
+{% endif %}
+{% if entry.maxTipAmount %}
+        try:
+            _tip_max = int(float(str(replace_variables_in_text({{ entry.maxTipAmount | tojson }}, _all_vars, {}) or "0")))
+            if _tip_max > 0:
+                _invoice_kwargs["max_tip_amount"] = _tip_max
+{% if entry.suggestedTipAmounts and entry.suggestedTipAmounts|length > 0 %}
+                _invoice_kwargs["suggested_tip_amounts"] = {{ entry.suggestedTipAmounts | tojson }}
+{% endif %}
+        except (ValueError, TypeError):
+            pass
+{% endif %}
+        if str(_all_vars.get("shop_need_name") or "").lower() in ("1", "true", "yes"):
+            _invoice_kwargs["need_name"] = True
+        if str(_all_vars.get("shop_need_email") or "").lower() in ("1", "true", "yes"):
+            _invoice_kwargs["need_email"] = True
+        if str(_all_vars.get("shop_need_phone") or "").lower() in ("1", "true", "yes"):
+            _invoice_kwargs["need_phone_number"] = True
+        if str(_all_vars.get("shop_need_shipping") or "").lower() in ("1", "true", "yes"):
+            _invoice_kwargs["need_shipping_address"] = True
+        pass

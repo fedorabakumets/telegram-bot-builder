@@ -28,6 +28,7 @@ import { CallbackTriggerConfiguration } from '../trigger/CallbackTriggerConfigur
 import { IncomingCallbackTriggerConfiguration } from '../trigger/IncomingCallbackTriggerConfiguration';
 import { OutgoingMessageTriggerConfiguration } from '../trigger/OutgoingMessageTriggerConfiguration';
 import { ManagedBotUpdatedTriggerConfiguration } from '../trigger/ManagedBotUpdatedTriggerConfiguration';
+import { SuccessfulPaymentTriggerConfiguration } from '../trigger/SuccessfulPaymentTriggerConfiguration';
 import { MemberTriggerConfiguration } from '../trigger/MemberTriggerConfiguration';
 import { ScheduleTriggerConfiguration } from '../trigger/ScheduleTriggerConfiguration';
 import { ApiTriggerConfiguration } from '../trigger/ApiTriggerConfiguration';
@@ -77,6 +78,11 @@ import { ConvertFileConfiguration } from '../configuration/ConvertFileConfigurat
 import { BotTableConfiguration } from '../configuration/BotTableConfiguration';
 import { LoopConfiguration } from '../configuration/LoopConfiguration';
 import { DelayConfiguration } from '../configuration/delay-configuration';
+import { SendInvoiceConfiguration } from '../configuration/send-invoice-configuration';
+import { CreateInvoiceLinkConfiguration } from '../configuration/create-invoice-link-configuration';
+import { RefundStarsConfiguration } from '../configuration/refund-stars-configuration';
+import { EditStarSubscriptionConfiguration } from '../configuration/edit-star-subscription-configuration';
+import { GetStarBalanceConfiguration } from '../configuration/get-star-balance-configuration';
 import { StopProcessingConfiguration } from '../configuration/stop-processing-configuration';
 import { RateCounterConfiguration } from '../configuration/rate-counter-configuration';
 import { CodeConfiguration } from '../configuration/code-configuration';
@@ -449,7 +455,7 @@ export function PropertiesPanel({
         <div className="space-y-0">
 
           {/* Basic Settings Section - СЃРєСЂС‹С‚Рѕ РґР»СЏ СѓР·Р»Р° СЂР°СЃСЃС‹Р»РєР°, client_auth, С‚СЂРёРіРіРµСЂРѕРІ, СѓСЃР»РѕРІРёСЏ Рё РјРµРґРёР°-РЅРѕРґС‹ */}
-          {selectedNode.type !== 'broadcast' && selectedNode.type !== 'client_auth' && selectedNode.type !== 'media' && (selectedNode.type as any) !== 'http_request' && (selectedNode.type as any) !== 'api_response' && (selectedNode.type as any) !== 'get_managed_bot_token' && (selectedNode.type as any) !== 'answer_callback_query' && (selectedNode.type as any) !== 'edit_message' && (selectedNode.type as any) !== 'delete_message' && (selectedNode.type as any) !== 'kick_user' && (selectedNode.type as any) !== 'set_variable' && (selectedNode.type as any) !== 'psql_query' && (selectedNode.type as any) !== 'convert_file' && (selectedNode.type as any) !== 'loop' && (selectedNode.type as any) !== 'bot_table' && (selectedNode.type as any) !== 'delay' && (selectedNode.type as any) !== 'code' && (selectedNode.type as any) !== 'userbot_message' && (selectedNode.type as any) !== 'userbot_click_button' && (selectedNode.type as any) !== 'userbot_inline_query' && (selectedNode.type as any) !== 'parallel_split' && (selectedNode.type as any) !== 'stop_processing' && (selectedNode.type as any) !== 'rate_counter' && (selectedNode.type as any) !== 'comment' && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && (
+          {selectedNode.type !== 'broadcast' && selectedNode.type !== 'client_auth' && selectedNode.type !== 'media' && (selectedNode.type as any) !== 'http_request' && (selectedNode.type as any) !== 'api_response' && (selectedNode.type as any) !== 'get_managed_bot_token' && (selectedNode.type as any) !== 'answer_callback_query' && (selectedNode.type as any) !== 'edit_message' && (selectedNode.type as any) !== 'delete_message' && (selectedNode.type as any) !== 'kick_user' && (selectedNode.type as any) !== 'set_variable' && (selectedNode.type as any) !== 'psql_query' && (selectedNode.type as any) !== 'convert_file' && (selectedNode.type as any) !== 'loop' && (selectedNode.type as any) !== 'bot_table' && (selectedNode.type as any) !== 'delay' && (selectedNode.type as any) !== 'send_invoice' && (selectedNode.type as any) !== 'create_invoice_link' && (selectedNode.type as any) !== 'refund_stars' && (selectedNode.type as any) !== 'edit_star_subscription' && (selectedNode.type as any) !== 'get_star_balance' && (selectedNode.type as any) !== 'code' && (selectedNode.type as any) !== 'userbot_message' && (selectedNode.type as any) !== 'userbot_click_button' && (selectedNode.type as any) !== 'userbot_inline_query' && (selectedNode.type as any) !== 'parallel_split' && (selectedNode.type as any) !== 'stop_processing' && (selectedNode.type as any) !== 'rate_counter' && (selectedNode.type as any) !== 'comment' && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && (
             <BasicSettingsSection
               selectedNode={selectedNode}
               projectId={projectId}
@@ -686,6 +692,62 @@ export function PropertiesPanel({
             <DelayConfiguration selectedNode={selectedNode} onNodeUpdate={onNodeUpdate} textVariables={textVariables as Variable[]} />
           )}
 
+          {/* Send Invoice Section */}
+          {(selectedNode.type as any) === 'send_invoice' && (
+            <SendInvoiceConfiguration
+              selectedNode={selectedNode}
+              projectId={projectId}
+              onNodeUpdate={onNodeUpdate}
+              getAllNodesFromAllSheets={getAllNodesFromAllSheets}
+              formatNodeDisplay={formatNodeDisplay}
+              textVariables={textVariables as Variable[]}
+              envVariables={envVariablesForNode}
+            />
+          )}
+
+          {(selectedNode.type as any) === 'create_invoice_link' && (
+            <CreateInvoiceLinkConfiguration
+              selectedNode={selectedNode}
+              projectId={projectId}
+              onNodeUpdate={onNodeUpdate}
+              getAllNodesFromAllSheets={getAllNodesFromAllSheets}
+              formatNodeDisplay={formatNodeDisplay}
+              textVariables={textVariables as Variable[]}
+              envVariables={envVariablesForNode}
+            />
+          )}
+
+          {/* Refund Stars Section */}
+          {(selectedNode.type as any) === 'refund_stars' && (
+            <RefundStarsConfiguration
+              selectedNode={selectedNode}
+              onNodeUpdate={onNodeUpdate}
+              getAllNodesFromAllSheets={getAllNodesFromAllSheets}
+              formatNodeDisplay={formatNodeDisplay}
+              textVariables={textVariables as Variable[]}
+            />
+          )}
+
+          {(selectedNode.type as any) === 'edit_star_subscription' && (
+            <EditStarSubscriptionConfiguration
+              selectedNode={selectedNode}
+              onNodeUpdate={onNodeUpdate}
+              getAllNodesFromAllSheets={getAllNodesFromAllSheets}
+              formatNodeDisplay={formatNodeDisplay}
+              textVariables={textVariables as Variable[]}
+            />
+          )}
+
+          {(selectedNode.type as any) === 'get_star_balance' && (
+            <GetStarBalanceConfiguration
+              selectedNode={selectedNode}
+              onNodeUpdate={onNodeUpdate}
+              getAllNodesFromAllSheets={getAllNodesFromAllSheets}
+              formatNodeDisplay={formatNodeDisplay}
+              textVariables={textVariables as Variable[]}
+            />
+          )}
+
           {(selectedNode.type as any) === 'stop_processing' && (
             <StopProcessingConfiguration selectedNode={selectedNode} />
           )}
@@ -801,6 +863,7 @@ export function PropertiesPanel({
               onNodeUpdate={onNodeUpdate}
               getAllNodesFromAllSheets={getAllNodesFromAllSheets}
               formatNodeDisplay={formatNodeDisplay}
+              textVariables={textVariables as Variable[]}
             />
           )}
           {isTriggerNode(selectedNode.type) && selectedNode.type === 'text_trigger' && (
@@ -851,6 +914,14 @@ export function PropertiesPanel({
           )}
           {isTriggerNode(selectedNode.type) && (selectedNode.type as any) === 'managed_bot_updated_trigger' && (
             <ManagedBotUpdatedTriggerConfiguration
+              selectedNode={selectedNode}
+              onNodeUpdate={onNodeUpdate}
+              getAllNodesFromAllSheets={getAllNodesFromAllSheets}
+              formatNodeDisplay={formatNodeDisplay}
+            />
+          )}
+          {isTriggerNode(selectedNode.type) && (selectedNode.type as any) === 'successful_payment_trigger' && (
+            <SuccessfulPaymentTriggerConfiguration
               selectedNode={selectedNode}
               onNodeUpdate={onNodeUpdate}
               getAllNodesFromAllSheets={getAllNodesFromAllSheets}

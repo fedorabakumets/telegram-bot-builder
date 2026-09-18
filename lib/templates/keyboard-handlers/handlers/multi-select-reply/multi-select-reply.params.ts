@@ -111,6 +111,8 @@ export interface MultiSelectReplyNode {
   messageText?: string;
   /** Целевой узел для continueButtonTarget */
   targetNode?: TargetNode;
+  /** Символ выбранной галочки */
+  checkmarkSymbol?: string;
 }
 
 /** Параметры для генерации обработчика multi-select reply */

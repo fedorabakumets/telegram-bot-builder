@@ -62,6 +62,8 @@ const multiSelectDoneNodeSchema = z.object({
   // --- Идентификация ---
   /** ID узла */
   id: z.string(),
+  /** Короткий ID для callback done_<shortNodeId> */
+  shortNodeId: z.string().optional(),
   /** Имя переменной для хранения выборов */
   variableName: z.string(),
 
@@ -70,7 +72,7 @@ const multiSelectDoneNodeSchema = z.object({
   continueButtonTarget: z.string().optional(),
   /** Целевой узел */
   targetNode: targetNodeSchema.optional(),
-});
+}).passthrough();
 
 /** Схема для валидации параметров multi-select done */
 export const multiSelectDoneParamsSchema = z.object({

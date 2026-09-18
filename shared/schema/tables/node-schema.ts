@@ -64,7 +64,7 @@ export const nodeSchema = z.object({
    * @deprecated Canonical content node is `message`.
    * `start` and `command` are kept only for backward compatibility with legacy projects.
    */
-  type: z.enum(['start', 'message', 'command', 'command_trigger', 'text_trigger', 'incoming_message_trigger', 'incoming_callback_trigger', 'outgoing_message_trigger', 'group_message_trigger', 'member_trigger', 'callback_trigger', 'managed_bot_updated_trigger', 'schedule_trigger', 'api_trigger', 'sticker', 'voice', 'animation', 'location', 'contact', 'pin_message', 'unpin_message', 'delete_message', 'forward_message', 'ban_user', 'unban_user', 'mute_user', 'unmute_user', 'kick_user', 'promote_user', 'demote_user', 'admin_rights', 'photo', 'video', 'audio', 'document', 'keyboard', 'input', 'condition', 'broadcast', 'client_auth', 'media', 'create_forum_topic', 'http_request', 'get_managed_bot_token', 'answer_callback_query', 'edit_message', 'set_variable', 'psql_query', 'convert_file', 'loop', 'bot_table', 'delay', 'api_response', 'userbot_message', 'userbot_click_button', 'userbot_inline_query', 'userbot_edit_trigger', 'parallel_split', 'stop_processing', 'rate_counter', 'code', 'comment']),
+  type: z.enum(['start', 'message', 'command', 'command_trigger', 'text_trigger', 'incoming_message_trigger', 'incoming_callback_trigger', 'outgoing_message_trigger', 'group_message_trigger', 'member_trigger', 'callback_trigger', 'managed_bot_updated_trigger', 'schedule_trigger', 'api_trigger', 'sticker', 'voice', 'animation', 'location', 'contact', 'pin_message', 'unpin_message', 'delete_message', 'forward_message', 'ban_user', 'unban_user', 'mute_user', 'unmute_user', 'kick_user', 'promote_user', 'demote_user', 'admin_rights', 'photo', 'video', 'audio', 'document', 'keyboard', 'input', 'condition', 'broadcast', 'client_auth', 'media', 'create_forum_topic', 'http_request', 'get_managed_bot_token', 'answer_callback_query', 'edit_message', 'set_variable', 'psql_query', 'convert_file', 'loop', 'bot_table', 'delay', 'api_response', 'userbot_message', 'userbot_click_button', 'userbot_inline_query', 'userbot_edit_trigger', 'parallel_split', 'stop_processing', 'rate_counter', 'code', 'comment', 'send_invoice', 'create_invoice_link', 'refund_stars', 'edit_star_subscription', 'get_star_balance', 'successful_payment_trigger']),
   /** Позиция узла на холсте */
   position: z.object({
     /** Координата X */
@@ -141,6 +141,8 @@ export const nodeSchema = z.object({
     requiresAuth: z.boolean().default(false),
     /** Показывать команду в меню бота */
     showInMenu: z.boolean().default(true),
+    /** Имя переменной для аргументов команды (после пробела); пусто = не сохранять */
+    saveCommandArgsTo: z.string().optional().default(''),
     /** Таймаут выполнения команды в секундах */
     commandTimeout: z.number().optional(),
     /** Время задержки между повторными вызовами в секундах */
@@ -453,10 +455,14 @@ export const nodeSchema = z.object({
     name: z.string().optional(),
     /** Метка для отображения */
     label: z.string().optional(),
-    /** Символ галочки для выбранных элементов */
+    /** Символ галочки для выбранных элементов (selection без группы) */
     checkmarkSymbol: z.string().optional(),
     /** Символ галочки для множественного выбора */
     multiSelectCheckmark: z.string().optional(),
+    /** Символ выбранной кнопки в радиогруппе (selectionGroup) */
+    radioSelectedSymbol: z.string().optional(),
+    /** Символ невыбранной кнопки в радиогруппе (selectionGroup) */
+    radioUnselectedSymbol: z.string().optional(),
     /** Длительность ограничения в секундах (для mute_user) */
     duration: z.number().optional(),
     /** Длительность мута в секундах */
@@ -832,6 +838,135 @@ export const nodeSchema = z.object({
       /** Значение заголовка */
       value: z.string(),
     })).default([]).optional(),
+    /** Название товара в счёте (1–32 знака) */
+    invoiceTitle: z.string().optional().default(''),
+    /** Описание товара в счёте (1–255 знаков) */
+    invoiceDescription: z.string().optional().default(''),
+    /** Цена (звёзды или минимальные единицы валюты; целое или {переменная}); fallback если invoicePrices пуст */
+    invoiceAmount: z.string().optional().default('1'),
+    /** Несколько строк LabeledPrice; пусто → одна строка из invoiceAmount */
+    invoicePrices: z.array(z.object({
+      /** ID строки в UI */
+      id: z.string(),
+      /** Подпись позиции (LabeledPrice.label) */
+      label: z.string(),
+      /** Сумма в минорных единицах или {переменная} */
+      amount: z.string(),
+    })).optional().default([]),
+    /** Валюта счёта: XTR или ISO 4217 из Bot Payments */
+    invoiceCurrency: z.string().optional().default('XTR'),
+    /** Источник provider_token при фиате: inline | env */
+    invoiceProviderSource: z.string().optional().default('inline'),
+    /** Токен провайдера, если invoiceProviderSource=inline */
+    invoiceProviderToken: z.string().optional().default(''),
+    /** Имя env-ключа токена, если invoiceProviderSource=env */
+    invoiceProviderTokenEnv: z.string().optional().default('PAYMENT_PROVIDER_TOKEN'),
+    /** Запросить имя покупателя (фиат, need_name) */
+    invoiceNeedName: z.boolean().optional().default(false),
+    /** Запросить email (фиат, need_email) */
+    invoiceNeedEmail: z.boolean().optional().default(false),
+    /** Запросить телефон (фиат, need_phone_number) */
+    invoiceNeedPhone: z.boolean().optional().default(false),
+    /** Запросить адрес доставки (фиат, need_shipping_address) */
+    invoiceNeedShipping: z.boolean().optional().default(false),
+    /** Цена зависит от доставки (фиат, is_flexible) */
+    invoiceIsFlexible: z.boolean().optional().default(false),
+    /** Передать телефон провайдеру (фиат) */
+    invoiceSendPhoneToProvider: z.boolean().optional().default(false),
+    /** Передать email провайдеру (фиат) */
+    invoiceSendEmailToProvider: z.boolean().optional().default(false),
+    /** Защита контента счёта (sendInvoice.protect_content) */
+    invoiceProtectContent: z.boolean().optional().default(false),
+    /** Макс. чаевые в минорных единицах (фиат); пусто = не слать */
+    invoiceMaxTipAmount: z.string().optional().default(''),
+    /** Предложенные чаевые через запятую, напр. "10,20,50" */
+    invoiceSuggestedTipAmounts: z.string().optional().default(''),
+    /** JSON для провайдера (provider_data), допускает {переменные} */
+    invoiceProviderData: z.string().optional().default(''),
+    /** Deep-link start_parameter при пересылке счёта */
+    invoiceStartParameter: z.string().optional().default(''),
+    /** Подписка на 30 дней (только create_invoice_link + XTR; у send_invoice Telegram запрещает) */
+    invoiceSubscription: z.boolean().optional().default(false),
+    /** URL картинки товара (необязательно) */
+    invoicePhotoUrl: z.string().optional().default(''),
+    /** Размер фото в байтах (photo_size) */
+    invoicePhotoSize: z.string().optional().default(''),
+    /** Ширина фото (photo_width) */
+    invoicePhotoWidth: z.string().optional().default(''),
+    /** Высота фото (photo_height) */
+    invoicePhotoHeight: z.string().optional().default(''),
+    /** ID темы форума (message_thread_id), пусто = обычный чат */
+    invoiceMessageThreadId: z.string().optional().default(''),
+    /** ID топика direct messages */
+    invoiceDirectMessagesTopicId: z.string().optional().default(''),
+    /** Тихая отправка счёта */
+    invoiceDisableNotification: z.boolean().optional().default(false),
+    /** message_id сообщения для reply_to */
+    invoiceReplyToMessageId: z.string().optional().default(''),
+    /** ID эффекта сообщения (личка) */
+    invoiceMessageEffectId: z.string().optional().default(''),
+    /** Платный broadcast (allow_paid_broadcast) */
+    invoiceAllowPaidBroadcast: z.boolean().optional().default(false),
+    /** JSON suggested_post_parameters */
+    invoiceSuggestedPostParams: z.string().optional().default(''),
+    /** Скрытая метка покупки; пусто = id узла */
+    invoicePayload: z.string().optional().default(''),
+    /** Переменная для сохранения суммы оплаты */
+    savePaymentAmountTo: z.string().optional().default(''),
+    /** Переменная для сохранения кода покупки */
+    savePaymentChargeIdTo: z.string().optional().default(''),
+    /** Переменная для order_info.name после оплаты */
+    saveOrderNameTo: z.string().optional().default(''),
+    /** Переменная для order_info.email после оплаты */
+    saveOrderEmailTo: z.string().optional().default(''),
+    /** Переменная для order_info.phone_number после оплаты */
+    saveOrderPhoneTo: z.string().optional().default(''),
+    /** Переменная для URL ссылки на счёт (create_invoice_link) */
+    saveInvoiceLinkTo: z.string().optional().default(''),
+    /** ID узла после оплаты по ссылке (create_invoice_link) */
+    afterPaymentTo: z.string().optional().default(''),
+    /** Источник user_id для возврата: current_user | custom */
+    refundUserSource: z.string().optional().default('current_user'),
+    /** ID пользователя или {переменная} при refundUserSource=custom */
+    refundUserId: z.string().optional().default(''),
+    /** Код покупки (telegram_payment_charge_id), допускает {переменные} */
+    refundChargeId: z.string().optional().default(''),
+    /** Не прерывать сценарий при ошибке возврата */
+    ignoreErrors: z.boolean().optional().default(false),
+    /** Сообщение, если код покупки пустой */
+    refundMsgEmpty: z.string().optional().default('Пожалуйста, укажите код покупки: /back КОД'),
+    /** Сообщение, если код не найден (CHARGE_NOT_FOUND и прочие) */
+    refundMsgNotFound: z.string().optional().default('Такой код покупки не найден. Проверьте данные и попробуйте снова.'),
+    /** Сообщение, если возврат уже был (CHARGE_ALREADY_REFUNDED) */
+    refundMsgAlreadyRefunded: z.string().optional().default('За эту покупку уже ранее был произведён возврат.'),
+    /** Выход «Пустой код» */
+    refundEmptyTarget: z.string().optional().default(''),
+    /** Выход «Код не найден» */
+    refundNotFoundTarget: z.string().optional().default(''),
+    /** Выход «Уже возвращён» */
+    refundAlreadyRefundedTarget: z.string().optional().default(''),
+    /** Источник user_id для управления подпиской: current_user | custom */
+    subscriptionUserSource: z.string().optional().default('current_user'),
+    /** ID пользователя или {переменная} при subscriptionUserSource=custom */
+    subscriptionUserId: z.string().optional().default(''),
+    /** Код покупки подписки (telegram_payment_charge_id) */
+    subscriptionChargeId: z.string().optional().default(''),
+    /** Действие: cancel | enable → is_canceled True/False */
+    subscriptionAction: z.string().optional().default('cancel'),
+    /** Сообщение при пустом коде подписки */
+    subscriptionMsgEmpty: z.string().optional().default('Укажите код покупки подписки'),
+    /** Сообщение при ошибке API управления подпиской */
+    subscriptionMsgError: z.string().optional().default('Не удалось изменить автопродление. Проверьте код покупки.'),
+    /** Выход «Пустой код» */
+    subscriptionEmptyTarget: z.string().optional().default(''),
+    /** Выход «Ошибка» */
+    subscriptionErrorTarget: z.string().optional().default(''),
+    /** Переменная для целого баланса звёзд бота (get_star_balance) */
+    saveStarBalanceTo: z.string().optional().default('star_balance'),
+    /** Текст при ошибке getMyStarBalance */
+    balanceMsgError: z.string().optional().default('Не удалось получить баланс звёзд'),
+    /** Выход «Ошибка» get_star_balance */
+    balanceErrorTarget: z.string().optional().default(''),
   }),
 });
 

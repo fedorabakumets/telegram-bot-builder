@@ -37,6 +37,8 @@ export interface ImportsTemplateParams {
   hasUserbotNodes?: boolean;
   /** Есть ли узлы rate_counter (нужен deque и time) */
   hasRateCounterNodes?: boolean;
+  /** Есть ли узлы send_invoice (нужен LabeledPrice) */
+  hasSendInvoiceNodes?: boolean;
   /** Есть ли таймаут ожидания ввода или сбор ответов */
   hasInputTimeoutNodes?: boolean;
 }

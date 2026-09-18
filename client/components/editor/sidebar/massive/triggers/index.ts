@@ -14,3 +14,4 @@ export { callbackTrigger } from './callback-trigger';
 export { incomingCallbackTrigger } from './incoming-callback-trigger';
 export { outgoingMessageTrigger } from './outgoing-message-trigger';
 export { memberTrigger } from './member-trigger';
+export { successfulPaymentTrigger } from './successful-payment-trigger';

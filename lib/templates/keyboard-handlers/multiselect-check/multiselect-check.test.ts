@@ -66,7 +66,7 @@ describe('generateMultiSelectCheck()', () => {
   describe('кнопки выбора (selection)', () => {
     it('генерирует проверку clean_user_input', () => {
       const r = generateMultiSelectCheck(validParamsWithMultiSelect);
-      assert.ok(r.includes('clean_user_input = user_input.replace("✅ ", "").strip()'));
+      assert.ok(r.includes('clean_user_input = user_input.replace("✅ ", "").strip()') || r.includes("clean_user_input = user_input.replace(\"✅ \", \"\").strip()"));
     });
 
     it('генерирует toggle логику', () => {

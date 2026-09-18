@@ -25,6 +25,9 @@ const SIMPLE_REF_FIELDS = [
   'sourceNodeId',
   'keyboardNodeId',
   'sourceMessageNodeId',
+  'refundEmptyTarget',
+  'refundNotFoundTarget',
+  'refundAlreadyRefundedTarget',
 ] as const;
 
 /**

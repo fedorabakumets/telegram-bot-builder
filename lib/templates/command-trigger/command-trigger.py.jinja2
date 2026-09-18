@@ -14,6 +14,7 @@
     - deepLinkParam: str      — параметр deep link, например "ref" или "ref_"
     - deepLinkSaveToVar: bool — сохранять значение в переменную
     - deepLinkVarName: str    — имя переменной для сохранения
+    - saveCommandArgsTo: str  — переменная для аргументов команды (после пробела)
 #}
 
 {# Единый роутер deep link — регистрируется ПЕРВЫМ чтобы иметь приоритет над CommandStart(deep_link=False) #}
@@ -209,7 +210,7 @@ async def start_command_handler(message: types.Message, state: FSMContext = None
 {%- if cmd != 'start' %}
 
 @dp.message(Command("{{ cmd }}"))
-async def command_trigger_{{ sanitized_node_id }}_handler(message: types.Message, state: FSMContext = None):
+async def command_trigger_{{ sanitized_node_id }}_handler(message: types.Message, command: CommandObject, state: FSMContext = None):
     user_id = message.from_user.id
     await capture_message_context(user_id, message)
     logging.info(f"Пользователь {user_id} вызвал команду '{{ entry.command }}' — триггер узла {{ entry.nodeId }}")
@@ -222,6 +223,10 @@ async def command_trigger_{{ sanitized_node_id }}_handler(message: types.Message
     if not await check_auth(user_id):
         await message.answer("❌ Сначала запустите бота: /start")
         return
+    {%- endif %}
+    {%- if entry.saveCommandArgsTo %}
+    await set_user_var(user_id, "{{ entry.saveCommandArgsTo }}", command.args or "")
+    logging.info(f"Аргументы команды '{{ entry.command }}' → {{ entry.saveCommandArgsTo }}={command.args!r}")
     {%- endif %}
 
     class MockCallback:

@@ -10,7 +10,7 @@
  * - button-goto (синий пунктир) — переход по inline-кнопке
  * - input-target (фиолетовый пунктир) — переход после ввода пользователя
  * - trigger-next (жёлтый сплошной) — переход из узла command_trigger
- * - keyboard-link (янтарный пунктир) — привязка message → keyboard
+ * - keyboard-link (янтарный пунктир) — привязка message/send_invoice → keyboard
  * - forward-source (янтарно-оранжевый пунктир) — привязка источника для forward_message
  *
  * При наведении на линию появляется кнопка удаления соединения.
@@ -24,6 +24,11 @@ import {
   KEYBOARD_LINK_PORT_TYPE,
   getKeyboardNodeId,
 } from './keyboard-connection';
+import {
+  findInvoiceHostForKeyboard,
+  findPayButtonOnKeyboard,
+  invoiceUsesPayButtonVisual,
+} from '@/components/editor/properties/utils/invoice-pay-connection';
 
 /** Размер SVG-холста — достаточно большой чтобы покрыть любой граф */
 const SVG_SIZE = 20000;
@@ -196,7 +201,7 @@ function buildSmartPath(
   toH: number,
   fromPortOffset?: { x: number; y: number },
 ): string {
-  const isTrigger = fromNode.type === 'command_trigger' || fromNode.type === 'text_trigger' || fromNode.type === 'incoming_message_trigger' || fromNode.type === 'group_message_trigger' || (fromNode.type as any) === 'member_trigger' || (fromNode.type as any) === 'callback_trigger' || (fromNode.type as any) === 'incoming_callback_trigger' || (fromNode.type as any) === 'outgoing_message_trigger' || (fromNode.type as any) === 'managed_bot_updated_trigger' || (fromNode.type as any) === 'schedule_trigger' || (fromNode.type as any) === 'api_trigger' || (fromNode.type as any) === 'userbot_edit_trigger';
+  const isTrigger = fromNode.type === 'command_trigger' || fromNode.type === 'text_trigger' || fromNode.type === 'incoming_message_trigger' || fromNode.type === 'group_message_trigger' || (fromNode.type as any) === 'member_trigger' || (fromNode.type as any) === 'callback_trigger' || (fromNode.type as any) === 'incoming_callback_trigger' || (fromNode.type as any) === 'outgoing_message_trigger' || (fromNode.type as any) === 'managed_bot_updated_trigger' || (fromNode.type as any) === 'successful_payment_trigger' || (fromNode.type as any) === 'schedule_trigger' || (fromNode.type as any) === 'api_trigger' || (fromNode.type as any) === 'userbot_edit_trigger';
   const xOffset = isTrigger ? TRIGGER_PORT_X_OFFSET : PORT_X_OFFSET;
 
   // Если передан offset порта кнопки — используем его, иначе правый край + центр узла
@@ -227,8 +232,18 @@ export function collectConnections(nodes: Node[]): Connection[] {
   const existingIds = new Set(nodes.map(n => n.id));
 
   nodes.forEach(node => {
-    // 1. Автопереход (исключаем loop — у него свои порты в пункте 10)
-    if (node.data?.enableAutoTransition && node.data?.autoTransitionTo && (node.type as any) !== 'loop') {
+    // 1. Автопереход (исключаем loop / refund_stars / create_invoice_link — свои порты ниже;
+    //    send_invoice с клавиатурой pay — линия от кнопки, не от счёта)
+    if (
+      node.data?.enableAutoTransition
+      && node.data?.autoTransitionTo
+      && (node.type as any) !== 'loop'
+      && (node.type as any) !== 'refund_stars'
+      && (node.type as any) !== 'edit_star_subscription'
+      && (node.type as any) !== 'get_star_balance'
+      && (node.type as any) !== 'create_invoice_link'
+      && !((node.type as string) === 'send_invoice' && invoiceUsesPayButtonVisual(node, nodes))
+    ) {
       const toId = node.data.autoTransitionTo as string;
       const targetNode = nodes.find((candidate) => candidate.id === toId);
       const isLegacyForwardSourceLink =
@@ -260,6 +275,34 @@ export function collectConnections(nodes: Node[]): Connection[] {
       }
     });
 
+    // 2.1 Кнопка «Оплатить» у клавиатуры счёта → autoTransitionTo счёта
+    // Достаточно autoTransitionTo (как у триггеров); enableAutoTransition выставляем в UI, но не блокируем стрелку
+    if (node.type === 'keyboard') {
+      const payBtn = findPayButtonOnKeyboard(node);
+      const invoiceHost = findInvoiceHostForKeyboard(node.id, nodes);
+      const payTarget = invoiceHost?.data?.autoTransitionTo
+        ? String(invoiceHost.data.autoTransitionTo).trim()
+        : '';
+      if (payBtn && payTarget && existingIds.has(payTarget)) {
+        const alreadyExists = connections.some(
+          (c) =>
+            c.fromId === node.id
+            && c.toId === payTarget
+            && c.type === 'button-goto'
+            && c.buttonId === payBtn.id,
+        );
+        if (!alreadyExists) {
+          connections.push({
+            fromId: node.id,
+            toId: payTarget,
+            type: 'button-goto',
+            label: payBtn.text || 'Оплатить',
+            buttonId: payBtn.id,
+          });
+        }
+      }
+    }
+
     // 3. Input target — куда идёт после ввода пользователя
     const inputTargetNodeId = (node.data as any)?.inputTargetNodeId
       || (node.type === 'input' ? (node.data as any)?.autoTransitionTo : undefined);
@@ -272,7 +315,7 @@ export function collectConnections(nodes: Node[]): Connection[] {
     }
 
     // 4. Соединение триггера команды, текстового триггера или триггера входящего сообщения с целевым узлом
-    if ((node.type === 'command_trigger' || node.type === 'text_trigger' || node.type === 'incoming_message_trigger' || node.type === 'group_message_trigger' || (node.type as any) === 'member_trigger' || (node.type as any) === 'callback_trigger' || (node.type as any) === 'incoming_callback_trigger' || (node.type as any) === 'outgoing_message_trigger' || (node.type as any) === 'managed_bot_updated_trigger' || (node.type as any) === 'schedule_trigger' || (node.type as any) === 'api_trigger' || (node.type as any) === 'userbot_edit_trigger') && node.data?.autoTransitionTo) {
+    if ((node.type === 'command_trigger' || node.type === 'text_trigger' || node.type === 'incoming_message_trigger' || node.type === 'group_message_trigger' || (node.type as any) === 'member_trigger' || (node.type as any) === 'callback_trigger' || (node.type as any) === 'incoming_callback_trigger' || (node.type as any) === 'outgoing_message_trigger' || (node.type as any) === 'managed_bot_updated_trigger' || (node.type as any) === 'successful_payment_trigger' || (node.type as any) === 'schedule_trigger' || (node.type as any) === 'api_trigger' || (node.type as any) === 'userbot_edit_trigger') && node.data?.autoTransitionTo) {
       const toId = node.data.autoTransitionTo as string;
       if (existingIds.has(toId)) {
         connections.push({ fromId: node.id, toId, type: 'trigger-next' });
@@ -339,8 +382,8 @@ export function collectConnections(nodes: Node[]): Connection[] {
       }
     }
 
-    // 8. Отдельная клавиатура у message-узла
-    if (node.type === 'message') {
+    // 8. Отдельная клавиатура у message / send_invoice
+    if (node.type === 'message' || (node.type as any) === 'send_invoice') {
       const keyboardNodeId = getKeyboardNodeId(node.data);
       const keyboardNode = keyboardNodeId ? nodes.find(n => n.id === keyboardNodeId && n.type === 'keyboard') : null;
       if (keyboardNode) {
@@ -379,6 +422,97 @@ export function collectConnections(nodes: Node[]): Connection[] {
         });
       }
     }
+
+    // 11. Выходы узла refund_stars
+    if ((node.type as any) === 'refund_stars') {
+      const d = node.data as any;
+      const refundPorts: Array<{ field: string; buttonId: string; label: string }> = [
+        { field: 'autoTransitionTo', buttonId: 'refund-success', label: 'Успех' },
+        { field: 'refundEmptyTarget', buttonId: 'refund-empty', label: 'Пустой код' },
+        { field: 'refundNotFoundTarget', buttonId: 'refund-not-found', label: 'Код не найден' },
+        {
+          field: 'refundAlreadyRefundedTarget',
+          buttonId: 'refund-already',
+          label: 'Уже возвращён',
+        },
+      ];
+      for (const port of refundPorts) {
+        const toId = d?.[port.field] as string | undefined;
+        if (toId && existingIds.has(toId)) {
+          connections.push({
+            fromId: node.id,
+            toId,
+            type: 'button-goto',
+            label: port.label,
+            buttonId: port.buttonId,
+          });
+        }
+      }
+    }
+
+    // 11b. Выходы edit_star_subscription
+    if ((node.type as any) === 'edit_star_subscription') {
+      const d = node.data as any;
+      const subPorts: Array<{ field: string; buttonId: string; label: string }> = [
+        { field: 'autoTransitionTo', buttonId: 'sub-success', label: 'Успех' },
+        { field: 'subscriptionEmptyTarget', buttonId: 'sub-empty', label: 'Пустой код' },
+        { field: 'subscriptionErrorTarget', buttonId: 'sub-error', label: 'Ошибка' },
+      ];
+      for (const port of subPorts) {
+        const toId = d?.[port.field] as string | undefined;
+        if (toId && existingIds.has(toId)) {
+          connections.push({
+            fromId: node.id,
+            toId,
+            type: 'button-goto',
+            label: port.label,
+            buttonId: port.buttonId,
+          });
+        }
+      }
+    }
+
+    // 11c. Выходы get_star_balance
+    if ((node.type as any) === 'get_star_balance') {
+      const d = node.data as any;
+      const balPorts: Array<{ field: string; buttonId: string; label: string }> = [
+        { field: 'autoTransitionTo', buttonId: 'bal-success', label: 'Успех' },
+        { field: 'balanceErrorTarget', buttonId: 'bal-error', label: 'Ошибка' },
+      ];
+      for (const port of balPorts) {
+        const toId = d?.[port.field] as string | undefined;
+        if (toId && existingIds.has(toId)) {
+          connections.push({
+            fromId: node.id,
+            toId,
+            type: 'button-goto',
+            label: port.label,
+            buttonId: port.buttonId,
+          });
+        }
+      }
+    }
+
+    // 12. Выходы create_invoice_link
+    if ((node.type as any) === 'create_invoice_link') {
+      const d = node.data as any;
+      const linkPorts: Array<{ field: string; buttonId: string; label: string }> = [
+        { field: 'autoTransitionTo', buttonId: 'invoice-link-created', label: 'Ссылка готова' },
+        { field: 'afterPaymentTo', buttonId: 'invoice-link-after-pay', label: 'После оплаты' },
+      ];
+      for (const port of linkPorts) {
+        const toId = d?.[port.field] as string | undefined;
+        if (toId && existingIds.has(toId)) {
+          connections.push({
+            fromId: node.id,
+            toId,
+            type: 'button-goto',
+            label: port.label,
+            buttonId: port.buttonId,
+          });
+        }
+      }
+    }
   });
 
   return connections;
@@ -387,18 +521,18 @@ export function collectConnections(nodes: Node[]): Connection[] {
 export function isConnectionRenderable(
   connection: Connection,
   nodeSizes: Map<string, NodeSize>,
-  buttonPortYOffsets?: Map<string, { x: number; y: number }>,
+  _buttonPortYOffsets?: Map<string, { x: number; y: number }>,
 ): boolean {
-  const { fromId, toId, type, buttonId } = connection;
+  const { fromId, toId } = connection;
 
   if (!nodeSizes.has(fromId) || !nodeSizes.has(toId)) {
     return false;
   }
 
-  if (type === 'button-goto' && buttonId && !buttonPortYOffsets?.has(buttonId)) {
-    return false;
-  }
-
+  /**
+   * Offset порта кнопки опционален: без него buildSmartPath рисует от центра узла.
+   * Раньше button-goto без замера скрывался — стрелка «после оплаты» не появлялась.
+   */
   return true;
 }
 

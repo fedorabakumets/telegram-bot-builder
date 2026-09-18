@@ -375,6 +375,16 @@ test('E02', 'userDatabaseEnabled: true → ЕСТЬ INSERT INTO bot_messages', (
   ok(code.includes('INSERT INTO bot_messages'), 'INSERT INTO bot_messages должен быть в коде');
 });
 
+test('E02b', 'userDatabaseEnabled: true → ЕСТЬ INSERT INTO message_activity_daily', () => {
+  const code = genDB(makeSimpleProject(), 'e02b');
+  ok(code.includes('INSERT INTO message_activity_daily'), 'message_activity_daily должен обновляться из бота');
+});
+
+test('E02c', 'userDatabaseEnabled: true → ЕСТЬ INSERT INTO user_activity_daily', () => {
+  const code = genDB(makeSimpleProject(), 'e02c');
+  ok(code.includes('INSERT INTO user_activity_daily'), 'user_activity_daily должен обновляться из бота');
+});
+
 test('E03', 'userDatabaseEnabled: true → ЕСТЬ PROJECT_ID в INSERT', () => {
   const code = genDB(makeSimpleProject(), 'e03');
   ok(code.includes('PROJECT_ID'), 'PROJECT_ID должен быть в коде');

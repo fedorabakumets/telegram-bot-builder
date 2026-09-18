@@ -15,7 +15,8 @@ export interface NodeWithSheet {
 
 /**
  * Получает все узлы из всех листов проекта.
- * Используется для межлистовых соединений и проверки дубликатов.
+ * Для текущего листа предпочитает живой массив `allNodes` (актуальные data),
+ * чтобы селекторы целей и стрелки на холсте не смотрели в устаревший sheet.nodes.
  * @param {any[]} allSheets - Все листы проекта
  * @param {Node[]} allNodes - Узлы текущего листа
  * @param {string} currentSheetId - ID текущего листа
@@ -30,17 +31,17 @@ export function collectAllNodesFromSheets(
 
   if (allSheets && allSheets.length > 0) {
     allSheets.forEach((sheet: any) => {
-      if (sheet.nodes) {
-        sheet.nodes.forEach((node: Node) => {
-          /** Пустой id ломает Radix Select: value="" запрещён */
-          if (!node?.id) return;
-          allNodesFromSheets.push({
-            node,
-            sheetId: sheet.id,
-            sheetName: sheet.name
-          });
+      const useLive = Boolean(currentSheetId && sheet.id === currentSheetId);
+      const sheetNodes: Node[] = useLive ? allNodes : (sheet.nodes || []);
+      sheetNodes.forEach((node: Node) => {
+        /** Пустой id ломает Radix Select: value="" запрещён */
+        if (!node?.id) return;
+        allNodesFromSheets.push({
+          node,
+          sheetId: sheet.id,
+          sheetName: sheet.name
         });
-      }
+      });
     });
   } else {
     allNodes.forEach((node: Node) => {

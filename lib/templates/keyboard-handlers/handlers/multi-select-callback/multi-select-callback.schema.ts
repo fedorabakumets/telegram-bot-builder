@@ -25,6 +25,8 @@ const multiSelectButtonSchema = z.object({
   escapedText: z.string(),
   /** Pre-computed callback_data */
   callbackData: z.string(),
+  /** Группа радиовыбора (пусто = обычная галочка) */
+  selectionGroup: z.string().optional(),
 });
 
 /** Схема для обычной кнопки */
@@ -47,6 +49,8 @@ const completeButtonSchema = z.object({
   text: z.string(),
   /** Target для перехода */
   target: z.string(),
+  /** Визуальный стиль кнопки */
+  style: z.enum(['primary', 'success', 'danger']).optional(),
 });
 
 /** Схема для узла multi-select */
@@ -76,6 +80,14 @@ const multiSelectNodeSchema = z.object({
   adjustCode: z.string().optional(),
   /** Общее количество кнопок */
   totalButtonsCount: z.number().optional(),
+  /** Имя переменной multi-select */
+  variableName: z.string().optional(),
+  /** Символ выбранной галочки */
+  checkmarkSymbol: z.string().optional().default('✅'),
+  /** Символ выбранного радио */
+  radioSelectedSymbol: z.string().optional().default('🔘'),
+  /** Символ невыбранного радио */
+  radioUnselectedSymbol: z.string().optional().default('⚪️'),
 });
 
 /** Схема для валидации параметров multi-select callback */

@@ -17,6 +17,7 @@
   @param {boolean} hasBotCommands - Есть ли команды для BotCommand (нужен BotCommand)
   @param {boolean} hasHttpRequestNodes - Есть ли узлы HTTP запросов (нужен aiohttp)
   @param {boolean} hasDeepLinkTriggers - Есть ли deep link триггеры (нужен CommandObject)
+  @param {boolean} hasSendInvoiceNodes - Есть ли счета в звёздах (нужен LabeledPrice)
 #}
 
 import asyncio
@@ -97,4 +98,8 @@ logging.getLogger('telethon').setLevel(logging.WARNING)
 {%- if hasRateCounterNodes %}
 from collections import deque
 import time
+{%- endif %}
+
+{%- if hasSendInvoiceNodes %}
+from aiogram.types import LabeledPrice
 {%- endif %}

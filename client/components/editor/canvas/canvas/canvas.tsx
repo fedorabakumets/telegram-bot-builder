@@ -23,6 +23,12 @@ import { useMoveNodesToProject } from './use-move-nodes-to-project';
 import { MarqueeOverlay } from './marquee-overlay';
 import { MultiSelectionToolbar } from './multi-selection-toolbar';
 import { clearKeyboardNodeId, setKeyboardNodeId } from '../canvas-node/keyboard-connection';
+import { ensureInvoicePayButton } from '@/components/editor/properties/utils/invoice-pay-button';
+import { buildInvoiceWithPayKeyboard } from '@/components/editor/properties/utils/create-invoice-with-keyboard';
+import {
+  findInvoiceHostForKeyboard,
+  findPayButtonOnKeyboard,
+} from '@/components/editor/properties/utils/invoice-pay-connection';
 import { PortType } from '../canvas-node/port-colors';
 import { getCanvasViewportMetrics, screenPointToCanvasPoint } from './utils/canvas-coordinate-utils';
 import { collectCrossSheetLinks, collectIncomingCrossSheetLinks } from './utils/collect-cross-sheet-links';
@@ -509,8 +515,24 @@ export function Canvas({
       existingSourceMode !== 'variable' &&
       (!existingSourceNodeId || existingSourceNodeId === sourceNodeId);
 
+    /** Связь от кнопки «Оплатить» → цель после оплаты на send_invoice */
+    let invoicePayHostId: string | null = null;
+    if (portType === 'button-goto' && buttonId && sourceNode?.type === 'keyboard') {
+      const payBtn = findPayButtonOnKeyboard(sourceNode);
+      const host = findInvoiceHostForKeyboard(sourceNode.id, nodes);
+      if (payBtn?.id === buttonId && host) {
+        invoicePayHostId = host.id;
+      }
+    }
+
     const updatedNodes = nodes.map((n) => {
       const data = { ...n.data } as Record<string, unknown>;
+
+      if (invoicePayHostId && n.id === invoicePayHostId) {
+        data.autoTransitionTo = targetNodeId;
+        data.enableAutoTransition = true;
+        return { ...n, data };
+      }
 
       if (n.id === sourceNodeId) {
         if (isForwardMessageSourceLink) {
@@ -523,7 +545,11 @@ export function Canvas({
            * При дропе на keyboard создаём привязку клавиатуры,
            * а при дропе на любой другой узел — обычный переход.
            */
-          if (portType === 'auto-transition' && sourceNode?.type === 'message' && targetNode?.type === 'keyboard') {
+          if (
+            portType === 'auto-transition'
+            && (sourceNode?.type === 'message' || (sourceNode?.type as string) === 'send_invoice')
+            && targetNode?.type === 'keyboard'
+          ) {
             return { ...n, data: setKeyboardNodeId(data, targetNodeId) as unknown as Node['data'] };
           }
 
@@ -535,6 +561,75 @@ export function Canvas({
         }
 
         if (portType === 'button-goto' && buttonId) {
+          /** Фиксированные порты refund_stars */
+          if ((n.type as any) === 'refund_stars') {
+            if (buttonId === 'refund-success') {
+              data.autoTransitionTo = targetNodeId;
+              data.enableAutoTransition = true;
+              return { ...n, data };
+            }
+            if (buttonId === 'refund-empty') {
+              data.refundEmptyTarget = targetNodeId;
+              return { ...n, data };
+            }
+            if (buttonId === 'refund-not-found') {
+              data.refundNotFoundTarget = targetNodeId;
+              return { ...n, data };
+            }
+            if (buttonId === 'refund-already') {
+              data.refundAlreadyRefundedTarget = targetNodeId;
+              return { ...n, data };
+            }
+          }
+
+          /** Порты edit_star_subscription */
+          if ((n.type as any) === 'edit_star_subscription') {
+            if (buttonId === 'sub-success') {
+              data.autoTransitionTo = targetNodeId;
+              data.enableAutoTransition = true;
+              return { ...n, data };
+            }
+            if (buttonId === 'sub-empty') {
+              data.subscriptionEmptyTarget = targetNodeId;
+              return { ...n, data };
+            }
+            if (buttonId === 'sub-error') {
+              data.subscriptionErrorTarget = targetNodeId;
+              return { ...n, data };
+            }
+          }
+
+          /** Порты get_star_balance */
+          if ((n.type as any) === 'get_star_balance') {
+            if (buttonId === 'bal-success') {
+              data.autoTransitionTo = targetNodeId;
+              data.enableAutoTransition = true;
+              return { ...n, data };
+            }
+            if (buttonId === 'bal-error') {
+              data.balanceErrorTarget = targetNodeId;
+              return { ...n, data };
+            }
+          }
+
+          /** Порты create_invoice_link */
+          if ((n.type as any) === 'create_invoice_link') {
+            if (buttonId === 'invoice-link-created') {
+              data.autoTransitionTo = targetNodeId;
+              data.enableAutoTransition = true;
+              return { ...n, data };
+            }
+            if (buttonId === 'invoice-link-after-pay') {
+              data.afterPaymentTo = targetNodeId;
+              return { ...n, data };
+            }
+          }
+
+          /** pay у счёта — не пишем target на кнопку, host уже обновлён выше */
+          if (invoicePayHostId) {
+            return n;
+          }
+
           const buttons = (data.buttons as any[] | undefined) ?? [];
           data.buttons = buttons.map((btn: any) =>
             btn.id === buttonId ? { ...btn, target: targetNodeId } : btn
@@ -577,6 +672,23 @@ export function Canvas({
         };
       }
 
+      /** При привязке счёта к клавиатуре — кнопка «Оплатить» и только inline */
+      if (
+        n.id === targetNodeId
+        && n.type === 'keyboard'
+        && (sourceNode?.type as string) === 'send_invoice'
+        && portType === 'auto-transition'
+      ) {
+        return {
+          ...n,
+          data: {
+            ...data,
+            keyboardType: 'inline',
+            buttons: ensureInvoicePayButton(data.buttons as any),
+          } as Node['data'],
+        };
+      }
+
       return n;
     }) as Node[];
 
@@ -595,8 +707,24 @@ export function Canvas({
       return;
     }
 
+    const sourceForDelete = nodes.find((n) => n.id === fromId);
+    let clearInvoicePayHostId: string | null = null;
+    if (type === 'button-goto' && sourceForDelete?.type === 'keyboard') {
+      const payBtn = findPayButtonOnKeyboard(sourceForDelete);
+      const host = findInvoiceHostForKeyboard(fromId, nodes);
+      if (payBtn && host && (host.data as any)?.autoTransitionTo === toId) {
+        clearInvoicePayHostId = host.id;
+      }
+    }
+
     const updatedNodes = nodes.map(n => {
       const data = { ...n.data } as Record<string, unknown>;
+
+      if (clearInvoicePayHostId && n.id === clearInvoicePayHostId) {
+        data.enableAutoTransition = false;
+        delete data.autoTransitionTo;
+        return { ...n, data };
+      }
 
       if (n.id === fromId) {
         if (type === 'trigger-next') {
@@ -605,6 +733,43 @@ export function Canvas({
           data.enableAutoTransition = false;
           delete data.autoTransitionTo;
         } else if (type === 'button-goto') {
+          /** Сброс выходов refund_stars по целевому id */
+          if ((n.type as any) === 'refund_stars') {
+            if (data.autoTransitionTo === toId) {
+              data.enableAutoTransition = false;
+              delete data.autoTransitionTo;
+            }
+            if (data.refundEmptyTarget === toId) delete data.refundEmptyTarget;
+            if (data.refundNotFoundTarget === toId) delete data.refundNotFoundTarget;
+            if (data.refundAlreadyRefundedTarget === toId) {
+              delete data.refundAlreadyRefundedTarget;
+            }
+          }
+          if ((n.type as any) === 'edit_star_subscription') {
+            if (data.autoTransitionTo === toId) {
+              data.enableAutoTransition = false;
+              delete data.autoTransitionTo;
+            }
+            if (data.subscriptionEmptyTarget === toId) delete data.subscriptionEmptyTarget;
+            if (data.subscriptionErrorTarget === toId) delete data.subscriptionErrorTarget;
+          }
+          if ((n.type as any) === 'get_star_balance') {
+            if (data.autoTransitionTo === toId) {
+              data.enableAutoTransition = false;
+              delete data.autoTransitionTo;
+            }
+            if (data.balanceErrorTarget === toId) delete data.balanceErrorTarget;
+          }
+          if ((n.type as any) === 'create_invoice_link') {
+            if (data.autoTransitionTo === toId) {
+              data.enableAutoTransition = false;
+              delete data.autoTransitionTo;
+            }
+            if (data.afterPaymentTo === toId) delete data.afterPaymentTo;
+          }
+          if (clearInvoicePayHostId) {
+            return n;
+          }
           const buttons = (data.buttons as any[] | undefined) ?? [];
           data.buttons = buttons.map((btn: any) =>
             btn.action === 'goto' && btn.target === toId ? { ...btn, target: undefined } : btn
@@ -1328,6 +1493,20 @@ export function Canvas({
       (clonedData as any).buttons = (clonedData as any).buttons.map((btn: any) => ({ ...btn, id: generateButtonId() }));
     }
 
+    /** Счёт — сразу с соседней клавиатурой «Оплатить» */
+    if ((component.type as string) === 'send_invoice') {
+      const { invoice, keyboard } = buildInvoiceWithPayKeyboard(
+        nanoid(),
+        nanoid(),
+        nodePosition,
+        clonedData as Record<string, unknown>,
+      );
+      addAction('add', 'Добавлен счёт со клавиатурой «Оплатить»');
+      onNodeAdd(invoice);
+      onNodeAdd(keyboard);
+      return;
+    }
+
     const newNode: Node = {
       id: nanoid(),
       type: component.type,
@@ -1382,6 +1561,20 @@ export function Canvas({
     );
     if (Array.isArray((clonedTouchData as any).buttons)) {
       (clonedTouchData as any).buttons = (clonedTouchData as any).buttons.map((btn: any) => ({ ...btn, id: generateButtonId() }));
+    }
+
+    /** Счёт — сразу с соседней клавиатурой «Оплатить» */
+    if ((component.type as string) === 'send_invoice') {
+      const { invoice, keyboard } = buildInvoiceWithPayKeyboard(
+        nanoid(),
+        nanoid(),
+        nodePosition,
+        clonedTouchData as Record<string, unknown>,
+      );
+      addAction('add', 'Добавлен счёт со клавиатурой «Оплатить»');
+      onNodeAdd(invoice);
+      onNodeAdd(keyboard);
+      return;
     }
 
     const newNode: Node = {

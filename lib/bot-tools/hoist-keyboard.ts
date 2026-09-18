@@ -1,11 +1,11 @@
 /**
- * @fileoverview Авто-нормализация (вынос) инлайн/reply-клавиатур message-нод в отдельные keyboard-ноды.
+ * @fileoverview Авто-нормализация (вынос) инлайн/reply-клавиатур host-нод в отдельные keyboard-ноды.
  * @description Серверно-авторитетный порт клиентской миграции
  * `migrateMessageKeyboardsToNodes` (client/.../utils/migrate-message-keyboards.ts),
  * очищенный от React/DOM-зависимостей. Используется в lib-мутациях project.json
  * (addNodeToProject / updateNodeInProject), чтобы MCP-путь записи приводил кнопки
- * message к каноничной модели: сами кнопки живут в отдельной keyboard-ноде, а
- * message ссылается на неё через keyboardNodeId. Идемпотентна: повторный вызов не
+ * message/send_invoice к каноничной модели: сами кнопки живут в отдельной keyboard-ноде, а
+ * host ссылается на неё через keyboardNodeId. Идемпотентна: повторный вызов не
  * плодит дубли keyboard-нод.
  * @module lib/bot-tools/hoist-keyboard
  */
@@ -103,16 +103,19 @@ function shouldHoist(data: Record<string, unknown>): boolean {
   return hasButtons && isHoistableType;
 }
 
+/** Типы узлов, у которых кнопки выносятся в отдельный keyboard */
+const HOISTABLE_HOST_TYPES = new Set(['message', 'send_invoice']);
+
 /**
- * Выносит встроенные инлайн/reply-кнопки message-нод в отдельные keyboard-ноды.
+ * Выносит встроенные инлайн/reply-кнопки message/send_invoice в отдельные keyboard-ноды.
  *
  * Правила (идемпотентно):
- * - обрабатываются только message-ноды с непустыми buttons и keyboardType ∈ {inline, reply};
+ * - обрабатываются host-ноды с непустыми buttons и keyboardType ∈ {inline, reply};
  * - если у ноды уже есть привязанная keyboard-нода (по keyboardNodeId и нода существует) — пропуск;
  * - если keyboardNodeId указан, но keyboard-ноды нет — переиспользуем этот id;
  * - keyboard-нода создаётся со смещением +360 по x; в неё переносятся buttons/keyboardType
  *   и прочие keyboard-поля (TRANSFERRED_KEYBOARD_KEYS);
- * - в message проставляется keyboardType:'none', buttons:[], keyboardNodeId:<id>, а
+ * - в host проставляется keyboardType:'none', buttons:[], keyboardNodeId:<id>, а
  *   перенесённые keyboard-поля удаляются.
  * @param nodes - Список нод листа
  * @returns Новый список нод с вынесенными keyboard-нодами
@@ -126,7 +129,7 @@ export function hoistMessageKeyboards(nodes: Node[]): Node[] {
 
   for (let index = 0; index < workingNodes.length; index += 1) {
     const node = workingNodes[index];
-    if (node.type !== 'message') continue;
+    if (!HOISTABLE_HOST_TYPES.has(node.type as string)) continue;
 
     const nodeData = node.data as Record<string, unknown>;
     if (!shouldHoist(nodeData)) continue;
@@ -161,16 +164,16 @@ export function hoistMessageKeyboards(nodes: Node[]): Node[] {
       data: keyboardData as Node['data'],
     };
 
-    const nextMessageData: Record<string, unknown> = { ...nodeData, keyboardNodeId };
+    const nextHostData: Record<string, unknown> = { ...nodeData, keyboardNodeId };
     for (const key of TRANSFERRED_KEYBOARD_KEYS) {
-      delete nextMessageData[key];
+      delete nextHostData[key];
     }
-    nextMessageData.keyboardType = 'none';
-    nextMessageData.buttons = [];
+    nextHostData.keyboardType = 'none';
+    nextHostData.buttons = [];
 
     workingNodes[index] = {
       ...node,
-      data: nextMessageData as Node['data'],
+      data: nextHostData as Node['data'],
     };
     appendedNodes.push(keyboardNode);
   }

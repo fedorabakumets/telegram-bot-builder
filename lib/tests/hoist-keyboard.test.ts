@@ -64,6 +64,28 @@ test('hoistMessageKeyboards не трогает message без кнопок и �
   assert.equal(result.length, 1, 'новых нод не появилось');
 });
 
+test('hoistMessageKeyboards выносит кнопки send_invoice в keyboard', () => {
+  const invoice: Node = {
+    id: 'inv1',
+    type: 'send_invoice' as Node['type'],
+    position: { x: 50, y: 80 },
+    data: {
+      invoiceTitle: 'Товар',
+      keyboardType: 'inline',
+      buttons: [{ id: 'pay1', text: 'Оплатить ⭐', action: 'pay' }],
+    },
+  } as unknown as Node;
+  const result = hoistMessageKeyboards([invoice]);
+  assert.equal(result.length, 2);
+  const host = result.find((n) => n.id === 'inv1')!;
+  const hostData = host.data as Record<string, unknown>;
+  assert.equal(hostData.keyboardType, 'none');
+  assert.deepEqual(hostData.buttons, []);
+  const kb = result.find((n) => n.type === 'keyboard')!;
+  assert.equal(kb.id, hostData.keyboardNodeId);
+  assert.equal(((kb.data as any).buttons as unknown[]).length, 1);
+});
+
 test('валидация выдаёт неблокирующий warning inline_keyboard_will_hoist', () => {
   const project = {
     version: 2,

@@ -113,6 +113,8 @@ const multiSelectReplyNodeSchema = z.object({
   oneTimeKeyboard: z.boolean().optional(),
   /** Текст сообщения */
   messageText: z.string().optional(),
+  /** Символ выбранной галочки */
+  checkmarkSymbol: z.string().optional().default('✅'),
 });
 
 /** Схема для валидации параметров multi-select reply */

@@ -23,6 +23,8 @@ export interface MultiSelectButton {
   escapedText: string;
   /** Pre-computed callback_data */
   callbackData: string;
+  /** Группа радиовыбора (пусто = обычная галочка) */
+  selectionGroup?: string;
 }
 
 /** Обычная кнопка (не selection) */
@@ -45,6 +47,8 @@ export interface CompleteButton {
   text: string;
   /** Target для перехода */
   target: string;
+  /** Визуальный стиль кнопки (Bot API): primary / success / danger */
+  style?: 'primary' | 'success' | 'danger';
 }
 
 /** Раскладка клавиатуры */
@@ -79,6 +83,14 @@ export interface MultiSelectNode {
   adjustCode?: string;
   /** Общее количество кнопок */
   totalButtonsCount?: number;
+  /** Имя переменной multi-select */
+  variableName?: string;
+  /** Символ выбранной галочки */
+  checkmarkSymbol?: string;
+  /** Символ выбранного радио */
+  radioSelectedSymbol?: string;
+  /** Символ невыбранного радио */
+  radioUnselectedSymbol?: string;
 }
 
 /** Параметры для генерации обработчика multi-select callback */

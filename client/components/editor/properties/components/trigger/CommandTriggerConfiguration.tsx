@@ -23,7 +23,9 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { TriggerTargetSelector } from './TriggerTargetSelector';
 import { DeepLinkSection } from './DeepLinkSection';
+import { CommandArgsVariableField } from './command-args-variable-field';
 import { formatNodeDisplay as defaultFormatNodeDisplay } from '../../utils/node-formatters';
+import type { Variable } from '../../../inline-rich/types';
 
 /**
  * Пропсы компонента CommandTriggerConfiguration
@@ -37,6 +39,8 @@ interface CommandTriggerConfigurationProps {
   getAllNodesFromAllSheets?: Array<{ node: Node; sheetId?: string; sheetName?: string }>;
   /** Форматирование названия узла в селекторе */
   formatNodeDisplay?: (node: Node, sheetName?: string) => string;
+  /** Переменные проекта для селектора saveCommandArgsTo */
+  textVariables?: Variable[];
 }
 
 /**
@@ -55,6 +59,7 @@ export function CommandTriggerConfiguration({
   onNodeUpdate,
   getAllNodesFromAllSheets,
   formatNodeDisplay = defaultFormatNodeDisplay,
+  textVariables = [],
 }: CommandTriggerConfigurationProps) {
   const isStartCommand = selectedNode.data?.command === '/start';
 
@@ -88,6 +93,15 @@ export function CommandTriggerConfiguration({
           placeholder="Описание команды"
         />
       </div>
+
+      {/* Аргументы команды — не для /start (там deep link) */}
+      {!isStartCommand && (
+        <CommandArgsVariableField
+          value={(selectedNode.data as any)?.saveCommandArgsTo || ''}
+          availableVariables={textVariables}
+          onChange={(value) => onNodeUpdate(selectedNode.id, { saveCommandArgsTo: value })}
+        />
+      )}
 
       {/* Deep Link — только для команды /start */}
       {isStartCommand && (

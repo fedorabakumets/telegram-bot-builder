@@ -26,6 +26,8 @@ export interface MultiSelectNode {
     multiSelectVariable?: string;
     continueButtonText?: string;
     continueButtonTarget?: string;
+    /** Символ выбранной галочки */
+    checkmarkSymbol?: string;
   };
 }
 

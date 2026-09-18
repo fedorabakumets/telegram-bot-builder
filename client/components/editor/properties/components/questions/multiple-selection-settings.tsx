@@ -11,6 +11,7 @@ import { Node } from '@shared/schema';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { MultiSelectSymbolFields } from './multi-select-symbol-fields';
 
 /**
  * Пропсы компонента MultipleSelectionSettings
@@ -122,6 +123,13 @@ export function MultipleSelectionSettings({
             />
           </div>
         </div>
+      )}
+
+      {selectedNode.data.allowMultipleSelection && (
+        <MultiSelectSymbolFields
+          selectedNode={selectedNode}
+          onNodeUpdate={onNodeUpdate}
+        />
       )}
     </>
   );

@@ -3,8 +3,12 @@
 ## user_activity_daily
 
 Дневные отметки «этот человек был активен в этот день».  
-Ставятся при сохранении входящего сообщения (`message_type = user`);  
-удаление из bot_messages / bot_users их не уменьшает.
+Ставятся при сохранении входящего сообщения (`message_type = user`):
+в Python-боте (`save_message_to_api`) и в Node (`createBotMessage` → `markUserActivityDaily`).  
+Удаление из bot_messages / bot_users их не уменьшает.
+
+Миграция `0018_backfill_user_activity_daily.sql` при деплое дозаполняет
+дыры из входящих `bot_messages` (`ON CONFLICT DO NOTHING`) — на всех инстансах.
 
 Столбец `first_seen_at` — копия времени первого появления человека у бота  
 (из `bot_users.registered_at` или `NOW()`, если профиля ещё нет).  

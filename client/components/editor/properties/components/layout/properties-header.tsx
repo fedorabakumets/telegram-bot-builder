@@ -17,6 +17,7 @@ import { copyTextToClipboard } from '@/utils/copy-text';
 import { getNodeDefaults } from '../../utils/node-defaults';
 import { getNodeName, getNodeIcon, getNodeColor } from '../../../shared/node-registry';
 import { PropertiesViewToggle, type PropertiesView } from './properties-view-toggle';
+import { invoiceCurrencyIconClass } from '../configuration/invoice-currency-utils';
 
 /**
  * Пропсы компонента заголовка панели свойств
@@ -87,7 +88,11 @@ export function PropertiesHeader({
   };
 
   const nodeTitle = getNodeTitle();
-  const nodeIcon = getNodeIcon(selectedNode.type as string);
+  const nodeType = selectedNode.type as string;
+  const nodeIcon =
+    nodeType === 'send_invoice'
+      ? invoiceCurrencyIconClass((selectedNode.data as any)?.invoiceCurrency)
+      : getNodeIcon(nodeType);
   const nodeColor = getNodeColor(selectedNode.type as string);
 
   return (

@@ -108,6 +108,24 @@
 }
 ```
 
+**Команда (`command`):** только латиница `a-z`, цифры и `_` (Telegram Bot API): `/buy`, `/refund`. Кириллица запрещена (`/купить` нельзя). `description` — по-русски.
+
+**Аргументы:** поле `saveCommandArgsTo` — имя переменной для текста после команды. Пример: `/donate 777` → в `{donate_amount}` попадёт `777`.
+
+```json
+{
+  "type": "command_trigger",
+  "data": {
+    "command": "/donate",
+    "description": "Донат звёздами",
+    "saveCommandArgsTo": "donate_amount",
+    "autoTransitionTo": "check_amount"
+  }
+}
+```
+
+Цепочка: `command_trigger(/donate)` → `condition(between 1..2500 по donate_amount)` → `send_invoice(invoiceAmount: "{donate_amount}")`.
+
 ### Поля text_trigger
 
 ```json
@@ -1057,6 +1075,264 @@ parallel_split → ветка N: … → set_variable (done = int({done}) + 1, m
 }
 ```
 
+### send_invoice — выставить счёт
+
+Счёт в чат. Валюта `invoiceCurrency`: `XTR` (дефолт, `provider_token=""`) или любой ISO 4217 из [Supported Currencies](https://core.telegram.org/bots/payments#supported-currencies) (нужен токен провайдера). `autoTransitionTo` срабатывает **после оплаты**, не после `answer_invoice`. Ссылка на оплату — отдельный тип `create_invoice_link`.
+
+Токен при фиате: `invoiceProviderSource` = `inline` → `invoiceProviderToken` в data (удобно для теста; попадёт в project.json и код) или `env` → `os.getenv(invoiceProviderTokenEnv)` (рекомендуется для продакшена). Пустой токен при фиате — лог и сообщение пользователю, счёт не шлётся.
+
+Можно привязать узел `keyboard` через `keyboardNodeId` (как у `message`). Первая кнопка клавиатуры обязана быть `"action": "pay"` (текст вроде «Оплатить ⭐»). Остальные кнопки — обычные (`goto`, `url`…). **При добавлении с холста** рядом сразу создаётся `keyboard` с одной кнопкой pay. Через MCP встроенные кнопки на `send_invoice` выносятся в `keyboard` (hoist). Без клавиатуры Телеграм сам покажет оплату. Тип `pay` нельзя ставить на клавиатуры обычных сообщений.
+
+```json
+{
+  "type": "send_invoice",
+  "data": {
+    "invoiceTitle": "Доступ на месяц",
+    "invoiceDescription": "Оплата звёздами",
+    "invoiceAmount": "100",
+    "invoiceCurrency": "XTR",
+    "invoiceProviderSource": "inline",
+    "invoiceProviderToken": "",
+    "invoiceProviderTokenEnv": "PAYMENT_PROVIDER_TOKEN",
+    "invoicePhotoUrl": "",
+    "invoicePayload": "",
+    "invoiceNeedName": false,
+    "invoiceNeedEmail": false,
+    "invoiceNeedPhone": false,
+    "savePaymentAmountTo": "paid_stars",
+    "savePaymentChargeIdTo": "payment_charge_id",
+    "saveOrderNameTo": "",
+    "saveOrderEmailTo": "",
+    "saveOrderPhoneTo": "",
+    "autoTransitionTo": "msg_thanks",
+    "enableAutoTransition": true,
+    "keyboardNodeId": "kbd_invoice",
+    "keyboardType": "none",
+    "buttons": []
+  }
+}
+```
+
+Пример кнопок у связанной клавиатуры:
+
+```json
+{
+  "type": "keyboard",
+  "data": {
+    "keyboardType": "inline",
+    "buttons": [
+      { "id": "pay1", "text": "Оплатить ⭐", "action": "pay" },
+      { "id": "cancel1", "text": "Отмена", "action": "goto", "target": "msg_cancel" }
+    ]
+  }
+}
+```
+
+| Поле | Описание |
+|------|----------|
+| `invoiceTitle` | Название, 1–32 |
+| `invoiceDescription` | Описание, 1–255 |
+| `invoiceAmount` | Fallback цены, если `invoicePrices` пуст; XTR — целые звёзды; фиат — минорные единицы; `{переменные}` |
+| `invoicePrices` | Массив `{ id, label, amount }` → несколько `LabeledPrice`; пусто = одна строка из `invoiceAmount`. Для **XTR** в API ровно одна позиция |
+| `invoiceCurrency` | `XTR` или код из Bot Payments (EUR, RUB, USD, GBP, UAH, …); также `{переменная}` — код подставится в runtime |
+| `invoiceProviderSource` | `inline` \| `env` (игнор при XTR) |
+| `invoiceProviderToken` | Токен в ноде при `inline` |
+| `invoiceProviderTokenEnv` | Имя env-ключа при `env` (дефолт `PAYMENT_PROVIDER_TOKEN`) |
+| `invoicePhotoUrl` | Картинка: `https://…`, `/uploads/…` или `{var}`; для uploads бот склеит с `API_BASE_URL` |
+| `invoicePhotoSize` / `Width` / `Height` | Опциональные размеры фото для API |
+| `invoicePayload` | Скрытая метка; пусто = id узла |
+| `invoiceProtectContent` | `protect_content` на этом счёте |
+| `invoiceStartParameter` | `start_parameter` (deep-link) |
+| `invoiceNeedName` / `Email` / `Phone` | Запросить имя/email/телефон (**только фиат**) |
+| `invoiceNeedShipping` / `invoiceIsFlexible` | Адрес доставки / гибкая цена (**только фиат**; плюс runtime `shop_need_shipping`) |
+| `invoiceMaxTipAmount` / `invoiceSuggestedTipAmounts` | Чаевые: число и строка `"10,20,50"` → массив (**только фиат**) |
+| `invoiceProviderData` | Сырой `provider_data` (+ `{переменные}`) |
+| `invoiceSendPhoneToProvider` / `SendEmailToProvider` | Передать контакты провайдеру (**только фиат**) |
+| `invoiceMessageThreadId` / `invoiceDirectMessagesTopicId` | Тема форума / DM-топик (супергруппа) |
+| `invoiceDisableNotification` / `invoiceReplyToMessageId` | Тихая отправка / ответ на message_id |
+| `invoiceMessageEffectId` / `invoiceAllowPaidBroadcast` | Эффект в ЛС / платный broadcast |
+| `invoiceSuggestedPostParams` | JSON для `suggested_post_parameters` |
+| `savePaymentAmountTo` | Куда сохранить сумму |
+| `savePaymentChargeIdTo` | Куда сохранить код покупки (для возврата позже) |
+| `saveOrderNameTo` / `EmailTo` / `PhoneTo` | После оплаты ← `order_info` (пусто = не писать) |
+| `keyboardNodeId` | Опционально: id узла `keyboard` со счётом |
+| `autoTransitionTo` | Узел после успешной оплаты (`enableAutoTransition: true`) |
+
+Типичная цепочка: `command_trigger` `/buy` → `send_invoice` → (после оплаты) `message` «спасибо».  
+Подписка 30 дней у `send_invoice` **недоступна** (Telegram: `SUBSCRIPTION_EXPORT_MISSING`) — только `create_invoice_link` + `invoiceSubscription` и только при `XTR`.
+
+### create_invoice_link — ссылка на счёт
+
+Отдельный узел (не режим `send_invoice`). Bot API `createInvoiceLink`: те же `invoiceCurrency` / токен провайдера. URL в `saveInvoiceLinkTo`, сразу `autoTransitionTo`, после оплаты — `afterPaymentTo` (или `successful_payment_trigger`). Без pay-клавиатуры. `pre_checkout` генерируется, если есть `send_invoice` **или** `create_invoice_link`. **Единственный** способ подписки Stars: `invoiceSubscription: true` при `invoiceCurrency: "XTR"`.
+
+При фиате (`invoiceCurrency != XTR`) runtime читает те же переменные магазина, что и `send_invoice`: `shop_need_name` / `shop_need_email` / `shop_need_phone` / `shop_need_shipping` / `shop_need_photo` (+ `shop_photo_url`). UX ссылки: после `create_invoice_link` — `message` **без** голого URL в тексте + inline-кнопка `action: "url"`, `url: "{invoice_url}"` (например «Оплатить»).
+
+```json
+{
+  "type": "create_invoice_link",
+  "data": {
+    "invoiceTitle": "Доступ",
+    "invoiceDescription": "Оплата по ссылке",
+    "invoiceAmount": "50",
+    "invoiceCurrency": "XTR",
+    "invoiceSubscription": false,
+    "invoicePhotoUrl": "",
+    "invoicePayload": "",
+    "saveInvoiceLinkTo": "invoice_url",
+    "savePaymentAmountTo": "paid_stars",
+    "savePaymentChargeIdTo": "payment_charge_id",
+    "autoTransitionTo": "msg_with_link",
+    "enableAutoTransition": true,
+    "afterPaymentTo": "msg_thanks"
+  }
+}
+```
+
+| Поле | Описание |
+|------|----------|
+| `invoiceCurrency` / токен | Как у `send_invoice` |
+| `invoiceSubscription` | `true` → `subscription_period: 2592000` (подписка 30 дней, **только XTR**). Нельзя через `send_invoice` |
+| `invoicePrices` / tips / shipping / provider_data / photo sizes / send_*_to_provider | Как у `send_invoice` (где есть в Bot API `createInvoiceLink`; **нет** protect/start_parameter/thread/silent/reply) |
+| `invoiceNeed*` / `saveOrder*To` | Как у `send_invoice` (только фиат) |
+| `saveInvoiceLinkTo` | Переменная под URL (`https://t.me/$…`) |
+| `autoTransitionTo` | Сразу после создания ссылки |
+| `afterPaymentTo` | После оплаты по этой ссылке (в текущей сессии) |
+
+Цепочка: `/buy` → `create_invoice_link` → `message` «Нажмите кнопку, чтобы оплатить» + url-кнопка `{invoice_url}` (не показывать голый URL в тексте).
+
+### successful_payment_trigger — успешная оплата (вне цепочки счёта)
+
+Ловит оплату звёздами, если payload **нет** в `_stars_payment_targets` текущей сессии (ссылка, старый счёт). Один общий `successful_payment` с `send_invoice` / `create_invoice_link`: сначала счёт/ссылка, иначе триггер. Фильтры проверяются в порядке `exact` → `starts_with` → `all`. Без счёта/ссылки хендлер всё равно генерируется при наличии триггера, но `pre_checkout` — нет. Для `/paysupport` и `/terms` используйте обычные `command_trigger` + `message`.
+
+```json
+{
+  "type": "successful_payment_trigger",
+  "data": {
+    "payloadFilter": "starts_with",
+    "payloadValue": "donate_",
+    "savePaymentAmountTo": "payment_amount",
+    "savePaymentChargeIdTo": "payment_charge_id",
+    "autoTransitionTo": "msg_outside_pay",
+    "enableAutoTransition": false
+  }
+}
+```
+
+| Поле | Описание |
+|------|----------|
+| `payloadFilter` | `"all"` / `"exact"` / `"starts_with"` |
+| `payloadValue` | Метка для exact / starts_with |
+| `savePaymentAmountTo` | Переменная суммы |
+| `savePaymentChargeIdTo` | Переменная кода покупки |
+| `autoTransitionTo` | Следующий узел (у триггеров `enableAutoTransition` не обязателен) |
+
+### refund_stars — вернуть звёзды
+
+Возврат покупки в этом боте через `refundStarPayment`.
+Четыре выхода на холсте: успех + пустой код + не найден + уже возвращён.
+Если выход ошибки подключён — только переход (текст рисует `message`).
+Если нет — `answer(refundMsg*)`; при `ignoreErrors` после текста — на `autoTransitionTo`. Без `raise`.
+
+```json
+{
+  "type": "refund_stars",
+  "data": {
+    "refundUserSource": "current_user",
+    "refundUserId": "",
+    "refundChargeId": "{payment_charge_id}",
+    "ignoreErrors": false,
+    "refundMsgEmpty": "Пожалуйста, укажите код покупки: /back КОД",
+    "refundMsgNotFound": "Такой код покупки не найден. Проверьте данные и попробуйте снова.",
+    "refundMsgAlreadyRefunded": "За эту покупку уже ранее был произведён возврат.",
+    "autoTransitionTo": "msg_refunded",
+    "enableAutoTransition": true,
+    "refundEmptyTarget": "msg_empty",
+    "refundNotFoundTarget": "msg_not_found",
+    "refundAlreadyRefundedTarget": "msg_already",
+    "keyboardType": "none",
+    "buttons": []
+  }
+}
+```
+
+| Поле | Описание |
+|------|----------|
+| `refundUserSource` | `"current_user"` или `"custom"` |
+| `refundUserId` | ID / `{var}` при `custom` |
+| `refundChargeId` | Код покупки (`telegram_payment_charge_id`) |
+| `autoTransitionTo` | Успех (`enableAutoTransition: true`) |
+| `refundEmptyTarget` | Выход «Пустой код» |
+| `refundNotFoundTarget` | Выход «Код не найден» / прочие |
+| `refundAlreadyRefundedTarget` | Выход «Уже возвращён» |
+| `refundMsg*` | Fallback-тексты, если выход не подключён |
+| `ignoreErrors` | Без выхода ошибки — после текста идти на успех |
+
+Цепочки: `/back КОД` → `refund_stars` → сообщения по выходам; демо: `send_invoice` (1⭐) → после оплаты `refund_stars`.
+
+### edit_star_subscription — управление автопродлением
+
+Bot API `editUserStarSubscription`. Не путать с `refund_stars` и с галкой `invoiceSubscription` на ссылке.
+Три выхода: успех / пустой код / ошибка. `subscriptionAction`: `cancel` → `is_canceled=True`, `enable` → `False`.
+
+```json
+{
+  "type": "edit_star_subscription",
+  "data": {
+    "subscriptionUserSource": "current_user",
+    "subscriptionUserId": "",
+    "subscriptionChargeId": "{payment_charge_id}",
+    "subscriptionAction": "cancel",
+    "ignoreErrors": false,
+    "subscriptionMsgEmpty": "Укажите код покупки подписки",
+    "subscriptionMsgError": "Не удалось изменить автопродление. Проверьте код покупки.",
+    "autoTransitionTo": "msg_done",
+    "enableAutoTransition": true,
+    "subscriptionEmptyTarget": "msg_empty",
+    "subscriptionErrorTarget": "msg_err",
+    "keyboardType": "none",
+    "buttons": []
+  }
+}
+```
+
+| Поле | Описание |
+|------|----------|
+| `subscriptionAction` | `"cancel"` \| `"enable"` |
+| `subscriptionChargeId` | Код покупки подписки |
+| `autoTransitionTo` | Успех |
+| `subscriptionEmptyTarget` / `subscriptionErrorTarget` | Ошибки |
+
+Цепочка: `/cancel_sub` → `edit_star_subscription` → `message`.
+
+### get_star_balance — баланс звёзд бота
+
+Bot API `getMyStarBalance`. Баланс **бота**, не пользователя. Целое `amount` → переменная. Два выхода: успех / ошибка.
+
+```json
+{
+  "type": "get_star_balance",
+  "data": {
+    "saveStarBalanceTo": "star_balance",
+    "ignoreErrors": false,
+    "balanceMsgError": "Не удалось получить баланс звёзд",
+    "autoTransitionTo": "msg_bal",
+    "enableAutoTransition": true,
+    "balanceErrorTarget": "msg_err",
+    "keyboardType": "none",
+    "buttons": []
+  }
+}
+```
+
+| Поле | Описание |
+|------|----------|
+| `saveStarBalanceTo` | Переменная для целого amount (дефолт `star_balance`) |
+| `autoTransitionTo` | Успех |
+| `balanceErrorTarget` | Ошибка API |
+| `ignoreErrors` | После текста ошибки идти на успех, если задан |
+
+Цепочка: `/balance` → `get_star_balance` → `message` с `{star_balance}`.
+
 ### code — произвольный Python (Telethon)
 
 Пишите **тело async-функции** с `await` (без своего `async def`). Переменные пользователя доступны по имени. `client` и `userbot_client` — тот же Telethon-клиент, что у узлов юзербота.
@@ -1084,6 +1360,7 @@ parallel_split → ветка N: … → set_variable (done = int({done}) + 1, m
 |-----|---------|
 | `client`, `userbot_client` | Telethon-клиент юзербота (тот же, что у userbot-узлов) |
 | `bot` | Экземпляр aiogram `Bot` — можно править сообщения самого бота |
+| `dp` | Dispatcher aiogram — можно один раз зарегистрировать свои callback-хендлеры |
 | `user_id` | ID текущего пользователя |
 | `user_data` | Словарь переменных **текущего** пользователя |
 | `all_user_data` | Словарь всех пользователей: `all_user_data[user_id]` |
@@ -1580,9 +1857,28 @@ await bot.edit_message_text('Опрашиваю… 3/15', chat_id=chat_id,
 | `command` | Выполнить команду | — |
 | `contact` | Запросить контакт | `requestContact: true` |
 | `location` | Запросить геолокацию | `requestLocation: true` |
-| `selection` | Выбор из списка | — |
-| `complete` | Завершить сбор данных | — |
+| `selection` | Выбор из списка (галочка/радио при multi-select) | опционально `selectionGroup` |
+| `complete` | Завершить сбор данных / multi-select | `target` — куда перейти после «Готово» |
 | `request_managed_bot` | Создать управляемого бота | `suggestedBotName`, `suggestedBotUsername` |
+
+### Multi-select и радиогруппы
+
+На узле с `allowMultipleSelection: true` кнопки `action: "selection"` переключают выбор; итог пишется в переменную через запятую. Кнопка `action: "complete"` завершает выбор.
+
+Символы отметки на **ноде** (клавиатура / message после merge), опционально:
+
+| Поле | Назначение | По умолчанию |
+|------|------------|--------------|
+| `checkmarkSymbol` | выбранная кнопка без группы | `✅` |
+| `radioSelectedSymbol` | выбранная кнопка с `selectionGroup` | `🔘` |
+| `radioUnselectedSymbol` | невыбранная кнопка с группой | `⚪️` |
+
+Невыбранная галочка — пустой префикс (отдельного поля нет).
+
+Опциональное поле кнопки `selectionGroup` (строка, напр. `"currency"`):
+- **пусто / нет** — обычный мультивыбор (`✅ `);
+- **одинаковая непустая группа** у нескольких кнопок — радио: в группе активна одна кнопка, префиксы `🔘 ` / `⚪️ `; повторный клик снимает выбор;
+- разные группы независимы друг от друга и от обычных галочек.
 
 ### Стили кнопок (style)
 
@@ -1673,7 +1969,7 @@ HTTP-узел с `httpRequestResponseFormat: "file"` сохраняет отве
 - `data.branches[].target: "nodeId"` — переход по ветке условия
 - `data.afterLoopTo: "nodeId"` — переход после завершения цикла
 
-> ⚠️ **Важно:** для нетриггерных нод (message, set_variable, bot_table, delete_message, delay, code, psql_query, convert_file, http_request и др.) при использовании `autoTransitionTo` **обязательно** добавлять `"enableAutoTransition": true`. Без этого флага связь не отрисуется на канвасе. Триггеры (command_trigger, text_trigger, schedule_trigger и др.) не нуждаются в этом флаге — их связи обрабатываются отдельно.
+> ⚠️ **Важно:** для нетриггерных нод (message, set_variable, bot_table, delete_message, delay, send_invoice, refund_stars, code, psql_query, convert_file, http_request и др.) при использовании `autoTransitionTo` **обязательно** добавлять `"enableAutoTransition": true`. Без этого флага связь не отрисуется на канвасе. Триггеры (command_trigger, text_trigger, schedule_trigger, successful_payment_trigger и др.) не нуждаются в этом флаге — их связи обрабатываются отдельно.
 
 ---
 
@@ -1943,6 +2239,7 @@ GIN-индекс на `bot_table_rows.data` для быстрого поиска
 
 ### Антипаттерны
 
+- ❌ Не создавать `command_trigger` с кириллицей (`/купить`) — только латиница (`/buy`)
 - ❌ Не хранить массивы как строку — использовать `json_push` в `set_variable`
 - ❌ Не делать SELECT + UPDATE в двух узлах — использовать `bot_table` с `operation: "update"` и `op: "increment"`
 - ❌ Не дублировать данные в `user_data` и в пользовательской таблице — выбрать одно место

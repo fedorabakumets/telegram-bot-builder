@@ -33,6 +33,7 @@ const KEYBOARD_HOST_TYPES = new Set<string>([
   NODE_TYPES.MESSAGE,
   NODE_TYPES.START,
   NODE_TYPES.COMMAND,
+  'send_invoice',
 ]);
 
 /** Значения клавиатуры по умолчанию */
@@ -214,6 +215,19 @@ function buildMergedKeyboardData(
       ? keyboardData.continueButtonTarget
       : (typeof hostData.continueButtonTarget === 'string' ? hostData.continueButtonTarget : undefined);
 
+  /**
+   * Берёт непустую строку символа с keyboard, иначе с host
+   * @param key - Имя поля символа
+   * @returns Строка или undefined
+   */
+  const resolveSymbolField = (key: string): string | undefined => {
+    const fromKb = keyboardData[key];
+    if (typeof fromKb === 'string' && fromKb.trim()) return fromKb.trim();
+    const fromHost = hostData[key];
+    if (typeof fromHost === 'string' && fromHost.trim()) return fromHost.trim();
+    return undefined;
+  };
+
   return {
     ...hostData,
     buttons: resolvedButtons,
@@ -224,6 +238,9 @@ function buildMergedKeyboardData(
     allowMultipleSelection: resolvedAllowMultipleSelection,
     multiSelectVariable: resolvedMultiSelectVariable,
     continueButtonTarget: resolvedContinueButtonTarget,
+    checkmarkSymbol: resolveSymbolField('checkmarkSymbol'),
+    radioSelectedSymbol: resolveSymbolField('radioSelectedSymbol'),
+    radioUnselectedSymbol: resolveSymbolField('radioUnselectedSymbol'),
     oneTimeKeyboard: typeof keyboardData.oneTimeKeyboard === 'boolean'
       ? keyboardData.oneTimeKeyboard
       : (typeof hostData.oneTimeKeyboard === 'boolean' ? hostData.oneTimeKeyboard : false),
@@ -233,6 +250,31 @@ function buildMergedKeyboardData(
     shuffleButtons: typeof keyboardData.shuffleButtons === 'boolean'
       ? keyboardData.shuffleButtons
       : (typeof hostData.shuffleButtons === 'boolean' ? hostData.shuffleButtons : false),
+  };
+}
+
+/**
+ * Гарантирует кнопку оплаты первой у хоста счёта
+ * @param hostData - Данные узла после слияния с клавиатурой
+ * @returns Данные с pay-кнопкой в начале и keyboardType inline
+ */
+function ensureInvoicePayButtonsOnHost(hostData: Record<string, unknown>): Record<string, unknown> {
+  const list = Array.isArray(hostData.buttons) ? [...(hostData.buttons as any[])] : [];
+  const payButtons = list.filter((b) => b?.action === 'pay');
+  const rest = list.filter((b) => b?.action !== 'pay');
+  const pay = payButtons[0] ?? {
+    id: 'invoice_pay',
+    text: 'Оплатить ⭐',
+    action: 'pay',
+    buttonType: 'normal',
+    skipDataCollection: true,
+    hideAfterClick: false,
+  };
+  return {
+    ...hostData,
+    keyboardType: 'inline',
+    buttons: [pay, ...rest],
+    shuffleButtons: false,
   };
 }
 
@@ -318,7 +360,12 @@ export function normalizeKeyboardBindings(nodes: Node[], connections: GraphConne
         continue;
       }
       const hostData = hostNode.data as Record<string, unknown>;
-      hostNode.data = buildMergedKeyboardData(hostData, keyboardData) as Node['data'];
+      let merged = buildMergedKeyboardData(hostData, keyboardData);
+      /** У счёта первая кнопка обязана быть pay */
+      if ((hostNode.type as string) === 'send_invoice') {
+        merged = ensureInvoicePayButtonsOnHost(merged);
+      }
+      hostNode.data = merged as Node['data'];
       delete (hostNode.data as Record<string, unknown>).keyboardNodeId;
     }
 

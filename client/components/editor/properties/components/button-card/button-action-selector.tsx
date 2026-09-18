@@ -22,6 +22,8 @@ interface ButtonActionSelectorProps {
   keyboardType?: string;
   /** Белый список разрешённых действий (главный ограничитель, если задан) */
   allowedActions?: ButtonActionType[];
+  /** Заблокировать смену действия */
+  disabled?: boolean;
 }
 
 /**
@@ -37,6 +39,7 @@ export function ButtonActionSelector({
   allowMultipleSelection = false,
   keyboardType,
   allowedActions,
+  disabled = false,
 }: ButtonActionSelectorProps) {
   const config = ACTION_CONFIG[button.action as ButtonActionType] ?? ACTION_CONFIG['default'];
   const isReply = keyboardType === 'reply';
@@ -57,6 +60,7 @@ export function ButtonActionSelector({
     <div className="space-y-2">
       <Select
         value={button.action}
+        disabled={disabled}
         onValueChange={(value: Button['action']) =>
           onButtonUpdate(nodeId, button.id, { action: value })
         }
@@ -97,6 +101,9 @@ export function ButtonActionSelector({
           )}
           {canShow('complete', allowMultipleSelection) && (
             <SelectItem value="complete"><ButtonActionOption action="complete" /></SelectItem>
+          )}
+          {canShow('pay', false) && (
+            <SelectItem value="pay"><ButtonActionOption action="pay" /></SelectItem>
           )}
         </SelectContent>
       </Select>

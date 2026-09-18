@@ -63,6 +63,13 @@ export function getBadgeText(variable: Variable): string {
     table: '📊 Таблица',
     userbot_click_button: '🟣 Юзербот',
     userbot_message: '🟣 Юзербот',
+    send_invoice: '⭐ Счёт',
+    create_invoice_link: '🔗 Ссылка на счёт',
+    successful_payment_trigger: '⭐ Оплата',
+    refund_stars: '↩️ Возврат',
+    edit_star_subscription: '🔄 Подписка',
+    get_star_balance: '💰 Баланс',
+    command_trigger: '⚡ Команда',
   };
   return labels[variable.nodeType] || '📌';
 }
@@ -241,6 +248,35 @@ export function getNodeInfo(variable: Variable) {
     return (
       <div className="text-[10px] text-violet-500 dark:text-violet-400 mt-0.5 truncate">
         🟣 {variable.description}
+      </div>
+    );
+  }
+  // Для send_invoice показываем описание
+  if ((variable.nodeType as string) === 'send_invoice') {
+    return (
+      <div className="text-[10px] text-yellow-600 dark:text-yellow-400 mt-0.5 truncate">
+        ⭐ {variable.description}
+      </div>
+    );
+  }
+  if ((variable.nodeType as string) === 'create_invoice_link') {
+    return (
+      <div className="text-[10px] text-yellow-600 dark:text-yellow-400 mt-0.5 truncate">
+        🔗 {variable.description}
+      </div>
+    );
+  }
+  if ((variable.nodeType as string) === 'get_star_balance') {
+    return (
+      <div className="text-[10px] text-yellow-600 dark:text-yellow-400 mt-0.5 truncate">
+        💰 {variable.description}
+      </div>
+    );
+  }
+  if ((variable.nodeType as string) === 'successful_payment_trigger') {
+    return (
+      <div className="text-[10px] text-yellow-600 dark:text-yellow-400 mt-0.5 truncate">
+        ⭐ {variable.description}
       </div>
     );
   }

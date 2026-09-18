@@ -58,6 +58,29 @@ async def save_message_to_api(user_id: str, message_type: str, message_text: str
             except Exception as _agg_err:
                 logging.warning(f"⚠️ Не удалось обновить message_activity_daily: {_agg_err}")
 
+            # Отметка «человек был активен сегодня» — только входящие (график «Активные пользователи»)
+            if message_type == "user":
+                try:
+                    await conn.execute(
+                        """
+                        INSERT INTO user_activity_daily (project_id, token_id, day, user_id, first_seen_at)
+                        VALUES (
+                          $1, $2, CURRENT_DATE, $3::bigint,
+                          COALESCE(
+                            (SELECT registered_at FROM bot_users
+                              WHERE project_id = $1 AND token_id = $2 AND user_id = $3::bigint),
+                            NOW()
+                          )
+                        )
+                        ON CONFLICT (project_id, token_id, day, user_id) DO NOTHING
+                        """,
+                        PROJECT_ID,
+                        TOKEN_ID,
+                        str(user_id),
+                    )
+                except Exception as _uact_err:
+                    logging.warning(f"⚠️ Не удалось обновить user_activity_daily: {_uact_err}")
+
             # Публикуем событие в Redis для мгновенного уведомления UI (fire-and-forget)
             if _redis_client:
                 try:

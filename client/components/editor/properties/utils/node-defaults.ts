@@ -120,7 +120,9 @@ export function getNodeDefaults(type: Node['type']): any {
       showInMenu: false,
       isPrivateOnly: false,
       requiresAuth: false,
-      adminOnly: false
+      adminOnly: false,
+      /** Переменная для аргументов команды (/donate 777 → 777) */
+      saveCommandArgsTo: '',
     },
     text_trigger: {
       textSynonyms: [],
@@ -349,6 +351,14 @@ export function getNodeDefaults(type: Node['type']): any {
       filterByUserId: '',
       autoTransitionTo: '',
     },
+    successful_payment_trigger: {
+      payloadFilter: 'all',
+      payloadValue: '',
+      savePaymentAmountTo: 'payment_amount',
+      savePaymentChargeIdTo: 'payment_charge_id',
+      autoTransitionTo: '',
+      enableAutoTransition: false,
+    },
     member_trigger: {
       memberEventType: 'join',
       groupChatId: '',
@@ -554,6 +564,163 @@ export function getNodeDefaults(type: Node['type']): any {
       autoTransitionTo: '',
       /** Включить автопереход */
       enableAutoTransition: false,
+    },
+    send_invoice: {
+      /** Название товара */
+      invoiceTitle: 'Товар',
+      /** Описание товара */
+      invoiceDescription: 'Описание товара',
+      /** Цена */
+      invoiceAmount: '1',
+      /** Валюта */
+      invoiceCurrency: 'XTR',
+      /** Источник токена при фиате */
+      invoiceProviderSource: 'inline',
+      /** Токен в ноде */
+      invoiceProviderToken: '',
+      /** Env-ключ токена */
+      invoiceProviderTokenEnv: 'PAYMENT_PROVIDER_TOKEN',
+      /** Запросить имя (фиат) */
+      invoiceNeedName: false,
+      /** Запросить email (фиат) */
+      invoiceNeedEmail: false,
+      /** Запросить телефон (фиат) */
+      invoiceNeedPhone: false,
+      /** URL картинки */
+      invoicePhotoUrl: '',
+      /** Скрытая метка покупки */
+      invoicePayload: '',
+      /** Переменная для суммы */
+      savePaymentAmountTo: '',
+      /** Переменная для кода покупки */
+      savePaymentChargeIdTo: '',
+      /** Переменная для имени покупателя */
+      saveOrderNameTo: '',
+      /** Переменная для email покупателя */
+      saveOrderEmailTo: '',
+      /** Переменная для телефона покупателя */
+      saveOrderPhoneTo: '',
+      /** ID следующего узла после оплаты */
+      autoTransitionTo: '',
+      /** Включить автопереход после оплаты */
+      enableAutoTransition: false,
+      /** Клавиатура — отдельным узлом рядом при добавлении с холста */
+      keyboardType: 'none',
+      buttons: [],
+    },
+    create_invoice_link: {
+      /** Название товара */
+      invoiceTitle: 'Товар',
+      /** Описание товара */
+      invoiceDescription: 'Описание товара',
+      /** Цена */
+      invoiceAmount: '1',
+      /** Валюта */
+      invoiceCurrency: 'XTR',
+      /** Источник токена при фиате */
+      invoiceProviderSource: 'inline',
+      /** Токен в ноде */
+      invoiceProviderToken: '',
+      /** Env-ключ токена */
+      invoiceProviderTokenEnv: 'PAYMENT_PROVIDER_TOKEN',
+      /** Запросить имя (фиат) */
+      invoiceNeedName: false,
+      /** Запросить email (фиат) */
+      invoiceNeedEmail: false,
+      /** Запросить телефон (фиат) */
+      invoiceNeedPhone: false,
+      /** Подписка на 30 дней (только ссылка + XTR) */
+      invoiceSubscription: false,
+      /** URL картинки */
+      invoicePhotoUrl: '',
+      /** Скрытая метка покупки */
+      invoicePayload: '',
+      /** Куда сохранить ссылку */
+      saveInvoiceLinkTo: 'invoice_url',
+      /** Переменная для суммы после оплаты */
+      savePaymentAmountTo: '',
+      /** Переменная для кода покупки после оплаты */
+      savePaymentChargeIdTo: '',
+      /** Переменная для имени покупателя */
+      saveOrderNameTo: '',
+      /** Переменная для email покупателя */
+      saveOrderEmailTo: '',
+      /** Переменная для телефона покупателя */
+      saveOrderPhoneTo: '',
+      /** Сразу после создания ссылки */
+      autoTransitionTo: '',
+      /** Включить переход после создания */
+      enableAutoTransition: false,
+      /** После оплаты по ссылке */
+      afterPaymentTo: '',
+    },
+    refund_stars: {
+      /** Источник user_id: current_user | custom */
+      refundUserSource: 'current_user',
+      /** ID пользователя при custom */
+      refundUserId: '',
+      /** Код покупки telegram_payment_charge_id */
+      refundChargeId: '',
+      /** Не прерывать сценарий при ошибке */
+      ignoreErrors: false,
+      /** Сообщение при пустом коде */
+      refundMsgEmpty: 'Пожалуйста, укажите код покупки: /back КОД',
+      /** Сообщение: код не найден */
+      refundMsgNotFound: 'Такой код покупки не найден. Проверьте данные и попробуйте снова.',
+      /** Сообщение: уже возвращено */
+      refundMsgAlreadyRefunded: 'За эту покупку уже ранее был произведён возврат.',
+      /** Выход «Пустой код» */
+      refundEmptyTarget: '',
+      /** Выход «Код не найден» */
+      refundNotFoundTarget: '',
+      /** Выход «Уже возвращён» */
+      refundAlreadyRefundedTarget: '',
+      /** ID следующего узла после успешного возврата */
+      autoTransitionTo: '',
+      /** Включить автопереход */
+      enableAutoTransition: false,
+      keyboardType: 'none',
+      buttons: [],
+    },
+    edit_star_subscription: {
+      /** Источник user_id */
+      subscriptionUserSource: 'current_user',
+      /** ID при custom */
+      subscriptionUserId: '',
+      /** Код покупки подписки */
+      subscriptionChargeId: '',
+      /** cancel | enable */
+      subscriptionAction: 'cancel',
+      /** Не рвать сценарий при ошибке */
+      ignoreErrors: false,
+      /** Текст пустого кода */
+      subscriptionMsgEmpty: 'Укажите код покупки подписки',
+      /** Текст ошибки API */
+      subscriptionMsgError: 'Не удалось изменить автопродление. Проверьте код покупки.',
+      /** Выход пустого кода */
+      subscriptionEmptyTarget: '',
+      /** Выход ошибки */
+      subscriptionErrorTarget: '',
+      /** Успех */
+      autoTransitionTo: '',
+      enableAutoTransition: false,
+      keyboardType: 'none',
+      buttons: [],
+    },
+    get_star_balance: {
+      /** Переменная для целого amount */
+      saveStarBalanceTo: 'star_balance',
+      /** Не рвать сценарий при ошибке */
+      ignoreErrors: false,
+      /** Текст ошибки API */
+      balanceMsgError: 'Не удалось получить баланс звёзд',
+      /** Выход ошибки */
+      balanceErrorTarget: '',
+      /** Успех */
+      autoTransitionTo: '',
+      enableAutoTransition: false,
+      keyboardType: 'none',
+      buttons: [],
     },
     userbot_edit_trigger: {
       /** Сущность (чат/канал) для отслеживания */

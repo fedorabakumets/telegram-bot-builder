@@ -53,6 +53,12 @@ export const MCP_ALLOWED_NODE_TYPES = [
   'userbot_inline_query',
   'userbot_edit_trigger',
   'comment',
+  'send_invoice',
+  'create_invoice_link',
+  'refund_stars',
+  'edit_star_subscription',
+  'get_star_balance',
+  'successful_payment_trigger',
 ] as const;
 
 /** Legacy и типы вне палитры — запрещены для create_node / list_node_types */
@@ -123,6 +129,12 @@ const MCP_NODE_DESCRIPTIONS: Record<string, string> = {
   userbot_inline_query: 'Inline-запрос через юзербот',
   userbot_edit_trigger: 'Триггер на редактирование (юзербот)',
   comment: 'Комментарий на холсте',
+  send_invoice: 'Выставить счёт в звёздах',
+  create_invoice_link: 'Ссылка на счёт',
+  refund_stars: 'Вернуть звёзды',
+  edit_star_subscription: 'Отменить или разрешить автопродление Stars',
+  get_star_balance: 'Баланс звёзд на счету бота (getMyStarBalance)',
+  successful_payment_trigger: 'Успешная оплата',
 };
 
 /**

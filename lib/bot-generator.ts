@@ -23,6 +23,7 @@ import { generateDatabaseCode } from './templates/database/database-code.rendere
 import { generateSafeEditOrSend, generateHeader, generateUniversalHandlers, generateMain, generateImports, generateConfig, generateUtils } from './templates/typed-renderer';
 import { generateNodeHandlers } from './templates/node-handlers/node-handlers.dispatcher';
 import { filterInlineNodes, hasInlineButtons, identifyNodesRequiringMultiSelectLogic } from './templates/keyboard/keyboard.renderer';
+import { resolveSelectionMarkSymbols } from './templates/keyboard/selection-mark-symbols';
 import { generateButtonResponse, generateMultiSelectCallback, generateMultiSelectDone, generateMultiSelectReply, generateReplyButtonHandlers, generateCommandCallbackHandler } from './templates/keyboard-handlers/handlers';
 import { generateInteractiveCallbackHandlers } from './templates/keyboard-handlers/interactive-callback-handlers';
 import { generateGroupHandlers } from './templates/group-handlers/group-handlers.renderer';
@@ -270,6 +271,7 @@ function generateCodeSections(
       hasDeepLinkTriggers: flags.hasDeepLinkTriggersResult,
       hasUserbotNodes: flags.hasUserbotNodesResult,
       hasRateCounterNodes: flags.hasRateCounterNodesResult,
+      hasSendInvoiceNodes: flags.hasSendInvoiceNodesResult,
       hasInputTimeoutNodes: flags.hasInputTimeoutNodesResult,
     })
   );
@@ -577,8 +579,10 @@ function generateCodeSections(
     const selectionButtons = allButtons
       .filter((b: any) => b.action === 'selection')
       .map((b: any) => {
-        const value = b.target || b.id || 'btn';
+        // Как в keyboard.py.jinja2: target || id (без обрезки — иначе рассинхрон с первой отрисовкой)
+        const value = String(b.target || b.id || 'btn');
         const valueTruncated = value.slice(-8);
+        const groupRaw = typeof b.selectionGroup === 'string' ? b.selectionGroup.trim() : '';
         return {
           id: b.id,
           text: b.text,
@@ -587,7 +591,8 @@ function generateCodeSections(
           value,
           valueTruncated,
           escapedText: b.text.replace(/"/g, '\\"'),
-          callbackData: `ms_${shortNodeId}_${valueTruncated}`,
+          callbackData: `ms_${shortNodeId}_${value}`,
+          selectionGroup: groupRaw || undefined,
         };
       });
     const regularButtons = allButtons
@@ -597,7 +602,15 @@ function generateCodeSections(
       .filter((b: any) => b.action === 'goto' && b.target)
       .map((b: any) => ({ id: b.id, text: b.text, action: b.action, target: b.target }));
     const completeBtn = allButtons.find((b: any) => b.action === 'complete');
+    const continueButtonTarget =
+      (typeof node.data?.continueButtonTarget === 'string' && node.data.continueButtonTarget.trim()) ||
+      (completeBtn?.target ? String(completeBtn.target) : '') ||
+      '';
+    const targetNode = continueButtonTarget
+      ? nodes.find((n: any) => n.id === continueButtonTarget)
+      : undefined;
 
+    const marks = resolveSelectionMarkSymbols(node.data);
     return {
       ...node,
       hasKeyboardLayout,
@@ -607,10 +620,33 @@ function generateCodeSections(
       selectionButtons,
       regularButtons,
       gotoButtons,
-      completeButton: completeBtn ? { text: completeBtn.text, target: completeBtn.target } : undefined,
+      completeButton: completeBtn
+        ? {
+            text: completeBtn.text,
+            target: completeBtn.target,
+            style:
+              completeBtn.style === 'primary' ||
+              completeBtn.style === 'success' ||
+              completeBtn.style === 'danger'
+                ? completeBtn.style
+                : undefined,
+          }
+        : undefined,
       doneCallbackData: `done_${shortNodeId}`,
       totalButtonsCount: allButtons.length,
       variableName: node.data?.multiSelectVariable || `multi_select_${node.id}`,
+      checkmarkSymbol: marks.checkmarkSymbol,
+      radioSelectedSymbol: marks.radioSelectedSymbol,
+      radioUnselectedSymbol: marks.radioUnselectedSymbol,
+      continueButtonTarget: continueButtonTarget || undefined,
+      targetNode: targetNode
+        ? {
+            id: targetNode.id,
+            type: targetNode.type,
+            data: targetNode.data || {},
+            shortId: String(targetNode.id).slice(-10).replace(/^_+/, ''),
+          }
+        : undefined,
     };
   });
 
@@ -703,8 +739,9 @@ function assembleAndValidate(
     sections.commandCallbackHandlers,
     sections.groupHandlers,
     sections.mediaInputHandlers,
-    sections.universalHandlers,
+    // multi-select (ms_/done_) до catch-all @dp.callback_query()
     sections.multiSelectHandlers,
+    sections.universalHandlers,
     sections.main,
   ];
 

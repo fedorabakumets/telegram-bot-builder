@@ -67,6 +67,13 @@ export const keyboardParamsSchema = z.object({
     suggestedBotName: z.string().optional(),
     /** Предложенный username для создаваемого управляемого бота (Bot API 9.6) */
     suggestedBotUsername: z.string().optional(),
+    /**
+     * Группа радиовыбора для selection при multi-select
+     * (одинаковое значение = один выбор, префиксы 🔘/⚪️)
+     */
+    selectionGroup: z.string().optional(),
+    /** Короткий ID кнопки (pre-computed) */
+    shortButtonId: z.string().optional(),
   })).default([]),
   /** Раскладка клавиатуры */
   keyboardLayout: z.object({
@@ -84,6 +91,12 @@ export const keyboardParamsSchema = z.object({
   allowMultipleSelection: z.boolean().optional().default(false),
   /** Переменная для хранения выборов */
   multiSelectVariable: z.string().optional(),
+  /** Символ выбранной галочки (без группы) */
+  checkmarkSymbol: z.string().optional().default('✅'),
+  /** Символ выбранного радио */
+  radioSelectedSymbol: z.string().optional().default('🔘'),
+  /** Символ невыбранного радио */
+  radioUnselectedSymbol: z.string().optional().default('⚪️'),
   /** ID узла для callback_data */
   nodeId: z.string().optional(),
   /** Кнопка завершения выбора */
