@@ -31,7 +31,7 @@
       "bot-json-prompt"
     ],
     "folder_titles": {},
-    "updated_at": "2026-09-11T02:36:53+03:00",
+    "updated_at": "2026-09-19T00:28:57+03:00",
     "tags": [],
     "author": ""
   },
@@ -58,7 +58,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-09-01T18:38:33Z",
+    "updated_at": "2026-09-13T17:59:58Z",
     "tags": [],
     "author": ""
   },
@@ -164,6 +164,21 @@
       "api": "Api"
     },
     "updated_at": "2026-09-01T18:38:33Z",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "api/disabled-node-types",
+    "title": "disabled-node-types",
+    "excerpt": "Эндпоинтов: **1**",
+    "parts": [
+      "api",
+      "disabled-node-types"
+    ],
+    "folder_titles": {
+      "api": "Api"
+    },
+    "updated_at": "2026-09-13T17:59:58Z",
     "tags": [],
     "author": ""
   },
@@ -350,7 +365,7 @@
   {
     "path": "api/project-users",
     "title": "project-users",
-    "excerpt": "Эндпоинтов: **10**",
+    "excerpt": "Эндпоинтов: **11**",
     "parts": [
       "api",
       "project-users"
@@ -358,7 +373,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-08-14T18:47:54+03:00",
+    "updated_at": "2026-09-13T17:59:58Z",
     "tags": [],
     "author": ""
   },
@@ -928,7 +943,7 @@
     "folder_titles": {
       "database": "Database"
     },
-    "updated_at": "2026-09-13T20:55:23+03:00",
+    "updated_at": "2026-09-19T00:44:38+03:00",
     "tags": [],
     "author": ""
   },
@@ -1138,7 +1153,7 @@
     "folder_titles": {
       "features": "🧩 Возможности"
     },
-    "updated_at": "2026-09-11T02:36:53+03:00",
+    "updated_at": "2026-09-19T00:28:57+03:00",
     "tags": [],
     "author": ""
   },
@@ -2447,7 +2462,7 @@
     "folder_titles": {
       "interface": "🖥️ Интерфейс"
     },
-    "updated_at": "2026-09-13T21:29:12+03:00",
+    "updated_at": "2026-09-19T00:43:13+03:00",
     "tags": [],
     "author": ""
   },
@@ -2786,7 +2801,7 @@
     "folder_titles": {
       "mcp": "🤖 MCP-конструктор"
     },
-    "updated_at": "2026-08-18T17:25:44+03:00",
+    "updated_at": "2026-09-14T01:22:05+03:00",
     "tags": [],
     "author": ""
   },
@@ -2816,7 +2831,7 @@
     "folder_titles": {
       "mcp": "🤖 MCP-конструктор"
     },
-    "updated_at": "2026-08-04T17:44:54+03:00",
+    "updated_at": "2026-09-13T23:42:39+03:00",
     "tags": [],
     "author": ""
   },
@@ -3097,6 +3112,21 @@
       "roadmaps": "🗺️ Roadmaps"
     },
     "updated_at": "2026-07-17T07:11:47+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "roadmaps/stars-payments-roadmap",
+    "title": "Оплата звёздами Телеграма",
+    "excerpt": "План внедрения приёма звёзд в конструкторе. Цифровой товар внутри бота (доступ, подписка, файл, донат) оплачивается **только звёздами**. Кар",
+    "parts": [
+      "roadmaps",
+      "stars-payments-roadmap"
+    ],
+    "folder_titles": {
+      "roadmaps": "🗺️ Roadmaps"
+    },
+    "updated_at": "2026-09-15T06:19:58+03:00",
     "tags": [],
     "author": ""
   },
