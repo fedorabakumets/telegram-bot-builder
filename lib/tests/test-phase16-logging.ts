@@ -383,6 +383,7 @@ test('E02b', 'userDatabaseEnabled: true → ЕСТЬ INSERT INTO message_activit
 test('E02c', 'userDatabaseEnabled: true → ЕСТЬ INSERT INTO user_activity_daily', () => {
   const code = genDB(makeSimpleProject(), 'e02c');
   ok(code.includes('INSERT INTO user_activity_daily'), 'user_activity_daily должен обновляться из бота');
+  ok(code.includes('int(user_id)'), 'user_id в user_activity_daily должен передаваться как int (asyncpg BIGINT)');
 });
 
 test('E03', 'userDatabaseEnabled: true → ЕСТЬ PROJECT_ID в INSERT', () => {
