@@ -1,29 +1,41 @@
 /**
- * @fileoverview Экран "Нет проектов" — отображается когда у пользователя нет проектов
+ * @fileoverview Экран «нет проектов» — онбординг с диалогом проводника
  * @module components/editor/no-projects/NoProjectsScreen
  */
 
-import { useState } from 'react';
-import { Bot, LogOut, FileJson, LayoutTemplate, Plus } from 'lucide-react';
+import { useCallback, useMemo, useState } from 'react';
+import { Bot } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { apiRequest } from '@/queryClient';
+import { TypewriterDialogue } from '@/components/editor/auth/TypewriterDialogue';
+import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
+import { isGuest, isTelegramUser } from '@/types/telegram-user';
+import { cn } from '@/utils/utils';
 import { useNoProjects } from './hooks/use-no-projects';
+import { NoProjectsActions } from './NoProjectsActions';
+import { NoProjectsCreateDialog } from './NoProjectsCreateDialog';
+import {
+  isNoProjectsIntroSeen,
+  markNoProjectsIntroSeen,
+} from './no-projects-intro-storage';
 
 /**
- * Экран приветствия для пользователя без проектов.
- * Предлагает создать, импортировать, выбрать шаблон или выйти.
- *
+ * Экран приветствия для пользователя без проектов
  * @returns JSX элемент экрана
  */
 export function NoProjectsScreen() {
   const [projectName, setProjectName] = useState('');
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
+  const { user } = useTelegramAuth();
+
+  const userId =
+    user && !isGuest(user) && isTelegramUser(user) ? user.id : 'anon';
+
+  const [introSeen] = useState(() => isNoProjectsIntroSeen(userId));
+  const [actionsReady, setActionsReady] = useState(introSeen);
 
   const {
     isCreateOpen,
@@ -35,7 +47,26 @@ export function NoProjectsScreen() {
     isImporting,
   } = useNoProjects();
 
-  /** Мутация создания нового проекта через POST /api/projects */
+  const firstName =
+    user && !isGuest(user) && isTelegramUser(user) ? user.firstName?.trim() : '';
+
+  const lines = useMemo(
+    () => [
+      firstName
+        ? { text: `${firstName}, тут пока пусто — проектов ещё нет.` }
+        : { text: 'Тут пока пусто — проектов ещё нет.' },
+      { text: 'Можно с нуля, с готового шаблона или закинуть JSON.' },
+      { text: 'С чего начнём?' },
+    ],
+    [firstName],
+  );
+
+  /** После диалога — кнопки и пометка в localStorage */
+  const handleAllDone = useCallback(() => {
+    markNoProjectsIntroSeen(userId);
+    setActionsReady(true);
+  }, [userId]);
+
   const createMutation = useMutation({
     mutationFn: (name: string) =>
       apiRequest('POST', '/api/projects', {
@@ -54,66 +85,52 @@ export function NoProjectsScreen() {
     <div className="flex items-center justify-center min-h-screen bg-background">
       <Card className="w-full max-w-sm mx-4 shadow-2xl border-border/50">
         <CardHeader className="items-center text-center space-y-3 pb-4">
-          {/* Иконка бота */}
-          <div className="flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 border border-primary/20">
+          <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20">
             <Bot className="h-8 w-8 text-primary" />
           </div>
-          <div className="space-y-1">
-            <CardTitle className="text-2xl font-bold">Нет проектов</CardTitle>
-            <CardDescription>
-              Создайте первый проект или импортируйте существующий
-            </CardDescription>
+          <div className="rounded-xl border border-primary/20 bg-primary/5 px-3 py-2.5 w-full">
+            {introSeen ? (
+              <div className={cn('space-y-2 text-center')} role="status">
+                {lines.map((line) => (
+                  <p key={line.text} className="text-sm text-foreground/90 leading-relaxed">
+                    {line.text}
+                  </p>
+                ))}
+              </div>
+            ) : (
+              <TypewriterDialogue
+                lines={lines}
+                startDelayMs={200}
+                gapMs={380}
+                speedMs={28}
+                lineClassName="text-sm text-foreground/90"
+                onAllDone={handleAllDone}
+              />
+            )}
           </div>
         </CardHeader>
 
-        <CardContent className="space-y-2 pt-2">
-          <Button className="w-full" onClick={handleCreateProject}>
-            <Plus className="h-4 w-4 mr-2" />
-            Создать проект
-          </Button>
-
-          <Button className="w-full" variant="outline" onClick={handleImport} disabled={isImporting}>
-            <FileJson className="h-4 w-4 mr-2" />
-            {isImporting ? 'Импорт...' : 'Импортировать JSON'}
-          </Button>
-
-          <Button className="w-full" variant="outline" onClick={handleTemplates}>
-            <LayoutTemplate className="h-4 w-4 mr-2" />
-            Выбрать шаблон
-          </Button>
-
-          <Button className="w-full text-destructive" variant="ghost" onClick={handleLogout}>
-            <LogOut className="h-4 w-4 mr-2" />
-            Выйти
-          </Button>
+        <CardContent className="pt-2">
+          <NoProjectsActions
+            ready={actionsReady}
+            instant={introSeen}
+            onCreate={handleCreateProject}
+            onImport={handleImport}
+            onTemplates={handleTemplates}
+            onLogout={handleLogout}
+            isImporting={isImporting}
+          />
         </CardContent>
       </Card>
 
-      {/* Диалог создания проекта */}
-      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Новый проект</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 pt-2">
-            <Input
-              placeholder="Название проекта"
-              value={projectName}
-              onChange={(e) => setProjectName(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && projectName.trim() && createMutation.mutate(projectName.trim())}
-            />
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setIsCreateOpen(false)}>Отмена</Button>
-              <Button
-                disabled={!projectName.trim() || createMutation.isPending}
-                onClick={() => createMutation.mutate(projectName.trim())}
-              >
-                {createMutation.isPending ? 'Создание...' : 'Создать'}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <NoProjectsCreateDialog
+        open={isCreateOpen}
+        onOpenChange={setIsCreateOpen}
+        projectName={projectName}
+        onProjectNameChange={setProjectName}
+        onSubmit={() => createMutation.mutate(projectName.trim())}
+        isPending={createMutation.isPending}
+      />
     </div>
   );
 }

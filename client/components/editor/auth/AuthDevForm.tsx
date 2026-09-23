@@ -3,12 +3,28 @@
  * @module components/editor/auth/AuthDevForm
  */
 
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Loader2, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
+import { TypewriterDialogue } from './TypewriterDialogue';
+import { cn } from '@/utils/utils';
+
+/** Документация: шаг 10 — Telegram Login / SKIP_AUTH */
+const INSTALL_AUTH_DOCS =
+  'https://fedorabakumets.github.io/telegram-bot-builder/docs/development/INSTALLATION#:~:text=%D0%A8%D0%B0%D0%B3%2010%3A%20%D0%9D%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0,NODE_ENV%3Ddevelopment';
+
+/** Реплики проводника в dev-режиме */
+const DEV_LINES = [
+  { text: 'У вас тут включён dev-режим.' },
+  { text: 'Не пугайтесь — просто введите свой Telegram ID ниже.' },
+  {
+    text: 'Нужен вход через виджет Telegram? SKIP_AUTH=false в .env — детали в',
+    link: { href: INSTALL_AUTH_DOCS, label: 'руководстве по установке' },
+  },
+];
 
 /**
  * Форма входа по Telegram ID для dev-режима.
@@ -19,8 +35,16 @@ import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-a
 export function AuthDevForm() {
   const [telegramId, setTelegramId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [showHint, setShowHint] = useState(false);
   const { toast } = useToast();
   const { acceptSession } = useTelegramAuth();
+
+  const handleLineDone = useCallback((index: number) => {
+    if (index === 0) setShowForm(true);
+  }, []);
+
+  const handleAllDone = useCallback(() => setShowHint(true), []);
 
   /**
    * Обрабатывает отправку формы — вызывает dev-login API
@@ -57,32 +81,49 @@ export function AuthDevForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
-      <p className="text-xs text-amber-500 text-center leading-relaxed">
-        ⚠️ Dev-режим: введите ваш Telegram ID
-      </p>
-      <p className="text-xs text-muted-foreground text-center leading-relaxed">
-        Для входа через Telegram Login Widget добавьте{' '}
-        <code className="rounded bg-muted px-1 py-0.5 text-[11px]">SKIP_AUTH=false</code> в{' '}
-        <code className="rounded bg-muted px-1 py-0.5 text-[11px]">.env</code> и перезапустите сервер
-      </p>
-      <Input
-        type="number"
-        placeholder="Ваш Telegram ID"
-        value={telegramId}
-        onChange={e => setTelegramId(e.target.value)}
-        disabled={isLoading}
-        className="text-center"
-      />
-      <Button
-        type="submit"
-        disabled={isLoading}
-        size="lg"
-        className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-semibold shadow-lg shadow-blue-500/30 transition-all duration-200"
+      <div className="rounded-xl border border-amber-500/25 bg-amber-500/5 px-3 py-2.5">
+        <TypewriterDialogue
+          lines={DEV_LINES}
+          startDelayMs={120}
+          gapMs={380}
+          speedMs={28}
+          lineClassName="text-xs text-amber-600 dark:text-amber-400"
+          onLineDone={handleLineDone}
+          onAllDone={handleAllDone}
+        />
+      </div>
+
+      <div
+        className={cn(
+          'space-y-3 transition-all duration-500',
+          showForm ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none h-0 overflow-hidden',
+        )}
       >
-        {isLoading ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <LogIn className="h-5 w-5 mr-2" />}
-        Войти
-      </Button>
-      <p className="text-xs text-muted-foreground text-center">
+        <Input
+          type="number"
+          placeholder="Ваш Telegram ID"
+          value={telegramId}
+          onChange={(e) => setTelegramId(e.target.value)}
+          disabled={isLoading || !showForm}
+          className="text-center"
+        />
+        <Button
+          type="submit"
+          disabled={isLoading || !showForm}
+          size="lg"
+          className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-semibold shadow-lg shadow-blue-500/30 transition-all duration-200"
+        >
+          {isLoading ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <LogIn className="h-5 w-5 mr-2" />}
+          Войти
+        </Button>
+      </div>
+
+      <p
+        className={cn(
+          'text-xs text-muted-foreground text-center transition-opacity duration-500',
+          showHint ? 'opacity-100' : 'opacity-0',
+        )}
+      >
         Узнать ID:{' '}
         <a href="https://t.me/userinfobot" target="_blank" rel="noreferrer" className="underline">
           @userinfobot

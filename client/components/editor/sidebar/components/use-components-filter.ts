@@ -6,6 +6,8 @@
 import { useMemo } from 'react';
 import { ComponentDefinition } from '@shared/schema';
 import type { CommandPreset } from '../massive/commands';
+import type { PaletteMainCategory } from '../constants';
+import { flattenPaletteSubcategories } from '../constants';
 
 /** Результат фильтрации компонентов */
 export interface FilteredResults {
@@ -30,28 +32,28 @@ function matchesQuery(text: string | undefined, query: string): boolean {
 
 /**
  * Хук для фильтрации компонентов и пресетов команд по поисковому запросу
- * @param categories - Массив категорий компонентов
+ * @param categories - Главные категории палитры
  * @param commandPresets - Пресеты команд
  * @param query - Строка поиска
  * @returns Отфильтрованные результаты или null если запрос пуст
  */
 export function useComponentsFilter(
-  categories: Array<{ title: string; components: ComponentDefinition[] }>,
+  categories: PaletteMainCategory[],
   commandPresets: CommandPreset[] | undefined,
-  query: string
+  query: string,
 ): FilteredResults | null {
   return useMemo(() => {
     const trimmed = query.trim().toLowerCase();
     if (!trimmed) return null;
 
-    const components = categories.flatMap((cat) =>
-      cat.components.filter(
-        (c) => matchesQuery(c.name, trimmed) || matchesQuery(c.description, trimmed)
-      )
+    const components = flattenPaletteSubcategories(categories).flatMap((sub) =>
+      sub.components.filter(
+        (c) => matchesQuery(c.name, trimmed) || matchesQuery(c.description, trimmed),
+      ),
     );
 
     const presets = (commandPresets ?? []).filter(
-      (p) => matchesQuery(p.name, trimmed) || matchesQuery(p.description, trimmed)
+      (p) => matchesQuery(p.name, trimmed) || matchesQuery(p.description, trimmed),
     );
 
     return { components, presets, hasResults: components.length > 0 || presets.length > 0 };

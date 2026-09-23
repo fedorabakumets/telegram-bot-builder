@@ -1,16 +1,18 @@
 /**
- * @fileoverview Компонент фильтров: поиск, категория и сортировка сценариев
+ * @fileoverview Панель поиска и фильтров сценариев
  * @module client/components/editor/scenariy/components/TemplateFilters
  */
 
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Filter, SortAsc } from 'lucide-react';
+import { Search, X, SlidersHorizontal, ArrowDownWideNarrow } from 'lucide-react';
 import { KATEGORII } from '../utils/scenariy-kategorii';
 import type { TemplateFiltersProps, SortBy } from '../types/scenariy-tipy';
+import { cn } from '@/utils/utils';
 
-/** Метки для значений сортировки */
+/** Метки сортировки */
 const METKI_SORTIROVKI: Record<SortBy, string> = {
   popular: 'Популярные',
   rating: 'По рейтингу',
@@ -18,81 +20,125 @@ const METKI_SORTIROVKI: Record<SortBy, string> = {
   name: 'По алфавиту',
 };
 
+const SELECT_TRIGGER =
+  'h-10 text-sm rounded-xl border-border/50 bg-background/70 shadow-none hover:bg-background hover:border-border focus:ring-1 focus:ring-primary/20';
+
 /**
- * Панель фильтров: поиск по тексту, выбор категории и сортировка
- * @param props - свойства компонента
- * @returns JSX элемент панели фильтров
+ * Поиск, категория и сортировка сценариев
+ * @param props - свойства
+ * @returns JSX элемент
  */
-export function TemplateFilters({ searchTerm, onSearchChange, selectedCategory, onCategoryChange, sortBy, onSortChange }: TemplateFiltersProps) {
-  const aktivnyeFiltery = searchTerm || selectedCategory !== 'all' || sortBy !== 'popular';
+export function TemplateFilters({
+  searchTerm,
+  onSearchChange,
+  selectedCategory,
+  onCategoryChange,
+  sortBy,
+  onSortChange,
+}: TemplateFiltersProps) {
+  const hasActive =
+    Boolean(searchTerm) || selectedCategory !== 'all' || sortBy !== 'popular';
+
+  /** Сбрасывает все фильтры */
+  const resetAll = () => {
+    onSearchChange('');
+    onCategoryChange('all');
+    onSortChange('popular');
+  };
 
   return (
-    <div className="rounded-xl border border-border/40 bg-gradient-to-br from-card/60 to-card/40 dark:from-card/50 dark:to-card/30 p-3 xs:p-4 sm:p-5 space-y-3 xs:space-y-4 backdrop-blur-sm hover:border-border/60 transition-all duration-300">
-      <div className="relative group">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-500/50 h-4 w-4 group-focus-within:text-blue-600 dark:group-focus-within:text-blue-400 transition-colors duration-200" />
-        <Input placeholder="Поиск сценариев по названию..." value={searchTerm} onChange={(e) => onSearchChange(e.target.value)} className="pl-10 h-10 xs:h-11 text-sm xs:text-base border border-border/50 rounded-lg bg-background/80 hover:bg-background hover:border-border/70 focus:border-blue-500/60 focus:ring-blue-500/15 transition-all duration-200 shadow-sm" />
+    <div className="space-y-2.5">
+      <div
+        className={cn(
+          'rounded-2xl border border-border/50 bg-card/40 p-2 sm:p-2.5',
+          'shadow-sm shadow-black/[0.02] dark:shadow-none',
+        )}
+      >
+        <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
+          <div className="relative flex-1 min-w-0">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-blue-500 dark:text-blue-400" />
+            <Input
+              placeholder="Найти шаблон по названию…"
+              value={searchTerm}
+              onChange={(e) => onSearchChange(e.target.value)}
+              className="h-10 rounded-xl border border-blue-500/35 bg-background pl-10 pr-9 text-sm shadow-none placeholder:text-muted-foreground/60 ring-1 ring-blue-500/20 focus-visible:ring-blue-500/35 focus-visible:border-blue-500/50"
+            />
+            {searchTerm ? (
+              <button
+                type="button"
+                aria-label="Очистить поиск"
+                onClick={() => onSearchChange('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            ) : null}
+          </div>
+
+          <div className="flex flex-col gap-2 xs:flex-row lg:w-auto lg:shrink-0">
+            <Select value={selectedCategory} onValueChange={onCategoryChange}>
+              <SelectTrigger className={cn(SELECT_TRIGGER, 'w-full xs:flex-1 lg:w-[200px]')}>
+                <div className="flex min-w-0 items-center gap-2">
+                  <SlidersHorizontal className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  <SelectValue placeholder="Категория" />
+                </div>
+              </SelectTrigger>
+              <SelectContent className="rounded-xl">
+                {KATEGORII.map((k) => (
+                  <SelectItem key={k.value} value={k.value} className="text-sm">
+                    {k.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={sortBy} onValueChange={(v) => onSortChange(v as SortBy)}>
+              <SelectTrigger className={cn(SELECT_TRIGGER, 'w-full xs:flex-1 lg:w-[180px]')}>
+                <div className="flex min-w-0 items-center gap-2">
+                  <ArrowDownWideNarrow className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  <SelectValue placeholder="Сортировка" />
+                </div>
+              </SelectTrigger>
+              <SelectContent className="rounded-xl">
+                {(Object.entries(METKI_SORTIROVKI) as [SortBy, string][]).map(([val, label]) => (
+                  <SelectItem key={val} value={val} className="text-sm">
+                    {label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
       </div>
 
-      <div className="flex flex-col xs:flex-row gap-2.5 xs:gap-3">
-        <div className="flex-1 relative z-40">
-          <div className="flex items-center gap-1.5 mb-2 xs:mb-0">
-            <Filter className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-            <span className="text-xs font-semibold text-foreground/70 uppercase tracking-wide">Категория</span>
-            {selectedCategory !== 'all' && (
-              <Badge variant="secondary" className="ml-1 text-xs bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300">
-                {KATEGORII.find(c => c.value === selectedCategory)?.label}
-              </Badge>
-            )}
-          </div>
-          <Select value={selectedCategory} onValueChange={onCategoryChange}>
-            <SelectTrigger className="w-full h-9 xs:h-10 text-xs xs:text-sm border border-border/60 rounded-lg bg-background/80 hover:bg-background hover:border-blue-500/40 focus:border-blue-500/60 focus:ring-blue-500/15 transition-all duration-200 shadow-sm">
-              <div className="flex items-center gap-2">
-                <Filter className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 hidden xs:block" />
-                <SelectValue placeholder="Выбрать категорию" />
-              </div>
-            </SelectTrigger>
-            <SelectContent className="z-50 rounded-lg">
-              {KATEGORII.map((k) => <SelectItem key={k.value} value={k.value} className="text-sm">{k.label}</SelectItem>)}
-            </SelectContent>
-          </Select>
+      {hasActive ? (
+        <div className="flex flex-wrap items-center gap-1.5 px-0.5">
+          {searchTerm ? (
+            <Badge variant="secondary" className="gap-1 rounded-lg font-normal">
+              Поиск: {searchTerm}
+            </Badge>
+          ) : null}
+          {selectedCategory !== 'all' ? (
+            <Badge variant="secondary" className="rounded-lg font-normal">
+              {KATEGORII.find((c) => c.value === selectedCategory)?.label}
+            </Badge>
+          ) : null}
+          {sortBy !== 'popular' ? (
+            <Badge variant="secondary" className="rounded-lg font-normal">
+              {METKI_SORTIROVKI[sortBy]}
+            </Badge>
+          ) : null}
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-7 px-2 text-xs text-muted-foreground"
+            onClick={resetAll}
+          >
+            Сбросить
+          </Button>
         </div>
-
-        <div className="flex-1 relative z-40">
-          <div className="flex items-center gap-1.5 mb-2 xs:mb-0">
-            <SortAsc className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
-            <span className="text-xs font-semibold text-foreground/70 uppercase tracking-wide">Сортировка</span>
-            {sortBy !== 'popular' && (
-              <Badge variant="secondary" className="ml-1 text-xs bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300">
-                {METKI_SORTIROVKI[sortBy]}
-              </Badge>
-            )}
-          </div>
-          <Select value={sortBy} onValueChange={(v) => onSortChange(v as SortBy)}>
-            <SelectTrigger className="w-full h-9 xs:h-10 text-xs xs:text-sm border border-border/60 rounded-lg bg-background/80 hover:bg-background hover:border-amber-500/40 focus:border-amber-500/60 focus:ring-amber-500/15 transition-all duration-200 shadow-sm">
-              <div className="flex items-center gap-2">
-                <SortAsc className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400 hidden xs:block" />
-                <SelectValue placeholder="Сортировка" />
-              </div>
-            </SelectTrigger>
-            <SelectContent className="z-50 rounded-lg">
-              {(Object.entries(METKI_SORTIROVKI) as [SortBy, string][]).map(([val, label]) => (
-                <SelectItem key={val} value={val} className="text-sm">{label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      {aktivnyeFiltery && (
-        <div className="pt-2 border-t border-border/30">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs font-medium text-muted-foreground">Фильтры активны:</span>
-            {searchTerm && <Badge variant="outline" className="text-xs bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300">Поиск: {searchTerm}</Badge>}
-            {selectedCategory !== 'all' && <Badge variant="outline" className="text-xs bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300">{KATEGORII.find(c => c.value === selectedCategory)?.label}</Badge>}
-            {sortBy !== 'popular' && <Badge variant="outline" className="text-xs bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300">Сортировка: {METKI_SORTIROVKI[sortBy]}</Badge>}
-          </div>
-        </div>
-      )}
+      ) : null}
     </div>
   );
 }
