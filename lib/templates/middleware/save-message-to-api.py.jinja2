@@ -65,10 +65,10 @@ async def save_message_to_api(user_id: str, message_type: str, message_text: str
                         """
                         INSERT INTO user_activity_daily (project_id, token_id, day, user_id, first_seen_at)
                         VALUES (
-                          $1, $2, CURRENT_DATE, $3::bigint,
+                          $1, $2, CURRENT_DATE, $3,
                           COALESCE(
                             (SELECT registered_at FROM bot_users
-                              WHERE project_id = $1 AND token_id = $2 AND user_id = $3::bigint),
+                              WHERE project_id = $1 AND token_id = $2 AND user_id = $3),
                             NOW()
                           )
                         )
@@ -76,7 +76,7 @@ async def save_message_to_api(user_id: str, message_type: str, message_text: str
                         """,
                         PROJECT_ID,
                         TOKEN_ID,
-                        str(user_id),
+                        int(user_id),
                     )
                 except Exception as _uact_err:
                     logging.warning(f"⚠️ Не удалось обновить user_activity_daily: {_uact_err}")
