@@ -13,7 +13,7 @@ import { insertBotProjectSchema } from "@shared/schema";
 import { z } from "zod";
 import { storage } from "../../../storages/storage";
 import type { StorageBotProjectUpdate } from "../../../storages/storageTypes";
-import { restartBotIfRunning } from "../../../bots/restartBotIfRunning";
+import { restartAllRunningBots } from "../../../bots/restartAllRunningBots";
 import { syncContentToTable } from "../../../services/content-table";
 import { getOwnerIdFromRequest } from "../../../telegram/auth-middleware";
 import { broadcastAgentCanvasUpdate } from "../../../canvas/broadcastAgentCanvasUpdate";
@@ -113,10 +113,14 @@ export async function updateProjectHandler(req: Request, res: Response): Promise
         }
 
         if (validatedData.data && validatedData.restartOnUpdate) {
-            console.log(`Проект ${projectId} обновлен, проверяем необходимость перезапуска бота...`);
-            const restartResult = await restartBotIfRunning(projectId);
-            if (!restartResult.success) {
-                console.error(`Ошибка перезапуска бота ${projectId}:`, restartResult.error);
+            console.log(`Проект ${projectId} обновлён, перезапуск всех запущенных ботов...`);
+            const restartResult = await restartAllRunningBots(projectId);
+            if (!restartResult.ok) {
+                console.error(`Проект ${projectId}: ${restartResult.message}`);
+            } else if (restartResult.failed > 0) {
+                console.error(
+                    `Проект ${projectId}: перезапущено ${restartResult.restarted}, ошибок ${restartResult.failed}`,
+                );
             }
         }
 

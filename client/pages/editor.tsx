@@ -75,6 +75,7 @@ import { CanvasViewToggle } from '@/pages/editor/components/canvas-view-toggle';
 import { useCanvasView } from '@/pages/editor/hooks/use-canvas-view';
 import { JsonApplyBar } from '@/components/editor/code/panel';
 import { StagingBar, useStagingBar } from '@/components/editor/staging';
+import { invalidateBotStatusQueries } from '@/components/editor/bot/invalidate-bot-status-queries';
 import { useBotEditor } from '@/components/editor/canvas/canvas/use-bot-editor';
 import { useMoveNodeToSheet } from '@/components/editor/canvas/canvas/use-move-node-to-sheet';
 import { useIsMobile } from '@/components/editor/header/hooks/use-mobile';
@@ -431,10 +432,13 @@ export default function Editor() {
       // Возвращаем контекст для отката
       return { previousProjects, previousProject, previousList };
     },
-    onSuccess: async (_updatedProject) => {
+    onSuccess: async (_updatedProject, variables) => {
       // Reset local changes flag only after successful save
       setHasLocalChanges(false);
       setRemoteSyncActor(null);
+      if (variables?.restartOnUpdate && activeProject?.id) {
+        invalidateBotStatusQueries(queryClient, activeProject.id);
+      }
 
       // Оповещаем другие вкладки/устройства что изменения сохранены —
       // у них тоже пропадёт плашка несохранённых изменений (данные уже синхронизированы)
@@ -898,7 +902,7 @@ export default function Editor() {
     onSave: () => updateProjectMutation.mutate({}),
     onSaveWithNote: (note: string) => updateProjectMutation.mutate({ commitMessage: note }),
     onSaveAndRestart: () => {
-      // Сохраняем проект с флагом restartOnUpdate — сервер сам перезапустит бота
+      // Сохраняем проект с флагом restartOnUpdate — сервер перезапустит всех запущенных ботов
       updateProjectMutation.mutate({ restartOnUpdate: true });
     },
     onDiscard: () => {
