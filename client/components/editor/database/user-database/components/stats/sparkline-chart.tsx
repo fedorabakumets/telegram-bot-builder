@@ -30,6 +30,8 @@ export interface MultiLineData {
   data: GrowthPoint[];
   /** Цвет линии */
   color: string;
+  /** Итог для легенды вместо суммы точек */
+  legendTotal?: number;
 }
 
 /**

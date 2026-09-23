@@ -34,7 +34,10 @@ export function SourceLegend({ items }: SourceLegendProps): React.JSX.Element {
   return (
     <div className="flex flex-wrap gap-2 text-xs">
       {items.map(item => {
-        const total = getTotalCount(item.data);
+        const total =
+          typeof item.legendTotal === 'number'
+            ? item.legendTotal
+            : getTotalCount(item.data);
         return (
           <div key={item.name} className="flex items-center gap-1.5">
             <div

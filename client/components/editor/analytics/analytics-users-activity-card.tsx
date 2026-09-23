@@ -45,11 +45,23 @@ export function AnalyticsUsersActivityCard({
     newInWindow,
   } = useUsersActivity({ projectId, selectedTokenId, granularity });
 
+  const returningInWindow = Math.max(0, activeInWindow - newInWindow);
+
   const multiLine =
     splitMode === 'split'
       ? [
-          { name: 'Новички', data: newcomersPoints, color: '#10b981' },
-          { name: 'Вернувшиеся', data: returningPoints, color: '#6366f1' },
+          {
+            name: 'Новички',
+            data: newcomersPoints,
+            color: '#10b981',
+            legendTotal: newInWindow,
+          },
+          {
+            name: 'Вернувшиеся',
+            data: returningPoints,
+            color: '#6366f1',
+            legendTotal: returningInWindow,
+          },
         ]
       : undefined;
 

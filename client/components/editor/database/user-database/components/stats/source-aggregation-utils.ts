@@ -48,6 +48,11 @@ export interface MultiLineData {
   data: GrowthPoint[];
   /** Цвет линии */
   color: string;
+  /**
+   * Итог для легенды, если сумма точек неверна
+   * (например уникальные за окно, а не сумма по дням)
+   */
+  legendTotal?: number;
 }
 
 /**
