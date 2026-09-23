@@ -82,7 +82,7 @@ export const insertBotProjectSchema = z.object({
   adminIds: z.string().default("").optional(),
   /** ID сессии гостевого пользователя */
   sessionId: z.string().nullable().optional(),
-  /** Флаг необходимости перезапуска бота при обновлении */
+  /** Перезапустить всех запущенных ботов проекта после сохранения сценария */
   restartOnUpdate: z.boolean().default(false).optional(),
 });
 

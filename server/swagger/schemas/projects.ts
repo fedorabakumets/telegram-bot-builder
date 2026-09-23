@@ -165,7 +165,7 @@ export const UpdateProjectRequestSchema = insertBotProjectSchema
     agentSessionId: z.string().optional(),
     /** Отображаемое имя агента */
     agentDisplayName: z.string().optional(),
-    /** Перезапустить бота после обновления data */
+    /** Перезапустить всех запущенных ботов проекта после обновления data */
     restartOnUpdate: z.boolean().optional(),
   })
   .openapi("UpdateProjectRequest");
