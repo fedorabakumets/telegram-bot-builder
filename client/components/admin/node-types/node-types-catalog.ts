@@ -24,16 +24,16 @@ export interface NodeTypeCatalogGroup {
 
 /**
  * Собирает группы типов из палитры редактора
- * @returns Группы без пустых категорий
+ * @returns Группы «главная · подкатегория» без пустых
  */
 export function buildNodeTypeCatalog(): NodeTypeCatalogGroup[] {
-  return componentCategories
-    .map((category) => ({
-      title: category.title,
-      items: category.components.map((component) => ({
+  return componentCategories.flatMap((main) =>
+    main.subcategories.map((sub) => ({
+      title: `${main.title} · ${sub.title}`,
+      items: sub.components.map((component) => ({
         type: component.type,
         label: nodeRegistry[component.type]?.name ?? component.name ?? component.type,
       })),
-    }))
-    .filter((group) => group.items.length > 0);
+    })),
+  ).filter((group) => group.items.length > 0);
 }

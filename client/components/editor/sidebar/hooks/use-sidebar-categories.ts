@@ -6,6 +6,9 @@
 
 import { useState, useCallback } from 'react';
 
+/** Главные категории, свёрнутые при первом открытии палитры */
+const INITIALLY_COLLAPSED_MAINS = ['Userbot Telegram API', 'Остальное'];
+
 /**
  * Результат работы хука категорий
  */
@@ -31,8 +34,9 @@ export interface UseSidebarCategoriesResult {
  * @returns Объект с состоянием и методами управления категориями
  */
 export function useSidebarCategories(): UseSidebarCategoriesResult {
-  // Множество свернутых категорий
-  const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
+  const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(
+    () => new Set(INITIALLY_COLLAPSED_MAINS),
+  );
 
   /**
    * Переключить состояние категории
@@ -76,15 +80,11 @@ export function useSidebarCategories(): UseSidebarCategoriesResult {
    * @returns True если категория свернута
    */
   const isCollapsed = useCallback(
-    (categoryTitle: string) => {
-      return collapsedCategories.has(categoryTitle);
-    },
-    [collapsedCategories]
+    (categoryTitle: string) => collapsedCategories.has(categoryTitle),
+    [collapsedCategories],
   );
 
-  /**
-   * Развернуть все категории
-   */
+  /** Развернуть все категории */
   const expandAll = useCallback(() => {
     setCollapsedCategories(new Set());
   }, []);

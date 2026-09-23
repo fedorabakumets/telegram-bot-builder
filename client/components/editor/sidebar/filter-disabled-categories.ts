@@ -3,32 +3,29 @@
  * @module components/editor/sidebar/filter-disabled-categories
  */
 
-import type { ComponentDefinition } from '@shared/schema';
-
-/** Категория палитры */
-export type PaletteCategory = {
-  /** Название категории */
-  title: string;
-  /** Компоненты в категории */
-  components: ComponentDefinition[];
-};
+import type { PaletteMainCategory } from './constants';
 
 /**
- * Убирает выключенные типы и пустые категории
- * @param categories - Исходные категории палитры
+ * Убирает выключенные типы, пустые подкатегории и пустые главные категории
+ * @param categories - Главные категории палитры
  * @param disabledTypes - Выключенные типы
- * @returns Отфильтрованные категории
+ * @returns Отфильтрованные главные категории
  */
 export function filterDisabledCategories(
-  categories: PaletteCategory[],
+  categories: PaletteMainCategory[],
   disabledTypes: readonly string[] | undefined,
-): PaletteCategory[] {
+): PaletteMainCategory[] {
   if (!disabledTypes?.length) return categories;
   const disabled = new Set(disabledTypes);
   return categories
-    .map((category) => ({
-      ...category,
-      components: category.components.filter((item) => !disabled.has(item.type)),
+    .map((main) => ({
+      ...main,
+      subcategories: main.subcategories
+        .map((sub) => ({
+          ...sub,
+          components: sub.components.filter((item) => !disabled.has(item.type)),
+        }))
+        .filter((sub) => sub.components.length > 0),
     }))
-    .filter((category) => category.components.length > 0);
+    .filter((main) => main.subcategories.length > 0);
 }
