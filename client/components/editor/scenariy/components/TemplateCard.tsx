@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Star, Trash2, Sparkles, Eye, Users, Globe, Lock } from 'lucide-react';
+import { cn } from '@/utils/utils';
 import { getCategoryLabel } from '../utils/scenariy-kategorii';
 import type { TemplateCardProps } from '../types/scenariy-tipy';
 
@@ -15,7 +16,14 @@ import type { TemplateCardProps } from '../types/scenariy-tipy';
  * @param props - свойства компонента
  * @returns JSX элемент карточки
  */
-export function TemplateCard({ template, onUse, showDelete, onDelete }: TemplateCardProps) {
+export function TemplateCard({
+  template,
+  onUse,
+  showDelete,
+  onDelete,
+  animateButton = false,
+  buttonDelayMs = 0,
+}: TemplateCardProps) {
   return (
     <Card className="group border border-border/40 shadow-sm hover:shadow-lg hover:border-border/70 transition-all duration-300 flex flex-col h-full overflow-hidden bg-gradient-to-br from-card/60 to-card/40 dark:from-card/50 dark:to-card/30 hover:from-blue-500/5 hover:to-cyan-500/5 dark:hover:from-blue-900/10 dark:hover:to-cyan-900/10 hover:scale-105">
       <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-30 bg-gradient-to-br from-blue-500/10 to-transparent transition-opacity duration-300 rounded-lg" />
@@ -75,8 +83,21 @@ export function TemplateCard({ template, onUse, showDelete, onDelete }: Template
             <span className="text-muted-foreground/60">использований</span>
           </div>
           <div className="flex gap-2 pt-1">
-            <Button size="sm" className="flex-1 h-9 xs:h-10 text-xs xs:text-sm font-semibold bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white shadow-sm hover:shadow-md transition-all group-hover:scale-105" onClick={() => onUse(template)} data-testid="button-use-template">
-              <Sparkles className="w-3 h-3 mr-1.5" />Использовать
+            <Button
+              size="sm"
+              className={cn(
+                'flex-1 h-9 xs:h-10 text-xs xs:text-sm font-semibold bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white shadow-sm hover:shadow-md transition-all group-hover:scale-105',
+                animateButton &&
+                  'animate-in fade-in slide-in-from-bottom-2 duration-500 fill-mode-both',
+              )}
+              style={
+                animateButton ? { animationDelay: `${buttonDelayMs}ms` } : undefined
+              }
+              onClick={() => onUse(template)}
+              data-testid="button-use-template"
+            >
+              <Sparkles className="w-3 h-3 mr-1.5" />
+              Использовать
             </Button>
             {showDelete && (
               <Button size="sm" variant="outline" onClick={() => onDelete(template)} className="h-9 xs:h-10 px-2.5 border-red-200/50 dark:border-red-800/50 hover:bg-red-50 dark:hover:bg-red-950/20 hover:text-red-600 dark:hover:text-red-400 transition-all" data-testid="button-delete-template">

@@ -37,6 +37,12 @@ export interface TemplateGridProps {
   showDelete: boolean;
   /** Обработчик удаления сценария */
   onDelete: (template: BotTemplate) => void;
+  /** Каскадное появление карточек */
+  staggerReveal?: boolean;
+  /** Показать карточки */
+  reveal?: boolean;
+  /** Базовая задержка после вкладок (мс) */
+  baseDelayMs?: number;
 }
 
 /**
@@ -51,6 +57,10 @@ export interface TemplateCardProps {
   showDelete: boolean;
   /** Обработчик удаления */
   onDelete: (template: BotTemplate) => void;
+  /** Анимировать появление кнопки «Использовать» */
+  animateButton?: boolean;
+  /** Задержка анимации кнопки (мс) */
+  buttonDelayMs?: number;
 }
 
 /**
