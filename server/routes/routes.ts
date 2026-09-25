@@ -668,14 +668,21 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       const result = await response.json();
       console.log(`[📋 Routes] Распарсили JSON ответ:`);
-      console.log(`  - ok: ${result.ok}`);
-      console.log(`  - result: ${JSON.stringify(result.result, null, 2).substring(0, 200)}...`);
+      console.log(`  - ok: ${result?.ok}`);
+      const resultPreview =
+        result?.result != null
+          ? JSON.stringify(result.result, null, 2).slice(0, 200)
+          : String(result?.description ?? result?.error ?? '(нет result)');
+      console.log(`  - result: ${resultPreview}...`);
 
-      if (!response.ok) {
-        console.warn(`[❌ Routes] Bot token validation failed for ${maskedToken}: ${result.description || 'Unknown error'}`);
+      // HTTP-ошибка Telegram или ok:false / пустой result → 400, не 500
+      if (!response.ok || !result?.ok || !result?.result) {
+        console.warn(
+          `[❌ Routes] Bot token validation failed for ${maskedToken}: ${result?.description || 'Unknown error'}`,
+        );
         return res.status(400).json({
           message: "Invalid bot token or failed to get bot info",
-          error: result.description || "Unknown error"
+          error: result?.description || "Unknown error",
         });
       }
 

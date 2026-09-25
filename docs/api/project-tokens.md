@@ -81,7 +81,7 @@ curl -s http://localhost:5000/api/projects/42/tokens -b cookies.txt
 
 **Auth:** опционально `getOwnerIdFromRequest` + `hasProjectAccess` при сессии.
 
-**Клиент:** модалка добавления бота.
+**Клиент:** модалка добавления бота; MCP `db_add_bot_token` (агенту отдаёт только безопасные поля без секрета).
 
 ```bash
 curl -s -X POST http://localhost:5000/api/projects/42/tokens -b cookies.txt \
@@ -132,7 +132,7 @@ curl -s -X POST http://localhost:5000/api/projects/42/tokens -b cookies.txt \
 
 **Auth:** опционально `getOwnerIdFromRequest` + `hasProjectAccess`; при auth также сверка `token.projectId`.
 
-**Клиент:** редактирование карточки токена.
+**Клиент:** TokenDisplayEdit; MCP `db_update_bot_token` (агенту отдаёт только безопасные поля без секрета).
 
 ```bash
 curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7 -b cookies.txt \
@@ -343,7 +343,9 @@ curl -s http://localhost:5000/api/projects/42/tokens/list -b cookies.txt
 
 Body `{ token }`. Вызывает `getMe`, `getMyDescription`, `getMyShortDescription`, опционально фото. **Нет** middleware `requireProjectAccess` / ownership — только глобальный `requireApiAuth` (если включён). `:id` в URL не влияет на Telegram.
 
-**Клиент:** форма добавления токена (превью @username).
+Невалидный / отозванный token Telegram → **400** (`Invalid bot token or failed to get bot info`), не 500.
+
+**Клиент:** форма добавления токена (превью @username); MCP `PostApiProjectsTokensParse` / эквивалент превью перед `db_add_bot_token`.
 
 ```bash
 curl -s -X POST http://localhost:5000/api/projects/42/tokens/parse -b cookies.txt \
@@ -366,8 +368,8 @@ curl -s -X POST http://localhost:5000/api/projects/42/tokens/parse -b cookies.tx
 | Код | Описание |
 |-----|----------|
 | 200 | Поля бота для формы |
-| 400 | Нет token / Invalid bot token |
-| 500 | Сеть / Telegram недоступен |
+| 400 | Нет token в body; либо Telegram отклонил token (ok:false / HTTP не 200) — `Invalid bot token or failed to get bot info` |
+| 500 | Сеть / Telegram недоступен (`Failed to connect…`). Ошибка логирования при пустом `result` больше не отдаёт 500. |
 
 #### Пример ответа `200`
 
