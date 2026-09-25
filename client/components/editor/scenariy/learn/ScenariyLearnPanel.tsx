@@ -50,7 +50,7 @@ export function ScenariyLearnPanel({
   onSkip,
 }: ScenariyLearnPanelProps) {
   return (
-    <div className="rounded-xl border border-primary/25 bg-primary/5 px-3 py-3 space-y-3 mb-3">
+    <div className="rounded-xl border border-primary/25 bg-primary/5 px-3 py-3 space-y-3 mb-3 max-w-2xl">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
           <span className="shrink-0 text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-md bg-primary/15 text-primary">
