@@ -370,6 +370,46 @@ MCP **не раздувает** `data` дефолтами клавиатуры. 
 
 Список токенов **без секрета** `token`: `id`, `name`, `botUsername`, флаги, **`messagesRetentionDays`**.
 
+#### `db_add_bot_token`
+
+Подключить бота к проекту — токен от `@BotFather` (модалка «Подключить бота»).
+
+| Параметр | Тип | Описание |
+|----------|-----|----------|
+| `project_id` | number | ID проекта |
+| `token` | string | Токен вида `123456789:AAH…` |
+| `name` | string? | Имя записи (по умолчанию «Основной токен») |
+| `is_default` | boolean? | Сделать токеном по умолчанию |
+
+- сервер вызывает Telegram `getMe` и шлёт WS `token-created`
+- дубликат того же `token` в проекте → `ok` + `created: false` (существующий id)
+- ответ **без** секрета `token` (только `id` / `name` / `botUsername` / флаги)
+- далее: `db_start_bot(project_id, token_id)`
+
+Эквивалент UI и `POST /api/projects/{id}/tokens`.
+
+Код: `lib/bot-tools/bot-token-create-db.ts` → `addBotTokenInDb`.
+
+#### `db_update_bot_token`
+
+Сменить Telegram-токен у существующей записи (UI TokenDisplayEdit).
+
+| Параметр | Тип | Описание |
+|----------|-----|----------|
+| `project_id` | number | ID проекта |
+| `token_id` | number | ID записи из `db_list_bot_tokens` |
+| `token` | string | Новый токен вида `123456789:AAH…` |
+| `name` | string? | Опционально новое имя записи |
+
+- при новом `token` сервер ставит `isActive: 1` и шлёт WS `token-updated`
+- **не** вызывает Telegram `getMe` — `botUsername` может не обновиться
+- ответ **без** секрета `token` (только `id` / `name` / `botUsername` / флаги)
+- маскированный/`••••` token API игнорирует; MCP валидирует формат до запроса
+
+Эквивалент UI и `PUT /api/projects/{id}/tokens/{tokenId}`.
+
+Код: `lib/bot-tools/bot-token-update-db.ts` → `updateBotTokenInDb`.
+
 #### `db_bot_status` / `db_bot_logs` / `db_bot_launch_history`
 
 Статус, live-логи и история запусков по `token_id` из `db_list_bot_tokens`.
@@ -465,6 +505,8 @@ WS: `token-deleted`.
 | Срок хранения сообщений | ✅ | `db_set_messages_retention` |
 | Live UI после настроек токена | ✅ | WS `token-updated`, [[features/token-settings-realtime]] |
 | Запуск всех офлайн | ✅ | `db_start_offline_bots`, [[features/start-offline-bots]] |
+| Добавление токена бота | ✅ | `db_add_bot_token` (без секрета в ответе), POST `/api/projects/{id}/tokens` |
+| Смена токена записи | ✅ | `db_update_bot_token` (без секрета в ответе), PUT `/api/projects/{id}/tokens/{tokenId}` |
 | Удаление токена бота | ✅ | `db_delete_bot_token` (`confirm: true`), [[features/token-project-access-delete]] |
 | `db_auto_layout` | ✅ | слой 5 |
 | Вкладка ИИ-агента в UI | частично | [[futures/features/ai-agent-tab-vision]] |
@@ -478,6 +520,8 @@ WS: `token-deleted`.
 | `tools/mcp-server/index.ts` | Регистрация MCP-тулов |
 | `lib/bot-tools/` | Реализация инструментов |
 | `lib/bot-tools/bot-runtime-db.ts` | Статус/логи/старт/стоп |
+| `lib/bot-tools/bot-token-create-db.ts` | Добавление токена (`db_add_bot_token`) |
+| `lib/bot-tools/bot-token-update-db.ts` | Смена токена (`db_update_bot_token`) |
 | `lib/bot-tools/bot-token-settings-db.ts` | Настройки токена (retention) |
 | `lib/bot-tools/mcp-allowed-types.ts` | Whitelist типов |
 | `lib/bot-tools/minimize-node-data.ts` | Компактный JSON |

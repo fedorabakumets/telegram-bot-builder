@@ -40,7 +40,8 @@ export function registerProjectTokensUpdatePaths(
       "WS `token-updated` (source=api).\n\n" +
       "**Auth:** опционально `getOwnerIdFromRequest` + `hasProjectAccess`; " +
       "при auth также сверка `token.projectId`.\n\n" +
-      "**Клиент:** редактирование карточки токена.\n\n" +
+      "**Клиент:** TokenDisplayEdit; MCP `db_update_bot_token` " +
+      "(агенту отдаёт только безопасные поля без секрета).\n\n" +
       "```bash\n" +
       "curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7 -b cookies.txt \\\n" +
       "  -H 'Content-Type: application/json' -d '{\"name\":\"Новое имя\"}'\n" +

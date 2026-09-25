@@ -37,7 +37,8 @@ export function registerProjectTokensCreatePaths(
       "Новый → **201** full + WS `token-created`.\n\n" +
       "**Риск:** ответ содержит **сырой** Telegram token.\n\n" +
       "**Auth:** опционально `getOwnerIdFromRequest` + `hasProjectAccess` при сессии.\n\n" +
-      "**Клиент:** модалка добавления бота.\n\n" +
+      "**Клиент:** модалка добавления бота; MCP `db_add_bot_token` " +
+      "(агенту отдаёт только безопасные поля без секрета).\n\n" +
       "```bash\n" +
       "curl -s -X POST http://localhost:5000/api/projects/42/tokens -b cookies.txt \\\n" +
       "  -H 'Content-Type: application/json' \\\n" +
