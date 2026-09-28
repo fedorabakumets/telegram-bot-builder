@@ -10355,7 +10355,7 @@
           "project-tokens"
         ],
         "summary": "Создать токен (или вернуть дубликат)",
-        "description": "`insertBotTokenSchema`. `ownerId` из body игнорируется (сессия / owner проекта). При отсутствии `botUsername` — auto getMe. Дубликат того же `token` → **200** full. Новый → **201** full + WS `token-created`.\n\n**Риск:** ответ содержит **сырой** Telegram token.\n\n**Auth:** опционально `getOwnerIdFromRequest` + `hasProjectAccess` при сессии.\n\n**Клиент:** модалка добавления бота.\n\n```bash\ncurl -s -X POST http://localhost:5000/api/projects/42/tokens -b cookies.txt \\\n  -H 'Content-Type: application/json' \\\n  -d '{\"name\":\"Основной\",\"token\":\"7123…:AAH…\"}'\n```",
+        "description": "`insertBotTokenSchema`. `ownerId` из body игнорируется (сессия / owner проекта). При отсутствии `botUsername` — auto getMe. Дубликат того же `token` → **200** full. Новый → **201** full + WS `token-created`.\n\n**Риск:** ответ содержит **сырой** Telegram token.\n\n**Auth:** опционально `getOwnerIdFromRequest` + `hasProjectAccess` при сессии.\n\n**Клиент:** модалка добавления бота; MCP `db_add_bot_token` (агенту отдаёт только безопасные поля без секрета).\n\n```bash\ncurl -s -X POST http://localhost:5000/api/projects/42/tokens -b cookies.txt \\\n  -H 'Content-Type: application/json' \\\n  -d '{\"name\":\"Основной\",\"token\":\"7123…:AAH…\"}'\n```",
         "security": [
           {
             "cookieAuth": []
@@ -10497,7 +10497,7 @@
           "project-tokens"
         ],
         "summary": "Обновить токен (masked ответ)",
-        "description": "`insertBotTokenSchema.partial()`. Маскированный/`••••` token **игнорируется** (`isMaskedOrPlaceholderToken`). Ответ — `toPublicBotToken`. WS `token-updated` (source=api).\n\n**Auth:** опционально `getOwnerIdFromRequest` + `hasProjectAccess`; при auth также сверка `token.projectId`.\n\n**Клиент:** редактирование карточки токена.\n\n```bash\ncurl -s -X PUT http://localhost:5000/api/projects/42/tokens/7 -b cookies.txt \\\n  -H 'Content-Type: application/json' -d '{\"name\":\"Новое имя\"}'\n```",
+        "description": "`insertBotTokenSchema.partial()`. Маскированный/`••••` token **игнорируется** (`isMaskedOrPlaceholderToken`). Ответ — `toPublicBotToken`. WS `token-updated` (source=api).\n\n**Auth:** опционально `getOwnerIdFromRequest` + `hasProjectAccess`; при auth также сверка `token.projectId`.\n\n**Клиент:** TokenDisplayEdit; MCP `db_update_bot_token` (агенту отдаёт только безопасные поля без секрета).\n\n```bash\ncurl -s -X PUT http://localhost:5000/api/projects/42/tokens/7 -b cookies.txt \\\n  -H 'Content-Type: application/json' -d '{\"name\":\"Новое имя\"}'\n```",
         "security": [
           {
             "cookieAuth": []
@@ -11049,7 +11049,7 @@
           "project-tokens"
         ],
         "summary": "Распарсить bot token через Telegram getMe",
-        "description": "Body `{ token }`. Вызывает `getMe`, `getMyDescription`, `getMyShortDescription`, опционально фото. **Нет** middleware `requireProjectAccess` / ownership — только глобальный `requireApiAuth` (если включён). `:id` в URL не влияет на Telegram.\n\n**Клиент:** форма добавления токена (превью @username).\n\n```bash\ncurl -s -X POST http://localhost:5000/api/projects/42/tokens/parse -b cookies.txt \\\n  -H 'Content-Type: application/json' \\\n  -d '{\"token\":\"7123…:AAH…\"}'\n```",
+        "description": "Body `{ token }`. Вызывает `getMe`, `getMyDescription`, `getMyShortDescription`, опционально фото. **Нет** middleware `requireProjectAccess` / ownership — только глобальный `requireApiAuth` (если включён). `:id` в URL не влияет на Telegram.\n\nНевалидный / отозванный token Telegram → **400** (`Invalid bot token or failed to get bot info`), не 500.\n\n**Клиент:** форма добавления токена (превью @username); MCP `PostApiProjectsTokensParse` / эквивалент превью перед `db_add_bot_token`.\n\n```bash\ncurl -s -X POST http://localhost:5000/api/projects/42/tokens/parse -b cookies.txt \\\n  -H 'Content-Type: application/json' \\\n  -d '{\"token\":\"7123…:AAH…\"}'\n```",
         "security": [
           {
             "cookieAuth": []
@@ -11128,7 +11128,7 @@
             }
           },
           "400": {
-            "description": "Нет token / Invalid bot token",
+            "description": "Нет token в body; либо Telegram отклонил token (ok:false / HTTP не 200) — `Invalid bot token or failed to get bot info`",
             "content": {
               "application/json": {
                 "schema": {
@@ -11142,7 +11142,7 @@
             }
           },
           "500": {
-            "description": "Сеть / Telegram недоступен",
+            "description": "Сеть / Telegram недоступен (`Failed to connect…`). Ошибка логирования при пустом `result` больше не отдаёт 500.",
             "content": {
               "application/json": {
                 "schema": {

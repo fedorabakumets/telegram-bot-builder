@@ -596,6 +596,7 @@ export function CanvasNode({ node, allNodes, isSelected, isMultiSelected, onClic
       <div
         ref={nodeRef}
         data-canvas-node="true"
+        data-node-type={node.type}
         className={cn(
           "bg-white/90 dark:bg-slate-900/90 rounded-2xl border-2 relative select-none",
           // Компактный размер для триггеров и утилит; счёт чуть шире под длинное имя

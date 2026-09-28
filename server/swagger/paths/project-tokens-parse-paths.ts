@@ -32,7 +32,10 @@ export function registerProjectTokensParsePaths(
       "Body `{ token }`. Вызывает `getMe`, `getMyDescription`, `getMyShortDescription`, " +
       "опционально фото. **Нет** middleware `requireProjectAccess` / ownership — " +
       "только глобальный `requireApiAuth` (если включён). `:id` в URL не влияет на Telegram.\n\n" +
-      "**Клиент:** форма добавления токена (превью @username).\n\n" +
+      "Невалидный / отозванный token Telegram → **400** " +
+      "(`Invalid bot token or failed to get bot info`), не 500.\n\n" +
+      "**Клиент:** форма добавления токена (превью @username); MCP `PostApiProjectsTokensParse` / " +
+      "эквивалент превью перед `db_add_bot_token`.\n\n" +
       "```bash\n" +
       "curl -s -X POST http://localhost:5000/api/projects/42/tokens/parse -b cookies.txt \\\n" +
       "  -H 'Content-Type: application/json' \\\n" +
@@ -60,7 +63,9 @@ export function registerProjectTokensParsePaths(
         },
       },
       400: {
-        description: "Нет token / Invalid bot token",
+        description:
+          "Нет token в body; либо Telegram отклонил token (ok:false / HTTP не 200) — " +
+          "`Invalid bot token or failed to get bot info`",
         content: {
           "application/json": {
             schema: ParseTokenErrorSchema,
@@ -72,7 +77,9 @@ export function registerProjectTokensParsePaths(
         },
       },
       500: {
-        description: "Сеть / Telegram недоступен",
+        description:
+          "Сеть / Telegram недоступен (`Failed to connect…`). " +
+          "Ошибка логирования при пустом `result` больше не отдаёт 500.",
         content: {
           "application/json": {
             schema: ParseTokenErrorSchema,

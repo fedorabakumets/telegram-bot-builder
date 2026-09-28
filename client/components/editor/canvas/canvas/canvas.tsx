@@ -13,6 +13,8 @@ import { CanvasSheets } from '@/components/editor/canvas/canvas-sheets';
 import { useCanvasViewport } from './use-canvas-viewport';
 import { useCanvasAutoFit } from './use-canvas-auto-fit';
 import { CanvasToolbar } from './canvas-toolbar';
+import { EditorLearnOverlay, useEditorLearn } from '@/components/editor/canvas/learn';
+import { registerEditorLearn, setEditorLearnActive } from '@/components/editor/canvas/learn/editor-learn-bridge';
 import { CanvasContent } from './canvas-content';
 import { MobileCanvasFab } from './mobile-canvas-fab';
 import { useConnectionDrag } from './use-connection-drag';
@@ -272,6 +274,13 @@ export function Canvas({
   onPortalNavigate,
   onRestoreVersion,
 }: CanvasProps) {
+  const learnNodes = Array.isArray(nodes) ? nodes : [];
+  const learn = useEditorLearn(learnNodes, learnNodes.length === 0);
+  useEffect(() => registerEditorLearn(learn.start), [learn.start]);
+  useEffect(() => {
+    setEditorLearnActive(learn.active);
+    return () => setEditorLearnActive(false);
+  }, [learn.active]);
   const canvasRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   /** Ref для onConnectionCreate чтобы handleConnectionComplete не устаревал */
@@ -1790,6 +1799,16 @@ export function Canvas({
         </div>
 
       </div>
+
+      {learn.active ? (
+        <EditorLearnOverlay
+          learn={learn}
+          sidebarVisible={sidebarVisible}
+          propertiesVisible={propertiesVisible}
+          onToggleSidebar={onToggleSidebar}
+          onToggleProperties={onToggleProperties}
+        />
+      ) : null}
 
       {/* Панель инструментов - фиксированная панель вверху */}
       <CanvasToolbar

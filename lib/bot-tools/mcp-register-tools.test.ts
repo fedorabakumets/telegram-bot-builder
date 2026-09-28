@@ -32,6 +32,9 @@ describe('registerMcpTools', () => {
     expect(names).toContain('db_archive_project');
     expect(names).toContain('db_unarchive_project');
     expect(names).toContain('update_project_db');
+    expect(names).toContain('db_add_bot_token');
+    expect(names).toContain('db_update_bot_token');
+    expect(names).toContain('db_delete_bot_token');
   });
 
   it('на stdio (enableFileTools=true) есть load_project/save_project', () => {

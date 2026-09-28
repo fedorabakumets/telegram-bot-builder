@@ -189,6 +189,7 @@ export function CanvasToolbar({
         <div className="flex items-center canvas-controls overflow-x-auto w-full gap-2 text-sm">
           <div className="flex items-center flex-shrink-0 gap-2">
             {/* РљРЅРѕРїРєРё РјР°СЃС€С‚Р°Р±Р° */}
+            <span data-learn-toolbar="zoom" className="inline-flex items-center gap-2">
             <ZoomControls
               zoom={zoom}
               canZoomOut={zoom > 1}
@@ -202,8 +203,10 @@ export function CanvasToolbar({
               canRestorePreviousView={canRestorePreviousView}
               onRestorePreviousView={onRestorePreviousView}
             />
+            </span>
 
             {/* РљРЅРѕРїРєРё РѕС‚РјРµРЅС‹/РїРѕРІС‚РѕСЂР° */}
+            <span data-learn-toolbar="undo" className="inline-flex items-center gap-2">
             <UndoRedoButtons
               canUndo={canUndo ?? actionHistory.length > 0}
               canRedo={canRedo}
@@ -220,6 +223,9 @@ export function CanvasToolbar({
               selectedActionsForUndo={selectedActionsForUndo}
               handleUndoSelected={handleUndoSelected}
             />
+            </span>
+
+            <span data-learn-toolbar="save" className="inline-flex items-center gap-2">
 
             {/* История версий проекта */}
             {projectId != null && (
@@ -229,8 +235,13 @@ export function CanvasToolbar({
             <SaveButton onSave={onSave} isSaving={isSaving} />
 
             {onSaveWithNote && <SaveCheckpointPopover onSaveWithNote={onSaveWithNote} isSaving={isSaving} />}
+            </span>
 
-            <AutoLayoutButton onAutoLayout={onAutoLayout} />
+            <span data-learn-toolbar="layout" className="inline-flex items-center">
+              <AutoLayoutButton onAutoLayout={onAutoLayout} />
+            </span>
+
+            <span data-learn-toolbar="clipboard" className="inline-flex items-center gap-2">
 
             {/* РњРµР¶РїСЂРѕРµРєС‚РЅРѕРµ РєРѕРїРёСЂРѕРІР°РЅРёРµ/РІСЃС‚Р°РІРєР° */}
             <ClipboardButtons
@@ -241,6 +252,9 @@ export function CanvasToolbar({
               selectedNodeId={selectedNodeId}
               hasClipboardData={hasClipboardData}
             />
+            </span>
+
+            <span data-learn-toolbar="search" className="inline-flex items-center gap-2">
 
             {/* Поиск узлов на текущем листе */}
             {onNodeFocus && (
@@ -261,6 +275,7 @@ export function CanvasToolbar({
             {onTogglePortals && (
               <PortalsToggleButton active={showPortals ?? false} onToggle={onTogglePortals} count={portalsCount} />
             )}
+            </span>
 
             {/* Р Р°Р·РґРµР»РёС‚РµР»СЊ */}
             <div className="h-6 w-px bg-slate-300/50 dark:bg-slate-600/50" />
@@ -285,7 +300,7 @@ export function CanvasToolbar({
 
           {/* Переключатель Холст / JSON */}
           {onViewChange && (
-            <div className="ml-auto flex-shrink-0">
+            <div data-learn-toolbar="view" className="ml-auto flex-shrink-0">
               <CanvasViewToggle value={canvasView ?? 'canvas'} onChange={onViewChange} />
             </div>
           )}

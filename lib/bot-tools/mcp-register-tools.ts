@@ -20,6 +20,8 @@ import {
   restartAllBotsInDb,
   setMessagesRetentionInDb,
   startOfflineBotsInDb,
+  addBotTokenInDb,
+  updateBotTokenInDb,
   deleteBotTokenInDb,
   connectNodes,
   connectNodesInDb,
@@ -895,6 +897,51 @@ export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOpt
       inputSchema: { project_id: z.number().describe('Числовой ID проекта из URL редактора') },
     },
     async ({ project_id }) => textResult(await listBotTokensInDb(project_id)),
+  );
+
+  server.registerTool(
+    'db_add_bot_token',
+    {
+      description:
+        'Подключить бота к проекту: добавить токен от @BotFather (модалка «Подключить бота»). '
+        + 'Сервер вызывает getMe и шлёт WS token-created. Дубликат того же token → ok + created:false. '
+        + 'Ответ БЕЗ секрета token (только id/name/username). Эквивалент POST /api/projects/:id/tokens. '
+        + 'После добавления можно db_start_bot(project_id, token_id).',
+      inputSchema: {
+        project_id: z.number().describe('ID проекта из URL редактора'),
+        token: z.string().describe('Токен от @BotFather, вид 123456789:AAH…'),
+        name: z.string().optional().describe('Имя записи (по умолчанию «Основной токен»; UI часто ставит FirstName (@username))'),
+        is_default: z.boolean().optional().describe('Сделать токеном по умолчанию (по умолчанию false)'),
+      },
+    },
+    async ({ project_id, token, name, is_default }) =>
+      textResult(
+        await addBotTokenInDb(project_id, token, {
+          name,
+          isDefault: is_default,
+        }),
+      ),
+  );
+
+  server.registerTool(
+    'db_update_bot_token',
+    {
+      description:
+        'Сменить Telegram-токен у существующей записи (TokenDisplayEdit). '
+        + 'Эквивалент PUT /api/projects/:id/tokens/:tokenId. При новом token сервер ставит isActive=1 '
+        + 'и шлёт WS token-updated. getMe при update не вызывается (botUsername может не обновиться). '
+        + 'Ответ БЕЗ секрета token (только id/name/username/флаги). token_id — из db_list_bot_tokens.',
+      inputSchema: {
+        project_id: z.number().describe('ID проекта из URL редактора'),
+        token_id: z.number().describe('ID записи токена из db_list_bot_tokens'),
+        token: z.string().describe('Новый токен от @BotFather, вид 123456789:AAH…'),
+        name: z.string().optional().describe('Опционально новое имя записи токена'),
+      },
+    },
+    async ({ project_id, token_id, token, name }) =>
+      textResult(
+        await updateBotTokenInDb(project_id, token_id, token, { name }),
+      ),
   );
 
   server.registerTool(

@@ -112,6 +112,10 @@ export function MyComponent({ ... }: MyProps) { ... }
 > - `lib/templates/node-handlers/node-handlers.dispatcher.ts` — подключение генератора в пайплайн
 > - `lib/index.ts` — экспорт для внешнего использования
 
+### Режим обучения UI (learn mode)
+
+При добавлении или копировании пошагового обучения в другой раздел интерфейса **ОБЯЗАТЕЛЬНО** читать `docs/development/adding-learn-mode.md` до начала работы. Эталон: `client/components/editor/scenariy/learn/`. Описание для людей: `docs/interface/learn-mode.md`.
+
 ## Правила редактирования project.json (ноды ботов)
 
 ### Condition-нода (type: "condition")

@@ -94,6 +94,10 @@ test-output.txt
 .playwright-mcp/
 terminal-output-*.txt
 
+# OpenAPI→MCP (tools/mcp-openapi): артефакты генератора, пересборка npm run mcp:openapi:generate
+tools/mcp-openapi/generated/
+tools/mcp-openapi/openapi.mcp.json
+
 # Standalone telegram-moderator (local tool, not part of builder)
 telegram-moderator/
 

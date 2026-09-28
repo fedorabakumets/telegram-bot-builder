@@ -6,12 +6,21 @@
 import { Button } from '@/components/ui/button';
 import { TypewriterText } from '@/components/editor/auth/TypewriterText';
 import { cn } from '@/utils/utils';
-import type { ScenariyLearnStep } from './scenariy-learn-steps';
+
+/** Минимум полей шага, который рисует панель */
+export interface LearnPanelStep {
+  /** Идентификатор шага, ключ печати */
+  id: string;
+  /** Короткий заголовок в прогрессе */
+  title: string;
+  /** Текст проводника */
+  text: string;
+}
 
 /** Пропсы панели */
 export interface ScenariyLearnPanelProps {
   /** Текущий шаг */
-  step: ScenariyLearnStep;
+  step: LearnPanelStep;
   /** Номер шага (1-based) */
   stepNumber: number;
   /** Всего шагов */
@@ -50,7 +59,7 @@ export function ScenariyLearnPanel({
   onSkip,
 }: ScenariyLearnPanelProps) {
   return (
-    <div className="rounded-xl border border-primary/25 bg-primary/5 px-3 py-3 space-y-3 mb-3">
+    <div className="rounded-xl border border-primary/25 bg-primary/5 px-3 py-3 space-y-3 mb-3 max-w-2xl">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
           <span className="shrink-0 text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-md bg-primary/15 text-primary">
