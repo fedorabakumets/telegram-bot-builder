@@ -23,7 +23,7 @@ interface EmptyStateProps {
  */
 export function EmptyState({ onClose }: EmptyStateProps) {
   return (
-    <aside className="w-full h-full bg-background border-l border-border flex flex-col">
+    <aside data-properties-panel className="w-full h-full bg-background border-l border-border flex flex-col">
       <EmptyStateHeader onClose={onClose} />
       <div className="flex flex-col items-center px-8 pt-12 empty-state-container">
         <div className="text-center max-w-xs">

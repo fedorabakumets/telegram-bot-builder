@@ -12,6 +12,8 @@ import { MobileMenu } from './components/mobile-menu';
 import { Logo } from './components/logo';
 import { ProjectSwitcher } from './components/project-switcher';
 import { ProjectArchiveBadge } from './components/project-archive-badge';
+import { EditorLearnButton } from '@/components/editor/canvas/learn';
+import { requestEditorLearn, useEditorLearnActive } from '@/components/editor/canvas/learn/editor-learn-bridge';
 
 export function AdaptiveHeader({
   config,
@@ -55,6 +57,7 @@ export function AdaptiveHeader({
 
   // Определяем мобильное устройство
   const isMobile = useIsMobile();
+  const learnActive = useEditorLearnActive();
 
   // Определяем ориентацию заголовка
   const isVertical = config.headerPosition === 'left' || config.headerPosition === 'right';
@@ -139,6 +142,10 @@ export function AdaptiveHeader({
             isVertical={isVertical}
             isCompact={isCompact}
           />
+
+          {currentTab === 'editor' ? (
+            <EditorLearnButton active={learnActive} onStart={requestEditorLearn} />
+          ) : null}
 
           {/* Десктопные/Планшетные действия */}
           <DesktopActionsFull

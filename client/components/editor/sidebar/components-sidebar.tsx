@@ -607,7 +607,7 @@ export function ComponentsSidebar({
 
   // Десктопная версия
   return (
-    <aside className="w-full bg-background h-full flex flex-col overflow-hidden">
+    <aside data-node-palette className="w-full bg-background h-full flex flex-col overflow-hidden">
       {sidebarContent}
     </aside>
   );

@@ -6,12 +6,21 @@
 import { Button } from '@/components/ui/button';
 import { TypewriterText } from '@/components/editor/auth/TypewriterText';
 import { cn } from '@/utils/utils';
-import type { ScenariyLearnStep } from './scenariy-learn-steps';
+
+/** Минимум полей шага, который рисует панель */
+export interface LearnPanelStep {
+  /** Идентификатор шага, ключ печати */
+  id: string;
+  /** Короткий заголовок в прогрессе */
+  title: string;
+  /** Текст проводника */
+  text: string;
+}
 
 /** Пропсы панели */
 export interface ScenariyLearnPanelProps {
   /** Текущий шаг */
-  step: ScenariyLearnStep;
+  step: LearnPanelStep;
   /** Номер шага (1-based) */
   stepNumber: number;
   /** Всего шагов */

@@ -574,6 +574,7 @@ function ConnectionsLayerComponent({ nodes, nodeSizes, onConnectionDelete, butto
 
   return (
     <svg
+      data-canvas-connections
       style={{
         position: 'absolute',
         top: 0,
