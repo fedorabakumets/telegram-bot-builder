@@ -214,6 +214,8 @@ class BotWorker:
         token_id = ctx.token_id
         token_token = iso.current_token_id.set(token_id)
         alias_prev: Dict[str, Any] = {}
+        env_prev: Optional[Dict[str, Optional[str]]] = None
+        dotenv_prev: Optional[Dict[str, Optional[str]]] = None
 
         try:
             emit_log(token_id, "─── Начало загрузки бота ───", "stdout")
@@ -234,10 +236,15 @@ class BotWorker:
                 siblings.append(stem)
 
             async with iso.get_env_lock():
+                dotenv_prev = iso.apply_bot_dotenv(bot_dir)
                 env_prev = iso.apply_bot_env(
                     ctx.token, token_id, ctx.webhook_url, ctx.webhook_port
                 )
-                emit_log(token_id, f"Env: PROJECT_ID={PROJECT_ID}, TOKEN_ID={token_id}", "stdout")
+                emit_log(
+                    token_id,
+                    f"Env: PROJECT_ID={os.environ.get('PROJECT_ID', PROJECT_ID)}, TOKEN_ID={token_id}",
+                    "stdout",
+                )
 
                 loaded = iso.load_sibling_modules(token_id, bot_dir, siblings)
                 iso.apply_short_aliases(loaded, alias_prev)
@@ -277,6 +284,8 @@ class BotWorker:
                 iso.restore_short_aliases(alias_prev)
                 alias_prev = {}
                 iso.restore_env(env_prev)
+                iso.restore_env(dotenv_prev)
+                env_prev = dotenv_prev = None
 
             ctx.status = "running"
             ctx.started_at = datetime.now()
@@ -306,6 +315,10 @@ class BotWorker:
         finally:
             if alias_prev:
                 iso.restore_short_aliases(alias_prev)
+            if env_prev is not None:
+                iso.restore_env(env_prev)
+            if dotenv_prev is not None:
+                iso.restore_env(dotenv_prev)
             iso.cleanup_bot_modules(token_id, ctx.bot_dir)
             if token_id in self.bots and self.bots[token_id] is ctx:
                 del self.bots[token_id]

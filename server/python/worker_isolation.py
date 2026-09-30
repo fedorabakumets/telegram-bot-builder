@@ -125,6 +125,24 @@ def apply_bot_env(token: str, token_id: int, webhook_url: Optional[str], webhook
     return prev
 
 
+def apply_bot_dotenv(bot_dir: Path) -> Dict[str, Optional[str]]:
+    """
+    Подставляет в os.environ значения из .env бота с перезаписью.
+    load_dotenv() в bot.py не перезаписывает существующие ключи, поэтому без этого
+    бот в общем воркере получил бы USERBOT_*, PROJECT_ID и прочее от соседнего бота.
+    @returns снимок прежних значений для restore_env
+    """
+    env_file = bot_dir / ".env"
+    if not env_file.is_file():
+        return {}
+    from dotenv import dotenv_values
+
+    values = {k: v for k, v in dotenv_values(env_file).items() if v is not None}
+    prev = {k: os.environ.get(k) for k in values}
+    os.environ.update(values)
+    return prev
+
+
 def restore_env(prev: Dict[str, Optional[str]]) -> None:
     """Откатывает env к снимку."""
     for k, v in prev.items():
