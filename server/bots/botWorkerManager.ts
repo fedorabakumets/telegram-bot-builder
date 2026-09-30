@@ -1,6 +1,7 @@
 /**
  * @fileoverview Менеджер воркеров ботов — управляет Python worker процессами
- * Модель: 1 проект = 1 воркер = N ботов внутри одного asyncio event loop
+ * Модель: 1 проект = 1 воркер = N ботов внутри одного asyncio event loop.
+ * При WORKER_GROUPING=shared все проекты делят один воркер (см. workerGrouping.ts).
  * @module server/bots/botWorkerManager
  */
 
@@ -18,6 +19,7 @@ import {
   WORKER_START_CONFIRM_TIMEOUT_MS,
 } from "./waitForWorkerBotStart";
 import { formatBotRuntimeErrorShort } from "./formatBotRuntimeError";
+import { resolveWorkerKey } from "./workerGrouping";
 
 /** Задержка перед killWorker когда activeBots пуст (мс) */
 const WORKER_DRAIN_MS = 2_000;
@@ -92,6 +94,19 @@ class BotWorkerManager extends EventEmitter {
 
   /** Подробные логи stdout воркера (JSON) */
   private workerVerbose = process.env.WORKER_POOL_VERBOSE === "true";
+
+  /** Проект каждого запущенного токена: tokenId → projectId (воркер может быть общим) */
+  private tokenProjects = new Map<number, number>();
+
+  /**
+   * Возвращает проект токена для маршрутизации событий
+   * @param tokenId - ID токена
+   * @param workerKey - Ключ воркера, из которого пришло событие
+   * @returns ID проекта токена или ключ воркера, если токен неизвестен
+   */
+  private projectOf(tokenId: number, workerKey: number): number {
+    return this.tokenProjects.get(tokenId) ?? workerKey;
+  }
 
   constructor() {
     super();
@@ -269,7 +284,7 @@ class BotWorkerManager extends EventEmitter {
 
         // Уведомляем о завершении каждого бота
         for (const tokenId of worker.activeBots) {
-          this.emit("bot-exited", projectId, tokenId, code, undefined, unexpected);
+          this.emit("bot-exited", this.projectOf(tokenId, projectId), tokenId, code, undefined, unexpected);
         }
         worker.activeBots.clear();
         this.workers.delete(projectId);
@@ -338,7 +353,7 @@ class BotWorkerManager extends EventEmitter {
         const preview = content.replace(/^\[\d{2}:\d{2}:\d{2}\]\s*/, "").split("\n")[0];
         console.error(`🏭 [WorkerPool:${projectId}] бот ${msg.token_id} ошибка: ${preview}`);
       }
-      this.emit("bot-log", projectId, msg.token_id, msg.type, content);
+      this.emit("bot-log", this.projectOf(msg.token_id, projectId), msg.token_id, msg.type, content);
     } else if (msg.token_id !== undefined && msg.token_id === 0) {
       // Системные asyncio-логи без контекста бота — не маршрутизируем
     } else {
@@ -359,7 +374,7 @@ class BotWorkerManager extends EventEmitter {
       this.lastBotErrors.delete(ev.tokenId);
       worker?.activeBots.add(ev.tokenId);
       console.log(`🏭 [WorkerPool:${projectId}] бот ${ev.tokenId} запущен`);
-      this.emit("bot-started", projectId, ev.tokenId);
+      this.emit("bot-started", this.projectOf(ev.tokenId, projectId), ev.tokenId);
       return;
     }
 
@@ -376,7 +391,7 @@ class BotWorkerManager extends EventEmitter {
       } else {
         console.log(`🏭 [WorkerPool:${projectId}] бот ${ev.tokenId} остановлен`);
       }
-      this.emit("bot-exited", projectId, ev.tokenId, status, runtimeError, false);
+      this.emit("bot-exited", this.projectOf(ev.tokenId, projectId), ev.tokenId, status, runtimeError, false);
       // Drain: не убиваем воркер мгновенно (гонка с restart)
       if (worker && worker.activeBots.size === 0 && worker.status === "ready") {
         this.scheduleWorkerDrain(projectId);
@@ -418,8 +433,10 @@ class BotWorkerManager extends EventEmitter {
    */
   async startBot(projectId: number, token: string, tokenId: number, botFile: string, webhook?: { webhookUrl: string; webhookPort: number }): Promise<void> {
     return this.withTokenLock(projectId, tokenId, async () => {
-      this.cancelWorkerDrain(projectId);
-      const worker = await this.getOrCreateWorker(projectId);
+      const workerKey = resolveWorkerKey(projectId);
+      this.tokenProjects.set(tokenId, projectId);
+      this.cancelWorkerDrain(workerKey);
+      const worker = await this.getOrCreateWorker(workerKey);
 
       const started = waitForWorkerBotStart(
         this,
@@ -428,7 +445,7 @@ class BotWorkerManager extends EventEmitter {
         WORKER_START_CONFIRM_TIMEOUT_MS,
       );
 
-      const sent = this.sendCommand(projectId, {
+      const sent = this.sendCommand(workerKey, {
         cmd: "start_bot",
         token,
         token_id: tokenId,
@@ -452,11 +469,11 @@ class BotWorkerManager extends EventEmitter {
           tokenId,
           WORKER_STOP_CONFIRM_TIMEOUT_MS,
         );
-        this.sendCommand(projectId, { cmd: "stop_bot", token_id: tokenId });
+        this.sendCommand(workerKey, { cmd: "stop_bot", token_id: tokenId });
         await stopWait;
         worker.activeBots.delete(tokenId);
         if (worker.activeBots.size === 0) {
-          this.scheduleWorkerDrain(projectId);
+          this.scheduleWorkerDrain(workerKey);
         }
         throw new Error(`Таймаут bot_started project=${projectId} token=${tokenId}`);
       }
@@ -471,7 +488,8 @@ class BotWorkerManager extends EventEmitter {
    */
   async stopBot(projectId: number, tokenId: number): Promise<boolean> {
     return this.withTokenLock(projectId, tokenId, async () => {
-      const worker = this.workers.get(projectId);
+      const workerKey = resolveWorkerKey(projectId);
+      const worker = this.workers.get(workerKey);
       if (!worker) return true;
 
       const confirmed = waitForWorkerBotStop(
@@ -481,7 +499,7 @@ class BotWorkerManager extends EventEmitter {
         WORKER_STOP_CONFIRM_TIMEOUT_MS,
       );
 
-      const sent = this.sendCommand(projectId, {
+      const sent = this.sendCommand(workerKey, {
         cmd: "stop_bot",
         token_id: tokenId,
       });
@@ -492,14 +510,14 @@ class BotWorkerManager extends EventEmitter {
 
       const ok = await confirmed;
       if (!ok) {
-        const w = this.workers.get(projectId);
+        const w = this.workers.get(workerKey);
         if (w?.activeBots.has(tokenId)) {
           console.warn(
-            `[WorkerPool:${projectId}] stop timeout token=${tokenId} — снимаем из activeBots без fake exit`,
+            `[WorkerPool:${workerKey}] stop timeout token=${tokenId} — снимаем из activeBots без fake exit`,
           );
           w.activeBots.delete(tokenId);
           if (w.activeBots.size === 0 && w.status === "ready") {
-            this.scheduleWorkerDrain(projectId);
+            this.scheduleWorkerDrain(workerKey);
           }
         }
       }
@@ -563,8 +581,9 @@ class BotWorkerManager extends EventEmitter {
    * @param tokenId - ID токена
    */
   isBotRunning(projectId: number, tokenId: number): boolean {
-    const worker = this.workers.get(projectId);
-    return worker?.activeBots.has(tokenId) ?? false;
+    const worker = this.workers.get(resolveWorkerKey(projectId));
+    if (!worker?.activeBots.has(tokenId)) return false;
+    return this.projectOf(tokenId, projectId) === projectId;
   }
 
   /**
@@ -572,7 +591,7 @@ class BotWorkerManager extends EventEmitter {
    * @param projectId - ID проекта
    */
   hasWorker(projectId: number): boolean {
-    const worker = this.workers.get(projectId);
+    const worker = this.workers.get(resolveWorkerKey(projectId));
     return worker?.status === "ready";
   }
 
@@ -581,7 +600,13 @@ class BotWorkerManager extends EventEmitter {
    * @param projectId - ID проекта
    */
   getBotsCount(projectId: number): number {
-    return this.workers.get(projectId)?.activeBots.size ?? 0;
+    const worker = this.workers.get(resolveWorkerKey(projectId));
+    if (!worker) return 0;
+    let count = 0;
+    for (const tokenId of worker.activeBots) {
+      if (this.projectOf(tokenId, projectId) === projectId) count++;
+    }
+    return count;
   }
 
   /**
