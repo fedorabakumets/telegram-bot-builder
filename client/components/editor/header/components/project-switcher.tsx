@@ -47,7 +47,7 @@ export function ProjectSwitcher({
         <Button
           variant="ghost"
           title={displayName}
-          className="h-8 min-w-0 max-w-[min(100%,18rem)] gap-1 border-none px-1.5 text-sm font-medium shadow-none focus-visible:ring-0 sm:max-w-72 md:max-w-80 xl:max-w-96"
+          className="h-8 min-w-0 max-w-[7.5rem] gap-1 border-none px-1.5 text-sm font-medium shadow-none focus-visible:ring-0 sm:max-w-52 md:max-w-72 xl:max-w-96"
         >
           <span className="truncate">{displayName}</span>
           <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />

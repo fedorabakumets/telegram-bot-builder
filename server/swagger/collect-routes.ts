@@ -78,6 +78,10 @@ const TAG_DESCRIPTIONS: Record<string, string> = {
   "agent-tokens":
     "Персональные токены агента (PAT) для MCP/CLI: список, создание, отзыв. " +
     "Секрет `mcp_…` отдаётся один раз при POST. Авторизация: session cookie или Bearer PAT.",
+  support:
+    "Чат пользователя Studio с поддержкой платформы: свой диалог, сообщение, отметка прочтения. " +
+    "Авторизация: session cookie или Bearer PAT. UI — кнопка чата в шапке. " +
+    "Ответы администратора — `/admin/api/support/*` (тег `admin`, страница `/admin/support`).",
   workers: "Worker Pool — Python-воркеры и статистика запущенных ботов",
   server: "Серверные переменные окружения (whitelist ключей для подстановки в env бота)",
   webhook: "Входящие webhook-апдейты Telegram (публичный прокси в Python бота)",

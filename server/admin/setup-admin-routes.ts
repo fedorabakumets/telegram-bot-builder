@@ -41,6 +41,7 @@ import {
 } from "./pages/schema-docs-page";
 import { isAdminEnabled, resolveAdminApiKey } from "./resolve-admin-key";
 import { isConfigured } from "../services/app-settings.service";
+import { setupAdminSupportRoutes } from "../support/setup-support-routes";
 
 /** Префикс защищённых admin-маршрутов */
 export const ADMIN_PATHS_PREFIX = "/admin";
@@ -134,6 +135,8 @@ export function setupAdminRoutes(app: Express): void {
   app.get("/admin/schema/:tableName", passAdminPageToClient);
   app.get("/admin/api-docs/:slug", passAdminPageToClient);
   app.get("/admin/users/:id", passAdminPageToClient);
+
+  setupAdminSupportRoutes(app);
 }
 
 /**

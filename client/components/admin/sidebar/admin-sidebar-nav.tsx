@@ -7,6 +7,7 @@ import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/utils/utils';
 import { ADMIN_NAV_ITEMS, isAdminNavItemActive } from './nav-items';
+import { SupportNavBadge } from './support-nav-badge';
 
 /**
  * Пропсы компонента AdminSidebarNav
@@ -35,7 +36,7 @@ export function AdminSidebarNav({ isCollapsed }: AdminSidebarNavProps) {
             <Button
               variant="ghost"
               className={cn(
-                'w-full justify-start gap-2 h-9 px-2',
+                'relative w-full justify-start gap-2 h-9 px-2',
                 isCollapsed && 'justify-center px-0',
                 isActive
                   ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white hover:from-blue-700 hover:to-blue-600'
@@ -44,6 +45,7 @@ export function AdminSidebarNav({ isCollapsed }: AdminSidebarNavProps) {
             >
               <Icon className="h-4 w-4 flex-shrink-0" />
               {!isCollapsed && <span className="text-sm whitespace-nowrap">{label}</span>}
+              {href === '/support' && <SupportNavBadge isCollapsed={isCollapsed} />}
             </Button>
           </Link>
         );

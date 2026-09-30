@@ -4,6 +4,7 @@
 
 import { sql } from 'drizzle-orm';
 import { db } from './db';
+import { ensureSupportTables } from './ensure-support-tables';
 
 /**
  * Асинхронная функция для выполнения SQL-запроса с повторными попытками
@@ -881,6 +882,8 @@ export async function initializeDatabaseTables() {
     } catch (error) {
       console.log('⚠️ Ошибка при миграции user_project_archives:', error);
     }
+
+    await ensureSupportTables();
 
     console.log('✅ Таблицы базы данных успешно инициализированы!');
     return true;

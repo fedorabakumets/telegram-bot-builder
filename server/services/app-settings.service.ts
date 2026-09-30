@@ -49,6 +49,7 @@ const ENV_FALLBACK: Record<string, string | undefined> = {
     process.env.VITE_TELEGRAM_BOT_USERNAME ?? process.env.TELEGRAM_BOT_USERNAME,
   telegram_bot_token:
     process.env.TELEGRAM_BOT_TOKEN ?? process.env.VITE_TELEGRAM_BOT_TOKEN,
+  support_bot_token: process.env.SUPPORT_BOT_TOKEN,
 };
 
 /**
@@ -270,6 +271,8 @@ export async function seedSettingsFromEnv(): Promise<void> {
     ["telegram_client_secret", process.env.TELEGRAM_CLIENT_SECRET],
     ["telegram_bot_username", process.env.VITE_TELEGRAM_BOT_USERNAME ?? process.env.TELEGRAM_BOT_USERNAME],
     ["telegram_bot_token", process.env.TELEGRAM_BOT_TOKEN ?? process.env.VITE_TELEGRAM_BOT_TOKEN],
+    ["support_bot_token", process.env.SUPPORT_BOT_TOKEN],
+    ["support_admin_chat_ids", process.env.SUPPORT_ADMIN_CHAT_IDS],
   ];
 
   for (const [key, value] of pairs) {
@@ -278,6 +281,16 @@ export async function seedSettingsFromEnv(): Promise<void> {
     if (!existing) {
       await setSetting(key, value);
       console.log(`[AppSettings] Перенесено из env в БД: ${key}`);
+    }
+  }
+
+  const supportToken = await getSetting("support_bot_token");
+  const supportUsername = await getSettingFromDb("support_bot_username");
+  if (supportToken && !supportUsername) {
+    const username = await fetchBotUsernameFromToken(supportToken);
+    if (username) {
+      await setSetting("support_bot_username", username);
+      console.log("[AppSettings] Сохранён username бота поддержки");
     }
   }
 

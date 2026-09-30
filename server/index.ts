@@ -13,10 +13,12 @@ import { log, serveStatic, setupVite } from "./routes/vite";
 import { storage } from "./storages/storage";
 import { initializeTerminalWebSocket } from './terminal/initializeTerminalWebSocket';
 import { initializeCanvasWebSocket } from './canvas/initializeCanvasWebSocket';
+import { initializeSupportWebSocket } from './support/initialize-support-websocket';
 import { registerWebSocketUpgrade } from './websocket/registerWebSocketUpgrade';
 import { initRedisPlatformSubscriber } from './redis/redisPlatformSubscriber';
 import { initRedisLogsSubscriber } from './redis/redisLogsSubscriber';
 import { initRedisProjectEventBridge } from './redis/redisProjectEventBridge';
+import { initSupportEventBridge } from './redis/support-event-bridge';
 import { stopCleanup } from "./utils/cache";
 import { shutdownAllBots } from "./utils/graceful-shutdown";
 import { runMigrations } from "./database/runMigrations";
@@ -151,14 +153,19 @@ app.use((req, res, next) => {
   // это устраняет конфликт нескольких ws-серверов ("Invalid frame header").
   const terminalWss = initializeTerminalWebSocket();
   const canvasWss = initializeCanvasWebSocket();
+  const supportWss = initializeSupportWebSocket();
   registerWebSocketUpgrade(httpServer, {
     "/api/terminal": terminalWss,
     "/api/canvas": canvasWss,
+    "/api/support/ws": supportWss,
+    "/admin/api/support/ws": supportWss,
   });
   // Подписываемся на Redis Pub/Sub события платформы
   initRedisPlatformSubscriber();
   // Fan-out ProjectEvent между репликами Node (настройки токена и пр.)
   initRedisProjectEventBridge();
+  // Fan-out событий чата поддержки между репликами
+  initSupportEventBridge();
   // Подписываемся на Redis Pub/Sub логи ботов (дополнительный канал к stdout)
   initRedisLogsSubscriber();
   // Автоматический бэкап базы панели (включается DB_BACKUP_INTERVAL_HOURS)

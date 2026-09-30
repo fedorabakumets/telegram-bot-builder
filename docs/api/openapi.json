@@ -107,6 +107,10 @@
       "description": "Реестр медиа-хранилищ (local / S3): список, создание, обновление, удаление, тест связности. Секреты наружу не отдаются — только hasSecrets. UI: вкладка «Файлы» → «Хранилища»."
     },
     {
+      "name": "support",
+      "description": "Чат пользователя Studio с поддержкой платформы: свой диалог, сообщение, отметка прочтения. Авторизация: session cookie или Bearer PAT. UI — кнопка чата в шапке. Ответы администратора — `/admin/api/support/*` (тег `admin`, страница `/admin/support`)."
+    },
+    {
       "name": "templates",
       "description": "Библиотека готовых сценариев (`bot_templates`). UI: «Сценарии». CRUD + use; доступ canViewOrUseTemplate. featured и seed — только /admin/api/templates/*. Не путать с lib/templates/ (Jinja2)."
     },
@@ -22489,6 +22493,366 @@
         }
       }
     },
+    "/api/support/attachments/{id}": {
+      "get": {
+        "tags": [
+          "support"
+        ],
+        "summary": "Картинка своего диалога",
+        "description": "Отдаёт файл только автору диалога. Тип проверен при загрузке: png, jpeg, webp или gif.\n\n```bash\ncurl -s http://localhost:5000/api/support/attachments/1 -b cookies.txt -o screen.png\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "agentToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Идентификатор вложения",
+              "example": "1"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Сессия Studio. Не нужна, если задан Bearer PAT. Без обоих — 401.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Картинка. Content-Type — сохранённый MIME, Content-Disposition: inline",
+            "content": {
+              "image/png": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/jpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/webp": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/gif": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет сессии",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupportError"
+                },
+                "example": {
+                  "error": "Требуется авторизация через Telegram"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Нет файла или он из чужого диалога",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupportError"
+                },
+                "example": {
+                  "error": "Файл не найден"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/support/messages": {
+      "post": {
+        "tags": [
+          "support"
+        ],
+        "summary": "Написать в поддержку",
+        "description": "Создаёт диалог при первом сообщении, увеличивает непрочитанное у администратора и переоткрывает закрытый чат. Поля `text` и `files` (картинки). Пустая отправка без текста и без файлов — 400. `context` — JSON-строка.\n\n```bash\ncurl -s -X POST http://localhost:5000/api/support/messages -b cookies.txt -F text='Не сохраняется сценарий' -F files=@screen.png\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "agentToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Сессия Studio. Не нужна, если задан Bearer PAT. Без обоих — 401.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/SupportUserMessageBody"
+              },
+              "example": {
+                "text": "Не сохраняется сценарий",
+                "context": "{\"projectId\":294,\"path\":\"/editor/294\"}"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Сообщение сохранено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupportMessage"
+                },
+                "example": {
+                  "id": 1,
+                  "sender": "user",
+                  "text": "Не сохраняется сценарий",
+                  "context": {
+                    "projectId": 294,
+                    "path": "/editor/294",
+                    "userAgent": "Mozilla/5.0"
+                  },
+                  "source": "web",
+                  "createdAt": "2026-09-30T11:10:20.787Z",
+                  "attachments": []
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Пустое сообщение, файл не картинка, больше 8 МБ или текст длиннее 4000",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupportError"
+                },
+                "example": {
+                  "error": "Сообщение не может быть пустым"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет session cookie и Bearer PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupportError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка базы",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupportError"
+                },
+                "example": {
+                  "error": "Не удалось отправить сообщение"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/support/read": {
+      "post": {
+        "tags": [
+          "support"
+        ],
+        "summary": "Отметить ответы прочитанными",
+        "description": "Обнуляет `unreadByUser` своего диалога. Если диалога ещё нет, отвечает `{ ok: true }` без ошибки.\n\n```bash\ncurl -s -X POST http://localhost:5000/api/support/read -b cookies.txt\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "agentToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Сессия Studio. Не нужна, если задан Bearer PAT. Без обоих — 401.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Счётчик обнулён",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupportReadOk"
+                },
+                "example": {
+                  "ok": true
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет session cookie и Bearer PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupportError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/support/thread": {
+      "get": {
+        "tags": [
+          "support"
+        ],
+        "summary": "Свой диалог поддержки",
+        "description": "Диалог текущего пользователя и сообщения. `thread` равен `null`, пока пользователь ни разу не писал. Auth: cookie `connect.sid` или Bearer PAT, виден только свой чат. UI: кнопка чата в шапке.\n\n```bash\ncurl -s http://localhost:5000/api/support/thread -b cookies.txt\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "agentToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Сессия Studio. Не нужна, если задан Bearer PAT. Без обоих — 401.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Диалог и сообщения",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserSupportThreadResponse"
+                },
+                "example": {
+                  "thread": {
+                    "id": 1,
+                    "status": "open",
+                    "unreadByAdmin": 0,
+                    "unreadByUser": 0,
+                    "lastMessageAt": "2026-09-30T11:11:04.565Z"
+                  },
+                  "messages": [
+                    {
+                      "id": 1,
+                      "sender": "user",
+                      "text": "Не сохраняется сценарий",
+                      "context": {
+                        "projectId": 294,
+                        "path": "/editor/294",
+                        "userAgent": "Mozilla/5.0"
+                      },
+                      "source": "web",
+                      "createdAt": "2026-09-30T11:10:20.787Z",
+                      "attachments": []
+                    },
+                    {
+                      "id": 2,
+                      "sender": "admin",
+                      "text": "Проверьте, что проект открыт, и повторите сохранение.",
+                      "context": null,
+                      "source": "web",
+                      "createdAt": "2026-09-30T11:11:04.565Z",
+                      "attachments": []
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет session cookie и Bearer PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupportError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка базы",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupportError"
+                },
+                "example": {
+                  "error": "Не удалось загрузить чат поддержки"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/templates": {
       "get": {
         "tags": [
@@ -24632,6 +24996,606 @@
         }
       }
     },
+    "/admin/api/support/threads": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Список диалогов поддержки",
+        "description": "Диалоги с автором и превью последнего сообщения. Сначала с непрочитанным, затем по времени. Без `status` возвращаются открытые. Лимит 200.\n\n**Auth:** cookie `admin_auth`. **UI:** `/admin/support`.\n\n```bash\ncurl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \\\n  -H 'Content-Type: application/x-www-form-urlencoded' \\\n  -d 'key=YOUR_ADMIN_API_KEY'\ncurl -s 'http://localhost:5000/admin/api/support/threads?status=open' -b admin.txt\n```",
+        "security": [
+          {
+            "adminCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "open",
+                "closed",
+                "all"
+              ],
+              "description": "Фильтр статуса. По умолчанию open",
+              "example": "open"
+            },
+            "required": false,
+            "name": "status",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Admin cookie после `/admin/login` (ключ `ADMIN_API_KEY`). Без неё — 401.",
+              "example": "eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0"
+            },
+            "required": false,
+            "description": "Admin cookie после `/admin/login` (`ADMIN_API_KEY`). Без неё — 401 ADMIN_UNAUTHORIZED.",
+            "example": "eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0",
+            "name": "admin_auth",
+            "in": "cookie"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Список диалогов",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminSupportThreadListResponse"
+                },
+                "example": {
+                  "items": [
+                    {
+                      "id": 1,
+                      "status": "open",
+                      "unreadByAdmin": 1,
+                      "unreadByUser": 0,
+                      "lastMessageAt": "2026-09-30T11:11:04.565Z",
+                      "user": {
+                        "id": 123456789,
+                        "firstName": "Иван",
+                        "lastName": null,
+                        "username": "ivan",
+                        "photoUrl": null
+                      },
+                      "lastMessageText": "Не сохраняется сценарий",
+                      "lastMessageSender": "user"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет admin-сессии",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminUnauthorized"
+                },
+                "example": {
+                  "error": "ADMIN_UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Внутренняя ошибка",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupportError"
+                },
+                "example": {
+                  "error": "Внутренняя ошибка сервера"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/api/support/unread": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Сколько сообщений ждут ответа",
+        "description": "Сумма `unread_by_admin` по всем диалогам. Для счётчика в меню админки.\n\n```bash\ncurl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \\\n  -H 'Content-Type: application/x-www-form-urlencoded' \\\n  -d 'key=YOUR_ADMIN_API_KEY'\ncurl -s http://localhost:5000/admin/api/support/unread -b admin.txt\n```",
+        "security": [
+          {
+            "adminCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Admin cookie после `/admin/login` (ключ `ADMIN_API_KEY`). Без неё — 401.",
+              "example": "eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0"
+            },
+            "required": false,
+            "description": "Admin cookie после `/admin/login` (`ADMIN_API_KEY`). Без неё — 401 ADMIN_UNAUTHORIZED.",
+            "example": "eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0",
+            "name": "admin_auth",
+            "in": "cookie"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Общее число непрочитанных",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminSupportUnreadResponse"
+                },
+                "example": {
+                  "total": 3
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет admin-сессии",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminUnauthorized"
+                },
+                "example": {
+                  "error": "ADMIN_UNAUTHORIZED"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/api/support/threads/{id}": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Диалог поддержки",
+        "description": "Диалог, профиль автора и сообщения. **Auth:** cookie `admin_auth`. **UI:** `/admin/support/{id}`.\n\n```bash\ncurl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \\\n  -H 'Content-Type: application/x-www-form-urlencoded' \\\n  -d 'key=YOUR_ADMIN_API_KEY'\ncurl -s http://localhost:5000/admin/api/support/threads/1 -b admin.txt\n```",
+        "security": [
+          {
+            "adminCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Идентификатор диалога",
+              "example": "1"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Admin cookie после `/admin/login` (ключ `ADMIN_API_KEY`). Без неё — 401.",
+              "example": "eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0"
+            },
+            "required": false,
+            "description": "Admin cookie после `/admin/login` (`ADMIN_API_KEY`). Без неё — 401 ADMIN_UNAUTHORIZED.",
+            "example": "eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0",
+            "name": "admin_auth",
+            "in": "cookie"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Диалог с сообщениями",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminSupportThreadResponse"
+                },
+                "example": {
+                  "thread": {
+                    "id": 1,
+                    "status": "open",
+                    "unreadByAdmin": 1,
+                    "unreadByUser": 0,
+                    "lastMessageAt": "2026-09-30T11:11:04.565Z"
+                  },
+                  "user": {
+                    "id": 123456789,
+                    "firstName": "Иван",
+                    "lastName": null,
+                    "username": "ivan",
+                    "photoUrl": null
+                  },
+                  "messages": [
+                    {
+                      "id": 1,
+                      "sender": "user",
+                      "text": "Не сохраняется сценарий",
+                      "context": {
+                        "projectId": 294,
+                        "path": "/editor/294",
+                        "userAgent": "Mozilla/5.0"
+                      },
+                      "source": "web",
+                      "createdAt": "2026-09-30T11:10:20.787Z",
+                      "attachments": []
+                    },
+                    {
+                      "id": 2,
+                      "sender": "admin",
+                      "text": "Проверьте, что проект открыт, и повторите сохранение.",
+                      "context": null,
+                      "source": "web",
+                      "createdAt": "2026-09-30T11:11:04.565Z",
+                      "attachments": []
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверный идентификатор",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupportError"
+                },
+                "example": {
+                  "error": "Неверный идентификатор диалога"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет admin-сессии",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminUnauthorized"
+                },
+                "example": {
+                  "error": "ADMIN_UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Диалог не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupportError"
+                },
+                "example": {
+                  "error": "Диалог не найден"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Закрыть или открыть диалог",
+        "description": "Меняет статус. Новое сообщение пользователя само переводит закрытый диалог в `open`.\n\n```bash\ncurl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \\\n  -H 'Content-Type: application/x-www-form-urlencoded' \\\n  -d 'key=YOUR_ADMIN_API_KEY'\ncurl -s -X PATCH http://localhost:5000/admin/api/support/threads/1 -b admin.txt -H 'Content-Type: application/json' -d '{\"status\":\"closed\"}'\n```",
+        "security": [
+          {
+            "adminCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Идентификатор диалога",
+              "example": "1"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Admin cookie после `/admin/login` (ключ `ADMIN_API_KEY`). Без неё — 401.",
+              "example": "eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0"
+            },
+            "required": false,
+            "description": "Admin cookie после `/admin/login` (`ADMIN_API_KEY`). Без неё — 401 ADMIN_UNAUTHORIZED.",
+            "example": "eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0",
+            "name": "admin_auth",
+            "in": "cookie"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SupportStatusBody"
+              },
+              "example": {
+                "status": "closed"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Обновлённый диалог",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupportThread"
+                },
+                "example": {
+                  "id": 1,
+                  "status": "closed",
+                  "unreadByAdmin": 0,
+                  "unreadByUser": 0,
+                  "lastMessageAt": "2026-09-30T11:11:04.565Z"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Статус не open/closed или неверный id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupportError"
+                },
+                "example": {
+                  "error": "Статус должен быть open или closed"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет admin-сессии",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminUnauthorized"
+                },
+                "example": {
+                  "error": "ADMIN_UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Диалог не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupportError"
+                },
+                "example": {
+                  "error": "Диалог не найден"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/api/support/threads/{id}/messages": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Ответить пользователю",
+        "description": "Сохраняет ответ администратора и отмечает диалог прочитанным. Поля `text` и `files`. Источник ответа — `web`.\n\n```bash\ncurl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \\\n  -H 'Content-Type: application/x-www-form-urlencoded' \\\n  -d 'key=YOUR_ADMIN_API_KEY'\ncurl -s -X POST http://localhost:5000/admin/api/support/threads/1/messages -b admin.txt -F text='Проверьте сохранение ещё раз.' -F files=@screen.png\n```",
+        "security": [
+          {
+            "adminCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Идентификатор диалога",
+              "example": "1"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Admin cookie после `/admin/login` (ключ `ADMIN_API_KEY`). Без неё — 401.",
+              "example": "eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0"
+            },
+            "required": false,
+            "description": "Admin cookie после `/admin/login` (`ADMIN_API_KEY`). Без неё — 401 ADMIN_UNAUTHORIZED.",
+            "example": "eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0",
+            "name": "admin_auth",
+            "in": "cookie"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/SupportAdminMessageBody"
+              },
+              "example": {
+                "text": "Проверьте сохранение ещё раз."
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Ответ сохранён",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupportMessage"
+                },
+                "example": {
+                  "id": 2,
+                  "sender": "admin",
+                  "text": "Проверьте, что проект открыт, и повторите сохранение.",
+                  "context": null,
+                  "source": "web",
+                  "createdAt": "2026-09-30T11:11:04.565Z",
+                  "attachments": []
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Пустое сообщение, файл не картинка, больше 8 МБ, текст длиннее 4000 или неверный id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupportError"
+                },
+                "example": {
+                  "error": "Сообщение не может быть пустым"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет admin-сессии",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminUnauthorized"
+                },
+                "example": {
+                  "error": "ADMIN_UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Диалог не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupportError"
+                },
+                "example": {
+                  "error": "Диалог не найден"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/api/support/threads/{id}/read": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Отметить диалог прочитанным",
+        "description": "Обнуляет `unreadByAdmin`.\n\n```bash\ncurl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \\\n  -H 'Content-Type: application/x-www-form-urlencoded' \\\n  -d 'key=YOUR_ADMIN_API_KEY'\ncurl -s -X POST http://localhost:5000/admin/api/support/threads/1/read -b admin.txt\n```",
+        "security": [
+          {
+            "adminCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Идентификатор диалога",
+              "example": "1"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Admin cookie после `/admin/login` (ключ `ADMIN_API_KEY`). Без неё — 401.",
+              "example": "eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0"
+            },
+            "required": false,
+            "description": "Admin cookie после `/admin/login` (`ADMIN_API_KEY`). Без неё — 401 ADMIN_UNAUTHORIZED.",
+            "example": "eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0",
+            "name": "admin_auth",
+            "in": "cookie"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Обновлённый диалог",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupportThread"
+                },
+                "example": {
+                  "id": 1,
+                  "status": "open",
+                  "unreadByAdmin": 0,
+                  "unreadByUser": 0,
+                  "lastMessageAt": "2026-09-30T11:11:04.565Z"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверный идентификатор",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupportError"
+                },
+                "example": {
+                  "error": "Неверный идентификатор диалога"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет admin-сессии",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminUnauthorized"
+                },
+                "example": {
+                  "error": "ADMIN_UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Диалог не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupportError"
+                },
+                "example": {
+                  "error": "Диалог не найден"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/admin/api/bot-folders/cleanup": {
       "post": {
         "tags": [
@@ -25255,6 +26219,101 @@
           },
           "504": {
             "description": "timeout (нет api_response за 30 с)"
+          }
+        }
+      }
+    },
+    "/admin/api/support/attachments/{id}": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Картинка диалога поддержки",
+        "description": "Отдаёт файл администратору по cookie `admin_auth`.\n\n```bash\ncurl -s http://localhost:5000/admin/api/support/attachments/1 -b admin.txt -o screen.png\n```",
+        "security": [
+          {
+            "adminCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Идентификатор вложения",
+              "example": "1"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Admin cookie после `/admin/login` (ключ `ADMIN_API_KEY`). Без неё — 401.",
+              "example": "eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0"
+            },
+            "required": false,
+            "description": "Admin cookie после `/admin/login` (`ADMIN_API_KEY`). Без неё — 401 ADMIN_UNAUTHORIZED.",
+            "example": "eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0",
+            "name": "admin_auth",
+            "in": "cookie"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Картинка. Content-Type — сохранённый MIME, Content-Disposition: inline",
+            "content": {
+              "image/png": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/jpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/webp": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/gif": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет admin-сессии",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupportError"
+                },
+                "example": {
+                  "error": "Unauthorized"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Файл не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupportError"
+                },
+                "example": {
+                  "error": "Файл не найден"
+                }
+              }
+            }
           }
         }
       }
@@ -30924,6 +31983,306 @@
           "error"
         ]
       },
+      "SupportUserProfile": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 123456789
+          },
+          "firstName": {
+            "type": "string",
+            "example": "Иван"
+          },
+          "lastName": {
+            "type": "string",
+            "nullable": true,
+            "example": null
+          },
+          "username": {
+            "type": "string",
+            "nullable": true,
+            "example": "ivan"
+          },
+          "photoUrl": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "firstName",
+          "lastName",
+          "username",
+          "photoUrl"
+        ]
+      },
+      "SupportThread": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "open",
+              "closed"
+            ],
+            "example": "open"
+          },
+          "unreadByAdmin": {
+            "type": "integer",
+            "example": 1
+          },
+          "unreadByUser": {
+            "type": "integer",
+            "example": 0
+          },
+          "lastMessageAt": {
+            "type": "string",
+            "example": "2026-09-30T11:10:20.787Z"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "unreadByAdmin",
+          "unreadByUser",
+          "lastMessageAt"
+        ]
+      },
+      "AdminSupportThreadListItem": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SupportThread"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "user": {
+                "$ref": "#/components/schemas/SupportUserProfile"
+              },
+              "lastMessageText": {
+                "type": "string",
+                "nullable": true,
+                "example": "Не сохраняется сценарий"
+              },
+              "lastMessageSender": {
+                "type": "string",
+                "nullable": true,
+                "enum": [
+                  "user",
+                  "admin"
+                ],
+                "example": "user"
+              }
+            },
+            "required": [
+              "user",
+              "lastMessageText",
+              "lastMessageSender"
+            ]
+          }
+        ]
+      },
+      "AdminSupportThreadListResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminSupportThreadListItem"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "SupportError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "Диалог не найден"
+          }
+        },
+        "required": [
+          "error"
+        ]
+      },
+      "AdminSupportUnreadResponse": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "example": 3
+          }
+        },
+        "required": [
+          "total"
+        ]
+      },
+      "SupportMessageContext": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "projectId": {
+            "type": "integer",
+            "nullable": true,
+            "example": 294
+          },
+          "path": {
+            "type": "string",
+            "example": "/editor/294"
+          },
+          "userAgent": {
+            "type": "string",
+            "example": "Mozilla/5.0"
+          }
+        }
+      },
+      "SupportAttachment": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "fileName": {
+            "type": "string",
+            "example": "screen.png"
+          },
+          "mime": {
+            "type": "string",
+            "enum": [
+              "image/png",
+              "image/jpeg",
+              "image/webp",
+              "image/gif"
+            ],
+            "example": "image/png"
+          },
+          "size": {
+            "type": "integer",
+            "example": 12034
+          }
+        },
+        "required": [
+          "id",
+          "fileName",
+          "mime",
+          "size"
+        ]
+      },
+      "SupportMessage": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "sender": {
+            "type": "string",
+            "enum": [
+              "user",
+              "admin"
+            ],
+            "example": "user"
+          },
+          "text": {
+            "type": "string",
+            "example": "Не сохраняется сценарий"
+          },
+          "context": {
+            "$ref": "#/components/schemas/SupportMessageContext"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "web",
+              "telegram"
+            ],
+            "example": "web"
+          },
+          "createdAt": {
+            "type": "string",
+            "example": "2026-09-30T11:10:20.787Z"
+          },
+          "attachments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SupportAttachment"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "sender",
+          "text",
+          "context",
+          "source",
+          "createdAt",
+          "attachments"
+        ]
+      },
+      "AdminSupportThreadResponse": {
+        "type": "object",
+        "properties": {
+          "thread": {
+            "$ref": "#/components/schemas/SupportThread"
+          },
+          "user": {
+            "$ref": "#/components/schemas/SupportUserProfile"
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SupportMessage"
+            }
+          }
+        },
+        "required": [
+          "thread",
+          "user",
+          "messages"
+        ]
+      },
+      "SupportAdminMessageBody": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "example": "Проверьте сохранение ещё раз."
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "binary"
+            },
+            "description": "png, jpeg, webp или gif. До 8 МБ каждая, число файлов не ограничено"
+          }
+        }
+      },
+      "SupportStatusBody": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "open",
+              "closed"
+            ],
+            "example": "closed"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
       "AdminBotFoldersCleanupOk": {
         "type": "object",
         "properties": {
@@ -31901,6 +33260,69 @@
         },
         "required": [
           "items"
+        ]
+      },
+      "UserSupportThreadResponse": {
+        "type": "object",
+        "properties": {
+          "thread": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SupportThread"
+              },
+              {
+                "nullable": true
+              }
+            ]
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SupportMessage"
+            }
+          }
+        },
+        "required": [
+          "thread",
+          "messages"
+        ]
+      },
+      "SupportUserMessageBody": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "Текст до 4000 символов. Можно пустой, если есть files",
+            "example": "Не сохраняется сценарий"
+          },
+          "context": {
+            "type": "string",
+            "description": "JSON: projectId, path, userAgent",
+            "example": "{\"projectId\":294,\"path\":\"/editor/294\"}"
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "binary"
+            },
+            "description": "png, jpeg, webp или gif. До 8 МБ каждая, число файлов не ограничено"
+          }
+        }
+      },
+      "SupportReadOk": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "enum": [
+              true
+            ],
+            "example": true
+          }
+        },
+        "required": [
+          "ok"
         ]
       },
       "BotTable": {

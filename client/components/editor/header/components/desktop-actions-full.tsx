@@ -9,7 +9,8 @@ import { UserAuth } from './user-auth';
 import { Separator } from './separator';
 import { GithubButton } from './github-button';
 import { cn } from '@/utils/utils';
-import type { AppUser } from '@/types/telegram-user';
+import { isTelegramUser, type AppUser } from '@/types/telegram-user';
+import { SupportChatButton } from '@/components/support/support-chat-button';
 
 /**
  * Свойства полных десктопных действий
@@ -75,12 +76,13 @@ export function DesktopActionsFull({
       'flex',
       isVertical
         ? 'flex-col space-y-2 p-2'
-        : 'ml-auto hidden shrink-0 flex-nowrap items-center gap-1 lg:flex lg:w-auto lg:order-none'
+        : 'ml-auto flex shrink-0 flex-nowrap items-center gap-1'
     )}>
       {/* Версия перенесена в сайдбар */}
       {!isVertical && (
         <>
           <GithubButton className="!p-0 !h-auto" />
+          {user && isTelegramUser(user) && <SupportChatButton />}
         </>
       )}
 
@@ -117,7 +119,7 @@ export function DesktopActionsFull({
 
       <div className={cn(
         'text-xs font-medium bg-gradient-to-r from-blue-500/10 to-cyan-500/10 dark:from-blue-700/20 dark:to-cyan-600/20 rounded-lg border border-blue-400/20 dark:border-blue-500/30 backdrop-blur-sm',
-        isVertical ? 'w-full px-3 py-1.5' : 'hidden items-center px-3 py-1.5 2xl:flex'
+        isVertical ? 'w-full px-3 py-1.5' : 'flex shrink-0 items-center whitespace-nowrap px-2.5 py-1.5'
       )}>
         <TelegramChatInvite variant="desktop" />
       </div>

@@ -3,7 +3,7 @@
  * @description Отображает ссылку на чат поддержки в Telegram
  */
 
-import { useIsMobile } from '../hooks/use-mobile';
+import { Send } from 'lucide-react';
 
 /**
  * Свойства компонента приглашения в чат
@@ -17,27 +17,23 @@ export interface TelegramChatInviteProps {
 
 /**
  * Приглашение присоединиться к Telegram-чату
+ * @param props - Свойства компонента
+ * @returns Ссылка на чат сообщества
  */
 export function TelegramChatInvite({ onClick, variant = 'mobile' }: TelegramChatInviteProps) {
-  const isMobile = useIsMobile();
-  const showDesktopLabel = !isMobile && variant === 'desktop';
-
   if (variant === 'desktop') {
     return (
-      <>
-        <span className="hidden sm:inline-block text-slate-700 dark:text-slate-300">
-          Мы в Telegram:
-        </span>
-        <a
-          href="https://t.me/bot_builder_chat"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="ml-1 text-blue-600 dark:text-blue-300 hover:underline font-semibold"
-          onClick={onClick}
-        >
-          @bot_builder_chat
-        </a>
-      </>
+      <a
+        href="https://t.me/bot_builder_chat"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center gap-1 whitespace-nowrap text-blue-600 dark:text-blue-300 hover:underline font-semibold"
+        title="Мы в Telegram"
+        onClick={onClick}
+      >
+        <Send className="h-3.5 w-3.5 md:hidden" />
+        <span className="hidden md:inline">Мы в Telegram</span>
+      </a>
     );
   }
 

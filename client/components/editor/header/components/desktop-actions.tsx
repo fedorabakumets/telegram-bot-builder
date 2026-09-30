@@ -65,7 +65,7 @@ export function DesktopActions({
       'flex',
       isVertical
         ? 'flex-col space-y-2 p-2'
-        : 'ml-auto hidden shrink-0 flex-nowrap items-center gap-1 lg:flex lg:w-auto lg:order-none'
+        : 'ml-auto flex shrink-0 flex-nowrap items-center gap-1'
     )}>
       {/* Кнопки управления состоянием панелей — ЗАКОММЕНТИРОВАНО
       {onToggleHeader && (

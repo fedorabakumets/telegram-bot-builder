@@ -1,6 +1,6 @@
 # admin
 
-Эндпоинтов: **13**
+Эндпоинтов: **20**
 
 ### `GET` /admin/api/app-settings
 
@@ -251,6 +251,343 @@ curl -s -b admin.txt http://localhost:5000/admin/api/status
 {
   "authenticated": true,
   "adminEnabled": true
+}
+```
+
+### `GET` /admin/api/support/attachments/{id}
+
+Картинка диалога поддержки
+
+**Авторизация:** Admin cookie
+
+Отдаёт файл администратору по cookie `admin_auth`.
+
+```bash
+curl -s http://localhost:5000/admin/api/support/attachments/1 -b admin.txt -o screen.png
+```
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `id` | path | да | — | `"1"` |
+| `admin_auth` | cookie | нет | Admin cookie после `/admin/login` (`ADMIN_API_KEY`). Без неё — 401 ADMIN_UNAUTHORIZED. | `"eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0"` |
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Картинка. Content-Type — сохранённый MIME, Content-Disposition: inline |
+| 401 | Нет admin-сессии |
+| 404 | Файл не найден |
+
+### `GET` /admin/api/support/threads
+
+Список диалогов поддержки
+
+**Авторизация:** Admin cookie
+
+Диалоги с автором и превью последнего сообщения. Сначала с непрочитанным, затем по времени. Без `status` возвращаются открытые. Лимит 200.
+
+**Auth:** cookie `admin_auth`. **UI:** `/admin/support`.
+
+```bash
+curl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  -d 'key=YOUR_ADMIN_API_KEY'
+curl -s 'http://localhost:5000/admin/api/support/threads?status=open' -b admin.txt
+```
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `status` | query | нет | — | `"open"` |
+| `admin_auth` | cookie | нет | Admin cookie после `/admin/login` (`ADMIN_API_KEY`). Без неё — 401 ADMIN_UNAUTHORIZED. | `"eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0"` |
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Список диалогов |
+| 401 | Нет admin-сессии |
+| 500 | Внутренняя ошибка |
+
+#### Пример ответа `200`
+
+```json
+{
+  "items": [
+    {
+      "id": 1,
+      "status": "open",
+      "unreadByAdmin": 1,
+      "unreadByUser": 0,
+      "lastMessageAt": "2026-09-30T11:11:04.565Z",
+      "user": {
+        "id": 123456789,
+        "firstName": "Иван",
+        "lastName": null,
+        "username": "ivan",
+        "photoUrl": null
+      },
+      "lastMessageText": "Не сохраняется сценарий",
+      "lastMessageSender": "user"
+    }
+  ]
+}
+```
+
+### `GET` /admin/api/support/threads/{id}
+
+Диалог поддержки
+
+**Авторизация:** Admin cookie
+
+Диалог, профиль автора и сообщения. **Auth:** cookie `admin_auth`. **UI:** `/admin/support/{id}`.
+
+```bash
+curl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  -d 'key=YOUR_ADMIN_API_KEY'
+curl -s http://localhost:5000/admin/api/support/threads/1 -b admin.txt
+```
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `id` | path | да | — | `"1"` |
+| `admin_auth` | cookie | нет | Admin cookie после `/admin/login` (`ADMIN_API_KEY`). Без неё — 401 ADMIN_UNAUTHORIZED. | `"eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0"` |
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Диалог с сообщениями |
+| 400 | Неверный идентификатор |
+| 401 | Нет admin-сессии |
+| 404 | Диалог не найден |
+
+#### Пример ответа `200`
+
+```json
+{
+  "thread": {
+    "id": 1,
+    "status": "open",
+    "unreadByAdmin": 1,
+    "unreadByUser": 0,
+    "lastMessageAt": "2026-09-30T11:11:04.565Z"
+  },
+  "user": {
+    "id": 123456789,
+    "firstName": "Иван",
+    "lastName": null,
+    "username": "ivan",
+    "photoUrl": null
+  },
+  "messages": [
+    {
+      "id": 1,
+      "sender": "user",
+      "text": "Не сохраняется сценарий",
+      "context": {
+        "projectId": 294,
+        "path": "/editor/294",
+        "userAgent": "Mozilla/5.0"
+      },
+      "source": "web",
+      "createdAt": "2026-09-30T11:10:20.787Z",
+      "attachments": []
+    },
+    {
+      "id": 2,
+      "sender": "admin",
+      "text": "Проверьте, что проект открыт, и повторите сохранение.",
+      "context": null,
+      "source": "web",
+      "createdAt": "2026-09-30T11:11:04.565Z",
+      "attachments": []
+    }
+  ]
+}
+```
+
+### `PATCH` /admin/api/support/threads/{id}
+
+Закрыть или открыть диалог
+
+**Авторизация:** Admin cookie
+
+Меняет статус. Новое сообщение пользователя само переводит закрытый диалог в `open`.
+
+```bash
+curl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  -d 'key=YOUR_ADMIN_API_KEY'
+curl -s -X PATCH http://localhost:5000/admin/api/support/threads/1 -b admin.txt -H 'Content-Type: application/json' -d '{"status":"closed"}'
+```
+
+**Тело запроса:** `SupportStatusBody`
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `id` | path | да | — | `"1"` |
+| `admin_auth` | cookie | нет | Admin cookie после `/admin/login` (`ADMIN_API_KEY`). Без неё — 401 ADMIN_UNAUTHORIZED. | `"eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0"` |
+
+#### Пример тела запроса
+
+```json
+{
+  "status": "closed"
+}
+```
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Обновлённый диалог |
+| 400 | Статус не open/closed или неверный id |
+| 401 | Нет admin-сессии |
+| 404 | Диалог не найден |
+
+#### Пример ответа `200`
+
+```json
+{
+  "id": 1,
+  "status": "closed",
+  "unreadByAdmin": 0,
+  "unreadByUser": 0,
+  "lastMessageAt": "2026-09-30T11:11:04.565Z"
+}
+```
+
+### `POST` /admin/api/support/threads/{id}/messages
+
+Ответить пользователю
+
+**Авторизация:** Admin cookie
+
+Сохраняет ответ администратора и отмечает диалог прочитанным. Поля `text` и `files`. Источник ответа — `web`.
+
+```bash
+curl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  -d 'key=YOUR_ADMIN_API_KEY'
+curl -s -X POST http://localhost:5000/admin/api/support/threads/1/messages -b admin.txt -F text='Проверьте сохранение ещё раз.' -F files=@screen.png
+```
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `id` | path | да | — | `"1"` |
+| `admin_auth` | cookie | нет | Admin cookie после `/admin/login` (`ADMIN_API_KEY`). Без неё — 401 ADMIN_UNAUTHORIZED. | `"eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0"` |
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 201 | Ответ сохранён |
+| 400 | Пустое сообщение, файл не картинка, больше 8 МБ, текст длиннее 4000 или неверный id |
+| 401 | Нет admin-сессии |
+| 404 | Диалог не найден |
+
+#### Пример ответа `201`
+
+```json
+{
+  "id": 2,
+  "sender": "admin",
+  "text": "Проверьте, что проект открыт, и повторите сохранение.",
+  "context": null,
+  "source": "web",
+  "createdAt": "2026-09-30T11:11:04.565Z",
+  "attachments": []
+}
+```
+
+### `POST` /admin/api/support/threads/{id}/read
+
+Отметить диалог прочитанным
+
+**Авторизация:** Admin cookie
+
+Обнуляет `unreadByAdmin`.
+
+```bash
+curl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  -d 'key=YOUR_ADMIN_API_KEY'
+curl -s -X POST http://localhost:5000/admin/api/support/threads/1/read -b admin.txt
+```
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `id` | path | да | — | `"1"` |
+| `admin_auth` | cookie | нет | Admin cookie после `/admin/login` (`ADMIN_API_KEY`). Без неё — 401 ADMIN_UNAUTHORIZED. | `"eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0"` |
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Обновлённый диалог |
+| 400 | Неверный идентификатор |
+| 401 | Нет admin-сессии |
+| 404 | Диалог не найден |
+
+#### Пример ответа `200`
+
+```json
+{
+  "id": 1,
+  "status": "open",
+  "unreadByAdmin": 0,
+  "unreadByUser": 0,
+  "lastMessageAt": "2026-09-30T11:11:04.565Z"
+}
+```
+
+### `GET` /admin/api/support/unread
+
+Сколько сообщений ждут ответа
+
+**Авторизация:** Admin cookie
+
+Сумма `unread_by_admin` по всем диалогам. Для счётчика в меню админки.
+
+```bash
+curl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  -d 'key=YOUR_ADMIN_API_KEY'
+curl -s http://localhost:5000/admin/api/support/unread -b admin.txt
+```
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `admin_auth` | cookie | нет | Admin cookie после `/admin/login` (`ADMIN_API_KEY`). Без неё — 401 ADMIN_UNAUTHORIZED. | `"eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0"` |
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Общее число непрочитанных |
+| 401 | Нет admin-сессии |
+
+#### Пример ответа `200`
+
+```json
+{
+  "total": 3
 }
 ```
 

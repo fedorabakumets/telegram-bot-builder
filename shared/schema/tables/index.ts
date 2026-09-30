@@ -88,3 +88,6 @@ export type { BotBuild, InsertBotBuild } from "./bot-builds";
 
 export { mediaFileTokens } from "./media-file-tokens";
 export type { MediaFileToken, InsertMediaFileToken } from "./media-file-tokens";
+
+export { supportThreads, supportMessages, supportAttachments } from "./support-chat";
+export type { SupportThread, SupportMessage, InsertSupportMessage, SupportAttachment } from "./support-chat";

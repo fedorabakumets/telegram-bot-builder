@@ -16,17 +16,19 @@ export interface UserInfoProps {
 }
 
 /**
- * Информация о пользователе: имя и username
+ * Короткое имя в шапке. Полный username остаётся в подсказке.
+ * @param props - Имя и username
+ * @returns Одна строка с именем или null в вертикальной шапке
  */
 export function UserInfo({ firstName, username, isVertical }: UserInfoProps) {
   if (isVertical) return null;
 
+  const handle = username ? `@${username.replace(/^@/, "")}` : "";
+  const title = handle ? `${firstName} ${handle}` : firstName;
+
   return (
-    <div className="hidden text-right xl:block">
-      <p className="text-xs font-bold text-foreground">{firstName}</p>
-      {username && (
-        <p className="text-xs text-blue-600 dark:text-blue-300">@{username}</p>
-      )}
-    </div>
+    <p className="hidden max-w-[5.5rem] truncate text-xs font-bold text-foreground xl:block" title={title}>
+      {firstName}
+    </p>
   );
 }

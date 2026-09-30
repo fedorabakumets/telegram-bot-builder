@@ -40,11 +40,10 @@ export function EditorLearnButton({ active, onStart }: EditorLearnButtonProps) {
           type="button"
           variant={active ? 'secondary' : 'outline'}
           size="sm"
-          className="h-8 shrink-0 gap-1.5"
-          title="Разделы обучения по редактору"
+          className="h-8 w-8 shrink-0 p-0"
+          title="Обучение"
         >
           <GraduationCap className="h-4 w-4" />
-          <span className="hidden sm:inline">Обучение</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-72">
