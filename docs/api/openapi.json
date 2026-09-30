@@ -24239,8 +24239,8 @@
                   "$ref": "#/components/schemas/AdminVersionResponse"
                 },
                 "example": {
-                  "version": "2.2.0.9",
-                  "releasedAt": "2026-08-20",
+                  "version": "2.2.1.0",
+                  "releasedAt": "2026-09-30",
                   "notesUrl": null
                 }
               }
@@ -24312,12 +24312,12 @@
                 },
                 "example": {
                   "current": {
-                    "version": "2.2.0.9",
-                    "releasedAt": "2026-08-20"
+                    "version": "2.2.1.0",
+                    "releasedAt": "2026-09-30"
                   },
                   "latest": {
-                    "version": "2.2.0.9",
-                    "releasedAt": "2026-08-20",
+                    "version": "2.2.1.0",
+                    "releasedAt": "2026-09-30",
                     "notesUrl": null
                   },
                   "updateAvailable": false,
@@ -30561,12 +30561,12 @@
         "properties": {
           "version": {
             "type": "string",
-            "example": "2.2.0.9"
+            "example": "2.2.1.0"
           },
           "releasedAt": {
             "type": "string",
             "nullable": true,
-            "example": "2026-08-20"
+            "example": "2026-09-30"
           },
           "notesUrl": {
             "type": "string",
@@ -30584,12 +30584,12 @@
         "properties": {
           "version": {
             "type": "string",
-            "example": "2.2.0.9"
+            "example": "2.2.1.0"
           },
           "releasedAt": {
             "type": "string",
             "nullable": true,
-            "example": "2026-08-20"
+            "example": "2026-09-30"
           },
           "notesUrl": {
             "type": "string",

@@ -51,15 +51,15 @@ export const ADMIN_UNAUTHORIZED_EXAMPLE = { error: "ADMIN_UNAUTHORIZED" as const
 
 /** GET /admin/api/version */
 export const ADMIN_VERSION_EXAMPLE = {
-  version: "2.2.0.9",
-  releasedAt: "2026-08-20",
+  version: "2.2.1.0",
+  releasedAt: "2026-09-30",
   notesUrl: null,
 };
 
 /** GET /admin/api/update-check */
 export const ADMIN_UPDATE_CHECK_EXAMPLE = {
-  current: { version: "2.2.0.9", releasedAt: "2026-08-20" },
-  latest: { version: "2.2.0.9", releasedAt: "2026-08-20", notesUrl: null },
+  current: { version: "2.2.1.0", releasedAt: "2026-09-30" },
+  latest: { version: "2.2.1.0", releasedAt: "2026-09-30", notesUrl: null },
   updateAvailable: false,
   checkFailed: false,
   deployGuideUrl: "https://github.com/org/telegram-bot-builder",

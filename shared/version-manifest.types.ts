@@ -5,7 +5,7 @@
 
 /** Манифест версии приложения в репозитории */
 export interface VersionManifest {
-  /** Semver-подобная версия, например 2.2.0.9 */
+  /** Semver-подобная версия, например 2.2.1.0 */
   version: string;
   /** Дата релиза ISO или YYYY-MM-DD */
   releasedAt?: string;
