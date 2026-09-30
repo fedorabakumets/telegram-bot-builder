@@ -168,3 +168,12 @@ export function MyComponent({ ... }: MyProps) { ... }
 
 Всегда сверяться с существующими нодами того же типа в project.json — копировать формат `data` из рабочих нод, а не выдумывать свой.
 
+## Cursor Cloud specific instructions
+
+- Базовый образ уже содержит Node.js. Установка окружения ставит PostgreSQL 17 (репозиторий apt.postgresql.org), Redis 7, пакет `python-is-python3` и venv `/opt/bot-builder-venv` (`pip install -r requirements.txt`), затем `npm ci`.
+- На старте VM нет systemd. PostgreSQL поднимается через `pg_ctlcluster 17 main start`, Redis — через `redis-server /etc/redis/redis.conf`. База `telegram_bot_builder`, пользователь `postgres`, пароль `postgres`.
+- Локальный `.env` создаётся при старте, если файла нет. Не копируйте `.env.example` как есть: `TELEGRAM_PROXY_URL=http://127.0.0.1:10809` включает `global-agent` и проксирует весь HTTP через отсутствующий прокси. В облаке `TELEGRAM_PROXY_URL` должен быть пустым. `PYTHON_PATH=/opt/bot-builder-venv/bin/python`.
+- Приложение: `npm run dev` (миграции и сервер) на http://localhost:5000. Вход — dev-login по числовому Telegram ID. Проверка: `GET /api/health`, затем создание проекта и `POST /api/projects/:id/generate`.
+- Фазовые тесты вызывают `python -m py_compile` (нужна команда `python`, не только `python3`). Пример: `npm run test:phase1`.
+- Не запускать `npm run check` и `npx tsc --noEmit`.
+
