@@ -1,6 +1,6 @@
 {
   "name": "telegram-bot-builder",
-  "version": "2.2.0.9",
+  "version": "2.2.1.0",
   "description": "🤖 Visual Telegram Bot Builder - Create bots without coding using drag-and-drop interface",
   "type": "module",
   "license": "MIT",
