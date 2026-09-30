@@ -25,6 +25,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 import bot_code_cache
+import lazy_aiogram
 import worker_isolation as iso
 
 PROJECT_ID = int(os.environ.get("PROJECT_ID", "0"))
@@ -447,6 +448,9 @@ def main():
     signal.signal(signal.SIGINT, signal.SIG_IGN)
     # Один раз на процесс воркера: боты не регистрируют свои signal_handler
     signal.signal = lambda *args, **kwargs: None  # type: ignore[method-assign]
+
+    # До импорта aiogram ботами: валидаторы моделей строятся по первому использованию
+    lazy_aiogram.enable()
 
     asyncio.run(BotWorker().run())
 
