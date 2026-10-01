@@ -38,6 +38,9 @@ bots/*
 # Приватное локальное хранилище сборок ботов (BOT_ARTIFACT_SOURCE=storage)
 .bot-builds/
 
+# Приватное локальное хранилище бэкапов базы (npm run db:backup)
+.db-backups/
+
 # Environment variables
 .env
 .env.local

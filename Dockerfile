@@ -22,7 +22,8 @@ FROM node:20-alpine
 
 # Python3 нужен для запуска пользовательских ботов (server/bots/startBot.ts)
 # procps нужен для команды ps (поиск Python процессов при остановке)
-RUN apk add --no-cache python3 py3-pip procps
+# postgresql18-client — pg_dump/pg_restore/psql для бэкапов базы (снимают и старые серверы)
+RUN apk add --no-cache python3 py3-pip procps postgresql18-client
 
 WORKDIR /app
 
