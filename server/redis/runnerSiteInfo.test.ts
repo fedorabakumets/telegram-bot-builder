@@ -10,7 +10,7 @@ import { listRunnerSiteInfos, publishRunnerSiteInfo, readRunnerSiteInfo, RUNNER_
 describe("readRunnerSiteInfo", () => {
   it("на Railway берёт регион и адреса площадки", () => {
     const info = readRunnerSiteInfo("site", {
-      RAILWAY_PROJECT_ID: "p",
+      RAILWAY_REPLICA_ID: "r",
       RAILWAY_REPLICA_REGION: "europe-west4",
       RUNNER_BOT_DATABASE_URL: "postgresql://inner",
       RUNNER_DATABASE_PUBLIC_URL: " postgresql://outer ",
@@ -24,7 +24,7 @@ describe("readRunnerSiteInfo", () => {
   });
 
   it("без Railway считает площадку Docker", () => {
-    assert.strictEqual(readRunnerSiteInfo("x", {}).platform, "docker");
+    assert.strictEqual(readRunnerSiteInfo("x", { RAILWAY_PROJECT_ID: "p" }).platform, "docker");
   });
 });
 

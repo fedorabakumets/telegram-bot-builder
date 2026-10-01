@@ -61,7 +61,8 @@ export function readRunnerSiteInfo(runnerId: string, env: NodeJS.ProcessEnv = pr
   return {
     v: RUNNER_SITE_INFO_VERSION,
     runnerId,
-    platform: env.RAILWAY_PROJECT_ID ? "railway" : "docker",
+    // RAILWAY_PROJECT_ID бывает и в .env панели, а RAILWAY_REPLICA_ID Railway задаёт только контейнеру
+    platform: env.RAILWAY_REPLICA_ID ? "railway" : "docker",
     region: nonEmpty(env.RAILWAY_REPLICA_REGION),
     botDatabaseUrl: nonEmpty(env.RUNNER_BOT_DATABASE_URL),
     databasePublicUrl: nonEmpty(env.RUNNER_DATABASE_PUBLIC_URL),

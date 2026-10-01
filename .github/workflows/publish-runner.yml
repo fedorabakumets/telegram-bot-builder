@@ -12,6 +12,7 @@ on:
       - server/runner/**
       - server/python/**
       - server/redis/workerStreams.ts
+      - server/redis/runnerSiteInfo.ts
       - server/bots/workerChannel.ts
       - server/bots/localWorkerChannel.ts
       - server/bots/builds/botBuildCodec.ts
