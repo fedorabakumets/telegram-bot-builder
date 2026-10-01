@@ -1,11 +1,15 @@
 /**
- * @fileoverview Автоматический бэкап базы панели раз в `DB_BACKUP_INTERVAL_HOURS` часов
+ * @fileoverview Автоматический бэкап баз раз в `DB_BACKUP_INTERVAL_HOURS` часов:
+ * база панели и базы из `DB_BACKUP_TARGETS` (см. dbBackupTargets.ts)
  * @module server/database/backups/dbBackupScheduler
  */
 
-import { assertBackupLabel, DEFAULT_DB_BACKUP_LABEL, getDbBackupIntervalHours, getDbBackupsKeep } from "./dbBackupConfig";
+import type { StorageBackend } from "../../storage/storage-backend";
+import { getDbBackupIntervalHours, getDbBackupsKeep } from "./dbBackupConfig";
 import { createDbBackup } from "./createDbBackup";
+import { readBackupIndex } from "./dbBackupIndex";
 import { resolveDbBackupsBackend } from "./dbBackupsBackend";
+import { getDbBackupTargets, staleBackupWarning, type DbBackupTarget } from "./dbBackupTargets";
 
 /** Задержка первого бэкапа после старта, чтобы не мешать восстановлению ботов */
 const FIRST_RUN_DELAY_MS = 5 * 60_000;
@@ -14,21 +18,38 @@ const FIRST_RUN_DELAY_MS = 5 * 60_000;
 let running = false;
 
 /**
- * Делает один бэкап базы панели; ошибки только пишутся в журнал.
+ * Бэкапит одну базу; при ошибке предупреждает, если последний удачный бэкап устарел
+ * @param target - База и метка
+ * @param backend - Хранилище бэкапов
+ * @param intervalHours - Интервал расписания
  */
-async function runScheduledBackup(): Promise<void> {
-  const databaseUrl = process.env.DATABASE_URL;
-  if (running || !databaseUrl) return;
+async function backupTarget(target: DbBackupTarget, backend: StorageBackend, intervalHours: number): Promise<void> {
+  const { label, databaseUrl } = target;
+  try {
+    const { entry } = await createDbBackup({
+      databaseUrl, label, backend, keep: getDbBackupsKeep(), log: (message) => console.log(`🗄️ [DbBackup:${label}] ${message}`),
+    });
+    console.log(`✅ [DbBackup:${label}] бэкап ${entry.id} сохранён в ${backend.configId}`);
+  } catch (error) {
+    console.error(`❌ [DbBackup:${label}] бэкап не создан:`, error instanceof Error ? error.message : error);
+    const index = await readBackupIndex(backend, label).catch(() => null);
+    const warning = index ? staleBackupWarning(index.entries, intervalHours) : "индекс бэкапов не прочитан";
+    if (warning) console.warn(`⚠️ [DbBackup:${label}] ${warning}`);
+  }
+}
+
+/**
+ * Бэкапит все базы по очереди; ошибки только пишутся в журнал.
+ * @param intervalHours - Интервал расписания
+ */
+export async function runScheduledBackup(intervalHours: number): Promise<void> {
+  if (running) return;
   running = true;
   try {
-    const label = assertBackupLabel(process.env.DB_BACKUP_LABEL?.trim() || DEFAULT_DB_BACKUP_LABEL);
     const backend = await resolveDbBackupsBackend();
-    const { entry } = await createDbBackup({
-      databaseUrl, label, backend, keep: getDbBackupsKeep(), log: (message) => console.log(`🗄️ [DbBackup] ${message}`),
-    });
-    console.log(`✅ [DbBackup] бэкап ${entry.id} сохранён в ${backend.configId}`);
+    for (const target of getDbBackupTargets()) await backupTarget(target, backend, intervalHours);
   } catch (error) {
-    console.error("❌ [DbBackup] бэкап не создан:", error instanceof Error ? error.message : error);
+    console.error("❌ [DbBackup] расписание бэкапов:", error instanceof Error ? error.message : error);
   } finally {
     running = false;
   }
@@ -41,8 +62,9 @@ async function runScheduledBackup(): Promise<void> {
 export function startDbBackupScheduler(): boolean {
   const hours = getDbBackupIntervalHours();
   if (hours <= 0) return false;
-  setTimeout(() => void runScheduledBackup(), FIRST_RUN_DELAY_MS).unref();
-  setInterval(() => void runScheduledBackup(), hours * 3_600_000).unref();
-  console.log(`🗄️ [DbBackup] бэкап базы панели каждые ${hours} ч, первый через 5 мин`);
+  const labels = getDbBackupTargets().map((t) => t.label).join(", ");
+  setTimeout(() => void runScheduledBackup(hours), FIRST_RUN_DELAY_MS).unref();
+  setInterval(() => void runScheduledBackup(hours), hours * 3_600_000).unref();
+  console.log(`🗄️ [DbBackup] бэкап (${labels}) каждые ${hours} ч, первый через 5 мин`);
   return true;
 }
