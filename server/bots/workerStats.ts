@@ -16,6 +16,8 @@ export interface WorkerStatsSource {
   activeBots: Set<number>;
   /** Процесс воркера */
   process: { pid?: number };
+  /** Память, которую сообщил сам воркер (МБ); если задана, PID не читается */
+  memoryMb?: number;
 }
 
 /** Строка статистики по проекту */
@@ -106,7 +108,7 @@ export function collectWorkerStats(
   for (const worker of workers) {
     const workerKey = worker.projectId;
     const pid = worker.process.pid;
-    const memoryMb = readMemory(pid);
+    const memoryMb = worker.memoryMb ?? readMemory(pid);
     stats.workers++;
     stats.totalBots += worker.activeBots.size;
     stats.totalMemoryMb += memoryMb;

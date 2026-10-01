@@ -392,9 +392,24 @@ class BotWorker:
             await asyncio.gather(*tasks, return_exceptions=True)
         self._shutdown_event.set()
 
+    async def _report_memory(self) -> None:
+        """Раз в 10 с сообщает RSS процесса: в контейнере сервер не видит PID воркера."""
+        while not self._shutdown_event.is_set():
+            try:
+                with open("/proc/self/status", encoding="utf-8") as status:
+                    for line in status:
+                        if line.startswith("VmRSS:"):
+                            emit_system(f"memory_kb:{int(line.split()[1])}")
+                            break
+            except (OSError, ValueError, IndexError):
+                return
+            await asyncio.sleep(10)
+
     async def run(self) -> None:
         """Главный цикл: stdin → команды."""
         emit_system("worker_ready")
+        if os.environ.get("WORKER_REPORT_MEMORY", "").lower() == "true":
+            self._memory_task = asyncio.create_task(self._report_memory())
         loop = asyncio.get_event_loop()
         stdin_queue: asyncio.Queue = asyncio.Queue()
 

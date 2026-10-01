@@ -115,11 +115,10 @@ async function writeBotEnvFile(
   const contentCache = tokenRecord?.contentCache === 1;
 
   const customEnvVars = await storage.getEnvVariables(tokenId);
+  const { resolveBotEnvReference } = await import("../bots/resolveBotEnvReference");
   const customVariables = customEnvVars.map(v => ({
     key: v.key,
-    value: v.value.startsWith('${{') && v.value.endsWith('}}')
-      ? (process.env[v.value.slice(3, -2)] ?? v.value)
-      : v.value,
+    value: resolveBotEnvReference(v.value),
   }));
 
   if (!customVariables.some(v => v.key === 'DATABASE_URL') && process.env.DATABASE_URL) {

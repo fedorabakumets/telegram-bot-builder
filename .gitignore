@@ -32,6 +32,9 @@ exports/
 bots/*
 !bots/README.md
 
+# Копии папок ботов для Docker-воркеров (WORKER_RUNTIME=docker)
+.worker-runtime/
+
 # Environment variables
 .env
 .env.local

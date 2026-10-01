@@ -42,6 +42,13 @@ describe("collectWorkerStats", () => {
     assert.strictEqual(stats.totalMemoryMb, 70);
   });
 
+  it("контейнер: память берётся из отчёта воркера, а не по PID docker CLI", () => {
+    const container = { ...worker(5, [11]), memoryMb: 98 };
+    const stats = collectWorkerStats([container], () => 5, readMemory);
+    assert.strictEqual(stats.details[0].memoryMb, 98);
+    assert.strictEqual(stats.totalMemoryMb, 98);
+  });
+
   it("общий воркер раскладывается по проектам токенов", () => {
     const projectOfToken = new Map([[1, 1], [2, 2]]);
     const stats = collectWorkerStats([worker(0, [1, 2])], (t) => projectOfToken.get(t) ?? 0, readMemory);

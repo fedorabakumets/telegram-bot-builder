@@ -2,6 +2,7 @@
  * @fileoverview Менеджер воркеров ботов — управляет Python worker процессами
  * Модель: 1 проект = 1 воркер = N ботов внутри одного asyncio event loop.
  * WORKER_GROUPING=owner — воркер на владельца, shared — один воркер на все проекты (см. workerGrouping.ts).
+ * WORKER_RUNTIME=docker — каждый воркер в своём контейнере (см. workerRuntime.ts, workerLaunch.ts).
  * @module server/bots/botWorkerManager
  */
 
@@ -22,6 +23,7 @@ import { formatBotRuntimeErrorShort } from "./formatBotRuntimeError";
 import { resolveWorkerKey } from "./workerGrouping";
 import { resolveProjectWorkerKey } from "./resolveProjectWorkerKey";
 import { collectWorkerStats, type WorkerPoolStats } from "./workerStats";
+import { prepareWorkerLaunch, stageBotFile, type WorkerLaunch } from "./workerLaunch";
 
 /** Задержка перед killWorker когда activeBots пуст (мс) */
 const WORKER_DRAIN_MS = 2_000;
@@ -66,6 +68,26 @@ interface ProjectWorker {
   status: "starting" | "ready" | "error" | "stopped";
   /** Время создания */
   createdAt: Date;
+  /** true, если воркер работает в Docker-контейнере */
+  docker: boolean;
+  /** Проекты, чьи файлы видит контейнер; null — без ограничений */
+  projects: Set<number> | null;
+  /** Память, которую сообщил сам воркер (МБ); для контейнера PID — это docker CLI */
+  memoryMb?: number;
+}
+
+/** Параметры запуска бота, нужные для повторного запуска в пересозданном контейнере */
+interface BotStartArgs {
+  /** ID проекта */
+  projectId: number;
+  /** Токен бота */
+  token: string;
+  /** ID токена */
+  tokenId: number;
+  /** Путь к bot.py на сервере */
+  botFile: string;
+  /** Настройки webhook, если бот работает через webhook */
+  webhook?: { webhookUrl: string; webhookPort: number };
 }
 
 /**
@@ -120,6 +142,26 @@ class BotWorkerManager extends EventEmitter {
    */
   private keyOf(projectId: number): number {
     return this.projectWorkerKeys.get(projectId) ?? resolveWorkerKey(projectId);
+  }
+
+  /** Параметры последнего запуска каждого бота: tokenId → BotStartArgs */
+  private startArgs = new Map<number, BotStartArgs>();
+
+  /** Токены, чьи bot-exited не публикуются, пока контейнер пересоздаётся */
+  private suppressedExits = new Set<number>();
+
+  /** Воркеры в процессе подготовки запуска: ключ → промис готового воркера */
+  private creating = new Map<number, Promise<ProjectWorker>>();
+
+  /**
+   * Публикует событие, кроме bot-exited ботов, которые переносятся в новый контейнер
+   * @param event - Имя события
+   * @param args - Аргументы события
+   * @returns true, если у события были слушатели
+   */
+  override emit(event: string | symbol, ...args: any[]): boolean {
+    if (event === "bot-exited" && this.suppressedExits.has(args[1])) return false;
+    return super.emit(event, ...args);
   }
 
   constructor() {
@@ -183,11 +225,12 @@ class BotWorkerManager extends EventEmitter {
   }
 
   /**
-   * Получает или создаёт воркер для проекта
-   * @param projectId - ID проекта
+   * Получает или создаёт воркер
+   * @param projectId - Ключ воркера (ID проекта, владельца или общий)
+   * @param botProjectId - Проект запускаемого бота (для выбора монтируемых папок)
    * @returns Промис с воркером в состоянии ready
    */
-  async getOrCreateWorker(projectId: number): Promise<ProjectWorker> {
+  async getOrCreateWorker(projectId: number, botProjectId: number = projectId): Promise<ProjectWorker> {
     const existing = this.workers.get(projectId);
     if (existing && existing.status === "ready") {
       return existing;
@@ -198,27 +241,29 @@ class BotWorkerManager extends EventEmitter {
       return this.waitForReady(projectId);
     }
 
-    // Создаём новый воркер
-    return this.createWorker(projectId);
+    const pending = this.creating.get(projectId);
+    if (pending) return pending;
+    const created = prepareWorkerLaunch(projectId, botProjectId, this.pythonPath, this.workerScript)
+      .then((launch) => this.createWorker(projectId, launch))
+      .finally(() => this.creating.delete(projectId));
+    this.creating.set(projectId, created);
+    return created;
   }
 
   /**
-   * Создаёт новый Python worker процесс для проекта
-   * @param projectId - ID проекта
+   * Создаёт новый Python worker процесс (или контейнер) для ключа воркера
+   * @param projectId - Ключ воркера
+   * @param launch - Команда запуска из prepareWorkerLaunch
    * @returns Промис с воркером в состоянии ready
    */
-  private createWorker(projectId: number): Promise<ProjectWorker> {
+  private createWorker(projectId: number, launch: WorkerLaunch): Promise<ProjectWorker> {
     return new Promise((resolve, reject) => {
-      console.log(`🏭 [WorkerPool] Создаём воркер для проекта ${projectId}`);
-      console.log(`🏭 [WorkerPool] Python: ${this.pythonPath}`);
-      console.log(`🏭 [WorkerPool] Script: ${this.workerScript}`);
+      console.log(`🏭 [WorkerPool] Создаём воркер ${projectId}${launch.docker ? " (docker)" : ""}`);
+      console.log(`🏭 [WorkerPool] Команда: ${launch.command} ${launch.docker ? launch.args.slice(-3).join(" ") : launch.args.join(" ")}`);
 
-      const workerProcess = spawn(this.pythonPath, ["-u", this.workerScript], {
+      const workerProcess = spawn(launch.command, launch.args, {
         stdio: ["pipe", "pipe", "pipe"],
-        env: {
-          ...process.env,
-          PROJECT_ID: projectId.toString(),
-        },
+        env: launch.env,
       });
 
       console.log(`🏭 [WorkerPool] Процесс воркера создан, PID: ${workerProcess.pid}`);
@@ -229,18 +274,23 @@ class BotWorkerManager extends EventEmitter {
         activeBots: new Set(),
         status: "starting",
         createdAt: new Date(),
+        docker: launch.docker,
+        projects: launch.projects,
+        memoryMb: launch.docker ? 0 : undefined,
       };
 
       this.workers.set(projectId, worker);
 
-      // Таймаут на запуск
+      // Контейнеру нужно больше времени: старт docker и, возможно, загрузка образа
+      const readyTimeoutMs = launch.docker ? 60_000 : 10_000;
       const timeout = setTimeout(() => {
         if (worker.status === "starting") {
           worker.status = "error";
-          console.error(`🏭 [WorkerPool] Таймаут: воркер проекта ${projectId} не запустился за 10 секунд`);
-          reject(new Error(`Воркер проекта ${projectId} не запустился за 10 секунд`));
+          console.error(`🏭 [WorkerPool] Таймаут: воркер ${projectId} не запустился за ${readyTimeoutMs / 1000} секунд`);
+          reject(new Error(`Воркер ${projectId} не запустился за ${readyTimeoutMs / 1000} секунд`));
+          if (launch.docker) workerProcess.kill("SIGKILL");
         }
-      }, 10000);
+      }, readyTimeoutMs);
 
       // Парсим stdout (JSON протокол)
       let buffer = "";
@@ -301,7 +351,8 @@ class BotWorkerManager extends EventEmitter {
           this.emit("bot-exited", this.projectOf(tokenId, projectId), tokenId, code, undefined, unexpected);
         }
         worker.activeBots.clear();
-        this.workers.delete(projectId);
+        // Старый процесс может завершиться после создания нового воркера с тем же ключом
+        if (this.workers.get(projectId) === worker) this.workers.delete(projectId);
 
         this.emit("worker-exited", projectId, code, signal);
 
@@ -313,7 +364,7 @@ class BotWorkerManager extends EventEmitter {
       workerProcess.on("error", (err) => {
         clearTimeout(timeout);
         worker.status = "error";
-        this.workers.delete(projectId);
+        if (this.workers.get(projectId) === worker) this.workers.delete(projectId);
         reject(err);
       });
     });
@@ -326,8 +377,9 @@ class BotWorkerManager extends EventEmitter {
   private waitForReady(projectId: number): Promise<ProjectWorker> {
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
+        this.removeListener("worker-ready", handler);
         reject(new Error(`Таймаут ожидания воркера проекта ${projectId}`));
-      }, 10000);
+      }, this.workers.get(projectId)?.docker ? 60_000 : 10_000);
 
       const handler = (readyProjectId: number) => {
         if (readyProjectId === projectId) {
@@ -383,6 +435,12 @@ class BotWorkerManager extends EventEmitter {
   private handleSystemMessage(projectId: number, content: string): void {
     const ev = parseWorkerSystemMessage(content);
     const worker = this.workers.get(projectId);
+
+    if (content.startsWith("memory_kb:")) {
+      const kb = parseInt(content.slice("memory_kb:".length), 10);
+      if (worker && Number.isFinite(kb)) worker.memoryMb = Math.round(kb / 1024);
+      return;
+    }
 
     if (ev.kind === "bot_started" && ev.tokenId !== undefined) {
       this.lastBotErrors.delete(ev.tokenId);
@@ -451,27 +509,18 @@ class BotWorkerManager extends EventEmitter {
       this.projectWorkerKeys.set(projectId, workerKey);
       this.tokenProjects.set(tokenId, projectId);
       this.cancelWorkerDrain(workerKey);
-      const worker = await this.getOrCreateWorker(workerKey);
+      const current = this.workers.get(workerKey);
+      if (current?.projects && !current.projects.has(projectId)) {
+        await this.remountWorker(workerKey, projectId);
+      }
+      const worker = await this.getOrCreateWorker(workerKey, projectId);
+      const args: BotStartArgs = { projectId, token, tokenId, botFile, webhook };
+      this.startArgs.set(tokenId, args);
 
-      const started = waitForWorkerBotStart(
-        this,
-        projectId,
-        tokenId,
-        WORKER_START_CONFIRM_TIMEOUT_MS,
-      );
-
-      const sent = this.sendCommand(workerKey, {
-        cmd: "start_bot",
-        token,
-        token_id: tokenId,
-        bot_file: botFile,
-        ...(webhook ? { webhook_url: webhook.webhookUrl, webhook_port: webhook.webhookPort } : {}),
-      });
-      if (!sent) {
+      const started = this.sendStartBot(workerKey, worker, args);
+      if (!started) {
         throw new Error(`Не удалось отправить start_bot project=${projectId} token=${tokenId}`);
       }
-
-      worker.activeBots.add(tokenId);
       const ok = await started;
       if (!ok) {
         // Не killWorker сразу: Python ещё грузит bot.py — стопаем задачу, потом drain
@@ -496,6 +545,59 @@ class BotWorkerManager extends EventEmitter {
   }
 
   /**
+   * Отправляет start_bot (для контейнера — после копирования папки бота)
+   * @param workerKey - Ключ воркера
+   * @param worker - Готовый воркер
+   * @param args - Параметры запуска бота
+   * @returns промис подтверждения bot_started или null, если команда не отправлена
+   */
+  private sendStartBot(workerKey: number, worker: ProjectWorker, args: BotStartArgs): Promise<boolean> | null {
+    const started = waitForWorkerBotStart(this, args.projectId, args.tokenId, WORKER_START_CONFIRM_TIMEOUT_MS);
+    const sent = this.sendCommand(workerKey, {
+      cmd: "start_bot",
+      token: args.token,
+      token_id: args.tokenId,
+      bot_file: stageBotFile(workerKey, args.botFile, worker.docker),
+      ...(args.webhook ? { webhook_url: args.webhook.webhookUrl, webhook_port: args.webhook.webhookPort } : {}),
+    });
+    if (!sent) return null;
+    worker.activeBots.add(args.tokenId);
+    return started;
+  }
+
+  /**
+   * Пересоздаёт контейнер, когда владельцу нужен проект, папки которого не смонтированы
+   * (новый проект). Работающие боты переносятся без смены статуса в БД.
+   * @param workerKey - Ключ воркера
+   * @param projectId - Проект, который должен стать доступен
+   */
+  private async remountWorker(workerKey: number, projectId: number): Promise<void> {
+    const old = this.workers.get(workerKey);
+    if (!old) return;
+    const replay = [...old.activeBots]
+      .map((tokenId) => this.startArgs.get(tokenId))
+      .filter((a): a is BotStartArgs => a !== undefined);
+    console.log(`🏭 [WorkerPool:${workerKey}] пересоздаём контейнер для проекта ${projectId}, ботов: ${replay.length}`);
+    for (const a of replay) this.suppressedExits.add(a.tokenId);
+    let results: boolean[] = [];
+    let failure: unknown;
+    try {
+      await this.killWorker(workerKey);
+      const fresh = await this.getOrCreateWorker(workerKey, projectId);
+      results = await Promise.all(replay.map((a) => this.sendStartBot(workerKey, fresh, a) ?? false));
+    } catch (error) {
+      failure = error;
+    } finally {
+      for (const a of replay) this.suppressedExits.delete(a.tokenId);
+    }
+    replay.forEach((a, i) => {
+      if (results[i]) return;
+      this.emit("bot-exited", a.projectId, a.tokenId, "error", "Бот не запустился в пересозданном контейнере", false);
+    });
+    if (failure) throw failure;
+  }
+
+  /**
    * Останавливает бота в воркере и ждёт bot_exited/bot_stopped.
    * @param projectId - ID проекта
    * @param tokenId - ID токена
@@ -503,6 +605,7 @@ class BotWorkerManager extends EventEmitter {
    */
   async stopBot(projectId: number, tokenId: number): Promise<boolean> {
     return this.withTokenLock(projectId, tokenId, async () => {
+      this.startArgs.delete(tokenId);
       const workerKey = this.keyOf(projectId);
       const worker = this.workers.get(workerKey);
       if (!worker) return true;
