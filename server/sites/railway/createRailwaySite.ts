@@ -62,6 +62,7 @@ export async function createRailwaySite(options: CreateRailwaySiteOptions): Prom
   const config = prepareSiteTemplateConfig(template.config, { region, runnerImage: options.runnerImage });
   log(`Токен ${target.tokenKind === "account" ? "аккаунта" : "workspace"}, создаём проект ${options.name}`);
   const project = await createSiteProject(auth, target, options.name);
+  log(`Проект ${project.projectId} создан`);
   try {
     await deploySiteTemplate(auth, project, template, config);
     log(`Шаблон развёрнут в ${region}, ждём сервисы`);

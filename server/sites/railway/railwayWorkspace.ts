@@ -24,6 +24,15 @@ export interface RailwayTarget {
 }
 
 /**
+ * Проверяет, что Railway отказал в доступе
+ * @param error - Ошибка запроса
+ * @returns true для «Not Authorized»
+ */
+function isNotAuthorized(error: unknown): boolean {
+  return error instanceof RailwayApiError && error.reasons.some((r) => /not authorized/i.test(r));
+}
+
+/**
  * Определяет тип токена и workspace для площадки
  * @param auth - Токен пользователя
  * @param wantedWorkspaceId - Нужный workspace, если у аккаунта их несколько
@@ -36,10 +45,16 @@ export async function resolveRailwayTarget(auth: RailwayAuth, wantedWorkspaceId?
     const data = await railwayGraphql<{ me: { workspaces: RailwayWorkspace[] } }>(auth, "query { me { workspaces { id name } } }");
     workspaces = data.me.workspaces;
   } catch (error) {
-    if (error instanceof RailwayApiError && error.reasons.some((r) => /not authorized/i.test(r))) {
-      return { tokenKind: "workspace" };
+    if (!isNotAuthorized(error)) throw error;
+    // Неизвестный токен Railway считает анонимом и создаёт ему временные проекты, поэтому
+    // токен workspace подтверждаем запросом проектов: аноним его не проходит
+    try {
+      await railwayGraphql(auth, "query { projects(first: 1) { edges { node { id } } } }");
+    } catch (inner) {
+      if (isNotAuthorized(inner)) throw new Error("Токен Railway не подходит: нужен токен аккаунта или workspace");
+      throw inner;
     }
-    throw error;
+    return { tokenKind: "workspace" };
   }
   if (wantedWorkspaceId) {
     if (!workspaces.some((w) => w.id === wantedWorkspaceId)) {
