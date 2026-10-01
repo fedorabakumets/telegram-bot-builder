@@ -76,7 +76,7 @@ export function setupAdminRoutes(app: Express): void {
       return;
     }
 
-    setAdminCookie(res, key);
+    setAdminCookie(res, key, req.secure);
     redirectAfterAdminLogin(req, res);
   });
 
