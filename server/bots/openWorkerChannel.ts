@@ -5,7 +5,7 @@
  */
 
 import { LocalWorkerChannel } from "./localWorkerChannel";
-import { ensureRailwayRunner, stopRailwayRunner } from "./railway/railwayRunner";
+import { ensureRailwayRunner, scheduleRailwayRunnerStop } from "./railway/railwayRunner";
 import { RemoteRunnerHub } from "./remoteRunnerHub";
 import { RemoteWorkerChannel } from "./remoteWorkerChannel";
 import type { WorkerChannel } from "./workerChannel";
@@ -35,6 +35,6 @@ export async function openWorkerChannel(workerKey: number, launch: WorkerLaunch)
   if (railwayProjectId === null) return new RemoteWorkerChannel(hub, workerKey);
   await ensureRailwayRunner(railwayProjectId, hub);
   const channel = new RemoteWorkerChannel(hub, workerKey);
-  channel.once("exit", () => void stopRailwayRunner(railwayProjectId));
+  channel.once("exit", () => scheduleRailwayRunnerStop(railwayProjectId));
   return channel;
 }
