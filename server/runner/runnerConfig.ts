@@ -25,6 +25,16 @@ export interface RunnerConfig {
 }
 
 /**
+ * Путь к worker.py рядом с исходниками исполнителя
+ * @returns путь к `server/python/worker.py`
+ * @throws Error в бандле без `import.meta.url` (образ исполнителя задаёт RUNNER_WORKER_SCRIPT)
+ */
+function defaultWorkerScript(): string {
+  if (!import.meta.url) throw new Error("Задайте RUNNER_WORKER_SCRIPT — путь к worker.py");
+  return join(dirname(fileURLToPath(import.meta.url)), "..", "python", "worker.py");
+}
+
+/**
  * Читает настройки из окружения
  * @param env - Переменные окружения
  * @returns настройки исполнителя
@@ -33,12 +43,11 @@ export interface RunnerConfig {
 export function loadRunnerConfig(env: NodeJS.ProcessEnv = process.env): RunnerConfig {
   const redisUrl = env.REDIS_URL?.trim();
   if (!redisUrl) throw new Error("Исполнителю нужен REDIS_URL (тот же Redis, что у панели)");
-  const defaultScript = join(dirname(fileURLToPath(import.meta.url)), "..", "python", "worker.py");
   return {
     runnerId: env.RUNNER_ID?.trim() || "default",
     redisUrl,
     pythonPath: env.RUNNER_PYTHON?.trim() || env.PYTHON_PATH?.trim() || (process.platform === "win32" ? "python" : "python3"),
-    workerScript: env.RUNNER_WORKER_SCRIPT?.trim() || defaultScript,
+    workerScript: env.RUNNER_WORKER_SCRIPT?.trim() || defaultWorkerScript(),
     cacheDir: env.RUNNER_CACHE_DIR?.trim() || join(homedir(), ".tbb-runner", "builds"),
     buildsKeep: Math.max(1, Number.parseInt(env.RUNNER_BUILDS_KEEP ?? "", 10) || 20),
   };

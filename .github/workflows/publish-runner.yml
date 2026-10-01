@@ -1,0 +1,78 @@
+# Публикация образа исполнителя ботов (Dockerfile.runner) в GHCR.
+# Образ запускают на других машинах и в облаке (Railway): docs/deployment/BOT_RUNNER.md
+# Деплой VPS не затрагивает.
+name: Publish runner image
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - Dockerfile.runner
+      - requirements.txt
+      - server/runner/**
+      - server/python/**
+      - server/redis/workerStreams.ts
+      - server/bots/workerChannel.ts
+      - server/bots/localWorkerChannel.ts
+      - server/bots/builds/botBuildCodec.ts
+      - .github/workflows/publish-runner.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: fedorabakumets/telegram-bot-builder-runner
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest
+            type=sha,prefix=sha-,format=short
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.runner
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=runner
+          cache-to: type=gha,mode=max,scope=runner
+
+      # Railway и другие машины тянут образ без токена
+      - name: Make GHCR package public
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          PKG="${IMAGE_NAME##*/}"
+          gh api --method PUT \
+            -H "Accept: application/vnd.github+json" \
+            "/user/packages/container/${PKG}/visibility" \
+            -f visibility=public \
+            || echo "WARN: could not set package visibility (may already be public)"
