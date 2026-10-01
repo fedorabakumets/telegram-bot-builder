@@ -4,6 +4,7 @@
  */
 import { spawn } from "node:child_process";
 import { workerManager } from './botWorkerManager';
+import { precompileBotCode } from './precompileBotCode';
 
 /**
  * Модуль для работы с URL
@@ -435,6 +436,8 @@ export async function startBot(
       } catch (historyError) {
         console.error('Ошибка создания записи истории запуска:', historyError);
       }
+
+      await precompileBotCode(mainFile);
 
       try {
         await workerManager.startBot(projectId, token, tokenId, mainFile, {

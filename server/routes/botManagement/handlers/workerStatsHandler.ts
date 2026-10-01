@@ -7,6 +7,8 @@
  * (без :projectId/:tokenId в пути), поэтому изоляция выполняется in-handler:
  * фильтрация stats.details по проектам владельца и пересчёт агрегатов. Это закрывает
  * IDOR — раньше любой аутентифицированный пользователь видел воркеры всех проектов.
+ * Общий воркер (WORKER_GROUPING=shared) приходит уже разбитым по проектам: владелец
+ * видит только свои проекты и их долю памяти, но не соседей по процессу.
  *
  * @module botManagement/handlers/workerStatsHandler
  */
@@ -22,8 +24,10 @@ interface WorkerDetail {
   projectId: number;
   /** Количество активных ботов */
   botsCount: number;
-  /** Потребление памяти процессом воркера в МБ */
+  /** Потребление памяти в МБ: RSS воркера или доля проекта в общем воркере */
   memoryMb: number;
+  /** true, если воркер общий для нескольких проектов (memoryMb — оценка доли) */
+  shared: boolean;
 }
 
 /**
@@ -51,21 +55,22 @@ export async function handleWorkerStats(req: Request, res: Response): Promise<vo
     const ownerProjects = await storage.getUserBotProjects(ownerId, { ignoreArchive: true });
     const ownedProjectIds = new Set(ownerProjects.map((project) => project.id));
 
-    // Оставляем только воркеры проектов владельца и убираем внутренний pid из выдачи
-    const details: WorkerDetail[] = stats.details
-      .filter((detail) => ownedProjectIds.has(detail.projectId))
-      .map((detail) => ({
-        projectId: detail.projectId,
-        botsCount: detail.botsCount,
-        memoryMb: detail.memoryMb,
-      }));
+    // Оставляем только проекты владельца; pid и ключ воркера наружу не отдаём
+    const owned = stats.details.filter((detail) => ownedProjectIds.has(detail.projectId));
+    const details: WorkerDetail[] = owned.map((detail) => ({
+      projectId: detail.projectId,
+      botsCount: detail.botsCount,
+      memoryMb: detail.memoryMb,
+      shared: detail.shared,
+    }));
 
-    // Пересчитываем агрегаты по отфильтрованным воркерам
+    // Пересчитываем агрегаты; проекты общего воркера — один процесс
+    const workers = new Set(owned.map((detail) => detail.workerKey)).size;
     const totalBots = details.reduce((sum, detail) => sum + detail.botsCount, 0);
     const totalMemoryMb = details.reduce((sum, detail) => sum + detail.memoryMb, 0);
 
     res.json({
-      workers: details.length,
+      workers,
       totalBots,
       totalMemoryMb,
       details,

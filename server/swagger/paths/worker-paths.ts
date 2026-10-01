@@ -29,7 +29,9 @@ export function registerWorkerPaths(
     description:
       "Возвращает агрегированную статистику Python Worker Pool для **текущего пользователя**.\n\n" +
       "**Модель:** один проект = один процесс `worker.py` (asyncio event loop), внутри — несколько ботов " +
-      "(по `tokenId`). Активен при `USE_WORKER_POOL !== 'false'` (по умолчанию включён).\n\n" +
+      "(по `tokenId`). Активен при `USE_WORKER_POOL !== 'false'` (по умолчанию включён). " +
+      "При `WORKER_GROUPING=shared` все проекты делят один процесс: он приходит строками по проектам " +
+      "с `shared: true`, а `workers` считает процессы, а не проекты.\n\n" +
       "**Изоляция (IDOR):** в `details` только воркеры проектов, доступных владельцу/коллаборатору. " +
       "Агрегаты `workers`, `totalBots`, `totalMemoryMb` пересчитываются после фильтрации. " +
       "Внутренний `pid` процесса **не** возвращается.\n\n" +
@@ -38,6 +40,7 @@ export function registerWorkerPaths(
       "**Клиент:** компонент `WorkerPoolStatus` в панели бота опрашивает эндпоинт каждые 10 с " +
       "и показывает бейдж «N воркеров · M ботов · RAM» (скрыт, если `workers === 0`).\n\n" +
       "**Память:** `memoryMb` — RSS процесса воркера (Windows: `tasklist`, Linux/macOS: `ps`). " +
+      "Для общего воркера — доля RSS пропорционально числу ботов проекта (оценка). " +
       "При ошибке чтения памяти поле может быть `0`.\n\n" +
       "**Пустой ответ (`workers: 0`):** нет запущенных ботов, воркеры уже завершили drain, " +
       "или Worker Pool отключён в окружении.",
@@ -57,8 +60,20 @@ export function registerWorkerPaths(
                   totalBots: 3,
                   totalMemoryMb: 145,
                   details: [
-                    { projectId: 266, botsCount: 1, memoryMb: 72 },
-                    { projectId: 42, botsCount: 2, memoryMb: 73 },
+                    { projectId: 266, botsCount: 1, memoryMb: 72, shared: false },
+                    { projectId: 42, botsCount: 2, memoryMb: 73, shared: false },
+                  ],
+                },
+              },
+              shared: {
+                summary: "Два проекта в общем воркере (WORKER_GROUPING=shared)",
+                value: {
+                  workers: 1,
+                  totalBots: 2,
+                  totalMemoryMb: 132,
+                  details: [
+                    { projectId: 1, botsCount: 1, memoryMb: 66, shared: true },
+                    { projectId: 2, botsCount: 1, memoryMb: 66, shared: true },
                   ],
                 },
               },

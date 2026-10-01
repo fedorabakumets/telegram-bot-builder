@@ -14,14 +14,22 @@ export const WorkerPoolDetailSchema = z
     /** Число активных ботов внутри воркера */
     botsCount: z.number().int().openapi({ example: 2, description: "Сколько tokenId сейчас в activeBots воркера" }),
     /** Потребление RAM процесса воркера в МБ (оценка через tasklist/ps) */
-    memoryMb: z.number().int().openapi({ example: 72, description: "RSS процесса Python worker, округлённо в МБ" }),
+    memoryMb: z.number().int().openapi({
+      example: 72,
+      description: "RSS процесса Python worker в МБ; для общего воркера — доля проекта по числу ботов",
+    }),
+    /** Воркер общий для нескольких проектов (WORKER_GROUPING=shared) */
+    shared: z.boolean().openapi({
+      example: false,
+      description: "true — воркер общий (WORKER_GROUPING=shared), memoryMb — оценка доли проекта",
+    }),
   })
   .openapi("WorkerPoolDetail");
 
 /** Ответ GET /api/workers/stats */
 export const WorkerPoolStatsSchema = z
   .object({
-    /** Количество активных воркеров (проектов с запущенным worker.py) */
+    /** Количество процессов воркеров, в которых работают боты владельца */
     workers: z.number().int().openapi({ example: 2 }),
     /** Суммарное число ботов во всех воркерах владельца */
     totalBots: z.number().int().openapi({ example: 3 }),
@@ -30,8 +38,8 @@ export const WorkerPoolStatsSchema = z
     /** Разбивка по проектам (без pid и без чужих проектов) */
     details: z.array(WorkerPoolDetailSchema).openapi({
       example: [
-        { projectId: 266, botsCount: 1, memoryMb: 72 },
-        { projectId: 42, botsCount: 2, memoryMb: 73 },
+        { projectId: 266, botsCount: 1, memoryMb: 72, shared: false },
+        { projectId: 42, botsCount: 2, memoryMb: 73, shared: false },
       ],
     }),
   })
