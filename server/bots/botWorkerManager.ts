@@ -23,7 +23,7 @@ import { formatBotRuntimeErrorShort } from "./formatBotRuntimeError";
 import { resolveWorkerKey } from "./workerGrouping";
 import { resolveProjectWorkerKey } from "./resolveProjectWorkerKey";
 import { collectWorkerStats, type WorkerPoolStats } from "./workerStats";
-import { prepareWorkerLaunch, stageBotFile, type WorkerLaunch } from "./workerLaunch";
+import { prepareWorkerLaunch, stageBotFile, unstageBotFile, type WorkerLaunch } from "./workerLaunch";
 
 /** Задержка перед killWorker когда activeBots пуст (мс) */
 const WORKER_DRAIN_MS = 2_000;
@@ -605,6 +605,7 @@ class BotWorkerManager extends EventEmitter {
    */
   async stopBot(projectId: number, tokenId: number): Promise<boolean> {
     return this.withTokenLock(projectId, tokenId, async () => {
+      const lastStart = this.startArgs.get(tokenId);
       this.startArgs.delete(tokenId);
       const workerKey = this.keyOf(projectId);
       const worker = this.workers.get(workerKey);
@@ -639,6 +640,7 @@ class BotWorkerManager extends EventEmitter {
           }
         }
       }
+      if (ok && worker.docker && lastStart) unstageBotFile(workerKey, lastStart.botFile);
       return ok;
     });
   }

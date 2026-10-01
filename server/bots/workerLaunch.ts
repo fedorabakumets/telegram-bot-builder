@@ -11,6 +11,7 @@ import { storage } from "../storages/storage";
 import { getWorkerGroupingMode } from "./workerGrouping";
 import { getDockerWorkerConfig, isDockerWorkerRuntime } from "./workerRuntime";
 import { buildDockerWorkerCommand, CONTAINER_APP_ROOT, dockerWorkerName } from "./workerDockerArgs";
+import { retargetBotCodeCache } from "./retargetBotCodeCache";
 
 /** Как запустить процесс воркера */
 export interface WorkerLaunch {
@@ -89,6 +90,8 @@ export async function prepareWorkerLaunch(
   const projectIds = await resolveWorkerProjects(workerKey, projectId);
   const appRoot = process.cwd();
   const staged = stagedBotsDir(workerKey);
+  // Копии от прошлого контейнера могут принадлежать проектам, которые сменили владельца
+  rmSync(staged, { recursive: true, force: true });
   mkdirSync(staged, { recursive: true });
   for (const id of projectIds ?? []) mkdirSync(join(appRoot, "uploads", String(id)), { recursive: true });
 
@@ -112,6 +115,15 @@ export async function prepareWorkerLaunch(
 }
 
 /**
+ * Удаляет копию папки остановленного бота из каталога контейнера
+ * @param workerKey - Ключ воркера
+ * @param botFile - Путь к основному .py бота на сервере
+ */
+export function unstageBotFile(workerKey: number, botFile: string): void {
+  rmSync(join(stagedBotsDir(workerKey), basename(dirname(botFile))), { recursive: true, force: true });
+}
+
+/**
  * Копирует папку бота в каталог контейнера и возвращает путь внутри контейнера.
  * Для воркера-процесса возвращает исходный путь без копирования.
  * @param workerKey - Ключ воркера
@@ -125,5 +137,6 @@ export function stageBotFile(workerKey: number, botFile: string, docker: boolean
   const target = join(stagedBotsDir(workerKey), folder);
   rmSync(target, { recursive: true, force: true });
   cpSync(dirname(botFile), target, { recursive: true });
+  retargetBotCodeCache(botFile, join(target, basename(botFile)));
   return `${CONTAINER_APP_ROOT}/bots/${folder}/${basename(botFile)}`;
 }
