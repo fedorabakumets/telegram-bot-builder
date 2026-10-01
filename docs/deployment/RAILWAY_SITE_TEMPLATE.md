@@ -41,4 +41,10 @@
 
 Шаблон развёрнут в новом проекте: три сервиса поднялись, исполнитель ответил `pong` через `REDIS_PUBLIC_URL`, PostgreSQL 18 доступен по `DATABASE_PUBLIC_URL`, данные лежат на томе.
 
-Сведения в `tbb:runner:<id>:info` пишет исполнитель из этой ветки; опубликованный образ начнёт их писать после слияния в `main` и сборки `publish-runner.yml`.
+Исполнитель проекта `tbb-site` на образе ветки записал `tbb:runners` и `tbb:runner:default:info` со всеми адресами.
+
+## Образ из ветки
+
+`publish-runner.yml` собирает образ и из веток `cursor/**`: тег — имя ветки с `-` вместо `/` (например `:cursor-railway-site-template-281a`), `latest` ставится только из `main`. Чтобы проверить ветку на площадке, укажите этот тег в образе сервиса `Runner`.
+
+Для загрузки из Actions пакету нужен доступ репозитория на запись: GitHub → Packages → `telegram-bot-builder-runner` → Package settings → Manage Actions access → `telegram-bot-builder`, роль **Write**. Без него сборка падает на `permission_denied: write_package`.
