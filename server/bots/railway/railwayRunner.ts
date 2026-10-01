@@ -80,11 +80,10 @@ export async function ensureRailwayRunner(projectId: number, hub: RemoteRunnerHu
   const config = getRailwayConfig();
   const name = railwayServiceName(projectId);
   const variables = runnerVariables(projectId, config.runnerRedisUrl);
-  const serviceId = await findRailwayService(config, name);
+  let serviceId = await findRailwayService(config, name);
   if (!serviceId) {
-    console.log(`🚂 [Railway] создаём сервис ${name} (${config.image})`);
-    await createRailwayService(config, name, variables);
-    return hub.waitOnline(DEPLOY_START_TIMEOUT_MS);
+    console.log(`🚂 [Railway] создаём сервис ${name} (${config.image}${config.region ? `, ${config.region}` : ""})`);
+    serviceId = await createRailwayService(config, name);
   }
   const latest = await latestRailwayDeployment(config, serviceId);
   if (latest && STARTING_STATUSES.has(latest.status)) return hub.waitOnline(DEPLOY_START_TIMEOUT_MS);

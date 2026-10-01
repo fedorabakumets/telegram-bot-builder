@@ -19,6 +19,8 @@ export interface RailwayConfig {
   image: string;
   /** REDIS_URL для исполнителя внутри Railway (обычно внутренний адрес Redis проекта) */
   runnerRedisUrl: string;
+  /** Регион сервисов, например europe-west4-drams3a (Амстердам); пусто — регион Railway по умолчанию */
+  region: string;
 }
 
 /**
@@ -86,6 +88,7 @@ export function getRailwayConfig(env: NodeJS.ProcessEnv = process.env): RailwayC
     environmentId: env.RAILWAY_ENVIRONMENT_ID?.trim() ?? "",
     image: env.RAILWAY_RUNNER_IMAGE?.trim() || "ghcr.io/fedorabakumets/telegram-bot-builder-runner:latest",
     runnerRedisUrl: env.RAILWAY_RUNNER_REDIS_URL?.trim() || "${{Redis.REDIS_URL}}",
+    region: env.RAILWAY_REGION?.trim() ?? "",
   };
   const missing = [
     !config.apiToken && "RAILWAY_API_TOKEN или RAILWAY_TOKEN",

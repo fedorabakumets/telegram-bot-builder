@@ -62,31 +62,23 @@ export async function findRailwayService(config: RailwayConfig, name: string): P
 }
 
 /**
- * Создаёт сервис на образе исполнителя; Railway сразу его разворачивает
+ * Создаёт пустой сервис без источника: Railway не разворачивает его, пока
+ * не заданы образ и регион (updateRailwayService) и не вызван деплой
  * @param config - Настройки Railway
  * @param name - Имя сервиса
- * @param variables - Переменные сервиса
  * @returns ID сервиса
  */
-export async function createRailwayService(config: RailwayConfig, name: string, variables: Record<string, string>): Promise<string> {
+export async function createRailwayService(config: RailwayConfig, name: string): Promise<string> {
   const data = await railwayRequest<{ serviceCreate: { id: string } }>(
     config,
     "mutation($input: ServiceCreateInput!) { serviceCreate(input: $input) { id } }",
-    {
-      input: {
-        projectId: config.projectId,
-        environmentId: config.environmentId,
-        name,
-        source: { image: config.image },
-        variables,
-      },
-    },
+    { input: { projectId: config.projectId, environmentId: config.environmentId, name } },
   );
   return data.serviceCreate.id;
 }
 
 /**
- * Обновляет образ и переменные сервиса без отдельного деплоя
+ * Обновляет образ, регион и переменные сервиса без отдельного деплоя
  * @param config - Настройки Railway
  * @param serviceId - ID сервиса
  * @param variables - Переменные сервиса
@@ -96,7 +88,13 @@ export async function updateRailwayService(config: RailwayConfig, serviceId: str
   await railwayRequest(
     config,
     "mutation($environmentId: String!, $serviceId: String!, $input: ServiceInstanceUpdateInput!) { serviceInstanceUpdate(environmentId: $environmentId, serviceId: $serviceId, input: $input) }",
-    { ...scope, input: { source: { image: config.image } } },
+    {
+      ...scope,
+      input: {
+        source: { image: config.image },
+        ...(config.region ? { multiRegionConfig: { [config.region]: { numReplicas: 1 } } } : {}),
+      },
+    },
   );
   await railwayRequest(
     config,

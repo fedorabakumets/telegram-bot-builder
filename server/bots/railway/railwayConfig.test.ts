@@ -32,6 +32,8 @@ describe("railwayConfig", () => {
     assert.strictEqual(workspace.projectToken, false);
     assert.strictEqual(workspace.apiToken, "w");
     assert.strictEqual(workspace.runnerRedisUrl, "${{Redis.REDIS_URL}}");
+    assert.strictEqual(workspace.region, "");
+    assert.strictEqual(getRailwayConfig({ ...base, RAILWAY_TOKEN: "t", RAILWAY_REGION: " europe-west4-drams3a " }).region, "europe-west4-drams3a");
   });
 
   it("адреса БД и Redis для ботов берутся из RAILWAY_BOT_*", () => {
