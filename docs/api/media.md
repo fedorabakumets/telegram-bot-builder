@@ -1,6 +1,6 @@
 # media
 
-Эндпоинтов: **13**
+Эндпоинтов: **14**
 
 ### `DELETE` /api/media/{id}
 
@@ -333,6 +333,20 @@ curl -s http://localhost:5000/api/media/project/42 -b cookies.txt
   }
 ]
 ```
+
+### `GET` /api/media/s3-proxy/{configId}/*
+
+GET /api/media/s3-proxy/{configId}/*
+
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Успешный ответ |
+| 401 | Требуется авторизация (сессия или Bearer PAT) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `GET` /api/media/search/{projectId}
 
