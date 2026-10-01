@@ -4,6 +4,7 @@
 |------|---------|---------|
 | [agent_tokens](./agent_tokens.md) | 10 | Таблица персональных токенов агента. Сам секрет НЕ хранится — только его sha-256 хеш. Токен несёт личность владельца, поэтому внешний клиент (MCP-сервер) работает только со своими проектами. |
 | [app_settings](./app_settings.md) | 3 | Таблица настроек приложения в формате ключ-значение. Используется для хранения глобальных параметров конфигурации, например флага завершения мастера первоначальной настройки. [CI test] проверка автосинка docs/database. |
+| [bot_builds](./bot_builds.md) | 11 | Сборка бота: сжатый сгенерированный `.py` лежит в хранилище (local/S3), здесь — только метаданные. Одна сборка на пару (токен, отпечаток). |
 | [bot_env_variables](./bot_env_variables.md) | 7 | Таблица пользовательских переменных окружения бота Хранит кастомные key=value переменные, привязанные к конкретному токену |
 | [bot_groups](./bot_groups.md) | 25 | Таблица групп бота |
 | [bot_instances](./bot_instances.md) | 9 | Таблица запущенных экземпляров ботов  ВАЖНО: После изменения этой схемы необходимо применить миграцию к базе данных! |
@@ -40,6 +41,8 @@
 ```mermaid
 erDiagram
     agent_tokens }o--|| telegram_users : "owner_id"
+    bot_builds }o--|| bot_projects : "project_id"
+    bot_builds }o--|| bot_tokens : "token_id"
     bot_env_variables }o--|| bot_tokens : "token_id"
     bot_groups }o--|| bot_projects : "project_id"
     bot_groups }o--o| bot_tokens : "token_id"
