@@ -65,6 +65,8 @@ import { setupUserProjectAndTokenRoutes } from "./setupUserProjectAndTokenRoutes
 import { setupAgentTokenRoutes } from "./setupAgentTokenRoutes";
 import { setupMcpRoutes } from "./mcp/setupMcpRoutes";
 import { setupStorageConfigRoutes } from "./setupStorageConfigRoutes";
+import { setupS3ProxyRoute } from "./media/s3-proxy-route";
+import { deleteMediaObject } from "./media/delete-media-object";
 import type { StorageBotTokenInput, StorageBotTokenUpdate } from "../storages/storageTypes";
 import { ensureStorageRegistryLoaded } from "../storage/storage-registry";
 import { readStorageLimitBytes } from "../storage/storage-config";
@@ -2161,9 +2163,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       // Удал��ем файл с диска
       try {
-        unlinkSync(mediaFile.filePath);
+        await deleteMediaObject(mediaFile);
       } catch (error) {
-        console.warn("Не удалось удалить файл с диска:", error);
+        console.warn("Не удалось удалить файл из хранилища:", error);
       }
 
       // Удаляем запись из базы данных
@@ -3217,6 +3219,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
   // CRUD реестра хранилищ (/api/storage-configs)
   setupStorageConfigRoutes(app);
+
+  // Прокси приватных S3-объектов (/api/media/s3-proxy/<configId>/<ключ>)
+  setupS3ProxyRoute(app);
 
   // Webhook роут: приём апдейтов от Telegram и проксирование в Python-процесс бота
   setupWebhookRoutes(app);

@@ -27,6 +27,7 @@ import { mediaFiles } from "@shared/schema";
 import { db } from "../../database/db";
 import type { StorageBackend, StorageRegistry } from "../../storage/storage-backend";
 import { LOCAL_DEFAULT_ID } from "../../storage/storage-config";
+import { getUploadsStorageId, uploadKeyFromUrl } from "../../storage/uploads-storage";
 
 /** Результат записи загруженного файла в целевой бэкенд */
 export interface UploadPersistResult {
@@ -158,9 +159,13 @@ export async function persistUploadToBackend(
     /* отсутствие временного файла не критично */
   }
 
+  // Хранилище загрузок отдаётся через /uploads (запасное чтение из S3),
+  // поэтому адрес файла остаётся прежним `/uploads/<ключ>`.
+  const keepUploadsUrl = stored.configId === getUploadsStorageId() && uploadKeyFromUrl(defaultUrl) === stored.key;
+
   return {
     filePath: stored.key,
-    url: stored.url,
+    url: keepUploadsUrl ? defaultUrl : stored.url,
     storageBackend: stored.backend,
     storageConfigId: stored.configId,
   };
