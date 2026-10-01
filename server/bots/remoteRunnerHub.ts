@@ -107,11 +107,22 @@ export class RemoteRunnerHub {
     this.sinks.delete(instance);
   }
 
+  /** Исполнитель перезапустился: его прежние воркеры завершены, хотя exit от них не пришёл */
+  private dropAll(): void {
+    if (this.sinks.size > 0) {
+      console.warn(`🛰️ [Runner:${this.runnerId}] исполнитель перезапущен — воркеры (${this.sinks.size}) считаются завершёнными`);
+    }
+    for (const [instance, sink] of [...this.sinks]) {
+      sink.handle({ k: "exit", w: "", i: instance, s: "RUNNER_RESTARTED" });
+    }
+  }
+
   /**
    * Передаёт событие каналу его экземпляра; события старых экземпляров отбрасываются
    * @param fields - Поля записи потока событий
    */
   private dispatch(fields: Record<string, string>): void {
+    if (fields.k === "hello") return this.dropAll();
     if (!fields.i || !fields.k) return;
     this.sinks.get(fields.i)?.handle(fields as unknown as RunnerEvent);
   }

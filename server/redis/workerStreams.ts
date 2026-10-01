@@ -27,8 +27,11 @@ export interface RunnerCommand {
 
 /** Событие воркера от исполнителя */
 export interface RunnerEvent {
-  /** line — строка stdout; stderr — вывод stderr; exit — воркер завершился; error — не запустился */
-  k: "line" | "stderr" | "exit" | "error";
+  /**
+   * line — строка stdout; stderr — вывод stderr; exit — воркер завершился; error — не запустился;
+   * hello — исполнитель (пере)запущен, воркеров прошлого запуска больше нет (w и i пустые)
+   */
+  k: "line" | "stderr" | "exit" | "error" | "hello";
   /** Ключ воркера */
   w: string;
   /** ID экземпляра воркера */
