@@ -15,8 +15,11 @@ const READ_BLOCK_MS = 5_000;
 
 /** Команда панели исполнителю */
 export interface RunnerCommand {
-  /** spawn — поднять воркер; line — строка в stdin; kill — убить; reset — убить все воркеры */
-  k: "spawn" | "line" | "kill" | "reset";
+  /**
+   * spawn — поднять воркер; line — строка в stdin; kill — убить; reset — убить все воркеры;
+   * ping — проверка, что исполнитель слушает команды (ответ — событие pong)
+   */
+  k: "spawn" | "line" | "kill" | "reset" | "ping";
   /** Ключ воркера */
   w?: string;
   /** ID экземпляра воркера (новый на каждый spawn) */
@@ -29,9 +32,10 @@ export interface RunnerCommand {
 export interface RunnerEvent {
   /**
    * line — строка stdout; stderr — вывод stderr; exit — воркер завершился; error — не запустился;
-   * hello — исполнитель (пере)запущен, воркеров прошлого запуска больше нет (w и i пустые)
+   * hello — исполнитель (пере)запущен, воркеров прошлого запуска больше нет (w и i пустые);
+   * pong — ответ на ping (w и i пустые)
    */
-  k: "line" | "stderr" | "exit" | "error" | "hello";
+  k: "line" | "stderr" | "exit" | "error" | "hello" | "pong";
   /** Ключ воркера */
   w: string;
   /** ID экземпляра воркера */

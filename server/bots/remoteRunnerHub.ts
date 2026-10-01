@@ -15,6 +15,7 @@ import {
   type RunnerEvent,
   type StreamFollower,
 } from "../redis/workerStreams";
+import { RunnerPresence } from "./runnerPresence";
 
 /** Получатель событий одного экземпляра воркера */
 export interface RunnerEventSink {
@@ -34,6 +35,8 @@ const hubs = new Map<string, Promise<RemoteRunnerHub>>();
 export class RemoteRunnerHub {
   /** Получатели событий: ID экземпляра воркера → канал */
   private readonly sinks = new Map<string, RunnerEventSink>();
+  /** Признаки жизни исполнителя */
+  private readonly presence = new RunnerPresence();
 
   /**
    * @param runnerId - ID исполнителя
@@ -91,6 +94,15 @@ export class RemoteRunnerHub {
   }
 
   /**
+   * Ждёт, пока исполнитель начнёт слушать команды (ping → pong или hello)
+   * @param timeoutMs - Сколько ждать
+   * @returns промис, который завершается при ответе исполнителя
+   */
+  waitOnline(timeoutMs: number): Promise<void> {
+    return this.presence.wait(() => this.send({ k: "ping" }), timeoutMs);
+  }
+
+  /**
    * Подписывает канал на события экземпляра воркера
    * @param instance - ID экземпляра
    * @param sink - Получатель
@@ -122,6 +134,7 @@ export class RemoteRunnerHub {
    * @param fields - Поля записи потока событий
    */
   private dispatch(fields: Record<string, string>): void {
+    if (fields.k === "hello" || fields.k === "pong") this.presence.notify();
     if (fields.k === "hello") return this.dropAll();
     if (!fields.i || !fields.k) return;
     this.sinks.get(fields.i)?.handle(fields as unknown as RunnerEvent);

@@ -57,6 +57,7 @@ export class RunnerWorkers {
   handle(fields: Record<string, string>): void {
     const command = fields as unknown as RunnerCommand;
     if (command.k === "reset") return this.reset();
+    if (command.k === "ping") return this.emitEvent({ k: "pong", w: "", i: "" });
     if (!command.w || !command.i) return;
     if (command.k === "spawn") this.spawn(command.w, command.i);
     else if (command.k === "line" && command.l !== undefined) this.forward(command.w, command.i, command.l);
