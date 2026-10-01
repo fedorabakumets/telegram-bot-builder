@@ -6,7 +6,6 @@
  * @module server/bots/botWorkerManager
  */
 
-import { spawn, ChildProcess } from "node:child_process";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { EventEmitter } from "node:events";
@@ -25,6 +24,8 @@ import { resolveProjectWorkerKey } from "./resolveProjectWorkerKey";
 import { collectWorkerStats, type WorkerPoolStats } from "./workerStats";
 import { prepareWorkerLaunch, stageBotFile, unstageBotFile, type WorkerLaunch } from "./workerLaunch";
 import { redactSecrets } from "../utils/redactSecrets";
+import type { WorkerChannel } from "./workerChannel";
+import { LocalWorkerChannel } from "./localWorkerChannel";
 
 /** Задержка перед killWorker когда activeBots пуст (мс) */
 const WORKER_DRAIN_MS = 2_000;
@@ -67,8 +68,8 @@ interface WorkerCommand {
 interface ProjectWorker {
   /** ID проекта */
   projectId: number;
-  /** Python процесс воркера */
-  process: ChildProcess;
+  /** Канал до воркера: дочерний процесс или удалённый исполнитель */
+  channel: WorkerChannel;
   /** Множество активных tokenId внутри воркера */
   activeBots: Set<number>;
   /** Статус воркера */
@@ -270,16 +271,13 @@ class BotWorkerManager extends EventEmitter {
       console.log(`🏭 [WorkerPool] Создаём воркер ${projectId}${launch.docker ? " (docker)" : ""}`);
       console.log(`🏭 [WorkerPool] Команда: ${launch.command} ${launch.docker ? launch.args.slice(-3).join(" ") : launch.args.join(" ")}`);
 
-      const workerProcess = spawn(launch.command, launch.args, {
-        stdio: ["pipe", "pipe", "pipe"],
-        env: launch.env,
-      });
+      const channel: WorkerChannel = new LocalWorkerChannel(launch);
 
-      console.log(`🏭 [WorkerPool] Процесс воркера создан, PID: ${workerProcess.pid}`);
+      console.log(`🏭 [WorkerPool] Процесс воркера создан, PID: ${channel.pid}`);
 
       const worker: ProjectWorker = {
         projectId,
-        process: workerProcess,
+        channel,
         activeBots: new Set(),
         status: "starting",
         createdAt: new Date(),
@@ -297,54 +295,42 @@ class BotWorkerManager extends EventEmitter {
           worker.status = "error";
           console.error(`🏭 [WorkerPool] Таймаут: воркер ${projectId} не запустился за ${readyTimeoutMs / 1000} секунд`);
           reject(new Error(`Воркер ${projectId} не запустился за ${readyTimeoutMs / 1000} секунд`));
-          if (launch.docker) workerProcess.kill("SIGKILL");
+          if (launch.docker) channel.kill();
         }
       }, readyTimeoutMs);
 
-      // Парсим stdout (JSON протокол)
-      let buffer = "";
-      workerProcess.stdout?.on("data", (chunk: Buffer) => {
-        const raw = chunk.toString("utf-8");
+      // Строки stdout (JSON протокол)
+      channel.on("line", (line: string) => {
         if (this.workerVerbose) {
-          console.log(`🏭 [WorkerPool:${projectId}] stdout: ${raw.trim().substring(0, 200)}`);
+          console.log(`🏭 [WorkerPool:${projectId}] stdout: ${line.substring(0, 200)}`);
         }
-        buffer += raw;
-        const lines = buffer.split("\n");
-        buffer = lines.pop() || "";
+        try {
+          const msg: WorkerMessage = JSON.parse(line);
+          this.handleWorkerMessage(projectId, msg);
 
-        for (const line of lines) {
-          if (!line.trim()) continue;
-          try {
-            const msg: WorkerMessage = JSON.parse(line);
-            this.handleWorkerMessage(projectId, msg);
-
-            // Воркер готов
-            if (msg.type === "system" && msg.content === "worker_ready") {
-              clearTimeout(timeout);
-              worker.status = "ready";
-              this.emit("worker-ready", projectId);
-              resolve(worker);
-            }
-          } catch {
-            // Не JSON — не фан-аутим на все боты (ломало изоляцию логов)
-            console.warn(
-              `[WorkerPool:${projectId}] Raw non-JSON stdout (игнор fanout): "${line.slice(0, 80)}"`,
-            );
+          // Воркер готов
+          if (msg.type === "system" && msg.content === "worker_ready") {
+            clearTimeout(timeout);
+            worker.status = "ready";
+            this.emit("worker-ready", projectId);
+            resolve(worker);
           }
+        } catch {
+          // Не JSON — не фан-аутим на все боты (ломало изоляцию логов)
+          console.warn(
+            `[WorkerPool:${projectId}] Raw non-JSON stdout (игнор fanout): "${line.slice(0, 80)}"`,
+          );
         }
       });
 
       // stderr воркера — системные ошибки
-      workerProcess.stderr?.on("data", (chunk: Buffer) => {
-        const content = chunk.toString("utf-8").trim();
-        if (content) {
-          console.error(`🏭 [WorkerPool:${projectId}] stderr: ${content.substring(0, 300)}`);
-          this.emit("worker-error", projectId, content);
-        }
+      channel.on("stderr", (content: string) => {
+        console.error(`🏭 [WorkerPool:${projectId}] stderr: ${content.substring(0, 300)}`);
+        this.emit("worker-error", projectId, content);
       });
 
       // Процесс завершился
-      workerProcess.on("exit", (code, signal) => {
+      channel.on("exit", (code: number | null, signal: string | null) => {
         console.log(`🏭 [WorkerPool:${projectId}] Воркер завершился: code=${code}, signal=${signal}`);
         clearTimeout(timeout);
         const wasReady = worker.status === "ready";
@@ -370,7 +356,7 @@ class BotWorkerManager extends EventEmitter {
         }
       });
 
-      workerProcess.on("error", (err) => {
+      channel.on("error", (err: Error) => {
         clearTimeout(timeout);
         worker.status = "error";
         if (this.workers.get(projectId) === worker) this.workers.delete(projectId);
@@ -496,13 +482,7 @@ class BotWorkerManager extends EventEmitter {
       return false;
     }
 
-    const line = JSON.stringify(command) + "\n";
-    try {
-      worker.process.stdin?.write(line, "utf-8");
-      return true;
-    } catch {
-      return false;
-    }
+    return worker.channel.send(JSON.stringify(command));
   }
 
   /**
@@ -683,21 +663,17 @@ class BotWorkerManager extends EventEmitter {
       // Ждём завершения до 5 секунд
       await new Promise<void>((resolve) => {
         const timeout = setTimeout(() => {
-          try {
-            worker.process.kill("SIGKILL");
-          } catch { /* уже завершён */ }
+          worker.channel.kill();
           resolve();
         }, 5000);
 
-        worker.process.on("exit", () => {
+        worker.channel.once("exit", () => {
           clearTimeout(timeout);
           resolve();
         });
       });
     } else {
-      try {
-        worker.process.kill("SIGKILL");
-      } catch { /* уже завершён */ }
+      worker.channel.kill();
     }
 
     this.workers.delete(projectId);

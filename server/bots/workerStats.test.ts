@@ -15,7 +15,7 @@ import { collectWorkerStats, splitMemoryByBots, type WorkerStatsSource } from ".
  * @returns источник статистики
  */
 function worker(key: number, tokens: number[], pid = 100 + key): WorkerStatsSource {
-  return { projectId: key, activeBots: new Set(tokens), process: { pid } };
+  return { projectId: key, activeBots: new Set(tokens), channel: { pid } };
 }
 
 /** Чтение памяти по PID: 132 МБ для общего воркера, иначе 70 */

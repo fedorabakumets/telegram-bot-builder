@@ -14,8 +14,8 @@ export interface WorkerStatsSource {
   projectId: number;
   /** ID токенов запущенных ботов */
   activeBots: Set<number>;
-  /** Процесс воркера */
-  process: { pid?: number };
+  /** Канал до воркера (PID есть только у процесса на этой машине) */
+  channel: { pid?: number };
   /** Память, которую сообщил сам воркер (МБ); если задана, PID не читается */
   memoryMb?: number;
 }
@@ -107,7 +107,7 @@ export function collectWorkerStats(
   const stats: WorkerPoolStats = { workers: 0, totalBots: 0, totalMemoryMb: 0, details: [] };
   for (const worker of workers) {
     const workerKey = worker.projectId;
-    const pid = worker.process.pid;
+    const pid = worker.channel.pid;
     const memoryMb = worker.memoryMb ?? readMemory(pid);
     stats.workers++;
     stats.totalBots += worker.activeBots.size;
