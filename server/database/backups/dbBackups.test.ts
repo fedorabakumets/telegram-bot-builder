@@ -13,7 +13,7 @@ import { assertBackupLabel, getDbBackupIntervalHours, getDbBackupsKeep } from ".
 import {
   backupIdFromDate, backupKey, findBackup, readBackupIndex, splitForRetention, writeBackupIndex, type DbBackupEntry,
 } from "./dbBackupIndex";
-import { splitConnectionPassword } from "./pgDumpRestore";
+import { adaptScriptForServer, splitConnectionPassword } from "./pgDumpRestore";
 import { compareRowCounts } from "./tableRowCounts";
 
 /**
@@ -71,6 +71,12 @@ describe("dbBackups", () => {
     assert.strictEqual(split.password, "p@ss");
     assert.strictEqual(split.url, "postgresql://u@host:5432/db?sslmode=require");
     assert.strictEqual(splitConnectionPassword("postgresql://u@host/db").password, null);
+  });
+
+  it("SET transaction_timeout убирается только для серверов до 17", () => {
+    const script = "SET lock_timeout = 0;\nSET transaction_timeout = 0;\nSET client_encoding = 'UTF8';\n";
+    assert.strictEqual(adaptScriptForServer(script, 16), "SET lock_timeout = 0;\n\nSET client_encoding = 'UTF8';\n");
+    assert.strictEqual(adaptScriptForServer(script, 17), script);
   });
 
   it("сверка строк находит расхождения и пропавшие таблицы", () => {

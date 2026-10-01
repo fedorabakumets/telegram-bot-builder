@@ -60,7 +60,7 @@ async function dumpWithinSnapshot(databaseUrl: string): Promise<SnapshotDump> {
   try {
     await client.query("BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY");
     const snapshot = (await client.query<{ s: string }>("SELECT pg_export_snapshot() AS s")).rows[0].s;
-    const serverVersion = (await client.query<{ v: string }>("SHOW server_version")).rows[0].v.split(" ")[0];
+    const serverVersion = (await client.query<{ v: string }>("SELECT current_setting('server_version') AS v")).rows[0].v.split(" ")[0];
     const tables = await countTableRows(client);
     const dump = await runPgDump(databaseUrl, snapshot);
     await client.query("COMMIT");

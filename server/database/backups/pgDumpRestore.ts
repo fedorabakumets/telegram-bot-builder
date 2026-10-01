@@ -33,16 +33,17 @@ export function splitConnectionPassword(databaseUrl: string): SplitConnection {
  * Запускает утилиту, подаёт ей данные на stdin и собирает stdout.
  * @param command - Путь к утилите
  * @param args - Аргументы без строки подключения
- * @param databaseUrl - Строка подключения
+ * @param databaseUrl - Строка подключения или null, если утилите база не нужна
  * @param input - Данные для stdin или null
  * @returns Содержимое stdout
  * @throws С текстом stderr, если утилита завершилась с ошибкой
  */
-function runTool(command: string, args: string[], databaseUrl: string, input: Buffer | null): Promise<Buffer> {
-  const { url, password } = splitConnectionPassword(databaseUrl);
-  const env = { ...process.env, ...(password !== null ? { PGPASSWORD: password } : {}) };
+function runTool(command: string, args: string[], databaseUrl: string | null, input: Buffer | null): Promise<Buffer> {
+  const split = databaseUrl ? splitConnectionPassword(databaseUrl) : null;
+  const env = { ...process.env, ...(split?.password != null ? { PGPASSWORD: split.password } : {}) };
+  const fullArgs = split ? [...args, `--dbname=${split.url}`] : args;
   return new Promise((resolve, reject) => {
-    const child = spawn(command, [...args, `--dbname=${url}`], { stdio: ["pipe", "pipe", "pipe"], env });
+    const child = spawn(command, fullArgs, { stdio: ["pipe", "pipe", "pipe"], env });
     const out: Buffer[] = [];
     const err: Buffer[] = [];
     child.stdout.on("data", (chunk: Buffer) => out.push(chunk));
@@ -75,17 +76,44 @@ export function runPgDump(databaseUrl: string, snapshot: string | null): Promise
 export interface PgRestoreOptions {
   /** Удалить существующие объекты перед созданием (`--clean --if-exists`) */
   clean: boolean;
+  /** Основная версия целевого сервера */
+  targetMajor: number;
+}
+
+/** Настройки сессии, которых нет в серверах старше указанной версии */
+const SESSION_SETTINGS_SINCE: Array<[RegExp, number]> = [[/^SET transaction_timeout = 0;$/m, 17]];
+
+/**
+ * Убирает из SQL-скрипта настройки сессии, неизвестные целевому серверу.
+ * @param script - SQL-скрипт от `pg_restore --file=-`
+ * @param targetMajor - Основная версия целевого сервера
+ * @returns Скрипт для целевого сервера
+ */
+export function adaptScriptForServer(script: string, targetMajor: number): string {
+  return SESSION_SETTINGS_SINCE.reduce(
+    (text, [pattern, since]) => (targetMajor < since ? text.replace(pattern, "") : text),
+    script,
+  );
 }
 
 /**
  * Восстанавливает дамп в базу одной транзакцией: при ошибке база не меняется.
+ *
+ * Если сервер старше `pg_restore`, дамп разворачивается в SQL, из него убираются
+ * неизвестные серверу настройки сессии, и скрипт выполняется через `psql`.
  * @param databaseUrl - Строка подключения к целевой базе
  * @param dump - Содержимое дампа формата custom
  * @param options - Параметры восстановления
  */
 export async function runPgRestore(databaseUrl: string, dump: Buffer, options: PgRestoreOptions): Promise<void> {
-  const { pgRestore } = findPgBinaries();
-  const args = ["--no-owner", "--no-privileges", "--single-transaction", "--exit-on-error"];
+  const { pgRestore, psql, major } = findPgBinaries();
+  const args = ["--no-owner", "--no-privileges"];
   if (options.clean) args.push("--clean", "--if-exists");
-  await runTool(pgRestore, args, databaseUrl, dump);
+  if (major === null || options.targetMajor >= major) {
+    await runTool(pgRestore, [...args, "--single-transaction", "--exit-on-error"], databaseUrl, dump);
+    return;
+  }
+  const script = (await runTool(pgRestore, [...args, "--file=-"], null, dump)).toString("utf8");
+  const adapted = Buffer.from(adaptScriptForServer(script, options.targetMajor), "utf8");
+  await runTool(psql, ["--no-psqlrc", "--quiet", "--single-transaction", "--set=ON_ERROR_STOP=1"], databaseUrl, adapted);
 }

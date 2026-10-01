@@ -71,7 +71,7 @@ async function withClient<T>(databaseUrl: string, fn: (client: Client) => Promis
  * Восстанавливает бэкап в базу и сверяет числа строк по таблицам.
  * @param options - Параметры восстановления
  * @returns Бэкап и расхождения (пусто — всё совпало)
- * @throws Если бэкапа нет, дамп повреждён или база не пуста без `force`
+ * @throws Если бэкапа нет, дамп повреждён, сервер старше исходного или база не пуста без `force`
  */
 export async function restoreDbBackup(options: RestoreDbBackupOptions): Promise<RestoreDbBackupResult> {
   const { backend, label, log = () => undefined } = options;
@@ -81,12 +81,19 @@ export async function restoreDbBackup(options: RestoreDbBackupOptions): Promise<
   const dump = await loadVerifiedDump(backend, entry);
   log(`дамп ${entry.key} скачан и проверен (${dump.length} байт)`);
 
-  const existing = await withClient(options.databaseUrl, listUserTables);
-  if (existing.length > 0 && !options.force) {
-    throw new Error(`Целевая база не пуста (${existing.length} таблиц). Для перезаписи нужен --force`);
+  const target = await withClient(options.databaseUrl, async (client) => ({
+    tables: await listUserTables(client),
+    major: Math.floor(Number((await client.query<{ v: string }>("SELECT current_setting('server_version_num') AS v")).rows[0].v) / 10000),
+  }));
+  const sourceMajor = Number.parseInt(entry.serverVersion, 10);
+  if (target.major < sourceMajor) {
+    throw new Error(`PostgreSQL целевой базы (${target.major}) старше исходной (${sourceMajor}): нужен сервер ${sourceMajor} или новее`);
   }
-  log(existing.length > 0 ? `перезаписываем ${existing.length} таблиц` : "целевая база пуста, восстанавливаем");
-  await runPgRestore(options.databaseUrl, dump, { clean: existing.length > 0 });
+  if (target.tables.length > 0 && !options.force) {
+    throw new Error(`Целевая база не пуста (${target.tables.length} таблиц). Для перезаписи нужен --force`);
+  }
+  log(target.tables.length > 0 ? `перезаписываем ${target.tables.length} таблиц` : "целевая база пуста, восстанавливаем");
+  await runPgRestore(options.databaseUrl, dump, { clean: target.tables.length > 0, targetMajor: target.major });
 
   const actual = await withClient(options.databaseUrl, countTableRows);
   const mismatches = compareRowCounts(entry.tables, actual);

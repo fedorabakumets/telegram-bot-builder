@@ -17,6 +17,8 @@ export interface PgBinaries {
   pgDump: string;
   /** Путь к pg_restore */
   pgRestore: string;
+  /** Путь к psql */
+  psql: string;
   /** Основная версия утилит (например, 18) или null, если взяты из PATH */
   major: number | null;
 }
@@ -42,14 +44,22 @@ function versionedDirs(parent: string, pattern: RegExp, suffix: string): Array<[
  */
 export function findPgBinaries(env: NodeJS.ProcessEnv = process.env): PgBinaries {
   const custom = getPgBinDir(env);
-  if (custom) {
-    return { pgDump: path.join(custom, "pg_dump"), pgRestore: path.join(custom, "pg_restore"), major: null };
-  }
+  if (custom) return inDir(custom, null);
   const candidates = [
     ...versionedDirs("/usr/lib/postgresql", /^(\d+)$/, "bin"),
     ...versionedDirs("/usr/libexec", /^postgresql(\d+)$/, ""),
   ].sort((a, b) => b[0] - a[0]);
   const best = candidates[0];
-  if (!best) return { pgDump: "pg_dump", pgRestore: "pg_restore", major: null };
-  return { pgDump: path.join(best[1], "pg_dump"), pgRestore: path.join(best[1], "pg_restore"), major: best[0] };
+  if (!best) return { pgDump: "pg_dump", pgRestore: "pg_restore", psql: "psql", major: null };
+  return inDir(best[1], best[0]);
+}
+
+/**
+ * Пути к утилитам в одной папке.
+ * @param dir - Папка с утилитами
+ * @param major - Основная версия или null
+ * @returns Пути к утилитам
+ */
+function inDir(dir: string, major: number | null): PgBinaries {
+  return { pgDump: path.join(dir, "pg_dump"), pgRestore: path.join(dir, "pg_restore"), psql: path.join(dir, "psql"), major };
 }
