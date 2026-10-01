@@ -91,6 +91,9 @@ export type { AgentToken, InsertAgentToken } from "./schema/tables/agent-tokens"
 export { storageConfigs } from "./schema/tables/storage-configs";
 export type { StorageConfig, InsertStorageConfig } from "./schema/tables/storage-configs";
 
+export { botBuilds } from "./schema/tables/bot-builds";
+export type { BotBuild, InsertBotBuild } from "./schema/tables/bot-builds";
+
 export { mediaFileTokens } from "./schema/tables/media-file-tokens";
 export type { MediaFileToken, InsertMediaFileToken } from "./schema/tables/media-file-tokens";
 

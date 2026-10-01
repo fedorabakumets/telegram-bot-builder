@@ -83,5 +83,8 @@ export type { AgentToken, InsertAgentToken } from "./agent-tokens";
 export { storageConfigs } from "./storage-configs";
 export type { StorageConfig, InsertStorageConfig } from "./storage-configs";
 
+export { botBuilds } from "./bot-builds";
+export type { BotBuild, InsertBotBuild } from "./bot-builds";
+
 export { mediaFileTokens } from "./media-file-tokens";
 export type { MediaFileToken, InsertMediaFileToken } from "./media-file-tokens";

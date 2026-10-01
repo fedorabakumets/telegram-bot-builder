@@ -34,6 +34,7 @@ bots/*
 
 # Копии папок ботов для Docker-воркеров (WORKER_RUNTIME=docker)
 .worker-runtime/
+.bot-builds/
 
 # Environment variables
 .env

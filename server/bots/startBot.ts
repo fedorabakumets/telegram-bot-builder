@@ -80,6 +80,7 @@ import {
   readGeneratedCodeMeta,
   writeGeneratedCodeMeta,
 } from '../files/generatedCodeMeta';
+import { persistBotBuildForStart, restoreBotBuildForStart } from './builds/startBotBuildHooks';
 
 
 
@@ -293,13 +294,20 @@ export async function startBot(
       generatorVersion,
     });
 
-    const reuse =
+    let reuse =
       reuseAllowed &&
       canReuseGeneratedCode(
         readGeneratedCodeMeta(botDir)?.fingerprint,
         fingerprint,
         existsSync(expectedMainFile),
       );
+
+    const buildContext = { projectId, tokenId, fingerprint, generatorVersion, mainFile: expectedMainFile };
+    // Папки бота нет или она устарела — пробуем сборку из хранилища вместо генерации
+    if (reuseAllowed && !reuse && (await restoreBotBuildForStart(buildContext))) {
+      writeGeneratedCodeMeta(botDir, { fingerprint, projectId, tokenId, writtenAt: new Date().toISOString() });
+      reuse = true;
+    }
 
     let mainFile: string;
     let assets: string[];
@@ -379,6 +387,8 @@ export async function startBot(
         writtenAt: new Date().toISOString(),
       });
     }
+
+    await persistBotBuildForStart({ ...buildContext, mainFile });
 
     console.log(`📁 Файлы бота:`);
     console.log(`   - Основной файл: ${mainFile}`);
