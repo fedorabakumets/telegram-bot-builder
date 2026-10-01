@@ -61,9 +61,13 @@ export async function buildBotEnvContent(botDir: string, projectId: number, toke
     key: v.key,
     value: resolveBotEnvReference(v.value),
   }));
+  const { isRailwayProject, railwayBotEnvDefaults } = await import("../bots/railway/railwayConfig");
+  // Боту на Railway адреса панели недоступны — подставляем адреса из RAILWAY_BOT_*
+  const remoteDefaults = isRailwayProject(projectId) ? railwayBotEnvDefaults() : {};
   for (const key of ["DATABASE_URL", "REDIS_URL"] as const) {
-    if (!customVariables.some((v) => v.key === key) && process.env[key]) {
-      customVariables.push({ key, value: process.env[key] as string });
+    const fallback = remoteDefaults[key] ?? process.env[key];
+    if (!customVariables.some((v) => v.key === key) && fallback) {
+      customVariables.push({ key, value: fallback });
     }
   }
   if (tokenRecord?.userbotEnabled === 1) {

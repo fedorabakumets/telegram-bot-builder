@@ -8,6 +8,7 @@
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { buildBotEnvContent, getBotEnvSource, parseBotEnv, retireBotEnvFile } from "./botEnv";
+import { isRemoteProject } from "../bots/botPlacement";
 
 /** Пути к папке и основному файлу бота */
 export interface BotPaths {
@@ -86,7 +87,8 @@ async function prepareBotEnv(
   tokenId: number,
 ): Promise<{ envPath?: string; env?: Record<string, string> }> {
   const content = await buildBotEnvContent(botDir, projectId, tokenId);
-  if (getBotEnvSource() === 'inline') {
+  // У исполнителя на другой машине нет папки бота, переменные идут только в команде
+  if (getBotEnvSource() === 'inline' || isRemoteProject(projectId)) {
     await retireBotEnvFile(botDir, projectId);
     return { env: parseBotEnv(content) };
   }

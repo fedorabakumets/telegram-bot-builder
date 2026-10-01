@@ -87,4 +87,12 @@ describe("resolveRunnerBuildForStart", () => {
     process.env.WORKER_RUNNER_CODE = "path";
     assert.deepStrictEqual(await resolveRunnerBuildForStart(ctx, deps(s3)), {});
   });
+
+  it("проект на Railway получает ссылку даже при WORKER_RUNNER_CODE=path", async () => {
+    process.env.WORKER_RUNTIME = "docker";
+    process.env.WORKER_RAILWAY_PROJECTS = "2";
+    process.env.BOT_ARTIFACT_SOURCE = "storage";
+    process.env.WORKER_RUNNER_CODE = "path";
+    assert.strictEqual((await resolveRunnerBuildForStart(ctx, deps(s3))).build?.fileName, "bot.py");
+  });
 });

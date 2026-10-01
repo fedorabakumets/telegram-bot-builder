@@ -4,7 +4,8 @@
  * @module server/bots/builds/runnerBuildForStart
  */
 
-import { getWorkerRunnerCodeSource, getWorkerRuntime } from "../workerRuntime";
+import { getWorkerRunnerCodeSource } from "../workerRuntime";
+import { getProjectPlacement } from "../botPlacement";
 import { isBotBuildStorageEnabled } from "./botBuildConfig";
 import { createDefaultBotBuildDeps, type BotBuildDeps } from "./botBuildDeps";
 import { getBotBuildLink, type BotBuildLink } from "./botBuildLink";
@@ -28,7 +29,10 @@ export async function resolveRunnerBuildForStart(
   ctx: StartBotBuildContext,
   deps?: Pick<BotBuildDeps, "findBuild" | "resolveBackend">,
 ): Promise<RunnerBuildForStart> {
-  if (getWorkerRuntime() !== "remote" || getWorkerRunnerCodeSource() === "path") return {};
+  const placement = getProjectPlacement(ctx.projectId);
+  if (!placement.runnerId) return {};
+  // Сервис Railway папку bots/ панели не видит никогда
+  if (placement.railwayProjectId === null && getWorkerRunnerCodeSource() === "path") return {};
   const fallback = "или WORKER_RUNNER_CODE=path, если исполнитель видит папку bots/ панели";
   if (!isBotBuildStorageEnabled()) {
     return { error: `Исполнителю нужен код из S3: включите BOT_ARTIFACT_SOURCE=storage и BOT_BUILDS_STORAGE_ID (${fallback})` };
