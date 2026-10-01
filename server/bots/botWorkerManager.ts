@@ -5,7 +5,7 @@
  * @module server/bots/botWorkerManager
  */
 
-import { spawn, ChildProcess, execSync } from "node:child_process";
+import { spawn, ChildProcess } from "node:child_process";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { EventEmitter } from "node:events";
@@ -20,6 +20,7 @@ import {
 } from "./waitForWorkerBotStart";
 import { formatBotRuntimeErrorShort } from "./formatBotRuntimeError";
 import { resolveWorkerKey } from "./workerGrouping";
+import { collectWorkerStats, type WorkerPoolStats } from "./workerStats";
 
 /** Задержка перед killWorker когда activeBots пуст (мс) */
 const WORKER_DRAIN_MS = 2_000;
@@ -610,50 +611,12 @@ class BotWorkerManager extends EventEmitter {
   }
 
   /**
-   * Возвращает общую статистику по всем воркерам, включая RAM
+   * Возвращает статистику по всем воркерам, включая RAM.
+   * Общий воркер раскладывается на записи по проектам (см. workerStats.ts).
+   * @returns агрегаты и разбивка по проектам
    */
-  getStats(): { workers: number; totalBots: number; totalMemoryMb: number; details: Array<{ projectId: number; botsCount: number; memoryMb: number; pid: number | undefined }> } {
-    let totalBots = 0;
-    let totalMemoryMb = 0;
-    const details: Array<{ projectId: number; botsCount: number; memoryMb: number; pid: number | undefined }> = [];
-
-    for (const worker of this.workers.values()) {
-      const botsCount = worker.activeBots.size;
-      totalBots += botsCount;
-
-      // Получаем RSS памяти процесса воркера
-      let memoryMb = 0;
-      if (worker.process.pid) {
-        try {
-          if (process.platform === "win32") {
-            const output = execSync(`tasklist /FI "PID eq ${worker.process.pid}" /FO CSV`, { encoding: "utf8" }).trim();
-            // Формат: "python.exe","1492","Console","9","29 916 КБ"
-            // Извлекаем все цифры из последнего CSV-поля (память в КБ)
-            const lines = output.split("\n").filter(l => l.includes(`"${worker.process.pid}"`));
-            if (lines.length > 0) {
-              const fields = lines[0].match(/"[^"]*"/g);
-              if (fields && fields.length >= 5) {
-                const memField = fields[fields.length - 1]; // последнее поле — память
-                const digits = memField.replace(/[^\d]/g, ""); // только цифры
-                if (digits) {
-                  memoryMb = Math.round(parseInt(digits) / 1024);
-                }
-              }
-            }
-          } else {
-            const output = execSync(`ps -o rss= -p ${worker.process.pid}`, { encoding: "utf8" }).trim();
-            memoryMb = Math.round(parseInt(output) / 1024);
-          }
-        } catch {
-          // Процесс мог завершиться
-        }
-      }
-
-      totalMemoryMb += memoryMb;
-      details.push({ projectId: worker.projectId, botsCount, memoryMb, pid: worker.process.pid });
-    }
-
-    return { workers: this.workers.size, totalBots, totalMemoryMb, details };
+  getStats(): WorkerPoolStats {
+    return collectWorkerStats(this.workers.values(), (tokenId, workerKey) => this.projectOf(tokenId, workerKey));
   }
 }
 
