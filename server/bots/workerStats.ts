@@ -1,12 +1,12 @@
 /**
  * @fileoverview Сбор статистики Worker Pool: RSS процессов и разбивка по проектам.
- * Общий воркер (WORKER_GROUPING=shared) раскладывается на записи по проектам,
- * память делится пропорционально числу ботов проекта.
+ * Воркер с ботами нескольких проектов (WORKER_GROUPING=shared/owner) раскладывается
+ * на записи по проектам, память делится пропорционально числу ботов проекта.
  * @module server/bots/workerStats
  */
 
 import { execSync } from "node:child_process";
-import { SHARED_WORKER_KEY } from "./workerGrouping";
+import { getWorkerGroupingMode, SHARED_WORKER_KEY } from "./workerGrouping";
 
 /** Минимальные данные воркера для статистики */
 export interface WorkerStatsSource {
@@ -116,11 +116,14 @@ export function collectWorkerStats(
       const projectId = projectOf(tokenId, workerKey);
       botsByProject.set(projectId, (botsByProject.get(projectId) ?? 0) + 1);
     }
-    const shared = workerKey === SHARED_WORKER_KEY || botsByProject.size > 1;
-    if (!shared) {
-      stats.details.push({ projectId: workerKey, botsCount: worker.activeBots.size, memoryMb, pid, workerKey, shared });
+    if (botsByProject.size === 0) {
+      // Пустой воркер (drain) можно приписать проекту, только если ключ — это ID проекта
+      if (getWorkerGroupingMode() === "project" && workerKey !== SHARED_WORKER_KEY) {
+        stats.details.push({ projectId: workerKey, botsCount: 0, memoryMb, pid, workerKey, shared: false });
+      }
       continue;
     }
+    const shared = workerKey === SHARED_WORKER_KEY || botsByProject.size > 1;
     for (const [projectId, share] of splitMemoryByBots(memoryMb, botsByProject)) {
       stats.details.push({ projectId, botsCount: botsByProject.get(projectId) ?? 0, memoryMb: share, pid, workerKey, shared });
     }

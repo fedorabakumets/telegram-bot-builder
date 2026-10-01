@@ -1,7 +1,7 @@
 /**
  * @fileoverview Менеджер воркеров ботов — управляет Python worker процессами
  * Модель: 1 проект = 1 воркер = N ботов внутри одного asyncio event loop.
- * При WORKER_GROUPING=shared все проекты делят один воркер (см. workerGrouping.ts).
+ * WORKER_GROUPING=owner — воркер на владельца, shared — один воркер на все проекты (см. workerGrouping.ts).
  * @module server/bots/botWorkerManager
  */
 
@@ -20,6 +20,7 @@ import {
 } from "./waitForWorkerBotStart";
 import { formatBotRuntimeErrorShort } from "./formatBotRuntimeError";
 import { resolveWorkerKey } from "./workerGrouping";
+import { resolveProjectWorkerKey } from "./resolveProjectWorkerKey";
 import { collectWorkerStats, type WorkerPoolStats } from "./workerStats";
 
 /** Задержка перед killWorker когда activeBots пуст (мс) */
@@ -107,6 +108,18 @@ class BotWorkerManager extends EventEmitter {
    */
   private projectOf(tokenId: number, workerKey: number): number {
     return this.tokenProjects.get(tokenId) ?? workerKey;
+  }
+
+  /** Ключ воркера проекта, определённый при последнем запуске: projectId → workerKey */
+  private projectWorkerKeys = new Map<number, number>();
+
+  /**
+   * Возвращает ключ воркера проекта для синхронных проверок
+   * @param projectId - ID проекта
+   * @returns ключ с последнего запуска или ключ без учёта владельца
+   */
+  private keyOf(projectId: number): number {
+    return this.projectWorkerKeys.get(projectId) ?? resolveWorkerKey(projectId);
   }
 
   constructor() {
@@ -434,7 +447,8 @@ class BotWorkerManager extends EventEmitter {
    */
   async startBot(projectId: number, token: string, tokenId: number, botFile: string, webhook?: { webhookUrl: string; webhookPort: number }): Promise<void> {
     return this.withTokenLock(projectId, tokenId, async () => {
-      const workerKey = resolveWorkerKey(projectId);
+      const workerKey = await resolveProjectWorkerKey(projectId);
+      this.projectWorkerKeys.set(projectId, workerKey);
       this.tokenProjects.set(tokenId, projectId);
       this.cancelWorkerDrain(workerKey);
       const worker = await this.getOrCreateWorker(workerKey);
@@ -489,7 +503,7 @@ class BotWorkerManager extends EventEmitter {
    */
   async stopBot(projectId: number, tokenId: number): Promise<boolean> {
     return this.withTokenLock(projectId, tokenId, async () => {
-      const workerKey = resolveWorkerKey(projectId);
+      const workerKey = this.keyOf(projectId);
       const worker = this.workers.get(workerKey);
       if (!worker) return true;
 
@@ -582,7 +596,7 @@ class BotWorkerManager extends EventEmitter {
    * @param tokenId - ID токена
    */
   isBotRunning(projectId: number, tokenId: number): boolean {
-    const worker = this.workers.get(resolveWorkerKey(projectId));
+    const worker = this.workers.get(this.keyOf(projectId));
     if (!worker?.activeBots.has(tokenId)) return false;
     return this.projectOf(tokenId, projectId) === projectId;
   }
@@ -592,7 +606,7 @@ class BotWorkerManager extends EventEmitter {
    * @param projectId - ID проекта
    */
   hasWorker(projectId: number): boolean {
-    const worker = this.workers.get(resolveWorkerKey(projectId));
+    const worker = this.workers.get(this.keyOf(projectId));
     return worker?.status === "ready";
   }
 
@@ -601,7 +615,7 @@ class BotWorkerManager extends EventEmitter {
    * @param projectId - ID проекта
    */
   getBotsCount(projectId: number): number {
-    const worker = this.workers.get(resolveWorkerKey(projectId));
+    const worker = this.workers.get(this.keyOf(projectId));
     if (!worker) return 0;
     let count = 0;
     for (const tokenId of worker.activeBots) {

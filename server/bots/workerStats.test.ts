@@ -3,7 +3,7 @@
  * @module server/bots/workerStats.test
  */
 
-import { describe, it } from "node:test";
+import { after, before, describe, it } from "node:test";
 import assert from "node:assert";
 import { collectWorkerStats, splitMemoryByBots, type WorkerStatsSource } from "./workerStats";
 
@@ -66,5 +66,36 @@ describe("collectWorkerStats", () => {
     const stats = collectWorkerStats([worker(0, [])], () => 0, readMemory);
     assert.deepStrictEqual(stats.details, []);
     assert.strictEqual(stats.workers, 1);
+  });
+
+  describe("режим owner (ключ воркера — ID владельца)", () => {
+    before(() => {
+      process.env.WORKER_GROUPING = "owner";
+    });
+    after(() => {
+      delete process.env.WORKER_GROUPING;
+    });
+
+    it("один проект владельца — строка с ID проекта и полным RSS", () => {
+      const stats = collectWorkerStats([worker(1612141295, [4], 7)], () => 9, readMemory);
+      assert.deepStrictEqual(
+        stats.details.map((d) => [d.projectId, d.botsCount, d.memoryMb, d.shared]),
+        [[9, 1, 70, false]],
+      );
+    });
+
+    it("два проекта владельца — разбивка, сумма равна RSS процесса", () => {
+      const projectOfToken = new Map([[1, 10], [2, 11], [3, 11]]);
+      const stats = collectWorkerStats([worker(55, [1, 2, 3], 7)], (t) => projectOfToken.get(t) ?? 0, readMemory);
+      assert.deepStrictEqual(
+        stats.details.map((d) => [d.projectId, d.botsCount, d.memoryMb, d.shared]),
+        [[10, 1, 23, true], [11, 2, 47, true]],
+      );
+    });
+
+    it("пустой воркер владельца не приписывается проекту с ID владельца", () => {
+      const stats = collectWorkerStats([worker(55, [], 7)], () => 0, readMemory);
+      assert.deepStrictEqual(stats.details, []);
+    });
   });
 });
