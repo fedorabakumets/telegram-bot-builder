@@ -28,14 +28,14 @@ interface BotUserbotSettingsProps {
   userbotApiId: string | null;
   /** API Hash */
   userbotApiHash: string | null;
-  /** Session string */
+  /** Маска session string от API («••••••••», если сессия сохранена) или null */
   userbotSessionString: string | null;
   /** Колбэк для pending */
   onPendingChange?: (key: string, value: string) => void;
 }
 
 /**
- * Сохраняет базовые настройки юзербота (вкл/выкл, api_id, api_hash)
+ * Сохраняет базовые настройки юзербота (вкл/выкл, api_id, api_hash); session string не отправляется
  * @param projectId - ID проекта
  * @param tokenId - ID токена
  * @param data - Данные для сохранения
@@ -43,7 +43,7 @@ interface BotUserbotSettingsProps {
 async function updateUserbotSettings(
   projectId: number,
   tokenId: number,
-  data: { userbotEnabled: number; userbotApiId: string | null; userbotApiHash: string | null; userbotSessionString: string | null },
+  data: { userbotEnabled: number; userbotApiId: string | null; userbotApiHash: string | null },
 ): Promise<void> {
   const res = await fetch(`/api/projects/${projectId}/tokens/${tokenId}/userbot`, {
     method: 'PUT',
@@ -85,8 +85,8 @@ export function BotUserbotSettings({
       updateUserbotSettings(projectId, tokenId, {
         userbotEnabled: enabled ? 1 : 0,
         userbotApiId: apiId || null,
+        // Маска «••••••••» или пустое поле — сервер оставит сохранённый API Hash; сессию форма не отправляет
         userbotApiHash: apiHash || null,
-        userbotSessionString: userbotSessionString,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/tokens`] });

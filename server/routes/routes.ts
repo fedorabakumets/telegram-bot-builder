@@ -1367,26 +1367,21 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     try {
       const tokenId = parseInt(req.params.tokenId);
       const projectId = parseInt(req.params.projectId);
-      const { userbotEnabled, userbotApiId, userbotApiHash, userbotSessionString } = req.body as {
-        userbotEnabled: number;
-        userbotApiId: string | null;
-        userbotApiHash: string | null;
-        userbotSessionString: string | null;
-      };
-
-      if (userbotEnabled !== 0 && userbotEnabled !== 1) {
-        return res.status(400).json({ message: "userbotEnabled должен быть 0 или 1" });
+      const { buildUserbotUpdate } = await import('./botTokens/build-userbot-update');
+      const parsed = buildUserbotUpdate(req.body);
+      if ('error' in parsed) {
+        return res.status(400).json({ message: parsed.error });
       }
 
-      const updated = await storage.updateBotToken(tokenId, {
-        userbotEnabled,
-        userbotApiId,
-        userbotApiHash,
-        userbotSessionString,
-      });
+      // Пустые и замаскированные API Hash / session string не перезаписывают сохранённые
+      const updated = await storage.updateBotToken(tokenId, parsed.update);
       if (!updated) {
         return res.status(404).json({ message: "Токен не найден" });
       }
+      const userbotEnabled = updated.userbotEnabled ?? 0;
+      const userbotApiId = updated.userbotApiId;
+      const userbotApiHash = updated.userbotApiHash;
+      const userbotSessionString = updated.userbotSessionString;
 
       try {
         const { existsSync, readFileSync, writeFileSync, readdirSync } = await import('fs');
@@ -1455,7 +1450,12 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   app.post("/api/projects/:projectId/tokens/:tokenId/userbot/send-code", requireTokenOwnership, async (req, res) => {
     try {
       const tokenId = parseInt(req.params.tokenId);
-      const { apiId, apiHash, phone } = req.body as { apiId: string; apiHash: string; phone: string };
+      const { apiId, phone } = req.body as { apiId: string; apiHash: string; phone: string };
+      const { pickNewSecret } = await import('./botTokens/build-userbot-update');
+      // Форма показывает сохранённый API Hash маской — тогда берём его из БД
+      const apiHash = pickNewSecret(req.body?.apiHash)
+        ?? (await storage.getBotToken(tokenId))?.userbotApiHash
+        ?? '';
 
       if (!apiId || !apiHash || !phone) {
         return res.status(400).json({ ok: false, message: "Заполните API ID, API Hash и номер телефона" });
@@ -1498,7 +1498,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         });
       }
 
-      res.json(result);
+      const { toPublicAuthResult } = await import('./botTokens/build-userbot-update');
+      res.json(toPublicAuthResult(result));
     } catch (error: any) {
       res.status(500).json({ ok: false, message: error.message || "Ошибка авторизации" });
     }
@@ -1528,7 +1529,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         });
       }
 
-      res.json(result);
+      const { toPublicAuthResult } = await import('./botTokens/build-userbot-update');
+      res.json(toPublicAuthResult(result));
     } catch (error: any) {
       res.status(500).json({ ok: false, message: error.message || "Ошибка 2FA авторизации" });
     }

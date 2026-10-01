@@ -37,8 +37,11 @@ function testPublicDto(): void {
   const pub = toPublicBotToken(raw);
   assert.ok(!pub.token.includes('SECRET'));
   assert.equal(pub.webhookSecretToken, null);
-  assert.equal(pub.userbotApiHash, null);
-  assert.equal(pub.userbotSessionString, null);
+  assert.equal(pub.userbotApiHash, '••••••••');
+  assert.equal(pub.userbotSessionString, '••••••••');
+  assert.ok(!JSON.stringify(pub).includes('hash') && !JSON.stringify(pub).includes('sess'));
+  const empty = toPublicBotToken({ ...raw, userbotApiHash: null, userbotSessionString: null });
+  assert.equal(empty.userbotSessionString, null);
 
   const inst = toPublicBotInstance({ id: 1, token: '111:SECRET', status: 'stopped' });
   assert.equal('token' in inst && (inst as { token?: string }).token, false);

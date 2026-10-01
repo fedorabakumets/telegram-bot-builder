@@ -7,6 +7,7 @@
  */
 
 import type { BotToken } from '@shared/schema';
+import { maskSecret } from './build-userbot-update';
 
 /**
  * Маскирует Telegram bot token для ответа клиенту
@@ -41,8 +42,9 @@ export function toPublicBotToken(token: BotToken): BotToken {
     ...token,
     token: maskBotToken(token.token),
     webhookSecretToken: null,
-    userbotApiHash: null,
-    userbotSessionString: null,
+    // Маска вместо null: UI видит, что секрет сохранён, и не стирает его при сохранении формы
+    userbotApiHash: maskSecret(token.userbotApiHash),
+    userbotSessionString: maskSecret(token.userbotSessionString),
   };
 }
 
