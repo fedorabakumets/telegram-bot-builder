@@ -54,6 +54,21 @@ BOT_BUILDS_STORAGE_ID=<id S3-хранилища на Railway>
 
 Регион применяется при каждом развёртывании сервиса бота. Redis и PostgreSQL лучше держать в том же регионе (Service Settings → Regions), иначе каждый запрос бота к базе идёт через океан.
 
+### База панели вместо базы на Railway
+
+Чтобы диалоги и пользователи ботов с Railway были видны в панели, `RAILWAY_BOT_DATABASE_URL` указывает на PostgreSQL панели, открытый наружу (публичный адрес сервера или TCP-туннель). Для ботов заводится отдельная роль без прав суперпользователя:
+
+```sql
+CREATE ROLE railway_bot LOGIN PASSWORD '<случайный пароль>';
+GRANT USAGE, CREATE ON SCHEMA public TO railway_bot;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO railway_bot;
+GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA public TO railway_bot;
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO railway_bot;
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT USAGE, SELECT, UPDATE ON SEQUENCES TO railway_bot;
+```
+
+Роль видит данные всех проектов, это временное решение до ролей на проект. Каждый запрос бота к базе идёт через интернет, поэтому база должна быть недалеко от региона Railway. Redis для состояний бота (`RAILWAY_BOT_REDIS_URL`) лучше оставить на Railway, рядом с ботом.
+
 `RAILWAY_BOT_*` подставляются боту вместо `DATABASE_URL` и `REDIS_URL` панели, если у токена не заданы свои. Ссылки `${{VAR}}` в переменных ботов раскрываются только для `WORKER_ENV_PASSTHROUGH`, пока задан `WORKER_RAILWAY_PROJECTS`.
 
 ## Проверено
@@ -62,7 +77,7 @@ BOT_BUILDS_STORAGE_ID=<id S3-хранилища на Railway>
 
 ## Ограничения
 
-- **Сообщения и пользователи бота** пишутся в базу на Railway, а панель читает свою. Диалоги и пользователи этого бота в панели не видны, пока база общая не вынесена или не синхронизирована.
+- **Сообщения и пользователи бота** пишутся в базу из `RAILWAY_BOT_DATABASE_URL`. Если это база на Railway, диалоги в панели не видны; вариант с базой панели описан выше.
 - **Медиа из `/uploads`** бот читает с локального диска — на Railway их нет.
 - **Переменные бота** (токен, сессия userbot, адрес БД) идут через Redis открытым текстом.
 - **Сигналов «жив» нет**: если сервис упал и не поднялся, бот числится запущенным.
