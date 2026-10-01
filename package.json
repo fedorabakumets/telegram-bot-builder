@@ -43,6 +43,7 @@
     "delete-bots-from-users": "tsx --tsconfig tsconfig.node.json scripts/delete-bots-from-users.ts",
     "backfill:token-segmentation": "tsx --tsconfig tsconfig.node.json scripts/backfill-token-segmentation.ts",
     "start": "npm run migrate && cross-env NODE_ENV=production tsx --tsconfig tsconfig.node.json server/index.ts",
+    "runner": "tsx --tsconfig tsconfig.node.json server/runner/index.ts",
     "build": "npm run build:client",
     "build:client": "vite build --mode production --config vite.config.ts",
     "build:fast": "vite build --mode production --minify false",
