@@ -55,6 +55,12 @@ interface WorkerCommand {
   token_id?: number;
   /** Путь к файлу бота */
   bot_file?: string;
+  /** URL webhook, если бот работает через webhook */
+  webhook_url?: string;
+  /** Порт aiohttp для webhook */
+  webhook_port?: number;
+  /** Переменные окружения бота (режим BOT_ENV_SOURCE=inline вместо файла .env) */
+  env?: Record<string, string>;
 }
 
 /** Контекст воркера проекта */
@@ -89,6 +95,8 @@ interface BotStartArgs {
   botFile: string;
   /** Настройки webhook, если бот работает через webhook */
   webhook?: { webhookUrl: string; webhookPort: number };
+  /** Переменные окружения бота; если заданы, воркер не читает .env */
+  env?: Record<string, string>;
 }
 
 /**
@@ -503,8 +511,17 @@ class BotWorkerManager extends EventEmitter {
    * @param token - Токен бота
    * @param tokenId - ID токена
    * @param botFile - Путь к сгенерированному bot.py
+   * @param webhook - Настройки webhook (опционально)
+   * @param env - Переменные окружения бота вместо файла .env (опционально)
    */
-  async startBot(projectId: number, token: string, tokenId: number, botFile: string, webhook?: { webhookUrl: string; webhookPort: number }): Promise<void> {
+  async startBot(
+    projectId: number,
+    token: string,
+    tokenId: number,
+    botFile: string,
+    webhook?: { webhookUrl: string; webhookPort: number },
+    env?: Record<string, string>,
+  ): Promise<void> {
     return this.withTokenLock(projectId, tokenId, async () => {
       const workerKey = await resolveProjectWorkerKey(projectId);
       this.projectWorkerKeys.set(projectId, workerKey);
@@ -515,7 +532,7 @@ class BotWorkerManager extends EventEmitter {
         await this.remountWorker(workerKey, projectId);
       }
       const worker = await this.getOrCreateWorker(workerKey, projectId);
-      const args: BotStartArgs = { projectId, token, tokenId, botFile, webhook };
+      const args: BotStartArgs = { projectId, token, tokenId, botFile, webhook, env };
       this.startArgs.set(tokenId, args);
 
       const started = this.sendStartBot(workerKey, worker, args);
@@ -560,6 +577,7 @@ class BotWorkerManager extends EventEmitter {
       token_id: args.tokenId,
       bot_file: stageBotFile(workerKey, args.botFile, worker.docker),
       ...(args.webhook ? { webhook_url: args.webhook.webhookUrl, webhook_port: args.webhook.webhookPort } : {}),
+      ...(args.env ? { env: args.env } : {}),
     });
     if (!sent) return null;
     worker.activeBots.add(args.tokenId);

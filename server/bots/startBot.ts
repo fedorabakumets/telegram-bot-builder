@@ -311,10 +311,12 @@ export async function startBot(
 
     let mainFile: string;
     let assets: string[];
+    /** Окружение бота при BOT_ENV_SOURCE=inline; undefined — бот читает .env */
+    let botEnv: Record<string, string> | undefined;
 
     if (reuse) {
       console.log(`♻️ Файлы бота взяты готовыми: projectId=${projectId}, tokenId=${tokenId}`);
-      ({ mainFile, assets } = await createCompleteBotFiles(
+      ({ mainFile, assets, env: botEnv } = await createCompleteBotFiles(
         '',
         project.name,
         project.data,
@@ -371,7 +373,7 @@ export async function startBot(
       console.log(`   db_pool присутствует:`, hasDbPool);
 
       console.log(`📄 Файлы бота созданы заново: projectId=${projectId}, tokenId=${tokenId}`);
-      ({ mainFile, assets } = await createCompleteBotFiles(
+      ({ mainFile, assets, env: botEnv } = await createCompleteBotFiles(
         botCode,
         project.name,
         project.data,
@@ -453,7 +455,7 @@ export async function startBot(
         await workerManager.startBot(projectId, token, tokenId, mainFile, {
           webhookUrl: effectiveWebhookUrl ?? undefined,
           webhookPort: 9000 + tokenId,
-        });
+        }, botEnv);
         console.log(`🏭 [WorkerPool] Бот ${projectId}/${tokenId} отправлен в воркер`);
       } catch (workerError) {
         console.error(`🏭 [WorkerPool] Ошибка запуска бота через воркер:`, workerError);
@@ -513,6 +515,7 @@ export async function startBot(
       cwd: dirname(mainFile), // Устанавливаем рабочую директорию в папку бота
       env: {
         ...process.env,
+        ...botEnv,
         PROJECT_ID: projectId.toString(),
         TOKEN_ID: tokenId.toString(),
         BOT_TOKEN: token,

@@ -7,6 +7,7 @@
 
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { buildBotEnvContent, getBotEnvSource, parseBotEnv, retireBotEnvFile } from "./botEnv";
 
 /** Пути к папке и основному файлу бота */
 export interface BotPaths {
@@ -72,92 +73,26 @@ export function createBotFile(botCode: string, projectId: number, tokenId?: numb
 }
 
 /**
- * Записывает только .env в папку бота (актуальные токен, Redis, webhook).
+ * Готовит переменные бота: в режиме file пишет .env, в режиме inline возвращает
+ * словарь для команды start_bot и удаляет старый .env из папки.
  * @param botDir - Папка бота
  * @param projectId - ID проекта
  * @param tokenId - ID токена
- * @returns Путь к .env
+ * @returns Путь к .env (file) или словарь переменных (inline)
  */
-async function writeBotEnvFile(
+async function prepareBotEnv(
   botDir: string,
   projectId: number,
   tokenId: number,
-): Promise<string> {
-  const { generateEnvFile } = await import("@shared/scaffolding-wrapper");
-  const { storage } = await import("../storages/storage");
-  const tokenRecord = await storage.getBotToken(tokenId);
-  const project = await storage.getBotProject(projectId);
-  const dbAdminIds = project?.adminIds?.trim();
-
-  let existingAdminIds = dbAdminIds || '123456789';
-  if (!dbAdminIds) {
-    const existingEnvPath = join(botDir, '.env');
-    if (existsSync(existingEnvPath)) {
-      try {
-        const { readFileSync } = await import('node:fs');
-        const existingEnv = readFileSync(existingEnvPath, 'utf8');
-        const match = existingEnv.match(/^ADMIN_IDS=(.+)$/m);
-        if (match && match[1].trim()) {
-          existingAdminIds = match[1].trim();
-        }
-      } catch {
-        // ignore
-      }
-    }
+): Promise<{ envPath?: string; env?: Record<string, string> }> {
+  const content = await buildBotEnvContent(botDir, projectId, tokenId);
+  if (getBotEnvSource() === 'inline') {
+    await retireBotEnvFile(botDir, projectId);
+    return { env: parseBotEnv(content) };
   }
-
-  const launchMode = tokenRecord?.launchMode ?? 'polling';
-  const webhookBaseUrl = tokenRecord?.webhookBaseUrl ?? null;
-  const webhookPort = launchMode === 'webhook' && webhookBaseUrl ? 9000 + tokenId : null;
-  const protectContent = tokenRecord?.protectContent === 1;
-  const saveIncomingMedia = tokenRecord?.saveIncomingMedia === 1;
-  const catchAllHandlers = tokenRecord?.catchAllHandlers !== 0;
-  const contentCache = tokenRecord?.contentCache === 1;
-
-  const customEnvVars = await storage.getEnvVariables(tokenId);
-  const { resolveBotEnvReference } = await import("../bots/resolveBotEnvReference");
-  const customVariables = customEnvVars.map(v => ({
-    key: v.key,
-    value: resolveBotEnvReference(v.value),
-  }));
-
-  if (!customVariables.some(v => v.key === 'DATABASE_URL') && process.env.DATABASE_URL) {
-    customVariables.push({ key: 'DATABASE_URL', value: process.env.DATABASE_URL });
-  }
-  if (!customVariables.some(v => v.key === 'REDIS_URL') && process.env.REDIS_URL) {
-    customVariables.push({ key: 'REDIS_URL', value: process.env.REDIS_URL });
-  }
-
-  if (tokenRecord?.userbotEnabled === 1) {
-    if (tokenRecord.userbotApiId) {
-      customVariables.push({ key: 'USERBOT_API_ID', value: tokenRecord.userbotApiId });
-    }
-    if (tokenRecord.userbotApiHash) {
-      customVariables.push({ key: 'USERBOT_API_HASH', value: tokenRecord.userbotApiHash });
-    }
-    if (tokenRecord.userbotSessionString) {
-      customVariables.push({ key: 'USERBOT_SESSION_STRING', value: tokenRecord.userbotSessionString });
-    }
-  }
-
-  const envContent = generateEnvFile(
-    tokenRecord?.token || "YOUR_BOT_TOKEN_HERE",
-    existingAdminIds,
-    projectId,
-    tokenRecord?.logLevel || 'WARNING',
-    'redis://localhost:6379',
-    launchMode === 'webhook' ? webhookBaseUrl : null,
-    webhookPort,
-    protectContent,
-    saveIncomingMedia,
-    tokenId,
-    customVariables,
-    catchAllHandlers,
-    contentCache,
-  );
   const envPath = join(botDir, '.env');
-  writeFileSync(envPath, envContent, 'utf8');
-  return envPath;
+  writeFileSync(envPath, content, 'utf8');
+  return { envPath };
 }
 
 /**
@@ -170,7 +105,7 @@ async function writeBotEnvFile(
  * @param tokenId - Идентификатор токена
  * @param customFileName - Необязательное кастомное имя файла (без расширения .py)
  * @param options - skipCodeAndData: только .env, не трогать .py
- * @returns Объект с путем к основному файлу и массивом путей к сопутствующим файлам
+ * @returns Путь к основному файлу, сопутствующие файлы и переменные бота (в режиме inline)
  */
 export async function createCompleteBotFiles(
   botCode: string,
@@ -180,7 +115,7 @@ export async function createCompleteBotFiles(
   tokenId: number,
   customFileName?: string,
   options?: CreateCompleteBotFilesOptions,
-): Promise<{ mainFile: string; assets: string[] }> {
+): Promise<{ mainFile: string; assets: string[]; env?: Record<string, string> }> {
   const { botDir, mainFile } = resolveBotPaths(projectId, tokenId, customFileName);
   if (!existsSync(botDir)) {
     mkdirSync(botDir, { recursive: true });
@@ -189,9 +124,9 @@ export async function createCompleteBotFiles(
   const assets: string[] = [];
 
   if (options?.skipCodeAndData) {
-    const envPath = await writeBotEnvFile(botDir, projectId, tokenId);
-    assets.push(envPath);
-    return { mainFile, assets };
+    const { envPath, env } = await prepareBotEnv(botDir, projectId, tokenId);
+    if (envPath) assets.push(envPath);
+    return { mainFile, assets, env };
   }
 
   let normalizedBotData = botData;
@@ -231,8 +166,8 @@ export async function createCompleteBotFiles(
   writeFileSync(jsonPath, JSON.stringify(normalizedBotData, null, 2), 'utf8');
   assets.push(jsonPath);
 
-  const envPath = await writeBotEnvFile(botDir, projectId, tokenId);
-  assets.push(envPath);
+  const { envPath, env } = await prepareBotEnv(botDir, projectId, tokenId);
+  if (envPath) assets.push(envPath);
 
-  return { mainFile, assets };
+  return { mainFile, assets, env };
 }
