@@ -34,6 +34,8 @@ bots/*
 
 # Копии папок ботов для Docker-воркеров (WORKER_RUNTIME=docker)
 .worker-runtime/
+
+# Приватное локальное хранилище сборок ботов (BOT_ARTIFACT_SOURCE=storage)
 .bot-builds/
 
 # Environment variables
