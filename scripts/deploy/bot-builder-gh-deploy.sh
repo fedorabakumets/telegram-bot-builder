@@ -36,15 +36,18 @@ flock 9
   docker compose up -d --no-build --remove-orphans
   docker compose ps
 
-  # App needs a few seconds after recreate before /api/health answers
+  # Порт слушается только после миграций и регистрации маршрутов (>30 с),
+  # поэтому ждём /api/health до ~2 минут
+  HEALTH_TRIES="${HEALTH_TRIES:-40}"
   ok=0
-  for i in 1 2 3 4 5 6 7 8 9 10; do
+  for i in $(seq 1 "$HEALTH_TRIES"); do
     if curl -fsS --max-time 10 http://127.0.0.1:5000/api/health; then
       echo
+      echo "health ok after try $i/$HEALTH_TRIES"
       ok=1
       break
     fi
-    echo "health not ready yet (try $i/10), sleep 3s"
+    echo "health not ready yet (try $i/$HEALTH_TRIES), sleep 3s"
     sleep 3
   done
   if [ "$ok" != 1 ]; then
