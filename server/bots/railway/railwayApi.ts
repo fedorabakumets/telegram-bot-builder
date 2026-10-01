@@ -4,13 +4,8 @@
  * @module server/bots/railway/railwayApi
  */
 
+import { railwayGraphql } from "../../sites/railway/railwayGraphql";
 import type { RailwayConfig } from "./railwayConfig";
-
-/** Адрес публичного API Railway */
-const RAILWAY_API_URL = "https://backboard.railway.com/graphql/v2";
-
-/** Таймаут одного запроса к API */
-const REQUEST_TIMEOUT_MS = 30_000;
 
 /** Последний деплой сервиса */
 export interface RailwayDeployment {
@@ -28,22 +23,8 @@ export interface RailwayDeployment {
  * @returns поле data ответа
  * @throws Error при сетевой ошибке или ошибке GraphQL
  */
-async function railwayRequest<T>(config: RailwayConfig, query: string, variables: Record<string, unknown>): Promise<T> {
-  const auth: Record<string, string> = config.projectToken
-    ? { "Project-Access-Token": config.apiToken }
-    : { Authorization: `Bearer ${config.apiToken}` };
-  const response = await fetch(RAILWAY_API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...auth },
-    body: JSON.stringify({ query, variables }),
-    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-  });
-  const body = (await response.json().catch(() => ({}))) as { data?: T; errors?: { message: string }[] };
-  if (!response.ok || body.errors?.length || !body.data) {
-    const reason = body.errors?.map((e) => e.message).join("; ") || `HTTP ${response.status}`;
-    throw new Error(`Railway API: ${reason}`);
-  }
-  return body.data;
+function railwayRequest<T>(config: RailwayConfig, query: string, variables: Record<string, unknown>): Promise<T> {
+  return railwayGraphql<T>({ token: config.apiToken, projectToken: config.projectToken }, query, variables);
 }
 
 /**
