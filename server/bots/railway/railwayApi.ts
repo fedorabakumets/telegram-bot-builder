@@ -134,10 +134,11 @@ export async function deployRailwayService(config: RailwayConfig, serviceId: str
 }
 
 /**
- * Останавливает деплой (сервис перестаёт работать и тратить ресурсы)
+ * Снимает деплой: контейнер останавливается и перестаёт тратить ресурсы, сервис остаётся.
+ * deploymentStop для работающего деплоя Railway не принимает («not stoppable»).
  * @param config - Настройки Railway
  * @param deploymentId - ID деплоя
  */
 export async function stopRailwayDeployment(config: RailwayConfig, deploymentId: string): Promise<void> {
-  await railwayRequest(config, "mutation($id: String!) { deploymentStop(id: $id) }", { id: deploymentId });
+  await railwayRequest(config, "mutation($id: String!) { deploymentRemove(id: $id) }", { id: deploymentId });
 }
