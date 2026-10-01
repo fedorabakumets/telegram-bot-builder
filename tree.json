@@ -73,7 +73,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-09-30T23:55:41Z",
+    "updated_at": "2026-10-01T17:20:04Z",
     "tags": [],
     "author": ""
   },
@@ -358,7 +358,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-09-25T15:12:22+03:00",
+    "updated_at": "2026-10-01T10:44:51Z",
     "tags": [],
     "author": ""
   },
@@ -403,7 +403,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-08-23T22:51:09+03:00",
+    "updated_at": "2026-10-01T10:44:51Z",
     "tags": [],
     "author": ""
   },
@@ -523,7 +523,7 @@
     "folder_titles": {
       "database": "Database"
     },
-    "updated_at": "2026-08-25T21:17:06Z",
+    "updated_at": "2026-10-01T09:57:18Z",
     "tags": [],
     "author": ""
   },
@@ -554,6 +554,21 @@
       "database": "Database"
     },
     "updated_at": "2026-07-05T13:02:50Z",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "database/bot_builds",
+    "title": "bot_builds",
+    "excerpt": "Сборка бота: сжатый сгенерированный `.py` лежит в хранилище (local/S3),",
+    "parts": [
+      "database",
+      "bot_builds"
+    ],
+    "folder_titles": {
+      "database": "Database"
+    },
+    "updated_at": "2026-10-01T09:57:18Z",
     "tags": [],
     "author": ""
   },
@@ -673,7 +688,7 @@
     "folder_titles": {
       "database": "Database"
     },
-    "updated_at": "2026-08-25T21:17:06Z",
+    "updated_at": "2026-10-01T09:57:18Z",
     "tags": [],
     "author": ""
   },
@@ -748,7 +763,7 @@
     "folder_titles": {
       "database": "Database"
     },
-    "updated_at": "2026-08-12T03:49:58Z",
+    "updated_at": "2026-10-01T09:57:18Z",
     "tags": [],
     "author": ""
   },
@@ -993,6 +1008,96 @@
     "author": ""
   },
   {
+    "path": "deployment/BOT_BUILDS",
+    "title": "Сборки ботов в хранилище",
+    "excerpt": "Сгенерированный код бота можно хранить не только в папке `bots/` на диске панели, но и в хранилище (локальная приватная папка или S3). Это п",
+    "parts": [
+      "deployment",
+      "BOT_BUILDS"
+    ],
+    "folder_titles": {
+      "deployment": "🚀 Деплой"
+    },
+    "updated_at": "2026-10-01T10:43:44Z",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "deployment/BOT_ENV",
+    "title": "Переменные бота без файла .env",
+    "excerpt": "Переменные бота (токен, `ADMIN_IDS`, `DATABASE_URL`, userbot-сессия, свои переменные токена) можно не хранить в файле `bots/<папка>/.env`, а",
+    "parts": [
+      "deployment",
+      "BOT_ENV"
+    ],
+    "folder_titles": {
+      "deployment": "🚀 Деплой"
+    },
+    "updated_at": "2026-10-01T10:43:44Z",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "deployment/BOT_RAILWAY",
+    "title": "Боты в сервисах Railway — `WORKER_RAILWAY_PROJECTS`",
+    "excerpt": "Панель работает на своей машине, а боты выбранных проектов — в отдельных сервисах [Railway](https://railway.com). Для пользователя всё как р",
+    "parts": [
+      "deployment",
+      "BOT_RAILWAY"
+    ],
+    "folder_titles": {
+      "deployment": "🚀 Деплой"
+    },
+    "updated_at": "2026-10-01T14:51:28Z",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "deployment/BOT_RUNNER",
+    "title": "Исполнитель ботов — `WORKER_RUNTIME=remote`",
+    "excerpt": "Исполнитель — отдельный процесс (`npm run runner`), который запускает Python-воркеры ботов на своей машине по командам панели. Панель при эт",
+    "parts": [
+      "deployment",
+      "BOT_RUNNER"
+    ],
+    "folder_titles": {
+      "deployment": "🚀 Деплой"
+    },
+    "updated_at": "2026-10-01T12:45:34Z",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "deployment/CURSOR_WORKER_RAILWAY",
+    "title": "Исполнитель Cursor Cloud Agents на Railway (My Machines)",
+    "excerpt": "Облачный агент Cursor может выполнять команды не на машине Cursor, а на нашем сервисе Railway. Модель и логика агента остаются у Cursor. В с",
+    "parts": [
+      "deployment",
+      "CURSOR_WORKER_RAILWAY"
+    ],
+    "folder_titles": {
+      "deployment": "🚀 Деплой"
+    },
+    "updated_at": "2026-10-01T17:20:04Z",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "deployment/DB_BACKUPS",
+    "title": "Бэкапы базы PostgreSQL — `npm run db:backup`",
+    "excerpt": "Бэкап снимает дамп любой базы PostgreSQL — панели, базы ботов на Railway или на VPS — и кладёт его в хранилище. Восстановление проверяет дам",
+    "parts": [
+      "deployment",
+      "DB_BACKUPS"
+    ],
+    "folder_titles": {
+      "deployment": "🚀 Деплой"
+    },
+    "updated_at": "2026-10-01T15:35:53Z",
+    "tags": [],
+    "author": ""
+  },
+  {
     "path": "deployment/RAILWAY_QUICK_DEPLOY",
     "title": "🚀 Быстрый деплой на Railway",
     "excerpt": "1. Иди на [railway.app](https://railway.app)",
@@ -1004,6 +1109,21 @@
       "deployment": "🚀 Деплой"
     },
     "updated_at": "2026-07-04T07:28:20+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "deployment/RAILWAY_SITE_TEMPLATE",
+    "title": "Площадка на Railway из шаблона `tbb-site`",
+    "excerpt": "Площадка — это исполнитель ботов с собственными Redis и PostgreSQL в аккаунте Railway пользователя. Разворачивается одной кнопкой: [railway.",
+    "parts": [
+      "deployment",
+      "RAILWAY_SITE_TEMPLATE"
+    ],
+    "folder_titles": {
+      "deployment": "🚀 Деплой"
+    },
+    "updated_at": "2026-10-01T15:35:53Z",
     "tags": [],
     "author": ""
   },
@@ -1033,7 +1153,22 @@
     "folder_titles": {
       "deployment": "🚀 Деплой"
     },
-    "updated_at": "2026-08-20T22:42:47+03:00",
+    "updated_at": "2026-10-01T02:08:06Z",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "deployment/WORKER_DOCKER",
+    "title": "Воркеры ботов в Docker (контейнер на человека)",
+    "excerpt": "Режим `WORKER_RUNTIME=docker` запускает каждый Python-воркер в отдельном контейнере.",
+    "parts": [
+      "deployment",
+      "WORKER_DOCKER"
+    ],
+    "folder_titles": {
+      "deployment": "🚀 Деплой"
+    },
+    "updated_at": "2026-10-01T02:18:30Z",
     "tags": [],
     "author": ""
   },
@@ -1800,6 +1935,23 @@
       "infrastructure": "🏗️ Инфраструктура"
     },
     "updated_at": "2026-08-05T15:24:19+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/infrastructure/bot-database-access",
+    "title": "Доступ ботов к БД платформы",
+    "excerpt": "**Статус:** проблема описана, не исправлена. Не срочно, но закрыть до роста числа пользователей.",
+    "parts": [
+      "futures",
+      "infrastructure",
+      "bot-database-access"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития",
+      "infrastructure": "🏗️ Инфраструктура"
+    },
+    "updated_at": "2026-10-01T02:45:11Z",
     "tags": [],
     "author": ""
   },
