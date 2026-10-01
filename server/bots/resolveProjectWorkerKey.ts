@@ -5,6 +5,7 @@
 
 import { storage } from "../storages/storage";
 import { getWorkerGroupingMode, resolveWorkerKey } from "./workerGrouping";
+import { isRailwayProject } from "./railway/railwayConfig";
 
 /**
  * Определяет ключ воркера для запуска бота проекта.
@@ -14,6 +15,8 @@ import { getWorkerGroupingMode, resolveWorkerKey } from "./workerGrouping";
  * @returns ключ воркера
  */
 export async function resolveProjectWorkerKey(projectId: number): Promise<number> {
+  // У проекта на Railway свой сервис, поэтому и свой воркер, независимо от группировки
+  if (isRailwayProject(projectId)) return -projectId;
   if (getWorkerGroupingMode() !== "owner") return resolveWorkerKey(projectId);
   try {
     const project = await storage.getBotProject(projectId);

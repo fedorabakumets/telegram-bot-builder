@@ -1,24 +1,40 @@
 /**
- * @fileoverview Выбор канала до воркера по подготовленному запуску: процесс здесь или исполнитель.
+ * @fileoverview Выбор канала до воркера по подготовленному запуску: процесс здесь,
+ * общий исполнитель или сервис проекта на Railway.
  * @module server/bots/openWorkerChannel
  */
 
 import { LocalWorkerChannel } from "./localWorkerChannel";
+import { ensureRailwayRunner, stopRailwayRunner } from "./railway/railwayRunner";
 import { RemoteRunnerHub } from "./remoteRunnerHub";
 import { RemoteWorkerChannel } from "./remoteWorkerChannel";
 import type { WorkerChannel } from "./workerChannel";
 import type { WorkerLaunch } from "./workerLaunch";
 
 /**
+ * Redis для связи с исполнителями: WORKER_RUNNER_REDIS_URL или REDIS_URL панели
+ * @returns адрес Redis
+ * @throws Error, если ни один не задан
+ */
+function runnerRedisUrl(): string {
+  const url = process.env.WORKER_RUNNER_REDIS_URL?.trim() || process.env.REDIS_URL?.trim();
+  if (!url) throw new Error("Для исполнителей нужен WORKER_RUNNER_REDIS_URL или REDIS_URL");
+  return url;
+}
+
+/**
  * Открывает канал до нового воркера
  * @param workerKey - Ключ воркера
  * @param launch - Результат prepareWorkerLaunch
- * @returns канал; для remote — после подключения к Redis
+ * @returns канал; для исполнителя — после подключения к Redis (и подъёма сервиса Railway)
  */
 export async function openWorkerChannel(workerKey: number, launch: WorkerLaunch): Promise<WorkerChannel> {
   if (!launch.runnerId) return new LocalWorkerChannel(launch);
-  const redisUrl = process.env.REDIS_URL;
-  if (!redisUrl) throw new Error("WORKER_RUNTIME=remote требует REDIS_URL");
-  const hub = await RemoteRunnerHub.get(launch.runnerId, redisUrl);
-  return new RemoteWorkerChannel(hub, workerKey);
+  const hub = await RemoteRunnerHub.get(launch.runnerId, runnerRedisUrl());
+  const railwayProjectId = launch.railwayProjectId ?? null;
+  if (railwayProjectId === null) return new RemoteWorkerChannel(hub, workerKey);
+  await ensureRailwayRunner(railwayProjectId, hub);
+  const channel = new RemoteWorkerChannel(hub, workerKey);
+  channel.once("exit", () => void stopRailwayRunner(railwayProjectId));
+  return channel;
 }

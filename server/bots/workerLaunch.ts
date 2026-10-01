@@ -9,7 +9,8 @@ import { cpSync, mkdirSync, rmSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import { storage } from "../storages/storage";
 import { getWorkerGroupingMode } from "./workerGrouping";
-import { getDockerWorkerConfig, getWorkerRuntime, getWorkerRunnerId, isDockerWorkerRuntime } from "./workerRuntime";
+import { getDockerWorkerConfig, isDockerWorkerRuntime } from "./workerRuntime";
+import { getProjectPlacement } from "./botPlacement";
 import { buildDockerWorkerCommand, CONTAINER_APP_ROOT, dockerWorkerName } from "./workerDockerArgs";
 import { retargetBotCodeCache } from "./retargetBotCodeCache";
 
@@ -27,6 +28,8 @@ export interface WorkerLaunch {
   docker: boolean;
   /** ID исполнителя для WORKER_RUNTIME=remote; null — воркер запускается на этой машине */
   runnerId: string | null;
+  /** ID проекта, если исполнитель — его сервис на Railway (поднимается перед запуском) */
+  railwayProjectId?: number | null;
 }
 
 /**
@@ -80,19 +83,14 @@ export async function prepareWorkerLaunch(
   pythonPath: string,
   workerScript: string,
 ): Promise<WorkerLaunch> {
-  if (getWorkerRuntime() === "remote") {
+  const placement = getProjectPlacement(projectId);
+  if (placement.runnerId) {
     // Команду и окружение воркера определяет исполнитель
-    return { command: "", args: [], env: {}, projects: null, docker: false, runnerId: getWorkerRunnerId() };
+    return { command: "", args: [], env: {}, projects: null, docker: false, ...placement };
   }
   if (!isDockerWorkerRuntime()) {
-    return {
-      command: pythonPath,
-      args: ["-u", workerScript],
-      env: { ...process.env, PROJECT_ID: workerKey.toString() },
-      projects: null,
-      docker: false,
-      runnerId: null,
-    };
+    const env = { ...process.env, PROJECT_ID: workerKey.toString() };
+    return { command: pythonPath, args: ["-u", workerScript], env, projects: null, docker: false, runnerId: null };
   }
   const projectIds = await resolveWorkerProjects(workerKey, projectId);
   const appRoot = process.cwd();
