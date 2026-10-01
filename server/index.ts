@@ -22,6 +22,7 @@ import { shutdownAllBots } from "./utils/graceful-shutdown";
 import { runMigrations } from "./database/runMigrations";
 import { isRedisAvailable, waitForRedisInit } from "./redis/redisClient";
 import { redactSecrets } from "./utils/redactSecrets";
+import { startDbBackupScheduler } from "./database/backups/dbBackupScheduler";
 
 // Настраиваем прокси для Telegram API ДО всех импортов
 dotenv.config({ debug: false });
@@ -160,6 +161,8 @@ app.use((req, res, next) => {
   initRedisProjectEventBridge();
   // Подписываемся на Redis Pub/Sub логи ботов (дополнительный канал к stdout)
   initRedisLogsSubscriber();
+  // Автоматический бэкап базы панели (включается DB_BACKUP_INTERVAL_HOURS)
+  startDbBackupScheduler();
 
   // Важно настраивать Vite только в режиме разработки и после
   // настройки всех остальных маршрутов, чтобы маршрут catch-all
