@@ -47,6 +47,17 @@ export function getWorkerRunnerId(): string {
   return process.env.WORKER_RUNNER_ID?.trim() || "default";
 }
 
+/** Откуда исполнитель берёт код бота: сборка из S3 или путь к папке bots/ панели */
+export type WorkerRunnerCodeSource = "build" | "path";
+
+/**
+ * Источник кода для исполнителя из WORKER_RUNNER_CODE
+ * @returns "path" только при явном значении (исполнитель на той же машине), иначе "build"
+ */
+export function getWorkerRunnerCodeSource(): WorkerRunnerCodeSource {
+  return process.env.WORKER_RUNNER_CODE?.trim().toLowerCase() === "path" ? "path" : "build";
+}
+
 /**
  * Проверяет, запускаются ли воркеры в Docker
  * @returns true при WORKER_RUNTIME=docker

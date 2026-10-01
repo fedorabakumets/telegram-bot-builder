@@ -26,6 +26,7 @@ import { collectWorkerStats, type WorkerPoolStats } from "./workerStats";
 import { prepareWorkerLaunch, stageBotFile, unstageBotFile, type WorkerLaunch } from "./workerLaunch";
 import { redactSecrets } from "../utils/redactSecrets";
 import type { WorkerChannel } from "./workerChannel";
+import type { BotBuildLink } from "./builds/botBuildLink";
 import { openWorkerChannel } from "./openWorkerChannel";
 
 /** Задержка перед killWorker когда activeBots пуст (мс) */
@@ -63,6 +64,18 @@ interface WorkerCommand {
   webhook_port?: number;
   /** Переменные окружения бота (режим BOT_ENV_SOURCE=inline вместо файла .env) */
   env?: Record<string, string>;
+  /** Сборка, которую исполнитель скачивает сам и подставляет вместо bot_file (WORKER_RUNTIME=remote) */
+  build?: { url: string; sha256: string; size: number; fingerprint: string; file_name: string };
+}
+
+/** Необязательные параметры запуска бота */
+export interface BotStartOptions {
+  /** Настройки webhook, если бот работает через webhook */
+  webhook?: { webhookUrl: string; webhookPort: number };
+  /** Переменные окружения бота вместо файла .env */
+  env?: Record<string, string>;
+  /** Сборка в S3 для удалённого исполнителя */
+  build?: BotBuildLink;
 }
 
 /** Контекст воркера проекта */
@@ -101,6 +114,8 @@ interface BotStartArgs {
   webhook?: { webhookUrl: string; webhookPort: number };
   /** Переменные окружения бота; если заданы, воркер не читает .env */
   env?: Record<string, string>;
+  /** Сборка в S3 для удалённого исполнителя */
+  build?: BotBuildLink;
 }
 
 /**
@@ -499,16 +514,14 @@ class BotWorkerManager extends EventEmitter {
    * @param token - Токен бота
    * @param tokenId - ID токена
    * @param botFile - Путь к сгенерированному bot.py
-   * @param webhook - Настройки webhook (опционально)
-   * @param env - Переменные окружения бота вместо файла .env (опционально)
+   * @param options - Webhook, переменные окружения и сборка для исполнителя
    */
   async startBot(
     projectId: number,
     token: string,
     tokenId: number,
     botFile: string,
-    webhook?: { webhookUrl: string; webhookPort: number },
-    env?: Record<string, string>,
+    options: BotStartOptions = {},
   ): Promise<void> {
     return this.withTokenLock(projectId, tokenId, async () => {
       const workerKey = await resolveProjectWorkerKey(projectId);
@@ -520,7 +533,7 @@ class BotWorkerManager extends EventEmitter {
         await this.remountWorker(workerKey, projectId);
       }
       const worker = await this.getOrCreateWorker(workerKey, projectId);
-      const args: BotStartArgs = { projectId, token, tokenId, botFile, webhook, env };
+      const args: BotStartArgs = { projectId, token, tokenId, botFile, ...options };
       this.startArgs.set(tokenId, args);
 
       const started = this.sendStartBot(workerKey, worker, args);
@@ -566,6 +579,7 @@ class BotWorkerManager extends EventEmitter {
       bot_file: stageBotFile(workerKey, args.botFile, worker.docker),
       ...(args.webhook ? { webhook_url: args.webhook.webhookUrl, webhook_port: args.webhook.webhookPort } : {}),
       ...(args.env ? { env: args.env } : {}),
+      ...(args.build ? { build: toCommandBuild(args.build) } : {}),
     });
     if (!sent) return null;
     worker.activeBots.add(args.tokenId);
@@ -740,6 +754,15 @@ class BotWorkerManager extends EventEmitter {
   getStats(): WorkerPoolStats {
     return collectWorkerStats(this.workers.values(), (tokenId, workerKey) => this.projectOf(tokenId, workerKey));
   }
+}
+
+/**
+ * Описание сборки в формате команды воркера (snake_case, как остальные поля протокола)
+ * @param build - Ссылка на сборку
+ * @returns поле build команды start_bot
+ */
+function toCommandBuild(build: BotBuildLink): NonNullable<WorkerCommand["build"]> {
+  return { url: build.url, sha256: build.sha256, size: build.size, fingerprint: build.fingerprint, file_name: build.fileName };
 }
 
 /** Синглтон менеджера воркеров */

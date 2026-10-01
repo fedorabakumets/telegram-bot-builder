@@ -81,6 +81,7 @@ import {
   writeGeneratedCodeMeta,
 } from '../files/generatedCodeMeta';
 import { persistBotBuildForStart, restoreBotBuildForStart } from './builds/startBotBuildHooks';
+import { resolveRunnerBuildForStart } from './builds/runnerBuildForStart';
 
 
 
@@ -391,6 +392,11 @@ export async function startBot(
     }
 
     await persistBotBuildForStart({ ...buildContext, mainFile });
+    const runnerBuild = await resolveRunnerBuildForStart({ ...buildContext, mainFile });
+    if (runnerBuild.error) {
+      console.error(`🛰️ Бот ${projectId}/${tokenId} не отправлен исполнителю: ${runnerBuild.error}`);
+      return { success: false, error: runnerBuild.error };
+    }
 
     console.log(`📁 Файлы бота:`);
     console.log(`   - Основной файл: ${mainFile}`);
@@ -453,9 +459,10 @@ export async function startBot(
 
       try {
         await workerManager.startBot(projectId, token, tokenId, mainFile, {
-          webhookUrl: effectiveWebhookUrl ?? undefined,
-          webhookPort: 9000 + tokenId,
-        }, botEnv);
+          webhook: { webhookUrl: effectiveWebhookUrl ?? undefined, webhookPort: 9000 + tokenId },
+          env: botEnv,
+          build: runnerBuild.build,
+        });
         console.log(`🏭 [WorkerPool] Бот ${projectId}/${tokenId} отправлен в воркер`);
       } catch (workerError) {
         console.error(`🏭 [WorkerPool] Ошибка запуска бота через воркер:`, workerError);
