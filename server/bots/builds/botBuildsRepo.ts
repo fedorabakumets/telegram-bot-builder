@@ -3,7 +3,7 @@
  * @module server/bots/builds/botBuildsRepo
  */
 
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, ne } from "drizzle-orm";
 import { botBuilds, type BotBuild, type InsertBotBuild } from "@shared/schema";
 import { db } from "../../database/db";
 
@@ -47,6 +47,28 @@ export async function listBotBuilds(tokenId: number): Promise<BotBuild[]> {
     .from(botBuilds)
     .where(eq(botBuilds.tokenId, tokenId))
     .orderBy(desc(botBuilds.createdAt), desc(botBuilds.id));
+}
+
+/**
+ * Возвращает сборки, лежащие не в указанном хранилище (кандидаты на перенос).
+ * @param configId - ID целевого хранилища
+ * @returns Список сборок, старые первыми
+ */
+export async function listBotBuildsOutside(configId: string): Promise<BotBuild[]> {
+  return db
+    .select()
+    .from(botBuilds)
+    .where(ne(botBuilds.storageConfigId, configId))
+    .orderBy(asc(botBuilds.id));
+}
+
+/**
+ * Переключает запись сборки на другое хранилище.
+ * @param id - ID сборки
+ * @param configId - ID нового хранилища
+ */
+export async function setBotBuildStorage(id: number, configId: string): Promise<void> {
+  await db.update(botBuilds).set({ storageConfigId: configId }).where(eq(botBuilds.id, id));
 }
 
 /**
