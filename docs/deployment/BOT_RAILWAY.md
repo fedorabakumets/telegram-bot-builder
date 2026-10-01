@@ -71,6 +71,10 @@ ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT USAGE, SELECT,
 
 `RAILWAY_BOT_*` подставляются боту вместо `DATABASE_URL` и `REDIS_URL` панели, если у токена не заданы свои. Ссылки `${{VAR}}` в переменных ботов раскрываются только для `WORKER_ENV_PASSTHROUGH`, пока задан `WORKER_RAILWAY_PROJECTS`.
 
+## Площадка из шаблона
+
+Постоянный исполнитель со своими Redis и PostgreSQL ставится шаблоном Railway: [RAILWAY_SITE_TEMPLATE.md](./RAILWAY_SITE_TEMPLATE.md).
+
 ## Проверено
 
 Бот проекта 1 с userbot на Railway: запуск из панели (сервис создан, исполнитель ответил, код скачан из бакета, бот подключился к PostgreSQL и Redis на Railway и принимал сообщения), остановка (деплой снят), запуск заново (новый деплой за 15 с), перезапуск без нового деплоя (9 с), перезапуск панели (бот восстановлен на том же исполнителе). После переноса Redis, PostgreSQL и сервиса бота в Амстердам (`europe-west4-drams3a`) данные сохранились, бот отвечает.
