@@ -21,6 +21,7 @@ import { stopCleanup } from "./utils/cache";
 import { shutdownAllBots } from "./utils/graceful-shutdown";
 import { runMigrations } from "./database/runMigrations";
 import { isRedisAvailable, waitForRedisInit } from "./redis/redisClient";
+import { redactSecrets } from "./utils/redactSecrets";
 
 // Настраиваем прокси для Telegram API ДО всех импортов
 dotenv.config({ debug: false });
@@ -89,7 +90,7 @@ app.use((req, res, next) => {
 
       let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
       if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
+        logLine += ` :: ${redactSecrets(JSON.stringify(capturedJsonResponse))}`;
       }
 
       // Ошибки — целиком (иначе «Не удалось получить…» без причины).

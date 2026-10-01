@@ -28596,7 +28596,9 @@
             "type": "boolean"
           },
           "session_string": {
-            "type": "string"
+            "type": "string",
+            "description": "Маска «••••••••», если сессия получена и сохранена; сама session string не возвращается",
+            "example": "••••••••"
           }
         },
         "required": [

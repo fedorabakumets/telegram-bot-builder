@@ -72,8 +72,11 @@ export const UserbotAuthResultSchema = z
     error: z.string().optional(),
     /** Нужен 2FA */
     needs_2fa: z.boolean().optional(),
-    /** Session string при успехе */
-    session_string: z.string().optional(),
+    /** Маска «••••••••» при успехе: сессия сохранена в БД, сама строка в ответ не попадает */
+    session_string: z.string().optional().openapi({
+      description: "Маска «••••••••», если сессия получена и сохранена; сама session string не возвращается",
+      example: "••••••••",
+    }),
   })
   .passthrough()
   .openapi("UserbotAuthResult");

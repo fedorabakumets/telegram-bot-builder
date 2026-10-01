@@ -80,6 +80,11 @@ describe('broadcast-client.py.jinja2', () => {
       it('логирует инициализацию Telethon', () => {
         assert.ok(generateBroadcastClient(validParamsBotUsers).includes('Инициализация Telethon'));
       });
+
+      it('не пишет в лог части session string', () => {
+        const r = generateBroadcastClient(validParamsBotUsers);
+        assert.ok(!r.includes('session_string[:'), 'session string даёт доступ к аккаунту — даже префикс в логе не нужен');
+      });
     });
 
     describe('Отправка', () => {

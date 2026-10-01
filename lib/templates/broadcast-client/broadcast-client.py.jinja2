@@ -121,7 +121,7 @@ async def handle_broadcast_{{ safeNodeId }}(callback_query, user_id):
     api_id = int(client_session["api_id"])
     api_hash = client_session["api_hash"]
     session_string = client_session["session_string"]
-    logging.info(f"🔧 Инициализация Telethon: api_id={api_id}, session={session_string[:20]}...")
+    logging.info(f"🔧 Инициализация Telethon: api_id={api_id}, session={'задана' if session_string else 'нет'}")
     app = TelegramClient(StringSession(session_string), api_id=api_id, api_hash=api_hash)
 
     # ── Отправка ────────────────────────────────────────────────────────────

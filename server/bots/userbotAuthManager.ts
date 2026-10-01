@@ -7,6 +7,7 @@
 import { spawn, ChildProcess } from 'node:child_process';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { redactSecrets } from '../utils/redactSecrets';
 
 /** Активные сессии авторизации (ключ — tokenId) */
 const authSessions = new Map<number, ChildProcess>();
@@ -58,13 +59,13 @@ function startAuthProcess(tokenId: number): ChildProcess {
           resolver(response);
         }
       } catch {
-        console.warn(`[UserbotAuth] Не удалось распарсить ответ: ${line}`);
+        console.warn(`[UserbotAuth] Не удалось распарсить ответ: ${redactSecrets(line)}`);
       }
     }
   });
 
   proc.stderr?.on('data', (chunk: Buffer) => {
-    console.warn(`[UserbotAuth stderr] ${chunk.toString()}`);
+    console.warn(`[UserbotAuth stderr] ${redactSecrets(chunk.toString())}`);
   });
 
   proc.on('exit', () => {

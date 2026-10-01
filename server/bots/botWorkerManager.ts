@@ -24,6 +24,7 @@ import { resolveWorkerKey } from "./workerGrouping";
 import { resolveProjectWorkerKey } from "./resolveProjectWorkerKey";
 import { collectWorkerStats, type WorkerPoolStats } from "./workerStats";
 import { prepareWorkerLaunch, stageBotFile, unstageBotFile, type WorkerLaunch } from "./workerLaunch";
+import { redactSecrets } from "../utils/redactSecrets";
 
 /** Задержка перед killWorker когда activeBots пуст (мс) */
 const WORKER_DRAIN_MS = 2_000;
@@ -413,7 +414,7 @@ class BotWorkerManager extends EventEmitter {
 
     // Логи бота — маршрутизируем по token_id
     if (msg.token_id !== undefined && msg.token_id > 0) {
-      const content = msg.content || "";
+      const content = redactSecrets(msg.content || "");
       if (msg.type === "stderr") {
         this.lastBotErrors.set(msg.token_id, content);
         const preview = content.replace(/^\[\d{2}:\d{2}:\d{2}\]\s*/, "").split("\n")[0];
