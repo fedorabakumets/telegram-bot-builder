@@ -14,6 +14,7 @@ import {
   runnerEventStream,
   type RunnerEvent,
 } from "../redis/workerStreams";
+import { publishRunnerSiteInfo, readRunnerSiteInfo } from "../redis/runnerSiteInfo";
 import { loadRunnerConfig } from "./runnerConfig";
 import { RunnerWorkers } from "./runnerWorkers";
 
@@ -32,6 +33,7 @@ async function main(): Promise<void> {
   });
   const follower = followStream(reader, runnerCommandStream(config.runnerId), (fields) => workers.handle(fields));
   await follower.ready;
+  await publishRunnerSiteInfo(writer, readRunnerSiteInfo(config.runnerId));
   // Панель считает воркеры прошлого запуска исполнителя завершёнными
   await appendToStream(writer, eventStream, { k: "hello", w: "", i: "" } satisfies RunnerEvent);
   console.log(`🛰️ Исполнитель ${config.runnerId} готов: python=${config.pythonPath}, worker=${config.workerScript}, кеш=${config.cacheDir}`);
