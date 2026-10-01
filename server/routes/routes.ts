@@ -1086,42 +1086,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         return res.status(404).json({ message: "Токен не найден" });
       }
 
-      try {
-        const { existsSync, readFileSync, writeFileSync, readdirSync } = await import('fs');
-        const { join } = await import('path');
-        const botsDir = join(process.cwd(), 'bots');
-
-        if (existsSync(botsDir)) {
-          const dirs = readdirSync(botsDir, { withFileTypes: true });
-
-          for (const dir of dirs) {
-            if (!dir.isDirectory()) continue;
-
-            const envPath = join(botsDir, dir.name, '.env');
-            if (!existsSync(envPath)) continue;
-
-            const content = readFileSync(envPath, 'utf8');
-            if (!content.includes(`PROJECT_ID=${projectId}`)) continue;
-
-            const line = `PROTECT_CONTENT=${protectContent === 1 ? 'true' : 'false'}`;
-            let updatedContent = content;
-
-            if (/^PROTECT_CONTENT=.*/m.test(updatedContent)) {
-              updatedContent = updatedContent.replace(/^PROTECT_CONTENT=.*/m, line);
-            } else {
-              updatedContent = `${updatedContent.trim()}\n\n# Защита контента от копирования/пересылки в Telegram\n${line}\n`;
-            }
-
-            if (updatedContent !== content) {
-              writeFileSync(envPath, updatedContent, 'utf8');
-              console.log(`✅ PROTECT_CONTENT обновлён в ${envPath}: ${protectContent}`);
-            }
-          }
-        }
-      } catch (envErr) {
-        console.warn('⚠️ Не удалось обновить .env файл бота:', envErr);
-      }
-
       void emitTokenUpdated({
         projectId,
         tokenId,
@@ -1165,42 +1129,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         return res.status(404).json({ message: "Токен не найден" });
       }
 
-      try {
-        const { existsSync, readFileSync, writeFileSync, readdirSync } = await import('fs');
-        const { join } = await import('path');
-        const botsDir = join(process.cwd(), 'bots');
-
-        if (existsSync(botsDir)) {
-          const dirs = readdirSync(botsDir, { withFileTypes: true });
-
-          for (const dir of dirs) {
-            if (!dir.isDirectory()) continue;
-
-            const envPath = join(botsDir, dir.name, '.env');
-            if (!existsSync(envPath)) continue;
-
-            const content = readFileSync(envPath, 'utf8');
-            if (!content.includes(`PROJECT_ID=${projectId}`)) continue;
-
-            const line = `SAVE_INCOMING_MEDIA=${saveIncomingMedia === 1 ? 'true' : 'false'}`;
-            let updatedContent = content;
-
-            if (/^SAVE_INCOMING_MEDIA=.*/m.test(updatedContent)) {
-              updatedContent = updatedContent.replace(/^SAVE_INCOMING_MEDIA=.*/m, line);
-            } else {
-              updatedContent = `${updatedContent.trim()}\n\n# Сохранение входящих медиафайлов от пользователей\n${line}\n`;
-            }
-
-            if (updatedContent !== content) {
-              writeFileSync(envPath, updatedContent, 'utf8');
-              console.log(`✅ SAVE_INCOMING_MEDIA обновлён в ${envPath}: ${saveIncomingMedia}`);
-            }
-          }
-        }
-      } catch (envErr) {
-        console.warn('⚠️ Не удалось обновить .env файл бота:', envErr);
-      }
-
       void emitTokenUpdated({
         projectId,
         tokenId,
@@ -1235,42 +1163,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const updated = await storage.updateBotToken(tokenId, { catchAllHandlers });
       if (!updated) {
         return res.status(404).json({ message: "Токен не найден" });
-      }
-
-      try {
-        const { existsSync, readFileSync, writeFileSync, readdirSync } = await import('fs');
-        const { join } = await import('path');
-        const botsDir = join(process.cwd(), 'bots');
-
-        if (existsSync(botsDir)) {
-          const dirs = readdirSync(botsDir, { withFileTypes: true });
-
-          for (const dir of dirs) {
-            if (!dir.isDirectory()) continue;
-
-            const envPath = join(botsDir, dir.name, '.env');
-            if (!existsSync(envPath)) continue;
-
-            const content = readFileSync(envPath, 'utf8');
-            if (!content.includes(`PROJECT_ID=${projectId}`)) continue;
-
-            const line = `CATCH_ALL_HANDLERS=${catchAllHandlers}`;
-            let updatedContent = content;
-
-            if (/^CATCH_ALL_HANDLERS=.*/m.test(updatedContent)) {
-              updatedContent = updatedContent.replace(/^CATCH_ALL_HANDLERS=.*/m, line);
-            } else {
-              updatedContent = `${updatedContent.trim()}\n\n# Генерация catch-all обработчиков (0/1)\n${line}\n`;
-            }
-
-            if (updatedContent !== content) {
-              writeFileSync(envPath, updatedContent, 'utf8');
-              console.log(`✅ CATCH_ALL_HANDLERS обновлён в ${envPath}: ${catchAllHandlers}`);
-            }
-          }
-        }
-      } catch (envErr) {
-        console.warn('⚠️ Не удалось обновить .env файл бота:', envErr);
       }
 
       void emitTokenUpdated({
@@ -1310,42 +1202,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         return res.status(404).json({ message: "Токен не найден" });
       }
 
-      try {
-        const { existsSync, readFileSync, writeFileSync, readdirSync } = await import('fs');
-        const { join } = await import('path');
-        const botsDir = join(process.cwd(), 'bots');
-
-        if (existsSync(botsDir)) {
-          const dirs = readdirSync(botsDir, { withFileTypes: true });
-
-          for (const dir of dirs) {
-            if (!dir.isDirectory()) continue;
-
-            const envPath = join(botsDir, dir.name, '.env');
-            if (!existsSync(envPath)) continue;
-
-            const content = readFileSync(envPath, 'utf8');
-            if (!content.includes(`PROJECT_ID=${projectId}`)) continue;
-
-            const line = `CONTENT_CACHE=${contentCache}`;
-            let updatedContent = content;
-
-            if (/^CONTENT_CACHE=.*/m.test(updatedContent)) {
-              updatedContent = updatedContent.replace(/^CONTENT_CACHE=.*/m, line);
-            } else {
-              updatedContent = `${updatedContent.trim()}\n\n# Живое обновление контента из таблицы _content (0/1)\n${line}\n`;
-            }
-
-            if (updatedContent !== content) {
-              writeFileSync(envPath, updatedContent, 'utf8');
-              console.log(`✅ CONTENT_CACHE обновлён в ${envPath}: ${contentCache}`);
-            }
-          }
-        }
-      } catch (envErr) {
-        console.warn('⚠️ Не удалось обновить .env файл бота:', envErr);
-      }
-
       void emitTokenUpdated({
         projectId,
         tokenId,
@@ -1379,56 +1235,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         return res.status(404).json({ message: "Токен не найден" });
       }
       const userbotEnabled = updated.userbotEnabled ?? 0;
-      const userbotApiId = updated.userbotApiId;
-      const userbotApiHash = updated.userbotApiHash;
-      const userbotSessionString = updated.userbotSessionString;
-
-      try {
-        const { existsSync, readFileSync, writeFileSync, readdirSync } = await import('fs');
-        const { join } = await import('path');
-        const botsDir = join(process.cwd(), 'bots');
-
-        if (existsSync(botsDir)) {
-          const dirs = readdirSync(botsDir, { withFileTypes: true });
-
-          for (const dir of dirs) {
-            if (!dir.isDirectory()) continue;
-
-            const envPath = join(botsDir, dir.name, '.env');
-            if (!existsSync(envPath)) continue;
-
-            const content = readFileSync(envPath, 'utf8');
-            if (!content.includes(`PROJECT_ID=${projectId}`)) continue;
-
-            let updatedContent = content;
-
-            const envLines: Array<{ key: string; value: string; comment: string }> = [
-              { key: 'USERBOT_ENABLED', value: userbotEnabled === 1 ? 'true' : 'false', comment: '# Telethon userbot' },
-              { key: 'USERBOT_API_ID', value: userbotApiId ?? '', comment: '' },
-              { key: 'USERBOT_API_HASH', value: userbotApiHash ?? '', comment: '' },
-              { key: 'USERBOT_SESSION_STRING', value: userbotSessionString ?? '', comment: '' },
-            ];
-
-            for (const { key, value, comment } of envLines) {
-              const regex = new RegExp(`^${key}=.*`, 'm');
-              const line = `${key}=${value}`;
-              if (regex.test(updatedContent)) {
-                updatedContent = updatedContent.replace(regex, line);
-              } else if (value) {
-                const prefix = comment ? `\n${comment}\n` : '\n';
-                updatedContent = `${updatedContent.trim()}${prefix}${line}\n`;
-              }
-            }
-
-            if (updatedContent !== content) {
-              writeFileSync(envPath, updatedContent, 'utf8');
-              console.log(`✅ Userbot настройки обновлены в ${envPath}`);
-            }
-          }
-        }
-      } catch (envErr) {
-        console.warn('⚠️ Не удалось обновить .env файл бота:', envErr);
-      }
 
       void emitTokenUpdated({
         projectId,
@@ -1553,29 +1359,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       if (!updated) return res.status(404).json({ message: "Токен не найден" });
 
       // Обновляем .env файл бота если существует
-      try {
-        const { existsSync, readFileSync, writeFileSync, readdirSync } = await import('fs');
-        const { join } = await import('path');
-        const botsDir = join(process.cwd(), 'bots');
-        if (existsSync(botsDir)) {
-          const dirs = readdirSync(botsDir, { withFileTypes: true });
-          for (const dir of dirs) {
-            if (!dir.isDirectory()) continue;
-            const envPath = join(botsDir, dir.name, '.env');
-            if (!existsSync(envPath)) continue;
-            const content = readFileSync(envPath, 'utf8');
-            // Проверяем что это .env нужного проекта по PROJECT_ID
-            if (!content.includes(`PROJECT_ID=${projectId}`)) continue;
-            const updatedContent = content.replace(/^LOG_LEVEL=.*/m, `LOG_LEVEL=${logLevel}`);
-            if (updatedContent !== content) {
-              writeFileSync(envPath, updatedContent, 'utf8');
-              console.log(`✅ LOG_LEVEL обновлён в ${envPath}: ${logLevel}`);
-            }
-          }
-        }
-      } catch (envErr) {
-        console.warn('⚠️ Не удалось обновить .env файл бота:', envErr);
-      }
 
       void emitTokenUpdated({
         projectId,

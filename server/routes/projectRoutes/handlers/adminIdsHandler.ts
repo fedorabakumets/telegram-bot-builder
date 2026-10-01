@@ -1,14 +1,14 @@
 /**
  * @fileoverview Обработчики API для управления списком ID администраторов бота
  *
- * Читает, обновляет и удаляет записи в переменной ADMIN_IDS файла .env бота.
- * Файл .env находится в папке bots/bot_{projectId}_{tokenId}/.env
+ * Источник правды — bot_projects.admin_ids; в .env бота значение попадает при запуске.
+ * Чтение старого .env (bots/<папка>/.env) осталось только как запасной вариант для GET.
  *
  * @module adminIdsHandler
  */
 
 import type { Request, Response } from 'express';
-import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { storage } from '../../../storages/storage';
 
@@ -92,28 +92,16 @@ export async function getAdminIdsHandler(req: Request, res: Response): Promise<v
 }
 
 /**
- * Обновляет значение ADMIN_IDS в БД и .env файле бота
+ * Обновляет значение ADMIN_IDS в БД (боты получат его при следующем запуске)
+ * @param req - Запрос с params.id (projectId) и body.adminIds
+ * @param res - Ответ с сохранённым значением
  */
 export async function updateAdminIdsHandler(req: Request, res: Response): Promise<void> {
   try {
     const projectId = parseInt(req.params.id);
     const { adminIds } = req.body as { adminIds: string };
 
-    // 1. Сохраняем в БД
     await storage.updateBotProject(projectId, { adminIds });
-
-    // 2. Также пишем в .env файл (если он существует)
-    const envPath = await findBotEnvPath(projectId);
-    if (envPath) {
-      let content = readFileSync(envPath, 'utf8');
-      if (/^ADMIN_IDS=/m.test(content)) {
-        content = content.replace(/^ADMIN_IDS=.*(\n[ \t]+.*)*$/m, `ADMIN_IDS=${adminIds}`);
-      } else {
-        content += `\nADMIN_IDS=${adminIds}`;
-      }
-      writeFileSync(envPath, content, 'utf8');
-    }
-
     res.json({ success: true, adminIds });
   } catch (error) {
     res.status(500).json({ message: 'Ошибка обновления ADMIN_IDS', error: String(error) });
@@ -138,21 +126,7 @@ export async function removeAdminIdHandler(req: Request, res: Response): Promise
     const updatedIds = currentIds.filter(id => id !== cleanId);
     const newAdminIds = updatedIds.join(',');
 
-    // Сохраняем в БД
     await storage.updateBotProject(projectId, { adminIds: newAdminIds });
-
-    // Обновляем .env файл если существует
-    const envPath = await findBotEnvPath(projectId);
-    if (envPath) {
-      let content = readFileSync(envPath, 'utf8');
-      if (/^ADMIN_IDS=/m.test(content)) {
-        content = content.replace(/^ADMIN_IDS=.*(\n[ \t]+.*)*$/m, `ADMIN_IDS=${newAdminIds}`);
-      } else {
-        content += `\nADMIN_IDS=${newAdminIds}`;
-      }
-      writeFileSync(envPath, content, 'utf8');
-    }
-
     res.json({ success: true, adminIds: newAdminIds });
   } catch (error) {
     res.status(500).json({ message: 'Ошибка удаления администратора', error: String(error) });
