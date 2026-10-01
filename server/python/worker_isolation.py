@@ -8,6 +8,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import contextvars
 import importlib.util
 import os
@@ -137,10 +138,53 @@ def apply_bot_dotenv(bot_dir: Path) -> Dict[str, Optional[str]]:
         return {}
     from dotenv import dotenv_values
 
-    values = {k: v for k, v in dotenv_values(env_file).items() if v is not None}
+    return apply_env_values({k: v for k, v in dotenv_values(env_file).items() if v is not None})
+
+
+def apply_env_values(values: Dict[str, str]) -> Dict[str, Optional[str]]:
+    """
+    Подставляет в os.environ переменные бота, присланные в команде start_bot (без файла .env).
+    @param values - имя переменной → значение
+    @returns снимок прежних значений для restore_env
+    """
     prev = {k: os.environ.get(k) for k in values}
     os.environ.update(values)
     return prev
+
+
+def parse_env_payload(raw: Any) -> Optional[Dict[str, str]]:
+    """
+    Проверяет поле env команды start_bot.
+    @param raw - значение из JSON
+    @returns словарь строк или None, если поле не передано
+    @raises ValueError если env не объект строк
+    """
+    if raw is None:
+        return None
+    if not isinstance(raw, dict) or not all(
+        isinstance(k, str) and isinstance(v, str) for k, v in raw.items()
+    ):
+        raise ValueError("env должен быть объектом строк")
+    return dict(raw)
+
+
+@contextlib.contextmanager
+def suppress_dotenv_autoload():
+    """
+    Отключает load_dotenv() на время загрузки бота: без своего .env поиск идёт вверх
+    по каталогам и может найти .env панели. Вызывать только под get_env_lock().
+    """
+    try:
+        import dotenv
+    except ImportError:
+        yield
+        return
+    original = dotenv.load_dotenv
+    dotenv.load_dotenv = lambda *args, **kwargs: False
+    try:
+        yield
+    finally:
+        dotenv.load_dotenv = original
 
 
 def restore_env(prev: Dict[str, Optional[str]]) -> None:

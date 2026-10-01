@@ -2,7 +2,8 @@
 Bot Worker — asyncio мастер-процесс для запуска нескольких ботов в одном event loop.
 
 Протокол:
-  stdin  → {"cmd": "start_bot", "token": "...", "token_id": 42, "bot_file": "/path/to/bot.py"}
+  stdin  → {"cmd": "start_bot", "token": "...", "token_id": 42, "bot_file": "/path/to/bot.py", "env": {...}?}
+           env — переменные бота вместо .env в его папке (BOT_ENV_SOURCE=inline)
   stdin  → {"cmd": "stop_bot", "token_id": 42}
   stdin  → {"cmd": "status"} | {"cmd": "shutdown"}
   stdout ← {"token_id": 42, "type": "stdout"|"stderr", "content": "..."}
@@ -12,6 +13,7 @@ Bot Worker — asyncio мастер-процесс для запуска нес�
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import logging
 import os
@@ -151,6 +153,8 @@ class BotContext:
         self.webhook_url: Optional[str] = None
         self.webhook_port: Optional[int] = None
         self.bot_dir: Optional[Path] = None
+        # Переменные бота из команды start_bot; None — читать .env из папки бота
+        self.env: Optional[Dict[str, str]] = None
         # Загруженный module bot.py — для request_bot_stop()
         self.module: Optional[types.ModuleType] = None
 
@@ -197,6 +201,11 @@ class BotWorker:
         if not token_id or not token or not bot_file:
             emit_log(token_id or 0, "Ошибка: не указаны token_id, token или bot_file", "stderr")
             return
+        try:
+            bot_env = iso.parse_env_payload(data.get("env"))
+        except ValueError as e:
+            emit_log(token_id, f"Ошибка: {e}", "stderr")
+            return
 
         if token_id in self.bots:
             emit_log(token_id, "Бот уже запущен, перезапускаем...", "stdout")
@@ -206,6 +215,7 @@ class BotWorker:
         ctx = BotContext(token_id=token_id, token=token, bot_file=bot_file)
         ctx.webhook_url = webhook_url
         ctx.webhook_port = webhook_port
+        ctx.env = bot_env
         self.bots[token_id] = ctx
         ctx.task = asyncio.create_task(self._run_bot(ctx))
         emit_log(token_id, f"Бот добавлен в воркер (project={PROJECT_ID})", "stdout")
@@ -217,6 +227,7 @@ class BotWorker:
         alias_prev: Dict[str, Any] = {}
         env_prev: Optional[Dict[str, Optional[str]]] = None
         dotenv_prev: Optional[Dict[str, Optional[str]]] = None
+        dotenv_guard = contextlib.ExitStack()
 
         try:
             emit_log(token_id, "─── Начало загрузки бота ───", "stdout")
@@ -237,7 +248,11 @@ class BotWorker:
                 siblings.append(stem)
 
             async with iso.get_env_lock():
-                dotenv_prev = iso.apply_bot_dotenv(bot_dir)
+                if ctx.env is not None:
+                    dotenv_prev = iso.apply_env_values(ctx.env)
+                    dotenv_guard.enter_context(iso.suppress_dotenv_autoload())
+                else:
+                    dotenv_prev = iso.apply_bot_dotenv(bot_dir)
                 env_prev = iso.apply_bot_env(
                     ctx.token, token_id, ctx.webhook_url, ctx.webhook_port
                 )
@@ -287,6 +302,7 @@ class BotWorker:
                 iso.restore_env(env_prev)
                 iso.restore_env(dotenv_prev)
                 env_prev = dotenv_prev = None
+                dotenv_guard.close()
 
             ctx.status = "running"
             ctx.started_at = datetime.now()
@@ -320,6 +336,7 @@ class BotWorker:
                 iso.restore_env(env_prev)
             if dotenv_prev is not None:
                 iso.restore_env(dotenv_prev)
+            dotenv_guard.close()
             iso.cleanup_bot_modules(token_id, ctx.bot_dir)
             if token_id in self.bots and self.bots[token_id] is ctx:
                 del self.bots[token_id]
