@@ -6166,7 +6166,7 @@
           "projects"
         ],
         "summary": "Заменить ADMIN_IDS проекта",
-        "description": "Полностью перезаписывает список админов в БД. Если есть папка бота — синхронизирует `ADMIN_IDS` в `.env`.\n\n**Тело:** `{ adminIds: \"id1,id2\" }` — строка через запятую.\n\n**Клиент:** сохранение в профиле бота, панель env, «Менеджер ботов» (добавление админа через PUT).\n\n```bash\ncurl -s -X PUT http://localhost:5000/api/projects/42/admin-ids -b cookies.txt \\\n  -H 'Content-Type: application/json' \\\n  -d '{\"adminIds\":\"123456789,987654321\"}'\n```",
+        "description": "Полностью перезаписывает список админов в БД. В `.env` бота значение попадёт при следующем запуске (файл не правится на лету).\n\n**Тело:** `{ adminIds: \"id1,id2\" }` — строка через запятую.\n\n**Клиент:** сохранение в профиле бота, панель env, «Менеджер ботов» (добавление админа через PUT).\n\n```bash\ncurl -s -X PUT http://localhost:5000/api/projects/42/admin-ids -b cookies.txt \\\n  -H 'Content-Type: application/json' \\\n  -d '{\"adminIds\":\"123456789,987654321\"}'\n```",
         "security": [
           {
             "cookieAuth": []
@@ -6254,7 +6254,7 @@
             }
           },
           "500": {
-            "description": "Ошибка записи БД / .env",
+            "description": "Ошибка записи БД",
             "content": {
               "application/json": {
                 "schema": {
@@ -6276,7 +6276,7 @@
           "projects"
         ],
         "summary": "Удалить одного администратора из ADMIN_IDS",
-        "description": "Убирает один Telegram ID из списка. Body `adminId` — число или `del_admin_{id}` (callback из шаблона «Менеджер ботов»).\n\nОбновляет БД и `.env` при наличии. Studio UI обычно делает `PUT` с новым списком; этот эндпоинт — для HTTP из бота-менеджера.\n\n```bash\ncurl -s -X POST http://localhost:5000/api/projects/42/admin-ids/remove \\\n  -b cookies.txt -H 'Content-Type: application/json' \\\n  -d '{\"adminId\":\"del_admin_987654321\"}'\n```",
+        "description": "Убирает один Telegram ID из списка. Body `adminId` — число или `del_admin_{id}` (callback из шаблона «Менеджер ботов»).\n\nОбновляет БД (бот увидит изменения после перезапуска). Studio UI обычно делает `PUT` с новым списком; этот эндпоинт — для HTTP из бота-менеджера.\n\n```bash\ncurl -s -X POST http://localhost:5000/api/projects/42/admin-ids/remove \\\n  -b cookies.txt -H 'Content-Type: application/json' \\\n  -d '{\"adminId\":\"del_admin_987654321\"}'\n```",
         "security": [
           {
             "cookieAuth": []
@@ -17872,7 +17872,7 @@
           "project-tokens"
         ],
         "summary": "Автоперезапуск бота",
-        "description": "`autoRestart` 0|1, `maxRestartAttempts` 1–10.\n\n**Auth:** `requireTokenOwnership`. WS `token-updated`. Часть флагов пишет `.env`.\n\n```bash\ncurl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/auto-restart \\\n  -b cookies.txt -H 'Content-Type: application/json' \\\n  -d '{\"autoRestart\":1,\"maxRestartAttempts\":3}'\n```",
+        "description": "`autoRestart` 0|1, `maxRestartAttempts` 1–10.\n\n**Auth:** `requireTokenOwnership`. WS `token-updated`. Флаги попадают в env бота при следующем запуске.\n\n```bash\ncurl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/auto-restart \\\n  -b cookies.txt -H 'Content-Type: application/json' \\\n  -d '{\"autoRestart\":1,\"maxRestartAttempts\":3}'\n```",
         "security": [
           {
             "cookieAuth": []
@@ -18011,7 +18011,7 @@
           "project-tokens"
         ],
         "summary": "Catch-all обработчики (CATCH_ALL_HANDLERS)",
-        "description": "`catchAllHandlers` 0|1 — генерация handle_unhandled_* / fallback_callback.\n\n**Auth:** `requireTokenOwnership`. WS `token-updated`. В `.env` пишется 0/1.\n\n```bash\ncurl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/catch-all-handlers \\\n  -b cookies.txt -H 'Content-Type: application/json' -d '{\"catchAllHandlers\":1}'\n```",
+        "description": "`catchAllHandlers` 0|1 — генерация handle_unhandled_* / fallback_callback.\n\n**Auth:** `requireTokenOwnership`. WS `token-updated`. В env бота (при следующем запуске) — 0/1.\n\n```bash\ncurl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/catch-all-handlers \\\n  -b cookies.txt -H 'Content-Type: application/json' -d '{\"catchAllHandlers\":1}'\n```",
         "security": [
           {
             "cookieAuth": []
@@ -18149,7 +18149,7 @@
           "project-tokens"
         ],
         "summary": "Живое обновление _content (CONTENT_CACHE)",
-        "description": "`contentCache` 0|1 — load/reload_content / redis subscribe. get_content всегда.\n\n**Auth:** `requireTokenOwnership`. WS `token-updated`. В `.env` пишется 0/1.\n\n```bash\ncurl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/content-cache \\\n  -b cookies.txt -H 'Content-Type: application/json' -d '{\"contentCache\":1}'\n```",
+        "description": "`contentCache` 0|1 — load/reload_content / redis subscribe. get_content всегда.\n\n**Auth:** `requireTokenOwnership`. WS `token-updated`. В env бота (при следующем запуске) — 0/1.\n\n```bash\ncurl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/content-cache \\\n  -b cookies.txt -H 'Content-Type: application/json' -d '{\"contentCache\":1}'\n```",
         "security": [
           {
             "cookieAuth": []
@@ -19195,7 +19195,7 @@
           "project-tokens"
         ],
         "summary": "Уровень логирования бота",
-        "description": "`logLevel`: DEBUG|INFO|WARNING|ERROR. Пишет LOG_LEVEL в `.env`. WS `token-updated`.\n\n**Auth:** `requireTokenOwnership`.\n\n```bash\ncurl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/log-level \\\n  -b cookies.txt -H 'Content-Type: application/json' -d '{\"logLevel\":\"WARNING\"}'\n```",
+        "description": "`logLevel`: DEBUG|INFO|WARNING|ERROR. LOG_LEVEL попадёт в env бота при следующем запуске. WS `token-updated`.\n\n**Auth:** `requireTokenOwnership`.\n\n```bash\ncurl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/log-level \\\n  -b cookies.txt -H 'Content-Type: application/json' -d '{\"logLevel\":\"WARNING\"}'\n```",
         "security": [
           {
             "cookieAuth": []
@@ -19746,7 +19746,7 @@
           "project-tokens"
         ],
         "summary": "Защита контента (PROTECT_CONTENT)",
-        "description": "`protectContent` 0|1 → `.env` PROTECT_CONTENT=true/false.\n\n**Auth:** `requireTokenOwnership`. WS `token-updated`. Часть флагов пишет `.env`.\n\n```bash\ncurl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/protect-content \\\n  -b cookies.txt -H 'Content-Type: application/json' -d '{\"protectContent\":1}'\n```",
+        "description": "`protectContent` 0|1 → env бота PROTECT_CONTENT=true/false.\n\n**Auth:** `requireTokenOwnership`. WS `token-updated`. Флаги попадают в env бота при следующем запуске.\n\n```bash\ncurl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/protect-content \\\n  -b cookies.txt -H 'Content-Type: application/json' -d '{\"protectContent\":1}'\n```",
         "security": [
           {
             "cookieAuth": []
@@ -19884,7 +19884,7 @@
           "project-tokens"
         ],
         "summary": "Сохранять входящие медиа",
-        "description": "`saveIncomingMedia` 0|1 → `.env` SAVE_INCOMING_MEDIA.\n\n**Auth:** `requireTokenOwnership`. WS `token-updated`. Часть флагов пишет `.env`.\n\n```bash\ncurl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/save-incoming-media \\\n  -b cookies.txt -H 'Content-Type: application/json' -d '{\"saveIncomingMedia\":1}'\n```",
+        "description": "`saveIncomingMedia` 0|1 → env бота SAVE_INCOMING_MEDIA.\n\n**Auth:** `requireTokenOwnership`. WS `token-updated`. Флаги попадают в env бота при следующем запуске.\n\n```bash\ncurl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/save-incoming-media \\\n  -b cookies.txt -H 'Content-Type: application/json' -d '{\"saveIncomingMedia\":1}'\n```",
         "security": [
           {
             "cookieAuth": []
@@ -20022,7 +20022,7 @@
           "project-tokens"
         ],
         "summary": "Настройки Telethon userbot",
-        "description": "Сохраняет `userbotEnabled` 0|1 и apiId/hash/session; пишет USERBOT_* в `.env`. WS `token-updated` (changedFields: userbotEnabled).\n\n**Auth:** `requireTokenOwnership`.\n\n```bash\ncurl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/userbot \\\n  -b cookies.txt -H 'Content-Type: application/json' \\\n  -d '{\"userbotEnabled\":1,\"userbotApiId\":\"123\",\"userbotApiHash\":\"abc\",\"userbotSessionString\":null}'\n```",
+        "description": "Сохраняет `userbotEnabled` 0|1 и apiId/hash/session; USERBOT_* попадут в env бота при следующем запуске. WS `token-updated` (changedFields: userbotEnabled).\n\n**Auth:** `requireTokenOwnership`.\n\n```bash\ncurl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/userbot \\\n  -b cookies.txt -H 'Content-Type: application/json' \\\n  -d '{\"userbotEnabled\":1,\"userbotApiId\":\"123\",\"userbotApiHash\":\"abc\",\"userbotSessionString\":null}'\n```",
         "security": [
           {
             "cookieAuth": []

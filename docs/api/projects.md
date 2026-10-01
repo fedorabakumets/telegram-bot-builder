@@ -387,7 +387,7 @@ curl -s http://localhost:5000/api/projects/42/admin-ids -b cookies.txt
 
 **Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
-Полностью перезаписывает список админов в БД. Если есть папка бота — синхронизирует `ADMIN_IDS` в `.env`.
+Полностью перезаписывает список админов в БД. В `.env` бота значение попадёт при следующем запуске (файл не правится на лету).
 
 **Тело:** `{ adminIds: "id1,id2" }` — строка через запятую.
 
@@ -423,7 +423,7 @@ curl -s -X PUT http://localhost:5000/api/projects/42/admin-ids -b cookies.txt \
 |-----|----------|
 | 200 | Список сохранён |
 | 401 | Нет session cookie и Bearer PAT |
-| 500 | Ошибка записи БД / .env |
+| 500 | Ошибка записи БД |
 
 #### Пример ответа `200`
 
@@ -442,7 +442,7 @@ curl -s -X PUT http://localhost:5000/api/projects/42/admin-ids -b cookies.txt \
 
 Убирает один Telegram ID из списка. Body `adminId` — число или `del_admin_{id}` (callback из шаблона «Менеджер ботов»).
 
-Обновляет БД и `.env` при наличии. Studio UI обычно делает `PUT` с новым списком; этот эндпоинт — для HTTP из бота-менеджера.
+Обновляет БД (бот увидит изменения после перезапуска). Studio UI обычно делает `PUT` с новым списком; этот эндпоинт — для HTTP из бота-менеджера.
 
 ```bash
 curl -s -X POST http://localhost:5000/api/projects/42/admin-ids/remove \

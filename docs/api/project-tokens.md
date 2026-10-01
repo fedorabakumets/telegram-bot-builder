@@ -438,7 +438,7 @@ curl -s -X DELETE http://localhost:5000/api/projects/42/tokens/7 -b cookies.txt
 
 `autoRestart` 0|1, `maxRestartAttempts` 1–10.
 
-**Auth:** `requireTokenOwnership`. WS `token-updated`. Часть флагов пишет `.env`.
+**Auth:** `requireTokenOwnership`. WS `token-updated`. Флаги попадают в env бота при следующем запуске.
 
 ```bash
 curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/auto-restart \
@@ -485,7 +485,7 @@ Catch-all обработчики (CATCH_ALL_HANDLERS)
 
 `catchAllHandlers` 0|1 — генерация handle_unhandled_* / fallback_callback.
 
-**Auth:** `requireTokenOwnership`. WS `token-updated`. В `.env` пишется 0/1.
+**Auth:** `requireTokenOwnership`. WS `token-updated`. В env бота (при следующем запуске) — 0/1.
 
 ```bash
 curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/catch-all-handlers \
@@ -530,7 +530,7 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/catch-all-handlers
 
 `contentCache` 0|1 — load/reload_content / redis subscribe. get_content всегда.
 
-**Auth:** `requireTokenOwnership`. WS `token-updated`. В `.env` пишется 0/1.
+**Auth:** `requireTokenOwnership`. WS `token-updated`. В env бота (при следующем запуске) — 0/1.
 
 ```bash
 curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/content-cache \
@@ -904,7 +904,7 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/launch-settings \
 
 **Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
-`logLevel`: DEBUG|INFO|WARNING|ERROR. Пишет LOG_LEVEL в `.env`. WS `token-updated`.
+`logLevel`: DEBUG|INFO|WARNING|ERROR. LOG_LEVEL попадёт в env бота при следующем запуске. WS `token-updated`.
 
 **Auth:** `requireTokenOwnership`.
 
@@ -1087,9 +1087,9 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/messages-retention
 
 **Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
-`protectContent` 0|1 → `.env` PROTECT_CONTENT=true/false.
+`protectContent` 0|1 → env бота PROTECT_CONTENT=true/false.
 
-**Auth:** `requireTokenOwnership`. WS `token-updated`. Часть флагов пишет `.env`.
+**Auth:** `requireTokenOwnership`. WS `token-updated`. Флаги попадают в env бота при следующем запуске.
 
 ```bash
 curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/protect-content \
@@ -1132,9 +1132,9 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/protect-content \
 
 **Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
-`saveIncomingMedia` 0|1 → `.env` SAVE_INCOMING_MEDIA.
+`saveIncomingMedia` 0|1 → env бота SAVE_INCOMING_MEDIA.
 
-**Auth:** `requireTokenOwnership`. WS `token-updated`. Часть флагов пишет `.env`.
+**Auth:** `requireTokenOwnership`. WS `token-updated`. Флаги попадают в env бота при следующем запуске.
 
 ```bash
 curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/save-incoming-media \
@@ -1177,7 +1177,7 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/save-incoming-medi
 
 **Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
-Сохраняет `userbotEnabled` 0|1 и apiId/hash/session; пишет USERBOT_* в `.env`. WS `token-updated` (changedFields: userbotEnabled).
+Сохраняет `userbotEnabled` 0|1 и apiId/hash/session; USERBOT_* попадут в env бота при следующем запуске. WS `token-updated` (changedFields: userbotEnabled).
 
 **Auth:** `requireTokenOwnership`.
 
