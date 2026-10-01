@@ -9,6 +9,7 @@ import { chmodSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { RunnerEvent } from "../redis/workerStreams";
+import { packBotBuild } from "../bots/builds/botBuildCodec";
 import { RunnerWorkers } from "./runnerWorkers";
 
 /** Поддельный воркер: сообщает о готовности, отвечает на строки, выходит по shutdown */
@@ -25,7 +26,12 @@ rl.on("line", (line) => {
  * Создаёт исполнителя с поддельным воркером
  * @returns воркеры и собранные события
  */
-function makeWorkers(): { workers: RunnerWorkers; events: RunnerEvent[]; next: (k: string) => Promise<RunnerEvent> } {
+function makeWorkers(fetchBuild?: (url: string) => Promise<Buffer>): {
+  workers: RunnerWorkers;
+  events: RunnerEvent[];
+  next: (k: string) => Promise<RunnerEvent>;
+  cacheDir: string;
+} {
   const dir = mkdtempSync(join(tmpdir(), "runner-"));
   const script = join(dir, "worker.cjs");
   writeFileSync(script, FAKE_WORKER);
@@ -36,11 +42,12 @@ function makeWorkers(): { workers: RunnerWorkers; events: RunnerEvent[]; next: (
   const events: RunnerEvent[] = [];
   const waiters: Array<() => void> = [];
   const workers = new RunnerWorkers(
-    { runnerId: "t", redisUrl: "redis://unused", pythonPath: python, workerScript: script },
+    { runnerId: "t", redisUrl: "redis://unused", pythonPath: python, workerScript: script, cacheDir: join(dir, "cache"), buildsKeep: 5 },
     (event) => {
       events.push(event);
       waiters.splice(0).forEach((w) => w());
     },
+    fetchBuild,
   );
   const next = async (k: string): Promise<RunnerEvent> => {
     for (;;) {
@@ -52,7 +59,7 @@ function makeWorkers(): { workers: RunnerWorkers; events: RunnerEvent[]; next: (
       await new Promise<void>((resolve) => waiters.push(resolve));
     }
   };
-  return { workers, events, next };
+  return { workers, events, next, cacheDir: join(dir, "cache") };
 }
 
 describe("RunnerWorkers", () => {
@@ -87,5 +94,41 @@ describe("RunnerWorkers", () => {
     const { workers, next } = makeWorkers();
     workers.handle({ k: "kill", w: "9", i: "gone" });
     assert.deepStrictEqual(await next("exit"), { w: "9", i: "gone", k: "exit", s: "SIGKILL" });
+  });
+
+  it("start_bot со сборкой: код скачан, bot_file подменён, следующая команда не обгоняет", async () => {
+    const packed = packBotBuild(Buffer.from("x = 1\n"));
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => (release = resolve));
+    const { workers, next, cacheDir } = makeWorkers(async () => {
+      await gate;
+      return packed.data;
+    });
+    const fingerprint = "cd".repeat(16);
+    const build = { url: "https://s3/b", sha256: packed.sha256, size: packed.size, fingerprint, file_name: "bot.py" };
+    workers.handle({ k: "spawn", w: "5", i: "a" });
+    await next("line");
+    workers.handle({ k: "line", w: "5", i: "a", l: JSON.stringify({ cmd: "start_bot", token_id: 1, bot_file: "/panel/x.py", build }) });
+    workers.handle({ k: "line", w: "5", i: "a", l: '{"cmd":"stop_bot","token_id":1}' });
+    release();
+    const started = JSON.parse(JSON.parse((await next("line")).l!).content);
+    assert.deepStrictEqual([started.cmd, started.bot_file, started.build], ["start_bot", join(cacheDir, fingerprint, "bot.py"), undefined]);
+    assert.strictEqual(JSON.parse(JSON.parse((await next("line")).l!).content).cmd, "stop_bot");
+    await workers.shutdown();
+  });
+
+  it("сборка не скачалась — панель получает ошибку бота и bot_exited", async () => {
+    const { workers, next } = makeWorkers(async () => {
+      throw new Error("HTTP 403 при скачивании сборки");
+    });
+    const build = { url: "https://s3/b", sha256: "0".repeat(64), size: 1, fingerprint: "ef".repeat(16), file_name: "bot.py" };
+    workers.handle({ k: "spawn", w: "5", i: "a" });
+    await next("line");
+    workers.handle({ k: "line", w: "5", i: "a", l: JSON.stringify({ cmd: "start_bot", token_id: 4, build }) });
+    const log = JSON.parse((await next("line")).l!);
+    assert.deepStrictEqual([log.type, log.token_id], ["stderr", 4]);
+    assert.match(log.content, /HTTP 403/);
+    assert.deepStrictEqual(JSON.parse((await next("line")).l!), { type: "system", content: "bot_exited:4:error" });
+    await workers.shutdown();
   });
 });

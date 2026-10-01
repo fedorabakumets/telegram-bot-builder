@@ -4,6 +4,7 @@
  * @module server/runner/runnerConfig
  */
 
+import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -17,6 +18,10 @@ export interface RunnerConfig {
   pythonPath: string;
   /** Путь к worker.py */
   workerScript: string;
+  /** Каталог кеша скачанных сборок ботов */
+  cacheDir: string;
+  /** Сколько сборок держать в кеше */
+  buildsKeep: number;
 }
 
 /**
@@ -34,5 +39,7 @@ export function loadRunnerConfig(env: NodeJS.ProcessEnv = process.env): RunnerCo
     redisUrl,
     pythonPath: env.RUNNER_PYTHON?.trim() || env.PYTHON_PATH?.trim() || (process.platform === "win32" ? "python" : "python3"),
     workerScript: env.RUNNER_WORKER_SCRIPT?.trim() || defaultScript,
+    cacheDir: env.RUNNER_CACHE_DIR?.trim() || join(homedir(), ".tbb-runner", "builds"),
+    buildsKeep: Math.max(1, Number.parseInt(env.RUNNER_BUILDS_KEEP ?? "", 10) || 20),
   };
 }

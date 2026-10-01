@@ -34,7 +34,7 @@ async function main(): Promise<void> {
   await follower.ready;
   // Панель считает воркеры прошлого запуска исполнителя завершёнными
   await appendToStream(writer, eventStream, { k: "hello", w: "", i: "" } satisfies RunnerEvent);
-  console.log(`🛰️ Исполнитель ${config.runnerId} готов: python=${config.pythonPath}, worker=${config.workerScript}`);
+  console.log(`🛰️ Исполнитель ${config.runnerId} готов: python=${config.pythonPath}, worker=${config.workerScript}, кеш=${config.cacheDir}`);
 
   let stopping = false;
   const stop = async (signal: string) => {

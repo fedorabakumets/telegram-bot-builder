@@ -1,12 +1,16 @@
 /**
  * @fileoverview Воркеры на машине исполнителя: запуск worker.py по команде панели
- * и пересылка его вывода обратно событиями.
+ * и пересылка его вывода обратно событиями. Для start_bot со сборкой код скачивается
+ * в локальный кеш, и в команду подставляется путь к нему.
  * @module server/runner/runnerWorkers
  */
 
 import { LocalWorkerChannel } from "../bots/localWorkerChannel";
 import type { RunnerCommand, RunnerEvent } from "../redis/workerStreams";
 import type { RunnerConfig } from "./runnerConfig";
+import { fetchBuildOverHttp, pruneBuildCache, type FetchBuild } from "./runnerBuildCache";
+import { prepareWorkerLine } from "./runnerStartCommand";
+import { botFailedEvents, forwardWorkerEvents, stopWorker } from "./runnerWorkerEvents";
 
 /** Сколько ждать штатного завершения воркеров при остановке исполнителя (мс) */
 const SHUTDOWN_GRACE_MS = 5_000;
@@ -17,6 +21,10 @@ interface RunnerWorker {
   instance: string;
   /** Процесс worker.py */
   channel: LocalWorkerChannel;
+  /** Очередь строк в stdin: подготовка сборки не должна менять порядок команд */
+  queue: Promise<void>;
+  /** Отпечатки сборок запущенных ботов: tokenId → отпечаток (не удаляются из кеша) */
+  builds: Map<number, string>;
 }
 
 /**
@@ -29,10 +37,12 @@ export class RunnerWorkers {
   /**
    * @param config - Настройки исполнителя
    * @param emitEvent - Отправка события панели
+   * @param fetchBuild - Скачивание сборки (подменяется в тестах)
    */
   constructor(
     private readonly config: RunnerConfig,
     private readonly emitEvent: (event: RunnerEvent) => void,
+    private readonly fetchBuild: FetchBuild = fetchBuildOverHttp,
   ) {}
 
   /** Число запущенных воркеров */
@@ -49,7 +59,7 @@ export class RunnerWorkers {
     if (command.k === "reset") return this.reset();
     if (!command.w || !command.i) return;
     if (command.k === "spawn") this.spawn(command.w, command.i);
-    else if (command.k === "line" && command.l !== undefined) this.current(command.w, command.i)?.channel.send(command.l);
+    else if (command.k === "line" && command.l !== undefined) this.forward(command.w, command.i, command.l);
     else if (command.k === "kill") this.kill(command.w, command.i);
   }
 
@@ -77,20 +87,38 @@ export class RunnerWorkers {
       args: ["-u", this.config.workerScript],
       env: { ...process.env, PROJECT_ID: workerKey, WORKER_REPORT_MEMORY: "true" },
     });
-    this.workers.set(workerKey, { instance, channel });
-    const base = { w: workerKey, i: instance };
-    channel.on("line", (line: string) => this.emitEvent({ ...base, k: "line", l: line }));
-    channel.on("stderr", (text: string) => this.emitEvent({ ...base, k: "stderr", l: text }));
-    channel.on("exit", (code: number | null, signal: string | null) => {
+    this.workers.set(workerKey, { instance, channel, queue: Promise.resolve(), builds: new Map() });
+    forwardWorkerEvents(channel, { w: workerKey, i: instance }, this.emitEvent, () => {
       if (this.workers.get(workerKey)?.instance === instance) this.workers.delete(workerKey);
-      console.log(`🛰️ Воркер ${workerKey} завершился: code=${code}, signal=${signal}`);
-      this.emitEvent({ ...base, k: "exit", c: code === null ? undefined : String(code), s: signal ?? undefined });
     });
-    channel.on("error", (error: Error) => {
-      if (this.workers.get(workerKey)?.instance === instance) this.workers.delete(workerKey);
-      console.error(`🛰️ Воркер ${workerKey} не запустился: ${error.message}`);
-      this.emitEvent({ ...base, k: "error", l: error.message });
-    });
+  }
+
+  /**
+   * Ставит строку в очередь воркера. Для start_bot со сборкой код скачивается в кеш;
+   * если не удалось — панель получает падение бота, как от самого воркера
+   * @param workerKey - Ключ воркера
+   * @param instance - ID экземпляра
+   * @param line - Строка JSON от панели
+   */
+  private forward(workerKey: string, instance: string, line: string): void {
+    const worker = this.current(workerKey, instance);
+    if (!worker) return;
+    worker.queue = worker.queue
+      .then(() => prepareWorkerLine(line, this.config.cacheDir, this.fetchBuild))
+      .then((prepared) => {
+        if ("error" in prepared) {
+          console.error(`🛰️ Воркер ${workerKey}, бот ${prepared.tokenId}: ${prepared.error}`);
+          botFailedEvents({ w: workerKey, i: instance }, prepared.tokenId, prepared.error).forEach(this.emitEvent);
+          return;
+        }
+        if (prepared.fingerprint && prepared.tokenId !== undefined) {
+          worker.builds.set(prepared.tokenId, prepared.fingerprint);
+          const inUse = new Set([...this.workers.values()].flatMap((w) => [...w.builds.values()]));
+          void pruneBuildCache(this.config.cacheDir, this.config.buildsKeep, inUse).catch(() => undefined);
+        }
+        worker.channel.send(prepared.line);
+      })
+      .catch((error) => console.error(`🛰️ Воркер ${workerKey}: ошибка подготовки команды:`, error));
   }
 
   /**
@@ -115,17 +143,6 @@ export class RunnerWorkers {
    * @returns промис после завершения всех воркеров
    */
   async shutdown(): Promise<void> {
-    const pending = [...this.workers.values()].map(
-      ({ channel }) =>
-        new Promise<void>((resolve) => {
-          const timer = setTimeout(() => channel.kill(), SHUTDOWN_GRACE_MS);
-          channel.once("exit", () => {
-            clearTimeout(timer);
-            resolve();
-          });
-          if (!channel.send(JSON.stringify({ cmd: "shutdown" }))) channel.kill();
-        }),
-    );
-    await Promise.all(pending);
+    await Promise.all([...this.workers.values()].map(({ channel }) => stopWorker(channel, SHUTDOWN_GRACE_MS)));
   }
 }
