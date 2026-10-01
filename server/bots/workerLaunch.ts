@@ -9,7 +9,7 @@ import { cpSync, mkdirSync, rmSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import { storage } from "../storages/storage";
 import { getWorkerGroupingMode } from "./workerGrouping";
-import { getDockerWorkerConfig, isDockerWorkerRuntime } from "./workerRuntime";
+import { getDockerWorkerConfig, getWorkerRuntime, getWorkerRunnerId, isDockerWorkerRuntime } from "./workerRuntime";
 import { buildDockerWorkerCommand, CONTAINER_APP_ROOT, dockerWorkerName } from "./workerDockerArgs";
 import { retargetBotCodeCache } from "./retargetBotCodeCache";
 
@@ -25,6 +25,8 @@ export interface WorkerLaunch {
   projects: Set<number> | null;
   /** true, если воркер работает в контейнере */
   docker: boolean;
+  /** ID исполнителя для WORKER_RUNTIME=remote; null — воркер запускается на этой машине */
+  runnerId: string | null;
 }
 
 /**
@@ -78,6 +80,10 @@ export async function prepareWorkerLaunch(
   pythonPath: string,
   workerScript: string,
 ): Promise<WorkerLaunch> {
+  if (getWorkerRuntime() === "remote") {
+    // Команду и окружение воркера определяет исполнитель
+    return { command: "", args: [], env: {}, projects: null, docker: false, runnerId: getWorkerRunnerId() };
+  }
   if (!isDockerWorkerRuntime()) {
     return {
       command: pythonPath,
@@ -85,6 +91,7 @@ export async function prepareWorkerLaunch(
       env: { ...process.env, PROJECT_ID: workerKey.toString() },
       projects: null,
       docker: false,
+      runnerId: null,
     };
   }
   const projectIds = await resolveWorkerProjects(workerKey, projectId);
@@ -111,6 +118,7 @@ export async function prepareWorkerLaunch(
     env: { ...clientEnv, ...cmd.env },
     projects: projectIds ? new Set(projectIds) : null,
     docker: true,
+    runnerId: null,
   };
 }
 

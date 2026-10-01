@@ -2,12 +2,13 @@
  * @fileoverview Среда запуска Python-воркеров: обычный процесс или Docker-контейнер.
  * WORKER_RUNTIME=process (по умолчанию) — воркер запускается как дочерний процесс сервера;
  * WORKER_RUNTIME=docker — каждый воркер (проект/владелец/общий, см. WORKER_GROUPING)
- * запускается в отдельном контейнере без переменных окружения сервера.
+ * запускается в отдельном контейнере без переменных окружения сервера;
+ * WORKER_RUNTIME=remote — воркеры запускает исполнитель (`npm run runner`), связь через Redis Streams.
  * @module server/bots/workerRuntime
  */
 
 /** Среда запуска воркеров */
-export type WorkerRuntime = "process" | "docker";
+export type WorkerRuntime = "process" | "docker" | "remote";
 
 /** Настройки запуска воркеров в Docker */
 export interface DockerWorkerConfig {
@@ -31,10 +32,19 @@ export interface DockerWorkerConfig {
 
 /**
  * Возвращает среду запуска воркеров из WORKER_RUNTIME
- * @returns docker или process
+ * @returns docker, remote или process
  */
 export function getWorkerRuntime(): WorkerRuntime {
-  return process.env.WORKER_RUNTIME?.trim().toLowerCase() === "docker" ? "docker" : "process";
+  const value = process.env.WORKER_RUNTIME?.trim().toLowerCase();
+  return value === "docker" || value === "remote" ? value : "process";
+}
+
+/**
+ * ID исполнителя, которому панель отдаёт воркеры в режиме remote
+ * @returns WORKER_RUNNER_ID или "default"
+ */
+export function getWorkerRunnerId(): string {
+  return process.env.WORKER_RUNNER_ID?.trim() || "default";
 }
 
 /**

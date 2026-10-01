@@ -3,6 +3,7 @@
  * Модель: 1 проект = 1 воркер = N ботов внутри одного asyncio event loop.
  * WORKER_GROUPING=owner — воркер на владельца, shared — один воркер на все проекты (см. workerGrouping.ts).
  * WORKER_RUNTIME=docker — каждый воркер в своём контейнере (см. workerRuntime.ts, workerLaunch.ts).
+ * WORKER_RUNTIME=remote — воркеры на исполнителе через Redis Streams (см. remoteWorkerChannel.ts).
  * @module server/bots/botWorkerManager
  */
 
@@ -25,7 +26,7 @@ import { collectWorkerStats, type WorkerPoolStats } from "./workerStats";
 import { prepareWorkerLaunch, stageBotFile, unstageBotFile, type WorkerLaunch } from "./workerLaunch";
 import { redactSecrets } from "../utils/redactSecrets";
 import type { WorkerChannel } from "./workerChannel";
-import { LocalWorkerChannel } from "./localWorkerChannel";
+import { openWorkerChannel } from "./openWorkerChannel";
 
 /** Задержка перед killWorker когда activeBots пуст (мс) */
 const WORKER_DRAIN_MS = 2_000;
@@ -78,6 +79,8 @@ interface ProjectWorker {
   createdAt: Date;
   /** true, если воркер работает в Docker-контейнере */
   docker: boolean;
+  /** true, если воркер запущен удалённым исполнителем */
+  remote: boolean;
   /** Проекты, чьи файлы видит контейнер; null — без ограничений */
   projects: Set<number> | null;
   /** Память, которую сообщил сам воркер (МБ); для контейнера PID — это docker CLI */
@@ -254,7 +257,7 @@ class BotWorkerManager extends EventEmitter {
     const pending = this.creating.get(projectId);
     if (pending) return pending;
     const created = prepareWorkerLaunch(projectId, botProjectId, this.pythonPath, this.workerScript)
-      .then((launch) => this.createWorker(projectId, launch))
+      .then(async (launch) => this.createWorker(projectId, launch, await openWorkerChannel(projectId, launch)))
       .finally(() => this.creating.delete(projectId));
     this.creating.set(projectId, created);
     return created;
@@ -264,16 +267,19 @@ class BotWorkerManager extends EventEmitter {
    * Создаёт новый Python worker процесс (или контейнер) для ключа воркера
    * @param projectId - Ключ воркера
    * @param launch - Команда запуска из prepareWorkerLaunch
+   * @param channel - Открытый канал до воркера
    * @returns Промис с воркером в состоянии ready
    */
-  private createWorker(projectId: number, launch: WorkerLaunch): Promise<ProjectWorker> {
+  private createWorker(projectId: number, launch: WorkerLaunch, channel: WorkerChannel): Promise<ProjectWorker> {
     return new Promise((resolve, reject) => {
-      console.log(`🏭 [WorkerPool] Создаём воркер ${projectId}${launch.docker ? " (docker)" : ""}`);
-      console.log(`🏭 [WorkerPool] Команда: ${launch.command} ${launch.docker ? launch.args.slice(-3).join(" ") : launch.args.join(" ")}`);
-
-      const channel: WorkerChannel = new LocalWorkerChannel(launch);
-
-      console.log(`🏭 [WorkerPool] Процесс воркера создан, PID: ${channel.pid}`);
+      const remote = launch.runnerId !== null;
+      if (remote) {
+        console.log(`🏭 [WorkerPool] Воркер ${projectId} запрошен у исполнителя ${launch.runnerId}`);
+      } else {
+        console.log(`🏭 [WorkerPool] Создаём воркер ${projectId}${launch.docker ? " (docker)" : ""}`);
+        console.log(`🏭 [WorkerPool] Команда: ${launch.command} ${launch.docker ? launch.args.slice(-3).join(" ") : launch.args.join(" ")}`);
+        console.log(`🏭 [WorkerPool] Процесс воркера создан, PID: ${channel.pid}`);
+      }
 
       const worker: ProjectWorker = {
         projectId,
@@ -282,20 +288,22 @@ class BotWorkerManager extends EventEmitter {
         status: "starting",
         createdAt: new Date(),
         docker: launch.docker,
+        remote,
         projects: launch.projects,
-        memoryMb: launch.docker ? 0 : undefined,
+        // PID контейнера — это docker CLI, у удалённого воркера PID нет: память сообщает сам воркер
+        memoryMb: launch.docker || remote ? 0 : undefined,
       };
 
       this.workers.set(projectId, worker);
 
-      // Контейнеру нужно больше времени: старт docker и, возможно, загрузка образа
-      const readyTimeoutMs = launch.docker ? 60_000 : 10_000;
+      // Контейнеру и исполнителю нужно больше времени: старт docker, сеть, загрузка образа
+      const readyTimeoutMs = launch.docker || remote ? 60_000 : 10_000;
       const timeout = setTimeout(() => {
         if (worker.status === "starting") {
           worker.status = "error";
           console.error(`🏭 [WorkerPool] Таймаут: воркер ${projectId} не запустился за ${readyTimeoutMs / 1000} секунд`);
           reject(new Error(`Воркер ${projectId} не запустился за ${readyTimeoutMs / 1000} секунд`));
-          if (launch.docker) channel.kill();
+          if (launch.docker || remote) channel.kill();
         }
       }, readyTimeoutMs);
 
@@ -374,7 +382,7 @@ class BotWorkerManager extends EventEmitter {
       const timeout = setTimeout(() => {
         this.removeListener("worker-ready", handler);
         reject(new Error(`Таймаут ожидания воркера проекта ${projectId}`));
-      }, this.workers.get(projectId)?.docker ? 60_000 : 10_000);
+      }, this.workers.get(projectId)?.docker || this.workers.get(projectId)?.remote ? 60_000 : 10_000);
 
       const handler = (readyProjectId: number) => {
         if (readyProjectId === projectId) {
