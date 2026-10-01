@@ -1,11 +1,15 @@
+# syntax=docker/dockerfile:1
 # Образ исполнителя ботов (`WORKER_RUNTIME=remote`): только исполнитель, worker.py
 # и Python-зависимости ботов, без панели и клиента. Подробно: docs/deployment/BOT_RUNNER.md
+# Собирается BuildKit (`docker buildx build`): кеш npm/pip между сборками, amd64 и arm64.
 
 # ── Сборка исполнителя в один JS-файл ────────────────────────────────────────
-FROM node:20-bookworm-slim AS builder
+# Бандл не зависит от архитектуры, поэтому собирается на платформе сборщика
+FROM --platform=$BUILDPLATFORM node:20-bookworm-slim AS builder
 
 WORKDIR /app
-RUN npm init -y >/dev/null \
+RUN --mount=type=cache,target=/root/.npm \
+    npm init -y >/dev/null \
  && npm install --no-save --ignore-scripts --no-audit --no-fund esbuild@0.27 ioredis@5.10 dotenv@17
 COPY server ./server
 RUN npx esbuild server/runner/index.ts --bundle --platform=node --target=node20 \
@@ -17,11 +21,12 @@ FROM python:3.12-slim-bookworm
 RUN apt-get update \
  && apt-get install -y --no-install-recommends libstdc++6 \
  && rm -rf /var/lib/apt/lists/*
-COPY --from=builder /usr/local/bin/node /usr/local/bin/node
+# node берётся из образа целевой архитектуры, а не из сборщика
+COPY --from=node:20-bookworm-slim /usr/local/bin/node /usr/local/bin/node
 
 WORKDIR /app
 COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
+RUN --mount=type=cache,target=/root/.cache/pip pip install -r requirements.txt
 
 COPY server/python ./python
 COPY --from=builder /app/dist-runner/runner.cjs ./runner.cjs
