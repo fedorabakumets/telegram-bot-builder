@@ -5,7 +5,8 @@ name: Publish runner image
 
 on:
   push:
-    branches: [main]
+    # Ветки cursor/** получают тег с именем ветки (cursor-<имя>), latest — только main
+    branches: [main, "cursor/**"]
     paths:
       - Dockerfile.runner
       - requirements.txt
@@ -55,7 +56,8 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=latest
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=ref,event=branch,enable=${{ github.ref_name != 'main' }}
             type=sha,prefix=sha-,format=short
 
       - name: Build and push
