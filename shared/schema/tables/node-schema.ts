@@ -165,8 +165,12 @@ export const nodeSchema = z.object({
     chatIdSource: z.enum(['current_chat', 'custom']).default('current_chat'),
     /** ID чата вручную или {переменная} */
     chatIdManual: z.string().optional(),
-    /** Не прерывать сценарий при ошибке удаления */
-    ignoreErrors: z.boolean().default(true),
+    /**
+     * Не прерывать сценарий при ошибке действия. Общее поле нескольких нод с разным
+     * умолчанием, поэтому его задаёт рендерер: delete_message / kick_user — true,
+     * refund_stars / get_star_balance / edit_star_subscription — false.
+     */
+    ignoreErrors: z.boolean().optional(),
     /** Множественное удаление из переменной-массива */
     bulkDelete: z.boolean().default(false),
     /** Имя переменной с массивом message_id */
@@ -931,8 +935,6 @@ export const nodeSchema = z.object({
     refundUserId: z.string().optional().default(''),
     /** Код покупки (telegram_payment_charge_id), допускает {переменные} */
     refundChargeId: z.string().optional().default(''),
-    /** Не прерывать сценарий при ошибке возврата */
-    ignoreErrors: z.boolean().optional().default(false),
     /** Сообщение, если код покупки пустой */
     refundMsgEmpty: z.string().optional().default('Пожалуйста, укажите код покупки: /back КОД'),
     /** Сообщение, если код не найден (CHARGE_NOT_FOUND и прочие) */
