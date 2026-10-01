@@ -25,7 +25,7 @@ export function registerProjectTokensSettingsFlagsPaths(
   cookieSecurity: Array<Record<string, string[]>>,
 ): void {
   const auth =
-    "**Auth:** `requireTokenOwnership`. WS `token-updated`. В `.env` пишется 0/1.\n\n";
+    "**Auth:** `requireTokenOwnership`. WS `token-updated`. В env бота (при следующем запуске) — 0/1.\n\n";
 
   registry.registerPath({
     method: "put",

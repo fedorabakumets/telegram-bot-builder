@@ -102,8 +102,8 @@ export function registerProjectsAdminIdsPaths(
     tags: ["projects"],
     summary: "Заменить ADMIN_IDS проекта",
     description:
-      "Полностью перезаписывает список админов в БД. Если есть папка бота — " +
-      "синхронизирует `ADMIN_IDS` в `.env`.\n\n" +
+      "Полностью перезаписывает список админов в БД. В `.env` бота значение " +
+      "попадёт при следующем запуске (файл не правится на лету).\n\n" +
       "**Тело:** `{ adminIds: \"id1,id2\" }` — строка через запятую.\n\n" +
       "**Клиент:** сохранение в профиле бота, панель env, " +
       "«Менеджер ботов» (добавление админа через PUT).\n\n" +
@@ -146,7 +146,7 @@ export function registerProjectsAdminIdsPaths(
         },
       },
       500: {
-        description: "Ошибка записи БД / .env",
+        description: "Ошибка записи БД",
         content: {
           "application/json": {
             schema: AdminIdsErrorSchema,
@@ -165,7 +165,7 @@ export function registerProjectsAdminIdsPaths(
     description:
       "Убирает один Telegram ID из списка. Body `adminId` — число или " +
       "`del_admin_{id}` (callback из шаблона «Менеджер ботов»).\n\n" +
-      "Обновляет БД и `.env` при наличии. Studio UI обычно делает `PUT` " +
+      "Обновляет БД (бот увидит изменения после перезапуска). Studio UI обычно делает `PUT` " +
       "с новым списком; этот эндпоинт — для HTTP из бота-менеджера.\n\n" +
       "```bash\n" +
       "curl -s -X POST http://localhost:5000/api/projects/42/admin-ids/remove \\\n" +

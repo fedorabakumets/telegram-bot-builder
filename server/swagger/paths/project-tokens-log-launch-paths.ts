@@ -58,7 +58,7 @@ export function registerProjectTokensLogLaunchPaths(
     tags: ["project-tokens"],
     summary: "Уровень логирования бота",
     description:
-      "`logLevel`: DEBUG|INFO|WARNING|ERROR. Пишет LOG_LEVEL в `.env`. " +
+      "`logLevel`: DEBUG|INFO|WARNING|ERROR. LOG_LEVEL попадёт в env бота при следующем запуске. " +
       "WS `token-updated`.\n\n" +
       "**Auth:** `requireTokenOwnership`.\n\n" +
       "```bash\ncurl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/log-level \\\n" +

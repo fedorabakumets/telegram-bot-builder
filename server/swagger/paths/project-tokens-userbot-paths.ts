@@ -33,7 +33,7 @@ export function registerProjectTokensUserbotPaths(
     tags: ["project-tokens"],
     summary: "Настройки Telethon userbot",
     description:
-      "Сохраняет `userbotEnabled` 0|1 и apiId/hash/session; пишет USERBOT_* в `.env`. " +
+      "Сохраняет `userbotEnabled` 0|1 и apiId/hash/session; USERBOT_* попадут в env бота при следующем запуске. " +
       "WS `token-updated` (changedFields: userbotEnabled).\n\n" +
       "**Auth:** `requireTokenOwnership`.\n\n" +
       "```bash\ncurl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/userbot \\\n" +

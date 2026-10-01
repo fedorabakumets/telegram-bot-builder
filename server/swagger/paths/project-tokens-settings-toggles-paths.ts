@@ -28,7 +28,7 @@ export function registerProjectTokensSettingsTogglesPaths(
   cookieSecurity: Array<Record<string, string[]>>,
 ): void {
   const auth =
-    "**Auth:** `requireTokenOwnership`. WS `token-updated`. Часть флагов пишет `.env`.\n\n";
+    "**Auth:** `requireTokenOwnership`. WS `token-updated`. Флаги попадают в env бота при следующем запуске.\n\n";
 
   registry.registerPath({
     method: "put",
@@ -70,7 +70,7 @@ export function registerProjectTokensSettingsTogglesPaths(
     tags: ["project-tokens"],
     summary: "Защита контента (PROTECT_CONTENT)",
     description:
-      "`protectContent` 0|1 → `.env` PROTECT_CONTENT=true/false.\n\n" +
+      "`protectContent` 0|1 → env бота PROTECT_CONTENT=true/false.\n\n" +
       auth +
       "```bash\ncurl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/protect-content \\\n" +
       "  -b cookies.txt -H 'Content-Type: application/json' -d '{\"protectContent\":1}'\n```",
@@ -103,7 +103,7 @@ export function registerProjectTokensSettingsTogglesPaths(
     tags: ["project-tokens"],
     summary: "Сохранять входящие медиа",
     description:
-      "`saveIncomingMedia` 0|1 → `.env` SAVE_INCOMING_MEDIA.\n\n" +
+      "`saveIncomingMedia` 0|1 → env бота SAVE_INCOMING_MEDIA.\n\n" +
       auth +
       "```bash\ncurl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/save-incoming-media \\\n" +
       "  -b cookies.txt -H 'Content-Type: application/json' -d '{\"saveIncomingMedia\":1}'\n```",
