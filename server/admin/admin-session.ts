@@ -56,17 +56,20 @@ export function verifyAdminToken(token: string, signingSecret: string): boolean 
 
 /**
  * Устанавливает admin-cookie после успешного входа.
+ * Secure только по HTTPS: на HTTP браузер такую cookie отбрасывает и вход выглядит как «ничего не произошло».
  * @param res - Ответ Express
  * @param signingSecret - Секрет подписи
+ * @param secure - Ставить флаг Secure. По умолчанию — только в production.
  * @returns void
  */
-export function setAdminCookie(res: Response, signingSecret: string): void {
+export function setAdminCookie(res: Response, signingSecret: string, secure?: boolean): void {
   const token = createAdminToken(signingSecret);
   const maxAgeSec = Math.floor(MAX_AGE_MS / 1000);
-  const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
+  const useSecure = secure ?? process.env.NODE_ENV === "production";
+  const secureAttr = useSecure ? "; Secure" : "";
   res.setHeader(
     "Set-Cookie",
-    `${ADMIN_COOKIE_NAME}=${encodeURIComponent(token)}; Path=/admin; HttpOnly; SameSite=Lax; Max-Age=${maxAgeSec}${secure}`,
+    `${ADMIN_COOKIE_NAME}=${encodeURIComponent(token)}; Path=/admin; HttpOnly; SameSite=Lax; Max-Age=${maxAgeSec}${secureAttr}`,
   );
 }
 
