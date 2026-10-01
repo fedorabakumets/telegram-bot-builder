@@ -71,6 +71,10 @@ npm run runner
 
 Код: `server/bots/builds/botBuildLink.ts`, `runnerBuildForStart.ts`, `server/runner/runnerStartCommand.ts`, `runnerBuildCache.ts`.
 
+## Исполнитель на Railway
+
+Боты выбранных проектов можно запускать в отдельных сервисах Railway: панель сама создаёт сервис с исполнителем, разворачивает и останавливает его. См. [BOT_RAILWAY.md](BOT_RAILWAY.md).
+
 ## Ограничения
 
 У режима пока есть ограничения:
