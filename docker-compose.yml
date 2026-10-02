@@ -64,6 +64,8 @@ services:
       PORT: "${PORT}"
       HOST: "${HOST}"
       REDIS_URL: "${REDIS_URL}"
+      # psql_query builtin (БД платформы) — только для однопользовательской установки
+      PSQL_BUILTIN_ENABLED: "${PSQL_BUILTIN_ENABLED:-false}"
     ports:
       - "127.0.0.1:5000:5000"
     volumes:
