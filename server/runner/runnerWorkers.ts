@@ -6,6 +6,7 @@
  */
 
 import { LocalWorkerChannel } from "../bots/localWorkerChannel";
+import { buildWorkerBaseEnv } from "../bots/workerBaseEnv";
 import type { RunnerCommand, RunnerEvent } from "../redis/workerStreams";
 import type { RunnerConfig } from "./runnerConfig";
 import { fetchBuildOverHttp, pruneBuildCache, type FetchBuild } from "./runnerBuildCache";
@@ -86,7 +87,7 @@ export class RunnerWorkers {
     const channel = new LocalWorkerChannel({
       command: this.config.pythonPath,
       args: ["-u", this.config.workerScript],
-      env: { ...process.env, PROJECT_ID: workerKey, WORKER_REPORT_MEMORY: "true" },
+      env: { ...buildWorkerBaseEnv(process.env, { includeConnections: false }), PROJECT_ID: workerKey, WORKER_REPORT_MEMORY: "true" },
     });
     this.workers.set(workerKey, { instance, channel, queue: Promise.resolve(), builds: new Map() });
     forwardWorkerEvents(channel, { w: workerKey, i: instance }, this.emitEvent, () => {

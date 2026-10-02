@@ -5,6 +5,8 @@
 import { spawn } from "node:child_process";
 import { workerManager } from './botWorkerManager';
 import { precompileBotCode } from './precompileBotCode';
+/** Окружение процесса бота без секретов панели */
+import { buildWorkerBaseEnv } from './workerBaseEnv';
 
 /**
  * Модуль для работы с URL
@@ -524,7 +526,8 @@ export async function startBot(
       detached: false,
       cwd: dirname(mainFile), // Устанавливаем рабочую директорию в папку бота
       env: {
-        ...process.env,
+        // Не ...process.env: бот не должен видеть SESSION_SECRET, ADMIN_API_KEY и др. (botEnvPolicy)
+        ...buildWorkerBaseEnv(),
         ...botEnv,
         PROJECT_ID: projectId.toString(),
         TOKEN_ID: tokenId.toString(),

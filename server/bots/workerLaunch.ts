@@ -13,6 +13,7 @@ import { getDockerWorkerConfig, isDockerWorkerRuntime } from "./workerRuntime";
 import { getProjectPlacement } from "./botPlacement";
 import { buildDockerWorkerCommand, CONTAINER_APP_ROOT, dockerWorkerName } from "./workerDockerArgs";
 import { retargetBotCodeCache } from "./retargetBotCodeCache";
+import { buildWorkerBaseEnv } from "./workerBaseEnv";
 
 /** Как запустить процесс воркера */
 export interface WorkerLaunch {
@@ -89,7 +90,7 @@ export async function prepareWorkerLaunch(
     return { command: "", args: [], env: {}, projects: null, docker: false, ...placement };
   }
   if (!isDockerWorkerRuntime()) {
-    const env = { ...process.env, PROJECT_ID: workerKey.toString() };
+    const env = { ...buildWorkerBaseEnv(), PROJECT_ID: workerKey.toString() };
     return { command: pythonPath, args: ["-u", workerScript], env, projects: null, docker: false, runnerId: null };
   }
   const projectIds = await resolveWorkerProjects(workerKey, projectId);
