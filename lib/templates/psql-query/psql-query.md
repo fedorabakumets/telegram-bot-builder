@@ -7,7 +7,7 @@
 | Параметр         | Тип                                    | Описание                                          |
 |------------------|----------------------------------------|---------------------------------------------------|
 | `nodeId`         | `string`                               | ID узла в графе бота                              |
-| `query`          | `string`                               | SQL-запрос, поддерживает `{переменные}`           |
+| `query`          | `string`                               | SQL. `{имя}` — параметр asyncpg, не вклейка текста |
 | `saveResultTo`   | `string`                               | Переменная для сохранения результата (или `""`)   |
 | `resultFormat`   | `json \| text \| first_row \| affected` | Формат обработки результата                       |
 | `textTemplate`   | `string`                               | Шаблон строки для формата `text`                  |
@@ -23,6 +23,22 @@
 - **`json`** — все строки как список словарей `[{}, ...]`
 - **`text`** — строки форматируются через `textTemplate` и объединяются через `\n`
 - **`affected`** — строка с количеством затронутых строк (из `execute`)
+
+## Параметры в SQL
+
+`{имя}` в `query` генератор заменяет на `$1`, `$2`, … и передаёт значения отдельным списком: `await _conn.fetch(_query, *_args)` (то же для `fetchrow` и `execute`). Запрос без скобок идёт без аргументов.
+
+- Одинаковое имя — один номер, порядок первого вхождения.
+- Имена те же, что в текстах: буквы, цифры, `_`, точка, индекс (`{a.b}`, `{a.b[0]}`), а также `now`, `today`, `time`, `__now`. Нет переменной — в аргумент попадает `None`.
+- Значение передаётся как есть, без приведения к числу. Для целой колонки: `WHERE id = {user_id}::bigint`.
+- Запись `'{name}'` (одинарные кавычки вплотную) тоже параметр, кавычки снимаются. Двойные кавычки и пробел внутри кавычек не снимаются.
+- Подстрока: `WHERE name ILIKE '%' || {q} || '%'`. Массив: `WHERE id = ANY({ids})`.
+- `LIKE '%{q}%'` ломается: скобки становятся `$n` внутри строки, поиск по подстроке не выполняется.
+- `FROM {таблица}` станет параметром и упадёт при выполнении. Имя таблицы пишется буквами в тексте запроса.
+- `{#each}` и `{=выражение}` в SQL не раскрываются.
+- `textTemplate` при формате `text` не меняется: это текст сообщения, `{name}` там подставляется в строку.
+
+Перед запросом, внутри уже открытого соединения и транзакции, выполняется `SET LOCAL statement_timeout = '15s'`. В поля узла таймаут не выносится.
 
 ## Пример входных данных
 
@@ -49,9 +65,11 @@ async def handle_callback_pq_leaderboard(callback_query: types.CallbackQuery, st
             logging.warning(f"⚠️ psql_query [pq_leaderboard]: db_pool недоступен, пропускаем")
             return
         _all_vars = await init_all_user_vars(user_id)
-        _query = replace_variables_in_text("SELECT name, score FROM users ...", _all_vars)
+        _query = "SELECT name, score FROM users ORDER BY score DESC LIMIT 10"
         async with db_pool.acquire() as _conn:
-            _rows = await _conn.fetch(_query)
+            async with _conn.transaction():
+                await _conn.execute("SET LOCAL statement_timeout = '15s'")
+                _rows = await _conn.fetch(_query)
             _result = [dict(r) for r in _rows]
         _lines = []
         for _r in _result:
@@ -62,6 +80,14 @@ async def handle_callback_pq_leaderboard(callback_query: types.CallbackQuery, st
         logging.info(f"✅ psql_query [pq_leaderboard]: выполнено для {user_id}")
     except Exception as e:
         logging.error(f"❌ Ошибка в psql_query [pq_leaderboard]: {e}")
+```
+
+Запрос `WHERE name = '{name}' AND id = {id}` в коде выглядит так:
+
+```python
+_query = "SELECT * FROM orders WHERE name = $1 AND id = $2"
+_args = [_psql_param("name", _all_vars), _psql_param("id", _all_vars), ]
+_row = await _conn.fetchrow(_query, *_args)
 ```
 
 ## Использование API
