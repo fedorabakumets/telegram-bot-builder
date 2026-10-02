@@ -1,11 +1,11 @@
 /**
- * @fileoverview Сравнение строк версий BotCraft (2.2.1.3)
+ * @fileoverview Сравнение строк версий BotCraft (2.2.1.4)
  * @module shared/compare-app-versions
  */
 
 /**
  * Разбирает строку версии на числовые части.
- * @param value - Версия, например v2.2.1.3
+ * @param value - Версия, например v2.2.1.4
  * @returns Массив чисел
  */
 export function parseAppVersion(value: string): number[] {
