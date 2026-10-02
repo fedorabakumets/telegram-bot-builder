@@ -1,0 +1,24 @@
+{#
+  @fileoverview Значение одного параметра SQL для узла psql_query.
+
+  Точное имя берётся из словаря как есть. Если ключа нет, один плейсхолдер
+  проходит через replace_variables_in_text (now, today, time, __now, путь с точкой).
+#}
+
+def _psql_param(_name, _variables):
+    """Возвращает значение параметра SQL, не вклеивая его в текст запроса.
+
+    Args:
+        _name: Имя из фигурных скобок ({user_id}, {a.b}, {a.b[0]}).
+        _variables: Словарь переменных пользователя.
+
+    Returns:
+        Значение как есть либо None, если переменной нет.
+    """
+    if isinstance(_variables, dict) and _name in _variables:
+        return _variables[_name]
+    _ph = "{" + _name + "}"
+    _resolved = replace_variables_in_text(_ph, _variables if isinstance(_variables, dict) else {})
+    if _resolved == _ph:
+        return None
+    return _resolved

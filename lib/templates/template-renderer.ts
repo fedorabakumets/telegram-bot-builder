@@ -25,6 +25,7 @@ import {
   callbackToRegexFilter,
 } from './filters';
 import { getTemplatesDir } from './utils/get-templates-dir';
+import { bindPsqlQuery } from './psql-query/psql-query-bind';
 
 
 /**
@@ -109,6 +110,8 @@ function initEnvironment(): Environment {
   env.addFilter('lower', lowerFilter);
   env.addFilter('escape', escapeFilter);
   env.addFilter('callback_to_regex', callbackToRegexFilter);
+  // {имя} в SQL psql_query → $n и список имён, без вклейки значения в текст
+  env.addFilter('psql_bind', (query: unknown) => bindPsqlQuery(typeof query === 'string' ? query : ''));
   env.addFilter('tojson', (val: any, indent?: number) => {
     if (indent !== undefined) {
       return JSON.stringify(val, null, indent);
