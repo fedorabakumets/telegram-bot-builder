@@ -12,6 +12,7 @@ import { storage } from '../../storages/storage';
 import { createRequire } from 'module';
 import { fileURLToPath } from 'url';
 import { resolve, dirname } from 'path';
+import { isPsqlBuiltinEnabled } from '../../utils/isPsqlBuiltinEnabled';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -245,6 +246,7 @@ export async function handleGenerateCode(req: Request, res: Response): Promise<v
       telegramFileIds,
       thumbnailFileIds,
       thumbnailUrls,
+      psqlBuiltinEnabled: isPsqlBuiltinEnabled(),
     });
 
     // Логирование результата
