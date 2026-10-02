@@ -33,7 +33,7 @@ export function BotEnvRowMenu({ envKey, canEdit, canDelete, onEdit, onDelete }: 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover/row:opacity-100">
+        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md text-muted-foreground/80 opacity-80 hover:bg-background hover:text-foreground sm:opacity-0 sm:group-hover/row:opacity-100 focus-visible:opacity-100">
           <MoreVertical className="h-3 w-3" />
         </Button>
       </DropdownMenuTrigger>

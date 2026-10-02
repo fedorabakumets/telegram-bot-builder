@@ -5,6 +5,7 @@
  */
 
 import { Button } from '@/components/ui/button';
+import { Loader2, Pencil, Play, Save } from 'lucide-react';
 
 /** Свойства мини-бара изменений */
 interface BotEnvStagingBarProps {
@@ -32,28 +33,27 @@ export function BotEnvStagingBar({
   const label = changesCount === 1 ? 'изменение' : 'изменений';
 
   return (
-    <div className="flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-md bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700/60">
-      <span className="text-xs text-slate-600 dark:text-slate-300 px-1.5 whitespace-nowrap">
-        <i className="fas fa-pencil text-violet-500 dark:text-violet-400 mr-1.5" />
+    <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-2.5 py-1.5">
+      <span className="inline-flex items-center gap-1.5 px-1 text-xs font-medium text-amber-800 dark:text-amber-200">
+        <Pencil className="h-3 w-3" />
         {changesCount} {label}
       </span>
-      <div className="w-px h-4 bg-slate-300 dark:bg-slate-700" />
-      <Button size="sm" variant="ghost" onClick={onDiscard} disabled={isSaving}
-        className="h-6 px-2 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
-        Сбросить
-      </Button>
-      <Button size="sm" onClick={onSave} disabled={isSaving}
-        className="h-6 px-2 text-xs bg-violet-600 hover:bg-violet-700 text-white">
-        {isSaving
-          ? <><i className="fas fa-spinner fa-spin mr-1" />Сохранение…</>
-          : <>💾 Сохранить</>}
-      </Button>
-      <Button size="sm" onClick={onSaveAndRestart} disabled={isSaving}
-        className="h-6 px-2 text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
-        {isSaving
-          ? <><i className="fas fa-spinner fa-spin mr-1" />…</>
-          : <>▶ Перезапустить</>}
-      </Button>
+      <div className="flex items-center gap-1">
+        <Button size="sm" variant="ghost" onClick={onDiscard} disabled={isSaving}
+          className="h-7 rounded-lg px-2 text-xs text-muted-foreground">
+          Сбросить
+        </Button>
+        <Button size="sm" onClick={onSave} disabled={isSaving}
+          className="h-7 gap-1 rounded-lg bg-violet-600 px-2 text-xs text-white hover:bg-violet-700">
+          {isSaving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
+          Сохранить
+        </Button>
+        <Button size="sm" onClick={onSaveAndRestart} disabled={isSaving}
+          className="h-7 gap-1 rounded-lg bg-emerald-600 px-2 text-xs text-white hover:bg-emerald-700">
+          {isSaving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Play className="h-3 w-3" />}
+          Перезапустить
+        </Button>
+      </div>
     </div>
   );
 }

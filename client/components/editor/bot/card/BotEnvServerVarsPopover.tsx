@@ -58,10 +58,9 @@ export function BotEnvServerVarsPopover({ onSelect }: BotEnvServerVarsPopoverPro
         </Button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-72 p-0">
-        <div className="px-3 py-2 border-b">
-          <span className="text-xs font-medium text-muted-foreground">
-            🖥️ Серверные переменные
-          </span>
+        <div className="flex items-center gap-2 border-b px-3 py-2">
+          <Server className="h-3.5 w-3.5 text-muted-foreground" />
+          <span className="text-xs font-medium">Серверные переменные</span>
         </div>
         <div className="max-h-56 overflow-y-auto">
           {isLoading && (
@@ -81,7 +80,7 @@ export function BotEnvServerVarsPopover({ onSelect }: BotEnvServerVarsPopoverPro
               className="w-full flex items-center gap-2 px-3 py-1.5 text-left hover:bg-muted/60 transition-colors"
               onClick={() => handleSelect(item)}
             >
-              <span className="text-xs font-mono font-medium text-foreground">
+              <span className="font-mono text-[11px] font-medium text-foreground">
                 {item.key}
               </span>
             </button>

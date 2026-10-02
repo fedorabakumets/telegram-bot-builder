@@ -14,6 +14,8 @@ interface SettingsSectionProps {
   children: ReactNode;
   /** Дополнительные классы обёртки */
   className?: string;
+  /** Счётчик справа от заголовка */
+  count?: number;
 }
 
 /**
@@ -21,13 +23,20 @@ interface SettingsSectionProps {
  * @param props - Свойства компонента
  * @returns JSX элемент
  */
-export function SettingsSection({ title, children, className }: SettingsSectionProps) {
+export function SettingsSection({ title, children, className, count }: SettingsSectionProps) {
   return (
     <section className={cn('space-y-2', className)}>
-      <h3 className="px-0.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-        {title}
-      </h3>
-      <div className="overflow-hidden rounded-lg border border-border/60 bg-card divide-y divide-border/50">
+      <div className="flex items-center justify-between gap-2 px-0.5">
+        <h3 className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+          {title}
+        </h3>
+        {typeof count === 'number' && (
+          <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium tabular-nums text-muted-foreground">
+            {count}
+          </span>
+        )}
+      </div>
+      <div className="divide-y divide-border/50 overflow-hidden rounded-lg border border-border/60 bg-card">
         {children}
       </div>
     </section>

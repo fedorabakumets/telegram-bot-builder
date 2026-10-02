@@ -47,13 +47,13 @@ export function BotEnvAddRow({ onSave, onCancel, isPending }: BotEnvAddRowProps)
   }
 
   return (
-    <div className="flex items-center gap-1.5 p-2 rounded-md border border-primary/30 bg-primary/5">
+    <div className="flex items-center gap-1.5 rounded-xl border border-primary/25 bg-primary/5 p-2 shadow-sm">
       <Input
         value={key}
         onChange={(e) => setKey(e.target.value.toUpperCase())}
         onKeyDown={handleKeyDown}
         placeholder="VARIABLE_NAME"
-        className="h-7 text-xs font-mono flex-1 min-w-0"
+        className="h-8 min-w-0 flex-1 rounded-lg font-mono text-xs"
         autoFocus
         disabled={isPending}
       />
@@ -63,7 +63,7 @@ export function BotEnvAddRow({ onSave, onCancel, isPending }: BotEnvAddRowProps)
         onKeyDown={handleKeyDown}
         placeholder="значение"
         type={isSecret ? 'password' : 'text'}
-        className="h-7 text-xs flex-1 min-w-0"
+        className="h-8 min-w-0 flex-1 rounded-lg text-xs"
         disabled={isPending}
       />
       <BotEnvServerVarsPopover onSelect={(val) => setValue(val)} />

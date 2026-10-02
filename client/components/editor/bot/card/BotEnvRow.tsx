@@ -8,9 +8,11 @@
 import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Braces, Eye, EyeOff, Copy } from 'lucide-react';
+import { Eye, EyeOff, Copy, Lock } from 'lucide-react';
+import { cn } from '@/utils/utils';
 import { BotEnvRowMenu } from './BotEnvRowMenu';
 import { BotEnvServerVarsPopover } from './BotEnvServerVarsPopover';
+import { BotEnvValueView } from './BotEnvValueView';
 
 /** Свойства строки переменной */
 interface BotEnvRowProps {
@@ -113,26 +115,27 @@ export function BotEnvRow({
       ? (revealed ?? '••••••••')
       : actualValue;
 
-  /** Подсветка строки при наличии pending изменения */
-  const pendingHighlight = pendingValue !== undefined
-    ? 'bg-amber-50/50 dark:bg-amber-950/20' : '';
+  const masked = isSecret && !isServerRef && revealed === null;
+  const actionBtn = 'h-7 w-7 shrink-0 rounded-md text-muted-foreground/80 opacity-80 hover:bg-background hover:text-foreground sm:opacity-0 sm:group-hover/row:opacity-100 focus-visible:opacity-100';
 
   return (
-    <div className={`flex items-center gap-1 sm:gap-2 px-1.5 sm:px-2 py-1.5 rounded-md hover:bg-muted/40 group/row transition-colors flex-wrap ${pendingHighlight}`}>
-      <Braces className="h-3.5 w-3.5 text-muted-foreground/60 shrink-0" />
-      <span className="text-xs font-mono font-medium text-foreground min-w-[60px] sm:min-w-[80px] shrink-0 break-all">
-        {envKey}
+    <div className={cn(
+      'group/row grid grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)_auto] items-center gap-x-2 px-3 py-2 transition-colors hover:bg-muted/40',
+      pendingValue !== undefined && 'border-l-2 border-l-amber-400 bg-amber-500/[0.08]',
+    )}>
+      <span className="inline-flex min-w-0 items-center gap-1 font-mono text-[11px] font-medium tracking-tight text-foreground/90" title={envKey}>
+        {!canEdit && <Lock className="h-3 w-3 shrink-0 text-muted-foreground/55" />}
+        <span className="truncate">{envKey}</span>
       </span>
-      <span className="text-muted-foreground/50 text-xs">=</span>
 
       {editing ? (
-        <div className="flex items-center gap-1 flex-1 min-w-0">
+        <div className="flex min-w-0 flex-1 items-center gap-1">
           <Input
             value={editValue}
             onChange={(e) => setEditValue(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') handleSaveEdit(); if (e.key === 'Escape') setEditing(false); }}
             onBlur={() => { if (!skipBlurRef.current) handleSaveEdit(); skipBlurRef.current = false; }}
-            className="h-6 text-xs flex-1 min-w-0"
+            className="h-7 min-w-0 flex-1 rounded-md text-xs"
             autoFocus
           />
           <div onMouseDown={() => { skipBlurRef.current = true; }}>
@@ -141,34 +144,31 @@ export function BotEnvRow({
         </div>
       ) : (
         <span
-          className={`text-xs break-all flex-1 min-w-0 ${canEdit ? 'text-foreground/80 cursor-pointer' : 'text-muted-foreground/70'}`}
+          className={cn('min-w-0', canEdit && 'cursor-text')}
           onClick={() => { if (canEdit) handleStartEdit(); }}
-          title={canEdit ? 'Нажмите для редактирования' : 'Только для чтения'}
+          title={masked ? (canEdit ? 'Нажмите, чтобы изменить' : 'Только для чтения') : displayValue}
         >
-          {displayValue}
+          <BotEnvValueView displayValue={displayValue} masked={masked} isServerRef={!!isServerRef} />
         </span>
       )}
 
-      {/* Кнопка reveal для секретов */}
-      {isSecret && (
-        <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover/row:opacity-100" onClick={handleToggleReveal} title="Показать/скрыть">
-          {revealed ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+      <div className="flex items-center justify-end">
+        {isSecret && (
+          <Button variant="ghost" size="icon" className={actionBtn} onClick={handleToggleReveal} title="Показать/скрыть">
+            {revealed ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+          </Button>
+        )}
+        <Button variant="ghost" size="icon" className={actionBtn} onClick={() => navigator.clipboard.writeText(revealed ?? actualValue)} title="Копировать">
+          <Copy className="h-3.5 w-3.5" />
         </Button>
-      )}
-
-      {/* Кнопка копирования */}
-      <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover/row:opacity-100" onClick={() => navigator.clipboard.writeText(revealed ?? actualValue)} title="Копировать">
-        <Copy className="h-3 w-3" />
-      </Button>
-
-      {/* Меню действий */}
-      <BotEnvRowMenu
-        envKey={envKey}
-        canEdit={canEdit}
-        canDelete={!isSystem && !!id}
-        onEdit={handleStartEdit}
-        onDelete={id ? () => onDelete?.(id) : undefined}
-      />
+        <BotEnvRowMenu
+          envKey={envKey}
+          canEdit={canEdit}
+          canDelete={!isSystem && !!id}
+          onEdit={handleStartEdit}
+          onDelete={id ? () => onDelete?.(id) : undefined}
+        />
+      </div>
     </div>
   );
 }

@@ -90,7 +90,7 @@ export function BotEnvRawEditor({
       <Textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
-        className="font-mono text-xs border rounded min-h-[200px] resize-y"
+        className="min-h-[220px] resize-y rounded-xl border-border/70 bg-muted/20 font-mono text-xs leading-relaxed"
         rows={12}
         placeholder="KEY=VALUE"
         spellCheck={false}
