@@ -23,8 +23,10 @@ interface BotEnvValueViewProps {
 export function BotEnvValueView({ displayValue, masked, isServerRef }: BotEnvValueViewProps) {
   if (masked) {
     return (
-      <span className="font-mono text-xs tracking-[0.28em] text-muted-foreground" aria-label="Скрыто">
-        ••••••
+      <span className="inline-flex items-center gap-1" aria-label="Скрыто">
+        {Array.from({ length: 6 }, (_, i) => (
+          <span key={i} className="h-1.5 w-1.5 rounded-full bg-zinc-400" />
+        ))}
       </span>
     );
   }
