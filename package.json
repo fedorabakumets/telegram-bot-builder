@@ -28,7 +28,7 @@
     "node": ">=16.0.0"
   },
   "scripts": {
-    "dev": "npm run migrate && npm run clean:vite && cross-env NODE_ENV=development tsx watch --tsconfig tsconfig.node.json server/index.ts",
+    "dev": "npm run clean:vite && cross-env NODE_ENV=development tsx watch --tsconfig tsconfig.node.json server/index.ts",
     "auto-commit:watch": "powershell -ExecutionPolicy Bypass -File .\\scripts\\watch-and-auto-commit.ps1",
     "clean:vite": "node -e \"const fs=require('fs');const path=require('path');const viteDir=path.join(process.cwd(),'node_modules','.vite');if(fs.existsSync(viteDir)){fs.rmSync(viteDir,{recursive:true,force:true});console.log('✅ Vite cache cleared');}else{console.log('ℹ️ Vite cache not found');}\"",
     "migrate": "tsx --tsconfig tsconfig.node.json scripts/run-migrations.ts",
@@ -47,7 +47,7 @@
     "update-avatar-urls": "tsx --tsconfig tsconfig.node.json scripts/update-avatar-urls.ts",
     "delete-bots-from-users": "tsx --tsconfig tsconfig.node.json scripts/delete-bots-from-users.ts",
     "backfill:token-segmentation": "tsx --tsconfig tsconfig.node.json scripts/backfill-token-segmentation.ts",
-    "start": "npm run migrate && cross-env NODE_ENV=production tsx --tsconfig tsconfig.node.json server/index.ts",
+    "start": "cross-env NODE_ENV=production tsx --tsconfig tsconfig.node.json server/index.ts",
     "runner": "tsx --tsconfig tsconfig.node.json server/runner/index.ts",
     "build": "npm run build:client",
     "build:client": "vite build --mode production --config vite.config.ts",

@@ -4,6 +4,7 @@
  */
 
 import { pool } from "./db";
+import { applySqlMigrations } from "./applySqlMigrations";
 import { seedSettingsFromEnv } from "../services/app-settings.service";
 
 /**
@@ -199,10 +200,19 @@ const ADD_KIND_TO_PROJECT_VERSIONS = `
 `;
 
 /**
- * Запускает все необходимые миграции базы данных
+ * Запускает все необходимые миграции базы данных: сначала SQL-файлы из migrations/,
+ * затем служебные DDL, repair и seed настроек. Единственная точка миграций при старте.
+ * При ошибке SQL-миграций процесс завершается с кодом 1, чтобы сервер не стартовал на неполной схеме.
  * @returns Promise<void>
  */
 export async function runMigrations(): Promise<void> {
+  try {
+    await applySqlMigrations();
+  } catch (error) {
+    console.error("❌ Migration error:", error);
+    process.exit(1);
+  }
+
   const client = await pool.connect();
   try {
     await client.query(CREATE_BOT_LOGS_TABLE);
