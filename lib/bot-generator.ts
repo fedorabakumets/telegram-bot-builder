@@ -157,6 +157,11 @@ export interface GeneratePythonCodeOptions {
    * Словарь прямых URL обложек видео: ключ — URL видео, значение — URL обложки.
    */
   thumbnailUrls?: Record<string, string>;
+  /**
+   * Разрешить узлу psql_query режим builtin (БД платформы). По умолчанию true;
+   * сервер передаёт PSQL_BUILTIN_ENABLED (по умолчанию false).
+   */
+  psqlBuiltinEnabled?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -214,6 +219,7 @@ function buildGenerationContext(
     telegramFileIds = {},
     thumbnailFileIds = {},
     thumbnailUrls = {},
+    psqlBuiltinEnabled = true,
   } = options;
 
   const genOptions: GenerationOptions = {
@@ -231,6 +237,7 @@ function buildGenerationContext(
     telegramFileIds,
     thumbnailFileIds,
     thumbnailUrls,
+    psqlBuiltinEnabled,
   };
 
   const context = createGenerationContext(botData, botName, groups, genOptions);
@@ -357,6 +364,7 @@ function generateCodeSections(
     context.options.thumbnailFileIds || {},
     context.options.thumbnailUrls || {},
     context.projectId ?? null,
+    context.options.psqlBuiltinEnabled ?? true,
   );
 
   // --- allReferencedNodeIds (теперь часть контекста секции) ---

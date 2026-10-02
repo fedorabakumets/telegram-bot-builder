@@ -25,6 +25,8 @@ export const psqlQueryParamsSchema = z.object({
   connectionEnvVar: z.string().default(''),
   /** Connection string для прямого подключения (при custom) */
   connectionString: z.string().default(''),
+  /** Разрешён ли режим builtin (БД платформы); false — узел builtin не выполняет запрос */
+  builtinEnabled: z.boolean().default(true),
 });
 
 /** Тип параметров, выведенный из схемы */

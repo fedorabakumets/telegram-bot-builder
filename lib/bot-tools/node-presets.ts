@@ -440,8 +440,8 @@ export function getNodePresetData(type: Node['type']): Record<string, unknown> {
       autoTransitionTo: '',
       /** Включить автопереход */
       enableAutoTransition: false,
-      /** Источник подключения к БД */
-      connectionSource: 'builtin',
+      /** Источник подключения к БД: env — своя переменная бота (builtin только с PSQL_BUILTIN_ENABLED) */
+      connectionSource: 'env',
       /** Переменная окружения бота для подключения */
       connectionEnvVar: '',
       /** Connection string для ручного ввода */
