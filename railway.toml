@@ -1,7 +1,9 @@
+# Config-as-code сервиса панели на Railway (единственный конфиг, railway.json не используется).
+# Образ собирается по корневому Dockerfile; переменные окружения (DATABASE_URL и др.)
+# задаются в настройках сервиса, NODE_ENV=production выставляет скрипт start.
+
 [build]
 builder = "DOCKERFILE"
-# Используем кэширование Docker слоев для ускорения сборки
-buildCommand = "npm run build:fast"
 
 [deploy]
 startCommand = "npm start"
@@ -9,17 +11,3 @@ restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
 healthcheckPath = "/api/health"
 healthcheckTimeout = 60
-
-[env]
-NODE_ENV = "production"
-# Оптимизация для быстрой сборки
-NPM_CONFIG_CACHE = "/tmp/.npm"
-NPM_CONFIG_AUDIT = "false"
-NPM_CONFIG_FUND = "false"
-# Railway will automatically set DATABASE_URL to the private URL when PostgreSQL service is connected
-# This ensures internal network communication for better performance
-
-# PostgreSQL service connection
-# Railway automatically generates these variables when PostgreSQL service is connected:
-# - DATABASE_URL (automatically set to private URL for better performance)
-# - PGHOST, PGPORT, PGDATABASE, PGUSER, PGPASSWORD (individual connection parameters)

@@ -65,17 +65,17 @@ PORT=3000
 3. Установите переменную в настройках проекта
 
 ### Настройка деплоя
-В `railway.toml`:
+Конфиг сервиса панели — только `railway.toml` в корне (отдельного `railway.json` нет), сборка по корневому `Dockerfile`:
 ```toml
 [build]
-builder = "nixpacks"
+builder = "DOCKERFILE"
 
 [deploy]
 startCommand = "npm start"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
 healthcheckPath = "/api/health"
-healthcheckTimeout = 300
-restartPolicyType = "on_failure"
-restartPolicyMaxRetries = 3
+healthcheckTimeout = 60
 ```
 
 ## 🔧 Исправление распространенных ошибок
