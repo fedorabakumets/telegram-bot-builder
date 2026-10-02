@@ -69,7 +69,7 @@ ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT USAGE, SELECT,
 
 Роль видит данные всех проектов, это временное решение до ролей на проект. Каждый запрос бота к базе идёт через интернет, поэтому база должна быть недалеко от региона Railway. Redis для состояний бота (`RAILWAY_BOT_REDIS_URL`) лучше оставить на Railway, рядом с ботом.
 
-`RAILWAY_BOT_*` подставляются боту вместо `DATABASE_URL` и `REDIS_URL` панели, если у токена не заданы свои. Ссылки `${{VAR}}` в переменных ботов раскрываются только для `WORKER_ENV_PASSTHROUGH`, пока задан `WORKER_RAILWAY_PROJECTS`.
+`RAILWAY_BOT_*` подставляются боту вместо `DATABASE_URL` и `REDIS_URL` панели, если у токена не заданы свои. Ссылки `${{VAR}}` в переменных ботов раскрываются только для `WORKER_ENV_PASSTHROUGH` вне denylist — во всех режимах (см. [WORKER_DOCKER.md](./WORKER_DOCKER.md#серверные-переменные-и-боты-все-режимы)).
 
 ## Площадка из шаблона
 

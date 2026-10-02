@@ -1,6 +1,6 @@
 {
   "name": "🤖 Bot Manager — Управление ботами",
-  "description": "Менеджер Studio из Telegram. Нужен env STUDIO_BOT_MANAGER_TOKEN = PAT со scope bot_manager (подстановка ${{STUDIO_BOT_MANAGER_TOKEN}} с сервера). HTTP-ноды шлют Authorization: Bearer.",
+  "description": "Менеджер Studio из Telegram. Нужен env STUDIO_BOT_MANAGER_TOKEN = PAT со scope bot_manager (подстановка ${{STUDIO_BOT_MANAGER_TOKEN}} с сервера; имя должно быть в WORKER_ENV_PASSTHROUGH). HTTP-ноды шлют Authorization: Bearer.",
   "category": "utility",
   "tags": [
     "bot-manager",

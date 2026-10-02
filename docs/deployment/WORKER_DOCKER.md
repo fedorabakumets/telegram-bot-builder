@@ -10,14 +10,50 @@
 
 | | `process` | `docker` |
 |---|---|---|
-| Переменные окружения сервера (`DATABASE_URL`, `SESSION_SECRET`, ключи) | видны боту | не попадают в контейнер |
-| `${{VAR}}` в переменных бота | раскрывается любая переменная сервера | только из `WORKER_ENV_PASSTHROUGH` |
+| Переменные окружения сервера (`SESSION_SECRET`, `ADMIN_API_KEY`, ключи) | не наследуются: только технические (PATH, локаль, PYTHON*), `DATABASE_URL`/`REDIS_URL` и `WORKER_ENV_PASSTHROUGH` | не попадают в контейнер, кроме `WORKER_ENV_PASSTHROUGH` |
+| `${{VAR}}` в переменных бота | только из `WORKER_ENV_PASSTHROUGH` (вне denylist) | только из `WORKER_ENV_PASSTHROUGH` (вне denylist) |
 | Файлы | весь сервер | копии папок своих ботов (только чтение) и `uploads/<id>` своих проектов |
 | Системные файлы контейнера | — | только чтение, `/tmp` в памяти (64 МБ) |
 | Права | права сервера | `--cap-drop ALL`, `no-new-privileges`, не больше 256 процессов |
 | Лимиты | общий лимит контейнера app | `WORKER_MEMORY_LIMIT`, `WORKER_CPUS` на каждый контейнер |
 
 Память на человека такая же, как в режиме `owner` без Docker (~110 МБ на контейнер с ботом).
+
+## Серверные переменные и боты (все режимы)
+
+Окружение бота состоит из трёх слоёв:
+
+1. **Переменные токена** (вкладка «Переменные» у бота) — отдаются как есть.
+2. **Системные**: `BOT_TOKEN`, `TOKEN_ID`, `PROJECT_ID`, `ADMIN_IDS`, `API_BASE_URL`, `WEBHOOK_*`,
+   `DATABASE_URL`, `REDIS_URL` и технические переменные процесса: `PATH`, `HOME`, `USER`, `LOGNAME`,
+   `LANG`, `LANGUAGE`, `LC_*`, `TZ`, `TMPDIR`/`TMP`/`TEMP`, `PYTHON*`, `VIRTUAL_ENV`, `LD_LIBRARY_PATH`,
+   `SSL_CERT_FILE`, `SSL_CERT_DIR`, `REQUESTS_CA_BUNDLE`, системные переменные Windows, а также настройки
+   воркера `BOT_CODE_CACHE`, `AIOGRAM_LAZY_MODELS`, `WORKER_REPORT_MEMORY`, `MAX_UPDATE_AGE_SECONDS`,
+   `DISABLE_ASYNC_LOG`, `LOG_LEVEL`.
+3. **Остальные переменные сервера** боту не видны — ни наследованием процесса, ни ссылкой `${{VAR}}`.
+   Отдаются только перечисленные в `WORKER_ENV_PASSTHROUGH`, во всех режимах `WORKER_RUNTIME`
+   (`process`, `docker`, `remote`):
+
+```env
+WORKER_ENV_PASSTHROUGH=OPENAI_API_KEY,WEBHOOK_BASE_URL
+```
+
+Такие переменные видны коду бота в `os.environ` (например `{OPENAI_API_KEY}` в ноде `http_request`)
+и раскрываются в ссылках `${{OPENAI_API_KEY}}` в переменных токена. Нераскрытая ссылка остаётся
+текстом, в логе сервера — предупреждение `[BotEnv]`.
+
+**Denylist** — эти имена не отдаются ботам даже из `WORKER_ENV_PASSTHROUGH` (сравнение без учёта регистра,
+код: `server/bots/botEnvPolicy.ts`):
+
+- точные имена: `SESSION_SECRET`, `ADMIN_API_KEY`, `DATABASE_URL`, `REDIS_URL`, `TELEGRAM_BOT_TOKEN`,
+  `VITE_TELEGRAM_BOT_TOKEN`, `MCP_AGENT_TOKEN`;
+- префиксы: `PG*` (`PGHOST`, `PGPASSWORD`, …), `RAILWAY_*`, `RUNNER_*`;
+- подстроки в имени: `SECRET`, `PASSWORD`, `PASSWD`, `PRIVATE_KEY`, `DATABASE_URL`, `REDIS_URL`
+  (например `STRIPE_SECRET_KEY`, `SMTP_PASSWORD`, `RAILWAY_BOT_DATABASE_URL`).
+
+`DATABASE_URL` и `REDIS_URL` бот получает слоем 2, поэтому ссылка `${{DATABASE_URL}}` не нужна: если она
+осталась в переменных токена, она отбрасывается и бот получает подключение панели. Если секрет нужен боту,
+назовите его без запрещённых слов и добавьте в `WORKER_ENV_PASSTHROUGH` или задайте прямо в переменных токена.
 
 ## Как работает
 

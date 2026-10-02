@@ -307,6 +307,8 @@ keyboard (кнопка с customCallbackData: "approve_{user_id}")
 
 `{имя}` подставляется из переменных сценария и **env бота** (вкладка Бот → env у токена). При конфликте имён побеждают переменные сценария/FSM. Пример Bearer: `httpRequestAuthBearerToken: "{API_TOKEN}"`.
 
+Переменные **сервера** (`SESSION_SECRET`, `ADMIN_API_KEY` и др.) в `{имя}` не подставляются: бот видит только переменные, перечисленные администратором в `WORKER_ENV_PASSTHROUGH` (вне denylist, см. `docs/deployment/WORKER_DOCKER.md`).
+
 
 ### 🗄️ Таблица данных (`bot_table`)
 

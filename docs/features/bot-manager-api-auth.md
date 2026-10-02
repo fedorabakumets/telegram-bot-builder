@@ -42,6 +42,8 @@ curl -s -X POST http://localhost:5000/api/agent-tokens -b cookies.txt \
 
 ```env
 STUDIO_BOT_MANAGER_TOKEN=mcp_...
+# без этого бот не увидит переменную сервера ни в os.environ, ни через ${{…}}
+WORKER_ENV_PASSTHROUGH=STUDIO_BOT_MANAGER_TOKEN
 # production:
 # BOT_MANAGER_ADMIN_IDS=123456789
 ```
@@ -52,7 +54,7 @@ STUDIO_BOT_MANAGER_TOKEN=mcp_...
 STUDIO_BOT_MANAGER_TOKEN=${{STUDIO_BOT_MANAGER_TOKEN}}
 ```
 
-`${{…}}` подставляется из whitelist серверных ключей при генерации `.env` бота (`ALLOWED_SERVER_ENV_KEYS`).
+`${{…}}` подставляется при генерации `.env` бота только для имён из `WORKER_ENV_PASSTHROUGH`, не попавших в denylist (`server/bots/botEnvPolicy.ts`, см. [WORKER_DOCKER.md](../deployment/WORKER_DOCKER.md#серверные-переменные-и-боты-все-режимы)).
 
 4. Перезапустить бота. HTTP-ноды шаблона шлют:
 
