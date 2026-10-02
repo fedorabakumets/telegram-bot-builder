@@ -23,19 +23,14 @@ interface BotEnvValueViewProps {
 export function BotEnvValueView({ displayValue, masked, isServerRef }: BotEnvValueViewProps) {
   if (masked) {
     return (
-      <span
-        className="inline-flex h-5 items-center gap-[3px] rounded-full bg-muted px-2"
-        aria-label="Скрыто"
-      >
-        {Array.from({ length: 5 }, (_, i) => (
-          <span key={i} className="h-1 w-1 rounded-full bg-muted-foreground/70" />
-        ))}
+      <span className="font-mono text-xs tracking-[0.28em] text-muted-foreground" aria-label="Скрыто">
+        ••••••
       </span>
     );
   }
   if (isServerRef) {
     return (
-      <span className="inline-flex max-w-full truncate rounded-full bg-violet-500/10 px-2 py-0.5 font-mono text-[11px] text-violet-700 dark:text-violet-300">
+      <span className="inline-flex w-fit max-w-full truncate rounded-full bg-violet-500/10 px-2 py-0.5 font-mono text-[11px] text-violet-700 dark:text-violet-300">
         {displayValue}
       </span>
     );
@@ -44,7 +39,7 @@ export function BotEnvValueView({ displayValue, masked, isServerRef }: BotEnvVal
     const on = displayValue === 'true';
     return (
       <span className={cn(
-        'inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium',
+        'inline-flex w-fit max-w-full items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium',
         on
           ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
           : 'bg-muted text-muted-foreground',

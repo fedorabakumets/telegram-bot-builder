@@ -33,12 +33,13 @@ export function BotEnvStagingBar({
   const label = changesCount === 1 ? 'изменение' : 'изменений';
 
   return (
-    <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-2.5 py-1.5">
+    <div className="@container mb-3">
+    <div className="flex flex-col gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-2.5 py-1.5 @[26rem]:flex-row @[26rem]:flex-wrap @[26rem]:items-center @[26rem]:justify-between">
       <span className="inline-flex items-center gap-1.5 px-1 text-xs font-medium text-amber-800 dark:text-amber-200">
         <Pencil className="h-3 w-3" />
         {changesCount} {label}
       </span>
-      <div className="flex items-center gap-1">
+      <div className="flex flex-wrap items-center gap-1">
         <Button size="sm" variant="ghost" onClick={onDiscard} disabled={isSaving}
           className="h-7 rounded-lg px-2 text-xs text-muted-foreground">
           Сбросить
@@ -54,6 +55,7 @@ export function BotEnvStagingBar({
           Перезапустить
         </Button>
       </div>
+    </div>
     </div>
   );
 }

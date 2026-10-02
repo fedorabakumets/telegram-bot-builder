@@ -93,7 +93,7 @@ export function BotEnvPanel({ projectId, tokenId, token, adminIds, pending }: Bo
   }
 
   return (
-    <div className="space-y-4">
+    <div className="@container space-y-4">
       <BotEnvToolbar
         totalCount={totalCount}
         showRaw={showRaw}

@@ -116,18 +116,20 @@ export function BotEnvRow({
       : actualValue;
 
   const masked = isSecret && !isServerRef && revealed === null;
-  const actionBtn = 'h-7 w-7 shrink-0 rounded-md text-muted-foreground/80 opacity-80 hover:bg-background hover:text-foreground sm:opacity-0 sm:group-hover/row:opacity-100 focus-visible:opacity-100';
+  const actionBtn = 'h-8 w-8 shrink-0 rounded-md text-muted-foreground hover:bg-background hover:text-foreground';
 
   return (
     <div className={cn(
-      'group/row grid grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)_auto] items-center gap-x-2 px-3 py-2 transition-colors hover:bg-muted/40',
+      'group/row flex flex-col gap-1.5 px-3 py-2 transition-colors hover:bg-muted/40',
+      '@[24rem]:flex-row @[24rem]:items-center @[24rem]:gap-3',
       pendingValue !== undefined && 'border-l-2 border-l-amber-400 bg-amber-500/[0.08]',
     )}>
-      <span className="inline-flex min-w-0 items-center gap-1 font-mono text-[11px] font-medium tracking-tight text-foreground/90" title={envKey}>
-        {!canEdit && <Lock className="h-3 w-3 shrink-0 text-muted-foreground/55" />}
+      <span className="inline-flex min-w-0 items-center gap-1 font-mono text-[11px] font-medium tracking-tight text-foreground @[24rem]:w-[42%] @[24rem]:shrink-0" title={envKey}>
+        {!canEdit && <Lock className="h-3 w-3 shrink-0 text-muted-foreground" />}
         <span className="truncate">{envKey}</span>
       </span>
 
+      <div className="flex min-w-0 flex-1 items-center gap-1">
       {editing ? (
         <div className="flex min-w-0 flex-1 items-center gap-1">
           <Input
@@ -135,7 +137,7 @@ export function BotEnvRow({
             onChange={(e) => setEditValue(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') handleSaveEdit(); if (e.key === 'Escape') setEditing(false); }}
             onBlur={() => { if (!skipBlurRef.current) handleSaveEdit(); skipBlurRef.current = false; }}
-            className="h-7 min-w-0 flex-1 rounded-md text-xs"
+            className="h-8 min-w-0 flex-1 rounded-md text-xs"
             autoFocus
           />
           <div onMouseDown={() => { skipBlurRef.current = true; }}>
@@ -144,7 +146,7 @@ export function BotEnvRow({
         </div>
       ) : (
         <span
-          className={cn('min-w-0', canEdit && 'cursor-text')}
+          className={cn('flex min-h-8 min-w-0 flex-1 items-center', canEdit && 'cursor-text')}
           onClick={() => { if (canEdit) handleStartEdit(); }}
           title={masked ? (canEdit ? 'Нажмите, чтобы изменить' : 'Только для чтения') : displayValue}
         >
@@ -152,7 +154,7 @@ export function BotEnvRow({
         </span>
       )}
 
-      <div className="flex items-center justify-end">
+      <div className="flex shrink-0 items-center">
         {isSecret && (
           <Button variant="ghost" size="icon" className={actionBtn} onClick={handleToggleReveal} title="Показать/скрыть">
             {revealed ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}

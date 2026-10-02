@@ -47,7 +47,7 @@ export function BotEnvAddRow({ onSave, onCancel, isPending }: BotEnvAddRowProps)
   }
 
   return (
-    <div className="flex items-center gap-1.5 rounded-xl border border-primary/25 bg-primary/5 p-2 shadow-sm">
+    <div className="flex flex-col gap-1.5 rounded-xl border border-primary/25 bg-primary/5 p-2 shadow-sm @[28rem]:flex-row @[28rem]:items-center">
       <Input
         value={key}
         onChange={(e) => setKey(e.target.value.toUpperCase())}
@@ -66,6 +66,7 @@ export function BotEnvAddRow({ onSave, onCancel, isPending }: BotEnvAddRowProps)
         className="h-8 min-w-0 flex-1 rounded-lg text-xs"
         disabled={isPending}
       />
+      <div className="flex items-center justify-end gap-0.5">
       <BotEnvServerVarsPopover onSelect={(val) => setValue(val)} />
       <Button
         variant="ghost" size="icon"
@@ -95,6 +96,7 @@ export function BotEnvAddRow({ onSave, onCancel, isPending }: BotEnvAddRowProps)
       >
         <X className="h-3.5 w-3.5" />
       </Button>
+      </div>
     </div>
   );
 }

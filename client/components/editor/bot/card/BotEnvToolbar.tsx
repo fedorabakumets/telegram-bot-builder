@@ -42,7 +42,7 @@ export function BotEnvToolbar({
 
   return (
     <>
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-[13px] tracking-tight">
           <span className="font-medium tabular-nums">{totalCount}</span>
           <span className="ml-1.5 text-muted-foreground">{varsWord(totalCount)}</span>
@@ -64,8 +64,9 @@ export function BotEnvToolbar({
           >
             <Search className="h-4 w-4" />
           </Button>
-          <Button size="sm" className="ml-1 h-8 gap-1 rounded-lg px-2.5 text-xs shadow-sm" onClick={onAdd}>
-            <Plus className="h-3.5 w-3.5" /> Новая
+          <Button size="sm" className="ml-1 h-8 gap-1 rounded-lg px-2.5 text-xs shadow-sm" onClick={onAdd} title="Новая переменная">
+            <Plus className="h-3.5 w-3.5" />
+            <span className="hidden @[22rem]:inline">Новая</span>
           </Button>
         </div>
       </div>
