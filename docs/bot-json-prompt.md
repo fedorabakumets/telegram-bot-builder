@@ -635,8 +635,8 @@
     "textTemplate": "",
     "enableAutoTransition": true,
     "autoTransitionTo": "next_node_id",
-    "connectionSource": "builtin",
-    "connectionEnvVar": "",
+    "connectionSource": "env",
+    "connectionEnvVar": "MY_DB_URL",
     "connectionString": ""
   }
 }
@@ -647,7 +647,11 @@
 | `query` | SQL-запрос (поддерживает `{переменные}`) |
 | `saveResultTo` | Имя переменной для результата |
 | `resultFormat` | `"first_row"` — первая строка как объект, `"all_rows"` — массив, `"scalar"` — одно значение |
-| `connectionSource` | `"builtin"` — встроенная БД, `"env"` — из переменной окружения, `"custom"` — строка подключения |
+| `connectionSource` | `"env"` — своя БД пользователя из переменной бота (по умолчанию), `"custom"` — строка подключения вручную, `"builtin"` — БД платформы (**только если администратор задал `PSQL_BUILTIN_ENABLED=true`**) |
+| `connectionEnvVar` | Имя переменной бота (вкладка «Бот» → переменные) со строкой `postgresql://user:pass@host:5432/db` — при `env` |
+| `connectionString` | Строка подключения — при `custom` |
+
+> ⚠️ **Подключение к БД:** по умолчанию режим `builtin` выключен — узел с ним не выполняет запрос и пишет в лог «подключение к БД платформы отключено администратором». Всегда используй `"connectionSource": "env"` и попроси пользователя добавить переменную бота (например `MY_DB_URL`) со строкой подключения к **своей** базе (Neon, Supabase, Railway и т.п.). Строка должна содержать явный хост; пустая строка, адрес без хоста и параметры `host`/`hostaddr`/`passfile`/`service` в query отклоняются — запрос не выполняется.
 
 #### Примеры SQL
 
@@ -2004,7 +2008,8 @@ HTTP-узел с `httpRequestResponseFormat: "file"` сохраняет отве
           "resultFormat": "first_row",
           "enableAutoTransition": true,
           "autoTransitionTo": "msg-profile",
-          "connectionSource": "builtin"
+          "connectionSource": "env",
+          "connectionEnvVar": "MY_DB_URL"
         }
       },
       {
@@ -2047,7 +2052,8 @@ HTTP-узел с `httpRequestResponseFormat: "file"` сохраняет отве
     "query": "UPDATE profiles SET reputation = 50 WHERE reputation < 50",
     "saveResultTo": "",
     "resultFormat": "scalar",
-    "connectionSource": "builtin"
+    "connectionSource": "env",
+    "connectionEnvVar": "MY_DB_URL"
   }
 }
 ```
@@ -2075,7 +2081,8 @@ HTTP-узел с `httpRequestResponseFormat: "file"` сохраняет отве
     "resultFormat": "scalar",
     "enableAutoTransition": true,
     "autoTransitionTo": "msg-rep-done",
-    "connectionSource": "builtin"
+    "connectionSource": "env",
+    "connectionEnvVar": "MY_DB_URL"
   }
 },
 {

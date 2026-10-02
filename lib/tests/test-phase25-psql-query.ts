@@ -11,6 +11,8 @@
  *  G. Граничные случаи (8 тестов)
  *  H. Интеграция с полным проектом (10 тестов)
  *  I. Регрессия — отсутствие дублей (5 тестов)
+ *  J. Подключение к внешней БД (10 тестов)
+ *  K. Флаг psqlBuiltinEnabled и проверка строки подключения (11 тестов)
  */
 
 import fs from 'fs';
@@ -999,14 +1001,16 @@ test('J02', 'connectionSource: builtin → db_pool is None проверка пр
   ok(code.includes('db_pool is None'), 'db_pool is None не найден для builtin');
 });
 
-test('J03', 'connectionSource: env → asyncpg.create_pool(os.environ.get("MY_DB" присутствует', () => {
+test('J03', 'connectionSource: env → _psql_safe_dsn(os.environ.get("MY_DB" и create_pool(_dsn присутствуют', () => {
   const p = makeCleanProject([makeStartNode(), makePsqlQueryNode('pq1', {
     connectionSource: 'env',
     connectionEnvVar: 'MY_DB',
   })]);
   const code = gen(p, 'J03');
-  ok(code.includes('asyncpg.create_pool(os.environ.get("MY_DB"'),
-    'asyncpg.create_pool(os.environ.get("MY_DB" не найден для env');
+  ok(code.includes('_psql_safe_dsn(os.environ.get("MY_DB"'),
+    '_psql_safe_dsn(os.environ.get("MY_DB" не найден для env');
+  ok(code.includes('asyncpg.create_pool(_dsn, min_size=1, max_size=3, **_dsn_kwargs)'),
+    'asyncpg.create_pool(_dsn, ...) не найден для env');
 });
 
 test('J04', 'connectionSource: env → НЕТ db_pool is None проверки', () => {
@@ -1081,6 +1085,150 @@ test('J10', 'connectionSource: custom → синтаксис Python OK', () => {
   })], true);
   const code = genDB(p, 'J10');
   syntax(code, 'J10');
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// БЛОК K: Флаг psqlBuiltinEnabled и проверка строки подключения
+// ═══════════════════════════════════════════════════════════════════════════════
+
+console.log('\n── Блок K: psqlBuiltinEnabled и _psql_safe_dsn ─────────────────');
+
+/**
+ * Генерирует код с явным значением флага psqlBuiltinEnabled
+ * @param project - Объект проекта
+ * @param label - Метка для имени бота
+ * @param psqlBuiltinEnabled - Разрешён ли режим builtin
+ * @returns Сгенерированный Python-код с поддержкой БД
+ */
+function genFlag(project: any, label: string, psqlBuiltinEnabled: boolean): string {
+  return generatePythonCode(project, {
+    botName: `PsqlQueryFlag_${label}`,
+    userDatabaseEnabled: true,
+    psqlBuiltinEnabled,
+  });
+}
+
+/**
+ * Возвращает тело обработчика узла до первой строки верхнего уровня после него
+ * @param code - Сгенерированный Python-код
+ * @param nodeId - ID узла
+ * @returns Текст обработчика
+ */
+function handlerBody(code: string, nodeId: string): string {
+  const start = code.indexOf(`async def handle_callback_${nodeId}(`);
+  ok(start !== -1, `handle_callback_${nodeId} не найден`);
+  const rest = code.slice(start);
+  const next = rest.slice(1).search(/\n[^\s]/);
+  return next === -1 ? rest : rest.slice(0, next + 1);
+}
+
+test('K01', 'psqlBuiltinEnabled: false → builtin-узел не обращается к db_pool', () => {
+  const p = makeCleanProject([makeStartNode(), makePsqlQueryNode('pq1', { connectionSource: 'builtin' })], true);
+  const body = handlerBody(genFlag(p, 'K01', false), 'pq1');
+  ok(!body.includes('db_pool'), 'db_pool найден в обработчике при выключенном builtin');
+  ok(!body.includes('_conn.'), 'запрос (_conn.) найден в обработчике при выключенном builtin');
+});
+
+test('K02', 'psqlBuiltinEnabled: false → в логе понятная ошибка «отключено администратором»', () => {
+  const p = makeCleanProject([makeStartNode(), makePsqlQueryNode('pq1')], true);
+  const body = handlerBody(genFlag(p, 'K02', false), 'pq1');
+  ok(body.includes('отключено администратором'), 'нет сообщения об отключении builtin');
+});
+
+test('K03', 'psqlBuiltinEnabled: false + узел без connectionSource (старые проекты) → тоже заблокирован', () => {
+  const node = makePsqlQueryNode('pq1');
+  delete (node.data as any).connectionSource;
+  const p = makeCleanProject([makeStartNode(), node], true);
+  ok(!handlerBody(genFlag(p, 'K03', false), 'pq1').includes('db_pool.acquire()'),
+    'старый узел без connectionSource выполняет запрос к db_pool');
+});
+
+test('K04', 'psqlBuiltinEnabled: false → синтаксис Python OK (с автопереходом)', () => {
+  const p = makeCleanProject([
+    makeStartNode(),
+    makePsqlQueryNode('pq1', { autoTransitionTo: 'msg1' }),
+    makeMessageNode('msg1'),
+  ], true);
+  syntax(genFlag(p, 'K04', false), 'K04');
+});
+
+test('K05', 'psqlBuiltinEnabled: true → builtin работает как раньше', () => {
+  const p = makeCleanProject([makeStartNode(), makePsqlQueryNode('pq1')], true);
+  const body = handlerBody(genFlag(p, 'K05', true), 'pq1');
+  ok(body.includes('async with db_pool.acquire() as _conn:'), 'db_pool.acquire() не найден при включённом builtin');
+  ok(!body.includes('отключено администратором'), 'сообщение об отключении при включённом builtin');
+});
+
+test('K06', 'psqlBuiltinEnabled: false → env и custom узлы продолжают работать', () => {
+  const p = makeCleanProject([
+    makeStartNode(),
+    makePsqlQueryNode('pq1', { connectionSource: 'env', connectionEnvVar: 'MY_DB' }),
+    makePsqlQueryNode('pq2', { connectionSource: 'custom', connectionString: 'postgresql://u:p@h:5432/d' }),
+  ], true);
+  const code = genFlag(p, 'K06', false);
+  ok(handlerBody(code, 'pq1').includes('_custom_pool.acquire()'), 'env-узел не выполняет запрос');
+  ok(handlerBody(code, 'pq2').includes('_custom_pool.acquire()'), 'custom-узел не выполняет запрос');
+});
+
+test('K07', 'два env/custom узла → хелпер _psql_safe_dsn объявлен ровно один раз', () => {
+  const p = makeCleanProject([
+    makeStartNode(),
+    makePsqlQueryNode('pq1', { connectionSource: 'env', connectionEnvVar: 'A_DB' }),
+    makePsqlQueryNode('pq2', { connectionSource: 'custom', connectionString: 'postgresql://u:p@h/d' }),
+  ]);
+  const count = (gen(p, 'K07').match(/def _psql_safe_dsn\(/g) || []).length;
+  ok(count === 1, `_psql_safe_dsn объявлен ${count} раз — ожидается 1`);
+});
+
+test('K08', 'только builtin-узлы → хелпер _psql_safe_dsn не генерируется', () => {
+  const p = makeCleanProject([makeStartNode(), makePsqlQueryNode('pq1')]);
+  ok(!gen(p, 'K08').includes('_psql_safe_dsn'), '_psql_safe_dsn сгенерирован без env/custom узлов');
+});
+
+test('K09', 'env-узел → локальный import asyncpg (работает без userDatabaseEnabled)', () => {
+  const p = makeCleanProject([makeStartNode(), makePsqlQueryNode('pq1', { connectionSource: 'env', connectionEnvVar: 'MY_DB' })]);
+  ok(handlerBody(gen(p, 'K09'), 'pq1').includes('import asyncpg'), 'нет import asyncpg в обработчике env-узла');
+});
+
+test('K10', 'имя env-переменной с кавычкой экранируется (нет инъекции в Python)', () => {
+  const p = makeCleanProject([makeStartNode(), makePsqlQueryNode('pq1', {
+    connectionSource: 'env',
+    connectionEnvVar: 'X", "")); import os; os.system("id"); (("',
+  })]);
+  const code = gen(p, 'K10');
+  ok(!code.includes('os.environ.get("X", ""));'), 'имя переменной вставлено без экранирования');
+  syntax(code, 'K10');
+});
+
+test('K11', '_psql_safe_dsn не пропускает подключения с хостом/паролем из окружения', () => {
+  const p = makeCleanProject([makeStartNode(), makePsqlQueryNode('pq1', { connectionSource: 'env', connectionEnvVar: 'MY_DB' })]);
+  const code = gen(p, 'K11');
+  const start = code.indexOf('def _psql_safe_dsn(');
+  ok(start !== -1, '_psql_safe_dsn не найден');
+  const tail = code.slice(start + 1).search(/\n[^\s]/);
+  const helper = code.slice(start, tail === -1 ? undefined : start + 1 + tail);
+  const check = [
+    helper,
+    'assert _psql_safe_dsn("") == (None, {})',
+    'assert _psql_safe_dsn("postgresql:///db")[0] is None',
+    'assert _psql_safe_dsn("mysql://u:p@h/db")[0] is None',
+    'assert _psql_safe_dsn("postgresql://u:p@h/db?host=/tmp")[0] is None',
+    'assert _psql_safe_dsn("postgresql://u@h/db?service=x")[0] is None',
+    'assert _psql_safe_dsn("postgresql://u@h/db?passfile=/x")[0] is None',
+    'assert _psql_safe_dsn("postgresql://u@h/db")[1] == {"password": ""}',
+    'assert _psql_safe_dsn("postgresql://u:@h/db")[1] == {"password": ""}',
+    'assert _psql_safe_dsn("postgresql://u:p@h:5432/db") == ("postgresql://u:p@h:5432/db", {})',
+    'assert _psql_safe_dsn("postgresql://u@h/db?password=qp")[1] == {}',
+  ].join('\n');
+  const tmp = '_tmp_pq_K11.py';
+  fs.writeFileSync(tmp, check, 'utf-8');
+  try {
+    execSync(`python ${tmp}`, { stdio: 'pipe' });
+  } catch (e: any) {
+    throw new Error(`проверка _psql_safe_dsn упала:\n${e.stderr?.toString() ?? e}`);
+  } finally {
+    try { fs.unlinkSync(tmp); } catch {}
+  }
 });
 
 // ─── Итоги ───────────────────────────────────────────────────────────────────

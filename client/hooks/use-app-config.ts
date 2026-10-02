@@ -19,6 +19,8 @@ export interface AppConfig {
   skipAuth?: boolean;
   /** Публичный базовый URL API (из API_BASE_URL или origin запроса) */
   apiBaseUrl?: string;
+  /** Разрешён ли узлу psql_query режим builtin (БД платформы); по умолчанию false */
+  psqlBuiltinEnabled?: boolean;
 }
 
 /**

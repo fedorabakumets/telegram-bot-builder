@@ -67,6 +67,12 @@ export interface GenerationOptions {
    * Приоритет: thumbnailFileIds > thumbnailUrls.
    */
   thumbnailUrls?: Record<string, string>;
+  /**
+   * Разрешить узлу psql_query режим builtin (запросы к БД платформы через db_pool).
+   * По умолчанию true для обратной совместимости lib; сервер передаёт значение
+   * PSQL_BUILTIN_ENABLED (по умолчанию false). При false узел builtin не выполняет запрос.
+   */
+  psqlBuiltinEnabled?: boolean;
 }
 
 /**
@@ -90,6 +96,7 @@ export const DEFAULT_GENERATION_OPTIONS: Required<GenerationOptions> = {
   telegramFileIds: {},
   thumbnailFileIds: {},
   thumbnailUrls: {},
+  psqlBuiltinEnabled: true,
 } as const;
 
 /**

@@ -16,6 +16,8 @@ export interface GeneratedCodeInput {
   catchAllHandlers: boolean;
   protectContent: boolean;
   contentCache: boolean;
+  /** Разрешён ли узлу psql_query режим builtin (PSQL_BUILTIN_ENABLED) */
+  psqlBuiltinEnabled: boolean;
   /** Контрольная сумма lib/bot-generator + templates + scaffolding */
   generatorVersion: string;
 }
@@ -45,6 +47,7 @@ export function buildGeneratedCodeFingerprint(input: GeneratedCodeInput): string
     catchAllHandlers: input.catchAllHandlers,
     protectContent: input.protectContent,
     contentCache: input.contentCache,
+    psqlBuiltinEnabled: input.psqlBuiltinEnabled,
     generatorVersion: input.generatorVersion,
   });
   return createHash('sha256').update(payload).digest('hex');

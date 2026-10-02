@@ -11,6 +11,7 @@
 import type { Request, Response } from "express";
 import { URL } from "node:url";
 import { storage } from "../../../storages/storage";
+import { isPsqlBuiltinEnabled } from "../../../utils/isPsqlBuiltinEnabled";
 
 /**
  * Обрабатывает запрос на экспорт проекта
@@ -40,6 +41,7 @@ export async function exportProjectHandler(req: Request, res: Response): Promise
         const pythonCode = generatePythonCode(project.data as any, {
             botName: project.name,
             userDatabaseEnabled,
+            psqlBuiltinEnabled: isPsqlBuiltinEnabled(),
         });
 
         res.json({ code: pythonCode });

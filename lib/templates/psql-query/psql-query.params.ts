@@ -23,4 +23,6 @@ export interface PsqlQueryTemplateParams {
   connectionEnvVar: string;
   /** Connection string для прямого подключения (при connectionSource === 'custom') */
   connectionString: string;
+  /** Разрешён ли режим builtin (БД платформы); при false узел builtin генерирует заглушку без запроса */
+  builtinEnabled: boolean;
 }

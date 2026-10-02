@@ -20,6 +20,7 @@ const baseInput: GeneratedCodeInput = {
   catchAllHandlers: true,
   protectContent: false,
   contentCache: false,
+  psqlBuiltinEnabled: false,
   generatorVersion: 'gen-v1',
 };
 

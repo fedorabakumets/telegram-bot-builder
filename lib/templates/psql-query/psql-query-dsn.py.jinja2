@@ -1,0 +1,37 @@
+{#
+  Хелпер проверки строки подключения для узлов psql_query (режимы env и custom)
+
+  @fileoverview Не даёт asyncpg подставить хост и пароль из окружения воркера
+  (PGHOST, PGPASSWORD, ~/.pgpass) — иначе пустая или неполная строка подключения
+  уводит запрос в БД платформы.
+#}
+
+def _psql_safe_dsn(dsn):
+    """Проверяет строку подключения psql_query.
+
+    Требует схему postgres/postgresql и явный хост в адресе, запрещает параметры
+    host/hostaddr/passfile/service в query. Если пароль не задан ни в адресе, ни
+    в ?password=, передаёт пустой пароль явно, чтобы asyncpg не взял PGPASSWORD
+    или ~/.pgpass.
+
+    Returns:
+        tuple: (dsn или None, дополнительные аргументы для asyncpg.create_pool)
+    """
+    from urllib.parse import urlsplit, parse_qs
+    dsn = (dsn or "").strip()
+    if not dsn:
+        return None, {}
+    try:
+        _parts = urlsplit(dsn)
+        _host = _parts.hostname
+        _password = _parts.password
+    except Exception:
+        return None, {}
+    if _parts.scheme not in ("postgres", "postgresql") or not _host:
+        return None, {}
+    _query = parse_qs(_parts.query)
+    _query_keys = {k.lower() for k in _query}
+    if _query_keys & {"host", "hostaddr", "passfile", "service"}:
+        return None, {}
+    _has_password = bool(_password) or any(v for k, vs in _query.items() if k.lower() == "password" for v in vs)
+    return dsn, ({} if _has_password else {"password": ""})

@@ -15,6 +15,7 @@
 | `connectionSource` | `string` | ❌ | `builtin` / `env` / `custom` — источник подключения |
 | `connectionEnvVar` | `string` | ❌ | Имя переменной окружения (при `env`) |
 | `connectionString` | `string` | ❌ | Прямой URL подключения (при `custom`) |
+| `builtinEnabled` | `boolean` | ❌ | Разрешён ли `builtin` (по умолчанию `true`; сервер передаёт `PSQL_BUILTIN_ENABLED`) |
 
 ## Форматы результата
 
@@ -71,6 +72,9 @@ import { generatePsqlQueryHandlers, collectPsqlQueryEntries } from './psql-query
 // Генерация Python-кода для всех psql_query узлов
 const code = generatePsqlQueryHandlers(nodes);
 
+// builtin запрещён: узлы builtin генерируют заглушку без обращения к db_pool
+const safeCode = generatePsqlQueryHandlers(nodes, { builtinEnabled: false });
+
 // Только сбор параметров (без рендеринга)
 const entries = collectPsqlQueryEntries(nodes);
 ```
@@ -79,13 +83,17 @@ const entries = collectPsqlQueryEntries(nodes);
 
 Параметр `connectionSource` определяет способ подключения к базе данных:
 
-### `builtin` (по умолчанию)
+### `builtin` (если `connectionSource` не задан)
 
-Используется встроенный пул `db_pool`, который создаётся при старте бота. Если `db_pool` недоступен — обработчик завершается без ошибки.
+Используется встроенный пул `db_pool` (БД платформы), который создаётся при старте бота. Если `db_pool` недоступен — обработчик завершается без ошибки.
+
+При `builtinEnabled: false` (на сервере — по умолчанию, пока не задан `PSQL_BUILTIN_ENABLED=true`) обработчик не обращается к `db_pool`: пишет в лог `⛔ ... подключение к БД платформы отключено администратором` и завершается.
 
 ### `env`
 
 Подключение через переменную окружения. В `connectionEnvVar` указывается имя переменной, содержащей connection string. Пул создаётся на лету и закрывается после выполнения запроса.
+
+Для `env` и `custom` строка проходит через `_psql_safe_dsn` (генерируется один раз на бота, шаблон `psql-query-dsn.py.jinja2`). Нужна схема `postgres`/`postgresql` и явный хост, параметры `host`/`hostaddr`/`passfile`/`service` в query запрещены. Без пароля в адресе передаётся `password=""`, чтобы asyncpg не подставил `PGHOST`/`PGPASSWORD`/`~/.pgpass` из окружения воркера. Если строка отклонена, запрос не выполняется.
 
 ```typescript
 {

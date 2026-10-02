@@ -10,14 +10,20 @@
   @param {string} connectionSource — builtin | env | custom
   @param {string} connectionEnvVar — имя переменной окружения (при env)
   @param {string} connectionString — прямой URL подключения (при custom)
+  @param {boolean} builtinEnabled  — разрешён ли режим builtin (PSQL_BUILTIN_ENABLED на сервере)
 #}
 {%- set safe_node_id = nodeId | safe_name -%}
+{%- set builtin_blocked = connectionSource == 'builtin' and not builtinEnabled -%}
 
 @dp.callback_query(lambda c: c.data == "{{ nodeId }}")
 async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery, state: FSMContext = None):
     """Узел psql_query: выполняет SQL-запрос к базе данных."""
     try:
         user_id = callback_query.from_user.id
+        {% if builtin_blocked %}
+        logging.error(f"⛔ psql_query [{{ nodeId }}]: подключение к БД платформы отключено администратором — укажите своё подключение в настройках узла")
+        return
+        {% else %}
         logging.info(f"🗄️ psql_query [{{ nodeId }}]: начало выполнения для пользователя {user_id}")
         if user_id not in user_data:
             user_data[user_id] = {}
@@ -29,11 +35,17 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
         _all_vars = await init_all_user_vars(user_id)
         _query = replace_variables_in_text({{ query | tojson }}, _all_vars)
         logging.info(f"🗄️ psql_query [{{ nodeId }}]: выполняем запрос для {user_id}")
+        {% if connectionSource == 'env' or connectionSource == 'custom' %}
+        import asyncpg
         {% if connectionSource == 'env' %}
-        _custom_pool = await asyncpg.create_pool(os.environ.get("{{ connectionEnvVar }}", ""), min_size=1, max_size=3)
-        async with _custom_pool.acquire() as _conn:
-        {% elif connectionSource == 'custom' %}
-        _custom_pool = await asyncpg.create_pool({{ connectionString | tojson }}, min_size=1, max_size=3)
+        _dsn, _dsn_kwargs = _psql_safe_dsn(os.environ.get({{ connectionEnvVar | tojson }}, ""))
+        {% else %}
+        _dsn, _dsn_kwargs = _psql_safe_dsn({{ connectionString | tojson }})
+        {% endif %}
+        if _dsn is None:
+            logging.error(f"⛔ psql_query [{{ nodeId }}]: не задано подключение — нужен адрес вида postgresql://user:pass@host:5432/db")
+            return
+        _custom_pool = await asyncpg.create_pool(_dsn, min_size=1, max_size=3, **_dsn_kwargs)
         async with _custom_pool.acquire() as _conn:
         {% else %}
         async with db_pool.acquire() as _conn:
@@ -86,6 +98,7 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
                 pass
         fake_cb = FakeCallback("{{ autoTransitionTo }}", callback_query.from_user, callback_query.message)
         await handle_callback_{{ safe_target }}(fake_cb, state=state)
+        {% endif %}
         {% endif %}
     except Exception as e:
         logging.error(f"❌ Ошибка в psql_query [{{ nodeId }}]: {e}")
