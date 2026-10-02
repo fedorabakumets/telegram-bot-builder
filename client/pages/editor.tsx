@@ -7,9 +7,6 @@
  * @module Editor
  */
 
-import { CodeEditorArea } from '@/components/editor/code/editor';
-import { CodePanel } from '@/components/editor/code/panel';
-import { ReadmePreview } from '@/components/editor/code/readme';
 import { useCodeGenerator as useCodeGeneratorServer } from '@/components/editor/code/hooks';
 import type { CodeFormat } from '@/components/editor/code/hooks';
 import { AppSidebar } from '@/components/editor/app-sidebar';
@@ -18,7 +15,6 @@ import { ComponentsSidebar } from '@/components/editor/sidebar/components-sideba
 import { PropertiesPanel } from '@/components/editor/properties/components/main/properties-panel';
 import { Canvas } from '@/components/editor/canvas/canvas/canvas';
 import { BotLayout } from '@/components/editor/bot/panel/BotLayout';
-import { TerminalPanel } from '@/components/editor/terminal/TerminalPanel';
 import { BotControl } from '@/components/editor/bot/bot-control';
 import { migrateAllKeyboardLayouts } from './editor/utils/keyboard-migration';
 import { getSheetIdFromUrl, getNodeIdFromUrl, syncEditorUrlParams } from './editor/utils/editor-url-params';
@@ -47,20 +43,28 @@ import { useDialogPanel } from '@/pages/editor/hooks/use-dialog-panel';
 import { useProjectNavigation } from '@/pages/editor/hooks/use-project-navigation';
 import { SaveTemplateModal } from '@/components/editor/header/components/save-template-modal';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'wouter';
 
-import { DialogPanel } from '@/components/editor/database/dialog/dialog-panel';
 import { UserMessagesLiveProvider } from '@/components/editor/database/user-database/contexts/user-messages-live-context';
-import { DialogsTabContent } from '@/components/editor/database/user-database/dialogs-tab/dialogs-tab-content';
-import { UserDatabasePanel } from '@/components/editor/database/user-database/user-database-panel';
-import { BroadcastPanel } from '@/components/editor/broadcast';
-import { AnalyticsPanel } from '@/components/editor/analytics';
-import { TablesPanel } from '@/components/editor/tables';
-import { FilesTabPage, type AttachTarget } from '@/components/editor/files';
-import { VersionsPanel } from '@/components/editor/versions';
-import { AgentTokensPanel } from '@/components/editor/agent';
-import { UserDetailsPanel } from '@/components/editor/database/user-details/user-details-panel';
+import type { AttachTarget } from '@/components/editor/files';
+import {
+  AgentTokensPanel,
+  AnalyticsPanel,
+  BroadcastPanel,
+  CodeEditorArea,
+  CodePanel,
+  DialogPanel,
+  DialogsTabContent,
+  FilesTabPage,
+  LazyPanelFallback,
+  ReadmePreview,
+  TablesPanel,
+  TerminalPanel,
+  UserDatabasePanel,
+  UserDetailsPanel,
+  VersionsPanel,
+} from './editor/lazy-panels';
 import { ProjectNotFound } from '@/components/editor/project-not-found';
 import { AdaptiveHeader } from '@/components/editor/header/adaptive-header';
 import { useArchiveProjectMutation } from '@/components/editor/sidebar/hooks/use-archive-project-mutation';
@@ -73,7 +77,6 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { MobilePropertiesSheet } from '@/pages/editor/components/mobile/mobile-properties-sheet';
 import { CanvasViewToggle } from '@/pages/editor/components/canvas-view-toggle';
 import { useCanvasView } from '@/pages/editor/hooks/use-canvas-view';
-import { JsonApplyBar } from '@/components/editor/code/panel';
 import { StagingBar, useStagingBar } from '@/components/editor/staging';
 import { invalidateBotStatusQueries } from '@/components/editor/bot/invalidate-bot-status-queries';
 import { useBotEditor } from '@/components/editor/canvas/canvas/use-bot-editor';
@@ -1567,29 +1570,31 @@ export default function Editor() {
 
   // Определяем содержимое панели кода
   const codeContent = activeProject ? (
-    <CodePanel
-      botDataArray={[activeProject.data as BotData]}
-      projectIds={[activeProject.id]}
-      projectName={activeProject.name}
-      onClose={handleCloseCodePanel}
-      selectedFormat={selectedFormat}
-      onFormatChange={handleFormatChange}
-      areAllCollapsed={areAllCollapsed}
-      onCollapseChange={setAreAllCollapsed}
-      showFullCode={showFullCode}
-      onShowFullCodeChange={setShowFullCode}
-      codeContent={generatedCodeContent}
-      isLoading={isCodeLoading}
-      displayContent={displayContent}
-      onApplyJson={(jsonString) => handleApplyJsonToBotData(jsonString)}
-      editedContent={editedJsonContent}
-      onResetEditor={() => {
-        isResettingEditorRef.current = true;
-        setEditedJsonContent('');
-        editorRef.current?.setValue(displayContent);
-        setTimeout(() => { isResettingEditorRef.current = false; }, 0);
-      }}
-    />
+    <Suspense fallback={<LazyPanelFallback />}>
+      <CodePanel
+        botDataArray={[activeProject.data as BotData]}
+        projectIds={[activeProject.id]}
+        projectName={activeProject.name}
+        onClose={handleCloseCodePanel}
+        selectedFormat={selectedFormat}
+        onFormatChange={handleFormatChange}
+        areAllCollapsed={areAllCollapsed}
+        onCollapseChange={setAreAllCollapsed}
+        showFullCode={showFullCode}
+        onShowFullCodeChange={setShowFullCode}
+        codeContent={generatedCodeContent}
+        isLoading={isCodeLoading}
+        displayContent={displayContent}
+        onApplyJson={(jsonString) => handleApplyJsonToBotData(jsonString)}
+        editedContent={editedJsonContent}
+        onResetEditor={() => {
+          isResettingEditorRef.current = true;
+          setEditedJsonContent('');
+          editorRef.current?.setValue(displayContent);
+          setTimeout(() => { isResettingEditorRef.current = false; }, 0);
+        }}
+      />
+    </Suspense>
   ) : null;
 
   // Показываем компонент 404 если проект не найден
@@ -1649,27 +1654,31 @@ export default function Editor() {
       // Показываем редактор кода поверх canvas
       <div className="h-full flex flex-col">
         {selectedFormat === 'readme' ? (
-          <ReadmePreview
-            markdownContent={displayContent}
-            theme={theme}
-            onContentChange={(content) => {
-              // Обновляем контент README в состоянии генератора
-              setCodeContent(prev => ({ ...prev, readme: content }));
-            }}
-          />
+          <Suspense fallback={<LazyPanelFallback />}>
+            <ReadmePreview
+              markdownContent={displayContent}
+              theme={theme}
+              onContentChange={(content) => {
+                // Обновляем контент README в состоянии генератора
+                setCodeContent(prev => ({ ...prev, readme: content }));
+              }}
+            />
+          </Suspense>
         ) : (
-          <CodeEditorArea
-            isMobile={false}
-            isLoading={isCodeLoading}
-            displayContent={displayContent}
-            selectedFormat={selectedFormat}
-            theme={theme}
-            editorRef={editorRef}
-            codeStats={codeStats}
-            setAreAllCollapsed={setAreAllCollapsed}
-            areAllCollapsed={areAllCollapsed}
-            onContentChange={(value) => { if (!isResettingEditorRef.current) setEditedJsonContent(value); }}
-          />
+          <Suspense fallback={<LazyPanelFallback />}>
+            <CodeEditorArea
+              isMobile={false}
+              isLoading={isCodeLoading}
+              displayContent={displayContent}
+              selectedFormat={selectedFormat}
+              theme={theme}
+              editorRef={editorRef}
+              codeStats={codeStats}
+              setAreAllCollapsed={setAreAllCollapsed}
+              areAllCollapsed={areAllCollapsed}
+              onContentChange={(value) => { if (!isResettingEditorRef.current) setEditedJsonContent(value); }}
+            />
+          </Suspense>
         )}
       </div>
     ) : (
@@ -1712,19 +1721,21 @@ export default function Editor() {
                 <CanvasViewToggle value={canvasView} onChange={handleViewChange} />
               </div>
               <div className="flex-1 min-h-0">
-                <CodeEditorArea
-                  isMobile={false}
-                  isLoading={false}
-                  displayContent={jsonContent}
-                  selectedFormat="json"
-                  theme={theme}
-                  editorRef={editorRef}
-                  codeStats={codeStats}
-                  setAreAllCollapsed={setAreAllCollapsed}
-                  areAllCollapsed={areAllCollapsed}
-                  onContentChange={handleJsonChange}
-                  className="border-0 rounded-none shadow-none"
-                />
+                <Suspense fallback={<LazyPanelFallback />}>
+                  <CodeEditorArea
+                    isMobile={false}
+                    isLoading={false}
+                    displayContent={jsonContent}
+                    selectedFormat="json"
+                    theme={theme}
+                    editorRef={editorRef}
+                    codeStats={codeStats}
+                    setAreAllCollapsed={setAreAllCollapsed}
+                    areAllCollapsed={areAllCollapsed}
+                    onContentChange={handleJsonChange}
+                    className="border-0 rounded-none shadow-none"
+                  />
+                </Suspense>
               </div>
             </div>
           )}
@@ -1807,126 +1818,144 @@ export default function Editor() {
           )}
           {currentTab === 'terminal' && (
             <div className="h-full">
-              <TerminalPanel
-                allProjects={allProjects.map((p) => ({ id: p.id, name: p.name }))}
-                currentProjectId={activeProject.id}
-                onProjectChange={(projectId) => {
-                  setLocation(`/projects/${projectId}`);
-                }}
-              />
+              <Suspense fallback={<LazyPanelFallback />}>
+                <TerminalPanel
+                  allProjects={allProjects.map((p) => ({ id: p.id, name: p.name }))}
+                  currentProjectId={activeProject.id}
+                  onProjectChange={(projectId) => {
+                    setLocation(`/projects/${projectId}`);
+                  }}
+                />
+              </Suspense>
             </div>
           )}
           {currentTab === 'users' && (
             <div className="h-full overflow-hidden">
-              <UserDatabasePanel
-                projectId={activeProject.id}
-                projectName={activeProject.name}
-                onOpenDialogPanel={handleOpenDialogPanel}
-                onOpenUserDetailsPanel={handleOpenUserDetailsPanel}
-                onNavigateToDialog={(user) => { setPendingDialogUser(user); handleTabChange('dialogs'); }}
-                selectedTokenId={selectedDatabaseTokenId}
-                onSelectToken={setSelectedDatabaseTokenId}
-                allProjects={allProjects.map((p) => ({ id: p.id, name: p.name }))}
-                onProjectChange={(projectId) => {
-                  setSelectedDatabaseTokenId(null);
-                  setLocation(`/projects/${projectId}`);                }}
-              />
+              <Suspense fallback={<LazyPanelFallback />}>
+                <UserDatabasePanel
+                  projectId={activeProject.id}
+                  projectName={activeProject.name}
+                  onOpenDialogPanel={handleOpenDialogPanel}
+                  onOpenUserDetailsPanel={handleOpenUserDetailsPanel}
+                  onNavigateToDialog={(user) => { setPendingDialogUser(user); handleTabChange('dialogs'); }}
+                  selectedTokenId={selectedDatabaseTokenId}
+                  onSelectToken={setSelectedDatabaseTokenId}
+                  allProjects={allProjects.map((p) => ({ id: p.id, name: p.name }))}
+                  onProjectChange={(projectId) => {
+                    setSelectedDatabaseTokenId(null);
+                    setLocation(`/projects/${projectId}`);                }}
+                />
+              </Suspense>
             </div>
           )}
           {currentTab === 'dialogs' && (
             <div className="h-full overflow-hidden">
               <UserMessagesLiveProvider projectId={activeProject.id}>
-                <DialogsTabContent
-                  projectId={activeProject.id}
-                  projectName={activeProject.name}
-                  selectedTokenId={selectedDatabaseTokenId}
-                  onSelectToken={setSelectedDatabaseTokenId}
-                  initialUser={pendingDialogUser}
-                  allProjects={allProjects.map((p) => ({ id: p.id, name: p.name }))}
-                  onProjectChange={(pid) => {
-                    setSelectedDatabaseTokenId(null);
-                    setLocation(`/projects/${pid}`);
-                  }}
-                />
+                <Suspense fallback={<LazyPanelFallback />}>
+                  <DialogsTabContent
+                    projectId={activeProject.id}
+                    projectName={activeProject.name}
+                    selectedTokenId={selectedDatabaseTokenId}
+                    onSelectToken={setSelectedDatabaseTokenId}
+                    initialUser={pendingDialogUser}
+                    allProjects={allProjects.map((p) => ({ id: p.id, name: p.name }))}
+                    onProjectChange={(pid) => {
+                      setSelectedDatabaseTokenId(null);
+                      setLocation(`/projects/${pid}`);
+                    }}
+                  />
+                </Suspense>
               </UserMessagesLiveProvider>
             </div>
           )}
           {currentTab === 'broadcast' && (
             <div className="h-full overflow-hidden">
-              <BroadcastPanel
-                projectId={activeProject.id}
-                selectedTokenId={selectedDatabaseTokenId}
-                onSelectToken={setSelectedDatabaseTokenId}
-                allProjects={allProjects.map((p) => ({ id: p.id, name: p.name }))}
-                onProjectChange={(projectId) => {
-                  setSelectedDatabaseTokenId(null);
-                  setLocation(`/projects/${projectId}`);
-                }}
-              />
+              <Suspense fallback={<LazyPanelFallback />}>
+                <BroadcastPanel
+                  projectId={activeProject.id}
+                  selectedTokenId={selectedDatabaseTokenId}
+                  onSelectToken={setSelectedDatabaseTokenId}
+                  allProjects={allProjects.map((p) => ({ id: p.id, name: p.name }))}
+                  onProjectChange={(projectId) => {
+                    setSelectedDatabaseTokenId(null);
+                    setLocation(`/projects/${projectId}`);
+                  }}
+                />
+              </Suspense>
             </div>
           )}
           {currentTab === 'analytics' && (
             <div className="h-full overflow-hidden">
-              <AnalyticsPanel
-                projectId={activeProject.id}
-                selectedTokenId={selectedDatabaseTokenId}
-                onSelectToken={setSelectedDatabaseTokenId}
-                allProjects={allProjects.map((p) => ({ id: p.id, name: p.name }))}
-                onProjectChange={(projectId) => {
-                  setSelectedDatabaseTokenId(null);
-                  setLocation(`/projects/${projectId}`);
-                }}
-              />
+              <Suspense fallback={<LazyPanelFallback />}>
+                <AnalyticsPanel
+                  projectId={activeProject.id}
+                  selectedTokenId={selectedDatabaseTokenId}
+                  onSelectToken={setSelectedDatabaseTokenId}
+                  allProjects={allProjects.map((p) => ({ id: p.id, name: p.name }))}
+                  onProjectChange={(projectId) => {
+                    setSelectedDatabaseTokenId(null);
+                    setLocation(`/projects/${projectId}`);
+                  }}
+                />
+              </Suspense>
             </div>
           )}
           {currentTab === 'tables' && (
             <div className="h-full overflow-hidden">
-              <TablesPanel
-                projectId={activeProject.id}
-                selectedTokenId={selectedDatabaseTokenId}
-                onSelectToken={setSelectedDatabaseTokenId}
-                allProjects={allProjects.map((p) => ({ id: p.id, name: p.name }))}
-                onProjectChange={(projectId) => {
-                  setSelectedDatabaseTokenId(null);
-                  setLocation(`/projects/${projectId}`);
-                }}
-              />
+              <Suspense fallback={<LazyPanelFallback />}>
+                <TablesPanel
+                  projectId={activeProject.id}
+                  selectedTokenId={selectedDatabaseTokenId}
+                  onSelectToken={setSelectedDatabaseTokenId}
+                  allProjects={allProjects.map((p) => ({ id: p.id, name: p.name }))}
+                  onProjectChange={(projectId) => {
+                    setSelectedDatabaseTokenId(null);
+                    setLocation(`/projects/${projectId}`);
+                  }}
+                />
+              </Suspense>
             </div>
           )}
           {currentTab === 'files' && (
             <div className="h-full overflow-hidden">
-              <FilesTabPage
-                projectId={activeProject.id}
-                selectedTokenId={selectedDatabaseTokenId}
-                onSelectToken={setSelectedDatabaseTokenId}
-                allProjects={allProjects.map((p) => ({ id: p.id, name: p.name }))}
-                onProjectChange={(projectId) => {
-                  setSelectedDatabaseTokenId(null);
-                  setLocation(`/projects/${projectId}`);
-                }}
-                onNodeUpdate={handleNodeUpdateWithSheets}
-                allSheets={botDataWithSheets?.sheets}
-                attachTarget={filesAttachTarget}
-                onSwitchToCanvas={() => setCurrentTab('editor')}
-                onFocusNode={(nodeId) => { setCurrentTab('editor'); navigateToPortalNode(nodeId); }}
-                onSetActiveSheet={(sheetId) => {
-                  if (botDataWithSheets) setBotDataWithSheets({ ...botDataWithSheets, activeSheetId: sheetId });
-                }}
-                onSelectNode={(nodeId) => setSelectedNodeId(nodeId)}
-              />
+              <Suspense fallback={<LazyPanelFallback />}>
+                <FilesTabPage
+                  projectId={activeProject.id}
+                  selectedTokenId={selectedDatabaseTokenId}
+                  onSelectToken={setSelectedDatabaseTokenId}
+                  allProjects={allProjects.map((p) => ({ id: p.id, name: p.name }))}
+                  onProjectChange={(projectId) => {
+                    setSelectedDatabaseTokenId(null);
+                    setLocation(`/projects/${projectId}`);
+                  }}
+                  onNodeUpdate={handleNodeUpdateWithSheets}
+                  allSheets={botDataWithSheets?.sheets}
+                  attachTarget={filesAttachTarget}
+                  onSwitchToCanvas={() => setCurrentTab('editor')}
+                  onFocusNode={(nodeId) => { setCurrentTab('editor'); navigateToPortalNode(nodeId); }}
+                  onSetActiveSheet={(sheetId) => {
+                    if (botDataWithSheets) setBotDataWithSheets({ ...botDataWithSheets, activeSheetId: sheetId });
+                  }}
+                  onSelectNode={(nodeId) => setSelectedNodeId(nodeId)}
+                />
+              </Suspense>
             </div>
           )}
           {currentTab === 'versions' && (
             <div className="h-full overflow-hidden">
-              <VersionsPanel
-                projectId={activeProject.id}
-                onRestored={discardLocalChanges}
-              />
+              <Suspense fallback={<LazyPanelFallback />}>
+                <VersionsPanel
+                  projectId={activeProject.id}
+                  onRestored={discardLocalChanges}
+                />
+              </Suspense>
             </div>
           )}
           {currentTab === 'agent' && (
             <div className="h-full p-6 bg-background overflow-auto">
-              <AgentTokensPanel />
+              <Suspense fallback={<LazyPanelFallback />}>
+                <AgentTokensPanel />
+              </Suspense>
             </div>
           )}
           {/* Для вкладки Экспорт показываем пустой контейнер */}
@@ -1938,29 +1967,31 @@ export default function Editor() {
     const sidebarContent = codePanelVisible ? (
       // Показываем CodePanel поверх sidebar
       <div className="h-full border-r bg-background">
-        <CodePanel
-          botDataArray={[activeProject.data as BotData]}
-          projectIds={[activeProject.id]}
-          projectName={activeProject.name}
-          onClose={handleToggleCodePanel}
-          selectedFormat={selectedFormat}
-          onFormatChange={handleFormatChange}
-          areAllCollapsed={areAllCollapsed}
-          onCollapseChange={setAreAllCollapsed}
-          showFullCode={showFullCode}
-          onShowFullCodeChange={setShowFullCode}
-          codeContent={generatedCodeContent}
-          isLoading={isCodeLoading}
-          displayContent={displayContent}
-          onApplyJson={(jsonString) => handleApplyJsonToBotData(jsonString)}
-          editedContent={editedJsonContent}
-          onResetEditor={() => {
-            isResettingEditorRef.current = true;
-            setEditedJsonContent('');
-            editorRef.current?.setValue(displayContent);
-            setTimeout(() => { isResettingEditorRef.current = false; }, 0);
-          }}
-        />
+        <Suspense fallback={<LazyPanelFallback />}>
+          <CodePanel
+            botDataArray={[activeProject.data as BotData]}
+            projectIds={[activeProject.id]}
+            projectName={activeProject.name}
+            onClose={handleToggleCodePanel}
+            selectedFormat={selectedFormat}
+            onFormatChange={handleFormatChange}
+            areAllCollapsed={areAllCollapsed}
+            onCollapseChange={setAreAllCollapsed}
+            showFullCode={showFullCode}
+            onShowFullCodeChange={setShowFullCode}
+            codeContent={generatedCodeContent}
+            isLoading={isCodeLoading}
+            displayContent={displayContent}
+            onApplyJson={(jsonString) => handleApplyJsonToBotData(jsonString)}
+            editedContent={editedJsonContent}
+            onResetEditor={() => {
+              isResettingEditorRef.current = true;
+              setEditedJsonContent('');
+              editorRef.current?.setValue(displayContent);
+              setTimeout(() => { isResettingEditorRef.current = false; }, 0);
+            }}
+          />
+        </Suspense>
       </div>
     ) : currentTab === 'editor' ? (
       <ComponentsSidebar
@@ -2032,44 +2063,50 @@ export default function Editor() {
             codeEditorContent={
               activeProject ? (
                 <div className="h-full flex flex-col">
-                  <CodeEditorArea
-                    isMobile={false}
-                    isLoading={isCodeLoading}
-                    displayContent={displayContent}
-                    selectedFormat={selectedFormat}
-                    theme={theme}
-                    editorRef={editorRef}
-                    codeStats={codeStats}
-                    setAreAllCollapsed={setAreAllCollapsed}
-                    areAllCollapsed={areAllCollapsed}
-                    onContentChange={(value) => { if (!isResettingEditorRef.current) setEditedJsonContent(value); }}
-                  />
+                  <Suspense fallback={<LazyPanelFallback />}>
+                    <CodeEditorArea
+                      isMobile={false}
+                      isLoading={isCodeLoading}
+                      displayContent={displayContent}
+                      selectedFormat={selectedFormat}
+                      theme={theme}
+                      editorRef={editorRef}
+                      codeStats={codeStats}
+                      setAreAllCollapsed={setAreAllCollapsed}
+                      areAllCollapsed={areAllCollapsed}
+                      onContentChange={(value) => { if (!isResettingEditorRef.current) setEditedJsonContent(value); }}
+                    />
+                  </Suspense>
                 </div>
               ) : null
             }
             dialogContent={
               selectedDialogUser && activeProject && (
-                <DialogPanel
-                  key={`dialog-${selectedDialogUser?.userId || 'none'}`}
-                  projectId={activeProject.id}
-                  selectedTokenId={selectedDatabaseTokenId}
-                  user={selectedDialogUser}
-                  onClose={handleCloseDialogPanel}
-                  onSelectUser={handleSelectDialogUser}
-                />
+                <Suspense fallback={<LazyPanelFallback />}>
+                  <DialogPanel
+                    key={`dialog-${selectedDialogUser?.userId || 'none'}`}
+                    projectId={activeProject.id}
+                    selectedTokenId={selectedDatabaseTokenId}
+                    user={selectedDialogUser}
+                    onClose={handleCloseDialogPanel}
+                    onSelectUser={handleSelectDialogUser}
+                  />
+                </Suspense>
               )
             }
             userDetailsContent={
               selectedUserDetails && activeProject && (
-                <UserDetailsPanel
-                  key={`userdetails-${selectedUserDetails?.userId || 'none'}`}
-                  projectId={activeProject.id}
-                  selectedTokenId={selectedDatabaseTokenId}
-                  user={selectedUserDetails}
-                  onClose={handleCloseUserDetailsPanel}
-                  onOpenDialog={handleOpenDialogPanel}
-                  onSelectUser={handleSelectUserDetails}
-                />
+                <Suspense fallback={<LazyPanelFallback />}>
+                  <UserDetailsPanel
+                    key={`userdetails-${selectedUserDetails?.userId || 'none'}`}
+                    projectId={activeProject.id}
+                    selectedTokenId={selectedDatabaseTokenId}
+                    user={selectedUserDetails}
+                    onClose={handleCloseUserDetailsPanel}
+                    onOpenDialog={handleOpenDialogPanel}
+                    onSelectUser={handleSelectUserDetails}
+                  />
+                </Suspense>
               )
             }
             onConfigChange={setFlexibleLayoutConfig}
@@ -2223,71 +2260,81 @@ export default function Editor() {
                 </div>
               ) : currentTab === 'users' ? (
                 <div className="h-full">
-                  <UserDatabasePanel
-                    projectId={activeProject.id}
-                    projectName={activeProject.name}
-                    onOpenDialogPanel={handleOpenDialogPanel}
-                    onOpenUserDetailsPanel={handleOpenUserDetailsPanel}
-                    onNavigateToDialog={(user) => { setPendingDialogUser(user); handleTabChange('dialogs'); }}
-                    selectedTokenId={selectedDatabaseTokenId}
-                    onSelectToken={setSelectedDatabaseTokenId}
-                    allProjects={allProjects.map((p) => ({ id: p.id, name: p.name }))}
-                    onProjectChange={(projectId) => {
-                      setSelectedDatabaseTokenId(null);
-                      setLocation(`/projects/${projectId}`);
-                    }}
-                  />
+                  <Suspense fallback={<LazyPanelFallback />}>
+                    <UserDatabasePanel
+                      projectId={activeProject.id}
+                      projectName={activeProject.name}
+                      onOpenDialogPanel={handleOpenDialogPanel}
+                      onOpenUserDetailsPanel={handleOpenUserDetailsPanel}
+                      onNavigateToDialog={(user) => { setPendingDialogUser(user); handleTabChange('dialogs'); }}
+                      selectedTokenId={selectedDatabaseTokenId}
+                      onSelectToken={setSelectedDatabaseTokenId}
+                      allProjects={allProjects.map((p) => ({ id: p.id, name: p.name }))}
+                      onProjectChange={(projectId) => {
+                        setSelectedDatabaseTokenId(null);
+                        setLocation(`/projects/${projectId}`);
+                      }}
+                    />
+                  </Suspense>
                 </div>
               ) : currentTab === 'broadcast' ? (
                 <div className="h-full">
-                  <BroadcastPanel
-                    projectId={activeProject.id}
-                    selectedTokenId={selectedDatabaseTokenId}
-                    onSelectToken={setSelectedDatabaseTokenId}
-                  />
+                  <Suspense fallback={<LazyPanelFallback />}>
+                    <BroadcastPanel
+                      projectId={activeProject.id}
+                      selectedTokenId={selectedDatabaseTokenId}
+                      onSelectToken={setSelectedDatabaseTokenId}
+                    />
+                  </Suspense>
                 </div>
               ) : currentTab === 'analytics' ? (
                 <div className="h-full overflow-hidden">
-                  <AnalyticsPanel
-                    projectId={activeProject.id}
-                    selectedTokenId={selectedDatabaseTokenId}
-                    onSelectToken={setSelectedDatabaseTokenId}
-                  />
+                  <Suspense fallback={<LazyPanelFallback />}>
+                    <AnalyticsPanel
+                      projectId={activeProject.id}
+                      selectedTokenId={selectedDatabaseTokenId}
+                      onSelectToken={setSelectedDatabaseTokenId}
+                    />
+                  </Suspense>
                 </div>
               ) : currentTab === 'tables' ? (
                 <div className="h-full overflow-hidden">
-                  <TablesPanel
-                    projectId={activeProject.id}
-                    selectedTokenId={selectedDatabaseTokenId}
-                    onSelectToken={setSelectedDatabaseTokenId}
-                    allProjects={allProjects.map((p) => ({ id: p.id, name: p.name }))}
-                    onProjectChange={(projectId) => {
-                      setSelectedDatabaseTokenId(null);
-                      setLocation(`/projects/${projectId}`);
-                    }}
-                  />
+                  <Suspense fallback={<LazyPanelFallback />}>
+                    <TablesPanel
+                      projectId={activeProject.id}
+                      selectedTokenId={selectedDatabaseTokenId}
+                      onSelectToken={setSelectedDatabaseTokenId}
+                      allProjects={allProjects.map((p) => ({ id: p.id, name: p.name }))}
+                      onProjectChange={(projectId) => {
+                        setSelectedDatabaseTokenId(null);
+                        setLocation(`/projects/${projectId}`);
+                      }}
+                    />
+                  </Suspense>
                 </div>
               ) : currentTab === 'files' ? (
                 <div className="h-full overflow-hidden">
-                  <FilesTabPage
-                    projectId={activeProject.id}
-                    selectedTokenId={selectedDatabaseTokenId}
-                    onSelectToken={setSelectedDatabaseTokenId}
-                    allProjects={allProjects.map((p) => ({ id: p.id, name: p.name }))}
-                    onProjectChange={(projectId) => {
-                      setSelectedDatabaseTokenId(null);
-                      setLocation(`/projects/${projectId}`);
-                    }}
-                    onNodeUpdate={handleNodeUpdateWithSheets}
-                    allSheets={botDataWithSheets?.sheets}
-                    attachTarget={filesAttachTarget}
-                    onSwitchToCanvas={() => setCurrentTab('editor')}
-                    onFocusNode={(nodeId) => { setCurrentTab('editor'); navigateToPortalNode(nodeId); }}
-                    onSetActiveSheet={(sheetId) => {
-                      if (botDataWithSheets) setBotDataWithSheets({ ...botDataWithSheets, activeSheetId: sheetId });
-                    }}
-                    onSelectNode={(nodeId) => setSelectedNodeId(nodeId)}
-                  />
+                  <Suspense fallback={<LazyPanelFallback />}>
+                    <FilesTabPage
+                      projectId={activeProject.id}
+                      selectedTokenId={selectedDatabaseTokenId}
+                      onSelectToken={setSelectedDatabaseTokenId}
+                      allProjects={allProjects.map((p) => ({ id: p.id, name: p.name }))}
+                      onProjectChange={(projectId) => {
+                        setSelectedDatabaseTokenId(null);
+                        setLocation(`/projects/${projectId}`);
+                      }}
+                      onNodeUpdate={handleNodeUpdateWithSheets}
+                      allSheets={botDataWithSheets?.sheets}
+                      attachTarget={filesAttachTarget}
+                      onSwitchToCanvas={() => setCurrentTab('editor')}
+                      onFocusNode={(nodeId) => { setCurrentTab('editor'); navigateToPortalNode(nodeId); }}
+                      onSetActiveSheet={(sheetId) => {
+                        if (botDataWithSheets) setBotDataWithSheets({ ...botDataWithSheets, activeSheetId: sheetId });
+                      }}
+                      onSelectNode={(nodeId) => setSelectedNodeId(nodeId)}
+                    />
+                  </Suspense>
                 </div>
               ) : currentTab === 'export' ? null : null}
             </div>
