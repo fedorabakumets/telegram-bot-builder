@@ -18,6 +18,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { ChevronDown, Eye, EyeOff, Unplug, Server, Bot, Pencil } from 'lucide-react';
 import { PropertyCheckbox } from '../common/property-checkbox';
+import { useAppConfig } from '@/hooks/use-app-config';
+import { PsqlBuiltinDisabledNotice } from './psql-builtin-disabled-notice';
 
 /** Тип источника подключения */
 type ConnectionSource = 'builtin' | 'env' | 'custom';
@@ -52,9 +54,9 @@ interface PsqlConnectionSectionProps {
   onUpdate: (updates: Record<string, any>) => void;
 }
 
-/** Серверные переменные (доступны всегда) */
+/** Серверные переменные (только если администратор задал PSQL_BUILTIN_ENABLED=true) */
 const SERVER_VARIABLES = [
-  { key: 'DATABASE_URL', description: 'Основная PostgreSQL БД платформы' },
+  { key: 'DATABASE_URL', description: 'Встроенная БД, разрешено администратором' },
 ];
 
 /**
@@ -90,10 +92,11 @@ function buildConnectionString(fields: ParsedConnection): string {
  * Возвращает отображаемое название текущего подключения
  * @param source - Источник подключения
  * @param envVar - Имя env-переменной
+ * @param builtinEnabled - Разрешён ли администратором режим builtin
  * @returns Строка для отображения
  */
-function getDisplayLabel(source: ConnectionSource, envVar: string): string {
-  if (source === 'builtin') return 'DATABASE_URL';
+function getDisplayLabel(source: ConnectionSource, envVar: string, builtinEnabled: boolean): string {
+  if (source === 'builtin') return builtinEnabled ? 'DATABASE_URL' : 'Выберите подключение';
   if (source === 'env') return envVar || 'Выберите переменную';
   return 'Ручной ввод';
 }
@@ -113,6 +116,7 @@ export function PsqlConnectionSection({
   const [showPassword, setShowPassword] = useState(false);
   const [showFields, setShowFields] = useState(false);
   const [parsedFields, setParsedFields] = useState<ParsedConnection | null>(null);
+  const builtinEnabled = useAppConfig().data?.psqlBuiltinEnabled === true;
 
   /** Обработчик выбора серверной переменной */
   const handleSelectServer = (key: string) => {
@@ -164,17 +168,19 @@ export function PsqlConnectionSection({
             size="sm"
             className="w-full h-8 justify-between text-xs font-mono bg-white/60 dark:bg-slate-950/60 border-violet-300/40 dark:border-violet-700/40"
           >
-            <span className="truncate">{getDisplayLabel(connectionSource, connectionEnvVar)}</span>
+            <span className="truncate">{getDisplayLabel(connectionSource, connectionEnvVar, builtinEnabled)}</span>
             <ChevronDown className="h-3.5 w-3.5 ml-2 flex-shrink-0 opacity-50" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-64">
-          {/* Серверные переменные */}
-          <DropdownMenuLabel className="text-xs font-semibold flex items-center gap-1.5">
-            <Server className="w-3 h-3" />
-            Серверные
-          </DropdownMenuLabel>
-          {SERVER_VARIABLES.map((v) => (
+          {/* Серверные переменные — только с разрешения администратора */}
+          {builtinEnabled && (
+            <DropdownMenuLabel className="text-xs font-semibold flex items-center gap-1.5">
+              <Server className="w-3 h-3" />
+              Серверные
+            </DropdownMenuLabel>
+          )}
+          {builtinEnabled && SERVER_VARIABLES.map((v) => (
             <DropdownMenuItem
               key={v.key}
               onClick={() => handleSelectServer(v.key)}
@@ -189,7 +195,7 @@ export function PsqlConnectionSection({
             </DropdownMenuItem>
           ))}
 
-          <DropdownMenuSeparator />
+          {builtinEnabled && <DropdownMenuSeparator />}
 
           {/* Переменные бота */}
           <DropdownMenuLabel className="text-xs font-semibold flex items-center gap-1.5">
@@ -225,6 +231,8 @@ export function PsqlConnectionSection({
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      {connectionSource === 'builtin' && !builtinEnabled && <PsqlBuiltinDisabledNotice />}
 
       {/* Поле ручного ввода connection string */}
       {connectionSource === 'custom' && (
