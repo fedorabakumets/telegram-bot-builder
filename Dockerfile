@@ -1,5 +1,8 @@
+# syntax=docker/dockerfile:1
 # Dockerfile для конструктора Telegram-ботов
 # Многоэтапная сборка: build-stage собирает клиент, runtime-stage содержит только необходимое
+# Кэш npm/pip хранится в BuildKit cache mounts. Railway требует id с префиксом
+# s/<ID сервиса>-, обычный buildx (GitHub Actions) принимает такой id как есть.
 
 # ── Build stage ──────────────────────────────────────────────────────────────
 FROM node:20-alpine AS builder
@@ -9,7 +12,8 @@ WORKDIR /app
 # Устанавливаем все зависимости (включая dev) для сборки клиента строго по lock-файлу.
 # .npmrc обязателен: lock собран с legacy-peer-deps=true, без него npm ci падает
 COPY package*.json .npmrc ./
-RUN npm ci --ignore-scripts
+RUN --mount=type=cache,id=s/a8481b49-5ca6-45bc-a1a5-3e1e8b80a79b-/root/.npm,target=/root/.npm \
+    npm ci --ignore-scripts --prefer-offline --no-audit --no-fund
 
 # Копируем исходный код, генерируем docs для /admin/schema и /admin/api-docs, собираем клиент
 COPY . .
@@ -28,9 +32,16 @@ RUN apk add --no-cache python3 py3-pip procps postgresql18-client
 
 WORKDIR /app
 
+# Python-зависимости пользовательских ботов ставим до копирования кода,
+# чтобы слой не пересобирался при каждом изменении исходников
+COPY requirements.txt ./
+RUN --mount=type=cache,id=s/a8481b49-5ca6-45bc-a1a5-3e1e8b80a79b-/root/.cache/pip,target=/root/.cache/pip \
+    pip3 install --break-system-packages -r requirements.txt
+
 # Устанавливаем только production-зависимости строго по lock-файлу
 COPY package*.json .npmrc ./
-RUN npm ci --omit=dev --ignore-scripts
+RUN --mount=type=cache,id=s/a8481b49-5ca6-45bc-a1a5-3e1e8b80a79b-/root/.npm,target=/root/.npm \
+    npm ci --omit=dev --ignore-scripts --prefer-offline --no-audit --no-fund
 
 # Копируем предсобранный клиент из build-stage
 COPY --from=builder /app/dist ./dist
@@ -49,10 +60,6 @@ COPY version.json ./version.json
 # Документация для /admin/schema и /admin/api-docs (генерируется на build-stage)
 COPY --from=builder /app/docs/database ./docs/database
 COPY --from=builder /app/docs/api ./docs/api
-
-# Устанавливаем Python-зависимости для пользовательских ботов
-COPY requirements.txt* ./
-RUN if [ -f requirements.txt ]; then pip3 install --break-system-packages -r requirements.txt; fi
 
 EXPOSE 5000
 
