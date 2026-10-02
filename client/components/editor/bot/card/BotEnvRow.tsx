@@ -171,6 +171,7 @@ export function BotEnvRow({
           onDelete={id ? () => onDelete?.(id) : undefined}
         />
       </div>
+      </div>
     </div>
   );
 }
