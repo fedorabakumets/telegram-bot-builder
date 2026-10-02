@@ -6,9 +6,10 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Устанавливаем все зависимости (включая dev) для сборки клиента
-COPY package*.json ./
-RUN npm install --ignore-scripts
+# Устанавливаем все зависимости (включая dev) для сборки клиента строго по lock-файлу.
+# .npmrc обязателен: lock собран с legacy-peer-deps=true, без него npm ci падает
+COPY package*.json .npmrc ./
+RUN npm ci --ignore-scripts
 
 # Копируем исходный код, генерируем docs для /admin/schema и /admin/api-docs, собираем клиент
 COPY . .
@@ -27,9 +28,9 @@ RUN apk add --no-cache python3 py3-pip procps postgresql18-client
 
 WORKDIR /app
 
-# Устанавливаем только production-зависимости
-COPY package*.json ./
-RUN npm install --omit=dev --ignore-scripts
+# Устанавливаем только production-зависимости строго по lock-файлу
+COPY package*.json .npmrc ./
+RUN npm ci --omit=dev --ignore-scripts
 
 # Копируем предсобранный клиент из build-stage
 COPY --from=builder /app/dist ./dist
