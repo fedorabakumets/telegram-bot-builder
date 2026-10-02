@@ -97,13 +97,22 @@ describe("workerDockerArgs", () => {
     assert.deepStrictEqual(parseEnvNameList(undefined), []);
   });
 
-  it("${{VAR}}: в режиме docker раскрываются только разрешённые переменные", () => {
+  it("${{VAR}}: в любом режиме раскрываются только разрешённые переменные", () => {
     const env = { SESSION_SECRET: "s", OPENAI_API_KEY: "sk-1" };
-    assert.strictEqual(resolveBotEnvReference("${{SESSION_SECRET}}", env), "s");
-    process.env.WORKER_RUNTIME = "docker";
-    process.env.WORKER_ENV_PASSTHROUGH = "OPENAI_API_KEY";
     assert.strictEqual(resolveBotEnvReference("${{SESSION_SECRET}}", env), "${{SESSION_SECRET}}");
-    assert.strictEqual(resolveBotEnvReference("${{OPENAI_API_KEY}}", env), "sk-1");
+    assert.strictEqual(resolveBotEnvReference("${{OPENAI_API_KEY}}", env), "${{OPENAI_API_KEY}}");
+    for (const runtime of ["process", "docker"]) {
+      process.env.WORKER_RUNTIME = runtime;
+      process.env.WORKER_ENV_PASSTHROUGH = "OPENAI_API_KEY,SESSION_SECRET";
+      assert.strictEqual(resolveBotEnvReference("${{SESSION_SECRET}}", env), "${{SESSION_SECRET}}");
+      assert.strictEqual(resolveBotEnvReference("${{OPENAI_API_KEY}}", env), "sk-1");
+    }
     assert.strictEqual(resolveBotEnvReference("plain", env), "plain");
+  });
+
+  it("denylist действует на WORKER_ENV_PASSTHROUGH и в контейнере", () => {
+    const cfg = { ...config, envPassthrough: ["OPENAI_API_KEY", "SESSION_SECRET", "PGPASSWORD"] };
+    const cmd = buildDockerWorkerCommand(7, [1], cfg, paths, { SESSION_SECRET: "s", PGPASSWORD: "p", OPENAI_API_KEY: "k" });
+    assert.deepStrictEqual(Object.keys(cmd.env).filter((k) => cfg.envPassthrough.includes(k)), ["OPENAI_API_KEY"]);
   });
 });

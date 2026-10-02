@@ -48,7 +48,7 @@ export function readLegacyAdminIds(botDir: string): string | null {
 export async function buildBotEnvContent(botDir: string, projectId: number, tokenId: number): Promise<string> {
   const { generateEnvFile } = await import("@shared/scaffolding-wrapper");
   const { storage } = await import("../storages/storage");
-  const { resolveBotEnvReference } = await import("../bots/resolveBotEnvReference");
+  const { resolveBotEnvVariables } = await import("../bots/resolveBotEnvReference");
   const tokenRecord = await storage.getBotToken(tokenId);
   const project = await storage.getBotProject(projectId);
   const adminIds = project?.adminIds?.trim() || readLegacyAdminIds(botDir) || ADMIN_IDS_PLACEHOLDER;
@@ -57,10 +57,8 @@ export async function buildBotEnvContent(botDir: string, projectId: number, toke
   const webhookBaseUrl = tokenRecord?.webhookBaseUrl ?? null;
   const webhookPort = launchMode === "webhook" && webhookBaseUrl ? 9000 + tokenId : null;
 
-  const customVariables = (await storage.getEnvVariables(tokenId)).map((v) => ({
-    key: v.key,
-    value: resolveBotEnvReference(v.value),
-  }));
+  // Ссылки ${{VAR}} раскрываются только для разрешённых переменных сервера (botEnvPolicy)
+  const customVariables = resolveBotEnvVariables(await storage.getEnvVariables(tokenId));
   const { isRailwayProject, railwayBotEnvDefaults } = await import("../bots/railway/railwayConfig");
   // Боту на Railway адреса панели недоступны — подставляем адреса из RAILWAY_BOT_*
   const remoteDefaults = isRailwayProject(projectId) ? railwayBotEnvDefaults() : {};

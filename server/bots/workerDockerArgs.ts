@@ -7,6 +7,7 @@
 
 import { join, relative, isAbsolute } from "node:path";
 import type { DockerWorkerConfig } from "./workerRuntime";
+import { canShareServerEnv } from "./botEnvPolicy";
 
 /** Корень приложения внутри контейнера: боты ищут uploads как ../../uploads */
 export const CONTAINER_APP_ROOT = "/app";
@@ -85,7 +86,9 @@ export function buildDockerWorkerCommand(
     HOME: "/tmp",
     WORKER_REPORT_MEMORY: "true",
   };
-  for (const key of [...WORKER_TUNING_ENV, ...config.envPassthrough]) {
+  // Denylist (botEnvPolicy) действует и на WORKER_ENV_PASSTHROUGH
+  const shared = config.envPassthrough.filter((key) => canShareServerEnv(key, config.envPassthrough));
+  for (const key of [...WORKER_TUNING_ENV, ...shared]) {
     const value = serverEnv[key];
     if (value !== undefined) env[key] = value;
   }
