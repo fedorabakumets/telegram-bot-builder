@@ -11,6 +11,8 @@ import express, { type Express } from "express";
 import fs from "fs";
 import path from "path";
 
+import { createUploadsS3Fallback } from "../../media/uploads-s3-fallback";
+
 /**
  * Настраивает раздачу статических файлов
  *
@@ -65,6 +67,9 @@ export function serveStatic(app: Express): void {
       }
     });
   }
+
+  // Файлов нет на диске — читаем из хранилища загрузок S3 (UPLOADS_STORAGE_ID)
+  app.use("/uploads", createUploadsS3Fallback());
 
   app.use("*", (_req, res) => {
     res.sendFile(path.resolve(distPath, "index.html"));

@@ -19,6 +19,7 @@ import {
   PutObjectCommand,
   GetObjectCommand,
   DeleteObjectCommand,
+  HeadObjectCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
@@ -172,6 +173,24 @@ export class S3Backend implements StorageBackend {
   }
 
   /**
+   * Возвращает размер объекта в бакете либо null, если объекта нет.
+   * @param key - Относительный ключ объекта в бакете
+   * @returns Размер объекта в байтах либо null
+   */
+  async head(key: string): Promise<number | null> {
+    const normKey = this.normalizeKey(key);
+    try {
+      const res = await this.client.send(
+        new HeadObjectCommand({ Bucket: this.bucket, Key: normKey }),
+      );
+      return res.ContentLength ?? 0;
+    } catch (err) {
+      if (isS3NotFound(err)) return null;
+      throw err;
+    }
+  }
+
+  /**
    * Удаляет объект из бакета (идемпотентно: S3 не считает отсутствие ошибкой).
    * @param key - Относительный ключ объекта в бакете
    */
@@ -218,4 +237,20 @@ export class S3Backend implements StorageBackend {
     const command = new GetObjectCommand({ Bucket: this.bucket, Key: normKey });
     return getSignedUrl(this.client, command, { expiresIn: expiresInSeconds });
   }
+}
+
+/**
+ * Проверяет, означает ли ошибка AWS SDK отсутствие объекта (404 / NoSuchKey / NotFound).
+ * @param err - Ошибка, выброшенная клиентом S3
+ * @returns true, если объекта в бакете нет
+ */
+export function isS3NotFound(err: unknown): boolean {
+  const e = err as { name?: string; Code?: string; $metadata?: { httpStatusCode?: number } } | null;
+  if (!e) return false;
+  return (
+    e.name === "NoSuchKey" ||
+    e.name === "NotFound" ||
+    e.Code === "NoSuchKey" ||
+    e.$metadata?.httpStatusCode === 404
+  );
 }
