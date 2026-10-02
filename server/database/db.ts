@@ -168,8 +168,14 @@ setTimeout(testConnection, 2000);
 /**
  * Закрывает пул соединений с БД.
  * Вызывается из graceful-shutdown ПОСЛЕ записи маркеров в БД.
+ * Повторный вызов ничего не делает: pg-pool бросает исключение на второй `end()`.
  */
 export function closeDbPool(): void {
   globalThis.__dbPoolActive = false;
-  pool.end();
+  if (poolClosed) return;
+  poolClosed = true;
+  pool.end().catch((error) => console.error('Ошибка закрытия пула БД:', error));
 }
+
+/** Пул уже закрыт через closeDbPool (`__dbPoolActive` для этого не годится: он сбрасывается и при обрыве соединения) */
+let poolClosed = false;

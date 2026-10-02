@@ -276,7 +276,10 @@ app.use((req, res, next) => {
     stopCleanup();
     httpServer.close(() => {
       log('HTTP-сервер закрыт');
+      process.exit(0);
     });
+    // Открытые WebSocket и keep-alive не дают close() завершиться — выходим принудительно
+    setTimeout(() => process.exit(0), 3000).unref();
   });
 
   process.on('SIGINT', async () => {

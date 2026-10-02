@@ -67,7 +67,22 @@ import { execSync } from "node:child_process";
  * @author Telegram Bot Builder
  * @since 1.0.0
  */
-export async function shutdownAllBots(): Promise<void> {
+export function shutdownAllBots(): Promise<void> {
+  shutdownPromise ??= runShutdown();
+  return shutdownPromise;
+}
+
+/**
+ * Текущее завершение работы: на один сигнал срабатывает несколько обработчиков
+ * (server/index.ts), и все они должны дождаться одного прохода, а не запускать свой
+ */
+let shutdownPromise: Promise<void> | null = null;
+
+/**
+ * Один проход завершения работы ботов (см. shutdownAllBots)
+ * @returns Промис, который разрешается после остановки ботов и закрытия пула БД
+ */
+async function runShutdown(): Promise<void> {
   // Блокируем autoRestart на время деплоя / SIGTERM
   markServerShuttingDown();
 
@@ -178,7 +193,8 @@ export async function shutdownAllBots(): Promise<void> {
     } else {
       // В Unix-подобных системах используем команду ps для получения списка процессов
       try {
-        const psOutput = execSync(`ps aux | grep python | grep bot_ | grep -v grep`, { encoding: 'utf8' }).trim();
+        // grep без совпадений завершается с кодом 1 — это не ошибка, а «процессов нет»
+        const psOutput = execSync(`ps aux | grep python | grep bot_ | grep -v grep || true`, { encoding: 'utf8' }).trim();
 
         if (psOutput) {
           const lines = psOutput.split('\n').filter(line => line.trim());
