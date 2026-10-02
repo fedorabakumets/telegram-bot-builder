@@ -8,13 +8,13 @@
 
 **Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
-Возвращает **только имена** переменных из whitelist серверного `process.env`, которые заданы и не пустые. **Значения не передаются** — секреты (DATABASE_URL, пароли PG и т.д.) не попадают в браузер.
+Возвращает **только имена** серверных переменных, которые реально раскрываются в ссылках `${{KEY}}`: перечисленные администратором в `WORKER_ENV_PASSTHROUGH`, не попавшие в denylist и заданные (не пустые). **Значения не передаются.**
 
-**Клиент:** вкладка «Переменные» у токена бота — `BotEnvPanel` и кнопка «Подставить из сервера» (`BotEnvServerVarsPopover`). UI подставляет в custom env синтаксис `${{KEY}}`; при генерации `.env` бота такие ссылки резолвятся из окружения Node-процесса на сервере.
+**Клиент:** вкладка «Переменные» у токена бота — `BotEnvPanel` и кнопка «Подставить из сервера» (`BotEnvServerVarsPopover`). UI подставляет в custom env синтаксис `${{KEY}}`; при генерации `.env` бота такие ссылки резолвятся из окружения Node-процесса на сервере (во всех режимах `WORKER_RUNTIME`).
 
-**Whitelist (фиксированный):** DATABASE_URL, REDIS_URL, WEBHOOK_BASE_URL, API_BASE_URL, NODE_ENV, PGHOST, PGPORT, PGDATABASE, PGUSER, STUDIO_BOT_MANAGER_TOKEN.
+**Denylist (нельзя обойти через WORKER_ENV_PASSTHROUGH):** SESSION_SECRET, ADMIN_API_KEY, DATABASE_URL, REDIS_URL, TELEGRAM_BOT_TOKEN, VITE_TELEGRAM_BOT_TOKEN, MCP_AGENT_TOKEN; имена с префиксами PG*, RAILWAY_*, RUNNER_*; имена, содержащие SECRET, PASSWORD, PASSWD, PRIVATE_KEY, DATABASE_URL, REDIS_URL.
 
-В `items` только ключи из whitelist, для которых `process.env[KEY]` определён и не пустой. Если переменная не задана на сервере — она не возвращается (UI показывает локальный дефолт без `${{…}}`).
+Если переменная не задана на сервере — она не возвращается (UI показывает локальный дефолт без `${{…}}`).
 
 Требуется авторизация: сессионная cookie или Bearer PAT агента.
 

@@ -31,7 +31,7 @@ import { seedDefaultTemplates } from "../utils/seed-templates";
 import { storage } from "../storages/storage";
 import { authMiddleware, getOwnerIdFromRequest, requireAuth } from "../telegram/auth-middleware";
 import { setupGuard } from "../middleware/setup-guard";
-import { ALLOWED_SERVER_ENV_KEYS } from "../constants/allowed-server-env-keys";
+import { getShareableServerEnvKeys } from "../bots/botEnvPolicy";
 import { identifyAgent } from "../middleware/agentTokenMiddleware";
 import { requireApiAuth } from "../middleware/requireApiAuth";
 import { requireProjectAccess } from "../middleware/requireProjectAccess";
@@ -3385,14 +3385,11 @@ function setupTokenEnvVariableRoutes(app: Express) {
 
   /**
    * Список ключей серверных переменных для подстановки в env бота (${{KEY}}).
-   * GET /api/server/env-keys — только имена из whitelist, без значений.
+   * GET /api/server/env-keys — только имена, которые реально раскрываются
+   * (WORKER_ENV_PASSTHROUGH минус denylist, заданные на сервере), без значений.
    */
   app.get("/api/server/env-keys", (_req, res) => {
-    const items = ALLOWED_SERVER_ENV_KEYS
-      .filter((key) => process.env[key] !== undefined && process.env[key] !== '')
-      .map((key) => ({ key }));
-
-    res.json({ items });
+    res.json({ items: getShareableServerEnvKeys().map((key) => ({ key })) });
   });
 
   /**

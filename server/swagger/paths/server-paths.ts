@@ -6,7 +6,11 @@
 import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import { UnauthorizedSchema } from "../schemas/common";
 import { ServerEnvKeysResponseSchema } from "../schemas/server";
-import { ALLOWED_SERVER_ENV_KEYS } from "../../constants/allowed-server-env-keys";
+import {
+  SERVER_ENV_DENY_EXACT,
+  SERVER_ENV_DENY_PREFIXES,
+  SERVER_ENV_DENY_SUBSTRINGS,
+} from "../../bots/botEnvPolicy";
 
 /**
  * Регистрирует paths группы server.
@@ -18,7 +22,9 @@ export function registerServerPaths(
   registry: OpenAPIRegistry,
   cookieSecurity: Array<{ cookieAuth: string[] }>,
 ): void {
-  const whitelist = ALLOWED_SERVER_ENV_KEYS.join(", ");
+  const denylist =
+    `${SERVER_ENV_DENY_EXACT.join(", ")}; имена с префиксами ${SERVER_ENV_DENY_PREFIXES.map((p) => `${p}*`).join(", ")}; ` +
+    `имена, содержащие ${SERVER_ENV_DENY_SUBSTRINGS.join(", ")}`;
 
   registry.registerPath({
     method: "get",
@@ -26,15 +32,15 @@ export function registerServerPaths(
     tags: ["server"],
     summary: "Список серверных env-ключей для подстановки в бот",
     description:
-      "Возвращает **только имена** переменных из whitelist серверного `process.env`, " +
-      "которые заданы и не пустые. **Значения не передаются** — секреты (DATABASE_URL, пароли PG и т.д.) не попадают в браузер.\n\n" +
+      "Возвращает **только имена** серверных переменных, которые реально раскрываются в ссылках `${{KEY}}`: " +
+      "перечисленные администратором в `WORKER_ENV_PASSTHROUGH`, не попавшие в denylist и заданные (не пустые). " +
+      "**Значения не передаются.**\n\n" +
       "**Клиент:** вкладка «Переменные» у токена бота — `BotEnvPanel` и кнопка «Подставить из сервера» " +
       "(`BotEnvServerVarsPopover`). UI подставляет в custom env синтаксис `${{KEY}}`; при генерации `.env` бота " +
-      "такие ссылки резолвятся из окружения Node-процесса на сервере.\n\n" +
-      "**Whitelist (фиксированный):** " +
-      whitelist +
+      "такие ссылки резолвятся из окружения Node-процесса на сервере (во всех режимах `WORKER_RUNTIME`).\n\n" +
+      "**Denylist (нельзя обойти через WORKER_ENV_PASSTHROUGH):** " +
+      denylist +
       ".\n\n" +
-      "В `items` только ключи из whitelist, для которых `process.env[KEY]` определён и не пустой. " +
       "Если переменная не задана на сервере — она не возвращается (UI показывает локальный дефолт без `${{…}}`).\n\n" +
       "Требуется авторизация: сессионная cookie или Bearer PAT агента.",
     security: cookieSecurity,
