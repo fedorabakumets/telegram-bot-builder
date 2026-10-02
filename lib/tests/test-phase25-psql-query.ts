@@ -5,7 +5,7 @@
  *  A. Базовая генерация (10 тестов)
  *  B. Форматы результата (10 тестов)
  *  C. Сохранение результата (8 тестов)
- *  D. Подстановка переменных в SQL (8 тестов)
+ *  D. Параметры SQL ($1, $2) вместо вклейки текста (8 тестов)
  *  E. Автопереход (8 тестов)
  *  F. Логирование (8 тестов)
  *  G. Граничные случаи (8 тестов)
@@ -13,6 +13,7 @@
  *  I. Регрессия — отсутствие дублей (5 тестов)
  *  J. Подключение к внешней БД (10 тестов)
  *  K. Флаг psqlBuiltinEnabled и проверка строки подключения (11 тестов)
+ *  L. Параметры asyncpg и statement_timeout (6 тестов)
  */
 
 import fs from 'fs';
@@ -263,13 +264,18 @@ test('A03', 'db_pool is None присутствует в теле обработ
   ok(fnBody.includes('db_pool is None'), 'db_pool is None не найден в теле обработчика');
 });
 
-test('A04', 'replace_variables_in_text( присутствует (подстановка переменных в SQL)', () => {
+test('A04', '{user_id} в SQL становится параметром $1, значение не вклеивается в текст', () => {
   const p = makeCleanProject([makeStartNode(), makePsqlQueryNode('pq1')]);
   const code = gen(p, 'A04');
   const fnIdx = code.indexOf('async def handle_callback_pq1(');
   ok(fnIdx !== -1, 'handle_callback_pq1 не найден');
   const fnBody = code.slice(fnIdx, fnIdx + 2000);
-  ok(fnBody.includes('replace_variables_in_text('), 'replace_variables_in_text( не найден в теле обработчика');
+  ok(fnBody.includes('_query = "SELECT * FROM bot_users WHERE user_id = $1"'),
+    'запрос с $1 не найден в теле обработчика');
+  ok(fnBody.includes('_psql_param("user_id", _all_vars)'),
+    '_psql_param("user_id") не найден в теле обработчика');
+  ok(code.includes('def _psql_param(') && code.includes('replace_variables_in_text('),
+    'хелпер _psql_param с replace_variables_in_text не найден');
 });
 
 test('A05', 'init_all_user_vars(user_id) присутствует', () => {
@@ -492,44 +498,50 @@ test('C08', 'Синтаксис OK при сохранении результа�
 // БЛОК D: Подстановка переменных в SQL
 // ═══════════════════════════════════════════════════════════════════════════════
 
-console.log('\n── Блок D: Подстановка переменных в SQL ────────────────────────');
+console.log('\n── Блок D: Параметры SQL ───────────────────────────────────────');
 
-test('D01', 'query с {user_id} → replace_variables_in_text("SELECT * FROM bot_users WHERE user_id = {user_id}" присутствует', () => {
-  const q = 'SELECT * FROM bot_users WHERE user_id = {user_id}';
-  const p = makeCleanProject([makeStartNode(), makePsqlQueryNode('pq1', { query: q })]);
+test('D01', 'query с {user_id} → SQL с $1 и _psql_param, без вклейки скобок в текст', () => {
+  const p = makeCleanProject([makeStartNode(), makePsqlQueryNode('pq1', {
+    query: 'SELECT * FROM bot_users WHERE user_id = {user_id}',
+  })]);
   const code = gen(p, 'D01');
-  ok(code.includes(`replace_variables_in_text("${q}"`),
-    `replace_variables_in_text с запросом не найдено`);
+  ok(code.includes('_query = "SELECT * FROM bot_users WHERE user_id = $1"'),
+    'строка запроса с $1 не найдена');
+  ok(code.includes('_psql_param("user_id", _all_vars)'),
+    '_psql_param("user_id") не найден');
+  ok(!code.includes('replace_variables_in_text("SELECT * FROM bot_users'),
+    'запрос всё ещё прогоняется через replace_variables_in_text целиком');
 });
 
-test('D02', 'query с {referrer_id} → строка запроса присутствует в коде', () => {
-  const q = 'SELECT * FROM orders WHERE ref = {referrer_id}';
-  const p = makeCleanProject([makeStartNode(), makePsqlQueryNode('pq1', { query: q })]);
+test('D02', 'query с {referrer_id} → параметр $1, имя не остаётся в тексте SQL', () => {
+  const p = makeCleanProject([makeStartNode(), makePsqlQueryNode('pq1', {
+    query: 'SELECT * FROM orders WHERE ref = {referrer_id}',
+  })]);
   const code = gen(p, 'D02');
-  ok(code.includes(q) || code.includes(q.replace(/"/g, '\\"')),
-    `Строка запроса "${q}" не найдена в коде`);
+  ok(code.includes('_query = "SELECT * FROM orders WHERE ref = $1"'),
+    'строка запроса с $1 не найдена');
+  ok(code.includes('_psql_param("referrer_id", _all_vars)'),
+    '_psql_param("referrer_id") не найден');
 });
 
-test('D03', 'query UPDATE → строка запроса присутствует в коде', () => {
-  const q = 'UPDATE stats SET cnt = cnt + 1 WHERE id = {user_id}';
-  const p = makeCleanProject([makeStartNode(), makePsqlQueryNode('pq1', { query: q })]);
+test('D03', 'query UPDATE → WHERE id = $1, значение не вклеено', () => {
+  const p = makeCleanProject([makeStartNode(), makePsqlQueryNode('pq1', {
+    query: 'UPDATE stats SET cnt = cnt + 1 WHERE id = {user_id}',
+  })]);
   const code = gen(p, 'D03');
-  ok(code.includes(q) || code.includes(q.replace(/"/g, '\\"')),
-    `Строка запроса UPDATE не найдена в коде`);
+  ok(code.includes('_query = "UPDATE stats SET cnt = cnt + 1 WHERE id = $1"'),
+    'строка UPDATE с $1 не найдена');
 });
 
-test('D04', 'Переменная _query используется в вызове _conn. (не сырая строка)', () => {
+test('D04', 'Переменная _query и *_args передаются в _conn. (не сырая строка)', () => {
   const p = makeCleanProject([makeStartNode(), makePsqlQueryNode('pq1')]);
   const code = gen(p, 'D04');
   const fnIdx = code.indexOf('async def handle_callback_pq1(');
   ok(fnIdx !== -1, 'handle_callback_pq1 не найден');
   const fnBody = code.slice(fnIdx, fnIdx + 2000);
   ok(fnBody.includes('_query'), '_query не найден в теле обработчика');
-  ok(fnBody.includes('_conn.') && (
-    fnBody.includes('_conn.fetchrow(_query)') ||
-    fnBody.includes('_conn.fetch(_query)') ||
-    fnBody.includes('_conn.execute(_query)')
-  ), '_query не передаётся в _conn. — используется сырая строка');
+  ok(fnBody.includes('_conn.fetchrow(_query, *_args)'),
+    '_query, *_args не передаются в _conn.fetchrow');
 });
 
 test('D05', '_all_vars = await init_all_user_vars(user_id) вызывается ДО _query =', () => {
@@ -545,9 +557,9 @@ test('D05', '_all_vars = await init_all_user_vars(user_id) вызывается 
   ok(allVarsIdx < queryIdx, '_all_vars должен вызываться ДО _query =');
 });
 
-test('D06', '_query передаётся в _conn.fetchrow/_conn.fetch/_conn.execute', () => {
+test('D06', '_query и *_args передаются в _conn.fetchrow/_conn.fetch/_conn.execute', () => {
   const formats = ['first_row', 'json', 'affected'];
-  const expected = ['_conn.fetchrow(_query)', '_conn.fetch(_query)', '_conn.execute(_query)'];
+  const expected = ['_conn.fetchrow(_query, *_args)', '_conn.fetch(_query, *_args)', '_conn.execute(_query, *_args)'];
   for (let i = 0; i < formats.length; i++) {
     const p = makeCleanProject([makeStartNode(), makePsqlQueryNode('pq1', { resultFormat: formats[i] })]);
     const code = gen(p, `D06_${formats[i]}`);
@@ -1228,6 +1240,75 @@ test('K11', '_psql_safe_dsn не пропускает подключения с 
     throw new Error(`проверка _psql_safe_dsn упала:\n${e.stderr?.toString() ?? e}`);
   } finally {
     try { fs.unlinkSync(tmp); } catch {}
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// БЛОК L: Параметры asyncpg и лимит времени
+// ═══════════════════════════════════════════════════════════════════════════════
+
+console.log('\n── Блок L: Параметры asyncpg и statement_timeout ──────────────');
+
+test('L01', "кавычки вокруг {name} снимаются, id = {id} → $1 и $2, вызов с *_args", () => {
+  const q = "SELECT * FROM orders WHERE name = '{name}' AND id = {id}";
+  const p = makeCleanProject([makeStartNode(), makePsqlQueryNode('pq1', { query: q })]);
+  const body = handlerBody(gen(p, 'L01'), 'pq1');
+  ok(body.includes('_query = "SELECT * FROM orders WHERE name = $1 AND id = $2"'),
+    'в коде нет $1 и $2');
+  ok(body.includes('_conn.fetchrow(_query, *_args)'), 'вызов без *_args');
+  ok(!body.includes("'{name}'") && !body.includes('{id}'),
+    'скобки или кавычки вокруг параметра остались в SQL');
+});
+
+test('L02', 'запрос без скобок не получает *_args', () => {
+  const p = makeCleanProject([makeStartNode(), makePsqlQueryNode('pq1', { query: 'SELECT 1' })]);
+  const body = handlerBody(gen(p, 'L02'), 'pq1');
+  ok(body.includes('_query = "SELECT 1"'), 'текст запроса без скобок не найден');
+  ok(body.includes('_conn.fetchrow(_query)'), 'вызов fetchrow без аргументов не найден');
+  ok(!body.includes('*_args'), 'у запроса без скобок появились аргументы');
+});
+
+test('L03', 'одно имя дважды — один номер $1 и один _psql_param', () => {
+  const p = makeCleanProject([makeStartNode(), makePsqlQueryNode('pq1', {
+    query: 'SELECT {name} FROM t WHERE a = {name}',
+  })]);
+  const body = handlerBody(gen(p, 'L03'), 'pq1');
+  ok(body.includes('_query = "SELECT $1 FROM t WHERE a = $1"'), 'повтор имени не схлопнулся в $1');
+  ok(!body.includes('$2'), 'для одного имени появился $2');
+  const calls = body.match(/_psql_param\("name"/g) || [];
+  ok(calls.length === 1, `_psql_param("name") встретился ${calls.length} раз`);
+});
+
+test('L04', 'builtin: перед запросом SET LOCAL statement_timeout на 15 с', () => {
+  const p = makeCleanProject([makeStartNode(), makePsqlQueryNode('pq1')]);
+  const body = handlerBody(gen(p, 'L04'), 'pq1');
+  ok(body.includes('async with _conn.transaction():'), 'нет транзакции для SET LOCAL');
+  ok(body.includes("SET LOCAL statement_timeout = '15s'"), 'нет statement_timeout 15s');
+});
+
+test('L05', 'env и custom тоже ставят statement_timeout, режимы подключения те же', () => {
+  const p = makeCleanProject([
+    makeStartNode(),
+    makePsqlQueryNode('pq1', { connectionSource: 'env', connectionEnvVar: 'MY_DB' }),
+    makePsqlQueryNode('pq2', { connectionSource: 'custom', connectionString: 'postgresql://u:p@h:5432/d' }),
+  ]);
+  const code = gen(p, 'L05');
+  ok(handlerBody(code, 'pq1').includes("SET LOCAL statement_timeout = '15s'"), 'нет таймаута у env');
+  ok(handlerBody(code, 'pq2').includes("SET LOCAL statement_timeout = '15s'"), 'нет таймаута у custom');
+  ok(handlerBody(code, 'pq1').includes('_psql_safe_dsn(os.environ.get("MY_DB"'), 'env больше не идёт через _psql_safe_dsn');
+  ok(code.includes('def _psql_safe_dsn('), '_psql_safe_dsn пропал');
+});
+
+test('L06', 'в лог не попадают ни запрос, ни _args', () => {
+  const p = makeCleanProject([makeStartNode(), makePsqlQueryNode('pq1', {
+    query: "SELECT * FROM orders WHERE name = '{name}'",
+  })]);
+  const body = handlerBody(gen(p, 'L06'), 'pq1');
+  const logs = body.split('\n').filter(line => line.includes('logging.'));
+  ok(logs.length > 0, 'нет строк логирования');
+  for (const line of logs) {
+    ok(!line.includes('_args') && !line.includes('SELECT * FROM orders'),
+      `в лог попало лишнее: ${line.trim()}`);
   }
 });
 

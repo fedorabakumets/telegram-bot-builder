@@ -19,6 +19,7 @@ import {
   makeNode,
 } from './psql-query.fixture';
 import { psqlQueryParamsSchema } from './psql-query.schema';
+import { bindPsqlQuery } from './psql-query-bind';
 
 // ─── generatePsqlQueryHandlers() ─────────────────────────────────────────────
 
@@ -118,6 +119,121 @@ describe('collectPsqlQueryEntries()', () => {
     expect(entries[0].resultFormat).toBe('first_row');
     expect(entries[0].textTemplate).toBe('');
     expect(entries[0].autoTransitionTo).toBe('');
+  });
+});
+
+// ─── Параметры asyncpg вместо вклейки текста ────────────────────────────────
+
+/**
+ * Генерирует обработчик одного узла psql_query
+ * @param data - Поля узла поверх значений по умолчанию
+ * @returns Сгенерированный Python-код
+ */
+function renderQuery(data: Record<string, unknown> = {}): string {
+  return generatePsqlQueryHandlers([
+    makeNode('pq_bind', 'psql_query', {
+      query: 'SELECT 1',
+      saveResultTo: '',
+      resultFormat: 'first_row',
+      textTemplate: '',
+      autoTransitionTo: '',
+      connectionSource: 'builtin',
+      ...data,
+    }),
+  ]);
+}
+
+describe('bindPsqlQuery()', () => {
+  it('снимает кавычки вокруг скобок и нумерует с первого вхождения', () => {
+    const bound = bindPsqlQuery("SELECT * FROM orders WHERE name = '{name}' AND id = {id}");
+    expect(bound.sql).toBe('SELECT * FROM orders WHERE name = $1 AND id = $2');
+    expect(bound.names).toEqual(['name', 'id']);
+  });
+
+  it('повторяет номер для того же имени', () => {
+    const bound = bindPsqlQuery('SELECT {name}, {id}, {name}');
+    expect(bound.sql).toBe('SELECT $1, $2, $1');
+    expect(bound.names).toEqual(['name', 'id']);
+  });
+
+  it('оставляет запрос без скобок без параметров', () => {
+    expect(bindPsqlQuery('SELECT 1')).toEqual({ sql: 'SELECT 1', names: [] });
+  });
+
+  it('понимает точку и индекс, не трогает двойные кавычки и пробел внутри кавычек', () => {
+    expect(bindPsqlQuery('SELECT {a.b}, {a.b[0]}').names).toEqual(['a.b', 'a.b[0]']);
+    expect(bindPsqlQuery('WHERE "{col}" = {val}').sql).toBe('WHERE "$1" = $2');
+    expect(bindPsqlQuery("SELECT '{ name }'").sql).toBe("SELECT '{ name }'");
+    expect(bindPsqlQuery("SELECT '{name} '").sql).toBe("SELECT '$1 '");
+  });
+
+  it('не раскрывает each и inline-выражение, LIKE с процентами оставляет $n внутри строки', () => {
+    expect(bindPsqlQuery("WHERE name LIKE '%{q}%'").sql).toBe("WHERE name LIKE '%$1%'");
+    expect(bindPsqlQuery('SELECT {#each items}{/each}').sql).toBe('SELECT {#each items}{/each}');
+    expect(bindPsqlQuery('SELECT {=1+2}').sql).toBe('SELECT {=1+2}');
+  });
+});
+
+describe('параметры SQL в сгенерированном коде', () => {
+  const quoted = "SELECT * FROM orders WHERE name = '{name}' AND id = {id}";
+
+  it('кладёт $1 и $2 в строку запроса и передаёт *_args', () => {
+    const code = renderQuery({ query: quoted });
+    expect(code).toContain('_query = "SELECT * FROM orders WHERE name = $1 AND id = $2"');
+    expect(code).toContain('_psql_param("name", _all_vars)');
+    expect(code).toContain('_psql_param("id", _all_vars)');
+    expect(code).toContain('_conn.fetchrow(_query, *_args)');
+    expect(code).not.toContain("{name}");
+    expect(code).not.toContain('{id}');
+  });
+
+  it('запрос без скобок вызывается без аргументов', () => {
+    const code = renderQuery({ query: 'SELECT 1', resultFormat: 'json' });
+    expect(code).toContain('_query = "SELECT 1"');
+    expect(code).toContain('_conn.fetch(_query)');
+    expect(code).not.toContain('*_args');
+    expect(code).not.toContain('_args');
+  });
+
+  it('одинаковое имя — один вызов _psql_param', () => {
+    const code = renderQuery({ query: 'SELECT {name} WHERE a = {name}' });
+    expect(code).toContain('_query = "SELECT $1 WHERE a = $1"');
+    expect(code.match(/_psql_param\("name"/g)).toHaveLength(1);
+    expect(code).not.toContain('$2');
+  });
+
+  it('ставит statement_timeout и для builtin, и для env', () => {
+    for (const data of [
+      { connectionSource: 'builtin' },
+      { connectionSource: 'env', connectionEnvVar: 'MY_DB' },
+      { connectionSource: 'custom', connectionString: 'postgresql://u:p@h:5432/db' },
+    ]) {
+      const code = renderQuery(data);
+      expect(code).toContain('async with _conn.transaction():');
+      expect(code).toContain('SET LOCAL statement_timeout = \'15s\'');
+    }
+  });
+
+  it('не пишет аргументы и текст запроса в лог', () => {
+    const code = renderQuery({ query: quoted });
+    const logs = code.split('\n').filter(line => line.includes('logging.'));
+    expect(logs.length).toBeGreaterThan(0);
+    for (const line of logs) {
+      expect(line).not.toContain('_args');
+      expect(line).not.toContain('SELECT * FROM orders');
+    }
+  });
+
+  it('шаблон resultFormat text по-прежнему собирается через replace_variables_in_text', () => {
+    const code = renderQuery({
+      query: 'SELECT name, score FROM leaderboard',
+      resultFormat: 'text',
+      saveResultTo: 'board',
+      textTemplate: '{name} — {score}',
+    });
+    expect(code).toContain('replace_variables_in_text("{name} — {score}"');
+    expect(code).toContain('_conn.fetch(_query)');
+    expect(code).not.toContain('*_args');
   });
 });
 
