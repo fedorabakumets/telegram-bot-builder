@@ -31,7 +31,7 @@
       "bot-json-prompt"
     ],
     "folder_titles": {},
-    "updated_at": "2026-09-19T00:28:57+03:00",
+    "updated_at": "2026-10-02T22:07:40Z",
     "tags": [],
     "author": ""
   },
@@ -58,7 +58,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-09-13T17:59:58Z",
+    "updated_at": "2026-10-01T18:51:28Z",
     "tags": [],
     "author": ""
   },
@@ -73,7 +73,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-10-01T17:20:04Z",
+    "updated_at": "2026-10-02T19:32:59Z",
     "tags": [],
     "author": ""
   },
@@ -230,7 +230,7 @@
   {
     "path": "api/media",
     "title": "media",
-    "excerpt": "Эндпоинтов: **13**",
+    "excerpt": "Эндпоинтов: **14**",
     "parts": [
       "api",
       "media"
@@ -238,7 +238,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-08-12T00:53:11+03:00",
+    "updated_at": "2026-10-01T18:51:28Z",
     "tags": [],
     "author": ""
   },
@@ -418,7 +418,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-08-12T00:53:11+03:00",
+    "updated_at": "2026-10-02T20:25:03Z",
     "tags": [],
     "author": ""
   },
@@ -1048,7 +1048,7 @@
     "folder_titles": {
       "deployment": "🚀 Деплой"
     },
-    "updated_at": "2026-10-01T14:51:28Z",
+    "updated_at": "2026-10-02T20:26:46Z",
     "tags": [],
     "author": ""
   },
@@ -1063,7 +1063,7 @@
     "folder_titles": {
       "deployment": "🚀 Деплой"
     },
-    "updated_at": "2026-10-01T12:45:34Z",
+    "updated_at": "2026-10-02T20:26:46Z",
     "tags": [],
     "author": ""
   },
@@ -1138,7 +1138,22 @@
     "folder_titles": {
       "deployment": "🚀 Деплой"
     },
-    "updated_at": "2026-01-26T22:01:11+03:00",
+    "updated_at": "2026-10-02T19:53:53Z",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "deployment/UPLOADS_S3",
+    "title": "Загрузки панели в S3",
+    "excerpt": "Файлы, которые пользователи загружают в редактор (фото, видео, документы узлов), можно хранить в S3-совместимом бакете вместо папки `uploads",
+    "parts": [
+      "deployment",
+      "UPLOADS_S3"
+    ],
+    "folder_titles": {
+      "deployment": "🚀 Деплой"
+    },
+    "updated_at": "2026-10-01T18:55:31Z",
     "tags": [],
     "author": ""
   },
@@ -1168,7 +1183,7 @@
     "folder_titles": {
       "deployment": "🚀 Деплой"
     },
-    "updated_at": "2026-10-01T02:18:30Z",
+    "updated_at": "2026-10-02T20:26:46Z",
     "tags": [],
     "author": ""
   },
@@ -1303,7 +1318,7 @@
     "folder_titles": {
       "features": "🧩 Возможности"
     },
-    "updated_at": "2026-09-19T00:28:57+03:00",
+    "updated_at": "2026-10-02T22:07:40Z",
     "tags": [],
     "author": ""
   },
@@ -1348,7 +1363,7 @@
     "folder_titles": {
       "features": "🧩 Возможности"
     },
-    "updated_at": "2026-08-09T02:15:21+03:00",
+    "updated_at": "2026-10-02T20:26:46Z",
     "tags": [],
     "author": ""
   },
@@ -1940,8 +1955,8 @@
   },
   {
     "path": "futures/infrastructure/bot-database-access",
-    "title": "Доступ ботов к БД платформы",
-    "excerpt": "**Статус:** проблема описана, не исправлена. Не срочно, но закрыть до роста числа пользователей.",
+    "title": "Доступ ботов к базе панели",
+    "excerpt": "**Статус:** отложено. Вернуться после параметров в `psql_query`. Проблема не закрыта.",
     "parts": [
       "futures",
       "infrastructure",
@@ -1951,7 +1966,7 @@
       "futures": "🔮 Планы развития",
       "infrastructure": "🏗️ Инфраструктура"
     },
-    "updated_at": "2026-10-01T02:45:11Z",
+    "updated_at": "2026-10-02T22:02:59Z",
     "tags": [],
     "author": ""
   },
@@ -2020,6 +2035,23 @@
       "infrastructure": "🏗️ Инфраструктура"
     },
     "updated_at": "2026-08-18T17:25:44+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/infrastructure/db-pool",
+    "title": "Пул соединений Postgres",
+    "excerpt": "**Статус:** отложено. Проблема в коде, не в настройке конкретного сервера.",
+    "parts": [
+      "futures",
+      "infrastructure",
+      "db-pool"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития",
+      "infrastructure": "🏗️ Инфраструктура"
+    },
+    "updated_at": "2026-10-02T22:33:53Z",
     "tags": [],
     "author": ""
   },
