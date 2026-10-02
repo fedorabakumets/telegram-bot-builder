@@ -11,7 +11,6 @@ from __future__ import annotations
 import contextlib
 import contextvars
 import importlib.util
-import os
 import sys
 import types
 from pathlib import Path
@@ -22,8 +21,19 @@ current_token_id: contextvars.ContextVar[int] = contextvars.ContextVar(
     "worker_current_token_id", default=0
 )
 
-# Сериализация мутаций os.environ при загрузке бота
+# Сериализация мутаций базового окружения при загрузке бота
 _env_lock = None
+
+
+def _process_environ():
+    """
+    Базовое окружение процесса.
+    Обёртка os.environ сюда не пишет: иначе restore_env стёр бы словарь бота.
+    @returns настоящий environ процесса
+    """
+    from bot_env_overlay import get_base_environ
+
+    return get_base_environ()
 
 
 def get_env_lock():
@@ -112,23 +122,26 @@ def cleanup_bot_modules(token_id: int, bot_dir: Optional[Path] = None) -> None:
 
 def apply_bot_env(token: str, token_id: int, webhook_url: Optional[str], webhook_port: Optional[int]) -> Dict[str, Optional[str]]:
     """
-    Пишет per-bot env. Возвращает снимок прежних значений для restore.
+    Пишет BOT_TOKEN и webhook в базовое окружение процесса на время загрузки.
+    Словарь бота в обёртке не трогает — его держит register.
+    @returns снимок прежних значений для restore_env
     """
+    env = _process_environ()
     keys = ("BOT_TOKEN", "TOKEN_ID", "WEBHOOK_URL", "WEBHOOK_PORT")
-    prev = {k: os.environ.get(k) for k in keys}
-    os.environ["BOT_TOKEN"] = token
-    os.environ["TOKEN_ID"] = str(token_id)
-    os.environ["WEBHOOK_PORT"] = str(webhook_port or (9000 + token_id))
+    prev = {k: env.get(k) for k in keys}
+    env["BOT_TOKEN"] = token
+    env["TOKEN_ID"] = str(token_id)
+    env["WEBHOOK_PORT"] = str(webhook_port or (9000 + token_id))
     if webhook_url:
-        os.environ["WEBHOOK_URL"] = webhook_url
+        env["WEBHOOK_URL"] = webhook_url
     else:
-        os.environ.pop("WEBHOOK_URL", None)
+        env.pop("WEBHOOK_URL", None)
     return prev
 
 
 def apply_bot_dotenv(bot_dir: Path) -> Dict[str, Optional[str]]:
     """
-    Подставляет в os.environ значения из .env бота с перезаписью.
+    Подставляет в базовое окружение процесса значения из .env бота с перезаписью.
     load_dotenv() в bot.py не перезаписывает существующие ключи, поэтому без этого
     бот в общем воркере получил бы USERBOT_*, PROJECT_ID и прочее от соседнего бота.
     @returns снимок прежних значений для restore_env
@@ -143,12 +156,13 @@ def apply_bot_dotenv(bot_dir: Path) -> Dict[str, Optional[str]]:
 
 def apply_env_values(values: Dict[str, str]) -> Dict[str, Optional[str]]:
     """
-    Подставляет в os.environ переменные бота, присланные в команде start_bot (без файла .env).
+    Подставляет переменные в базовое окружение процесса, не в словарь бота.
     @param values - имя переменной → значение
     @returns снимок прежних значений для restore_env
     """
-    prev = {k: os.environ.get(k) for k in values}
-    os.environ.update(values)
+    env = _process_environ()
+    prev = {k: env.get(k) for k in values}
+    env.update(values)
     return prev
 
 
@@ -188,12 +202,13 @@ def suppress_dotenv_autoload():
 
 
 def restore_env(prev: Dict[str, Optional[str]]) -> None:
-    """Откатывает env к снимку."""
+    """Откатывает базовое окружение процесса. Словарь бота в обёртке не стирает."""
+    env = _process_environ()
     for k, v in prev.items():
         if v is None:
-            os.environ.pop(k, None)
+            env.pop(k, None)
         else:
-            os.environ[k] = v
+            env[k] = v
 
 
 def inject_bot_constants(

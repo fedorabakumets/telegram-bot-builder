@@ -27,6 +27,8 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 import bot_code_cache
+import bot_env_overlay
+import bot_env_snapshot
 import lazy_aiogram
 import worker_isolation as iso
 
@@ -228,6 +230,7 @@ class BotWorker:
         env_prev: Optional[Dict[str, Optional[str]]] = None
         dotenv_prev: Optional[Dict[str, Optional[str]]] = None
         dotenv_guard = contextlib.ExitStack()
+        overlay_on = False
 
         try:
             emit_log(token_id, "─── Начало загрузки бота ───", "stdout")
@@ -256,6 +259,19 @@ class BotWorker:
                 env_prev = iso.apply_bot_env(
                     ctx.token, token_id, ctx.webhook_url, ctx.webhook_port
                 )
+                # Словарь живёт и после restore_env: main() читает os.environ уже без чужих секретов в базе
+                bot_env_overlay.register(
+                    token_id,
+                    bot_env_snapshot.bot_env_values(
+                        ctx.token,
+                        token_id,
+                        ctx.webhook_url,
+                        ctx.webhook_port,
+                        ctx.env,
+                        bot_dir,
+                    ),
+                )
+                overlay_on = True
                 emit_log(
                     token_id,
                     f"Env: PROJECT_ID={os.environ.get('PROJECT_ID', PROJECT_ID)}, TOKEN_ID={token_id}",
@@ -337,6 +353,8 @@ class BotWorker:
             if dotenv_prev is not None:
                 iso.restore_env(dotenv_prev)
             dotenv_guard.close()
+            if overlay_on:
+                bot_env_overlay.unregister(token_id)
             iso.cleanup_bot_modules(token_id, ctx.bot_dir)
             if token_id in self.bots and self.bots[token_id] is ctx:
                 del self.bots[token_id]
@@ -469,6 +487,8 @@ class BotWorker:
 
 def main():
     """Точка входа воркера."""
+    # До загрузки ботов: os.getenv читает os.environ, поэтому хватает одной подмены
+    bot_env_overlay.install()
     if sys.platform == "win32":
         sys.stdout = open(sys.stdout.fileno(), mode="w", encoding="utf-8", buffering=1, closefd=False)
         sys.stderr = open(sys.stderr.fileno(), mode="w", encoding="utf-8", buffering=1, closefd=False)
