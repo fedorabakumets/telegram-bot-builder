@@ -60,6 +60,12 @@ describe('broadcast-client.py.jinja2', () => {
         assert.ok(!r.includes('FROM user_ids'));
       });
 
+      it('фильтрует получателей по проекту и токену через параметры $1/$2', () => {
+        const r = generateBroadcastClient(validParamsBotUsers);
+        assert.ok(r.includes('WHERE project_id = $1 AND token_id = $2", PROJECT_ID, TOKEN_ID)'));
+        assert.ok(!r.includes('project_id = PROJECT_ID'));
+      });
+
       it('логирует userbot user_id', () => {
         const r = generateBroadcastClient(validParamsBotUsers);
         assert.ok(r.includes('Client API (Userbot)'));

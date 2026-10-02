@@ -40,6 +40,12 @@ describe('broadcast-bot.py.jinja2', () => {
         assert.ok(r.includes('SELECT DISTINCT user_id FROM bot_users'));
         assert.ok(!r.includes('FROM user_ids'));
       });
+
+      it('фильтрует получателей по проекту и токену через параметры $1/$2', () => {
+        const r = generateBroadcastBot(validParamsBotUsers);
+        assert.ok(r.includes('WHERE project_id = $1 AND token_id = $2", PROJECT_ID, TOKEN_ID)'));
+        assert.ok(!r.includes('project_id = PROJECT_ID'));
+      });
     });
 
     describe('Отправка', () => {
