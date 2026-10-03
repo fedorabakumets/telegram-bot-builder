@@ -1419,10 +1419,21 @@ input[type="checkbox"]:focus {
     inset 0 1px 0 hsl(var(--foreground) / 0.15);
 }
 
+/* Запекание слоя на время зума: GPU меняет матрицу, карточки не растризуются каждый кадр */
+[data-canvas-content][data-viewport-live] {
+  will-change: transform;
+}
+
+/* Куллинг вне экрана. Атрибут ставится из DOM и не входит в style React */
+[data-canvas-culled] {
+  display: none !important;
+}
+
 /* Modern Canvas Grid Styles */
 .canvas-grid-modern {
   position: relative;
-  transition: all 0.3s ease;
+  /* Только подсветка drop, без transition: all — иначе сдвиг холста анимируется */
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .canvas-grid-modern[data-drag-over="true"] {
@@ -1449,6 +1460,25 @@ input[type="checkbox"]:focus {
     linear-gradient(90deg, rgba(99, 102, 241, 0.25) 1px, transparent 1px),
     linear-gradient(rgba(99, 102, 241, 0.25) 1px, transparent 1px) !important;
   box-shadow: inset 0 0 80px rgba(99, 102, 241, 0.15);
+}
+
+/* Бегущая строка имени листа на узкой панели */
+@keyframes sheet-name-marquee {
+  0%, 12% { transform: translateX(0); }
+  88%, 100% { transform: translateX(var(--sheet-name-shift)); }
+}
+
+.sheet-name-marquee {
+  animation-name: sheet-name-marquee;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet-name-marquee {
+    animation: none;
+  }
 }
 
 /* Enhanced shadows for modern look */

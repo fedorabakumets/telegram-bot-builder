@@ -10,6 +10,7 @@ import { UndoRedoButtons } from './undo-redo-buttons';
 import { ActionHistory } from './action-history';
 import { VersionHistoryButton } from './version-history-button';
 import { SaveButton } from './save-button';
+import { AutosaveToggle } from '@/components/editor/staging/autosave-toggle';
 import { SaveCheckpointPopover } from './save-checkpoint-popover';
 import { AutoLayoutButton } from './auto-layout-button';
 import { ClipboardButtons } from './clipboard-buttons';
@@ -70,6 +71,10 @@ interface CanvasToolbarProps {
   onRedo?: () => void;
   /** РљРѕР»Р±СЌРє РґР»СЏ СЃРѕС…СЂР°РЅРµРЅРёСЏ */
   onSave?: () => void;
+  /** Включено ли автосохранение холста */
+  autosave?: boolean;
+  /** Включить или выключить автосохранение */
+  onAutosaveChange?: (enabled: boolean) => void;
   /** Колбэк сохранения с заметкой — создаёт постоянный ручной чекпоинт */
   onSaveWithNote?: (note: string) => void;
   /** Колбэк для авто-расстановки узлов */
@@ -155,6 +160,8 @@ export function CanvasToolbar({
   onUndo,
   onRedo,
   onSave,
+  autosave,
+  onAutosaveChange,
   onSaveWithNote,
   onAutoLayout,
   onCopyToClipboard,
@@ -232,6 +239,9 @@ export function CanvasToolbar({
               <VersionHistoryButton projectId={projectId} onRestored={onRestoreVersion} />
             )}
 
+            {onAutosaveChange && (
+              <AutosaveToggle checked={!!autosave} onChange={onAutosaveChange} />
+            )}
             <SaveButton onSave={onSave} isSaving={isSaving} />
 
             {onSaveWithNote && <SaveCheckpointPopover onSaveWithNote={onSaveWithNote} isSaving={isSaving} />}

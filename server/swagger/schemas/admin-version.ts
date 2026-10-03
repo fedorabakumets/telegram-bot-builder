@@ -9,7 +9,7 @@ import { z } from "zod";
 /** Блок версии в ответах admin */
 export const AdminVersionInfoSchema = z
   .object({
-    version: z.string().openapi({ example: "2.2.1.3" }),
+    version: z.string().openapi({ example: "2.2.1.4" }),
     releasedAt: z.string().nullable().openapi({ example: "2026-09-30" }),
     notesUrl: z.string().nullable().optional().openapi({ example: null }),
   })

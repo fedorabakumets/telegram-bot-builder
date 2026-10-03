@@ -12,6 +12,8 @@ import {
   type MouseEvent as ReactMouseEvent,
 } from 'react';
 import { useTouchGestures } from './use-touch-gestures';
+import type { ViewportPan } from './paint-editor-viewport';
+import { scheduleViewportRelease } from './schedule-viewport-release';
 
 /** Точка смещения камеры */
 export interface CanvasPan {
@@ -37,6 +39,11 @@ export interface UseCanvasViewportOptions {
   minZoom?: number;
   /** Макс. zoom % */
   maxZoom?: number;
+  /**
+   * Кадр жеста без setState. Третий аргумент — запечь слой (зум).
+   * Если задан, pan/zoom коммитятся в React только в конце жеста.
+   */
+  paintFrame?: (pan: ViewportPan, zoom: number, promote?: boolean) => void;
 }
 
 /**
@@ -51,6 +58,7 @@ export function useCanvasViewport({
   isNodeBeingDragged,
   minZoom = 1,
   maxZoom = 200,
+  paintFrame,
 }: UseCanvasViewportOptions) {
   const [zoom, setZoom] = useState(100);
   const [pan, setPan] = useState<CanvasPan>({ x: 0, y: 0 });
@@ -70,15 +78,77 @@ export function useCanvasViewport({
 
   const rafIdRef = useRef<number | null>(null);
   const pendingUpdateRef = useRef<{ pan: CanvasPan; zoom: number } | null>(null);
+  const paintFrameRef = useRef(paintFrame);
+  paintFrameRef.current = paintFrame;
+  const wheelTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** Жест идёт: рендер читает refs. Без setState, чтобы не будить холст */
+  const viewportLiveRef = useRef(false);
+  /** В этом жесте масштаб уже менялся — слой запечён */
+  const promoteRef = useRef(false);
+  /** Масштаб, уже записанный в DOM или в React */
+  const paintedZoomRef = useRef(100);
+  const cancelReleaseRef = useRef<(() => void) | null>(null);
 
   useEffect(() => { zoomRef.current = zoom; }, [zoom]);
   useEffect(() => { panRef.current = pan; }, [pan]);
+  useEffect(() => {
+    if (!viewportLiveRef.current) paintedZoomRef.current = zoom;
+  }, [zoom]);
 
   const triggerTransformAnimation = useCallback(() => {
     setAnimateTransform(true);
     if (animateTimerRef.current) clearTimeout(animateTimerRef.current);
     animateTimerRef.current = setTimeout(() => setAnimateTransform(false), 220);
   }, []);
+
+  /** Отменяет отложенное снятие will-change, если жест продолжился */
+  const cancelRelease = useCallback(() => {
+    cancelReleaseRef.current?.();
+    cancelReleaseRef.current = null;
+  }, []);
+
+  /**
+   * После жеста: один кадр без will-change (резкий рерастр), затем pan/zoom в React.
+   * Пока жест идёт, setState не вызывается.
+   */
+  const commitViewport = useCallback(() => {
+    if (wheelTimerRef.current) {
+      clearTimeout(wheelTimerRef.current);
+      wheelTimerRef.current = null;
+    }
+    if (rafIdRef.current !== null) {
+      cancelAnimationFrame(rafIdRef.current);
+      rafIdRef.current = null;
+    }
+    const pending = pendingUpdateRef.current;
+    pendingUpdateRef.current = null;
+    if (!viewportLiveRef.current && !pending) return;
+    if (pending) paintFrameRef.current?.(pending.pan, pending.zoom, promoteRef.current);
+    cancelRelease();
+    cancelReleaseRef.current = scheduleViewportRelease(
+      () => canvasRef.current,
+      () => {
+        cancelReleaseRef.current = null;
+        viewportLiveRef.current = false;
+        promoteRef.current = false;
+        const nextPan = panRef.current;
+        const nextZoom = zoomRef.current;
+        setPan((prev) => (
+          prev.x === nextPan.x && prev.y === nextPan.y ? prev : { x: nextPan.x, y: nextPan.y }
+        ));
+        setZoom((prev) => (prev === nextZoom ? prev : nextZoom));
+      },
+    );
+  }, [canvasRef, cancelRelease]);
+
+  /** Коммит после паузы колеса: у wheel нет mouseup */
+  const armWheelCommit = useCallback(() => {
+    if (wheelTimerRef.current) clearTimeout(wheelTimerRef.current);
+    wheelTimerRef.current = setTimeout(() => {
+      wheelTimerRef.current = null;
+      commitViewport();
+    }, 100);
+  }, [commitViewport]);
 
   const scheduleStateFlush = useCallback(() => {
     if (rafIdRef.current !== null) return;
@@ -94,8 +164,32 @@ export function useCanvasViewport({
 
   const scheduleFlush = useCallback((newPan: CanvasPan, newZoom: number) => {
     pendingUpdateRef.current = { pan: newPan, zoom: newZoom };
-    scheduleStateFlush();
-  }, [scheduleStateFlush]);
+    if (!paintFrameRef.current) {
+      scheduleStateFlush();
+      return;
+    }
+    cancelRelease();
+    if (!viewportLiveRef.current) {
+      viewportLiveRef.current = true;
+      promoteRef.current = false;
+    }
+    if (newZoom !== paintedZoomRef.current) promoteRef.current = true;
+    paintedZoomRef.current = newZoom;
+    if (rafIdRef.current !== null) return;
+    rafIdRef.current = requestAnimationFrame(() => {
+      rafIdRef.current = null;
+      const pending = pendingUpdateRef.current;
+      if (!pending) return;
+      pendingUpdateRef.current = null;
+      paintFrameRef.current?.(pending.pan, pending.zoom, promoteRef.current);
+    });
+  }, [scheduleStateFlush, cancelRelease]);
+
+  useEffect(() => () => {
+    if (rafIdRef.current !== null) cancelAnimationFrame(rafIdRef.current);
+    if (wheelTimerRef.current) clearTimeout(wheelTimerRef.current);
+    cancelReleaseRef.current?.();
+  }, []);
 
   const getContainerDimensions = useCallback(() => {
     if (canvasRef.current?.parentElement) {
@@ -105,8 +199,14 @@ export function useCanvasViewport({
     return { width: window.innerWidth - 64, height: window.innerHeight - 64 };
   }, [canvasRef]);
 
+  /**
+   * Зум к центру видимой области.
+   * С paintFrame — один запечённый кадр и коммит, без CSS transition 200 мс.
+   * Без paintFrame (холст ботов) — прежняя анимация.
+   * @param newZoom - Новый масштаб в процентах
+   */
   const zoomFromCenter = useCallback((newZoom: number) => {
-    triggerTransformAnimation();
+    if (newZoom === zoomRef.current) return;
     const { width, height } = getContainerDimensions();
     const centerX = width / 2;
     const centerY = height / 2;
@@ -122,9 +222,19 @@ export function useCanvasViewport({
     };
     zoomRef.current = newZoom;
     panRef.current = newPan;
+    if (paintFrameRef.current) {
+      viewportLiveRef.current = true;
+      promoteRef.current = true;
+      paintedZoomRef.current = newZoom;
+      pendingUpdateRef.current = { pan: newPan, zoom: newZoom };
+      paintFrameRef.current(newPan, newZoom, true);
+      commitViewport();
+      return;
+    }
+    triggerTransformAnimation();
     setPan(newPan);
     setZoom(newZoom);
-  }, [getContainerDimensions, triggerTransformAnimation]);
+  }, [getContainerDimensions, triggerTransformAnimation, commitViewport]);
 
   const zoomIn = useCallback(() => {
     zoomFromCenter(Math.min(zoomRef.current * 1.05, maxZoom));
@@ -135,12 +245,23 @@ export function useCanvasViewport({
   }, [zoomFromCenter, minZoom]);
 
   const resetZoom = useCallback(() => {
-    triggerTransformAnimation();
+    if (zoomRef.current === 100 && panRef.current.x === 0 && panRef.current.y === 0) return;
+    const newPan = { x: 0, y: 0 };
     zoomRef.current = 100;
-    panRef.current = { x: 0, y: 0 };
+    panRef.current = newPan;
+    if (paintFrameRef.current) {
+      viewportLiveRef.current = true;
+      promoteRef.current = true;
+      paintedZoomRef.current = 100;
+      pendingUpdateRef.current = { pan: newPan, zoom: 100 };
+      paintFrameRef.current(newPan, 100, true);
+      commitViewport();
+      return;
+    }
+    triggerTransformAnimation();
     setZoom(100);
-    setPan({ x: 0, y: 0 });
-  }, [triggerTransformAnimation]);
+    setPan(newPan);
+  }, [triggerTransformAnimation, commitViewport]);
 
   const setZoomLevel = useCallback((level: number) => {
     zoomFromCenter(Math.max(Math.min(level, maxZoom), minZoom));
@@ -171,7 +292,8 @@ export function useCanvasViewport({
       panRef.current = newPan;
       scheduleFlush(newPan, zoomRef.current);
     }
-  }, [canvasRef, maxZoom, minZoom, scheduleFlush]);
+    if (paintFrameRef.current) armWheelCommit();
+  }, [canvasRef, maxZoom, minZoom, scheduleFlush, armWheelCommit]);
 
   const handleMouseDown = useCallback((e: ReactMouseEvent) => {
     const target = e.target as HTMLElement;
@@ -185,14 +307,17 @@ export function useCanvasViewport({
     }
   }, [isEmptyTarget, onEmptyLeftClick]);
 
-  const handleMouseUp = useCallback(() => setIsPanning(false), []);
+  const handleMouseUp = useCallback(() => {
+    setIsPanning(false);
+    if (paintFrameRef.current) commitViewport();
+  }, [commitViewport]);
 
   const handleContextMenu = useCallback((e: ReactMouseEvent) => {
     if ((e.target as HTMLElement).closest('[data-canvas-node]')) return;
     e.preventDefault();
   }, []);
 
-  const { handleTouchStart, handleTouchMove, handleTouchEnd } = useTouchGestures({
+  const { handleTouchStart, handleTouchMove, handleTouchEnd: endTouch } = useTouchGestures({
     canvasRef: canvasRef as RefObject<HTMLDivElement>,
     pan,
     zoom,
@@ -213,6 +338,12 @@ export function useCanvasViewport({
     setInitialPinchZoom,
     isNodeBeingDragged,
   });
+
+  /** После жеста пальцем фиксируем камеру в состоянии React */
+  const handleTouchEnd = useCallback((e: TouchEvent) => {
+    endTouch(e);
+    if (e.touches.length === 0 && paintFrameRef.current) commitViewport();
+  }, [endTouch, commitViewport]);
 
   useEffect(() => {
     const el = canvasRef.current;
@@ -239,7 +370,10 @@ export function useCanvasViewport({
       panRef.current = newPan;
       scheduleFlush(newPan, zoomRef.current);
     };
-    const onUp = () => setIsPanning(false);
+    const onUp = () => {
+      setIsPanning(false);
+      if (paintFrameRef.current) commitViewport();
+    };
     const preventPageZoom = (e: WheelEvent) => {
       if (e.ctrlKey) e.preventDefault();
     };
@@ -253,7 +387,7 @@ export function useCanvasViewport({
       document.removeEventListener('mouseup', onUp);
       document.removeEventListener('wheel', preventPageZoom);
     };
-  }, [isPanning, panStart, lastPanPosition, scheduleFlush]);
+  }, [isPanning, panStart, lastPanPosition, scheduleFlush, commitViewport]);
 
   return {
     pan,
@@ -263,6 +397,7 @@ export function useCanvasViewport({
     panRef,
     zoomRef,
     isPanning,
+    viewportLiveRef,
     animateTransform,
     triggerTransformAnimation,
     zoomIn,

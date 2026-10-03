@@ -8,14 +8,33 @@
  * Важно: одновременно должен монтироваться только один layout.
  */
 
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { useMediaQuery } from '@/components/editor/properties/hooks/use-media-query';
 import { Bot, Terminal } from 'lucide-react';
 import { BotsPanel } from './BotsPanel';
-import { TerminalPanel } from '../../terminal/TerminalPanel';
 import { useActiveTerminals } from '../contexts/ActiveTerminalsContext';
 import { useBotViewMode } from '../canvas/use-bot-view-mode';
+
+/**
+ * Панель терминала внутри вкладки «Бот».
+ * Чанк запрашивается при показе панели, а не вместе с холстом.
+ */
+const TerminalPanel = lazy(() =>
+  import('../../terminal/TerminalPanel').then((m) => ({ default: m.TerminalPanel })),
+);
+
+/**
+ * Компактный фолбек загрузки терминала. Не перекрывает весь редактор.
+ * @returns JSX-элемент индикатора
+ */
+function TerminalPanelFallback() {
+  return (
+    <div className="flex h-full w-full items-center justify-center text-sm text-muted-foreground" role="status">
+      <i className="fas fa-spinner fa-spin text-xs" aria-hidden="true" />
+    </div>
+  );
+}
 
 type MobileTab = 'bots' | 'terminal';
 
@@ -63,7 +82,9 @@ export function BotLayout({ projectId, projectName, allProjects, onProjectChange
           </ResizablePanel>
           <ResizableHandle withHandle />
           <ResizablePanel defaultSize={50} minSize={25}>
-            <TerminalPanel />
+            <Suspense fallback={<TerminalPanelFallback />}>
+              <TerminalPanel />
+            </Suspense>
           </ResizablePanel>
         </ResizablePanelGroup>
       </div>
@@ -115,7 +136,9 @@ export function BotLayout({ projectId, projectName, allProjects, onProjectChange
           </div>
         ) : (
           <div className="h-full">
-            <TerminalPanel />
+            <Suspense fallback={<TerminalPanelFallback />}>
+              <TerminalPanel />
+            </Suspense>
           </div>
         )}
       </div>

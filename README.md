@@ -15,7 +15,7 @@
   **Создавайте Telegram ботов без программирования!**
   
   [![MIT License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](https://choosealicense.com/licenses/mit/)
-  [![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen?style=for-the-badge&logo=node.js)](https://nodejs.org/)
+  [![Node.js Version](https://img.shields.io/badge/node-%3E%3D18%20%7C%2022%20LTS-brightgreen?style=for-the-badge&logo=node.js)](https://nodejs.org/)
   [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
   [![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
   [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
@@ -59,6 +59,45 @@
 
 
 
+
+## 🚀 Быстрый старт
+
+Локально конструктор поднимается одной командой. Образ панели собран на **Node.js 22**. Боты генерируются на **Python (aiogram)** и по умолчанию запускаются процессом на том же сервере.
+
+### Docker
+
+```bash
+git clone https://github.com/fedorabakumets/telegram-bot-builder.git
+cd telegram-bot-builder
+docker compose up -d
+```
+
+Приложение откроется на `http://localhost:5000`.
+
+### Вручную
+
+Нужны Node.js ≥ 18 (удобнее 22), PostgreSQL ≥ 17, Redis ≥ 7, Python ≥ 3.10. Пошагово для Windows, macOS и Linux: **[docs/development/INSTALLATION.md](docs/development/INSTALLATION.md)**.
+
+```bash
+git clone https://github.com/fedorabakumets/telegram-bot-builder.git
+cd telegram-bot-builder
+npm install
+pip install -r requirements.txt
+cp .env.example .env
+npm run dev
+```
+
+### Свой сервер
+
+| Куда | Что это | Документация |
+|------|---------|--------------|
+| **Docker** | Панель и зависимости у себя | команды выше и [установка](docs/development/INSTALLATION.md) |
+| **Railway** | Облако, база рядом с сервисом | [RAILWAY_QUICK_DEPLOY.md](docs/deployment/RAILWAY_QUICK_DEPLOY.md) |
+| **VPS** | GitHub Actions собирает образ, сервер только скачивает его | [VPS_GITHUB_ACTIONS.md](docs/deployment/VPS_GITHUB_ACTIONS.md) |
+
+Сайт документации: [fedorabakumets.github.io/telegram-bot-builder](https://fedorabakumets.github.io/telegram-bot-builder/).
+
+---
 
 ### 🏗️ Архитектура системы
 
@@ -109,12 +148,12 @@
       <td align="center" width="25%" style="padding: 15px;">
         <div style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); padding: 20px; border-radius: 15px; color: white;">
           <h3>☁️ Деплой</h3>
-          <p><strong>Railway + Python</strong></p>
-          <p>Запуск ботов</p>
+          <p><strong>Node.js + Python</strong></p>
+          <p>Панель и боты</p>
           <hr style="border: 1px solid rgba(255,255,255,0.3);">
-          <small>• Автогенерация кода<br/>
-          • Готовые Python боты<br/>
-          • Облачный хостинг</small>
+          <small>• Образ панели на Node 22<br/>
+          • Боты на Python (aiogram)<br/>
+          • Docker, Railway или VPS</small>
         </div>
       </td>
     </tr>
@@ -204,12 +243,17 @@
 ┣ 📂 shared/                     # 🔗 Общие модули (схемы, типы)
 ┣ 📂 bots/                       # 🤖 Сгенерированные Python-боты
 ┣ 📂 docs/                       # 📚 Документация
-┃ ┣ 📂 analysis/                 # Анализ архитектуры
-┃ ┣ 📂 deployment/               # Инструкции по деплою
-┃ ┣ 📂 development/              # Для разработчиков
-┃ ┣ 📂 features/                 # Описание фич
+┃ ┣ 📂 api/                      # Справочник REST API
+┃ ┣ 📂 deployment/               # Railway, Docker, VPS
+┃ ┣ 📂 development/              # Установка и вклад в код
+┃ ┣ 📂 features/                 # Описание фич и типов нод
 ┃ ┣ 📂 futures/                  # Планы развития
-┃ ┗ 📂 releases/                 # Заметки к релизам
+┃ ┣ 📂 interface/                # Вкладки конструктора
+┃ ┣ 📂 mcp/                      # MCP-конструктор
+┃ ┣ 📂 nodes/                    # Справочник нод
+┃ ┣ 📂 releases/                 # Заметки к релизам
+┃ ┣ 📂 variables/                # Переменные
+┃ ┗ 📄 home.md                   # Оглавление документации
 ┣ 📂 migrations/                 # 🗄️ Миграции Drizzle ORM
 ┣ 📂 uploads/                    # 📁 Загруженные медиафайлы
 ┣ 📂 scripts/                    # 📜 Вспомогательные скрипты
@@ -233,12 +277,13 @@
   <img src="https://img.shields.io/badge/Аутентификация-Session-orange?style=for-the-badge&logo=auth" alt="Auth"/>
 </div>
 
-> ⚠️ **Безопасность:** На данный момент многие эндпоинты открыты и не требуют аутентификации. Проект находится в стадии активной разработки — авторизация и изоляция данных между пользователями планируются в будущих релизах. Следите за обновлениями в нашем [Telegram-канале](https://t.me/botcraft_studio) и [чате](https://t.me/bot_builder_chat).
+> 🔐 **Доступ:** `/api` закрыт по умолчанию. Личность берётся из сессии (вход через Telegram) или из токена агента. Нет личности — ответ `401`. Без входа открыты проверка здоровья, вход, первичная настройка, конфиг экрана логина, webhook и хуки. Справочник: [docs/api/README.md](docs/api/README.md), вход: [docs/api/auth.md](docs/api/auth.md).
 
 API маршруты находятся в директории `server/routes/`:
 
 | Директория | Что содержит |
 |-----------|-------------|
+| `server/routes/auth/` | Вход, сессия, выход |
 | `server/routes/projectRoutes/` | CRUD проектов, обновление схемы |
 | `server/routes/botManagement/` | Запуск, остановка, перезапуск ботов |
 | `server/routes/tables/` | Работа с таблицами данных |
@@ -288,6 +333,10 @@ API маршруты находятся в директории `server/routes/`
 - **📢 Рассылки** — массовая отправка сообщений по базе
 - **📊 Аналитика** — статистика использования бота
 - **📑 Таблицы** — таблицы данных проекта (контент, настройки)
+- **🖥️ Терминал** — логи запущенного бота
+- **🖼️ Файлы** — файлы проекта и загруженные материалы
+- **🕒 История версий** — снимки схемы проекта
+- **✨ Агент** — токены для MCP и внешнего редактирования
 
 > 💡 Вкладки и блоки постоянно обновляются и дополняются с каждым релизом.
 
@@ -298,8 +347,8 @@ API маршруты находятся в директории `server/routes/`
 ### ▶️ Вариант 1: Запуск из конструктора (кнопка «Запустить»)
 
 Бот запускается прямо из интерфейса конструктора:
-- **На официальном сайте** — пока работает нестабильно, актуальную ссылку можно получить в чате [@bot_builder_chat](https://t.me/bot_builder_chat). Скоро выпускаем глобально!
-- **Self-hosted (рекомендуется)** — разверните конструктор у себя и запускайте ботов из своей инфраструктуры
+- **Self-hosted** — основной описанный путь. Разверните конструктор у себя (Docker, Railway или VPS) и запускайте ботов из вкладки «Бот»
+- **Публичный экземпляр** — актуальную ссылку смотрите в чате [@bot_builder_chat](https://t.me/bot_builder_chat)
 
 ### 📦 Вариант 2: Скачать код и запустить где угодно
 
@@ -313,7 +362,17 @@ API маршруты находятся в директории `server/routes/`
 
 Разверните Bot Builder на своём сервере — и создавайте/запускайте ботов в своей инфраструктуре:
 
-#### Railway (рекомендуется)
+#### Docker
+
+```bash
+git clone https://github.com/fedorabakumets/telegram-bot-builder.git
+cd telegram-bot-builder
+docker compose up -d
+```
+
+Приложение откроется на `http://localhost:5000`. Так же удобно поднять конструктор на своём сервере.
+
+#### Railway
 
 1. Зарегистрируйтесь на [Railway.app](https://railway.app/)
 2. Создайте новый проект
@@ -324,13 +383,11 @@ API маршруты находятся в директории `server/routes/`
 
 Подробные инструкции: [docs/deployment/RAILWAY_QUICK_DEPLOY.md](docs/deployment/RAILWAY_QUICK_DEPLOY.md)
 
-#### Docker
+#### VPS
 
-```bash
-git clone https://github.com/fedorabakumets/telegram-bot-builder.git
-cd telegram-bot-builder
-docker compose up -d
-```
+Сборка идёт в GitHub Actions. Сервер скачивает готовый образ и перезапускает контейнеры, без `docker build` на самой машине.
+
+Подробные инструкции: [docs/deployment/VPS_GITHUB_ACTIONS.md](docs/deployment/VPS_GITHUB_ACTIONS.md)
 
 #### Ручная установка (любая ОС)
 
@@ -363,12 +420,13 @@ docker compose up -d
 
 ### Шаг 2: Откройте редактор
 - При первом запуске у вас уже есть **проект по умолчанию** с узлом "Старт"
-- Если нужен новый проект, откройте вкладку **"Проекты"** (слева) и нажмите кнопку **"+ Новый"**
+- Если нужен новый проект, в редакторе откройте вкладку **«Проекты»** на панели холста и нажмите **«+ Новый»**
 
-### Шаг 3: Добавьте токен бота
-1. В правой части нажмите кнопку **"Бот"** 
-2. Вставьте токен, который вы получили от BotFather
-3. Токен сохранится автоматически
+### Шаг 3: Подключите бота
+1. В левом сайдбаре откройте вкладку **«Бот»**
+2. Нажмите **«Подключить бот»**
+3. Вставьте токен, который вы получили от BotFather. Имя и описание подтянутся сами
+4. Токен сохранится в проекте
 
 ### Шаг 4: Постройте сценарий бота
 1. Перетащите блок **"Сообщение"** на холст рядом с узлом "Старт"
@@ -380,12 +438,9 @@ docker compose up -d
 4. Добавьте еще блоки и настройте переходы между ними
 
 ### Шаг 5: Запустите бота
-1. Откройте вкладку **"Бот"** (справа внизу)
-2. Нажмите кнопку **"Запустить"**
-3. Откройте своего бота в Telegram
-4. Тестируйте и улучшайте!
-
-</details>
+1. На вкладке **«Бот»** в левом сайдбаре нажмите **«Запустить»** на карточке бота
+2. Откройте своего бота в Telegram
+3. Тестируйте и улучшайте!
 
 </details>
 
@@ -757,16 +812,16 @@ if __name__ == "__main__":
 <div style="text-align: left; font-size: 14px;">
 
 <p><strong>🚂 <a href="docs/deployment/RAILWAY_QUICK_DEPLOY.md" style="color: #FFE4E1;">Railway</a></strong><br/>
-<small>Развертывание на Railway (рекомендуется)</small></p>
+<small>Панель в облаке, база рядом с сервисом</small></p>
 
-<p><strong>🐳 Docker</strong><br/>
-<small>Контейнеризация приложения (скоро)</small></p>
+<p><strong>🐳 <a href="docs/development/INSTALLATION.md" style="color: #FFE4E1;">Docker</a></strong><br/>
+<small><code>docker compose up -d</code> — панель у себя</small></p>
 
-<p><strong>☁️ VPS</strong><br/>
-<small>Развертывание на собственном сервере (скоро)</small></p>
+<p><strong>☁️ <a href="docs/deployment/VPS_GITHUB_ACTIONS.md" style="color: #FFE4E1;">VPS</a></strong><br/>
+<small>Сервер скачивает готовый образ</small></p>
 
-<p><strong>⚙️ CI/CD</strong><br/>
-<small>Автоматическое развертывание (скоро)</small></p>
+<p><strong>⚙️ <a href="docs/deployment/VPS_GITHUB_ACTIONS.md" style="color: #FFE4E1;">CI/CD</a></strong><br/>
+<small>Сборка в GitHub Actions, на сервере только pull</small></p>
 
 </div>
 </div>
@@ -780,14 +835,14 @@ if __name__ == "__main__":
 <p><strong>🏗️ <a href="docs/features/NODE_TYPES.md" style="color: #FFE4E1;">Типы узлов</a></strong><br/>
 <small>Полный список доступных блоков</small></p>
 
-<p><strong>🔧 <a href="docs/futures/features/possible-triggers-and-actions.md" style="color: #FFE4E1;">Триггеры и действия</a></strong><br/>
+<p><strong>🔧 <a href="docs/features/POSSIBLE_TRIGGERS_AND_ACTIONS.md" style="color: #FFE4E1;">Триггеры и действия</a></strong><br/>
 <small>Справочник возможностей</small></p>
 
-<p><strong>📈 Производительность</strong><br/>
-<small>Оптимизация и мониторинг (скоро)</small></p>
+<p><strong>🧩 <a href="docs/nodes/overview.md" style="color: #FFE4E1;">Справочник нод</a></strong><br/>
+<small>Что делает каждый блок на холсте</small></p>
 
-<p><strong>🧪 Тестирование</strong><br/>
-<small>Стратегии тестирования (скоро)</small></p>
+<p><strong>🖥️ <a href="docs/interface/overview.md" style="color: #FFE4E1;">Интерфейс</a></strong><br/>
+<small>Вкладки конструктора и с чего начать</small></p>
 
 </div>
 </div>
@@ -801,14 +856,14 @@ if __name__ == "__main__":
 <p><strong>🛡️ <a href="docs/development/HOW_TO_UPDATE.md" style="color: #FFE4E1;">Обновление проекта</a></strong><br/>
 <small>Как обновить проект с GitHub</small></p>
 
-<p><strong>🔐 Аутентификация</strong><br/>
-<small>Защита пользовательских данных (скоро)</small></p>
+<p><strong>🔐 <a href="docs/api/auth.md" style="color: #FFE4E1;">Аутентификация</a></strong><br/>
+<small>Сессия Telegram, <code>/api</code> закрыт по умолчанию</small></p>
 
-<p><strong>🚨 Мониторинг</strong><br/>
-<small>Отслеживание угроз (скоро)</small></p>
+<p><strong>💚 <a href="docs/api/health.md" style="color: #FFE4E1;">Живость сервиса</a></strong><br/>
+<small>Проверка <code>/api/health</code></small></p>
 
-<p><strong>📋 Аудит</strong><br/>
-<small>Проверка безопасности (скоро)</small></p>
+<p><strong>🤖 <a href="docs/features/bot-manager-api-auth.md" style="color: #FFE4E1;">Токен агента</a></strong><br/>
+<small>Внешний доступ к проектам по PAT</small></p>
 
 </div>
 </div>
@@ -830,6 +885,9 @@ if __name__ == "__main__":
     <a href="docs/development/TROUBLESHOOTING_RU.md">
       <img src="https://img.shields.io/badge/🔧_Помощь-Решение_проблем-34a853?style=for-the-badge&logo=tools" alt="Help"/>
     </a>
+    <a href="https://fedorabakumets.github.io/telegram-bot-builder/">
+      <img src="https://img.shields.io/badge/🌐_Сайт-Документация-9c27b0?style=for-the-badge&logo=githubpages" alt="Docs site"/>
+    </a>
   </div>
 </div>
 
@@ -846,24 +904,29 @@ if __name__ == "__main__":
   │   ├── 📄 TROUBLESHOOTING_RU.md # Устранение неполадок
   │   ├── 📄 CONTRIBUTING.md       # Руководство для контрибьюторов
   │   ├── 📄 adding-new-trigger.md # Добавление новой ноды
-  │   └── 📄 HOW_TO_UPDATE.md     # Как обновить проект
+  │   └── 📄 HOW_TO_UPDATE.md      # Как обновить проект
   │
   ├── 📁 deployment/               # 🚀 Руководства по развертыванию
-  │   ├── 📄 RAILWAY_QUICK_DEPLOY.md # Быстрый деплой на Railway
-  │   ├── 📄 RAILWAY_TROUBLESHOOTING.md # Устранение проблем
-  │   └── 📄 VERCEL_DEPLOY.md     # Развертывание на Vercel
+  │   ├── 📄 RAILWAY_QUICK_DEPLOY.md    # Быстрый деплой на Railway
+  │   ├── 📄 RAILWAY_TROUBLESHOOTING.md # Устранение проблем Railway
+  │   └── 📄 VPS_GITHUB_ACTIONS.md      # Деплой на VPS через Actions
   │
   ├── 📁 features/                 # 🧩 Описание возможностей
-  │   ├── 📄 NODE_TYPES.md        # Типы узлов
-  │   └── 📄 POSSIBLE_TRIGGERS_AND_ACTIONS.md # Триггеры
+  │   ├── 📄 NODE_TYPES.md                      # Типы узлов
+  │   └── 📄 POSSIBLE_TRIGGERS_AND_ACTIONS.md   # Триггеры
   │
+  ├── 📁 nodes/                    # 🧩 Справочник нод для людей
+  ├── 📁 interface/                # 🖥️ Вкладки конструктора
+  ├── 📁 api/                      # 📡 REST API
+  ├── 📁 mcp/                      # 🤖 MCP-конструктор
+  ├── 📁 variables/                # 📊 Переменные
+  ├── 📁 database/                 # 🗄️ Таблицы базы
   ├── 📁 futures/                  # 🔮 Планы развития
-  │
   ├── 📁 releases/                 # 📝 Release notes
   │
   ├── 📄 home.md                   # 📚 Главная страница документации
-  ├── 📄 JSDOC_STANDARDS.md       # 📋 Стандарты JSDoc
-  └── 📄 bot-json-prompt.md       # 🤖 Промт для ИИ
+  ├── 📄 JSDOC_STANDARDS.md        # 📋 Стандарты JSDoc
+  └── 📄 bot-json-prompt.md        # 🤖 Промт для ИИ
   ```
 
   </div>
@@ -923,6 +986,8 @@ if __name__ == "__main__":
 ![macOS](https://img.shields.io/badge/macOS-000000?style=flat-square&logo=apple&logoColor=white)
 ![Linux](https://img.shields.io/badge/Linux-FCC624?style=flat-square&logo=linux&logoColor=black)
 
+Образ панели в Docker собран на **Node.js 22**. Локально без Docker достаточно **Node.js 18**, удобнее та же 22-я.
+
 </div>
 
 </details>
@@ -960,9 +1025,10 @@ python bot.py                     # запуск бота
 
 | Платформа | Подходит для | Документация |
 |-----------|-------------|--------------|
-| **Railway** | Быстрый деплой, автоскейлинг | [RAILWAY_QUICK_DEPLOY.md](docs/deployment/RAILWAY_QUICK_DEPLOY.md) |
-| **VPS** (DigitalOcean, Linode) | Полный контроль | Стандартный запуск Python |
-| **Docker** | Изоляция, воспроизводимость | `docker compose up -d` |
+| **Railway** | Панель в облаке | [RAILWAY_QUICK_DEPLOY.md](docs/deployment/RAILWAY_QUICK_DEPLOY.md) |
+| **VPS** | Панель: Actions собирает образ, сервер его скачивает | [VPS_GITHUB_ACTIONS.md](docs/deployment/VPS_GITHUB_ACTIONS.md) |
+| **Docker** | Панель целиком у себя | `docker compose up -d` |
+| **Любой хостинг** | Уже скачанный `bot.py` | `python bot.py` |
 
 ---
 

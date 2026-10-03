@@ -11,6 +11,9 @@
 import { useRef, useCallback, useState, useEffect, useMemo } from 'react';
 import { CanvasSheets } from '@/components/editor/canvas/canvas-sheets';
 import { useCanvasViewport } from './use-canvas-viewport';
+import { editorGridStep, paintEditorViewport } from './paint-editor-viewport';
+import { cullCanvasNodes } from './cull-canvas-nodes';
+import { useEditorCullSync } from './use-editor-cull-sync';
 import { useCanvasAutoFit } from './use-canvas-auto-fit';
 import { CanvasToolbar } from './canvas-toolbar';
 import { EditorLearnOverlay, useEditorLearn } from '@/components/editor/canvas/learn';
@@ -136,6 +139,10 @@ interface CanvasProps {
   onSaveWithNote?: (note: string) => void;
   /** Флаг процесса сохранения */
   isSaving?: boolean;
+  /** Включено ли автосохранение холста */
+  autosave?: boolean;
+  /** Включить или выключить автосохранение */
+  onAutosaveChange?: (enabled: boolean) => void;
   /** Колбэк для копирования в буфер обмена */
   onCopyToClipboard?: (nodeIds: string[]) => void;
   /** Колбэк для вставки из буфера обмена */
@@ -239,6 +246,8 @@ export function Canvas({
   onSave,
   onSaveWithNote,
   isSaving,
+  autosave,
+  onAutosaveChange,
   onCopyToClipboard,
   onPasteFromClipboard,
   hasClipboardData,
@@ -292,6 +301,12 @@ export function Canvas({
 
   // Состояние для хранения реальных размеров узлов
   const [nodeSizes, setNodeSizes] = useState<Map<string, { width: number; height: number }>>(new Map());
+  const nodeSizesRef = useRef(nodeSizes);
+  nodeSizesRef.current = nodeSizes;
+  /** Id, которые куллинг не скрывает. Обновляется в useEditorCullSync */
+  const cullKeepRef = useRef<Set<string>>(new Set());
+  /** Отпечаток набора узлов для пересборки карты куллинга */
+  const cullSigRef = useRef('');
 
   // ID узла, который сейчас перетаскивается (для подсветки связанных узлов и линий)
   const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
@@ -350,6 +365,30 @@ export function Canvas({
     return true;
   }, [tool, clearSelection, startMarquee]);
 
+  /**
+   * Кадр жеста: transform в DOM, куллинг видимых узлов, без рендера React.
+   * @param nextPan - Смещение камеры
+   * @param nextZoom - Масштаб в процентах
+   * @param promote - Запечь слой на время зума
+   */
+  const paintFrame = useCallback((
+    nextPan: { x: number; y: number },
+    nextZoom: number,
+    promote = false,
+  ) => {
+    const root = canvasRef.current;
+    if (!root) return;
+    paintEditorViewport(root, nextPan, nextZoom, promote);
+    cullCanvasNodes(
+      root,
+      nextPan,
+      nextZoom,
+      nodeSizesRef.current,
+      cullKeepRef.current,
+      cullSigRef.current,
+    );
+  }, []);
+
   const {
     pan,
     zoom,
@@ -358,6 +397,7 @@ export function Canvas({
     panRef,
     zoomRef,
     isPanning,
+    viewportLiveRef,
     animateTransform,
     triggerTransformAnimation,
     zoomIn,
@@ -372,7 +412,12 @@ export function Canvas({
     isEmptyTarget: isEditorEmptyTarget,
     onEmptyLeftClick: onEditorEmptyLeftClick,
     isNodeBeingDragged,
+    paintFrame,
   });
+
+  /** Если рендер случился посреди жеста, берём камеру из refs, не из устаревшего state */
+  const viewPan = viewportLiveRef.current ? panRef.current : pan;
+  const viewZoom = viewportLiveRef.current ? zoomRef.current : zoom;
 
   /** Групповое перемещение выделенных узлов в листы */
   const { moveNodesToSheet, moveNodesToNewSheet } = useMoveNodesToSheet(botData, onBotDataUpdate);
@@ -840,6 +885,24 @@ export function Canvas({
     onConnectionComplete: handleConnectionComplete,
   });
 
+  useEditorCullSync({
+    canvasRef,
+    viewportLiveRef,
+    animateTransform,
+    cullKeepRef,
+    cullSigRef,
+    nodes,
+    showPortals,
+    pan,
+    zoom,
+    nodeSizes,
+    selectedNodeId,
+    selectedNodeIds,
+    highlightNodeId,
+    draggingNodeId,
+    hoveredTargetNodeId,
+  });
+
   /**
    * Выполняет реальный откат состояния холста на N шагов назад.
    * Находит индекс самой ранней выбранной записи в истории действий
@@ -935,8 +998,16 @@ export function Canvas({
   }, [isSelecting]);
 
   // Обработчик изменения размеров узлов
+  /**
+   * Запоминает размер узла. Нулевые замеры (display:none при куллинге) не затирают прошлый.
+   * @param nodeId - Идентификатор узла
+   * @param size - Ширина и высота border-box
+   */
   const handleNodeSizeChange = useCallback((nodeId: string, size: { width: number; height: number }) => {
+    if (size.width < 1 || size.height < 1) return;
     setNodeSizes(prev => {
+      const current = prev.get(nodeId);
+      if (current && current.width === size.width && current.height === size.height) return prev;
       const newMap = new Map(prev);
       newMap.set(nodeId, size);
       return newMap;
@@ -1036,9 +1107,11 @@ export function Canvas({
       const containerWidth = scrollContainer ? scrollContainer.clientWidth - 64 : window.innerWidth - 64;
       const containerHeight = scrollContainer ? scrollContainer.clientHeight - 64 : window.innerHeight - 64;
 
-      // Вычисляем центр в координатах canvas (с учетом текущего pan и zoom)
-      const centerX = (containerWidth / 2 - pan.x) / (zoom / 100);
-      const centerY = (containerHeight / 2 - pan.y) / (zoom / 100);
+      // Refs, а не state: во время жеста камера ещё не закоммичена в React
+      const camera = panRef.current;
+      const scale = zoomRef.current / 100;
+      const centerX = (containerWidth / 2 - camera.x) / scale;
+      const centerY = (containerHeight / 2 - camera.y) / scale;
 
       const position = {
         x: Math.max(50, centerX - 160),
@@ -1048,7 +1121,7 @@ export function Canvas({
       return position;
     }
     return { x: 400, y: 300 }; // fallback если canvas не найден
-  }, [pan, zoom]);
+  }, [panRef, zoomRef]);
 
   // Вычисляет canvas-координаты для вставки: из lastClickPosition или центр видимой области
   const getPastePosition = useCallback(() => {
@@ -1420,7 +1493,7 @@ export function Canvas({
       const viewport = getCanvasViewportMetrics(scrollContainer);
       if (!viewport) return getCenterPosition();
 
-      const point = screenPointToCanvasPoint(e.clientX, e.clientY, viewport, pan, zoom);
+      const point = screenPointToCanvasPoint(e.clientX, e.clientY, viewport, panRef.current, zoomRef.current);
       if (point.x >= -10000 && point.y >= -10000 && point.x <= 10000 && point.y <= 10000) {
         return {
           x: point.x - 160,
@@ -1525,7 +1598,7 @@ export function Canvas({
 
     addAction('add', `Добавлен узел "${component.type}"`);
     onNodeAdd(newNode);
-  }, [onNodeAdd, pan, zoom, getCenterPosition, addAction]);
+  }, [onNodeAdd, panRef, zoomRef, getCenterPosition, addAction]);
 
   // Обработчик canvas-drop события для touch устройств  
   const handleCanvasDrop = useCallback((e: CustomEvent) => {
@@ -1547,8 +1620,8 @@ export function Canvas({
           canvasRect.left + position.x,
           canvasRect.top + position.y,
           viewport,
-          pan,
-          zoom
+          panRef.current,
+          zoomRef.current
         );
         nodePosition = { x: point.x - 160, y: point.y - 50 };
       } else {
@@ -1595,7 +1668,7 @@ export function Canvas({
 
     addAction('add', `Добавлен узел "${component.type}"`);
     onNodeAdd(newNode);
-  }, [onNodeAdd, pan, zoom, getCenterPosition, addAction]);
+  }, [onNodeAdd, panRef, zoomRef, getCenterPosition, addAction]);
 
   // Handle canvas-drop событие для touch устройств
   useEffect(() => {
@@ -1620,7 +1693,7 @@ export function Canvas({
   const handleCanvasClick = useCallback((e: React.MouseEvent) => {
     // Сохраняем позицию клика и текущий transform для последующей вставки
     setLastClickPosition({ x: e.clientX, y: e.clientY });
-    setClickTransform({ pan: { x: pan.x, y: pan.y }, zoom });
+    setClickTransform({ pan: { x: panRef.current.x, y: panRef.current.y }, zoom: zoomRef.current });
     
     if (e.target === e.currentTarget) {
       onNodeSelect('');
@@ -1631,7 +1704,7 @@ export function Canvas({
         clearSelection();
       }
     }
-  }, [onNodeSelect, pan.x, pan.y, zoom, clearSelection, selectedNodeIds, tool]);
+  }, [onNodeSelect, panRef, zoomRef, clearSelection, selectedNodeIds, tool]);
 
   /**
    * Стабильный обработчик дублирования узла через контекстное меню.
@@ -1734,15 +1807,17 @@ export function Canvas({
               а не через background-position — поэтому при панорамировании фон
               НЕ перерисовывается (нет каскадной перерисовки нод) и не мерцает.
               background-size меняется только при зуме, поэтому точки остаются
-              чёткими 1px, а внешний вид — прежним. */}
+              чёткими 1px. При сильном отдалении шаг укрупняется, чтобы точки
+              не сливались в синий фон. */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             <div
+              data-canvas-grid
               className="absolute"
               style={{
                 inset: '-60px',
                 backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(99, 102, 241, 0.15) 1px, transparent 0)',
-                backgroundSize: `${24 * zoom / 100}px ${24 * zoom / 100}px`,
-                transform: `translate(${pan.x % (24 * zoom / 100)}px, ${pan.y % (24 * zoom / 100)}px)`,
+                backgroundSize: `${editorGridStep(viewZoom)}px ${editorGridStep(viewZoom)}px`,
+                transform: `translate(${viewPan.x % editorGridStep(viewZoom)}px, ${viewPan.y % editorGridStep(viewZoom)}px)`,
                 willChange: 'transform',
               }}
             />
@@ -1752,11 +1827,12 @@ export function Canvas({
           <CanvasContent
             botData={botData}
             nodes={nodes}
-            pan={pan}
-            zoom={zoom}
+            pan={viewPan}
+            zoom={viewZoom}
             zoomRef={zoomRef}
             panRef={panRef}
             disableTransition={!animateTransform}
+            promoteLayer={viewportLiveRef.current}
             selectedNodeId={selectedNodeId}
             selectedNodeIds={selectedNodeIds}
             onNodeSelect={onNodeSelect}
@@ -1833,6 +1909,8 @@ export function Canvas({
         onUndo={onUndo}
         onRedo={onRedo}
         onSave={onSave}
+        autosave={autosave}
+        onAutosaveChange={onAutosaveChange}
         onSaveWithNote={onSaveWithNote}
         onAutoLayout={onAutoLayout}
         onCopyToClipboard={onCopyToClipboard}

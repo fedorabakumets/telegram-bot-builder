@@ -74,6 +74,8 @@ interface LayoutGraph {
   keyboardByHostId: Map<string, string>;
   /** Узлы, на которые ведут кнопки конкретного источника. */
   buttonTargetsBySourceId: Map<string, Set<string>>;
+  /** Порядок ветки условия: меньший индекс должен быть выше на холсте. */
+  branchRankByTargetId: Map<string, { parentId: string; index: number }>;
 }
 
 /**
@@ -391,6 +393,36 @@ function inferConnectionsFromNodes(
 }
 
 /**
+ * Порядок веток условия и параллельного запуска.
+ * Индекс в карточке: 0 сверху, «иначе» обычно последний и должен быть ниже.
+ * @param nodesById - Узлы холста
+ * @returns Цель ветки → родитель и индекс
+ */
+function collectBranchRanks(
+  nodesById: Map<string, Node>,
+): Map<string, { parentId: string; index: number }> {
+  const ranks = new Map<string, { parentId: string; index: number }>();
+
+  for (const node of nodesById.values()) {
+    const data = node.data as Record<string, unknown>;
+    const branches = node.type === 'condition'
+      ? data.branches
+      : (node.type as string) === 'parallel_split'
+        ? data.parallelBranches
+        : null;
+    if (!Array.isArray(branches)) continue;
+
+    branches.forEach((branch, index) => {
+      const target = (branch as { target?: unknown })?.target;
+      if (typeof target !== 'string' || !target || ranks.has(target)) return;
+      ranks.set(target, { parentId: node.id, index });
+    });
+  }
+
+  return ranks;
+}
+
+/**
  * Собирает граф, на котором потом строится раскладка.
  */
 function buildLayoutGraph(nodes: Node[], connections: any[]): LayoutGraph {
@@ -478,6 +510,7 @@ function buildLayoutGraph(nodes: Node[], connections: any[]): LayoutGraph {
     keyboardHostByKeyboardId,
     keyboardByHostId,
     buttonTargetsBySourceId,
+    branchRankByTargetId: collectBranchRanks(nodesById),
   };
 }
 
@@ -805,6 +838,12 @@ function sortLayerNodes(
   layerIndex: number,
 ): Node[] {
   return [...layerNodes].sort((a, b) => {
+    const aRank = graph.branchRankByTargetId.get(a.id);
+    const bRank = graph.branchRankByTargetId.get(b.id);
+    if (aRank && bRank && aRank.parentId === bRank.parentId && aRank.index !== bRank.index) {
+      return aRank.index - bRank.index;
+    }
+
     const aCenter = getDesiredCenter(a, layerIndex, centersByNodeId, graph, layerMap);
     const bCenter = getDesiredCenter(b, layerIndex, centersByNodeId, graph, layerMap);
     const aFallback = Number.isFinite(aCenter) ? aCenter : centersByNodeId.get(a.id) ?? Number.POSITIVE_INFINITY;

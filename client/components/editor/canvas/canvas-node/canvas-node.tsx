@@ -3,6 +3,7 @@
  */
 
 import { Node } from '@/types/bot';
+import { CANVAS_CULLED_ATTR } from '../canvas/cull-canvas-nodes';
 import { cn } from '@/utils/utils';
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { OutputPort } from './output-port';
@@ -493,6 +494,7 @@ export function CanvasNode({ node, allNodes, isSelected, isMultiSelected, onClic
         let width: number;
         let height: number;
         // Используем borderBoxSize если доступен (современные браузеры)
+        if (wrapperEl.hasAttribute(CANVAS_CULLED_ATTR)) return;
         if (entry.borderBoxSize && entry.borderBoxSize.length > 0) {
           width = entry.borderBoxSize[0].inlineSize;
           height = entry.borderBoxSize[0].blockSize;
@@ -502,6 +504,8 @@ export function CanvasNode({ node, allNodes, isSelected, isMultiSelected, onClic
           width = rect.width;
           height = rect.height;
         }
+        // Куллинг даёт 0×0. Не затираем последний ненулевой размер — от него зависят линии.
+        if (width < 1 || height < 1) return;
         onSizeChange(node.id, { width, height });
       }
     });
@@ -569,6 +573,7 @@ export function CanvasNode({ node, allNodes, isSelected, isMultiSelected, onClic
      */
     <div
       className="group"
+      data-canvas-node-wrap={node.id}
       style={{
         position: 'absolute',
         left: node.position.x,
@@ -614,7 +619,7 @@ export function CanvasNode({ node, allNodes, isSelected, isMultiSelected, onClic
             : node.type === 'input'
             ? "p-4 w-80"
             : "p-6 w-80",
-          isDragActive ? "shadow-lg cursor-grabbing z-50 border-blue-500" : "shadow-xl hover:shadow-2xl border-gray-200 dark:border-slate-700 hover:border-gray-300 dark:hover:border-slate-600 transition-all duration-200",
+          isDragActive ? "shadow-lg cursor-grabbing z-50 border-blue-500" : "shadow-xl hover:shadow-2xl border-gray-200 dark:border-slate-700 hover:border-gray-300 dark:hover:border-slate-600 transition-[border-color,box-shadow,transform] duration-200",
           isSelected && !isDragActive ? "ring-4 ring-blue-500/20 shadow-2xl shadow-blue-500/10 border-blue-500" : "",
           /* Индиго-подсветка для нод, выделенных рамкой (мульти-выделение). Синее одиночное выделение в приоритете */
           isMultiSelected && !isSelected && !isDragActive ? "ring-4 ring-indigo-500/50 shadow-2xl shadow-indigo-500/20 border-indigo-500" : "",

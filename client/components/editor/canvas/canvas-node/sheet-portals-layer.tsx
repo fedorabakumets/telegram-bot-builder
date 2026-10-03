@@ -12,9 +12,7 @@ import { Node } from '@/types/bot';
 import { SheetPortal } from '../canvas/utils/collect-cross-sheet-links';
 import { SheetPortalNode } from './sheet-portal-node';
 import { computePortalPositions, computePortalLines } from './sheet-portal-positions';
-
-/** Размер SVG-холста */
-const SVG_SIZE = 20000;
+import { connectionSvgStyle } from './connection-svg-style';
 
 /**
  * Свойства слоя порталов
@@ -57,16 +55,7 @@ export function SheetPortalsLayer({ portals, nodes, nodeSizes, onNavigate, onNav
     <>
       {/* SVG-слой пунктирных линий к порталам */}
       <svg
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: SVG_SIZE,
-          height: SVG_SIZE,
-          pointerEvents: 'none',
-          overflow: 'visible',
-          zIndex: 4,
-        }}
+        style={connectionSvgStyle(4)}
       >
         {lines.map(({ key, x1, y1, x2, y2 }) => {
           const dx = Math.abs(x2 - x1);

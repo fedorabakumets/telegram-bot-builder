@@ -1,4 +1,9 @@
+/**
+ * @fileoverview Панель листов холста: лента вкладок на широкой колонке и один лист на узкой
+ */
+
 import { useState, useRef, useEffect } from 'react';
+import { CanvasSheetsCompact } from './canvas-sheets-compact';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 // Убираем DropdownMenu и Dialog - теперь всё просто
@@ -182,7 +187,17 @@ export function CanvasSheets({
   };
 
   return (
-    <div className="flex items-center gap-3 relative z-50 w-full px-4 py-3 bg-gradient-to-r from-white via-slate-50 to-white dark:from-slate-950/95 dark:via-slate-900/95 dark:to-slate-950/95 backdrop-blur-md border-t border-slate-200/50 dark:border-slate-600/50 shadow-lg shadow-slate-300/10 dark:shadow-black/20">
+    <div className="@container w-full">
+    <CanvasSheetsCompact
+      sheets={sheets}
+      activeSheetId={activeSheetId}
+      onSheetSelect={onSheetSelect}
+      onAdd={addNewSheet}
+      onSheetDelete={onSheetDelete}
+      onSheetRename={onSheetRename}
+      onSheetDuplicate={onSheetDuplicate}
+    />
+    <div className="hidden @[28rem]:flex items-center gap-3 relative z-50 w-full px-4 py-3 bg-gradient-to-r from-white via-slate-50 to-white dark:from-slate-950/95 dark:via-slate-900/95 dark:to-slate-950/95 backdrop-blur-md border-t border-slate-200/50 dark:border-slate-600/50 shadow-lg shadow-slate-300/10 dark:shadow-black/20">
       {/* Кнопка прокрутки влево - для мобильных переключает листы */}
       {(canScrollLeft || (isMobile && sheets.length > 1)) && (
         <Button
@@ -198,7 +213,7 @@ export function CanvasSheets({
       {/* Контейнер вкладок */}
       <div 
         ref={tabsContainerRef}
-        className="flex-1 flex overflow-x-auto overflow-y-hidden scroll-smooth relative z-10 items-center scrollbar-hide"
+        className="flex-1 min-w-0 flex overflow-x-auto overflow-y-hidden scroll-smooth relative z-10 items-center scrollbar-hide"
         style={{
           scrollbarWidth: 'none',
           msOverflowStyle: 'none'
@@ -207,7 +222,7 @@ export function CanvasSheets({
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
-        <div className={`flex gap-2 w-full`}>
+        <div className="flex gap-2 w-max">
           {sheets.map((sheet) => (
             <div
               key={sheet.id}
@@ -333,6 +348,7 @@ export function CanvasSheets({
         <Plus className="h-4 w-4 text-emerald-400 drop-shadow-sm" />
       </Button>
       {/* Диалог убран - создание листа теперь происходит одним кликом */}
+    </div>
     </div>
   );
 }

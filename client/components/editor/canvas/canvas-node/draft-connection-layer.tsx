@@ -9,9 +9,7 @@
 
 import { DraftConnection } from '../canvas/use-connection-drag';
 import { PORT_COLORS } from './port-colors';
-
-/** Размер SVG-холста */
-const SVG_SIZE = 20000;
+import { connectionSvgStyle } from './connection-svg-style';
 
 interface DraftConnectionLayerProps {
   /** Текущее временное соединение (null если не тянем) */
@@ -37,16 +35,7 @@ export function DraftConnectionLayer({ draftConnection }: DraftConnectionLayerPr
 
   return (
     <svg
-      style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        width: SVG_SIZE,
-        height: SVG_SIZE,
-        pointerEvents: 'none',
-        overflow: 'visible',
-        zIndex: 50,
-      }}
+      style={connectionSvgStyle(50)}
     >
       <defs>
         <marker
