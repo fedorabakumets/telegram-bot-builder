@@ -1419,6 +1419,16 @@ input[type="checkbox"]:focus {
     inset 0 1px 0 hsl(var(--foreground) / 0.15);
 }
 
+/* Запекание слоя на время зума: GPU меняет матрицу, карточки не растризуются каждый кадр */
+[data-canvas-content][data-viewport-live] {
+  will-change: transform;
+}
+
+/* Куллинг вне экрана. Атрибут ставится из DOM и не входит в style React */
+[data-canvas-culled] {
+  display: none !important;
+}
+
 /* Modern Canvas Grid Styles */
 .canvas-grid-modern {
   position: relative;
@@ -1438,7 +1448,7 @@ input[type="checkbox"]:focus {
 /* Dark theme canvas styles */
 .dark .canvas-grid-modern {
   background-image: 
-    radial-gradient(circle at 1px 1px, rgb(59 130 246 / 0.34) 1px, transparent 0),
+    radial-gradient(circle at 1px 1px, rgba(99, 102, 241, 0.2) 1px, transparent 0),
     linear-gradient(90deg, rgba(100, 116, 139, 0.15) 1px, transparent 1px),
     linear-gradient(rgba(100, 116, 139, 0.15) 1px, transparent 1px) !important;
 }

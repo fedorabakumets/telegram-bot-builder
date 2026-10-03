@@ -11,7 +11,9 @@
 import { useRef, useCallback, useState, useEffect, useMemo } from 'react';
 import { CanvasSheets } from '@/components/editor/canvas/canvas-sheets';
 import { useCanvasViewport } from './use-canvas-viewport';
-import { paintEditorViewport } from './paint-editor-viewport';
+import { editorGridStep, paintEditorViewport } from './paint-editor-viewport';
+import { cullCanvasNodes } from './cull-canvas-nodes';
+import { useEditorCullSync } from './use-editor-cull-sync';
 import { useCanvasAutoFit } from './use-canvas-auto-fit';
 import { CanvasToolbar } from './canvas-toolbar';
 import { EditorLearnOverlay, useEditorLearn } from '@/components/editor/canvas/learn';
@@ -299,6 +301,12 @@ export function Canvas({
 
   // Состояние для хранения реальных размеров узлов
   const [nodeSizes, setNodeSizes] = useState<Map<string, { width: number; height: number }>>(new Map());
+  const nodeSizesRef = useRef(nodeSizes);
+  nodeSizesRef.current = nodeSizes;
+  /** Id, которые куллинг не скрывает. Обновляется в useEditorCullSync */
+  const cullKeepRef = useRef<Set<string>>(new Set());
+  /** Отпечаток набора узлов для пересборки карты куллинга */
+  const cullSigRef = useRef('');
 
   // ID узла, который сейчас перетаскивается (для подсветки связанных узлов и линий)
   const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
@@ -357,10 +365,28 @@ export function Canvas({
     return true;
   }, [tool, clearSelection, startMarquee]);
 
-  /** Кадр pan/zoom пишется в DOM, React узнает о камере в конце жеста */
-  const paintFrame = useCallback((nextPan: { x: number; y: number }, nextZoom: number) => {
+  /**
+   * Кадр жеста: transform в DOM, куллинг видимых узлов, без рендера React.
+   * @param nextPan - Смещение камеры
+   * @param nextZoom - Масштаб в процентах
+   * @param promote - Запечь слой на время зума
+   */
+  const paintFrame = useCallback((
+    nextPan: { x: number; y: number },
+    nextZoom: number,
+    promote = false,
+  ) => {
     const root = canvasRef.current;
-    if (root) paintEditorViewport(root, nextPan, nextZoom);
+    if (!root) return;
+    paintEditorViewport(root, nextPan, nextZoom, promote);
+    cullCanvasNodes(
+      root,
+      nextPan,
+      nextZoom,
+      nodeSizesRef.current,
+      cullKeepRef.current,
+      cullSigRef.current,
+    );
   }, []);
 
   const {
@@ -371,7 +397,7 @@ export function Canvas({
     panRef,
     zoomRef,
     isPanning,
-    viewportLive,
+    viewportLiveRef,
     animateTransform,
     triggerTransformAnimation,
     zoomIn,
@@ -389,9 +415,9 @@ export function Canvas({
     paintFrame,
   });
 
-  /** Пока жест идёт, камера в refs новее, чем state */
-  const viewPan = viewportLive ? panRef.current : pan;
-  const viewZoom = viewportLive ? zoomRef.current : zoom;
+  /** Если рендер случился посреди жеста, берём камеру из refs, не из устаревшего state */
+  const viewPan = viewportLiveRef.current ? panRef.current : pan;
+  const viewZoom = viewportLiveRef.current ? zoomRef.current : zoom;
 
   /** Групповое перемещение выделенных узлов в листы */
   const { moveNodesToSheet, moveNodesToNewSheet } = useMoveNodesToSheet(botData, onBotDataUpdate);
@@ -859,6 +885,24 @@ export function Canvas({
     onConnectionComplete: handleConnectionComplete,
   });
 
+  useEditorCullSync({
+    canvasRef,
+    viewportLiveRef,
+    animateTransform,
+    cullKeepRef,
+    cullSigRef,
+    nodes,
+    showPortals,
+    pan,
+    zoom,
+    nodeSizes,
+    selectedNodeId,
+    selectedNodeIds,
+    highlightNodeId,
+    draggingNodeId,
+    hoveredTargetNodeId,
+  });
+
   /**
    * Выполняет реальный откат состояния холста на N шагов назад.
    * Находит индекс самой ранней выбранной записи в истории действий
@@ -954,8 +998,16 @@ export function Canvas({
   }, [isSelecting]);
 
   // Обработчик изменения размеров узлов
+  /**
+   * Запоминает размер узла. Нулевые замеры (display:none при куллинге) не затирают прошлый.
+   * @param nodeId - Идентификатор узла
+   * @param size - Ширина и высота border-box
+   */
   const handleNodeSizeChange = useCallback((nodeId: string, size: { width: number; height: number }) => {
+    if (size.width < 1 || size.height < 1) return;
     setNodeSizes(prev => {
+      const current = prev.get(nodeId);
+      if (current && current.width === size.width && current.height === size.height) return prev;
       const newMap = new Map(prev);
       newMap.set(nodeId, size);
       return newMap;
@@ -1755,16 +1807,17 @@ export function Canvas({
               а не через background-position — поэтому при панорамировании фон
               НЕ перерисовывается (нет каскадной перерисовки нод) и не мерцает.
               background-size меняется только при зуме, поэтому точки остаются
-              чёткими 1px, а внешний вид — прежним. */}
+              чёткими 1px. При сильном отдалении шаг укрупняется, чтобы точки
+              не сливались в синий фон. */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             <div
               data-canvas-grid
               className="absolute"
               style={{
                 inset: '-60px',
-                backgroundImage: 'radial-gradient(circle at 1px 1px, rgb(59 130 246 / 0.34) 1px, transparent 0)',
-                backgroundSize: `${24 * viewZoom / 100}px ${24 * viewZoom / 100}px`,
-                transform: `translate(${viewPan.x % (24 * viewZoom / 100)}px, ${viewPan.y % (24 * viewZoom / 100)}px)`,
+                backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(99, 102, 241, 0.15) 1px, transparent 0)',
+                backgroundSize: `${editorGridStep(viewZoom)}px ${editorGridStep(viewZoom)}px`,
+                transform: `translate(${viewPan.x % editorGridStep(viewZoom)}px, ${viewPan.y % editorGridStep(viewZoom)}px)`,
                 willChange: 'transform',
               }}
             />
@@ -1779,6 +1832,7 @@ export function Canvas({
             zoomRef={zoomRef}
             panRef={panRef}
             disableTransition={!animateTransform}
+            promoteLayer={viewportLiveRef.current}
             selectedNodeId={selectedNodeId}
             selectedNodeIds={selectedNodeIds}
             onNodeSelect={onNodeSelect}

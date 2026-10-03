@@ -35,6 +35,8 @@ interface CanvasContentProps {
   panRef: React.MutableRefObject<{ x: number; y: number }>;
   /** Отключить CSS-переход трансформации (на время интерактивного зума/пана) */
   disableTransition?: boolean;
+  /** Жест зума: translateZ, чтобы слой не сбрасывался, если React перерисует style */
+  promoteLayer?: boolean;
   /** Идентификатор выбранного узла */
   selectedNodeId: string | null;
   /** Множество идентификаторов узлов, выделенных рамкой (мульти-выделение) */
@@ -105,6 +107,7 @@ export function CanvasContent({
   zoomRef,
   panRef,
   disableTransition,
+  promoteLayer,
   selectedNodeId,
   selectedNodeIds,
   onNodeSelect,
@@ -233,9 +236,9 @@ export function CanvasContent({
   return (
     <div
       data-canvas-content
-      className={`relative origin-top-left ${disableTransition ? '' : 'transition-transform duration-200 ease-out'}`}
+      className={`relative origin-top-left ${disableTransition || promoteLayer ? '' : 'transition-transform duration-200 ease-out'}`}
       style={{
-        transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom / 100})`,
+        transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom / 100})${promoteLayer ? ' translateZ(0)' : ''}`,
         transformOrigin: '0 0',
       }}
     >

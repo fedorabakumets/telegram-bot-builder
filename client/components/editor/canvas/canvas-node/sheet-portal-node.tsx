@@ -54,6 +54,7 @@ export function SheetPortalNode({ portal, position, onNavigateSheet, onNavigateN
         <TooltipTrigger asChild>
           <div
             className="absolute w-[576px] cursor-pointer select-none group"
+            data-canvas-portal=""
             style={{ left: position.x, top: position.y }}
             onClick={handleClick}
             onDoubleClick={handleDoubleClick}
