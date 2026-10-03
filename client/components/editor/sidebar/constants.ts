@@ -90,11 +90,6 @@ export const componentCategories: PaletteMainCategory[] = [
         components: [banUser, unbanUser, muteUser, unmuteUser, kickUser, promoteUser, demoteUser, adminRights],
       },
       {
-        title: 'Автоматизация',
-        description: 'Запуск по расписанию',
-        components: [scheduleTrigger],
-      },
-      {
         title: 'Платежи',
         description: 'Счета, Stars и подписки',
         components: [
@@ -121,6 +116,11 @@ export const componentCategories: PaletteMainCategory[] = [
     icon: 'fas fa-puzzle-piece',
     description: 'Логика сценария, интеграции и служебные блоки',
     subcategories: [
+      {
+        title: 'Автоматизация',
+        description: 'Запуск по расписанию',
+        components: [scheduleTrigger],
+      },
       {
         title: 'Внешний API',
         description: 'HTTP-вход и ответ наружу',
