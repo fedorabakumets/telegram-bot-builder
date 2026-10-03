@@ -1438,7 +1438,7 @@ input[type="checkbox"]:focus {
 /* Dark theme canvas styles */
 .dark .canvas-grid-modern {
   background-image: 
-    radial-gradient(circle at 1px 1px, rgba(99, 102, 241, 0.2) 1px, transparent 0),
+    radial-gradient(circle at 1px 1px, rgb(59 130 246 / 0.34) 1px, transparent 0),
     linear-gradient(90deg, rgba(100, 116, 139, 0.15) 1px, transparent 1px),
     linear-gradient(rgba(100, 116, 139, 0.15) 1px, transparent 1px) !important;
 }

@@ -77,7 +77,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { MobilePropertiesSheet } from '@/pages/editor/components/mobile/mobile-properties-sheet';
 import { CanvasViewToggle } from '@/pages/editor/components/canvas-view-toggle';
 import { useCanvasView } from '@/pages/editor/hooks/use-canvas-view';
-import { StagingBar, useStagingBar } from '@/components/editor/staging';
+import { StagingBar, useEditorAutosave, useStagingBar } from '@/components/editor/staging';
 import { invalidateBotStatusQueries } from '@/components/editor/bot/invalidate-bot-status-queries';
 import { useBotEditor } from '@/components/editor/canvas/canvas/use-bot-editor';
 import { useMoveNodeToSheet } from '@/components/editor/canvas/canvas/use-move-node-to-sheet';
@@ -922,6 +922,14 @@ export default function Editor() {
     mode: canvasView,
   });
 
+  const { autosave, setAutosave } = useEditorAutosave({
+    hasLocalChanges,
+    isSaving: updateProjectMutation.isPending,
+    mode: canvasView,
+    latestActionId: actionHistory[0]?.id ?? null,
+    onSave: stagingBar.onSave,
+  });
+
   // Обработчики узлов через хук
   const {
     handleNodeUpdateWithSheets,
@@ -1689,6 +1697,7 @@ export default function Editor() {
             {...stagingBar}
             actionHistory={actionHistory}
             onDismissRemoteSync={dismissRemoteCanvasSync}
+            autosave={autosave}
           />
         )}
         {/* Контейнер вкладок: relative нужен для absolute-позиционирования JSON-редактора поверх Canvas */}
@@ -1765,6 +1774,8 @@ export default function Editor() {
                 onSave={() => updateProjectMutation.mutate({ restartOnUpdate: true })}
                 onSaveWithNote={(note) => updateProjectMutation.mutate({ restartOnUpdate: true, commitMessage: note })}
                 isSaving={updateProjectMutation.isPending}
+                autosave={autosave}
+                onAutosaveChange={setAutosave}
                 onCopyToClipboard={copyToClipboard}
                 onPasteFromClipboard={pasteFromClipboard}
                 hasClipboardData={hasClipboardData()}
@@ -2220,6 +2231,8 @@ export default function Editor() {
                   onSave={() => updateProjectMutation.mutate({ restartOnUpdate: true })}
                   onSaveWithNote={(note) => updateProjectMutation.mutate({ restartOnUpdate: true, commitMessage: note })}
                   isSaving={updateProjectMutation.isPending}
+                  autosave={autosave}
+                  onAutosaveChange={setAutosave}
                   onCopyToClipboard={copyToClipboard}
                   onPasteFromClipboard={pasteFromClipboard}
                   hasClipboardData={hasClipboardData()}

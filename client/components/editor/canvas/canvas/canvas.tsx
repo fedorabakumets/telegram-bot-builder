@@ -137,6 +137,10 @@ interface CanvasProps {
   onSaveWithNote?: (note: string) => void;
   /** Флаг процесса сохранения */
   isSaving?: boolean;
+  /** Включено ли автосохранение холста */
+  autosave?: boolean;
+  /** Включить или выключить автосохранение */
+  onAutosaveChange?: (enabled: boolean) => void;
   /** Колбэк для копирования в буфер обмена */
   onCopyToClipboard?: (nodeIds: string[]) => void;
   /** Колбэк для вставки из буфера обмена */
@@ -240,6 +244,8 @@ export function Canvas({
   onSave,
   onSaveWithNote,
   isSaving,
+  autosave,
+  onAutosaveChange,
   onCopyToClipboard,
   onPasteFromClipboard,
   hasClipboardData,
@@ -1756,7 +1762,7 @@ export function Canvas({
               className="absolute"
               style={{
                 inset: '-60px',
-                backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(99, 102, 241, 0.15) 1px, transparent 0)',
+                backgroundImage: 'radial-gradient(circle at 1px 1px, rgb(59 130 246 / 0.34) 1px, transparent 0)',
                 backgroundSize: `${24 * viewZoom / 100}px ${24 * viewZoom / 100}px`,
                 transform: `translate(${viewPan.x % (24 * viewZoom / 100)}px, ${viewPan.y % (24 * viewZoom / 100)}px)`,
                 willChange: 'transform',
@@ -1849,6 +1855,8 @@ export function Canvas({
         onUndo={onUndo}
         onRedo={onRedo}
         onSave={onSave}
+        autosave={autosave}
+        onAutosaveChange={onAutosaveChange}
         onSaveWithNote={onSaveWithNote}
         onAutoLayout={onAutoLayout}
         onCopyToClipboard={onCopyToClipboard}
