@@ -1422,7 +1422,8 @@ input[type="checkbox"]:focus {
 /* Modern Canvas Grid Styles */
 .canvas-grid-modern {
   position: relative;
-  transition: all 0.3s ease;
+  /* Только подсветка drop, без transition: all — иначе сдвиг холста анимируется */
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .canvas-grid-modern[data-drag-over="true"] {

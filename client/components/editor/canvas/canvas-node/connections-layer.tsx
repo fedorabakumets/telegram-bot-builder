@@ -19,6 +19,7 @@
  */
 
 import { memo, useState } from 'react';
+import { connectionSvgStyle } from './connection-svg-style';
 import { Node } from '@/types/bot';
 import {
   KEYBOARD_LINK_PORT_TYPE,
@@ -29,9 +30,6 @@ import {
   findPayButtonOnKeyboard,
   invoiceUsesPayButtonVisual,
 } from '@/components/editor/properties/utils/invoice-pay-connection';
-
-/** Размер SVG-холста — достаточно большой чтобы покрыть любой граф */
-const SVG_SIZE = 20000;
 
 /**
  * Тип соединения между узлами
@@ -575,16 +573,7 @@ function ConnectionsLayerComponent({ nodes, nodeSizes, onConnectionDelete, butto
   return (
     <svg
       data-canvas-connections
-      style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        width: SVG_SIZE,
-        height: SVG_SIZE,
-        pointerEvents: 'none',
-        overflow: 'visible',
-        zIndex: 5,
-      }}
+      style={connectionSvgStyle(5)}
     >
       <defs>
         {/* Фильтр свечения для подсветки активных соединений */}

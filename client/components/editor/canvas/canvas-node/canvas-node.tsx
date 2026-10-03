@@ -614,7 +614,7 @@ export function CanvasNode({ node, allNodes, isSelected, isMultiSelected, onClic
             : node.type === 'input'
             ? "p-4 w-80"
             : "p-6 w-80",
-          isDragActive ? "shadow-lg cursor-grabbing z-50 border-blue-500" : "shadow-xl hover:shadow-2xl border-gray-200 dark:border-slate-700 hover:border-gray-300 dark:hover:border-slate-600 transition-all duration-200",
+          isDragActive ? "shadow-lg cursor-grabbing z-50 border-blue-500" : "shadow-xl hover:shadow-2xl border-gray-200 dark:border-slate-700 hover:border-gray-300 dark:hover:border-slate-600 transition-[border-color,box-shadow,transform] duration-200",
           isSelected && !isDragActive ? "ring-4 ring-blue-500/20 shadow-2xl shadow-blue-500/10 border-blue-500" : "",
           /* Индиго-подсветка для нод, выделенных рамкой (мульти-выделение). Синее одиночное выделение в приоритете */
           isMultiSelected && !isSelected && !isDragActive ? "ring-4 ring-indigo-500/50 shadow-2xl shadow-indigo-500/20 border-indigo-500" : "",
