@@ -11,6 +11,7 @@
 import { useRef, useCallback, useState, useEffect, useMemo } from 'react';
 import { CanvasSheets } from '@/components/editor/canvas/canvas-sheets';
 import { useCanvasViewport } from './use-canvas-viewport';
+import { paintEditorViewport } from './paint-editor-viewport';
 import { useCanvasAutoFit } from './use-canvas-auto-fit';
 import { CanvasToolbar } from './canvas-toolbar';
 import { EditorLearnOverlay, useEditorLearn } from '@/components/editor/canvas/learn';
@@ -350,6 +351,12 @@ export function Canvas({
     return true;
   }, [tool, clearSelection, startMarquee]);
 
+  /** Кадр pan/zoom пишется в DOM, React узнает о камере в конце жеста */
+  const paintFrame = useCallback((nextPan: { x: number; y: number }, nextZoom: number) => {
+    const root = canvasRef.current;
+    if (root) paintEditorViewport(root, nextPan, nextZoom);
+  }, []);
+
   const {
     pan,
     zoom,
@@ -358,6 +365,7 @@ export function Canvas({
     panRef,
     zoomRef,
     isPanning,
+    viewportLive,
     animateTransform,
     triggerTransformAnimation,
     zoomIn,
@@ -372,7 +380,12 @@ export function Canvas({
     isEmptyTarget: isEditorEmptyTarget,
     onEmptyLeftClick: onEditorEmptyLeftClick,
     isNodeBeingDragged,
+    paintFrame,
   });
+
+  /** Пока жест идёт, камера в refs новее, чем state */
+  const viewPan = viewportLive ? panRef.current : pan;
+  const viewZoom = viewportLive ? zoomRef.current : zoom;
 
   /** Групповое перемещение выделенных узлов в листы */
   const { moveNodesToSheet, moveNodesToNewSheet } = useMoveNodesToSheet(botData, onBotDataUpdate);
@@ -1036,9 +1049,11 @@ export function Canvas({
       const containerWidth = scrollContainer ? scrollContainer.clientWidth - 64 : window.innerWidth - 64;
       const containerHeight = scrollContainer ? scrollContainer.clientHeight - 64 : window.innerHeight - 64;
 
-      // Вычисляем центр в координатах canvas (с учетом текущего pan и zoom)
-      const centerX = (containerWidth / 2 - pan.x) / (zoom / 100);
-      const centerY = (containerHeight / 2 - pan.y) / (zoom / 100);
+      // Refs, а не state: во время жеста камера ещё не закоммичена в React
+      const camera = panRef.current;
+      const scale = zoomRef.current / 100;
+      const centerX = (containerWidth / 2 - camera.x) / scale;
+      const centerY = (containerHeight / 2 - camera.y) / scale;
 
       const position = {
         x: Math.max(50, centerX - 160),
@@ -1048,7 +1063,7 @@ export function Canvas({
       return position;
     }
     return { x: 400, y: 300 }; // fallback если canvas не найден
-  }, [pan, zoom]);
+  }, [panRef, zoomRef]);
 
   // Вычисляет canvas-координаты для вставки: из lastClickPosition или центр видимой области
   const getPastePosition = useCallback(() => {
@@ -1420,7 +1435,7 @@ export function Canvas({
       const viewport = getCanvasViewportMetrics(scrollContainer);
       if (!viewport) return getCenterPosition();
 
-      const point = screenPointToCanvasPoint(e.clientX, e.clientY, viewport, pan, zoom);
+      const point = screenPointToCanvasPoint(e.clientX, e.clientY, viewport, panRef.current, zoomRef.current);
       if (point.x >= -10000 && point.y >= -10000 && point.x <= 10000 && point.y <= 10000) {
         return {
           x: point.x - 160,
@@ -1525,7 +1540,7 @@ export function Canvas({
 
     addAction('add', `Добавлен узел "${component.type}"`);
     onNodeAdd(newNode);
-  }, [onNodeAdd, pan, zoom, getCenterPosition, addAction]);
+  }, [onNodeAdd, panRef, zoomRef, getCenterPosition, addAction]);
 
   // Обработчик canvas-drop события для touch устройств  
   const handleCanvasDrop = useCallback((e: CustomEvent) => {
@@ -1547,8 +1562,8 @@ export function Canvas({
           canvasRect.left + position.x,
           canvasRect.top + position.y,
           viewport,
-          pan,
-          zoom
+          panRef.current,
+          zoomRef.current
         );
         nodePosition = { x: point.x - 160, y: point.y - 50 };
       } else {
@@ -1595,7 +1610,7 @@ export function Canvas({
 
     addAction('add', `Добавлен узел "${component.type}"`);
     onNodeAdd(newNode);
-  }, [onNodeAdd, pan, zoom, getCenterPosition, addAction]);
+  }, [onNodeAdd, panRef, zoomRef, getCenterPosition, addAction]);
 
   // Handle canvas-drop событие для touch устройств
   useEffect(() => {
@@ -1620,7 +1635,7 @@ export function Canvas({
   const handleCanvasClick = useCallback((e: React.MouseEvent) => {
     // Сохраняем позицию клика и текущий transform для последующей вставки
     setLastClickPosition({ x: e.clientX, y: e.clientY });
-    setClickTransform({ pan: { x: pan.x, y: pan.y }, zoom });
+    setClickTransform({ pan: { x: panRef.current.x, y: panRef.current.y }, zoom: zoomRef.current });
     
     if (e.target === e.currentTarget) {
       onNodeSelect('');
@@ -1631,7 +1646,7 @@ export function Canvas({
         clearSelection();
       }
     }
-  }, [onNodeSelect, pan.x, pan.y, zoom, clearSelection, selectedNodeIds, tool]);
+  }, [onNodeSelect, panRef, zoomRef, clearSelection, selectedNodeIds, tool]);
 
   /**
    * Стабильный обработчик дублирования узла через контекстное меню.
@@ -1737,12 +1752,13 @@ export function Canvas({
               чёткими 1px, а внешний вид — прежним. */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             <div
+              data-canvas-grid
               className="absolute"
               style={{
                 inset: '-60px',
                 backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(99, 102, 241, 0.15) 1px, transparent 0)',
-                backgroundSize: `${24 * zoom / 100}px ${24 * zoom / 100}px`,
-                transform: `translate(${pan.x % (24 * zoom / 100)}px, ${pan.y % (24 * zoom / 100)}px)`,
+                backgroundSize: `${24 * viewZoom / 100}px ${24 * viewZoom / 100}px`,
+                transform: `translate(${viewPan.x % (24 * viewZoom / 100)}px, ${viewPan.y % (24 * viewZoom / 100)}px)`,
                 willChange: 'transform',
               }}
             />
@@ -1752,8 +1768,8 @@ export function Canvas({
           <CanvasContent
             botData={botData}
             nodes={nodes}
-            pan={pan}
-            zoom={zoom}
+            pan={viewPan}
+            zoom={viewZoom}
             zoomRef={zoomRef}
             panRef={panRef}
             disableTransition={!animateTransform}

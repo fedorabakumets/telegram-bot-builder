@@ -232,6 +232,7 @@ export function CanvasContent({
 
   return (
     <div
+      data-canvas-content
       className={`relative origin-top-left ${disableTransition ? '' : 'transition-transform duration-200 ease-out'}`}
       style={{
         transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom / 100})`,
