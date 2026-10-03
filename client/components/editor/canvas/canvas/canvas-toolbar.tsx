@@ -196,6 +196,7 @@ export function CanvasToolbar({
         <div className="flex items-center canvas-controls overflow-x-auto w-full gap-2 text-sm">
           <div className="flex items-center flex-shrink-0 gap-2">
             {/* РљРЅРѕРїРєРё РјР°СЃС€С‚Р°Р±Р° */}
+            {/* Масштаб временно на левой панели; «A» остаётся здесь */}
             <span data-learn-toolbar="zoom" className="inline-flex items-center gap-2">
             <ZoomControls
               zoom={zoom}
@@ -209,6 +210,7 @@ export function CanvasToolbar({
               onZoomLevelChange={onZoomLevelChange}
               canRestorePreviousView={canRestorePreviousView}
               onRestorePreviousView={onRestorePreviousView}
+              hideScaleButtons
             />
             </span>
 
