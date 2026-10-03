@@ -22819,7 +22819,8 @@
                       "createdAt": "2026-09-30T11:11:04.565Z",
                       "attachments": []
                     }
-                  ]
+                  ],
+                  "telegramBot": "support_bot"
                 }
               }
             }
@@ -33280,11 +33281,17 @@
             "items": {
               "$ref": "#/components/schemas/SupportMessage"
             }
+          },
+          "telegramBot": {
+            "type": "string",
+            "nullable": true,
+            "example": "support_bot"
           }
         },
         "required": [
           "thread",
-          "messages"
+          "messages",
+          "telegramBot"
         ]
       },
       "SupportUserMessageBody": {

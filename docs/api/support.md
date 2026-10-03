@@ -167,6 +167,7 @@ curl -s http://localhost:5000/api/support/thread -b cookies.txt
       "createdAt": "2026-09-30T11:11:04.565Z",
       "attachments": []
     }
-  ]
+  ],
+  "telegramBot": "support_bot"
 }
 ```
