@@ -101,8 +101,43 @@ describe('createHierarchicalLayout', () => {
     expect(getX('msg_1')).toBeLessThan(getX('cond_1'));
     expect(getX('cond_1')).toBeLessThan(getX('yes_1'));
     expect(getX('cond_1')).toBeLessThan(getX('no_1'));
+    expect(getY('yes_1')).toBeLessThan(getY('no_1'));
     expect(Math.abs(getY('trigger_1') - getY('msg_1'))).toBeLessThan(60);
     expect(Math.abs(getY('cond_1') - getY('msg_1'))).toBeLessThan(60);
+  });
+
+  it('ставит ветку если выше иначе', () => {
+    const nodes = [
+      makeNode('trigger_1', 'command_trigger', { autoTransitionTo: 'cond_1' }),
+      makeNode('cond_1', 'condition', {
+        branches: [
+          { id: 'branch_if', operator: 'equals', target: 'cond_2' },
+          { id: 'branch_else', operator: 'else', target: 'err_1' },
+        ],
+      }),
+      makeNode('cond_2', 'condition', {
+        branches: [
+          { id: 'b1', operator: 'greater_than', target: 'ok_1' },
+          { id: 'b2', operator: 'else', target: 'empty_1' },
+        ],
+      }),
+      makeNode('err_1', 'message', { messageText: 'fail' }),
+      makeNode('ok_1', 'message', { messageText: 'ok' }),
+      makeNode('empty_1', 'message', { messageText: 'empty' }),
+    ];
+
+    const laidOut = createHierarchicalLayout(nodes, [], {
+      startX: 20,
+      startY: 20,
+      nodeWidth: 140,
+      nodeHeight: 80,
+      horizontalSpacing: 60,
+      verticalSpacing: 30,
+    });
+
+    const getY = (id: string) => laidOut.find(node => node.id === id)!.position.y;
+    expect(getY('cond_2')).toBeLessThan(getY('err_1'));
+    expect(getY('ok_1')).toBeLessThan(getY('empty_1'));
   });
 
   it('держит keyboard рядом с message и не разрывает поток', () => {
