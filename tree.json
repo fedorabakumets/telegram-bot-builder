@@ -73,7 +73,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-10-02T19:32:59Z",
+    "updated_at": "2026-10-02T23:37:14Z",
     "tags": [],
     "author": ""
   },
@@ -3281,6 +3281,21 @@
       "releases": "📝 Релизы"
     },
     "updated_at": "2026-06-23T14:36:15+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "releases/RELEASE_NOTES_v2.2.1.4",
+    "title": "📋 Release Notes v2.2.1.4",
+    "excerpt": "**Дата выпуска:** 2 октября 2026 г.",
+    "parts": [
+      "releases",
+      "RELEASE_NOTES_v2.2.1.4"
+    ],
+    "folder_titles": {
+      "releases": "📝 Релизы"
+    },
+    "updated_at": "2026-10-03T00:27:25Z",
     "tags": [],
     "author": ""
   },
