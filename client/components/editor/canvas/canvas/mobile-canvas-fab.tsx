@@ -36,7 +36,7 @@ export function MobileCanvasFab({
   if (!isMobile) return null;
 
   return (
-    <div className="absolute bottom-24 right-4 z-40 flex flex-col gap-2 pointer-events-auto">
+    <div className="absolute bottom-24 right-4 z-40 flex flex-col gap-2 pointer-events-auto max-md:!bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))]">
       {/* Кнопка свойств — появляется при выборе узла */}
       <button
         type="button"

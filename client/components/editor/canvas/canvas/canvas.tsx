@@ -1778,8 +1778,8 @@ export function Canvas({
   }, [selectedNodeIds, moveNodesToNewSheet, addAction, clearSelection, botData]);
 
   return (
-    <main className="w-full h-full relative overflow-hidden bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 dark:from-slate-950 dark:via-gray-950 dark:to-slate-900">
-      <div ref={scrollContainerRef} className="absolute inset-x-0 overflow-auto" style={{ top: 60, bottom: 60 }}>
+    <main className="w-full h-full relative overflow-hidden bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 dark:from-slate-950 dark:via-gray-950 dark:to-slate-900 max-md:flex max-md:flex-col">
+      <div ref={scrollContainerRef} className="absolute inset-x-0 top-[60px] bottom-[60px] overflow-auto max-md:!static max-md:flex-1 max-md:min-h-0 max-md:pt-[60px]">
 
         {/* Enhanced Canvas Grid */}
         <div
@@ -1959,9 +1959,9 @@ export function Canvas({
         onMoveToProject={handleGroupMoveToProject}
       />
 
-      {/* Компонент листов холста - фиксированная панель внизу */}
+      {/* На узком экране панель в потоке колонки, а не bottom-0 у слишком высокого 100vh */}
       {botData && botData.sheets && botData.sheets.length > 0 && onBotDataUpdate && (
-        <div data-canvas-sheets className="absolute bottom-0 left-0 right-0 z-30 pointer-events-auto">
+        <div data-canvas-sheets className="absolute bottom-0 left-0 right-0 z-30 pointer-events-auto max-md:!static max-md:shrink-0">
           <CanvasSheets
             sheets={botData.sheets}
             activeSheetId={botData.activeSheetId || botData.sheets[0]?.id || null}

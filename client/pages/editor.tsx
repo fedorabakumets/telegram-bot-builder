@@ -2044,7 +2044,7 @@ export default function Editor() {
     if (useFlexibleLayout) {
       return (
         <UserMessagesLiveProvider projectId={activeProject.id}>
-        <div className="flex h-screen w-full overflow-hidden">
+        <div className="flex h-screen h-svh w-full overflow-hidden">
           {/** Левый сайдбар навигации */}
           <AppSidebar
             projectName={activeProject.name}
