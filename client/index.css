@@ -1462,6 +1462,17 @@ input[type="checkbox"]:focus {
   box-shadow: inset 0 0 80px rgba(99, 102, 241, 0.15);
 }
 
+/* Оболочка редактора по видимой области, а не по 100vh за панелью браузера */
+.app-viewport {
+  position: fixed;
+  top: var(--vv-offset, 0px);
+  left: 0;
+  width: 100%;
+  height: 100svh;
+  height: var(--vv-height, 100svh);
+  overflow: hidden;
+}
+
 /* Низ панели листов над жестом «домой». max-inset не прыгает, когда панель браузера прячется */
 @media (max-width: 767px) {
   [data-canvas-sheets] {

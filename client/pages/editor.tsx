@@ -1612,7 +1612,7 @@ export default function Editor() {
 
   if (!activeProject) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="app-viewport flex items-center justify-center bg-background">
         <div className="text-center">
           <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-4">
             <i className="fas fa-spinner fa-spin text-gray-400 text-xl"></i>
@@ -2044,7 +2044,7 @@ export default function Editor() {
     if (useFlexibleLayout) {
       return (
         <UserMessagesLiveProvider projectId={activeProject.id}>
-        <div className="flex h-screen h-svh w-full overflow-hidden">
+        <div className="app-viewport flex w-full">
           {/** Левый сайдбар навигации */}
           <AppSidebar
             projectName={activeProject.name}
