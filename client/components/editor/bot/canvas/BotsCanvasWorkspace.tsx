@@ -22,7 +22,8 @@ interface BotsCanvasWorkspaceProps {
 }
 
 /**
- * Холст на весь контейнер; detail — overlay справа с ручкой ширины; sheet &lt;640px
+ * Холст вплотную к шапке, без своей рамки: линия шапки совпадает с сайдбаром.
+ * Detail — overlay справа с ручкой ширины; sheet &lt;640px.
  * @param props - Свойства компонента
  * @returns JSX элемент
  */
@@ -54,7 +55,7 @@ export function BotsCanvasWorkspace({ project, tokens }: BotsCanvasWorkspaceProp
   const overlayOpen = !!selectedToken && !useSheet;
 
   return (
-    <div className="relative h-full min-h-0 overflow-hidden rounded-lg border border-border">
+    <div className="relative h-full min-h-0 overflow-hidden">
       <BotsCanvas
         projectId={project.id}
         tokens={tokens}

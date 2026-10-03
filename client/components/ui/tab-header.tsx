@@ -27,6 +27,7 @@ export interface TabHeaderProps {
  * Универсальный заголовок вкладки.
  * Узкая панель: строка 1 — заголовок и действия, строка 2 — фильтры.
  * Широкая панель (или singleLine на десктопе): всё в одну строку.
+ * Одна строка ровно 56px (min-h-14), как шапка сайдбара, чтобы границы совпали.
  * Разметка одна, без второй копии шапки.
  *
  * @param props - Свойства компонента
@@ -57,11 +58,12 @@ export function TabHeader({
   return (
     <div
       className={cn(
-        '@container px-4 sm:px-6 py-2.5 sm:py-3 border-b bg-gradient-to-r from-muted/40 to-background',
+        '@container flex min-h-14 items-center border-b border-border/50 px-4 sm:px-6 py-1.5',
+        'bg-gradient-to-r from-muted/40 to-background',
         className,
       )}
     >
-      <div className={cn('grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-2', row)}>
+      <div className={cn('grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-2', row)}>
         <div className="col-start-1 row-start-1 flex min-w-0 items-center gap-2">
           <div className="flex shrink-0 items-center gap-2.5">
             <div className="shrink-0 rounded-lg bg-primary/10 p-2">{icon}</div>
