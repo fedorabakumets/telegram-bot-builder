@@ -61,6 +61,9 @@ COPY version.json ./version.json
 COPY --from=builder /app/docs/database ./docs/database
 COPY --from=builder /app/docs/api ./docs/api
 
+# Снимки BotFather и прочие картинки UI: сервер отдаёт каталог как /assets
+COPY assets ./assets
+
 EXPOSE 5000
 
 # Стартуем приложение: SQL- и служебные миграции сервер применяет сам при старте
