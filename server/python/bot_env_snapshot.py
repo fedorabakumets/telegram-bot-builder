@@ -1,9 +1,10 @@
 """
-Словарь переменных одного бота для обёртки os.environ.
+@fileoverview Словарь переменных одного бота для обёртки os.environ.
 
-Те же значения, что apply_bot_env кладёт в процесс на время загрузки:
+worker.py передаёт этот словарь в register и не пишет его в базу процесса:
 копия ctx.env или .env плюс BOT_TOKEN, TOKEN_ID, WEBHOOK_URL, WEBHOOK_PORT.
-Секреты сервера сюда не добавляются.
+Секреты сервера сюда не добавляются. DATABASE_URL и REDIS_URL приходят уже
+внутри ctx.env или .env конкретного бота.
 """
 
 from __future__ import annotations

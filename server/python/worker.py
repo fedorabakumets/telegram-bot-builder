@@ -1,4 +1,7 @@
 """
+@fileoverview Мастер-процесс воркера: несколько ботов в одном event loop.
+Секреты бота живут в словаре оверлея и не пишутся в базовый environ процесса.
+
 Bot Worker — asyncio мастер-процесс для запуска нескольких ботов в одном event loop.
 
 Протокол:
@@ -227,8 +230,6 @@ class BotWorker:
         token_id = ctx.token_id
         token_token = iso.current_token_id.set(token_id)
         alias_prev: Dict[str, Any] = {}
-        env_prev: Optional[Dict[str, Optional[str]]] = None
-        dotenv_prev: Optional[Dict[str, Optional[str]]] = None
         dotenv_guard = contextlib.ExitStack()
         overlay_on = False
 
@@ -251,15 +252,10 @@ class BotWorker:
                 siblings.append(stem)
 
             async with iso.get_env_lock():
+                # Inline-env: load_dotenv() бота не должен найти .env панели выше по дереву
                 if ctx.env is not None:
-                    dotenv_prev = iso.apply_env_values(ctx.env)
                     dotenv_guard.enter_context(iso.suppress_dotenv_autoload())
-                else:
-                    dotenv_prev = iso.apply_bot_dotenv(bot_dir)
-                env_prev = iso.apply_bot_env(
-                    ctx.token, token_id, ctx.webhook_url, ctx.webhook_port
-                )
-                # Словарь живёт и после restore_env: main() читает os.environ уже без чужих секретов в базе
+                # Словарь до загрузки модулей: BOT_TOKEN и env бота не попадают в базу процесса
                 bot_env_overlay.register(
                     token_id,
                     bot_env_snapshot.bot_env_values(
@@ -315,9 +311,6 @@ class BotWorker:
 
                 iso.restore_short_aliases(alias_prev)
                 alias_prev = {}
-                iso.restore_env(env_prev)
-                iso.restore_env(dotenv_prev)
-                env_prev = dotenv_prev = None
                 dotenv_guard.close()
 
             ctx.status = "running"
@@ -348,10 +341,6 @@ class BotWorker:
         finally:
             if alias_prev:
                 iso.restore_short_aliases(alias_prev)
-            if env_prev is not None:
-                iso.restore_env(env_prev)
-            if dotenv_prev is not None:
-                iso.restore_env(dotenv_prev)
             dotenv_guard.close()
             if overlay_on:
                 bot_env_overlay.unregister(token_id)

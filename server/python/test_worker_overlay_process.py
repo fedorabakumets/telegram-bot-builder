@@ -1,5 +1,5 @@
 """
-Два бота в одном процессе worker.py видят только свой env после загрузки.
+@fileoverview Два бота в одном процессе worker.py видят только свой env после загрузки.
 
 Запуск: python3 -m unittest server/python/test_worker_overlay_process.py
 """
@@ -43,7 +43,7 @@ class WorkerOverlayProcessTest(unittest.TestCase):
     """Поднимает worker.py на двух минимальных bot.py без Telegram."""
 
     def test_two_bots_keep_own_env(self):
-        """После restore_env каждый бот видит свой ключ и не видит ключ соседа."""
+        """После загрузки каждый бот видит свой ключ и токен и не видит ключ соседа."""
         worker = Path(__file__).resolve().parent / "worker.py"
         with tempfile.TemporaryDirectory() as tmp:
             bot = Path(tmp) / "bot.py"

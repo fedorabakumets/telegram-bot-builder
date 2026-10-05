@@ -1,5 +1,5 @@
 """
-Тесты передачи переменных бота в команде start_bot (BOT_ENV_SOURCE=inline).
+@fileoverview Тесты передачи переменных бота в команде start_bot (BOT_ENV_SOURCE=inline).
 
 Запуск: python3 -m unittest server/python/test_worker_isolation_env.py
 """

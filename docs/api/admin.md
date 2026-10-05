@@ -823,12 +823,12 @@ curl -s 'http://localhost:5000/admin/api/update-check?refresh=1' -b admin.txt
 ```json
 {
   "current": {
-    "version": "2.2.1.4",
-    "releasedAt": "2026-10-02"
+    "version": "2.2.1.5",
+    "releasedAt": "2026-10-05"
   },
   "latest": {
-    "version": "2.2.1.4",
-    "releasedAt": "2026-10-02",
+    "version": "2.2.1.5",
+    "releasedAt": "2026-10-05",
     "notesUrl": null
   },
   "updateAvailable": false,
@@ -1000,8 +1000,8 @@ curl -s http://localhost:5000/admin/api/version -b admin.txt
 
 ```json
 {
-  "version": "2.2.1.4",
-  "releasedAt": "2026-10-02",
+  "version": "2.2.1.5",
+  "releasedAt": "2026-10-05",
   "notesUrl": null
 }
 ```

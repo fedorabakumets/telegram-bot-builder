@@ -10,7 +10,7 @@
 
 | | `process` | `docker` |
 |---|---|---|
-| Переменные окружения сервера (`SESSION_SECRET`, `ADMIN_API_KEY`, ключи) | не наследуются: только технические (PATH, локаль, PYTHON*), `DATABASE_URL`/`REDIS_URL` и `WORKER_ENV_PASSTHROUGH` | не попадают в контейнер, кроме `WORKER_ENV_PASSTHROUGH` |
+| Переменные окружения сервера (`SESSION_SECRET`, `ADMIN_API_KEY`, ключи) | не наследуются: в базу процесса входят технические (PATH, локаль, PYTHON*), `API_BASE_URL`/`WEBHOOK_BASE_URL` и `WORKER_ENV_PASSTHROUGH`. `DATABASE_URL`/`REDIS_URL` бот получает в своём словаре | не попадают в контейнер, кроме `WORKER_ENV_PASSTHROUGH` |
 | `${{VAR}}` в переменных бота | только из `WORKER_ENV_PASSTHROUGH` (вне denylist) | только из `WORKER_ENV_PASSTHROUGH` (вне denylist) |
 | Файлы | весь сервер | копии папок своих ботов (только чтение) и `uploads/<id>` своих проектов |
 | Системные файлы контейнера | — | только чтение, `/tmp` в памяти (64 МБ) |
@@ -24,12 +24,13 @@
 Окружение бота состоит из трёх слоёв:
 
 1. **Переменные токена** (вкладка «Переменные» у бота) — отдаются как есть.
-2. **Системные**: `BOT_TOKEN`, `TOKEN_ID`, `PROJECT_ID`, `ADMIN_IDS`, `API_BASE_URL`, `WEBHOOK_*`,
-   `DATABASE_URL`, `REDIS_URL` и технические переменные процесса: `PATH`, `HOME`, `USER`, `LOGNAME`,
-   `LANG`, `LANGUAGE`, `LC_*`, `TZ`, `TMPDIR`/`TMP`/`TEMP`, `PYTHON*`, `VIRTUAL_ENV`, `LD_LIBRARY_PATH`,
-   `SSL_CERT_FILE`, `SSL_CERT_DIR`, `REQUESTS_CA_BUNDLE`, системные переменные Windows, а также настройки
-   воркера `BOT_CODE_CACHE`, `AIOGRAM_LAZY_MODELS`, `WORKER_REPORT_MEMORY`, `MAX_UPDATE_AGE_SECONDS`,
-   `DISABLE_ASYNC_LOG`, `LOG_LEVEL`.
+2. **Системные**: `BOT_TOKEN`, `TOKEN_ID`, `PROJECT_ID`, `ADMIN_IDS`, `WEBHOOK_*`,
+   `DATABASE_URL`, `REDIS_URL` — в словаре этого бота, не в базе процесса воркера.
+   В базе процесса остаются `API_BASE_URL`, `WEBHOOK_BASE_URL` и технические переменные:
+   `PATH`, `HOME`, `USER`, `LOGNAME`, `LANG`, `LANGUAGE`, `LC_*`, `TZ`, `TMPDIR`/`TMP`/`TEMP`,
+   `PYTHON*`, `VIRTUAL_ENV`, `LD_LIBRARY_PATH`, `SSL_CERT_FILE`, `SSL_CERT_DIR`, `REQUESTS_CA_BUNDLE`,
+   системные переменные Windows, а также настройки воркера `BOT_CODE_CACHE`, `AIOGRAM_LAZY_MODELS`,
+   `WORKER_REPORT_MEMORY`, `MAX_UPDATE_AGE_SECONDS`, `DISABLE_ASYNC_LOG`, `LOG_LEVEL`.
 3. **Остальные переменные сервера** боту не видны — ни наследованием процесса, ни ссылкой `${{VAR}}`.
    Отдаются только перечисленные в `WORKER_ENV_PASSTHROUGH`, во всех режимах `WORKER_RUNTIME`
    (`process`, `docker`, `remote`):
@@ -51,7 +52,7 @@ WORKER_ENV_PASSTHROUGH=OPENAI_API_KEY,WEBHOOK_BASE_URL
 - подстроки в имени: `SECRET`, `PASSWORD`, `PASSWD`, `PRIVATE_KEY`, `DATABASE_URL`, `REDIS_URL`
   (например `STRIPE_SECRET_KEY`, `SMTP_PASSWORD`, `RAILWAY_BOT_DATABASE_URL`).
 
-`DATABASE_URL` и `REDIS_URL` бот получает слоем 2, поэтому ссылка `${{DATABASE_URL}}` не нужна: если она
+`DATABASE_URL` и `REDIS_URL` бот получает в своём словаре (сборка переменных бота), не в базе процесса, поэтому ссылка `${{DATABASE_URL}}` не нужна: если она
 осталась в переменных токена, она отбрасывается и бот получает подключение панели. Если секрет нужен боту,
 назовите его без запрещённых слов и добавьте в `WORKER_ENV_PASSTHROUGH` или задайте прямо в переменных токена.
 
@@ -70,9 +71,10 @@ WORKER_ENV_PASSTHROUGH=OPENAI_API_KEY,WEBHOOK_BASE_URL
 
 ## Что не закрывает
 
-- **Доступ к БД платформы.** В `.env` бота по-прежнему лежит `DATABASE_URL` платформы — боты
+- **Доступ к БД платформы.** В словаре бота по-прежнему лежит его `DATABASE_URL` платформы — боты
   пишут в `bot_users`, `bot_messages` и другие таблицы. Код бота (нода `code`, `psql_query`)
-  может прочитать этот `.env` и сделать любой запрос. Нужна отдельная роль БД на проект — следующий шаг.
+  видит эту строку и может сделать любой запрос. Сосед в том же процессе через `os.environ` её не видит.
+  Нужна отдельная роль БД на проект — следующий шаг.
 - **Сеть.** С `WORKER_DOCKER_NETWORK=host` контейнер видит всё, что слушает на хосте.
   Для прода лучше отдельная сеть, где доступны только db и redis.
 - **Боты одного человека** по-прежнему в одном процессе и видят друг друга.
