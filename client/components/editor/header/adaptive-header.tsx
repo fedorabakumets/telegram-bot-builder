@@ -1,3 +1,7 @@
+/**
+ * @fileoverview Адаптивная шапка редактора. Узкая шапка прокручивается по горизонтали.
+ */
+
 import { useIsMobile } from '@/components/editor/header/hooks/use-mobile';
 import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
 import { useTelegramLogin } from '@/components/editor/header/hooks/use-telegram-login';
@@ -112,8 +116,9 @@ export function AdaptiveHeader({
 
   return (
     <>
-      <header className={containerClasses}>
-        <div className="flex items-center gap-0 md:order-first flex-shrink-0">
+      <header className={`${containerClasses} w-full min-w-0 overflow-x-auto overflow-y-hidden`}>
+        <div className="flex w-max min-w-full items-center gap-2">
+        <div className="flex shrink-0 items-center">
           {/* Переключатель проекта — без лого, лого живёт в сайдбаре */}
           {projects && projects.length > 0 && currentProjectId && onProjectChange && (
             <ProjectSwitcher
@@ -135,7 +140,7 @@ export function AdaptiveHeader({
           {/* Мобильные кнопки перенесены на FAB канваса — см. mobile-canvas-fab.tsx */}
         </div>
 
-        <div className="flex items-center gap-1 lg:gap-2 flex-1">
+        <div className="flex shrink-0 grow items-center gap-1 lg:gap-2">
           <Navigation
             currentTab={currentTab}
             onTabChange={onTabChange}
@@ -170,6 +175,7 @@ export function AdaptiveHeader({
             onLogin={handleTelegramLogin}
             isVertical={isVertical}
           />
+        </div>
         </div>
 
         {/* Мобильная кнопка меню — скрыта, функционал перенесён на FAB и навигацию */}

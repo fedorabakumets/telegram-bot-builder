@@ -63,6 +63,7 @@ import { getRedisPublisher, waitForRedisInit } from "../redis/redisClient";
 import { setupProjectRoutes } from "./setupProjectRoutes";
 import { setupUserProjectAndTokenRoutes } from "./setupUserProjectAndTokenRoutes";
 import { setupAgentTokenRoutes } from "./setupAgentTokenRoutes";
+import { setupUserSupportRoutes } from "../support/setup-support-routes";
 import { setupMcpRoutes } from "./mcp/setupMcpRoutes";
 import { setupStorageConfigRoutes } from "./setupStorageConfigRoutes";
 import { setupS3ProxyRoute } from "./media/s3-proxy-route";
@@ -3213,6 +3214,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
   // Персональные токены агента (PAT) для MCP
   setupAgentTokenRoutes(app);
+
+  // Чат поддержки платформы (/api/support/*)
+  setupUserSupportRoutes(app);
 
   // Remote Streamable HTTP MCP (/mcp) — без клона репо
   setupMcpRoutes(app);

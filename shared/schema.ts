@@ -97,6 +97,9 @@ export type { BotBuild, InsertBotBuild } from "./schema/tables/bot-builds";
 export { mediaFileTokens } from "./schema/tables/media-file-tokens";
 export type { MediaFileToken, InsertMediaFileToken } from "./schema/tables/media-file-tokens";
 
+export { supportThreads, supportMessages, supportAttachments } from "./schema/tables/support-chat";
+export type { SupportThread, SupportMessage, InsertSupportMessage, SupportAttachment } from "./schema/tables/support-chat";
+
 export type TelegramUserDB = typeof telegramUsersTable.$inferSelect;
 
 // Импорты для обратной совместимости

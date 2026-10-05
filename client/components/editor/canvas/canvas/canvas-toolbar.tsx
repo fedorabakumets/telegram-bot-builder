@@ -195,23 +195,6 @@ export function CanvasToolbar({
       <div className="flex items-center gap-3 relative z-50 w-full px-4 py-3 bg-gradient-to-r from-white via-slate-50 to-white dark:from-slate-950/95 dark:via-slate-900/95 dark:to-slate-950/95 backdrop-blur-md border-b border-slate-200/50 dark:border-slate-600/50 shadow-lg shadow-slate-300/10 dark:shadow-black/20 pointer-events-auto">
         <div className="flex items-center canvas-controls overflow-x-auto w-full gap-2 text-sm">
           <div className="flex items-center flex-shrink-0 gap-2">
-            {/* РљРЅРѕРїРєРё РјР°СЃС€С‚Р°Р±Р° */}
-            <span data-learn-toolbar="zoom" className="inline-flex items-center gap-2">
-            <ZoomControls
-              zoom={zoom}
-              canZoomOut={zoom > 1}
-              canZoomIn={zoom < 200}
-              canFitToContent={nodes.length > 0}
-              onZoomOut={onZoomOut}
-              onZoomIn={onZoomIn}
-              onResetZoom={onResetZoom}
-              onFitToContent={onFitToContent}
-              onZoomLevelChange={onZoomLevelChange}
-              canRestorePreviousView={canRestorePreviousView}
-              onRestorePreviousView={onRestorePreviousView}
-            />
-            </span>
-
             {/* РљРЅРѕРїРєРё РѕС‚РјРµРЅС‹/РїРѕРІС‚РѕСЂР° */}
             <span data-learn-toolbar="undo" className="inline-flex items-center gap-2">
             <UndoRedoButtons
@@ -261,6 +244,24 @@ export function CanvasToolbar({
               clickTransform={clickTransform}
               selectedNodeId={selectedNodeId}
               hasClipboardData={hasClipboardData}
+            />
+            </span>
+
+            {/* Масштаб на левой панели; «A» — перед поиском */}
+            <span data-learn-toolbar="zoom" className="inline-flex items-center gap-2">
+            <ZoomControls
+              zoom={zoom}
+              canZoomOut={zoom > 1}
+              canZoomIn={zoom < 200}
+              canFitToContent={nodes.length > 0}
+              onZoomOut={onZoomOut}
+              onZoomIn={onZoomIn}
+              onResetZoom={onResetZoom}
+              onFitToContent={onFitToContent}
+              onZoomLevelChange={onZoomLevelChange}
+              canRestorePreviousView={canRestorePreviousView}
+              onRestorePreviousView={onRestorePreviousView}
+              hideScaleButtons
             />
             </span>
 

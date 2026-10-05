@@ -915,6 +915,13 @@ export function CanvasNode({ node, allNodes, isSelected, isMultiSelected, onClic
                 }}
               />
             ) : undefined}
+            dangerItems={onDelete ? [{
+              id: 'delete',
+              label: 'Удалить',
+              icon: 'fas fa-trash',
+              danger: true,
+              onClick: () => onDelete(),
+            }] : undefined}
           />
         )}
       </div>

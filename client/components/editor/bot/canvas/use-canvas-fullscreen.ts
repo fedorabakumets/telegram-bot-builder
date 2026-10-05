@@ -10,7 +10,7 @@ import { useCallback, useEffect, useState, type RefObject } from 'react';
  * @param rootRef - Ref корня холста
  * @returns isFullscreen и toggleFullscreen
  */
-export function useCanvasFullscreen(rootRef: RefObject<HTMLDivElement | null>) {
+export function useCanvasFullscreen(rootRef: RefObject<HTMLElement | null>) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [cssFullscreen, setCssFullscreen] = useState(false);
 

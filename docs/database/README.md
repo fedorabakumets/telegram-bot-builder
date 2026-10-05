@@ -29,6 +29,9 @@
 | [project_collaborators](./project_collaborators.md) | 4 | Таблица коллабораторов проекта. Хранит связи между проектами и пользователями, имеющими доступ к ним. |
 | [project_versions](./project_versions.md) | 8 | Таблица версий проектов — хранит снимки данных проекта (BotDataWithSheets) |
 | [storage_configs](./storage_configs.md) | 8 | Таблица реестра хранилищ: несколько S3 (разные бакеты/endpoint'ы/креды) и несколько локальных папок. Одно хранилище помечено активным для новых загрузок; читать можно из всех. |
+| [support_attachments](./support_attachments.md) | 8 | Картинка, приложенная к сообщению поддержки. Файл лежит в активном хранилище, не в media_files проекта. |
+| [support_messages](./support_messages.md) | 7 | Сообщение в диалоге поддержки |
+| [support_threads](./support_threads.md) | 8 | Диалог поддержки: ровно один на пользователя платформы |
 | [telegram_users](./telegram_users.md) | 8 | Таблица аутентифицированных пользователей Telegram |
 | [user_project_archives](./user_project_archives.md) | 3 | Личный архив проектов: каждый пользователь может скрыть проект только у себя. |
 | [user_telegram_settings](./user_telegram_settings.md) | 9 | Таблица пользовательских настроек для Telegram Client API |
@@ -81,6 +84,9 @@ erDiagram
     project_collaborators }o--o| telegram_users : "invited_by"
     project_versions }o--|| bot_projects : "project_id"
     project_versions }o--o| telegram_users : "author_id"
+    support_attachments }o--|| support_messages : "message_id"
+    support_messages }o--|| support_threads : "thread_id"
+    support_threads }o--|| telegram_users : "user_id"
     user_project_archives }o--|| telegram_users : "user_id"
     user_project_archives }o--|| bot_projects : "project_id"
 ```

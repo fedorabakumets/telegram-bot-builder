@@ -11,11 +11,13 @@
 import { useRef, useCallback, useState, useEffect, useMemo } from 'react';
 import { CanvasSheets } from '@/components/editor/canvas/canvas-sheets';
 import { useCanvasViewport } from './use-canvas-viewport';
+import { useCanvasFullscreen } from '@/components/editor/bot/canvas/use-canvas-fullscreen';
 import { editorGridStep, paintEditorViewport } from './paint-editor-viewport';
 import { cullCanvasNodes } from './cull-canvas-nodes';
 import { useEditorCullSync } from './use-editor-cull-sync';
 import { useCanvasAutoFit } from './use-canvas-auto-fit';
 import { CanvasToolbar } from './canvas-toolbar';
+import { EditorCanvasSideControls } from './editor-canvas-side-controls';
 import { EditorLearnOverlay, useEditorLearn } from '@/components/editor/canvas/learn';
 import { registerEditorLearn, setEditorLearnActive } from '@/components/editor/canvas/learn/editor-learn-bridge';
 import { CanvasContent } from './canvas-content';
@@ -291,7 +293,11 @@ export function Canvas({
     return () => setEditorLearnActive(false);
   }, [learn.active]);
   const canvasRef = useRef<HTMLDivElement>(null);
+  const mainRef = useRef<HTMLElement | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const { isFullscreen, cssFullscreen, toggleFullscreen } = useCanvasFullscreen(mainRef);
+  const cssFullscreenRef = useRef(false);
+  cssFullscreenRef.current = cssFullscreen;
   /** Ref для onConnectionCreate чтобы handleConnectionComplete не устаревал */
   const onConnectionCreateRef = useRef(onConnectionCreate);
   useEffect(() => { onConnectionCreateRef.current = onConnectionCreate; }, [onConnectionCreate]);
@@ -1269,6 +1275,7 @@ export function Canvas({
       if (!isInputField) {
         // Escape — сначала восстанавливает предыдущий вид, иначе снимает выделение
         if (e.key === 'Escape') {
+          if (document.fullscreenElement || cssFullscreenRef.current) return;
           if (canRestorePreviousView) {
             e.preventDefault();
             restorePreviousView();
@@ -1778,8 +1785,8 @@ export function Canvas({
   }, [selectedNodeIds, moveNodesToNewSheet, addAction, clearSelection, botData]);
 
   return (
-    <main className="w-full h-full relative overflow-hidden bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 dark:from-slate-950 dark:via-gray-950 dark:to-slate-900">
-      <div ref={scrollContainerRef} className="absolute inset-x-0 overflow-auto" style={{ top: 60, bottom: 60 }}>
+    <main ref={mainRef} className={`w-full h-full relative overflow-hidden bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 dark:from-slate-950 dark:via-gray-950 dark:to-slate-900 max-md:flex max-md:flex-col${cssFullscreen ? ' !fixed inset-0 z-[200]' : ''}`}>
+      <div ref={scrollContainerRef} className="absolute inset-x-0 top-[60px] bottom-[60px] overflow-auto max-md:!static max-md:flex-1 max-md:min-h-0 max-md:pt-[60px]">
 
         {/* Enhanced Canvas Grid */}
         <div
@@ -1940,6 +1947,18 @@ export function Canvas({
         onRestoreVersion={onRestoreVersion}
       />
 
+      <EditorCanvasSideControls
+        zoom={zoom}
+        canZoomIn={zoom < 200}
+        canZoomOut={zoom > 1}
+        onZoomIn={zoomIn}
+        onZoomOut={zoomOut}
+        onFit={fitToContent}
+        canFit={nodes.length > 0}
+        isFullscreen={isFullscreen}
+        onToggleFullscreen={toggleFullscreen}
+      />
+
       {/* Плавающая панель для мобильных устройств */}
       <MobileCanvasFab
         onOpenMobileSidebar={onOpenMobileSidebar}
@@ -1959,9 +1978,9 @@ export function Canvas({
         onMoveToProject={handleGroupMoveToProject}
       />
 
-      {/* Компонент листов холста - фиксированная панель внизу */}
+      {/* На узком экране панель в потоке колонки, а не bottom-0 у слишком высокого 100vh */}
       {botData && botData.sheets && botData.sheets.length > 0 && onBotDataUpdate && (
-        <div data-canvas-sheets className="absolute bottom-0 left-0 right-0 z-30 pointer-events-auto">
+        <div data-canvas-sheets className="absolute bottom-0 left-0 right-0 z-30 pointer-events-auto max-md:!static max-md:shrink-0">
           <CanvasSheets
             sheets={botData.sheets}
             activeSheetId={botData.activeSheetId || botData.sheets[0]?.id || null}

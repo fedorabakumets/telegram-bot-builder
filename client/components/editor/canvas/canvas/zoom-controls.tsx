@@ -38,6 +38,8 @@ interface ZoomControlsProps {
   canRestorePreviousView?: boolean;
   /** Колбэк восстановления предыдущего вида */
   onRestorePreviousView?: () => void;
+  /** Скрыть кнопки масштаба и оставить только «A» */
+  hideScaleButtons?: boolean;
 }
 
 /**
@@ -73,6 +75,7 @@ export function ZoomControls({
   onAutoFitOnSheetChangeToggle,
   canRestorePreviousView = false,
   onRestorePreviousView,
+  hideScaleButtons = false,
 }: ZoomControlsProps) {
   /** Локальное состояние для переключателя авто-fit (если пропсы не переданы) */
   const [localAutoFit, setLocalAutoFit] = useState(() => {
@@ -119,6 +122,22 @@ export function ZoomControls({
       repeatTimerRef.current = null;
     }
   }, []);
+
+  if (hideScaleButtons) {
+    return (
+      <button
+        type="button"
+        onClick={() => handleAutoFitToggle(!autoFitValue)}
+        className={`${BUTTON_BASE_CLASSES} ${autoFitValue
+          ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-500/30'
+          : BUTTON_INACTIVE_CLASSES
+        } flex items-center justify-center`}
+        title={autoFitValue ? 'Авто-уместить при смене листа: ВКЛ' : 'Авто-уместить при смене листа: ВЫКЛ'}
+      >
+        <span className="text-[10px] font-bold leading-none">A</span>
+      </button>
+    );
+  }
 
   return (
     <>

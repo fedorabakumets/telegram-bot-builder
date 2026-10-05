@@ -49,7 +49,7 @@ const AdminPanel = lazy(() => import("@/pages/admin"));
  */
 function LoadingSpinner() {
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background">
+    <div className="app-viewport flex items-center justify-center bg-background">
       <div className="flex flex-col items-center space-y-6">
         {/* Логотип или иконка */}
         <div className="relative">
@@ -140,6 +140,8 @@ function Router() {
         <Route path="/admin/live-db" component={AdminPanel} />
         <Route path="/admin/users/:id" component={AdminPanel} />
         <Route path="/admin/users" component={AdminPanel} />
+        <Route path="/admin/support/:id" component={AdminPanel} />
+        <Route path="/admin/support" component={AdminPanel} />
         <Route path="/admin/node-types" component={AdminPanel} />
         <Route path="/admin/maintenance" component={AdminPanel} />
         <Route path="/admin" component={AdminPanel} />

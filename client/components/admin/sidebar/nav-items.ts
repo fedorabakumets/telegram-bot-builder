@@ -14,6 +14,7 @@ import {
   Braces,
   Users,
   Blocks,
+  MessageCircle,
 } from 'lucide-react';
 
 /** Внутренний раздел панели */
@@ -30,6 +31,7 @@ export interface AdminNavItem {
 export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { href: '/', label: 'Сводка', icon: LayoutDashboard },
   { href: '/users', label: 'Аккаунты', icon: Users },
+  { href: '/support', label: 'Поддержка', icon: MessageCircle },
   { href: '/settings', label: 'Настройки', icon: Settings },
   { href: '/node-types', label: 'Типы блоков', icon: Blocks },
   { href: '/docs', label: 'Документация API', icon: BookOpen },
@@ -75,6 +77,9 @@ export function isAdminNavItemActive(location: string, href: string): boolean {
   }
   if (href === '/users') {
     return location === '/admin/users' || location.startsWith('/admin/users/');
+  }
+  if (href === '/support') {
+    return location === '/admin/support' || location.startsWith('/admin/support/');
   }
   if (href === '/node-types') {
     return location === '/admin/node-types' || location.startsWith('/admin/node-types/');

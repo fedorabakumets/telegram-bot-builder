@@ -5,7 +5,9 @@
 
 import { Loader2 } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { useSupportSocket } from '@/components/support/hooks/use-support-socket';
 import { useAdminStatus } from './hooks/use-admin-status';
+import { ADMIN_SUPPORT_QUERY_KEY, AdminSupportSocketContext } from './hooks/use-admin-support';
 import { AdminSidebar } from './sidebar/admin-sidebar';
 
 /**
@@ -23,6 +25,11 @@ interface AdminLayoutProps {
  */
 export function AdminLayout({ children }: AdminLayoutProps) {
   const { isLoading, data } = useAdminStatus();
+  const socketConnected = useSupportSocket(
+    '/admin/api/support/ws',
+    ADMIN_SUPPORT_QUERY_KEY,
+    Boolean(data?.authenticated),
+  );
 
   if (isLoading || !data?.authenticated) {
     return (
@@ -33,9 +40,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   }
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-background">
-      <AdminSidebar />
-      <main className="flex-1 flex flex-col overflow-hidden min-h-0">{children}</main>
-    </div>
+    <AdminSupportSocketContext.Provider value={socketConnected}>
+      <div className="flex h-screen w-full overflow-hidden bg-background">
+        <AdminSidebar />
+        <main className="flex-1 flex flex-col overflow-hidden min-h-0">{children}</main>
+      </div>
+    </AdminSupportSocketContext.Provider>
   );
 }

@@ -15,7 +15,10 @@
 
 import { createRoot } from "react-dom/client";
 import App from "./App";
+import { installVisualViewportSync } from "./lib/sync-visual-viewport";
 import "./index.css";
+
+installVisualViewportSync();
 
 /**
  * @brief Функция монтирования React-приложения в DOM
