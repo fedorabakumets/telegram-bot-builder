@@ -1,9 +1,15 @@
 /**
+ * @fileoverview Остановка бота в пуле воркеров или в отдельном процессе
+ * @module server/bots/stopBot
+ */
+
+/**
  * Модуль для выполнения системных команд
  * @external child_process
  */
 import { execSync } from "node:child_process";
 import { workerManager } from './botWorkerManager';
+import { isWorkerPoolEnabled } from './isWorkerPoolEnabled';
 
 /**
  * Глобальная коллекция активных процессов ботов
@@ -67,7 +73,7 @@ export async function stopBot(projectId: number, tokenId: number): Promise<{ suc
   markExpectedStop(tokenId);
   try {
     // ─── Режим воркера: остановка бота через worker pool ───
-    if (process.env.USE_WORKER_POOL !== 'false') {
+    if (isWorkerPoolEnabled()) {
       const confirmed = await workerManager.stopBot(projectId, tokenId);
       if (!confirmed) {
         console.error(

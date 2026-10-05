@@ -17,6 +17,12 @@ const FIRST_RUN_DELAY_MS = 5 * 60_000;
 /** Идёт ли бэкап прямо сейчас */
 let running = false;
 
+/** Таймер первого запуска после старта или сохранения настроек */
+let firstTimer: ReturnType<typeof setTimeout> | undefined;
+
+/** Повтор расписания */
+let repeatTimer: ReturnType<typeof setInterval> | undefined;
+
 /**
  * Бэкапит одну базу; при ошибке предупреждает, если последний удачный бэкап устарел
  * @param target - База и метка
@@ -63,8 +69,23 @@ export function startDbBackupScheduler(): boolean {
   const hours = getDbBackupIntervalHours();
   if (hours <= 0) return false;
   const labels = getDbBackupTargets().map((t) => t.label).join(", ");
-  setTimeout(() => void runScheduledBackup(hours), FIRST_RUN_DELAY_MS).unref();
-  setInterval(() => void runScheduledBackup(hours), hours * 3_600_000).unref();
+  firstTimer = setTimeout(() => void runScheduledBackup(hours), FIRST_RUN_DELAY_MS);
+  firstTimer.unref();
+  repeatTimer = setInterval(() => void runScheduledBackup(hours), hours * 3_600_000);
+  repeatTimer.unref();
   console.log(`🗄️ [DbBackup] бэкап (${labels}) каждые ${hours} ч, первый через 5 мин`);
   return true;
+}
+
+/**
+ * Сбрасывает таймеры и запускает расписание заново.
+ * Вызывается после сохранения раздела бэкапов, без рестарта процесса.
+ * @returns true, если расписание снова запущено
+ */
+export function restartDbBackupScheduler(): boolean {
+  if (firstTimer) clearTimeout(firstTimer);
+  if (repeatTimer) clearInterval(repeatTimer);
+  firstTimer = undefined;
+  repeatTimer = undefined;
+  return startDbBackupScheduler();
 }

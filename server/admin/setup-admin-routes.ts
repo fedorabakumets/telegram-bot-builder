@@ -3,9 +3,10 @@
  * @module server/admin/setup-admin-routes
  */
 
-import type { Express, Request, Response } from "express";
-import express from "express";
+import express, { type Express } from "express";
+import { redirectAfterAdminLogin } from "./admin-login-redirect";
 import { isAdminAuthenticated, requireAdminAuth } from "./admin-auth-middleware";
+import { adminKeysMatch } from "./admin-key-match";
 import { clearAdminCookie, setAdminCookie } from "./admin-session";
 import {
   handleGetAdminAppSettings,
@@ -40,8 +41,8 @@ import {
   serveSchemaDocsEmbedTable,
 } from "./pages/schema-docs-page";
 import { isAdminEnabled, resolveAdminApiKey } from "./resolve-admin-key";
-import { isConfigured } from "../services/app-settings.service";
 import { setupAdminSupportRoutes } from "../support/setup-support-routes";
+import { setupRuntimeSettingsRoutes } from "./setup-runtime-settings-routes";
 
 /** Префикс защищённых admin-маршрутов */
 export const ADMIN_PATHS_PREFIX = "/admin";
@@ -72,7 +73,7 @@ export function setupAdminRoutes(app: Express): void {
     }
 
     const submitted = typeof req.body?.key === "string" ? req.body.key.trim() : "";
-    if (!submitted || submitted !== key) {
+    if (!adminKeysMatch(submitted, key)) {
       res.redirect(302, "/admin/login?error=1");
       return;
     }
@@ -136,21 +137,8 @@ export function setupAdminRoutes(app: Express): void {
   app.get("/admin/api-docs/:slug", passAdminPageToClient);
   app.get("/admin/users/:id", passAdminPageToClient);
 
+  setupRuntimeSettingsRoutes(app);
   setupAdminSupportRoutes(app);
-}
-
-/**
- * Редирект после успешного admin login: settings если не настроено, иначе hub.
- * @param req - Запрос Express
- * @param res - Ответ Express
- */
-async function redirectAfterAdminLogin(req: Request, res: Response): Promise<void> {
-  const configured = await isConfigured();
-  if (!configured) {
-    res.redirect(302, "/admin/settings");
-    return;
-  }
-  res.redirect(302, "/admin");
 }
 
 /**

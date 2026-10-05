@@ -1,9 +1,10 @@
 """
-Обёртка os.environ в процессе воркера.
+@fileoverview Обёртка os.environ в процессе воркера.
 
 Пока current_token_id указывает на бота, чтение видит его словарь поверх базы
 (ключи бота важнее). Запись из задачи бота не меняет окружение процесса.
-При current_token_id == 0 словари ботов скрыты.
+BOT_TOKEN, переменные бота, DATABASE_URL и REDIS_URL живут в словаре register,
+не в базе процесса. При current_token_id == 0 словари ботов скрыты.
 os.getenv в CPython делает environ.get — подмены os.environ достаточно.
 """
 

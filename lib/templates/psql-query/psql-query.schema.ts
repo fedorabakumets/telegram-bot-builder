@@ -27,6 +27,8 @@ export const psqlQueryParamsSchema = z.object({
   connectionString: z.string().default(''),
   /** Разрешён ли режим builtin (БД платформы); false — узел builtin не выполняет запрос */
   builtinEnabled: z.boolean().default(true),
+  /** Запрещён ли режим env с переменной DATABASE_URL; false — код как раньше */
+  panelDsnDenied: z.boolean().default(false),
 });
 
 /** Тип параметров, выведенный из схемы */

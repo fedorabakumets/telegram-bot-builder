@@ -16,6 +16,7 @@
 import { botProcesses } from "../routes/routes";
 import { closeDbPool } from "../database/db";
 import { workerManager } from '../bots/botWorkerManager';
+import { isWorkerPoolEnabled } from '../bots/isWorkerPoolEnabled';
 import { markServerShuttingDown } from '../bots/serverShutdownState';
 
 /**
@@ -121,7 +122,7 @@ async function runShutdown(): Promise<void> {
   console.log('🛑 Начинаем корректное завершение всех ботов...');
 
   // После маркера — гасим worker pool (exit-handler не затрёт __server_restart__)
-  if (process.env.USE_WORKER_POOL !== 'false') {
+  if (isWorkerPoolEnabled()) {
     await workerManager.shutdownAll();
   }
 

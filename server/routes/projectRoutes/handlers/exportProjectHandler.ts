@@ -12,6 +12,8 @@ import type { Request, Response } from "express";
 import { URL } from "node:url";
 import { storage } from "../../../storages/storage";
 import { isPsqlBuiltinEnabled } from "../../../utils/isPsqlBuiltinEnabled";
+import { isPsqlPanelDsnDenied } from "../../../utils/isPsqlPanelDsnDenied";
+import { isBotRuntimeActive } from "../../../bots/resolveBotDatabaseUrl";
 
 /**
  * Обрабатывает запрос на экспорт проекта
@@ -42,6 +44,8 @@ export async function exportProjectHandler(req: Request, res: Response): Promise
             botName: project.name,
             userDatabaseEnabled,
             psqlBuiltinEnabled: isPsqlBuiltinEnabled(),
+            psqlPanelDsnDenied: isPsqlPanelDsnDenied(),
+            botRuntimeRole: isBotRuntimeActive(),
         });
 
         res.json({ code: pythonCode });

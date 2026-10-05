@@ -6,6 +6,7 @@
  * @module server/bots/resolveBotEnvReference
  */
 
+import { runtimeEnv } from "../services/runtime-overlay";
 import { canShareServerEnv, getEnvPassthrough, isServerEnvDenied } from "./botEnvPolicy";
 
 /** Переменные, которые бот получает от панели сам, если у токена не задано своё значение */
@@ -34,7 +35,7 @@ export function resolveBotEnvReference(value: string, env: NodeJS.ProcessEnv = p
     console.warn(`[BotEnv] ссылка \${{${name}}} не раскрыта: ${reason}`);
     return value;
   }
-  return env[name] ?? value;
+  return runtimeEnv(name, env) ?? value;
 }
 
 /**

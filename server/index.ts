@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Точка входа сервера: HTTP, сокеты и запуск ботов
+ * @module server/index
+ */
+
 import dotenv from "dotenv";
 import express, { NextFunction, type Request, Response } from "express";
 import { createServer } from "http";
@@ -22,9 +27,12 @@ import { initSupportEventBridge } from './redis/support-event-bridge';
 import { stopCleanup } from "./utils/cache";
 import { shutdownAllBots } from "./utils/graceful-shutdown";
 import { runMigrations } from "./database/runMigrations";
+import { ensureBotRuntimeRole } from "./database/bot-runtime/ensure-bot-runtime-role";
 import { isRedisAvailable, waitForRedisInit } from "./redis/redisClient";
 import { redactSecrets } from "./utils/redactSecrets";
 import { startDbBackupScheduler } from "./database/backups/dbBackupScheduler";
+import { applyRuntimeProxyEnv, refreshRuntimeOverlay } from "./admin/runtime-overlay-refresh";
+import { isWorkerPoolEnabled } from "./bots/isWorkerPoolEnabled";
 
 // Настраиваем прокси для Telegram API ДО всех импортов
 dotenv.config({ debug: false });
@@ -121,6 +129,7 @@ app.use((req, res, next) => {
 (async () => {
   const httpServer = createServer(app);
   await runMigrations();
+  await ensureBotRuntimeRole();
   await registerRoutes(app, httpServer);
 
   // Несуществующие /api/* → JSON 404, не SPA index.html (до Vite/static catch-all)
@@ -168,7 +177,9 @@ app.use((req, res, next) => {
   initSupportEventBridge();
   // Подписываемся на Redis Pub/Sub логи ботов (дополнительный канал к stdout)
   initRedisLogsSubscriber();
-  // Автоматический бэкап базы панели (включается DB_BACKUP_INTERVAL_HOURS)
+  // Оверлей админки, затем расписание бэкапов (интервал из админки или env)
+  await refreshRuntimeOverlay();
+  applyRuntimeProxyEnv();
   startDbBackupScheduler();
 
   // Важно настраивать Vite только в режиме разработки и после
@@ -258,7 +269,7 @@ app.use((req, res, next) => {
         const closed = await reconcileOrphanLaunchHistories(async (tokenId) => {
           const token = await storage.getBotToken(tokenId);
           if (!token) return false;
-          if (process.env.USE_WORKER_POOL !== 'false'
+          if (isWorkerPoolEnabled()
             && workerManager.isBotRunning(token.projectId, tokenId)) {
             return true;
           }

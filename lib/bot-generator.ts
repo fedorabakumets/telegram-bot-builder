@@ -162,6 +162,16 @@ export interface GeneratePythonCodeOptions {
    * сервер передаёт PSQL_BUILTIN_ENABLED (по умолчанию false).
    */
   psqlBuiltinEnabled?: boolean;
+  /**
+   * Запретить режим env с переменной DATABASE_URL. По умолчанию false;
+   * сервер передаёт PSQL_PANEL_DSN_DENIED. Пока false, код узла не меняется.
+   */
+  psqlPanelDsnDenied?: boolean;
+  /**
+   * Код под роль bot_runtime. По умолчанию false.
+   * Сервер передаёт true только при BOT_RUNTIME_ENABLED и непустом BOT_DATABASE_URL.
+   */
+  botRuntimeRole?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -220,6 +230,8 @@ function buildGenerationContext(
     thumbnailFileIds = {},
     thumbnailUrls = {},
     psqlBuiltinEnabled = true,
+    psqlPanelDsnDenied = false,
+    botRuntimeRole = false,
   } = options;
 
   const genOptions: GenerationOptions = {
@@ -238,6 +250,8 @@ function buildGenerationContext(
     thumbnailFileIds,
     thumbnailUrls,
     psqlBuiltinEnabled,
+    psqlPanelDsnDenied,
+    botRuntimeRole,
   };
 
   const context = createGenerationContext(botData, botName, groups, genOptions);
@@ -327,7 +341,7 @@ function generateCodeSections(
 
   // --- database ---
   const databaseCode = emitOnce(state, COMPONENT_NAMES.DATABASE, () =>
-    generateDatabaseCode(userDatabaseEnabled, nodes)
+    generateDatabaseCode(userDatabaseEnabled, nodes, !!context.options.botRuntimeRole)
   );
 
   // --- utils (содержит save_message_to_api-заглушку при userDatabaseEnabled=false) ---
@@ -365,6 +379,8 @@ function generateCodeSections(
     context.options.thumbnailUrls || {},
     context.projectId ?? null,
     context.options.psqlBuiltinEnabled ?? true,
+    context.options.psqlPanelDsnDenied ?? false,
+    !!context.options.botRuntimeRole,
   );
 
   // --- allReferencedNodeIds (теперь часть контекста секции) ---
@@ -473,7 +489,7 @@ function generateCodeSections(
   // --- group handlers ---
   const groupHandlers = emitOnce(state, COMPONENT_NAMES.GROUP_HANDLERS, () =>
     !!context.options.enableGroupHandlers
-      ? '\n' + generateGroupHandlers(context.groups)
+      ? '\n' + generateGroupHandlers(context.groups, !!context.options.botRuntimeRole)
       : ''
   );
 

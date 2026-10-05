@@ -1,5 +1,9 @@
 """
-Изоляция ботов внутри worker-процесса: contextvars, уникальные модули, env-lock.
+@fileoverview Изоляция ботов внутри worker-процесса: contextvars, уникальные модули, env-lock.
+
+Путь загрузки бота идёт через словарь bot_env_overlay, а не через запись в базу процесса.
+apply_env_values, apply_bot_env и apply_bot_dotenv остаются низкоуровневыми хелперами
+(их вызывают тесты) и пишут в настоящий environ. worker.py их не вызывает.
 
 Контракт system-событий (stdout JSON type=system):
   worker_ready | bot_started:{token_id} | bot_exited:{token_id}:{status}
@@ -21,7 +25,7 @@ current_token_id: contextvars.ContextVar[int] = contextvars.ContextVar(
     "worker_current_token_id", default=0
 )
 
-# Сериализация мутаций базового окружения при загрузке бота
+# Сериализация подмены sys.modules и exec: два бота не грузят короткие имена одновременно
 _env_lock = None
 
 
@@ -37,7 +41,7 @@ def _process_environ():
 
 
 def get_env_lock():
-    """Ленивый asyncio.Lock для подмены env при exec."""
+    """Ленивый asyncio.Lock на время подмены sys.modules и exec бота."""
     global _env_lock
     import asyncio
 
@@ -122,8 +126,8 @@ def cleanup_bot_modules(token_id: int, bot_dir: Optional[Path] = None) -> None:
 
 def apply_bot_env(token: str, token_id: int, webhook_url: Optional[str], webhook_port: Optional[int]) -> Dict[str, Optional[str]]:
     """
-    Пишет BOT_TOKEN и webhook в базовое окружение процесса на время загрузки.
-    Словарь бота в обёртке не трогает — его держит register.
+    Низкоуровневый хелпер: пишет BOT_TOKEN и webhook в базовое окружение процесса.
+    Загрузка бота в worker.py его не вызывает — секреты живут в словаре оверлея.
     @returns снимок прежних значений для restore_env
     """
     env = _process_environ()
@@ -141,9 +145,8 @@ def apply_bot_env(token: str, token_id: int, webhook_url: Optional[str], webhook
 
 def apply_bot_dotenv(bot_dir: Path) -> Dict[str, Optional[str]]:
     """
-    Подставляет в базовое окружение процесса значения из .env бота с перезаписью.
-    load_dotenv() в bot.py не перезаписывает существующие ключи, поэтому без этого
-    бот в общем воркере получил бы USERBOT_*, PROJECT_ID и прочее от соседнего бота.
+    Низкоуровневый хелпер: подставляет .env бота в базовое окружение процесса.
+    Загрузка бота читает .env в словарь оверлея и этот хелпер не вызывает.
     @returns снимок прежних значений для restore_env
     """
     env_file = bot_dir / ".env"
@@ -156,7 +159,8 @@ def apply_bot_dotenv(bot_dir: Path) -> Dict[str, Optional[str]]:
 
 def apply_env_values(values: Dict[str, str]) -> Dict[str, Optional[str]]:
     """
-    Подставляет переменные в базовое окружение процесса, не в словарь бота.
+    Низкоуровневый хелпер: подставляет переменные в базовое окружение процесса, не в словарь бота.
+    Путь загрузки бота идёт через register оверлея и этот хелпер не вызывает.
     @param values - имя переменной → значение
     @returns снимок прежних значений для restore_env
     """

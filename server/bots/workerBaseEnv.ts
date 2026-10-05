@@ -1,9 +1,10 @@
 /**
- * @fileoverview Базовое окружение Python-воркера/процесса бота вместо `...process.env`.
- * Из окружения сервера берутся только технические переменные (PATH, локаль, PYTHON*, сертификаты),
- * настройки самого воркера, системные адреса (API_BASE_URL, DATABASE_URL, REDIS_URL)
- * и переменные из WORKER_ENV_PASSTHROUGH, не попавшие в denylist (см. botEnvPolicy).
- * Значения бота (BOT_TOKEN, TOKEN_ID, свои переменные) воркер получает в команде start_bot или .env.
+ * @fileoverview Базовое окружение Python-воркера вместо `...process.env`.
+ * Из окружения сервера берутся технические переменные (PATH, HOME, локаль, PYTHON*, сертификаты),
+ * настройки самого воркера, системные адреса (API_BASE_URL, WEBHOOK_BASE_URL)
+ * и переменные из WORKER_ENV_PASSTHROUGH вне denylist (см. botEnvPolicy).
+ * DATABASE_URL и REDIS_URL в базу процесса по умолчанию не входят: подключения
+ * бот получает в своём словаре, не в окружении воркера.
  * @module server/bots/workerBaseEnv
  */
 
@@ -28,12 +29,12 @@ export const WORKER_TUNING_ENV: readonly string[] = [
 /** Системные адреса панели, которые бот получает и так (слой 2) */
 export const WORKER_SYSTEM_ENV: readonly string[] = ["API_BASE_URL", "WEBHOOK_BASE_URL"];
 
-/** Подключения к БД и Redis панели: боты пока хранят в них свои данные */
+/** Подключения к БД и Redis панели. В базу воркера входят только при includeConnections: true */
 export const WORKER_CONNECTION_ENV: readonly string[] = ["DATABASE_URL", "REDIS_URL"];
 
 /** Настройки сборки базового окружения */
 export interface WorkerBaseEnvOptions {
-  /** Передавать DATABASE_URL и REDIS_URL сервера; false — для исполнителя: его REDIS_URL — канал к панели, а подключения бот получает в start_bot */
+  /** Кладёт DATABASE_URL и REDIS_URL сервера в базу процесса. По умолчанию выключено: бот получает их в своём словаре */
   includeConnections?: boolean;
   /** Разрешённые серверные переменные; по умолчанию WORKER_ENV_PASSTHROUGH из env */
   passthrough?: readonly string[];
@@ -63,7 +64,7 @@ export function buildWorkerBaseEnv(
   const exact = new Set([
     ...WORKER_TUNING_ENV,
     ...WORKER_SYSTEM_ENV,
-    ...(options.includeConnections === false ? [] : WORKER_CONNECTION_ENV),
+    ...(options.includeConnections ? WORKER_CONNECTION_ENV : []),
   ]);
   const result: NodeJS.ProcessEnv = {};
   for (const [key, value] of Object.entries(env)) {

@@ -32,4 +32,6 @@ export interface GroupMessageTriggerEntry {
 export interface GroupMessageTriggerTemplateParams {
   /** Массив триггеров сообщений в группе */
   entries: GroupMessageTriggerEntry[];
+  /** Фильтр bot_users по project_id и token_id */
+  botRuntimeRole?: boolean;
 }

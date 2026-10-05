@@ -6,6 +6,7 @@
  */
 
 import type { Redis as RedisConnection } from "ioredis";
+import { runnerSiteConnectionUrls } from "./runnerSiteInfoUrls";
 
 /** Множество ID исполнителей, подключённых к этому Redis */
 export const RUNNER_REGISTRY_KEY = "tbb:runners";
@@ -52,7 +53,8 @@ function nonEmpty(value: string | undefined): string | undefined {
 }
 
 /**
- * Собирает сведения о площадке из окружения исполнителя
+ * Собирает сведения о площадке из окружения исполнителя.
+ * RUNNER_SITE_INFO_HIDE_URLS выключен — адреса пишутся целиком, версия формата не растёт.
  * @param runnerId - ID исполнителя
  * @param env - Переменные окружения
  * @returns сведения для записи в Redis
@@ -64,9 +66,7 @@ export function readRunnerSiteInfo(runnerId: string, env: NodeJS.ProcessEnv = pr
     // RAILWAY_PROJECT_ID бывает и в .env панели, а RAILWAY_REPLICA_ID Railway задаёт только контейнеру
     platform: env.RAILWAY_REPLICA_ID ? "railway" : "docker",
     region: nonEmpty(env.RAILWAY_REPLICA_REGION),
-    botDatabaseUrl: nonEmpty(env.RUNNER_BOT_DATABASE_URL),
-    databasePublicUrl: nonEmpty(env.RUNNER_DATABASE_PUBLIC_URL),
-    botRedisUrl: nonEmpty(env.RUNNER_BOT_REDIS_URL),
+    ...runnerSiteConnectionUrls(env),
     startedAt: new Date().toISOString(),
   };
 }

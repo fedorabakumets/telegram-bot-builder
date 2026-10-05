@@ -8,19 +8,9 @@ import { LocalWorkerChannel } from "./localWorkerChannel";
 import { ensureRailwayRunner, scheduleRailwayRunnerStop } from "./railway/railwayRunner";
 import { RemoteRunnerHub } from "./remoteRunnerHub";
 import { RemoteWorkerChannel } from "./remoteWorkerChannel";
+import { resolveRunnerRedisUrl } from "./resolveRunnerRedisUrl";
 import type { WorkerChannel } from "./workerChannel";
 import type { WorkerLaunch } from "./workerLaunch";
-
-/**
- * Redis для связи с исполнителями: WORKER_RUNNER_REDIS_URL или REDIS_URL панели
- * @returns адрес Redis
- * @throws Error, если ни один не задан
- */
-function runnerRedisUrl(): string {
-  const url = process.env.WORKER_RUNNER_REDIS_URL?.trim() || process.env.REDIS_URL?.trim();
-  if (!url) throw new Error("Для исполнителей нужен WORKER_RUNNER_REDIS_URL или REDIS_URL");
-  return url;
-}
 
 /**
  * Открывает канал до нового воркера
@@ -30,7 +20,7 @@ function runnerRedisUrl(): string {
  */
 export async function openWorkerChannel(workerKey: number, launch: WorkerLaunch): Promise<WorkerChannel> {
   if (!launch.runnerId) return new LocalWorkerChannel(launch);
-  const hub = await RemoteRunnerHub.get(launch.runnerId, runnerRedisUrl());
+  const hub = await RemoteRunnerHub.get(launch.runnerId, resolveRunnerRedisUrl());
   const railwayProjectId = launch.railwayProjectId ?? null;
   if (railwayProjectId === null) return new RemoteWorkerChannel(hub, workerKey);
   await ensureRailwayRunner(railwayProjectId, hub);

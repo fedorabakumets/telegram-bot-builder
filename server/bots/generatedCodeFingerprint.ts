@@ -18,6 +18,10 @@ export interface GeneratedCodeInput {
   contentCache: boolean;
   /** Разрешён ли узлу psql_query режим builtin (PSQL_BUILTIN_ENABLED) */
   psqlBuiltinEnabled: boolean;
+  /** Запрещён ли режим env с переменной DATABASE_URL (PSQL_PANEL_DSN_DENIED) */
+  psqlPanelDsnDenied: boolean;
+  /** Код бота под роль bot_runtime (флаг и BOT_DATABASE_URL) */
+  botRuntimeRole: boolean;
   /** Контрольная сумма lib/bot-generator + templates + scaffolding */
   generatorVersion: string;
 }
@@ -48,6 +52,8 @@ export function buildGeneratedCodeFingerprint(input: GeneratedCodeInput): string
     protectContent: input.protectContent,
     contentCache: input.contentCache,
     psqlBuiltinEnabled: input.psqlBuiltinEnabled,
+    psqlPanelDsnDenied: input.psqlPanelDsnDenied,
+    botRuntimeRole: input.botRuntimeRole,
     generatorVersion: input.generatorVersion,
   });
   return createHash('sha256').update(payload).digest('hex');

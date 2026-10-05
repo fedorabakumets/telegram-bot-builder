@@ -41,9 +41,22 @@ npm run site:create -- --token <токен Railway> [--name tbb-site] [--region 
 Панели нужен только `REDIS_PUBLIC_URL`. При старте исполнитель записывает в Redis (`server/redis/runnerSiteInfo.ts`):
 
 - `tbb:runners` — множество ID исполнителей;
-- `tbb:runner:<id>:info` — JSON со сведениями: `runnerId`, `platform` (`railway` / `docker`), `region`, `botDatabaseUrl`, `databasePublicUrl`, `botRedisUrl`, `startedAt`.
+- `tbb:runner:<id>:info` — JSON со сведениями: `runnerId`, `platform` (`railway` / `docker`), `region`, `botDatabaseUrl`, `databasePublicUrl`, `botRedisUrl`, `startedAt`. Версия формата — поле `v` (сейчас `1`). Три адреса пишутся целиком, пока выключен `RUNNER_SITE_INFO_HIDE_URLS`.
 
 Прочитать их можно через `listRunnerSiteInfos()`. Проверить, что исполнитель слушает команды: записать `k=ping` в `tbb:runner:<id>:cmd` и дождаться `k=pong` в `tbb:runner:<id>:ev`.
+
+## Флаги разделения Redis
+
+Оба флага по умолчанию выключены. Значение считается включённым только если оно равно `true`, `1` или `yes` (без учёта регистра, крайние пробелы снимаются). Площадка без этих флагов работает как сейчас.
+
+Включать их нужно вручную, после того как на панели задан `WORKER_RUNNER_REDIS_URL`.
+
+| Переменная | Где | По умолчанию (выключена) | Включена |
+|---|---|---|---|
+| `WORKER_RUNNER_REDIS_REQUIRED` | панель | адрес Redis исполнителя берётся из `WORKER_RUNNER_REDIS_URL`, а если он пуст — из `REDIS_URL` панели | адрес только из `WORKER_RUNNER_REDIS_URL`. Пустое значение — ошибка, запасной `REDIS_URL` панели не используется |
+| `RUNNER_SITE_INFO_HIDE_URLS` | исполнитель | в JSON есть полные `botDatabaseUrl` (`RUNNER_BOT_DATABASE_URL`), `databasePublicUrl` (`RUNNER_DATABASE_PUBLIC_URL`) и `botRedisUrl` (`RUNNER_BOT_REDIS_URL`). Поле `v` не растёт | этих трёх полей нет. Остаются `runnerId`, `platform`, `region`, `startedAt` и та же `v` |
+
+Кто читает базу исполнителя из Redis, при включённом `RUNNER_SITE_INFO_HIDE_URLS` перестанет её видеть: поле отсутствует целиком, пароль из строки не вырезается. Старые записи с адресами по-прежнему читаются — поля необязательные. Пустой адрес в `scripts/site-create.ts` печатается прочерком и команду не роняет.
 
 ## Как пересоздать шаблон
 

@@ -72,7 +72,7 @@ export async function setupVite(app: Express, server: Server): Promise<void> {
   if (fs.existsSync(uploadsPath)) {
     app.use("/uploads", express.static(uploadsPath));
   }
-  // Файлов нет на диске — читаем из хранилища загрузок S3 (UPLOADS_STORAGE_ID)
+  // Файлов нет на диске — из S3 только ключи, зарегистрированные в media_files
   app.use("/uploads", createUploadsS3Fallback());
 
   // Раздача файлов из assets в режиме разработки (скриншоты, изображения для UI)

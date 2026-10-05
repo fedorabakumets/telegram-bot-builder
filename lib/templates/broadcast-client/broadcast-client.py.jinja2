@@ -18,6 +18,16 @@ async def handle_broadcast_{{ safeNodeId }}(callback_query, user_id):
     _success_msg = {{ successMsg | format_python_text }}
 
     # ── Проверка сессии Client API ──────────────────────────────────────────
+{%- if botRuntimeRole %}
+    import os
+    client_session = {
+        "session_string": os.environ.get("USERBOT_SESSION_STRING"),
+        "user_id": None,
+        "api_id": os.environ.get("USERBOT_API_ID"),
+        "api_hash": os.environ.get("USERBOT_API_HASH"),
+    }
+    logging.info(f"🔑 Client API сессия из USERBOT_*: задана={bool(client_session['session_string'])}")
+{%- else %}
     try:
         if db_pool is None:
             logging.error("❌ База данных не инициализирована. Включите 'База данных пользователей' в настройках проекта.")
@@ -32,6 +42,7 @@ async def handle_broadcast_{{ safeNodeId }}(callback_query, user_id):
         logging.error(f"❌ Ошибка получения сессии Client API: {e}")
         await callback_query.message.answer(_error_msg)
         return
+{%- endif %}
 
     if not client_session:
         logging.error("❌ Client API не авторизован")

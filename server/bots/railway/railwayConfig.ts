@@ -5,6 +5,8 @@
  * @module server/bots/railway/railwayConfig
  */
 
+import { runtimeEnv } from "../../services/runtime-overlay";
+
 /** Настройки Railway для сервисов исполнителей */
 export interface RailwayConfig {
   /** Токен API (workspace, аккаунта или проекта) */
@@ -39,7 +41,7 @@ function parseProjectIds(value: string | undefined): Set<number> {
  * @returns true, если проект в списке
  */
 export function isRailwayProject(projectId: number): boolean {
-  return parseProjectIds(process.env.WORKER_RAILWAY_PROJECTS).has(projectId);
+  return parseProjectIds(runtimeEnv("WORKER_RAILWAY_PROJECTS")).has(projectId);
 }
 
 /**
@@ -79,14 +81,14 @@ export function railwayBotEnvDefaults(env: NodeJS.ProcessEnv = process.env): Par
  * @throws Error, если не хватает обязательных переменных
  */
 export function getRailwayConfig(env: NodeJS.ProcessEnv = process.env): RailwayConfig {
-  const projectToken = env.RAILWAY_TOKEN?.trim() ?? "";
+  const projectToken = runtimeEnv("RAILWAY_TOKEN", env) ?? "";
   const apiToken = env.RAILWAY_API_TOKEN?.trim() || projectToken;
   const config: RailwayConfig = {
     apiToken,
     projectToken: !env.RAILWAY_API_TOKEN?.trim() && projectToken !== "",
-    projectId: env.RAILWAY_PROJECT_ID?.trim() ?? "",
-    environmentId: env.RAILWAY_ENVIRONMENT_ID?.trim() ?? "",
-    image: env.RAILWAY_RUNNER_IMAGE?.trim() || "ghcr.io/fedorabakumets/telegram-bot-builder-runner:latest",
+    projectId: runtimeEnv("RAILWAY_PROJECT_ID", env) ?? "",
+    environmentId: runtimeEnv("RAILWAY_ENVIRONMENT_ID", env) ?? "",
+    image: runtimeEnv("RAILWAY_RUNNER_IMAGE", env) || "ghcr.io/fedorabakumets/telegram-bot-builder-runner:latest",
     runnerRedisUrl: env.RAILWAY_RUNNER_REDIS_URL?.trim() || "${{Redis.REDIS_URL}}",
     region: env.RAILWAY_REGION?.trim() ?? "",
   };

@@ -55,18 +55,29 @@ export function verifyAdminToken(token: string, signingSecret: string): boolean 
 }
 
 /**
+ * Нужен ли флаг Secure у admin-cookie.
+ * В production всегда true: аргумент secure и X-Forwarded-Proto это не отменяют.
+ * Вне production флаг берётся из аргумента; без него cookie без Secure,
+ * иначе браузер на HTTP отбрасывает cookie и вход выглядит как «ничего не произошло».
+ * @param secure - Явный флаг от вызывающего кода
+ * @returns true, если в Set-Cookie нужен атрибут Secure
+ */
+export function shouldUseSecureAdminCookie(secure?: boolean): boolean {
+  if (process.env.NODE_ENV === "production") return true;
+  return secure === true;
+}
+
+/**
  * Устанавливает admin-cookie после успешного входа.
- * Secure только по HTTPS: на HTTP браузер такую cookie отбрасывает и вход выглядит как «ничего не произошло».
  * @param res - Ответ Express
  * @param signingSecret - Секрет подписи
- * @param secure - Ставить флаг Secure. По умолчанию — только в production.
+ * @param secure - Ставить флаг Secure вне production
  * @returns void
  */
 export function setAdminCookie(res: Response, signingSecret: string, secure?: boolean): void {
   const token = createAdminToken(signingSecret);
   const maxAgeSec = Math.floor(MAX_AGE_MS / 1000);
-  const useSecure = secure ?? process.env.NODE_ENV === "production";
-  const secureAttr = useSecure ? "; Secure" : "";
+  const secureAttr = shouldUseSecureAdminCookie(secure) ? "; Secure" : "";
   res.setHeader(
     "Set-Cookie",
     `${ADMIN_COOKIE_NAME}=${encodeURIComponent(token)}; Path=/admin; HttpOnly; SameSite=Lax; Max-Age=${maxAgeSec}${secureAttr}`,

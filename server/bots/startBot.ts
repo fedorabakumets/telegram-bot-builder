@@ -1,9 +1,15 @@
 /**
+ * @fileoverview Запуск бота: пул воркеров или отдельный процесс
+ * @module server/bots/startBot
+ */
+
+/**
  * Модуль для запуска дочерних процессов
  * @external child_process
  */
 import { spawn } from "node:child_process";
 import { workerManager } from './botWorkerManager';
+import { isWorkerPoolEnabled } from './isWorkerPoolEnabled';
 import { precompileBotCode } from './precompileBotCode';
 /** Окружение процесса бота без секретов панели */
 import { buildWorkerBaseEnv } from './workerBaseEnv';
@@ -21,6 +27,8 @@ import { URL } from "node:url";
 import { dirname, join } from "node:path";
 import { fetchWithProxy } from "../utils/telegram-proxy";
 import { isPsqlBuiltinEnabled } from "../utils/isPsqlBuiltinEnabled";
+import { isPsqlPanelDsnDenied } from "../utils/isPsqlPanelDsnDenied";
+import { isBotRuntimeActive } from "./resolveBotDatabaseUrl";
 import { generatePythonCode } from "../../lib/bot-generator";
 import {
   buildStartBlockedByDisabledTypesError,
@@ -296,6 +304,8 @@ export async function startBot(
       protectContent: tokenSettings?.protectContent === 1,
       contentCache: tokenSettings?.contentCache === 1,
       psqlBuiltinEnabled: isPsqlBuiltinEnabled(),
+      psqlPanelDsnDenied: isPsqlPanelDsnDenied(),
+      botRuntimeRole: isBotRuntimeActive(),
       generatorVersion,
     });
 
@@ -370,6 +380,8 @@ export async function startBot(
         contentCache: tokenSettings?.contentCache === 1,
         thumbnailUrls,
         psqlBuiltinEnabled: isPsqlBuiltinEnabled(),
+        psqlPanelDsnDenied: isPsqlPanelDsnDenied(),
+        botRuntimeRole: isBotRuntimeActive(),
       });
 
       const hasDbInit = botCode.includes('async def init_database()');
@@ -441,7 +453,7 @@ export async function startBot(
     }
 
     // ─── Режим воркера: запуск бота через worker pool вместо отдельного процесса ───
-    if (process.env.USE_WORKER_POOL !== 'false') {
+    if (isWorkerPoolEnabled()) {
       console.log(`🏭 [WorkerPool] Запуск бота ${projectId}/${tokenId} через воркер...`);
       console.log(`🏭 [WorkerPool] mainFile: ${mainFile}`);
 

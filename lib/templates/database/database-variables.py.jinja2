@@ -19,6 +19,23 @@
 {% elif source.table == 'user_telegram_settings' %}
 {{ indent }}# Таблица: {{ source.table }}
 {{ indent }}# {{ source.description }}
+{% if botRuntimeRole %}
+{{ indent }}# Сессия этого токена из USERBOT_*, без чтения user_telegram_settings
+{{ indent }}import os as _userbot_os
+{% for field in source.fields %}
+{% if field.column == 'api_id' %}
+{{ indent }}{{ field.variableName }} = _userbot_os.environ.get("USERBOT_API_ID")
+{% elif field.column == 'api_hash' %}
+{{ indent }}{{ field.variableName }} = _userbot_os.environ.get("USERBOT_API_HASH")
+{% elif field.column == 'session_string' %}
+{{ indent }}{{ field.variableName }} = _userbot_os.environ.get("USERBOT_SESSION_STRING")
+{% elif field.column == 'is_active' %}
+{{ indent }}{{ field.variableName }} = bool(_userbot_os.environ.get("USERBOT_SESSION_STRING"))
+{% else %}
+{{ indent }}{{ field.variableName }} = None
+{% endif %}
+{% endfor %}
+{% else %}
 {{ indent }}try:
 {{ indent }}    async with db_pool.acquire() as conn:
 {{ indent }}        # Загружаем настройки из общей базы ('default')
@@ -37,6 +54,7 @@
 {% for field in source.fields %}
 {{ indent }}    {{ field.variableName }} = None
 {% endfor %}
+{% endif %}
 
 {% endif %}
 {% endfor %}

@@ -61,13 +61,20 @@ describe("botEnvPolicy", () => {
   it("базовое окружение воркера без секретов панели", () => {
     const env = buildWorkerBaseEnv(serverEnv);
     for (const key of ["SESSION_SECRET", "ADMIN_API_KEY", "PGPASSWORD", "RAILWAY_API_TOKEN", "TELEGRAM_BOT_TOKEN",
-      "STRIPE_SECRET_KEY", "PYTHON_SECRET_TOKEN", "WORKER_ENV_PASSTHROUGH"]) {
+      "STRIPE_SECRET_KEY", "PYTHON_SECRET_TOKEN", "WORKER_ENV_PASSTHROUGH", "DATABASE_URL", "REDIS_URL"]) {
       assert.ok(!(key in env), key);
     }
-    for (const key of ["PATH", "HOME", "LANG", "LC_ALL", "PYTHONUNBUFFERED", "DATABASE_URL", "REDIS_URL",
+    for (const key of ["PATH", "HOME", "LANG", "LC_ALL", "PYTHONUNBUFFERED",
       "API_BASE_URL", "BOT_CODE_CACHE", "OPENAI_API_KEY"]) {
       assert.strictEqual(env[key], serverEnv[key], key);
     }
+  });
+
+  it("includeConnections true явно кладёт подключения панели в базу", () => {
+    const env = buildWorkerBaseEnv(serverEnv, { includeConnections: true, passthrough: [] });
+    assert.strictEqual(env.DATABASE_URL, "postgres://db");
+    assert.strictEqual(env.REDIS_URL, "redis://r");
+    assert.ok(!("OPENAI_API_KEY" in env) && !("SESSION_SECRET" in env));
   });
 
   it("исполнитель не отдаёт боту свои подключения", () => {

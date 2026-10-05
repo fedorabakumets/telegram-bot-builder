@@ -69,7 +69,7 @@
 | `incoming_message_trigger` | Любое входящее сообщение (с фильтрами чата) |
 | `incoming_callback_trigger` | Callback от inline-кнопки |
 | `callback_trigger` | Конкретный `callback_data` |
-| `group_message_trigger` | Сообщение в группе |
+| `group_message_trigger` | Сообщение в группе. При `BOT_RUNTIME_ENABLED` и заданном `BOT_DATABASE_URL` поиск в `bot_users` фильтрует `project_id` и `token_id`; без флага — только `project_id` |
 | `member_trigger` | Вход или выход участника из группы |
 | `managed_bot_updated_trigger` | Обновление управляемого бота |
 | `schedule_trigger` | Запуск по расписанию (интервал / cron) |
@@ -653,6 +653,8 @@
 | `connectionString` | Строка подключения — при `custom` |
 
 > ⚠️ **Подключение к БД:** по умолчанию режим `builtin` выключен — узел с ним не выполняет запрос и пишет в лог «подключение к БД платформы отключено администратором». Всегда используй `"connectionSource": "env"` и попроси пользователя добавить переменную бота (например `MY_DB_URL`) со строкой подключения к **своей** базе (Neon, Supabase, Railway и т.п.). Строка должна содержать явный хост; пустая строка, адрес без хоста и параметры `host`/`hostaddr`/`passfile`/`service` в query отклоняются — запрос не выполняется.
+
+Серверный флаг `PSQL_PANEL_DSN_DENIED` по умолчанию выключен и в JSON не пишется. Пока он выключен, режим `env` с `DATABASE_URL` работает как раньше. Когда администратор включает флаг и пересобирает бота, `connectionEnvVar` со значением `DATABASE_URL` (без учёта регистра) не выполняет запрос. Свои имена (`MY_DB`, `BOT_DATABASE_URL`) и режим `custom` при включённом флаге работают.
 
 #### Как писать `{переменные}` в SQL
 
@@ -1560,6 +1562,8 @@ await bot.edit_message_text('Опрашиваю… 3/15', chat_id=chat_id,
 }
 ```
 
+При `BOT_RUNTIME_ENABLED` и заданном `BOT_DATABASE_URL` сессия Client API берётся из `USERBOT_*` этого токена, без чтения `user_telegram_settings`. Переменные `tg_api_id`, `tg_api_hash`, `tg_session` и `tg_is_active` тоже читаются из этих переменных. Без флага остаётся запрос к `user_telegram_settings`.
+
 ---
 
 ## Медиа-узлы
@@ -1600,7 +1604,7 @@ await bot.edit_message_text('Опрашиваю… 3/15', chat_id=chat_id,
 | `delete_message` | Удалить сообщение |
 | `pin_message` | Закрепить сообщение |
 | `unpin_message` | Открепить сообщение |
-| `forward_message` | Переслать сообщение |
+| `forward_message` | Переслать сообщение. При `BOT_RUNTIME_ENABLED` и заданном `BOT_DATABASE_URL` lookup в `bot_messages` фильтрует `project_id` и `token_id` |
 | `answer_callback_query` | Ответить на callback (всплывающее уведомление) |
 
 #### customCallbackData для edit_message

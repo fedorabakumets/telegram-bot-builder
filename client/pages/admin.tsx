@@ -20,6 +20,8 @@ import { AdminUsersPage } from '@/components/admin/pages/admin-users';
 import { AdminUserDetailPage } from '@/components/admin/pages/admin-user-detail';
 import { AdminNodeTypesPage } from '@/components/admin/pages/admin-node-types';
 import { AdminSupportPage } from '@/components/admin/pages/admin-support';
+import { AdminRuntimePage } from '@/components/admin/pages/admin-runtime';
+import { AdminGuidePage } from '@/components/admin/pages/admin-guide';
 import type { ComponentType } from 'react';
 
 /**
@@ -47,6 +49,8 @@ export default function AdminPanel() {
     <AdminLayout>
       <Switch>
         <Route path="/admin/settings" component={adminRoute(AdminSettingsPage)} />
+        <Route path="/admin/runtime/:group" component={adminRoute(AdminRuntimePage)} />
+        <Route path="/admin/guides/:slug" component={adminRoute(AdminGuidePage, true)} />
         <Route path="/admin/docs/:viewer" component={adminRoute(AdminDocsViewerPage, true)} />
         <Route path="/admin/docs" component={adminRoute(AdminDocsPage)} />
         <Route path="/admin/schema/:tableName" component={adminRoute(AdminSchemaPage, true)} />

@@ -34,6 +34,8 @@ const groupMessageTriggerEntrySchema = z.object({
 export const groupMessageTriggerParamsSchema = z.object({
   /** Массив триггеров */
   entries: z.array(groupMessageTriggerEntrySchema),
+  /** Фильтр bot_users по project_id и token_id */
+  botRuntimeRole: z.boolean().optional().default(false),
 });
 
 export type GroupMessageTriggerParams = z.infer<typeof groupMessageTriggerParamsSchema>;

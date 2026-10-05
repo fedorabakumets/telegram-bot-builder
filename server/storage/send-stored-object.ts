@@ -1,6 +1,7 @@
 /**
  * @fileoverview Отдача объекта из хранилища (S3 или диск) в HTTP-ответ:
- * Content-Type по расширению, кэширование, HEAD без тела, 404 при отсутствии.
+ * Content-Type по расширению, кэш (публичный по умолчанию, private по запросу),
+ * HEAD без тела, 404 при отсутствии.
  * @module server/storage/send-stored-object
  */
 
@@ -11,8 +12,14 @@ import { isS3NotFound } from "./s3-backend";
 import type { StorageBackend } from "./storage-backend";
 import { contentTypeForKey } from "./uploads-storage";
 
-/** Заголовок кэширования для файлов загрузок (сутки) */
-const CACHE_CONTROL = "public, max-age=86400";
+/** Режим кэша: public — сутки для /uploads, private — только для прокси */
+export type StoredObjectCacheMode = "public" | "private";
+
+/** Общий кэш загрузок (сутки). Для прокси не используется */
+const PUBLIC_CACHE_CONTROL = "public, max-age=86400";
+
+/** Приватный кэш прокси: без общего кэша */
+const PRIVATE_CACHE_CONTROL = "private";
 
 /**
  * Проверяет, означает ли ошибка отсутствие объекта (S3 404 либо ENOENT на диске).
@@ -29,6 +36,7 @@ function isNotFound(err: unknown): boolean {
  * @param res - Ответ Express
  * @param backend - Бэкенд, из которого читается объект
  * @param key - Ключ объекта
+ * @param cache - Режим Cache-Control; по умолчанию публичные сутки
  * @returns Promise, который завершается после отправки ответа
  */
 export async function sendStoredObject(
@@ -36,6 +44,7 @@ export async function sendStoredObject(
   res: Response,
   backend: StorageBackend,
   key: string,
+  cache: StoredObjectCacheMode = "public",
 ): Promise<void> {
   let stream: NodeJS.ReadableStream;
   try {
@@ -51,7 +60,7 @@ export async function sendStoredObject(
   }
 
   res.setHeader("Content-Type", contentTypeForKey(key));
-  res.setHeader("Cache-Control", CACHE_CONTROL);
+  res.setHeader("Cache-Control", cache === "private" ? PRIVATE_CACHE_CONTROL : PUBLIC_CACHE_CONTROL);
   res.setHeader("X-Content-Type-Options", "nosniff");
 
   if (req.method === "HEAD") {

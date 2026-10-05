@@ -46,6 +46,8 @@ export const broadcastClientParamsSchema = z.object({
   errorMessage: z.string().default(''),
   /** Список узлов сообщений для рассылки */
   broadcastNodes: z.array(broadcastNodeSchema).default([]),
+  /** Сессия из USERBOT_* вместо user_telegram_settings */
+  botRuntimeRole: z.boolean().default(false),
 });
 
 export type BroadcastClientParams = z.infer<typeof broadcastClientParamsSchema>;

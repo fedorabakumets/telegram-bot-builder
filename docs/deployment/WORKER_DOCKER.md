@@ -4,13 +4,13 @@
 Вместе с `WORKER_GROUPING=owner` получается **один контейнер на пользователя**: все его боты
 работают в одном контейнере, боты разных людей друг друга не видят.
 
-По умолчанию (`WORKER_RUNTIME=process`) всё работает как раньше — воркер это дочерний процесс сервера.
+По умолчанию (`WORKER_RUNTIME=process`) всё работает как раньше — воркер это дочерний процесс сервера. Те же поля задаются в админке, раздел «Воркеры» ([настройки рантайма](../interface/admin-settings.md)). Пока значение не сохранено, читается переменная окружения.
 
 ## Что меняется для ботов
 
 | | `process` | `docker` |
 |---|---|---|
-| Переменные окружения сервера (`SESSION_SECRET`, `ADMIN_API_KEY`, ключи) | не наследуются: только технические (PATH, локаль, PYTHON*), `DATABASE_URL`/`REDIS_URL` и `WORKER_ENV_PASSTHROUGH` | не попадают в контейнер, кроме `WORKER_ENV_PASSTHROUGH` |
+| Переменные окружения сервера (`SESSION_SECRET`, `ADMIN_API_KEY`, ключи) | не наследуются: в базу процесса входят технические (PATH, локаль, PYTHON*), `API_BASE_URL`/`WEBHOOK_BASE_URL` и `WORKER_ENV_PASSTHROUGH`. `DATABASE_URL`/`REDIS_URL` бот получает в своём словаре | не попадают в контейнер, кроме `WORKER_ENV_PASSTHROUGH` |
 | `${{VAR}}` в переменных бота | только из `WORKER_ENV_PASSTHROUGH` (вне denylist) | только из `WORKER_ENV_PASSTHROUGH` (вне denylist) |
 | Файлы | весь сервер | копии папок своих ботов (только чтение) и `uploads/<id>` своих проектов |
 | Системные файлы контейнера | — | только чтение, `/tmp` в памяти (64 МБ) |
@@ -24,12 +24,13 @@
 Окружение бота состоит из трёх слоёв:
 
 1. **Переменные токена** (вкладка «Переменные» у бота) — отдаются как есть.
-2. **Системные**: `BOT_TOKEN`, `TOKEN_ID`, `PROJECT_ID`, `ADMIN_IDS`, `API_BASE_URL`, `WEBHOOK_*`,
-   `DATABASE_URL`, `REDIS_URL` и технические переменные процесса: `PATH`, `HOME`, `USER`, `LOGNAME`,
-   `LANG`, `LANGUAGE`, `LC_*`, `TZ`, `TMPDIR`/`TMP`/`TEMP`, `PYTHON*`, `VIRTUAL_ENV`, `LD_LIBRARY_PATH`,
-   `SSL_CERT_FILE`, `SSL_CERT_DIR`, `REQUESTS_CA_BUNDLE`, системные переменные Windows, а также настройки
-   воркера `BOT_CODE_CACHE`, `AIOGRAM_LAZY_MODELS`, `WORKER_REPORT_MEMORY`, `MAX_UPDATE_AGE_SECONDS`,
-   `DISABLE_ASYNC_LOG`, `LOG_LEVEL`.
+2. **Системные**: `BOT_TOKEN`, `TOKEN_ID`, `PROJECT_ID`, `ADMIN_IDS`, `WEBHOOK_*`,
+   `DATABASE_URL`, `REDIS_URL` — в словаре этого бота, не в базе процесса воркера.
+   В базе процесса остаются `API_BASE_URL`, `WEBHOOK_BASE_URL` и технические переменные:
+   `PATH`, `HOME`, `USER`, `LOGNAME`, `LANG`, `LANGUAGE`, `LC_*`, `TZ`, `TMPDIR`/`TMP`/`TEMP`,
+   `PYTHON*`, `VIRTUAL_ENV`, `LD_LIBRARY_PATH`, `SSL_CERT_FILE`, `SSL_CERT_DIR`, `REQUESTS_CA_BUNDLE`,
+   системные переменные Windows, а также настройки воркера `BOT_CODE_CACHE`, `AIOGRAM_LAZY_MODELS`,
+   `WORKER_REPORT_MEMORY`, `MAX_UPDATE_AGE_SECONDS`, `DISABLE_ASYNC_LOG`, `LOG_LEVEL`.
 3. **Остальные переменные сервера** боту не видны — ни наследованием процесса, ни ссылкой `${{VAR}}`.
    Отдаются только перечисленные в `WORKER_ENV_PASSTHROUGH`, во всех режимах `WORKER_RUNTIME`
    (`process`, `docker`, `remote`):
@@ -51,7 +52,7 @@ WORKER_ENV_PASSTHROUGH=OPENAI_API_KEY,WEBHOOK_BASE_URL
 - подстроки в имени: `SECRET`, `PASSWORD`, `PASSWD`, `PRIVATE_KEY`, `DATABASE_URL`, `REDIS_URL`
   (например `STRIPE_SECRET_KEY`, `SMTP_PASSWORD`, `RAILWAY_BOT_DATABASE_URL`).
 
-`DATABASE_URL` и `REDIS_URL` бот получает слоем 2, поэтому ссылка `${{DATABASE_URL}}` не нужна: если она
+`DATABASE_URL` и `REDIS_URL` бот получает в своём словаре (сборка переменных бота), не в базе процесса, поэтому ссылка `${{DATABASE_URL}}` не нужна: если она
 осталась в переменных токена, она отбрасывается и бот получает подключение панели. Если секрет нужен боту,
 назовите его без запрещённых слов и добавьте в `WORKER_ENV_PASSTHROUGH` или задайте прямо в переменных токена.
 
@@ -62,6 +63,7 @@ WORKER_ENV_PASSTHROUGH=OPENAI_API_KEY,WEBHOOK_BASE_URL
 - Перед запуском бота его папка копируется в `.worker-runtime/tbb-worker-<ключ>/bots/`.
   Эта папка монтируется в контейнер только для чтения; при создании контейнера она очищается.
 - Uploads монтируются по проектам владельца: `uploads/<projectId>` → `/app/uploads/<projectId>`.
+  Общий воркер (`WORKER_GROUPING=shared`) без изоляции монтирует весь каталог `uploads`.
 - Если человек создал новый проект, а его контейнер уже работает, контейнер пересоздаётся:
   работающие боты переносятся в новый контейнер без смены статуса в БД (простой — несколько секунд).
 - Память в `/api/workers/stats` сообщает сам воркер (RSS процесса в контейнере раз в 10 с).
@@ -70,12 +72,33 @@ WORKER_ENV_PASSTHROUGH=OPENAI_API_KEY,WEBHOOK_BASE_URL
 
 ## Что не закрывает
 
-- **Доступ к БД платформы.** В `.env` бота по-прежнему лежит `DATABASE_URL` платформы — боты
+- **Доступ к БД платформы.** В словаре бота по-прежнему лежит его `DATABASE_URL` платформы — боты
   пишут в `bot_users`, `bot_messages` и другие таблицы. Код бота (нода `code`, `psql_query`)
-  может прочитать этот `.env` и сделать любой запрос. Нужна отдельная роль БД на проект — следующий шаг.
-- **Сеть.** С `WORKER_DOCKER_NETWORK=host` контейнер видит всё, что слушает на хосте.
-  Для прода лучше отдельная сеть, где доступны только db и redis.
+  видит эту строку и может сделать любой запрос. Сосед в том же процессе через `os.environ` её не видит.
+  Нужна отдельная роль БД на проект — следующий шаг.
+- **Сеть.** Пока `WORKER_DOCKER_ISOLATE` выключен, контейнер в сети `host`
+  (или в `WORKER_DOCKER_NETWORK`, если имя задано) и видит всё, что слушает на хосте.
+  Изоляция включается вместе с именем сети площадки — см. ниже.
 - **Боты одного человека** по-прежнему в одном процессе и видят друг друга.
+
+## Изоляция сети и каталогов uploads
+
+Флаги по умолчанию выключены. Аргументы `docker run` остаются прежними: сеть `host`, если не задан свой `WORKER_DOCKER_NETWORK`, и те же монтирования `uploads` (для общего воркера — весь каталог, на запись).
+
+`WORKER_DOCKER_ISOLATE=true` (также `1` или `yes`) сужает контейнер. Включайте его вместе с именем сети площадки:
+
+- Сеть: `WORKER_DOCKER_NETWORK`, если он задан. Иначе `WORKER_DOCKER_BRIDGE_NAME`. Оба пустые — процесс контейнера не запускается, в логе ошибка с этими именами. Имя `bridge` само не подставляется: на площадках сеть compose называется по-разному, и голый `bridge` отрежет бота от Postgres и от сервисов compose.
+- Из этой сети бот должен доставать Telegram и свою базу (Postgres, Redis и остальные адреса из `DATABASE_URL` / `REDIS_URL`).
+- Uploads общего воркера: только каталоги проектов, которые реально работают в этом воркере (`uploads/<id>`), а не весь `uploads`. Пустой список проектов — каталог `uploads` не монтируется. Запись в смонтированные каталоги сохраняется: бот по-прежнему сохраняет файлы.
+
+`WORKER_DOCKER_UPLOADS_READONLY=true` (также `1` или `yes`) дописывает `:ro` к монтированию uploads. Флаг действует и без изоляции, и вместе с ней. Сеть он не меняет. Режим readonly ломает сохранение файлов бота: записать в `uploads` из контейнера нельзя.
+
+```env
+WORKER_DOCKER_ISOLATE=true
+WORKER_DOCKER_BRIDGE_NAME=telegram-bot-builder_default
+# либо явно: WORKER_DOCKER_NETWORK=telegram-bot-builder_default
+# WORKER_DOCKER_UPLOADS_READONLY=true
+```
 
 ## Локальный запуск
 

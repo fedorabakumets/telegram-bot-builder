@@ -43,12 +43,20 @@ async def group_message_trigger_{{ entry.safeName }}_handler(message: types.Mess
     _resolved_user_id = None
     _db_pool_ref = globals().get('db_pool')
     _project_id = globals().get('PROJECT_ID', 0)
+{%- if botRuntimeRole %}
+    _token_id = globals().get('TOKEN_ID', 0)
+{%- endif %}
     if _db_pool_ref:
         try:
             async with _db_pool_ref.acquire() as _conn:
                 _row = await _conn.fetchrow(
+{%- if botRuntimeRole %}
+                    "SELECT user_id FROM bot_users WHERE project_id = $1 AND token_id = $2 AND user_data->>'{{ entry.threadIdVariable }}' = $3 LIMIT 1",
+                    _project_id, _token_id, str(_thread_id)
+{%- else %}
                     "SELECT user_id FROM bot_users WHERE project_id = $1 AND user_data->>'{{ entry.threadIdVariable }}' = $2 LIMIT 1",
                     _project_id, str(_thread_id)
+{%- endif %}
                 )
                 if _row:
                     _resolved_user_id = _row['user_id']

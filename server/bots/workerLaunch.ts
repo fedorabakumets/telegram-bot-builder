@@ -7,11 +7,10 @@
 import { execFileSync } from "node:child_process";
 import { cpSync, mkdirSync, rmSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
-import { storage } from "../storages/storage";
-import { getWorkerGroupingMode } from "./workerGrouping";
 import { getDockerWorkerConfig, isDockerWorkerRuntime } from "./workerRuntime";
 import { getProjectPlacement } from "./botPlacement";
 import { buildDockerWorkerCommand, CONTAINER_APP_ROOT, dockerWorkerName } from "./workerDockerArgs";
+import { resolveWorkerProjects } from "./resolveWorkerProjects";
 import { retargetBotCodeCache } from "./retargetBotCodeCache";
 import { buildWorkerBaseEnv } from "./workerBaseEnv";
 
@@ -43,22 +42,6 @@ function stagedBotsDir(workerKey: number): string {
 }
 
 /**
- * Определяет проекты, чьи uploads видит воркер
- * @param workerKey - Ключ воркера
- * @param projectId - Проект запускаемого бота
- * @returns ID проектов или null для общего воркера
- */
-async function resolveWorkerProjects(workerKey: number, projectId: number): Promise<number[] | null> {
-  const mode = getWorkerGroupingMode();
-  if (mode === "shared") return null;
-  if (mode === "owner" && workerKey > 0) {
-    const owned = await storage.getUserBotProjects(workerKey, { ignoreArchive: true });
-    return [...new Set([projectId, ...owned.map((p) => p.id)])];
-  }
-  return [projectId];
-}
-
-/**
  * Удаляет оставшийся после падения сервера контейнер с тем же именем
  * @param name - Имя контейнера
  */
@@ -76,6 +59,7 @@ function removeStaleContainer(name: string): void {
  * @param projectId - Проект запускаемого бота
  * @param pythonPath - Python сервера (режим process)
  * @param workerScript - Путь к worker.py
+ * @param memberProjectIds - Проекты ботов, которые уже будут в этом воркере
  * @returns команда, окружение и доступные проекты
  */
 export async function prepareWorkerLaunch(
@@ -83,6 +67,7 @@ export async function prepareWorkerLaunch(
   projectId: number,
   pythonPath: string,
   workerScript: string,
+  memberProjectIds: readonly number[] = [],
 ): Promise<WorkerLaunch> {
   const placement = getProjectPlacement(projectId);
   if (placement.runnerId) {
@@ -93,7 +78,9 @@ export async function prepareWorkerLaunch(
     const env = { ...buildWorkerBaseEnv(), PROJECT_ID: workerKey.toString() };
     return { command: pythonPath, args: ["-u", workerScript], env, projects: null, docker: false, runnerId: null };
   }
-  const projectIds = await resolveWorkerProjects(workerKey, projectId);
+  // Ошибка имени сети при изоляции — до каталогов и до сборки аргументов docker run
+  const config = getDockerWorkerConfig();
+  const projectIds = await resolveWorkerProjects(workerKey, projectId, memberProjectIds);
   const appRoot = process.cwd();
   const staged = stagedBotsDir(workerKey);
   // Копии от прошлого контейнера могут принадлежать проектам, которые сменили владельца
@@ -101,7 +88,7 @@ export async function prepareWorkerLaunch(
   mkdirSync(staged, { recursive: true });
   for (const id of projectIds ?? []) mkdirSync(join(appRoot, "uploads", String(id)), { recursive: true });
 
-  const cmd = buildDockerWorkerCommand(workerKey, projectIds, getDockerWorkerConfig(), {
+  const cmd = buildDockerWorkerCommand(workerKey, projectIds, config, {
     appRoot,
     pythonDir: dirname(workerScript),
     stagedBotsDir: staged,

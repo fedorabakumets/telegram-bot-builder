@@ -13,6 +13,8 @@ import { createRequire } from 'module';
 import { fileURLToPath } from 'url';
 import { resolve, dirname } from 'path';
 import { isPsqlBuiltinEnabled } from '../../utils/isPsqlBuiltinEnabled';
+import { isPsqlPanelDsnDenied } from '../../utils/isPsqlPanelDsnDenied';
+import { isBotRuntimeActive } from '../../bots/resolveBotDatabaseUrl';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -247,6 +249,8 @@ export async function handleGenerateCode(req: Request, res: Response): Promise<v
       thumbnailFileIds,
       thumbnailUrls,
       psqlBuiltinEnabled: isPsqlBuiltinEnabled(),
+      psqlPanelDsnDenied: isPsqlPanelDsnDenied(),
+      botRuntimeRole: isBotRuntimeActive(),
     });
 
     // Логирование результата

@@ -1591,6 +1591,49 @@ test('N07', 'регрессия: SQL SELECT выбирает user_id', () => {
   );
 });
 
+/**
+ * Генерирует код с включённой опцией роли bot_runtime.
+ * @param project - Проект сценария
+ * @param label - Метка
+ * @returns Сгенерированный Python
+ */
+function genRuntime(project: unknown, label: string): string {
+  return generatePythonCode(project as any, {
+    botName: `Phase21RT_${label}`,
+    userDatabaseEnabled: true,
+    botRuntimeRole: true,
+  });
+}
+
+const runtimeProject = () => makeCleanProject([
+  makeGroupMessageTriggerNode('gmt1', { autoTransitionTo: 'msg1' }),
+  makeMessageNode('msg1'),
+]);
+
+console.log('── Блок R: роль bot_runtime ──────────────────────────────────────────');
+
+test('R01', 'без роли thread ищется по project_id = $1 и $2', () => {
+  const code = gen(runtimeProject(), 'r01');
+  ok(
+    code.includes("project_id = $1 AND user_data->>'support_thread_id' = $2"),
+    'без роли thread_id остаётся параметром $2',
+  );
+  ok(!code.includes("token_id = $2 AND user_data"), 'token_id не добавляется в этот запрос без роли');
+});
+
+test('R02', 'с ролью фильтр project_id и token_id', () => {
+  const code = genRuntime(runtimeProject(), 'r02');
+  ok(
+    code.includes("project_id = $1 AND token_id = $2 AND user_data->>'support_thread_id' = $3"),
+    'с ролью нужны project_id и token_id',
+  );
+  ok(code.includes("_token_id = globals().get('TOKEN_ID', 0)"), 'TOKEN_ID читается из окружения бота');
+});
+
+test('R03', 'с ролью синтаксис триггера корректен', () => {
+  syntax(genRuntime(runtimeProject(), 'r03'), 'r03');
+});
+
 // ─── Итоговая таблица ─────────────────────────────────────────────────────────
 
 const passed = results.filter((r) => r.passed).length;
