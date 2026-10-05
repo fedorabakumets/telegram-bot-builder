@@ -21,6 +21,7 @@ const baseInput: GeneratedCodeInput = {
   protectContent: false,
   contentCache: false,
   psqlBuiltinEnabled: false,
+  botRuntimeRole: false,
   generatorVersion: 'gen-v1',
 };
 

@@ -9,8 +9,15 @@ import { NODE_TYPES } from '../../bot-generator/types/node-type.constants';
 
 /**
  * Генерирует код базы данных + алиасы обработчиков command_trigger
+ * @param userDatabaseEnabled - Включена ли база пользователей
+ * @param nodes - Узлы сценария
+ * @param botRuntimeRole - Убрать CREATE TABLE и выставить app.project_id / app.token_id
  */
-export function generateDatabaseCode(userDatabaseEnabled: boolean, nodes: any[]): string {
+export function generateDatabaseCode(
+  userDatabaseEnabled: boolean,
+  nodes: any[],
+  botRuntimeRole = false,
+): string {
   if (!userDatabaseEnabled) {
     return '';
   }
@@ -27,7 +34,13 @@ export function generateDatabaseCode(userDatabaseEnabled: boolean, nodes: any[])
     n.data?.collectUserInput && TG_VARS.has(n.data?.inputVariable)
   );
 
-  let code = generateDatabase({ userDatabaseEnabled: true, hasMessageLogging, hasUserDataAccess, hasTelegramSettingsTable });
+  let code = generateDatabase({
+    userDatabaseEnabled: true,
+    hasMessageLogging,
+    hasUserDataAccess,
+    hasTelegramSettingsTable,
+    botRuntimeRole,
+  });
   code += '\n';
 
   const commandNodes = nodes

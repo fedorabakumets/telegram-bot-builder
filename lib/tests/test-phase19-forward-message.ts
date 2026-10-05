@@ -1891,6 +1891,46 @@ test('X06', 'полный сценарий с БД синтаксически к
   syntax(genDB(makeSupportDemoProject(), 'x06'), 'x06');
 });
 
+/**
+ * Генерирует код с включённой опцией роли bot_runtime.
+ * @param project - Проект сценария
+ * @param label - Метка временного файла синтаксиса
+ * @returns Сгенерированный Python
+ */
+function genRuntime(project: unknown, label: string): string {
+  return generatePythonCode(project as any, {
+    botName: `Phase19RT_${label}`,
+    userDatabaseEnabled: true,
+    botRuntimeRole: true,
+  });
+}
+
+console.log('── Блок R: роль bot_runtime ──────────────────────────────────────────');
+
+test('R01', 'без роли lookup bot_messages не фильтрует token_id', () => {
+  const code = genDB(makeCleanProject([
+    makeForwardMessageNode('fwd1', { sourceMessageIdSource: 'last_message' }),
+  ]), 'r01');
+  ok(code.includes('WHERE project_id = $1'), 'фильтр project_id сохраняется');
+  ok(code.includes('AND user_id = $2\n                          AND node_id = $3'), 'user_id остаётся вторым параметром lookup');
+  ok(!code.includes('AND token_id = $2\n                          AND user_id = $3'), 'token_id не добавляется в lookup без роли');
+});
+
+test('R02', 'с ролью lookup фильтрует project_id и token_id', () => {
+  const code = genRuntime(makeCleanProject([
+    makeForwardMessageNode('fwd1', { sourceMessageIdSource: 'last_message' }),
+  ]), 'r02');
+  ok(code.includes('AND token_id = $2'), 'должен быть token_id = $2');
+  ok(code.includes('AND user_id = $3'), 'user_id сдвигается на $3');
+  ok(code.includes('globals().get("TOKEN_ID")'), 'TOKEN_ID передаётся в запрос');
+});
+
+test('R03', 'с ролью синтаксис lookup корректен', () => {
+  syntax(genRuntime(makeCleanProject([
+    makeForwardMessageNode('fwd1', { sourceMessageIdSource: 'last_message' }),
+  ]), 'r03'), 'r03');
+});
+
 const passed = results.filter((r) => r.passed).length;
 const failed = results.filter((r) => !r.passed).length;
 const total = results.length;

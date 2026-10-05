@@ -9,8 +9,10 @@ import { renderPartialTemplate } from '../template-renderer';
 /**
  * Генерирует Python-код обработчиков групп.
  * Заменяет generateGroupHandlers из MediaHandler.
+ * @param groups - Подключённые группы
+ * @param botRuntimeRole - Не генерировать запись в group_activity
  */
-export function generateGroupHandlers(groups: BotGroup[]): string {
+export function generateGroupHandlers(groups: BotGroup[], botRuntimeRole = false): string {
   if (!groups || groups.length === 0) return '';
 
   const groupsConfig: Record<string, { id: string; isAdmin?: number; settings?: Record<string, unknown> }> = {};
@@ -24,5 +26,5 @@ export function generateGroupHandlers(groups: BotGroup[]): string {
     }
   }
 
-  return renderPartialTemplate('group-handlers/group-handlers.py.jinja2', { groupsConfig });
+  return renderPartialTemplate('group-handlers/group-handlers.py.jinja2', { groupsConfig, botRuntimeRole });
 }

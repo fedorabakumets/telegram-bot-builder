@@ -15,6 +15,8 @@ export const databaseParamsSchema = z.object({
   hasTelegramSettingsTable: z.boolean().default(false),
   /** Нужны функции чтения/записи переменных пользователя */
   hasUserDataAccess: z.boolean().default(false),
+  /** Роль bot_runtime: без CREATE TABLE, с set_config на соединении */
+  botRuntimeRole: z.boolean().default(false),
 });
 
 /** Тип параметров базы данных (выведен из схемы) */

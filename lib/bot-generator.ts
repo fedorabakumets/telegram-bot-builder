@@ -162,6 +162,11 @@ export interface GeneratePythonCodeOptions {
    * сервер передаёт PSQL_BUILTIN_ENABLED (по умолчанию false).
    */
   psqlBuiltinEnabled?: boolean;
+  /**
+   * Код под роль bot_runtime. По умолчанию false.
+   * Сервер передаёт true только при BOT_RUNTIME_ENABLED и непустом BOT_DATABASE_URL.
+   */
+  botRuntimeRole?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -220,6 +225,7 @@ function buildGenerationContext(
     thumbnailFileIds = {},
     thumbnailUrls = {},
     psqlBuiltinEnabled = true,
+    botRuntimeRole = false,
   } = options;
 
   const genOptions: GenerationOptions = {
@@ -238,6 +244,7 @@ function buildGenerationContext(
     thumbnailFileIds,
     thumbnailUrls,
     psqlBuiltinEnabled,
+    botRuntimeRole,
   };
 
   const context = createGenerationContext(botData, botName, groups, genOptions);
@@ -327,7 +334,7 @@ function generateCodeSections(
 
   // --- database ---
   const databaseCode = emitOnce(state, COMPONENT_NAMES.DATABASE, () =>
-    generateDatabaseCode(userDatabaseEnabled, nodes)
+    generateDatabaseCode(userDatabaseEnabled, nodes, !!context.options.botRuntimeRole)
   );
 
   // --- utils (содержит save_message_to_api-заглушку при userDatabaseEnabled=false) ---
@@ -365,6 +372,7 @@ function generateCodeSections(
     context.options.thumbnailUrls || {},
     context.projectId ?? null,
     context.options.psqlBuiltinEnabled ?? true,
+    !!context.options.botRuntimeRole,
   );
 
   // --- allReferencedNodeIds (теперь часть контекста секции) ---
@@ -473,7 +481,7 @@ function generateCodeSections(
   // --- group handlers ---
   const groupHandlers = emitOnce(state, COMPONENT_NAMES.GROUP_HANDLERS, () =>
     !!context.options.enableGroupHandlers
-      ? '\n' + generateGroupHandlers(context.groups)
+      ? '\n' + generateGroupHandlers(context.groups, !!context.options.botRuntimeRole)
       : ''
   );
 

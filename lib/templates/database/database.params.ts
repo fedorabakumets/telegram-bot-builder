@@ -13,4 +13,6 @@ export interface DatabaseTemplateParams {
   hasTelegramSettingsTable?: boolean;
   /** Нужны функции чтения/записи переменных пользователя */
   hasUserDataAccess?: boolean;
+  /** Роль bot_runtime: без CREATE TABLE, set_config на соединении. По умолчанию false */
+  botRuntimeRole?: boolean;
 }

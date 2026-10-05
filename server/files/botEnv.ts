@@ -6,6 +6,7 @@
 import { existsSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { parse } from "dotenv";
+import { resolveBotDatabaseUrl, warnBotRuntimeIfNeeded } from "../bots/resolveBotDatabaseUrl";
 
 /** Как переменные попадают к боту: файл .env в папке бота или поле env в команде start_bot */
 export type BotEnvSource = "file" | "inline";
@@ -62,8 +63,12 @@ export async function buildBotEnvContent(botDir: string, projectId: number, toke
   const { isRailwayProject, railwayBotEnvDefaults } = await import("../bots/railway/railwayConfig");
   // Боту на Railway адреса панели недоступны — подставляем адреса из RAILWAY_BOT_*
   const remoteDefaults = isRailwayProject(projectId) ? railwayBotEnvDefaults() : {};
+  warnBotRuntimeIfNeeded();
+  const runtimeDatabase = resolveBotDatabaseUrl();
   for (const key of ["DATABASE_URL", "REDIS_URL"] as const) {
-    const fallback = remoteDefaults[key] ?? process.env[key];
+    const fallback = key === "DATABASE_URL" && runtimeDatabase.useBotRuntime
+      ? runtimeDatabase.databaseUrl
+      : (remoteDefaults[key] ?? process.env[key]);
     if (!customVariables.some((v) => v.key === key) && fallback) {
       customVariables.push({ key, value: fallback });
     }

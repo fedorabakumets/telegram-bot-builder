@@ -17,6 +17,9 @@
 import fs from 'fs';
 import { execSync } from 'child_process';
 import { generateDatabase } from '../templates/database/database.renderer.ts';
+import { generateDatabaseVariablesCode } from '../templates/database/database-variables.renderer.ts';
+import { generateBroadcastClient } from '../templates/broadcast-client/broadcast-client.renderer.ts';
+import { generateGroupHandlers } from '../templates/group-handlers/group-handlers.renderer.ts';
 
 /** Структура результата одного теста */
 type R = { id: string; name: string; passed: boolean; note: string };
@@ -134,6 +137,60 @@ test('A09', 'sync_user_attribution_to_db записывает deep_link_param/re
     dbCode.includes('COALESCE(bot_users.referrer_id, EXCLUDED.referrer_id)'),
     'COALESCE для referrer_id должен быть в sync_user_attribution_to_db'
   );
+});
+
+console.log('── Блок B: роль bot_runtime выключена и включена ────────────────────');
+
+/** Код init_database без роли: CREATE TABLE остаётся */
+const dbOff = generateDatabase({ userDatabaseEnabled: true, botRuntimeRole: false });
+/** Код init_database с ролью: set_config, без CREATE TABLE */
+const dbOn = generateDatabase({ userDatabaseEnabled: true, botRuntimeRole: true });
+
+test('B01', 'без роли init_database создаёт таблицы и не вызывает set_config', () => {
+  ok(dbOff.includes('CREATE TABLE IF NOT EXISTS bot_users'), 'CREATE TABLE bot_users должен остаться');
+  ok(dbOff.includes('CREATE TABLE IF NOT EXISTS bot_messages'), 'CREATE TABLE bot_messages должен остаться');
+  ok(!dbOff.includes('set_config'), 'set_config не генерируется без роли');
+});
+
+test('B02', 'с ролью нет CREATE TABLE и есть set_config project_id и token_id', () => {
+  ok(!dbOn.includes('CREATE TABLE'), 'схему создаёт панель, CREATE TABLE в боте нет');
+  ok(dbOn.includes("set_config('app.project_id'"), 'app.project_id выставляется на соединении');
+  ok(dbOn.includes("set_config('app.token_id'"), 'app.token_id выставляется на соединении');
+  ok(dbOn.includes('str(PROJECT_ID)'), 'PROJECT_ID бота уходит в set_config');
+  ok(dbOn.includes('str(TOKEN_ID)'), 'TOKEN_ID бота уходит в set_config');
+  ok(dbOn.includes('init=_set_bot_runtime_scope'), 'callback висит на create_pool');
+});
+
+test('B03', 'синтаксис init_database с ролью OK', () => {
+  const r = checkSyntax(dbOn, 'b03');
+  ok(r.ok, `Синтаксическая ошибка:\n${r.error}`);
+});
+
+test('B04', 'переменные Telegram: без роли таблица, с ролью USERBOT_*', () => {
+  const off = generateDatabaseVariablesCode('        ', ['tg_session'], false);
+  const on = generateDatabaseVariablesCode('        ', ['tg_session'], true);
+  ok(off.includes('SELECT * FROM user_telegram_settings'), 'без роли читается user_telegram_settings');
+  ok(!off.includes('USERBOT_SESSION_STRING'), 'без роли USERBOT_* не подставляется');
+  ok(on.includes('USERBOT_SESSION_STRING'), 'с ролью сессия из USERBOT_SESSION_STRING');
+  ok(on.includes('USERBOT_API_ID') && on.includes('USERBOT_API_HASH'), 'api_id и api_hash из USERBOT_*');
+  ok(!on.includes('SELECT * FROM user_telegram_settings'), 'с ролью таблица не читается');
+});
+
+test('B05', 'broadcast-client: без роли user_telegram_settings, с ролью USERBOT_*', () => {
+  const off = generateBroadcastClient({ nodeId: 'broadcast_1', broadcastNodes: [] });
+  const on = generateBroadcastClient({ nodeId: 'broadcast_1', broadcastNodes: [], botRuntimeRole: true });
+  ok(off.includes('user_telegram_settings'), 'без роли сессия из user_telegram_settings');
+  ok(!off.includes('USERBOT_SESSION_STRING'), 'без роли USERBOT_* нет');
+  ok(on.includes('USERBOT_SESSION_STRING'), 'с ролью сессия из USERBOT_*');
+  ok(!on.includes('user_telegram_settings'), 'с ролью таблица не читается');
+});
+
+test('B06', 'group_activity пишется только без роли', () => {
+  const groups = [{ name: 'support', groupId: '-1001', isAdmin: 0, settings: {} }] as never;
+  const off = generateGroupHandlers(groups, false);
+  const on = generateGroupHandlers(groups, true);
+  ok(off.includes('INSERT INTO group_activity'), 'без роли запись в шаблоне остаётся');
+  ok(!on.includes('group_activity'), 'с ролью запись не генерируется');
 });
 
 // ─── Итоги ───────────────────────────────────────────────────────────────────

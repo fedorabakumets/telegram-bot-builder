@@ -59,14 +59,23 @@ async def _load_forward_message_from_log_{{ safeName }}(callback_query: types.Ca
                         SELECT message_data
                         FROM bot_messages
                         WHERE project_id = $1
+{%- if botRuntimeRole %}
+                          AND token_id = $2
+                          AND user_id = $3
+                          AND node_id = $4
+{%- else %}
                           AND user_id = $2
                           AND node_id = $3
+{%- endif %}
                           AND message_type = 'bot'
                           AND message_data->>'message_id' IS NOT NULL
                         ORDER BY created_at DESC
                         LIMIT 1
                         """,
                         project_id,
+{%- if botRuntimeRole %}
+                        globals().get("TOKEN_ID"),
+{%- endif %}
                         chat_lookup_id,
                         linked_node_id,
                     )
@@ -103,12 +112,20 @@ async def _load_forward_message_from_log_{{ safeName }}(callback_query: types.Ca
                             SELECT message_data
                             FROM bot_messages
                             WHERE project_id = $1
+{%- if botRuntimeRole %}
+                              AND token_id = $2
+                              AND user_id = $3
+{%- else %}
                               AND user_id = $2
+{%- endif %}
                               AND message_data->>'message_id' IS NOT NULL
                             ORDER BY created_at DESC
                             LIMIT 1
                             """,
                             project_id,
+{%- if botRuntimeRole %}
+                            globals().get("TOKEN_ID"),
+{%- endif %}
                             _lookup_id,
                         )
                     else:

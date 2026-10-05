@@ -73,6 +73,12 @@ export interface GenerationOptions {
    * PSQL_BUILTIN_ENABLED (по умолчанию false). При false узел builtin не выполняет запрос.
    */
   psqlBuiltinEnabled?: boolean;
+  /**
+   * Код под роль bot_runtime: без CREATE TABLE, с set_config и фильтрами
+   * project_id + token_id. По умолчанию false. Сервер передаёт true только
+   * когда включён BOT_RUNTIME_ENABLED и задан BOT_DATABASE_URL.
+   */
+  botRuntimeRole?: boolean;
 }
 
 /**
@@ -97,6 +103,7 @@ export const DEFAULT_GENERATION_OPTIONS: Required<GenerationOptions> = {
   thumbnailFileIds: {},
   thumbnailUrls: {},
   psqlBuiltinEnabled: true,
+  botRuntimeRole: false,
 } as const;
 
 /**

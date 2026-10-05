@@ -57,6 +57,7 @@ export function generateGroupMessageTriggers(params: GroupMessageTriggerTemplate
   const validated = groupMessageTriggerParamsSchema.parse(params);
   return renderPartialTemplate('group-message-trigger/group-message-trigger.py.jinja2', {
     entries: validated.entries,
+    botRuntimeRole: validated.botRuntimeRole,
   });
 }
 
@@ -64,10 +65,11 @@ export function generateGroupMessageTriggers(params: GroupMessageTriggerTemplate
  * Генерация Python обработчиков триггеров сообщений в группе из массива узлов (высокоуровневый API).
  *
  * @param nodes - Массив узлов холста
+ * @param botRuntimeRole - Фильтровать bot_users по project_id и token_id
  * @returns Сгенерированный Python код
  */
-export function generateGroupMessageTriggerHandlers(nodes: Node[]): string {
+export function generateGroupMessageTriggerHandlers(nodes: Node[], botRuntimeRole = false): string {
   const entries = collectGroupMessageTriggerEntries(nodes);
   if (entries.length === 0) return '';
-  return generateGroupMessageTriggers({ entries });
+  return generateGroupMessageTriggers({ entries, botRuntimeRole });
 }

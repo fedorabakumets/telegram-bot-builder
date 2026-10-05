@@ -255,6 +255,7 @@ function generateCommandEntryHandler(node: Node, callbackHandlerCode: string): s
  * @param thumbnailUrls - Словарь прямых URL обложек видео (ключ — URL видео, значение — URL обложки)
  * @param projectId - ID проекта (для поддержки get_content)
  * @param psqlBuiltinEnabled - Разрешён ли узлу psql_query режим builtin (БД платформы)
+ * @param botRuntimeRole - Код под роль bot_runtime (по умолчанию false)
  * @returns Сгенерированный код обработчиков узлов
  *
  * @example
@@ -269,6 +270,7 @@ export function generateNodeHandlers(
   thumbnailUrls: Record<string, string> = {},
   projectId: number | null = null,
   psqlBuiltinEnabled: boolean = true,
+  botRuntimeRole: boolean = false,
 ): string {
   // Собираем код в массив строк
   const codeLines: string[] = [];
@@ -366,7 +368,7 @@ export function generateNodeHandlers(
     pin_message: generateMessageHandlerFromNode,
     unpin_message: generateMessageHandlerFromNode,
     /** Обработчик узла пересылки сообщений */
-    forward_message: generateForwardMessageFromNode,
+    forward_message: (node) => generateForwardMessageFromNode(node, botRuntimeRole),
     /** Обработчик узла создания топика в форуме Telegram */
     create_forum_topic: (node) => generateCreateForumTopicFromNode(node, { allNodes: nodes }),
     /** Обработчик узла HTTP запроса */
@@ -379,7 +381,7 @@ export function generateNodeHandlers(
     promote_user: generateUserHandlerFromNode,
     demote_user: generateUserHandlerFromNode,
     admin_rights: generateAdminRightsFromNode,
-    broadcast: (node) => generateBroadcastHandler(node, nodes),
+    broadcast: (node) => generateBroadcastHandler(node, nodes, botRuntimeRole),
     keyboard: (node) => generateKeyboardHandler(node, nodes),
     input: generateUserInputNodeHandler,
     get_managed_bot_token: (node) => {
@@ -460,7 +462,7 @@ export function generateNodeHandlers(
   }
 
   // --- Обработчики триггеров сообщений в группе ---
-  const groupMessageTriggerCode = generateGroupMessageTriggerHandlers(nodes);
+  const groupMessageTriggerCode = generateGroupMessageTriggerHandlers(nodes, botRuntimeRole);
   if (groupMessageTriggerCode) {
     codeLines.push('\n# Обработчики триггеров сообщений в группе');
     groupMessageTriggerCode.split('\n').forEach(line => codeLines.push(line));

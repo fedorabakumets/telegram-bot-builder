@@ -90,13 +90,17 @@ export function generateBroadcastClient(params: BroadcastClientTemplateParams): 
 
 /**
  * Генерирует Python обработчик рассылки Client API из узла графа.
+ * @param node - Узел рассылки
+ * @param allNodes - Все узлы сценария
+ * @param botRuntimeRole - Брать сессию из USERBOT_* этого токена
  */
-export function generateBroadcastClientFromNode(node: Node, allNodes: Node[]): string {
+export function generateBroadcastClientFromNode(node: Node, allNodes: Node[], botRuntimeRole = false): string {
   const d = node.data as any;
   return generateBroadcastClient({
     nodeId: node.id,
     successMessage: d.successMessage || '',
     errorMessage: d.errorMessage || '',
     broadcastNodes: collectBroadcastNodes(allNodes, node.id),
+    botRuntimeRole,
   });
 }
