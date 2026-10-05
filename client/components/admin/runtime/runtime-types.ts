@@ -16,6 +16,8 @@ export interface RuntimeFieldView {
   kind: RuntimeFieldKind;
   /** Подсказка */
   hint?: string;
+  /** Пример в placeholder, не значение поля */
+  placeholder?: string;
   /** Эффективное значение, у секрета пусто */
   value: string;
   /** Уже задано в админке или в окружении */
@@ -34,6 +36,14 @@ export interface RuntimeStorageOption {
   public: boolean;
 }
 
+/** Ссылка на документ раздела */
+export interface RuntimeDocLink {
+  /** Подпись ссылки */
+  label: string;
+  /** Адрес внутри панели */
+  href: string;
+}
+
 /** Раздел настроек */
 export interface RuntimeGroupView {
   /** Ключ раздела */
@@ -42,6 +52,8 @@ export interface RuntimeGroupView {
   title: string;
   /** Описание */
   description: string;
+  /** Ссылки на документы раздела */
+  docs: RuntimeDocLink[];
   /** Поля */
   fields: RuntimeFieldView[];
   /** Хранилища */

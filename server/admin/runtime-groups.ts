@@ -4,6 +4,8 @@
  */
 
 import type { RuntimeField, RuntimeGroup } from "./runtime-field";
+import { docsForRuntimeGroup } from "./runtime-guides";
+import { placeholderFor } from "./runtime-placeholders";
 
 /** Хранилища файлов */
 const storages: RuntimeField[] = [
@@ -81,14 +83,30 @@ const platform: RuntimeField[] = [
   { env: "BOT_DATABASE_URL", label: "Адрес роли bot_runtime", kind: "secret" },
 ];
 
+/**
+ * Подмешивает пример placeholder и ссылки на документы раздела
+ * @param group - Раздел без подсказок ввода
+ * @returns Раздел для формы и API
+ */
+function withHints(group: RuntimeGroup): RuntimeGroup {
+  return {
+    ...group,
+    docs: docsForRuntimeGroup(group.id),
+    fields: group.fields.map((field) => {
+      const placeholder = placeholderFor(field.env);
+      return placeholder ? { ...field, placeholder } : field;
+    }),
+  };
+}
+
 /** Все разделы по порядку меню */
 export const RUNTIME_GROUPS: RuntimeGroup[] = [
-  { id: "storages", title: "Хранилища", description: "Куда панель пишет файлы. Ключи S3 шифруются и в форме не показываются.", fields: storages },
-  { id: "backups", title: "Бэкапы", description: "Куда и как часто снимать дамп базы. Публичный бакет выбрать нельзя.", fields: backups },
-  { id: "workers", title: "Воркеры", description: "Как запускать ботов. Пока поля пустые, действуют прежние переменные.", fields: workers },
-  { id: "runners", title: "Исполнители", description: "Связь с удалённым раннером и Railway.", fields: runners },
-  { id: "builds", title: "Сборки", description: "Где лежит собранный код бота для исполнителя.", fields: builds },
-  { id: "platform", title: "Площадка", description: "Поддержка, MCP и доступ ботов к базе. Секрет не меняется, если поле оставить пустым.", fields: platform },
+  withHints({ id: "storages", title: "Хранилища", description: "Куда панель пишет файлы. Ключи S3 шифруются и в форме не показываются.", fields: storages }),
+  withHints({ id: "backups", title: "Бэкапы", description: "Куда и как часто снимать дамп базы. Публичный бакет выбрать нельзя.", fields: backups }),
+  withHints({ id: "workers", title: "Воркеры", description: "Как запускать ботов. Пока поля пустые, действуют прежние переменные.", fields: workers }),
+  withHints({ id: "runners", title: "Исполнители", description: "Связь с удалённым раннером и Railway.", fields: runners }),
+  withHints({ id: "builds", title: "Сборки", description: "Где лежит собранный код бота для исполнителя.", fields: builds }),
+  withHints({ id: "platform", title: "Площадка", description: "Поддержка, MCP и доступ ботов к базе. Секрет не меняется, если поле оставить пустым.", fields: platform }),
 ];
 
 /**

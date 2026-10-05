@@ -5,25 +5,11 @@
 
 import { storageConfigs } from "@shared/schema";
 import { db } from "../database/db";
-import { runtimeEnv } from "../services/runtime-overlay";
-import type { RuntimeField, RuntimeGroup } from "./runtime-field";
+import type { RuntimeDocLink, RuntimeGroup } from "./runtime-field";
+import { toRuntimeFieldView, type RuntimeFieldView } from "./runtime-field-view";
 import { isPublicStorageRow, type RuntimeStorageOption } from "./runtime-storage-public";
 
-/** Поле в ответе API: секрет не содержит самого значения */
-export interface RuntimeFieldView {
-  /** Имя переменной */
-  env: string;
-  /** Подпись */
-  label: string;
-  /** Вид поля */
-  kind: RuntimeField["kind"];
-  /** Подсказка */
-  hint?: string;
-  /** Эффективное значение; у секрета всегда пусто */
-  value: string;
-  /** Задано ли значение в админке или в env */
-  configured: boolean;
-}
+export type { RuntimeFieldView };
 
 /** Раздел для формы */
 export interface RuntimeGroupView {
@@ -33,30 +19,12 @@ export interface RuntimeGroupView {
   title: string;
   /** Описание */
   description: string;
+  /** Ссылки на документы раздела */
+  docs: RuntimeDocLink[];
   /** Поля */
   fields: RuntimeFieldView[];
   /** Хранилища для выпадающего списка */
   storages: RuntimeStorageOption[];
-}
-
-/**
- * Эффективное значение поля. Секрет наружу не отдаётся.
- * @param field - Описание поля
- * @returns Поле для JSON
- */
-export function toRuntimeFieldView(field: RuntimeField): RuntimeFieldView {
-  const current = runtimeEnv(field.env);
-  if (field.kind === "secret") {
-    return { env: field.env, label: field.label, kind: field.kind, hint: field.hint, value: "", configured: Boolean(current) };
-  }
-  return {
-    env: field.env,
-    label: field.label,
-    kind: field.kind,
-    hint: field.hint,
-    value: current ?? "",
-    configured: Boolean(current),
-  };
 }
 
 /**
@@ -88,6 +56,7 @@ export async function loadRuntimeGroupView(group: RuntimeGroup): Promise<Runtime
     id: group.id,
     title: group.title,
     description: group.description,
+    docs: group.docs ?? [],
     fields: group.fields.map(toRuntimeFieldView),
     storages: await listRuntimeStorageOptions(),
   };

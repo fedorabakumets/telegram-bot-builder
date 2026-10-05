@@ -25,6 +25,16 @@ interface RuntimeFieldControlProps {
 }
 
 /**
+ * Текст placeholder: у заданного секрета напоминание, иначе пример из API
+ * @param field - Поле формы
+ * @returns Строка placeholder или undefined
+ */
+function inputPlaceholder(field: RuntimeFieldView): string | undefined {
+  if (field.kind === 'secret' && field.configured) return 'уже задан, пустое поле не стирает';
+  return field.placeholder;
+}
+
+/**
  * Рисует input, список или секрет
  * @param props - Поле, хранилища и регистрация формы
  * @returns JSX элемент поля
@@ -56,7 +66,7 @@ export function RuntimeFieldControl({ field, storages, register }: RuntimeFieldC
           id={field.env}
           type={field.kind === 'secret' ? 'password' : field.kind === 'number' ? 'number' : 'text'}
           autoComplete={field.kind === 'secret' ? 'new-password' : undefined}
-          placeholder={field.kind === 'secret' && field.configured ? 'уже задан' : undefined}
+          placeholder={inputPlaceholder(field)}
           {...register(name)}
         />
       ) : null}

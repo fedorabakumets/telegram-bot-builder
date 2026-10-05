@@ -10,6 +10,7 @@ import {
   handlePutRuntimeSettings,
   handleRunRuntimeBackup,
 } from "./runtime-settings-handlers";
+import { setupRuntimeGuideRoutes } from "./setup-runtime-guide-routes";
 
 /**
  * Регистрирует чтение и запись разделов и немедленный бэкап
@@ -20,4 +21,5 @@ export function setupRuntimeSettingsRoutes(app: Express): void {
   app.get("/admin/api/runtime-settings/:group", requireAdminAuth, handleGetRuntimeSettings);
   app.put("/admin/api/runtime-settings/:group", requireAdminAuth, handlePutRuntimeSettings);
   app.post("/admin/api/runtime-settings/backups/run", requireAdminAuth, handleRunRuntimeBackup);
+  setupRuntimeGuideRoutes(app);
 }
