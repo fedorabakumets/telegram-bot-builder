@@ -13,3 +13,12 @@
 В production cookie `admin_auth` всегда ставится с флагом `Secure`. Заголовок `X-Forwarded-Proto` это не отменяет. Вне production локальный вход по HTTP по-прежнему без `Secure`. Ключ входа сравнивается через SHA-256 и `timingSafeEqual`.
 
 Прокси `/api/media/s3-proxy` отдаёт объект только если есть строка `media_files` и у пользователя есть доступ к её проекту. Совпадение с бакетом загрузок само по себе доступ не даёт. Запасная раздача `/uploads` из S3 отдаёт только зарегистрированные ключи и по-прежнему без сессии. Дисковый `express.static` для папки `uploads/` не менялся.
+
+Дальше поведение площадки меняют только явные флаги. Пока их нет, всё остаётся как было.
+
+- `PSQL_PANEL_DSN_DENIED` — после пересборки бота узел `psql_query` в режиме `env` не подключается по переменной `DATABASE_URL`. Своя переменная и режим `custom` работают.
+- `WORKER_RUNNER_REDIS_REQUIRED` — исполнитель берёт только `WORKER_RUNNER_REDIS_URL`, без запасного `REDIS_URL` панели.
+- `RUNNER_SITE_INFO_HIDE_URLS` — в сведениях исполнителя больше нет полных адресов базы и Redis.
+- `WORKER_DOCKER_ISOLATE` вместе с `WORKER_DOCKER_NETWORK` или `WORKER_DOCKER_BRIDGE_NAME` — контейнер уходит из сети `host` и монтирует только каталоги своих проектов. Имя `bridge` само не подставляется.
+- `WORKER_DOCKER_UPLOADS_READONLY` — каталоги `uploads` только для чтения.
+- `BOT_RUNTIME_ENABLED` и заранее заданный `BOT_DATABASE_URL` — роль `bot_runtime`, права и RLS. Пароль только в `BOT_DATABASE_URL`. Пустой адрес не роняет панель: боты остаются на строке панели. После включения нужна пересборка ботов.

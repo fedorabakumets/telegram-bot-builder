@@ -99,7 +99,11 @@ export function generateForwardMessage(params: ForwardMessageTemplateParams): st
   return renderPartialTemplate('forward-message/forward-message.py.jinja2', validated);
 }
 
-/** Генерирует Python-код из узла графа */
-export function generateForwardMessageFromNode(node: Node): string {
-  return generateForwardMessage(nodeToForwardMessageParams(node));
+/**
+ * Генерирует Python-код из узла графа
+ * @param node - Узел пересылки
+ * @param botRuntimeRole - Фильтровать bot_messages по project_id и token_id
+ */
+export function generateForwardMessageFromNode(node: Node, botRuntimeRole = false): string {
+  return generateForwardMessage({ ...nodeToForwardMessageParams(node), botRuntimeRole });
 }

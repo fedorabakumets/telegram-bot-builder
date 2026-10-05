@@ -107,6 +107,8 @@ keyboard (кнопка с customCallbackData: "approve_{user_id}")
 
 Срабатывает на сообщения в групповых чатах.
 
+Пока `BOT_RUNTIME_ENABLED` выключен, поиск пользователя по теме фильтрует `bot_users` только по `project_id`. Когда флаг включён и задан `BOT_DATABASE_URL`, в запрос добавляется `token_id`.
+
 ---
 
 ### 👤 Триггер участника (`member_trigger`)
@@ -255,6 +257,8 @@ keyboard (кнопка с customCallbackData: "approve_{user_id}")
 ### ↗️ Переслать сообщение (`forward_message`)
 
 Пересылает сообщение в другой чат.
+
+В режиме `BOT_RUNTIME_ENABLED` и заданного `BOT_DATABASE_URL` поиск исходного сообщения в `bot_messages` фильтрует и `project_id`, и `token_id`. Без флага условие прежнее.
 
 ---
 

@@ -50,6 +50,8 @@ export const forwardMessageParamsSchema = z.object({
   disableNotification: z.boolean().optional().default(false),
   /** Скрыть автора — использует copy_message вместо forward_message */
   hideAuthor: z.boolean().optional().default(false),
+  /** Фильтр bot_messages по project_id и token_id */
+  botRuntimeRole: z.boolean().optional().default(false),
 });
 
 /** Тип параметров шаблона пересылки */

@@ -124,6 +124,18 @@ async def init_database():
     """Инициализация подключения к базе данных и создание таблиц"""
     global db_pool
     try:
+{%- if botRuntimeRole %}
+        async def _set_bot_runtime_scope(conn):
+            """Выставляет проект и токен бота на каждом соединении пула."""
+            await conn.execute(
+                "SELECT set_config('app.project_id', $1, false), set_config('app.token_id', $2, false)",
+                str(PROJECT_ID),
+                str(TOKEN_ID),
+            )
+        db_pool = await asyncpg.create_pool(
+            DATABASE_URL, min_size=1, max_size=10, init=_set_bot_runtime_scope
+        )
+{%- else %}
         db_pool = await asyncpg.create_pool(DATABASE_URL, min_size=1, max_size=10)
         async with db_pool.acquire() as conn:
             await conn.execute("""
@@ -170,6 +182,7 @@ async def init_database():
                 );
             """)
             logging.info("✅ Таблица user_telegram_settings создана")
+{%- endif %}
 {%- endif %}
         logging.info("✅ База данных инициализирована")
     except Exception as e:

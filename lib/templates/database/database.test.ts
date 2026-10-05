@@ -277,6 +277,7 @@ describe('database.py.jinja2 шаблон', () => {
           assert.strictEqual(result.data.hasMessageLogging, false);
           assert.strictEqual(result.data.hasTelegramSettingsTable, false);
           assert.strictEqual(result.data.hasUserDataAccess, false);
+          assert.strictEqual(result.data.botRuntimeRole, false);
         }
       });
 
@@ -299,15 +300,16 @@ describe('database.py.jinja2 шаблон', () => {
     });
 
     describe('Структура схемы', () => {
-      it('должен иметь 4 поля', () => {
+      it('должен иметь 5 полей', () => {
         const shape = databaseParamsSchema.shape;
         const fields = Object.keys(shape);
 
-        assert.strictEqual(fields.length, 4);
+        assert.strictEqual(fields.length, 5);
         assert.ok(fields.includes('userDatabaseEnabled'));
         assert.ok(fields.includes('hasMessageLogging'));
         assert.ok(fields.includes('hasTelegramSettingsTable'));
         assert.ok(fields.includes('hasUserDataAccess'));
+        assert.ok(fields.includes('botRuntimeRole'));
       });
 
       it('должен использовать ZodDefault для всех полей', () => {
@@ -316,6 +318,7 @@ describe('database.py.jinja2 шаблон', () => {
         assert.strictEqual(shape.hasMessageLogging.constructor.name, 'ZodDefault');
         assert.strictEqual(shape.hasTelegramSettingsTable.constructor.name, 'ZodDefault');
         assert.strictEqual(shape.hasUserDataAccess.constructor.name, 'ZodDefault');
+        assert.strictEqual(shape.botRuntimeRole.constructor.name, 'ZodDefault');
       });
     });
   });

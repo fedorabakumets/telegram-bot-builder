@@ -14,12 +14,15 @@ export interface UniversalVariableReplacementParams {
 /**
  * Генерирует код для универсальной замены переменных
  * @param codeLines - Массив строк кода для добавления
- * @param params - Параметры генерации (node, indentLevel) или строка отступа (обратная совместимость)
+ * @param params - Параметры генерации или строка отступа
+ * @param _oldIndentLevel - Устаревший отступ
+ * @param botRuntimeRole - Сессию Telegram брать из USERBOT_*
  */
 export function generateUniversalVariableReplacement(
   codeLines: string[],
   params: UniversalVariableReplacementParams | string = {},
-  _oldIndentLevel?: string
+  _oldIndentLevel?: string,
+  botRuntimeRole = false,
 ): void {
   let indent = '';
   let node: any = null;
@@ -52,6 +55,7 @@ export function generateUniversalVariableReplacement(
     indent,
     sources,
     variableFiltersJson,
+    botRuntimeRole,
   });
 
   codeLines.push(code);

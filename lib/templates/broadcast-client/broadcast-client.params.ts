@@ -45,4 +45,6 @@ export interface BroadcastClientTemplateParams {
   errorMessage?: string;
   /** Список узлов сообщений для рассылки */
   broadcastNodes?: BroadcastNode[];
+  /** Сессия из USERBOT_* вместо user_telegram_settings */
+  botRuntimeRole?: boolean;
 }

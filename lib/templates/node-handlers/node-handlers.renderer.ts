@@ -135,13 +135,17 @@ export function resolveMediaUrls(data: any): {
 
 /**
  * Генерирует обработчик рассылки (broadcast)
+ * @param node - Узел рассылки
+ * @param allNodes - Все узлы сценария
+ * @param botRuntimeRole - Сессия Client API из USERBOT_*
  */
 export function generateBroadcastHandler(
   node: Node,
-  allNodes: Node[] = []
+  allNodes: Node[] = [],
+  botRuntimeRole = false,
 ): string {
   return node.data?.broadcastApiType === 'client'
-    ? generateBroadcastClientFromNode(node, allNodes)
+    ? generateBroadcastClientFromNode(node, allNodes, botRuntimeRole)
     : generateBroadcastBotFromNode(node, allNodes);
 }
 

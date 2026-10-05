@@ -79,6 +79,12 @@ export interface GenerationOptions {
    * PSQL_PANEL_DSN_DENIED. При true запрос к этой переменной не выполняется.
    */
   psqlPanelDsnDenied?: boolean;
+  /**
+   * Код под роль bot_runtime: без CREATE TABLE, с set_config и фильтрами
+   * project_id + token_id. По умолчанию false. Сервер передаёт true только
+   * когда включён BOT_RUNTIME_ENABLED и задан BOT_DATABASE_URL.
+   */
+  botRuntimeRole?: boolean;
 }
 
 /**
@@ -104,6 +110,7 @@ export const DEFAULT_GENERATION_OPTIONS: Required<GenerationOptions> = {
   thumbnailUrls: {},
   psqlBuiltinEnabled: true,
   psqlPanelDsnDenied: false,
+  botRuntimeRole: false,
 } as const;
 
 /**

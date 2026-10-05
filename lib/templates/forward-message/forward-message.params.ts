@@ -48,4 +48,6 @@ export interface ForwardMessageTemplateParams {
   disableNotification?: boolean;
   /** Скрыть автора — использует copy_message вместо forward_message */
   hideAuthor?: boolean;
+  /** Фильтр bot_messages по project_id и token_id */
+  botRuntimeRole?: boolean;
 }
