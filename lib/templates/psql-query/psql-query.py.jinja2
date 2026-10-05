@@ -16,9 +16,11 @@
   @param {string} connectionEnvVar — имя переменной окружения (при env)
   @param {string} connectionString — прямой URL подключения (при custom)
   @param {boolean} builtinEnabled  — разрешён ли режим builtin (PSQL_BUILTIN_ENABLED на сервере)
+  @param {boolean} panelDsnDenied  — запрещён ли env DATABASE_URL (PSQL_PANEL_DSN_DENIED на сервере)
 #}
 {%- set safe_node_id = nodeId | safe_name -%}
 {%- set builtin_blocked = connectionSource == 'builtin' and not builtinEnabled -%}
+{%- set panel_dsn_blocked = panelDsnDenied and connectionSource == 'env' and (connectionEnvVar | trim | lower) == 'database_url' -%}
 {%- set bound = query | psql_bind -%}
 {% include 'psql-query/psql-query-param.py.jinja2' %}
 
@@ -27,7 +29,7 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
     """Узел psql_query: выполняет SQL-запрос к базе данных."""
     try:
         user_id = callback_query.from_user.id
-        {% if builtin_blocked %}
+        {% if builtin_blocked or panel_dsn_blocked %}
         logging.error(f"⛔ psql_query [{{ nodeId }}]: подключение к БД платформы отключено администратором — укажите своё подключение в настройках узла")
         return
         {% else %}

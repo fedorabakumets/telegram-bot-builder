@@ -16,6 +16,7 @@
 | `connectionEnvVar` | `string` | ❌ | Имя переменной окружения (при `env`) |
 | `connectionString` | `string` | ❌ | Прямой URL подключения (при `custom`) |
 | `builtinEnabled` | `boolean` | ❌ | Разрешён ли `builtin` (по умолчанию `true`; сервер передаёт `PSQL_BUILTIN_ENABLED`) |
+| `panelDsnDenied` | `boolean` | ❌ | Запрещён ли `env` с переменной `DATABASE_URL` (по умолчанию `false`; сервер передаёт `PSQL_PANEL_DSN_DENIED`) |
 
 ## Форматы результата
 
@@ -101,6 +102,9 @@ const code = generatePsqlQueryHandlers(nodes);
 // builtin запрещён: узлы builtin генерируют заглушку без обращения к db_pool
 const safeCode = generatePsqlQueryHandlers(nodes, { builtinEnabled: false });
 
+// env DATABASE_URL запрещён сервером; свои переменные и custom не затрагиваются
+const deniedPanel = generatePsqlQueryHandlers(nodes, { panelDsnDenied: true });
+
 // Только сбор параметров (без рендеринга)
 const entries = collectPsqlQueryEntries(nodes);
 ```
@@ -118,6 +122,8 @@ const entries = collectPsqlQueryEntries(nodes);
 ### `env`
 
 Подключение через переменную окружения. В `connectionEnvVar` указывается имя переменной, содержащей connection string. Пул создаётся на лету и закрывается после выполнения запроса.
+
+Серверный флаг `PSQL_PANEL_DSN_DENIED` по умолчанию выключен (`panelDsnDenied: false`): сгенерированный код тот же, что и без флага. Когда администратор включает флаг и бот пересобирается, режим `env` не подключается, если имя переменной — `DATABASE_URL` без учёта регистра. В лог пишется то же сообщение, что у выключенного builtin (`подключение к БД платформы отключено администратором`), запрос не выполняется. Своя переменная (`MY_DB`, `BOT_DATABASE_URL`) и режим `custom` продолжают работать. Режим `builtin` по-прежнему зависит только от `PSQL_BUILTIN_ENABLED`.
 
 Для `env` и `custom` строка проходит через `_psql_safe_dsn` (генерируется один раз на бота, шаблон `psql-query-dsn.py.jinja2`). Нужна схема `postgres`/`postgresql` и явный хост, параметры `host`/`hostaddr`/`passfile`/`service` в query запрещены. Без пароля в адресе передаётся `password=""`, чтобы asyncpg не подставил `PGHOST`/`PGPASSWORD`/`~/.pgpass` из окружения воркера. Если строка отклонена, запрос не выполняется.
 

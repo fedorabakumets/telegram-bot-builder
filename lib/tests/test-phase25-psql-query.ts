@@ -14,6 +14,7 @@
  *  J. Подключение к внешней БД (10 тестов)
  *  K. Флаг psqlBuiltinEnabled и проверка строки подключения (11 тестов)
  *  L. Параметры asyncpg и statement_timeout (6 тестов)
+ *  M. Флаг PSQL_PANEL_DSN_DENIED для режима env (8 тестов)
  */
 
 import fs from 'fs';
@@ -1310,6 +1311,138 @@ test('L06', 'в лог не попадают ни запрос, ни _args', () 
     ok(!line.includes('_args') && !line.includes('SELECT * FROM orders'),
       `в лог попало лишнее: ${line.trim()}`);
   }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// БЛОК M: Флаг PSQL_PANEL_DSN_DENIED — env DATABASE_URL
+// ═══════════════════════════════════════════════════════════════════════════════
+
+console.log('\n── Блок M: PSQL_PANEL_DSN_DENIED ───────────────────────────────');
+
+/**
+ * Генерирует код с явным флагом запрета DATABASE_URL в режиме env
+ * @param project - Объект проекта
+ * @param label - Метка для имени бота
+ * @param psqlPanelDsnDenied - Запрещено ли подключение по переменной DATABASE_URL
+ * @param psqlBuiltinEnabled - Разрешён ли режим builtin
+ * @returns Сгенерированный Python-код
+ */
+function genPanel(
+  project: any,
+  label: string,
+  psqlPanelDsnDenied: boolean,
+  psqlBuiltinEnabled = true,
+): string {
+  return generatePythonCode(project, {
+    botName: `PsqlQueryPanel_${label}`,
+    userDatabaseEnabled: true,
+    psqlPanelDsnDenied,
+    psqlBuiltinEnabled,
+  });
+}
+
+test('M01', 'флаг выключен → код env DATABASE_URL совпадает с генерацией без флага', () => {
+  const variants = [
+    { connectionSource: 'env', connectionEnvVar: 'DATABASE_URL' },
+    { connectionSource: 'env', connectionEnvVar: 'database_url' },
+    { connectionSource: 'env', connectionEnvVar: 'MY_DB' },
+    { connectionSource: 'env', connectionEnvVar: 'BOT_DATABASE_URL' },
+    { connectionSource: 'custom', connectionString: 'postgresql://u:p@h:5432/d' },
+    { connectionSource: 'builtin' },
+  ];
+  for (const data of variants) {
+    const p = makeCleanProject([makeStartNode(), makePsqlQueryNode('pq1', data)], true);
+    const opts = { botName: 'PsqlQueryPanel_M01', userDatabaseEnabled: true };
+    const omitted = generatePythonCode(p, opts);
+    const explicit = generatePythonCode(p, { ...opts, psqlPanelDsnDenied: false });
+    ok(omitted === explicit, `код разошёлся при выключенном флаге: ${JSON.stringify(data)}`);
+    ok(!explicit.includes('отключено администратором'),
+      `лишнее сообщение об отключении при выключенном флаге: ${JSON.stringify(data)}`);
+  }
+});
+
+test('M02', 'флаг выключен и connectionEnvVar DATABASE_URL → запрос выполняется как раньше', () => {
+  const p = makeCleanProject([makeStartNode(), makePsqlQueryNode('pq1', {
+    connectionSource: 'env',
+    connectionEnvVar: 'DATABASE_URL',
+  })], true);
+  const body = handlerBody(genPanel(p, 'M02', false), 'pq1');
+  ok(body.includes('_psql_safe_dsn(os.environ.get("DATABASE_URL"'), 'нет чтения DATABASE_URL');
+  ok(body.includes('_custom_pool.acquire()'), 'env-узел не выполняет запрос');
+  ok(!body.includes('отключено администратором'), 'запрос заблокирован при выключенном флаге');
+});
+
+test('M03', 'флаг включён и connectionEnvVar DATABASE_URL → запрос не выполняется', () => {
+  for (const name of ['DATABASE_URL', 'database_url', 'Database_Url', '  DATABASE_URL  ']) {
+    const p = makeCleanProject([makeStartNode(), makePsqlQueryNode('pq1', {
+      connectionSource: 'env',
+      connectionEnvVar: name,
+    })], true);
+    const body = handlerBody(genPanel(p, 'M03', true), 'pq1');
+    ok(body.includes('отключено администратором'), `нет сообщения об отключении для ${name}`);
+    ok(!body.includes('os.environ.get'), `читается окружение для ${name}`);
+    ok(!body.includes('_custom_pool'), `создаётся пул для ${name}`);
+    ok(!body.includes('_conn.'), `выполняется запрос для ${name}`);
+  }
+});
+
+test('M04', 'флаг включён → своя переменная MY_DB и BOT_DATABASE_URL работают', () => {
+  const p = makeCleanProject([
+    makeStartNode(),
+    makePsqlQueryNode('pq1', { connectionSource: 'env', connectionEnvVar: 'MY_DB' }),
+    makePsqlQueryNode('pq2', { connectionSource: 'env', connectionEnvVar: 'BOT_DATABASE_URL' }),
+  ], true);
+  const code = genPanel(p, 'M04', true);
+  ok(handlerBody(code, 'pq1').includes('_psql_safe_dsn(os.environ.get("MY_DB"'), 'MY_DB не читается');
+  ok(handlerBody(code, 'pq1').includes('_custom_pool.acquire()'), 'MY_DB не выполняет запрос');
+  ok(handlerBody(code, 'pq2').includes('_psql_safe_dsn(os.environ.get("BOT_DATABASE_URL"'), 'BOT_DATABASE_URL не читается');
+  ok(!handlerBody(code, 'pq1').includes('отключено администратором'), 'MY_DB заблокирован');
+  ok(!handlerBody(code, 'pq2').includes('отключено администратором'), 'BOT_DATABASE_URL заблокирован');
+});
+
+test('M05', 'флаг включён → режим custom продолжает работать', () => {
+  const p = makeCleanProject([makeStartNode(), makePsqlQueryNode('pq1', {
+    connectionSource: 'custom',
+    connectionString: 'postgresql://u:p@h:5432/d',
+  })], true);
+  const body = handlerBody(genPanel(p, 'M05', true), 'pq1');
+  ok(body.includes('_custom_pool.acquire()'), 'custom-узел не выполняет запрос');
+  ok(body.includes('_psql_safe_dsn("postgresql://u:p@h:5432/d")'), 'custom-строка не передаётся');
+  ok(!body.includes('отключено администратором'), 'custom заблокирован флагом панели');
+});
+
+test('M06', 'флаг панели не меняет режим builtin: им рулит psqlBuiltinEnabled', () => {
+  const p = makeCleanProject([makeStartNode(), makePsqlQueryNode('pq1', { connectionSource: 'builtin' })], true);
+  const blockedOff = handlerBody(genPanel(p, 'M06a', false, false), 'pq1');
+  const blockedOn = handlerBody(genPanel(p, 'M06b', true, false), 'pq1');
+  ok(blockedOff === blockedOn, 'выключенный builtin изменился из-за флага панели');
+  const openOff = handlerBody(genPanel(p, 'M06c', false, true), 'pq1');
+  const openOn = handlerBody(genPanel(p, 'M06d', true, true), 'pq1');
+  ok(openOff === openOn, 'включённый builtin изменился из-за флага панели');
+  ok(openOn.includes('async with db_pool.acquire() as _conn:'), 'builtin не выполняет запрос');
+  ok(!openOn.includes('отключено администратором'), 'builtin заблокирован флагом панели');
+});
+
+test('M07', 'флаг включён и DATABASE_URL → синтаксис Python OK', () => {
+  const p = makeCleanProject([
+    makeStartNode(),
+    makePsqlQueryNode('pq1', { connectionSource: 'env', connectionEnvVar: 'DATABASE_URL', autoTransitionTo: 'msg1' }),
+    makeMessageNode('msg1'),
+  ], true);
+  syntax(genPanel(p, 'M07', true), 'M07');
+});
+
+test('M08', 'флаг включён → своя переменная рядом с DATABASE_URL, хелпер один', () => {
+  const p = makeCleanProject([
+    makeStartNode(),
+    makePsqlQueryNode('pq1', { connectionSource: 'env', connectionEnvVar: 'DATABASE_URL' }),
+    makePsqlQueryNode('pq2', { connectionSource: 'env', connectionEnvVar: 'MY_DB' }),
+  ], true);
+  const code = genPanel(p, 'M08', true);
+  ok(!handlerBody(code, 'pq1').includes('_conn.'), 'DATABASE_URL всё ещё выполняет запрос');
+  ok(handlerBody(code, 'pq2').includes('_custom_pool.acquire()'), 'MY_DB перестал выполнять запрос');
+  const count = (code.match(/def _psql_safe_dsn\(/g) || []).length;
+  ok(count === 1, `_psql_safe_dsn объявлен ${count} раз — ожидается 1`);
 });
 
 // ─── Итоги ───────────────────────────────────────────────────────────────────

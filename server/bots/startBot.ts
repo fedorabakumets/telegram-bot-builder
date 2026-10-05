@@ -21,6 +21,7 @@ import { URL } from "node:url";
 import { dirname, join } from "node:path";
 import { fetchWithProxy } from "../utils/telegram-proxy";
 import { isPsqlBuiltinEnabled } from "../utils/isPsqlBuiltinEnabled";
+import { isPsqlPanelDsnDenied } from "../utils/isPsqlPanelDsnDenied";
 import { generatePythonCode } from "../../lib/bot-generator";
 import {
   buildStartBlockedByDisabledTypesError,
@@ -296,6 +297,7 @@ export async function startBot(
       protectContent: tokenSettings?.protectContent === 1,
       contentCache: tokenSettings?.contentCache === 1,
       psqlBuiltinEnabled: isPsqlBuiltinEnabled(),
+      psqlPanelDsnDenied: isPsqlPanelDsnDenied(),
       generatorVersion,
     });
 
@@ -370,6 +372,7 @@ export async function startBot(
         contentCache: tokenSettings?.contentCache === 1,
         thumbnailUrls,
         psqlBuiltinEnabled: isPsqlBuiltinEnabled(),
+        psqlPanelDsnDenied: isPsqlPanelDsnDenied(),
       });
 
       const hasDbInit = botCode.includes('async def init_database()');

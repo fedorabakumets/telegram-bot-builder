@@ -73,6 +73,12 @@ export interface GenerationOptions {
    * PSQL_BUILTIN_ENABLED (по умолчанию false). При false узел builtin не выполняет запрос.
    */
   psqlBuiltinEnabled?: boolean;
+  /**
+   * Запретить узлу psql_query в режиме env подключение по переменной DATABASE_URL.
+   * По умолчанию false: сгенерированный код совпадает с прежним. Сервер передаёт
+   * PSQL_PANEL_DSN_DENIED. При true запрос к этой переменной не выполняется.
+   */
+  psqlPanelDsnDenied?: boolean;
 }
 
 /**
@@ -97,6 +103,7 @@ export const DEFAULT_GENERATION_OPTIONS: Required<GenerationOptions> = {
   thumbnailFileIds: {},
   thumbnailUrls: {},
   psqlBuiltinEnabled: true,
+  psqlPanelDsnDenied: false,
 } as const;
 
 /**
