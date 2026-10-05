@@ -10,7 +10,10 @@ import { getDockerWorkerConfig, getWorkerRuntime, parseEnvNameList, type DockerW
 import { resolveBotEnvReference } from "./resolveBotEnvReference";
 
 /** Переменные, которые тесты меняют и восстанавливают */
-const TOUCHED = ["WORKER_RUNTIME", "WORKER_ENV_PASSTHROUGH", "WORKER_DOCKER_NETWORK", "WORKER_MEMORY_LIMIT"];
+const TOUCHED = [
+  "WORKER_RUNTIME", "WORKER_ENV_PASSTHROUGH", "WORKER_DOCKER_NETWORK", "WORKER_MEMORY_LIMIT",
+  "WORKER_DOCKER_ISOLATE", "WORKER_DOCKER_BRIDGE_NAME", "WORKER_DOCKER_UPLOADS_READONLY",
+];
 
 /** Настройки контейнера для тестов */
 const config: DockerWorkerConfig = {
