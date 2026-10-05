@@ -285,6 +285,7 @@
     "@vitest/ui": "^2.1.9",
     "autoprefixer": "^10.4.23",
     "c8": "^11.0.0",
+    "caniuse-lite": "^1.0.30001814",
     "drizzle-docs-generator": "^0.7.2",
     "drizzle-kit": "^0.31.8",
     "esbuild": "^0.27.2",
