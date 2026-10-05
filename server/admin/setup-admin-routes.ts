@@ -6,6 +6,7 @@
 import type { Express, Request, Response } from "express";
 import express from "express";
 import { isAdminAuthenticated, requireAdminAuth } from "./admin-auth-middleware";
+import { adminKeysMatch } from "./admin-key-match";
 import { clearAdminCookie, setAdminCookie } from "./admin-session";
 import {
   handleGetAdminAppSettings,
@@ -72,7 +73,7 @@ export function setupAdminRoutes(app: Express): void {
     }
 
     const submitted = typeof req.body?.key === "string" ? req.body.key.trim() : "";
-    if (!submitted || submitted !== key) {
+    if (!adminKeysMatch(submitted, key)) {
       res.redirect(302, "/admin/login?error=1");
       return;
     }
