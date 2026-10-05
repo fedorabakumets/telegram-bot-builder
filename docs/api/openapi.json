@@ -24648,7 +24648,7 @@
                 },
                 "example": {
                   "version": "2.2.1.5",
-                  "releasedAt": "2026-10-02",
+                  "releasedAt": "2026-10-05",
                   "notesUrl": null
                 }
               }
@@ -24721,11 +24721,11 @@
                 "example": {
                   "current": {
                     "version": "2.2.1.5",
-                    "releasedAt": "2026-10-02"
+                    "releasedAt": "2026-10-05"
                   },
                   "latest": {
                     "version": "2.2.1.5",
-                    "releasedAt": "2026-10-02",
+                    "releasedAt": "2026-10-05",
                     "notesUrl": null
                   },
                   "updateAvailable": false,
