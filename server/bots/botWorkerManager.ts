@@ -24,6 +24,10 @@ import { resolveWorkerKey } from "./workerGrouping";
 import { resolveProjectWorkerKey } from "./resolveProjectWorkerKey";
 import { collectWorkerStats, type WorkerPoolStats } from "./workerStats";
 import { prepareWorkerLaunch, stageBotFile, unstageBotFile, type WorkerLaunch } from "./workerLaunch";
+import { isDockerWorkerRuntime } from "./workerRuntime";
+import { isWorkerDockerIsolate } from "./workerDockerFlags";
+import { projectIdsOfTokens } from "./workerSharedProjects";
+import { withWorkerKeyLock } from "./workerKeyLock";
 import { redactSecrets } from "../utils/redactSecrets";
 import type { WorkerChannel } from "./workerChannel";
 import type { BotBuildLink } from "./builds/botBuildLink";
@@ -256,9 +260,14 @@ class BotWorkerManager extends EventEmitter {
    * Получает или создаёт воркер
    * @param projectId - Ключ воркера (ID проекта, владельца или общий)
    * @param botProjectId - Проект запускаемого бота (для выбора монтируемых папок)
+   * @param memberProjectIds - Проекты ботов, которые уже будут в этом воркере
    * @returns Промис с воркером в состоянии ready
    */
-  async getOrCreateWorker(projectId: number, botProjectId: number = projectId): Promise<ProjectWorker> {
+  async getOrCreateWorker(
+    projectId: number,
+    botProjectId: number = projectId,
+    memberProjectIds?: readonly number[],
+  ): Promise<ProjectWorker> {
     const existing = this.workers.get(projectId);
     if (existing && existing.status === "ready") {
       return existing;
@@ -271,7 +280,13 @@ class BotWorkerManager extends EventEmitter {
 
     const pending = this.creating.get(projectId);
     if (pending) return pending;
-    const created = prepareWorkerLaunch(projectId, botProjectId, this.pythonPath, this.workerScript)
+    const created = prepareWorkerLaunch(
+      projectId,
+      botProjectId,
+      this.pythonPath,
+      this.workerScript,
+      memberProjectIds,
+    )
       .then(async (launch) => this.createWorker(projectId, launch, await openWorkerChannel(projectId, launch)))
       .finally(() => this.creating.delete(projectId));
     this.creating.set(projectId, created);
@@ -528,39 +543,58 @@ class BotWorkerManager extends EventEmitter {
       this.projectWorkerKeys.set(projectId, workerKey);
       this.tokenProjects.set(tokenId, projectId);
       this.cancelWorkerDrain(workerKey);
-      const current = this.workers.get(workerKey);
-      if (current?.projects && !current.projects.has(projectId)) {
-        await this.remountWorker(workerKey, projectId);
-      }
-      const worker = await this.getOrCreateWorker(workerKey, projectId);
-      const args: BotStartArgs = { projectId, token, tokenId, botFile, ...options };
-      this.startArgs.set(tokenId, args);
-
-      const started = this.sendStartBot(workerKey, worker, args);
-      if (!started) {
-        throw new Error(`Не удалось отправить start_bot project=${projectId} token=${tokenId}`);
-      }
-      const ok = await started;
-      if (!ok) {
-        // Не killWorker сразу: Python ещё грузит bot.py — стопаем задачу, потом drain
-        console.warn(
-          `🏭 [WorkerPool] Таймаут bot_started project=${projectId} token=${tokenId} — stop in-flight`,
-        );
-        const stopWait = waitForWorkerBotStop(
-          this,
-          projectId,
-          tokenId,
-          WORKER_STOP_CONFIRM_TIMEOUT_MS,
-        );
-        this.sendCommand(workerKey, { cmd: "stop_bot", token_id: tokenId });
-        await stopWait;
-        worker.activeBots.delete(tokenId);
-        if (worker.activeBots.size === 0) {
-          this.scheduleWorkerDrain(workerKey);
-        }
-        throw new Error(`Таймаут bot_started project=${projectId} token=${tokenId}`);
-      }
+      const run = () => this.launchBotOnWorker(workerKey, projectId, token, tokenId, botFile, options);
+      // Очередь только при изоляции: контейнер не пересоздаётся, пока бот ещё стартует
+      if (!isDockerWorkerRuntime() || !isWorkerDockerIsolate()) return run();
+      return withWorkerKeyLock(workerKey, run);
     });
+  }
+
+  /**
+   * Монтирует проект и отправляет start_bot
+   * @param workerKey - Ключ воркера
+   * @param projectId - ID проекта
+   * @param token - Токен бота
+   * @param tokenId - ID токена
+   * @param botFile - Путь к bot.py
+   * @param options - Webhook, переменные и сборка
+   */
+  private async launchBotOnWorker(
+    workerKey: number,
+    projectId: number,
+    token: string,
+    tokenId: number,
+    botFile: string,
+    options: BotStartOptions,
+  ): Promise<void> {
+    const worker = await this.mountProjectWorker(workerKey, projectId);
+    const args: BotStartArgs = { projectId, token, tokenId, botFile, ...options };
+    this.startArgs.set(tokenId, args);
+
+    const started = this.sendStartBot(workerKey, worker, args);
+    if (!started) {
+      throw new Error(`Не удалось отправить start_bot project=${projectId} token=${tokenId}`);
+    }
+    const ok = await started;
+    if (!ok) {
+      // Не killWorker сразу: Python ещё грузит bot.py — стопаем задачу, потом drain
+      console.warn(
+        `🏭 [WorkerPool] Таймаут bot_started project=${projectId} token=${tokenId} — stop in-flight`,
+      );
+      const stopWait = waitForWorkerBotStop(
+        this,
+        projectId,
+        tokenId,
+        WORKER_STOP_CONFIRM_TIMEOUT_MS,
+      );
+      this.sendCommand(workerKey, { cmd: "stop_bot", token_id: tokenId });
+      await stopWait;
+      worker.activeBots.delete(tokenId);
+      if (worker.activeBots.size === 0) {
+        this.scheduleWorkerDrain(workerKey);
+      }
+      throw new Error(`Таймаут bot_started project=${projectId} token=${tokenId}`);
+    }
   }
 
   /**
@@ -587,6 +621,29 @@ class BotWorkerManager extends EventEmitter {
   }
 
   /**
+   * Пересоздаёт контейнер, если каталог проекта ещё не смонтирован
+   * @param workerKey - Ключ воркера
+   * @param projectId - Проект запускаемого бота
+   * @returns воркер, которому доступен проект
+   */
+  private async mountProjectWorker(workerKey: number, projectId: number): Promise<ProjectWorker> {
+    const current = this.workers.get(workerKey);
+    if (current?.projects && !current.projects.has(projectId)) {
+      await this.remountWorker(workerKey, projectId);
+    }
+    let worker = await this.getOrCreateWorker(workerKey, projectId);
+    if (isWorkerDockerIsolate() && worker.projects && !worker.projects.has(projectId)) {
+      await this.remountWorker(workerKey, projectId);
+      const fresh = this.workers.get(workerKey);
+      if (!fresh?.projects?.has(projectId)) {
+        throw new Error(`Воркер ${workerKey} не получил каталог проекта ${projectId}`);
+      }
+      worker = fresh;
+    }
+    return worker;
+  }
+
+  /**
    * Пересоздаёт контейнер, когда владельцу нужен проект, папки которого не смонтированы
    * (новый проект). Работающие боты переносятся без смены статуса в БД.
    * @param workerKey - Ключ воркера
@@ -598,13 +655,17 @@ class BotWorkerManager extends EventEmitter {
     const replay = [...old.activeBots]
       .map((tokenId) => this.startArgs.get(tokenId))
       .filter((a): a is BotStartArgs => a !== undefined);
+    const mounted = old.projects ? [...old.projects] : [];
+    const memberIds = [...mounted, ...projectIdsOfTokens(old.activeBots, (tokenId) => (
+      this.startArgs.get(tokenId)?.projectId ?? this.tokenProjects.get(tokenId)
+    ))];
     console.log(`🏭 [WorkerPool:${workerKey}] пересоздаём контейнер для проекта ${projectId}, ботов: ${replay.length}`);
     for (const a of replay) this.suppressedExits.add(a.tokenId);
     let results: boolean[] = [];
     let failure: unknown;
     try {
       await this.killWorker(workerKey);
-      const fresh = await this.getOrCreateWorker(workerKey, projectId);
+      const fresh = await this.getOrCreateWorker(workerKey, projectId, memberIds);
       results = await Promise.all(replay.map((a) => this.sendStartBot(workerKey, fresh, a) ?? false));
     } catch (error) {
       failure = error;

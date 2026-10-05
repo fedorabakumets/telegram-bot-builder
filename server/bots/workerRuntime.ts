@@ -7,6 +7,8 @@
  * @module server/bots/workerRuntime
  */
 
+import { resolveWorkerDockerNetwork } from "./workerDockerFlags";
+
 /** Среда запуска воркеров */
 export type WorkerRuntime = "process" | "docker" | "remote";
 
@@ -16,7 +18,7 @@ export interface DockerWorkerConfig {
   image: string;
   /** Python внутри образа */
   python: string;
-  /** Сеть контейнера: host, bridge или сеть docker compose */
+  /** Сеть контейнера: host либо имя из WORKER_DOCKER_NETWORK / WORKER_DOCKER_BRIDGE_NAME */
   network: string;
   /** Лимит памяти контейнера (формат docker: 256m, 1g), пусто — без лимита */
   memory: string;
@@ -96,7 +98,7 @@ export function getDockerWorkerConfig(): DockerWorkerConfig {
   return {
     image: env.WORKER_DOCKER_IMAGE?.trim() || "ghcr.io/fedorabakumets/telegram-bot-builder:latest",
     python: env.WORKER_DOCKER_PYTHON?.trim() || "python3",
-    network: env.WORKER_DOCKER_NETWORK?.trim() || "host",
+    network: resolveWorkerDockerNetwork(env),
     memory: env.WORKER_MEMORY_LIMIT?.trim() ?? "",
     cpus: env.WORKER_CPUS?.trim() ?? "",
     user: env.WORKER_DOCKER_USER?.trim() || currentUser(),

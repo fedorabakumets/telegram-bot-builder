@@ -8,6 +8,7 @@
 import { join, relative, isAbsolute } from "node:path";
 import type { DockerWorkerConfig } from "./workerRuntime";
 import { canShareServerEnv } from "./botEnvPolicy";
+import { uploadVolumeArgs } from "./workerDockerMounts";
 
 /** Корень приложения внутри контейнера: боты ищут uploads как ../../uploads */
 export const CONTAINER_APP_ROOT = "/app";
@@ -64,7 +65,7 @@ export function toHostPath(localPath: string, appRoot: string, hostRoot: string)
 /**
  * Собирает аргументы `docker run` для воркера
  * @param workerKey - Ключ воркера
- * @param projectIds - Проекты, чьи uploads монтируются; null — весь каталог uploads
+ * @param projectIds - Проекты, чьи uploads монтируются; null — весь каталог, если изоляция выключена
  * @param config - Настройки из переменных окружения
  * @param paths - Локальные пути
  * @param serverEnv - Окружение сервера, из которого берутся разрешённые переменные
@@ -106,14 +107,7 @@ export function buildDockerWorkerCommand(
 
   args.push("-v", `${host(paths.pythonDir)}:${CONTAINER_WORKER_DIR}:ro`);
   args.push("-v", `${host(paths.stagedBotsDir)}:${CONTAINER_APP_ROOT}/bots:ro`);
-  const uploads = join(paths.appRoot, "uploads");
-  if (projectIds === null) {
-    args.push("-v", `${host(uploads)}:${CONTAINER_APP_ROOT}/uploads`);
-  } else {
-    for (const id of projectIds) {
-      args.push("-v", `${host(join(uploads, String(id)))}:${CONTAINER_APP_ROOT}/uploads/${id}`);
-    }
-  }
+  args.push(...uploadVolumeArgs(host, paths.appRoot, CONTAINER_APP_ROOT, projectIds, serverEnv));
   for (const key of Object.keys(env)) args.push("-e", key);
   args.push(config.image, config.python, "-u", `${CONTAINER_WORKER_DIR}/worker.py`);
   return { name, args, env };
