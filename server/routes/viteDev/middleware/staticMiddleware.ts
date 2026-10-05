@@ -68,7 +68,7 @@ export function serveStatic(app: Express): void {
     });
   }
 
-  // Файлов нет на диске — читаем из хранилища загрузок S3 (UPLOADS_STORAGE_ID)
+  // Файлов нет на диске — из S3 только ключи, зарегистрированные в media_files
   app.use("/uploads", createUploadsS3Fallback());
 
   app.use("*", (_req, res) => {
