@@ -58,14 +58,14 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-10-01T18:51:28Z",
+    "updated_at": "2026-10-03T14:16:00+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "api/admin",
     "title": "admin",
-    "excerpt": "Эндпоинтов: **13**",
+    "excerpt": "Эндпоинтов: **20**",
     "parts": [
       "api",
       "admin"
@@ -73,7 +73,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-10-02T23:37:14Z",
+    "updated_at": "2026-10-03T14:16:00+03:00",
     "tags": [],
     "author": ""
   },
@@ -453,6 +453,21 @@
     "author": ""
   },
   {
+    "path": "api/support",
+    "title": "support",
+    "excerpt": "Эндпоинтов: **4**",
+    "parts": [
+      "api",
+      "support"
+    ],
+    "folder_titles": {
+      "api": "Api"
+    },
+    "updated_at": "2026-10-03T11:20:48Z",
+    "tags": [],
+    "author": ""
+  },
+  {
     "path": "api/templates",
     "title": "templates",
     "excerpt": "Эндпоинтов: **9**",
@@ -523,7 +538,7 @@
     "folder_titles": {
       "database": "Database"
     },
-    "updated_at": "2026-10-01T09:57:18Z",
+    "updated_at": "2026-10-03T11:20:48Z",
     "tags": [],
     "author": ""
   },
@@ -933,6 +948,51 @@
     "author": ""
   },
   {
+    "path": "database/support_attachments",
+    "title": "support_attachments",
+    "excerpt": "Картинка, приложенная к сообщению поддержки.",
+    "parts": [
+      "database",
+      "support_attachments"
+    ],
+    "folder_titles": {
+      "database": "Database"
+    },
+    "updated_at": "2026-10-03T11:20:48Z",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "database/support_messages",
+    "title": "support_messages",
+    "excerpt": "Сообщение в диалоге поддержки",
+    "parts": [
+      "database",
+      "support_messages"
+    ],
+    "folder_titles": {
+      "database": "Database"
+    },
+    "updated_at": "2026-10-03T11:20:48Z",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "database/support_threads",
+    "title": "support_threads",
+    "excerpt": "Диалог поддержки: ровно один на пользователя платформы",
+    "parts": [
+      "database",
+      "support_threads"
+    ],
+    "folder_titles": {
+      "database": "Database"
+    },
+    "updated_at": "2026-10-03T11:20:48Z",
+    "tags": [],
+    "author": ""
+  },
+  {
     "path": "database/telegram_users",
     "title": "telegram_users",
     "excerpt": "Таблица аутентифицированных пользователей Telegram",
@@ -943,7 +1003,7 @@
     "folder_titles": {
       "database": "Database"
     },
-    "updated_at": "2026-08-25T21:17:06Z",
+    "updated_at": "2026-10-03T11:20:48Z",
     "tags": [],
     "author": ""
   },
@@ -1848,6 +1908,23 @@
       "features": "✨ Фичи"
     },
     "updated_at": "2026-08-02T16:41:59+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/features/platform-support-chat",
+    "title": "Чат поддержки платформы BotCraft",
+    "excerpt": "> Переписка между пользователями конструктора и администратором прямо в интерфейсе,",
+    "parts": [
+      "futures",
+      "features",
+      "platform-support-chat"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития",
+      "features": "✨ Фичи"
+    },
+    "updated_at": "2026-10-03T14:16:00+03:00",
     "tags": [],
     "author": ""
   },
