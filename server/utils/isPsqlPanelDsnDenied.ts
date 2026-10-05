@@ -3,6 +3,8 @@
  * @module server/utils/isPsqlPanelDsnDenied
  */
 
+import { runtimeFlag } from "../services/runtime-overlay";
+
 /**
  * Запрещено ли узлу psql_query в режиме `env` подключаться по переменной DATABASE_URL.
  * По умолчанию выключено: пока флага нет, сгенерированный код и поведение узла прежние.
@@ -13,6 +15,5 @@
  * @returns true, если PSQL_PANEL_DSN_DENIED равен true/1/yes
  */
 export function isPsqlPanelDsnDenied(env: NodeJS.ProcessEnv = process.env): boolean {
-  const value = env.PSQL_PANEL_DSN_DENIED?.trim().toLowerCase();
-  return value === "true" || value === "1" || value === "yes";
+  return runtimeFlag("PSQL_PANEL_DSN_DENIED", env);
 }

@@ -136,6 +136,18 @@ export async function setSetting(key: string, value: string): Promise<void> {
 }
 
 /**
+ * Удаляет настройку из БД и сбрасывает кэш.
+ * Пустое обычное поле рантайма так возвращает чтение из живого окружения.
+ * @param key - Ключ настройки
+ * @returns Promise<void>
+ */
+export async function deleteSetting(key: string): Promise<void> {
+  await db.delete(appSettings).where(eq(appSettings.key, key));
+  cache.delete(key);
+  if (key === AUTH_LOGIN_MODE_KEY) skipAuthSyncCache = null;
+}
+
+/**
  * Получить все настройки из БД одним запросом.
  *
  * @returns Объект вида `{ ключ: значение }`

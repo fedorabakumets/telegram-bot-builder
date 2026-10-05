@@ -24612,6 +24612,242 @@
         }
       }
     },
+    "/admin/api/runtime-settings/{group}": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Раздел настроек рантайма",
+        "description": "Поля раздела. Секрет отдаётся только флагом `configured`, без значения. Пока значение не сохранено, в `value` попадает живой process.env.\n\n**Auth:** cookie `admin_auth`. **UI:** `/admin/runtime/{group}`.\n\n```bash\ncurl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \\\n  -H 'Content-Type: application/x-www-form-urlencoded' \\\n  -d 'key=YOUR_ADMIN_API_KEY'\ncurl -s http://localhost:5000/admin/api/runtime-settings/backups -b admin.txt\n```",
+        "security": [
+          {
+            "adminCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "backups"
+            },
+            "required": true,
+            "name": "group",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Admin cookie после `/admin/login` (ключ `ADMIN_API_KEY`). Без неё — 401.",
+              "example": "eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0"
+            },
+            "required": false,
+            "description": "Admin cookie после `/admin/login` (`ADMIN_API_KEY`). Без неё — 401 ADMIN_UNAUTHORIZED.",
+            "example": "eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0",
+            "name": "admin_auth",
+            "in": "cookie"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Поля и хранилища",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RuntimeGroupView"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет admin-сессии",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminUnauthorized"
+                },
+                "example": {
+                  "error": "ADMIN_UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Неизвестный раздел"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Сохранить раздел настроек рантайма",
+        "description": "Пустой секрет не затирает старое значение. Пустая обычная строка удаляет ключ и возвращает чтение из env. Секреты не пишутся в process.env. Раздел backups перезапускает планировщик, storages обновляет s3-default.\n\n```bash\ncurl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \\\n  -H 'Content-Type: application/x-www-form-urlencoded' \\\n  -d 'key=YOUR_ADMIN_API_KEY'\ncurl -s -X PUT http://localhost:5000/admin/api/runtime-settings/workers -b admin.txt \\\n  -H 'Content-Type: application/json' -d '{\"values\":{\"USE_WORKER_POOL\":\"true\"}}'\n```",
+        "security": [
+          {
+            "adminCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "group",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Admin cookie после `/admin/login` (ключ `ADMIN_API_KEY`). Без неё — 401.",
+              "example": "eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0"
+            },
+            "required": false,
+            "description": "Admin cookie после `/admin/login` (`ADMIN_API_KEY`). Без неё — 401 ADMIN_UNAUTHORIZED.",
+            "example": "eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0",
+            "name": "admin_auth",
+            "in": "cookie"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "values": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "values"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Сохранено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "warnings": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "required": [
+                    "ok",
+                    "warnings"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Публичное хранилище или неверное тело"
+          },
+          "401": {
+            "description": "Нет admin-сессии",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminUnauthorized"
+                },
+                "example": {
+                  "error": "ADMIN_UNAUTHORIZED"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/api/runtime-settings/backups/run": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Снять бэкап сейчас",
+        "description": "Дамп всех целей расписания. Публичное хранилище отклоняется.\n\n```bash\ncurl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \\\n  -H 'Content-Type: application/x-www-form-urlencoded' \\\n  -d 'key=YOUR_ADMIN_API_KEY'\ncurl -s -X POST http://localhost:5000/admin/api/runtime-settings/backups/run -b admin.txt\n```",
+        "security": [
+          {
+            "adminCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Admin cookie после `/admin/login` (ключ `ADMIN_API_KEY`). Без неё — 401.",
+              "example": "eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0"
+            },
+            "required": false,
+            "description": "Admin cookie после `/admin/login` (`ADMIN_API_KEY`). Без неё — 401 ADMIN_UNAUTHORIZED.",
+            "example": "eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0",
+            "name": "admin_auth",
+            "in": "cookie"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Метки баз",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "labels": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "required": [
+                    "ok",
+                    "labels"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет admin-сессии",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminUnauthorized"
+                },
+                "example": {
+                  "error": "ADMIN_UNAUTHORIZED"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/admin/api/version": {
       "get": {
         "tags": [
@@ -31660,6 +31896,96 @@
             "$ref": "#/components/schemas/AdminTelegramSettingsPayload"
           }
         }
+      },
+      "RuntimeFieldView": {
+        "type": "object",
+        "properties": {
+          "env": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "text",
+              "number",
+              "bool",
+              "secret",
+              "storage"
+            ]
+          },
+          "hint": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          },
+          "configured": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "env",
+          "label",
+          "kind",
+          "value",
+          "configured"
+        ]
+      },
+      "RuntimeGroupView": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RuntimeFieldView"
+            }
+          },
+          "storages": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "backend": {
+                  "type": "string"
+                },
+                "public": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "id",
+                "name",
+                "backend",
+                "public"
+              ]
+            }
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "description",
+          "fields",
+          "storages"
+        ]
       },
       "AdminVersionResponse": {
         "type": "object",

@@ -11,6 +11,7 @@
 import { botProcesses } from '../routes/routes';
 import { setupProcessOutputListener } from './setupProcessOutputListener';
 import { workerManager } from '../bots/botWorkerManager';
+import { isWorkerPoolEnabled } from '../bots/isWorkerPoolEnabled';
 import { sendOutputToTerminals } from './sendOutputToTerminals';
 import { getActiveLaunchId } from './activeLaunchIds';
 import { handleWorkerBotExited } from '../bots/handleWorkerBotExited';
@@ -76,7 +77,7 @@ export function setupBotProcessListeners() {
     console.log('[Terminal] Прослушивание процессов ботов настроено');
 
     // ─── Режим воркера: подписка на логи из worker pool ───
-    if (process.env.USE_WORKER_POOL !== 'false') {
+    if (isWorkerPoolEnabled()) {
       const routeWorkerLog = (projectId: number, tokenId: number, type: string, content: string) => {
         const streamType = (type === 'stderr') ? 'stderr' : 'stdout';
         const launchId = getActiveLaunchId(tokenId);

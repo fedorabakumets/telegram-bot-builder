@@ -3,6 +3,8 @@
  * @module server/bots/builds/botBuildConfig
  */
 
+import { runtimeEnv } from "../../services/runtime-overlay";
+
 /** Источник кода бота: только диск или диск + хранилище сборок */
 export type BotArtifactSource = "disk" | "storage";
 
@@ -21,7 +23,7 @@ export const DEFAULT_BOT_BUILDS_KEEP = 3;
  * @returns "storage" только при явном включении, иначе "disk"
  */
 export function getBotArtifactSource(env: NodeJS.ProcessEnv = process.env): BotArtifactSource {
-  return env.BOT_ARTIFACT_SOURCE?.trim().toLowerCase() === "storage" ? "storage" : "disk";
+  return runtimeEnv("BOT_ARTIFACT_SOURCE", env)?.toLowerCase() === "storage" ? "storage" : "disk";
 }
 
 /**
@@ -39,7 +41,7 @@ export function isBotBuildStorageEnabled(env: NodeJS.ProcessEnv = process.env): 
  * @returns Количество сохраняемых сборок
  */
 export function getBotBuildsKeep(env: NodeJS.ProcessEnv = process.env): number {
-  const parsed = Number.parseInt(env.BOT_BUILDS_KEEP ?? "", 10);
+  const parsed = Number.parseInt(runtimeEnv("BOT_BUILDS_KEEP", env) ?? "", 10);
   return Number.isFinite(parsed) && parsed >= 1 ? parsed : DEFAULT_BOT_BUILDS_KEEP;
 }
 
@@ -49,8 +51,7 @@ export function getBotBuildsKeep(env: NodeJS.ProcessEnv = process.env): number {
  * @returns ID конфига или null — тогда используется приватная локальная папка
  */
 export function getBotBuildsStorageId(env: NodeJS.ProcessEnv = process.env): string | null {
-  const id = env.BOT_BUILDS_STORAGE_ID?.trim();
-  return id ? id : null;
+  return runtimeEnv("BOT_BUILDS_STORAGE_ID", env) ?? null;
 }
 
 /**
@@ -59,5 +60,5 @@ export function getBotBuildsStorageId(env: NodeJS.ProcessEnv = process.env): str
  * @returns Путь относительно cwd или абсолютный
  */
 export function getBotBuildsDir(env: NodeJS.ProcessEnv = process.env): string {
-  return env.BOT_BUILDS_DIR?.trim() || DEFAULT_BOT_BUILDS_DIR;
+  return runtimeEnv("BOT_BUILDS_DIR", env) || DEFAULT_BOT_BUILDS_DIR;
 }

@@ -3,6 +3,8 @@
  * @module agentTokens/can-create-bot-manager-scope
  */
 
+import { runtimeEnv } from "../../services/runtime-overlay";
+
 /**
  * Разрешено ли пользователю создать PAT с scope bot_manager.
  * Production: id в BOT_MANAGER_ADMIN_IDS (через запятую).
@@ -14,7 +16,7 @@ export function canCreateBotManagerScope(userId: number): boolean {
   if (process.env.NODE_ENV !== "production") {
     return true;
   }
-  const raw = process.env.BOT_MANAGER_ADMIN_IDS ?? "";
+  const raw = runtimeEnv("BOT_MANAGER_ADMIN_IDS") ?? "";
   const allowed = raw
     .split(",")
     .map((s) => Number(s.trim()))

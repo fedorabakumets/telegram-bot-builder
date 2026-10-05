@@ -4,14 +4,15 @@
  * @module server/bots/resolveRunnerRedisUrl
  */
 
+import { runtimeEnv, runtimeFlag } from "../services/runtime-overlay";
+
 /**
  * Включён ли запрет запасного REDIS_URL панели.
  * @param env - Окружение панели
  * @returns true, если WORKER_RUNNER_REDIS_REQUIRED равен true/1/yes
  */
 export function isWorkerRunnerRedisRequired(env: NodeJS.ProcessEnv): boolean {
-  const value = env.WORKER_RUNNER_REDIS_REQUIRED?.trim().toLowerCase();
-  return value === "true" || value === "1" || value === "yes";
+  return runtimeFlag("WORKER_RUNNER_REDIS_REQUIRED", env);
 }
 
 /**
@@ -23,7 +24,7 @@ export function isWorkerRunnerRedisRequired(env: NodeJS.ProcessEnv): boolean {
  * @throws Error, если нужный адрес пуст
  */
 export function resolveRunnerRedisUrl(env: NodeJS.ProcessEnv = process.env): string {
-  const dedicated = env.WORKER_RUNNER_REDIS_URL?.trim();
+  const dedicated = runtimeEnv("WORKER_RUNNER_REDIS_URL", env);
   if (isWorkerRunnerRedisRequired(env)) {
     if (!dedicated) {
       throw new Error(

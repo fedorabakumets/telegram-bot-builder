@@ -2,13 +2,14 @@
  * @fileoverview Выбор хранилища для бэкапов базы
  *
  * В дампе есть токены ботов и сессии userbot, поэтому публичное
- * `local-default` (раздаётся через `/uploads`) для бэкапов не используется.
+ * `local-default` и хранилище с прямым http(s)-адресом для бэкапов не используются.
  * @module server/database/backups/dbBackupsBackend
  */
 
 import { LocalDiskBackend } from "../../storage/local-disk-backend";
 import type { StorageBackend } from "../../storage/storage-backend";
 import { ensureStorageRegistryLoaded } from "../../storage/storage-registry";
+import { assertBackupStoragePrivate } from "./backupStoragePublic";
 import { DB_BACKUPS_LOCAL_ID, getDbBackupsDir, getDbBackupsStorageId } from "./dbBackupConfig";
 
 /** ID публичного локального хранилища, запрещённого для бэкапов */
@@ -41,5 +42,6 @@ export async function resolveDbBackupsBackend(configId?: string | null): Promise
   const backend = registry.list().find((item) => item.configId === id);
   if (!backend) throw new Error(`Хранилище бэкапов "${id}" не найдено в storage_configs`);
   if (backend.readOnly) throw new Error(`Хранилище бэкапов "${id}" доступно только для чтения`);
+  assertBackupStoragePrivate(backend);
   return backend;
 }

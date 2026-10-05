@@ -7,6 +7,7 @@ import { checkProcessExists, isPythonProcess } from './utils/processChecker';
 import { restoreProcessTracking } from './utils/processRestorer';
 import { findActiveProcessForToken } from '../../utils/findActiveProcessForToken';
 import { workerManager } from '../../bots/botWorkerManager';
+import { isWorkerPoolEnabled } from '../../bots/isWorkerPoolEnabled';
 
 /** Поля экземпляра, нужные для live-статуса */
 export interface LiveBotInstanceRef {
@@ -32,7 +33,7 @@ export function computeLiveBotStatus(
 ): 'running' | 'stopped' {
   const hasChild = Boolean(findActiveProcessForToken(projectId, tokenId));
   const inWorker =
-    process.env.USE_WORKER_POOL !== 'false' && workerManager.isBotRunning(projectId, tokenId);
+    isWorkerPoolEnabled() && workerManager.isBotRunning(projectId, tokenId);
   if (hasChild || inWorker) return 'running';
   if (!instance) return 'stopped';
 

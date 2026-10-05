@@ -7,6 +7,7 @@ import { botProcesses } from "../routes/routes";
 import { storage } from "../storages/storage";
 import { findActiveProcessForProject } from "../utils/findActiveProcessForProject";
 import { startBot } from "./startBot";
+import { isWorkerPoolEnabled } from "./isWorkerPoolEnabled";
 import { stopBot } from "./stopBot";
 import { POST_STOP_COOLDOWN_MS, sleepMs } from "./restartTiming";
 
@@ -35,7 +36,7 @@ export async function restartBotIfRunning(projectId: number): Promise<{ success:
     }
     const launchToken = tokenRecord.token;
 
-    if (process.env.USE_WORKER_POOL !== 'false') {
+    if (isWorkerPoolEnabled()) {
       const stopResult = await stopBot(projectId, tokenId);
       if (!stopResult.success) {
         return { success: false, error: stopResult.error };

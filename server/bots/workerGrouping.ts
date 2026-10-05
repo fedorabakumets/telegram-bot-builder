@@ -3,6 +3,8 @@
  * @module server/bots/workerGrouping
  */
 
+import { runtimeEnv } from "../services/runtime-overlay";
+
 /** Ключ общего воркера в режиме shared */
 export const SHARED_WORKER_KEY = 0;
 
@@ -19,7 +21,7 @@ export type WorkerGroupingMode = "project" | "owner" | "shared";
  * @returns режим; неизвестное значение трактуется как "project"
  */
 export function getWorkerGroupingMode(): WorkerGroupingMode {
-  const value = process.env.WORKER_GROUPING?.trim().toLowerCase();
+  const value = runtimeEnv("WORKER_GROUPING")?.toLowerCase();
   return value === "shared" || value === "owner" ? value : "project";
 }
 

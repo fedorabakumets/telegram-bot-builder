@@ -8,6 +8,7 @@ import { telegramUsers } from "@shared/schema";
 import type { SupportMessageDto } from "@shared/support/support.types";
 import { db } from "../database/db";
 import { getSetting } from "../services/app-settings.service";
+import { runtimeEnv } from "../services/runtime-overlay";
 import { getStorageRegistry } from "../storage/storage-registry";
 import { listMessageAttachmentFiles } from "./support-attachments-repo";
 import { callTelegram, escapeHtml, readStream } from "./notify-support-telegram";
@@ -20,8 +21,8 @@ let missingAdminsWarned = false;
  * @returns Уникальные положительные id
  */
 async function listAdminChatIds(): Promise<number[]> {
-  const fromEnv = process.env.SUPPORT_ADMIN_CHAT_IDS?.trim();
-  const raw = fromEnv || (await getSetting("support_admin_chat_ids")) || "";
+  const fromRuntime = runtimeEnv("SUPPORT_ADMIN_CHAT_IDS");
+  const raw = fromRuntime || (await getSetting("support_admin_chat_ids")) || "";
   const ids = new Set<number>();
   for (const part of raw.split(/[,\s]+/)) {
     const id = Number(part);

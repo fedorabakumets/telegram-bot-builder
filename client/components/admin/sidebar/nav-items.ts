@@ -15,6 +15,12 @@ import {
   Users,
   Blocks,
   MessageCircle,
+  HardDrive,
+  Archive,
+  Cpu,
+  Server,
+  Package,
+  SlidersHorizontal,
 } from 'lucide-react';
 
 /** Внутренний раздел панели */
@@ -33,6 +39,12 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { href: '/users', label: 'Аккаунты', icon: Users },
   { href: '/support', label: 'Поддержка', icon: MessageCircle },
   { href: '/settings', label: 'Настройки', icon: Settings },
+  { href: '/runtime/storages', label: 'Хранилища', icon: HardDrive },
+  { href: '/runtime/backups', label: 'Бэкапы', icon: Archive },
+  { href: '/runtime/workers', label: 'Воркеры', icon: Cpu },
+  { href: '/runtime/runners', label: 'Исполнители', icon: Server },
+  { href: '/runtime/builds', label: 'Сборки', icon: Package },
+  { href: '/runtime/platform', label: 'Площадка', icon: SlidersHorizontal },
   { href: '/node-types', label: 'Типы блоков', icon: Blocks },
   { href: '/docs', label: 'Документация API', icon: BookOpen },
   { href: '/maintenance', label: 'Обслуживание', icon: Wrench },

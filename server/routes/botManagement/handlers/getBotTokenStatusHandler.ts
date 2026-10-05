@@ -9,6 +9,7 @@ import { checkProcessExists, isPythonProcess, findBotProcessPid } from '../utils
 import { restoreProcessTracking } from '../utils/processRestorer';
 import { findActiveProcessForToken } from '../../../utils/findActiveProcessForToken';
 import { workerManager } from '../../../bots/botWorkerManager';
+import { isWorkerPoolEnabled } from '../../../bots/isWorkerPoolEnabled';
 import { reconcileLaunchHistoryForToken } from '../../../bots/reconcileLaunchHistory';
 import { resolveStoppedErrorMessage, formatBotStatusLabel } from '../../../bots/resolveStoppedErrorMessage';
 import { isTokenPendingRestore } from '../../../bots/restoreState';
@@ -136,7 +137,7 @@ export async function getBotTokenStatusHandler(req: Request, res: Response): Pro
         const activeProcessInfo = findActiveProcessForToken(projectId, tokenId);
         // В режиме воркера статус проверяется через workerManager (как в handleBotStatusByToken),
         // иначе воркерные боты ошибочно числятся остановленными.
-        const isRunningInWorker = process.env.USE_WORKER_POOL !== 'false'
+        const isRunningInWorker = isWorkerPoolEnabled()
             && workerManager.isBotRunning(projectId, tokenId);
         let actualStatus = (activeProcessInfo || isRunningInWorker) ? 'running' : 'stopped';
 

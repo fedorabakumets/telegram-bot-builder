@@ -3,6 +3,8 @@
  * @module server/database/backups/dbBackupConfig
  */
 
+import { runtimeEnv } from "../../services/runtime-overlay";
+
 /** ID служебного приватного локального хранилища бэкапов */
 export const DB_BACKUPS_LOCAL_ID = "db-backups-local";
 
@@ -33,8 +35,7 @@ function readInt(raw: string | undefined, fallback: number, min: number): number
  * @returns ID конфига или null — тогда приватная локальная папка
  */
 export function getDbBackupsStorageId(env: NodeJS.ProcessEnv = process.env): string | null {
-  const id = env.DB_BACKUPS_STORAGE_ID?.trim();
-  return id ? id : null;
+  return runtimeEnv("DB_BACKUPS_STORAGE_ID", env) ?? null;
 }
 
 /**
@@ -43,7 +44,7 @@ export function getDbBackupsStorageId(env: NodeJS.ProcessEnv = process.env): str
  * @returns Путь относительно cwd или абсолютный
  */
 export function getDbBackupsDir(env: NodeJS.ProcessEnv = process.env): string {
-  return env.DB_BACKUPS_DIR?.trim() || DEFAULT_DB_BACKUPS_DIR;
+  return runtimeEnv("DB_BACKUPS_DIR", env) || DEFAULT_DB_BACKUPS_DIR;
 }
 
 /**
@@ -52,7 +53,7 @@ export function getDbBackupsDir(env: NodeJS.ProcessEnv = process.env): string {
  * @returns Количество сохраняемых бэкапов
  */
 export function getDbBackupsKeep(env: NodeJS.ProcessEnv = process.env): number {
-  return readInt(env.DB_BACKUPS_KEEP, DEFAULT_DB_BACKUPS_KEEP, 1);
+  return readInt(runtimeEnv("DB_BACKUPS_KEEP", env), DEFAULT_DB_BACKUPS_KEEP, 1);
 }
 
 /**
@@ -61,7 +62,7 @@ export function getDbBackupsKeep(env: NodeJS.ProcessEnv = process.env): number {
  * @returns Часы между бэкапами; 0 — автоматический бэкап выключен
  */
 export function getDbBackupIntervalHours(env: NodeJS.ProcessEnv = process.env): number {
-  return readInt(env.DB_BACKUP_INTERVAL_HOURS, 0, 0);
+  return readInt(runtimeEnv("DB_BACKUP_INTERVAL_HOURS", env), 0, 0);
 }
 
 /**
