@@ -28,6 +28,8 @@ interface UseGrowthBySourceParams {
   selectedTokenId?: number | null;
   /** Гранулярность графика, по умолчанию "1d" (30 дней) */
   granularity?: GrowthGranularity;
+  /** false — не запрашивать (режим «Все» у источников) */
+  enabled?: boolean;
 }
 
 /**
@@ -36,7 +38,7 @@ interface UseGrowthBySourceParams {
  * @returns Точки прироста по источникам и состояние загрузки
  */
 export function useGrowthBySource(params: UseGrowthBySourceParams) {
-  const { projectId, selectedTokenId, granularity = '1d' } = params;
+  const { projectId, selectedTokenId, granularity = '1d', enabled = true } = params;
 
   const baseUrl = `/api/projects/${projectId}/users/growth-by-source?granularity=${granularity}`;
   const requestUrl = buildUsersApiUrl(baseUrl, selectedTokenId);
@@ -52,7 +54,7 @@ export function useGrowthBySource(params: UseGrowthBySourceParams) {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return response.json();
     },
-    enabled: !!projectId,
+    enabled: !!projectId && enabled,
     staleTime: 0,
     gcTime: 60_000,
     retry: false,

@@ -110,7 +110,8 @@ export default defineConfig(async () => {
         deny: ["**/.*"],
       },
       hmr: {
-        overlay: false,
+        // Плашка ошибки: после исправления Vite сам перезагружает вкладку
+        overlay: true,
         clientPort: 5000
       },
     },

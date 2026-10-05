@@ -15,6 +15,8 @@ export interface StatBarItem {
   count: number;
   /** Процент от общего числа */
   percentage: number;
+  /** Цвет сегмента; если не задан, карточка берёт свою палитру */
+  color?: string;
 }
 
 /**

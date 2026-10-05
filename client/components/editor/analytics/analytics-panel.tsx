@@ -26,7 +26,7 @@ import { BotTokenSelector } from '@/components/editor/database/user-database/com
 import { useProjectTokens } from '@/hooks/use-project-tokens';
 import { useNormalizeSelectedTokenId } from '@/hooks/use-normalize-selected-token';
 import { useLiveInvalidate } from '@/components/editor/database/user-database/hooks/use-live-invalidate';
-import { AnalyticsSourcesChart } from './analytics-sources-chart';
+import { AnalyticsSourcesPair } from './analytics-sources-pair';
 import { AnalyticsPopularButtonsChart } from './analytics-popular-buttons-chart';
 import { AnalyticsTableChartCard } from './table-chart/analytics-table-chart-card';
 import { AnalyticsAudienceReachNote } from './analytics-audience-reach-note';
@@ -126,7 +126,7 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken, allP
   const { stats, refetchStats } = useStats({ projectId, selectedTokenId });
   const { points: growthPoints, weeklyGrowth } = useGrowth({ projectId, selectedTokenId, granularity: growthGranularity });
   const { points: sourcePoints } = useGrowthBySource({ projectId, selectedTokenId, granularity: growthGranularity });
-  const { languages, sources } = useTraffic({ projectId, selectedTokenId });
+  const { languages } = useTraffic({ projectId, selectedTokenId });
   const { points: messagePoints, outgoingPoints, weeklyMessages } = useMessagesActivity({ projectId, selectedTokenId, granularity: msgGranularity, split: activitySplitMode === 'split' });
 
   /** Multi-line данные для графика активности: входящие + исходящие (только в режиме split) */
@@ -139,8 +139,6 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken, allP
   const growthTrend = weeklyGrowth > 0 ? 'up' : weeklyGrowth < 0 ? 'down' : 'neutral';
   const multiLineData = aggregateTopSources(sourcePoints, 5);
 
-  /** Элементы для donut-карточки источников трафика */
-  const sourceItems = sources.map(s => ({ label: s.param, count: s.count, percentage: s.percentage }));
   /** Элементы для donut-карточки языков */
   const languageItems = languages.map(l => ({ label: l.code, count: l.count, percentage: l.percentage }));
   /** Элементы для donut-карточки Premium / не Premium */
@@ -245,20 +243,11 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken, allP
             />
           </div>
 
-          {/* Строка 2: источники трафика (bar/line) + donut источников */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-            <AnalyticsSourcesChart
-              projectId={projectId}
-              selectedTokenId={selectedTokenId}
-            />
-            <StatDonutCard
-              title="Источники трафика"
-              items={sourceItems}
-              maxItems={null}
-              className="h-full"
-              info={<SourcesDonutChartInfo />}
-            />
-          </div>
+          <AnalyticsSourcesPair
+            projectId={projectId}
+            selectedTokenId={selectedTokenId}
+            donutInfo={<SourcesDonutChartInfo />}
+          />
 
           {/* Строка: топ-10 популярных кнопок */}
           <div className="grid grid-cols-1 gap-3">

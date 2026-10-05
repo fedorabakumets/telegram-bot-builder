@@ -38,6 +38,8 @@ function getDonutColor(index: number): string {
 export interface StatDonutCardProps {
   /** Заголовок карточки */
   title: string;
+  /** Подпись под заголовком, например срок */
+  subtitle?: string;
   /** Список элементов диаграммы */
   items: StatBarItem[];
   /** Максимальное количество элементов; null — показать все, по умолчанию 8 */
@@ -48,6 +50,8 @@ export interface StatDonutCardProps {
   className?: string;
   /** Спойлер «Что это за диаграмма?» */
   info?: React.ReactNode;
+  /** Кнопки справа от заголовка, например срок */
+  headerExtra?: React.ReactNode;
 }
 
 /**
@@ -83,7 +87,7 @@ function DonutTooltip({ active, payload }: DonutTooltipProps): React.JSX.Element
  * @returns JSX элемент карточки
  */
 export function StatDonutCard(props: StatDonutCardProps): React.JSX.Element {
-  const { title, items, maxItems = 8, onItemClick, className, info } = props;
+  const { title, subtitle, items, maxItems = 8, onItemClick, className, info, headerExtra } = props;
 
   const allItems = items ?? [];
   const visible = maxItems == null ? allItems : allItems.slice(0, maxItems);
@@ -95,8 +99,15 @@ export function StatDonutCard(props: StatDonutCardProps): React.JSX.Element {
 
   return (
     <div className={`bg-background border rounded-xl p-3 flex flex-col gap-2 min-w-0 ${className ?? ''}`}>
-      {/* Заголовок карточки */}
-      <p className="text-sm font-medium text-foreground">{title}</p>
+      <div className="flex items-start justify-between gap-2 flex-wrap">
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-foreground">{title}</p>
+          {subtitle ? (
+            <p className="text-[11px] text-muted-foreground">{subtitle}</p>
+          ) : null}
+        </div>
+        {headerExtra}
+      </div>
       {info}
 
       {isEmpty ? (
@@ -122,7 +133,7 @@ export function StatDonutCard(props: StatDonutCardProps): React.JSX.Element {
                 {visible.map((item, index) => (
                   <Cell
                     key={item.label}
-                    fill={getDonutColor(index)}
+                    fill={item.color ?? getDonutColor(index)}
                   />
                 ))}
               </Pie>
@@ -155,7 +166,7 @@ export function StatDonutCard(props: StatDonutCardProps): React.JSX.Element {
                 {/* Цветная точка */}
                 <span
                   className="flex-shrink-0 w-2 h-2 rounded-full"
-                  style={{ backgroundColor: getDonutColor(index) }}
+                  style={{ backgroundColor: item.color ?? getDonutColor(index) }}
                 />
                 {/* Метка */}
                 <span className="text-xs text-foreground truncate flex-1 min-w-0">

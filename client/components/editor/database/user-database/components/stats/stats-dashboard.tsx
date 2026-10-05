@@ -18,7 +18,7 @@ import { ChartTypeToggle, ChartType } from './chart-type-toggle';
 import { SourceModeToggle, SourceMode } from './source-mode-toggle';
 import { ActivitySplitToggle, ActivitySplitMode } from './activity-split-toggle';
 import { aggregateTopSources } from './source-aggregation-utils';
-import { AnalyticsSourcesChart } from '@/components/editor/analytics/analytics-sources-chart';
+import { AnalyticsSourcesPair } from '@/components/editor/analytics/analytics-sources-pair';
 import { AnalyticsAudienceReachNote } from '@/components/editor/analytics/analytics-audience-reach-note';
 
 /**
@@ -89,7 +89,7 @@ export function StatsDashboard(props: StatsDashboardProps): React.JSX.Element {
 
   const { points, weeklyGrowth } = useGrowth({ projectId, selectedTokenId, granularity: growthGranularity });
   const { points: sourcePoints } = useGrowthBySource({ projectId, selectedTokenId, granularity: growthGranularity });
-  const { sources, languages } = useTraffic({ projectId, selectedTokenId });
+  const { languages } = useTraffic({ projectId, selectedTokenId });
   const { points: messagePoints, outgoingPoints, weeklyMessages } = useMessagesActivity({
     projectId,
     selectedTokenId,
@@ -110,13 +110,6 @@ export function StatsDashboard(props: StatsDashboardProps): React.JSX.Element {
   const total = stats.totalUsers ?? 0;
   const premiumPercent = calcPercent(stats.premiumUsers ?? 0, total);
   const nonPremiumPercent = calcPercent(Math.max(0, total - (stats.premiumUsers ?? 0)), total);
-
-  // Преобразуем источники трафика в формат StatBarItem
-  const sourceItems = sources.map(s => ({
-    label: s.param,
-    count: s.count,
-    percentage: s.percentage,
-  }));
 
   // Преобразуем языки в формат StatBarItem
   const languageItems = languages.map(l => ({
@@ -192,19 +185,12 @@ export function StatsDashboard(props: StatsDashboardProps): React.JSX.Element {
         />
       </div>
 
-      {/* Строка 2: график источников трафика + donut рядом */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <AnalyticsSourcesChart
-          projectId={projectId}
-          selectedTokenId={selectedTokenId}
-        />
-        <StatDonutCard
-          title="Источники трафика"
-          items={sourceItems}
-          maxItems={null}
-          onItemClick={onSourceClick}
-        />
-      </div>
+      <AnalyticsSourcesPair
+        projectId={projectId}
+        selectedTokenId={selectedTokenId}
+        onSourceClick={onSourceClick}
+        gridClassName="grid-cols-1 sm:grid-cols-2"
+      />
 
       {/* Строка 3: Premium + языки */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
