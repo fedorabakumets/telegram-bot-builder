@@ -33,7 +33,8 @@ export async function setupVite(app: Express, server: Server): Promise<void> {
     middlewareMode: true,
     hmr: {
       server,
-      overlay: false
+      // Плашка ошибки: после исправления Vite сам перезагружает вкладку
+      overlay: true
     },
     allowedHosts: true as const,
   };

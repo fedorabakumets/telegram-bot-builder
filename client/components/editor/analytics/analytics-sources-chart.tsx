@@ -17,8 +17,9 @@ import { aggregateTopSources } from '@/components/editor/database/user-database/
 import { fmtTick, fmtTooltipDate, getTickIndices } from '@/components/editor/database/user-database/components/stats/sparkline-utils';
 import { useUserMessagesLiveContext } from '@/components/editor/database/user-database/contexts/user-messages-live-context';
 import { ChartTypeToggle, ChartType } from '@/components/editor/database/user-database/components/stats/chart-type-toggle';
-import { GrowthGranularitySelector } from '@/components/editor/database/user-database/components/stats/growth-granularity-selector';
 import { SourcesTrendChartInfo } from './analytics-chart-info-texts';
+import { SourcesPeriodSelector } from './sources-period-selector';
+import { SourcesPeriod } from './sources-period';
 
 /**
  * Пропсы компонента AnalyticsSourcesChart
@@ -28,6 +29,14 @@ export interface AnalyticsSourcesChartProps {
   projectId: number;
   /** Идентификатор выбранного токена бота */
   selectedTokenId?: number | null;
+  /** Окно столбцов; задаёт родительская пара карточек */
+  granularity: GrowthGranularity;
+  /** false — пояснение вместо графика, режим «Все» */
+  showSeries: boolean;
+  /** Выбранный срок пары карточек */
+  period: SourcesPeriod;
+  /** Смена срока для столбцов и кольца */
+  onPeriodChange: (period: SourcesPeriod) => void;
 }
 
 /** Сколько топ-источников на графике (+ «Остальные») */
@@ -76,8 +85,14 @@ function SourcesTooltip({
 /**
  * Карточка-график динамики источников трафика
  */
-export function AnalyticsSourcesChart({ projectId, selectedTokenId }: AnalyticsSourcesChartProps): React.JSX.Element {
-  const [granularity, setGranularity] = useState<GrowthGranularity>('1d');
+export function AnalyticsSourcesChart({
+  projectId,
+  selectedTokenId,
+  granularity,
+  showSeries,
+  period,
+  onPeriodChange,
+}: AnalyticsSourcesChartProps): React.JSX.Element {
   const [chartType, setChartType] = useState<ChartType>('bar');
   /** null = на графике топ-N; иначе только выбранные из легенды */
   const [selectedSources, setSelectedSources] = useState<Set<string> | null>(null);
@@ -94,7 +109,12 @@ export function AnalyticsSourcesChart({ projectId, selectedTokenId }: AnalyticsS
     });
   }, [liveContext, projectId, selectedTokenId, queryClient]);
 
-  const { points, isLoading } = useGrowthBySource({ projectId, selectedTokenId, granularity });
+  const { points, isLoading } = useGrowthBySource({
+    projectId,
+    selectedTokenId,
+    granularity,
+    enabled: showSeries,
+  });
 
   /** Все источники — для легенды */
   const allSourcesData = useMemo(
@@ -219,21 +239,27 @@ export function AnalyticsSourcesChart({ projectId, selectedTokenId }: AnalyticsS
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <div className="flex items-center gap-2 min-w-0">
           <span className="text-sm font-medium truncate">Источники трафика</span>
-          {totalForPeriod > 0 && (
+          {showSeries && totalForPeriod > 0 && (
             <span className="text-xs text-muted-foreground whitespace-nowrap">
               +{totalForPeriod} за период
             </span>
           )}
         </div>
         <div className="flex items-center gap-1.5 flex-wrap">
-          <ChartTypeToggle value={chartType} onChange={setChartType} />
-          <GrowthGranularitySelector value={granularity} onChange={setGranularity} />
+          {showSeries ? (
+            <ChartTypeToggle value={chartType} onChange={setChartType} />
+          ) : null}
+          <SourcesPeriodSelector value={period} onChange={onPeriodChange} />
         </div>
       </div>
 
       <SourcesTrendChartInfo />
 
-      {chartData.length < 2 ? (
+      {!showSeries ? (
+        <p className="text-xs text-muted-foreground/50 italic py-8 text-center">
+          График по времени есть только для выбранного срока.
+        </p>
+      ) : chartData.length < 2 ? (
         <p className="text-xs text-muted-foreground/50 italic py-8 text-center">
           {isLoading ? '' : 'Нет данных об источниках трафика'}
         </p>
@@ -326,7 +352,7 @@ export function AnalyticsSourcesChart({ projectId, selectedTokenId }: AnalyticsS
         </ResponsiveContainer>
       )}
 
-      {allSourcesData.length > 0 && (
+      {showSeries && allSourcesData.length > 0 && (
         <div className="flex flex-col gap-2 border-t border-border/40 pt-2">
           <div className="flex items-baseline justify-between gap-2 text-[11px] font-semibold text-muted-foreground">
             <span>
