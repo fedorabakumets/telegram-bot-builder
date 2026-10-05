@@ -7,6 +7,7 @@
  * @module server/bots/workerRuntime
  */
 
+import { runtimeEnv } from "../services/runtime-overlay";
 import { resolveWorkerDockerNetwork } from "./workerDockerFlags";
 
 /** Среда запуска воркеров */
@@ -37,7 +38,7 @@ export interface DockerWorkerConfig {
  * @returns docker, remote или process
  */
 export function getWorkerRuntime(): WorkerRuntime {
-  const value = process.env.WORKER_RUNTIME?.trim().toLowerCase();
+  const value = runtimeEnv("WORKER_RUNTIME")?.toLowerCase();
   return value === "docker" || value === "remote" ? value : "process";
 }
 
@@ -46,7 +47,7 @@ export function getWorkerRuntime(): WorkerRuntime {
  * @returns WORKER_RUNNER_ID или "default"
  */
 export function getWorkerRunnerId(): string {
-  return process.env.WORKER_RUNNER_ID?.trim() || "default";
+  return runtimeEnv("WORKER_RUNNER_ID") || "default";
 }
 
 /** Откуда исполнитель берёт код бота: сборка из S3 или путь к папке bots/ панели */
@@ -94,15 +95,14 @@ function currentUser(): string {
  * @returns настройки с значениями по умолчанию
  */
 export function getDockerWorkerConfig(): DockerWorkerConfig {
-  const env = process.env;
   return {
-    image: env.WORKER_DOCKER_IMAGE?.trim() || "ghcr.io/fedorabakumets/telegram-bot-builder:latest",
-    python: env.WORKER_DOCKER_PYTHON?.trim() || "python3",
-    network: resolveWorkerDockerNetwork(env),
-    memory: env.WORKER_MEMORY_LIMIT?.trim() ?? "",
-    cpus: env.WORKER_CPUS?.trim() ?? "",
-    user: env.WORKER_DOCKER_USER?.trim() || currentUser(),
-    hostRoot: env.WORKER_DOCKER_HOST_ROOT?.trim() ?? "",
-    envPassthrough: parseEnvNameList(env.WORKER_ENV_PASSTHROUGH),
+    image: runtimeEnv("WORKER_DOCKER_IMAGE") || "ghcr.io/fedorabakumets/telegram-bot-builder:latest",
+    python: process.env.WORKER_DOCKER_PYTHON?.trim() || "python3",
+    network: resolveWorkerDockerNetwork(process.env),
+    memory: runtimeEnv("WORKER_MEMORY_LIMIT") ?? "",
+    cpus: runtimeEnv("WORKER_CPUS") ?? "",
+    user: process.env.WORKER_DOCKER_USER?.trim() || currentUser(),
+    hostRoot: runtimeEnv("WORKER_DOCKER_HOST_ROOT") ?? "",
+    envPassthrough: parseEnvNameList(runtimeEnv("WORKER_ENV_PASSTHROUGH")),
   };
 }

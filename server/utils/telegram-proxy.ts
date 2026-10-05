@@ -6,6 +6,7 @@
  */
 
 import { ProxyAgent, Agent, fetch as undiciFetch } from 'undici';
+import { runtimeEnv } from '../services/runtime-overlay';
 
 /** Агент для прямого подключения (без системного прокси) */
 const directAgent = new Agent();
@@ -24,18 +25,27 @@ function initProxy(): void {
   if (proxyInitialized) return;
   proxyInitialized = true;
 
-  const proxyUrl = process.env.TELEGRAM_PROXY_URL;
-  if (!proxyUrl || proxyUrl.trim() === '') return;
+  const proxyUrl = runtimeEnv('TELEGRAM_PROXY_URL');
+  if (!proxyUrl) return;
 
   try {
-    proxyAgent = new ProxyAgent(proxyUrl.trim());
-    console.log(`[Proxy] Прокси инициализирован: ${proxyUrl.trim()}`);
+    proxyAgent = new ProxyAgent(proxyUrl);
+    console.log(`[Proxy] Прокси инициализирован: ${proxyUrl}`);
   } catch (error) {
     console.error(
       `[Proxy] Ошибка создания ProxyAgent:`,
       error instanceof Error ? error.message : error,
     );
   }
+}
+
+/**
+ * Сбрасывает кэш агента, чтобы следующее обращение взяло адрес из админки
+ * @returns void
+ */
+export function resetTelegramProxy(): void {
+  proxyInitialized = false;
+  proxyAgent = null;
 }
 
 /**

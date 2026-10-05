@@ -4,6 +4,8 @@
  * @module server/redis/runnerSiteInfoUrls
  */
 
+import { runtimeFlag } from "../services/runtime-overlay";
+
 /** Адреса базы и Redis площадки в сведениях исполнителя */
 export interface RunnerSiteConnectionUrls {
   /** Адрес PostgreSQL для ботов внутри площадки */
@@ -20,8 +22,7 @@ export interface RunnerSiteConnectionUrls {
  * @returns true, если RUNNER_SITE_INFO_HIDE_URLS равен true/1/yes
  */
 export function isRunnerSiteInfoHideUrls(env: NodeJS.ProcessEnv): boolean {
-  const value = env.RUNNER_SITE_INFO_HIDE_URLS?.trim().toLowerCase();
-  return value === "true" || value === "1" || value === "yes";
+  return runtimeFlag("RUNNER_SITE_INFO_HIDE_URLS", env);
 }
 
 /**

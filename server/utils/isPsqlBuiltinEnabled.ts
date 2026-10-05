@@ -3,6 +3,8 @@
  * @module server/utils/isPsqlBuiltinEnabled
  */
 
+import { runtimeFlag } from "../services/runtime-overlay";
+
 /**
  * Разрешено ли узлу psql_query в режиме `builtin` ходить в БД платформы (DATABASE_URL панели).
  * По умолчанию выключено: в многопользовательской установке это даёт любому боту
@@ -12,6 +14,5 @@
  * @returns true, если PSQL_BUILTIN_ENABLED равен true/1/yes
  */
 export function isPsqlBuiltinEnabled(env: NodeJS.ProcessEnv = process.env): boolean {
-  const value = env.PSQL_BUILTIN_ENABLED?.trim().toLowerCase();
-  return value === "true" || value === "1" || value === "yes";
+  return runtimeFlag("PSQL_BUILTIN_ENABLED", env);
 }

@@ -3,6 +3,8 @@
  * @module server/utils/isBotRuntimeEnabled
  */
 
+import { runtimeFlag } from "../services/runtime-overlay";
+
 /**
  * Включена ли роль bot_runtime.
  * По умолчанию выключено: боты по-прежнему получают DATABASE_URL панели.
@@ -11,6 +13,5 @@
  * @returns true, если BOT_RUNTIME_ENABLED равен true/1/yes
  */
 export function isBotRuntimeEnabled(env: NodeJS.ProcessEnv = process.env): boolean {
-  const value = env.BOT_RUNTIME_ENABLED?.trim().toLowerCase();
-  return value === "true" || value === "1" || value === "yes";
+  return runtimeFlag("BOT_RUNTIME_ENABLED", env);
 }

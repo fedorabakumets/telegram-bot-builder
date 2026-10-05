@@ -5,6 +5,7 @@
 
 import { storage } from '../storages/storage';
 import { workerManager } from './botWorkerManager';
+import { isWorkerPoolEnabled } from './isWorkerPoolEnabled';
 import { findActiveProcessForToken } from '../utils/findActiveProcessForToken';
 import { clearBotRedisLock } from './clearBotRedisLock';
 import { refuseInactiveBotStart } from './refuse-inactive-bot-start';
@@ -31,7 +32,7 @@ export { RESTORE_SWEEP_DELAY_MS } from './restoreSweepConstants';
  * @param tokenId - ID токена
  */
 export function isBotActuallyRunning(projectId: number, tokenId: number): boolean {
-  if (process.env.USE_WORKER_POOL !== 'false'
+  if (isWorkerPoolEnabled()
     && workerManager.isBotRunning(projectId, tokenId)) {
     return true;
   }

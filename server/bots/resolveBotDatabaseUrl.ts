@@ -3,6 +3,7 @@
  * @module server/bots/resolveBotDatabaseUrl
  */
 
+import { runtimeEnv } from "../services/runtime-overlay";
 import { isBotRuntimeEnabled } from "../utils/isBotRuntimeEnabled";
 
 /** Решение, какую строку подключения видит бот */
@@ -30,7 +31,7 @@ export function resolveBotDatabaseUrl(env: NodeJS.ProcessEnv = process.env): Bot
   if (!isBotRuntimeEnabled(env)) {
     return { databaseUrl: panelUrl, useBotRuntime: false, warning: null };
   }
-  const botUrl = env.BOT_DATABASE_URL?.trim();
+  const botUrl = runtimeEnv("BOT_DATABASE_URL", env);
   if (!botUrl) {
     return {
       databaseUrl: panelUrl,

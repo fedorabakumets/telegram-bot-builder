@@ -7,6 +7,7 @@
  * @module server/bots/botEnvPolicy
  */
 
+import { runtimeEnv } from "../services/runtime-overlay";
 import { parseEnvNameList } from "./workerRuntime";
 
 /** Имена, которые никогда не отдаются боту как серверная переменная */
@@ -53,7 +54,7 @@ export function isServerEnvDenied(name: string): boolean {
  * @returns имена из WORKER_ENV_PASSTHROUGH (без проверки denylist)
  */
 export function getEnvPassthrough(env: NodeJS.ProcessEnv = process.env): string[] {
-  return parseEnvNameList(env.WORKER_ENV_PASSTHROUGH);
+  return parseEnvNameList(runtimeEnv("WORKER_ENV_PASSTHROUGH", env));
 }
 
 /**

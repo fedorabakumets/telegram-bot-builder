@@ -4,6 +4,7 @@
  * @module server/database/backups/dbBackupTargets
  */
 
+import { runtimeEnv } from "../../services/runtime-overlay";
 import { assertBackupLabel, DEFAULT_DB_BACKUP_LABEL } from "./dbBackupConfig";
 import type { DbBackupEntry } from "./dbBackupIndex";
 
@@ -41,8 +42,13 @@ export function parseDbBackupTargets(raw: string | undefined): DbBackupTarget[] 
 export function getDbBackupTargets(env: NodeJS.ProcessEnv = process.env): DbBackupTarget[] {
   const targets: DbBackupTarget[] = [];
   const panelUrl = env.DATABASE_URL?.trim();
-  if (panelUrl) targets.push({ label: assertBackupLabel(env.DB_BACKUP_LABEL?.trim() || DEFAULT_DB_BACKUP_LABEL), databaseUrl: panelUrl });
-  targets.push(...parseDbBackupTargets(env.DB_BACKUP_TARGETS));
+  if (panelUrl) {
+    targets.push({
+      label: assertBackupLabel(runtimeEnv("DB_BACKUP_LABEL", env) || DEFAULT_DB_BACKUP_LABEL),
+      databaseUrl: panelUrl,
+    });
+  }
+  targets.push(...parseDbBackupTargets(runtimeEnv("DB_BACKUP_TARGETS", env)));
   const seen = new Set<string>();
   for (const { label } of targets) {
     if (seen.has(label)) throw new Error(`Метка бэкапа "${label}" повторяется`);

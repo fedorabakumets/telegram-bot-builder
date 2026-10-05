@@ -8,6 +8,7 @@
 
 import path from "path";
 
+import { runtimeEnv } from "../services/runtime-overlay";
 import type { StorageBackend } from "./storage-backend";
 
 /** Имя переменной окружения с ID хранилища загрузок (storage_configs.id) */
@@ -44,8 +45,7 @@ const CONTENT_TYPES: Record<string, string> = {
  * @returns ID конфига либо null, если запасное чтение из S3 выключено
  */
 export function getUploadsStorageId(env: NodeJS.ProcessEnv = process.env): string | null {
-  const raw = env[UPLOADS_STORAGE_ID_ENV]?.trim();
-  return raw ? raw : null;
+  return runtimeEnv(UPLOADS_STORAGE_ID_ENV, env) ?? null;
 }
 
 /**

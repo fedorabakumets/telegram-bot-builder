@@ -5,8 +5,7 @@
  * @module server/bots/workerDockerFlags
  */
 
-/** Значения, которые включают флаг: true, 1, yes */
-const FLAG_ON = new Set(["true", "1", "yes"]);
+import { runtimeEnv, runtimeFlag } from "../services/runtime-overlay";
 
 /**
  * Проверяет булев флаг окружения (true, 1, yes, без учёта регистра)
@@ -15,8 +14,7 @@ const FLAG_ON = new Set(["true", "1", "yes"]);
  * @returns true, если значение одно из true/1/yes
  */
 export function isEnvFlag(env: NodeJS.ProcessEnv, name: string): boolean {
-  const value = env[name]?.trim().toLowerCase();
-  return value !== undefined && FLAG_ON.has(value);
+  return runtimeFlag(name, env);
 }
 
 /**
@@ -46,9 +44,9 @@ export function isWorkerUploadsReadonly(env: NodeJS.ProcessEnv = process.env): b
  * @returns значение для --network
  */
 export function resolveWorkerDockerNetwork(env: NodeJS.ProcessEnv = process.env): string {
-  const named = env.WORKER_DOCKER_NETWORK?.trim() || "";
+  const named = runtimeEnv("WORKER_DOCKER_NETWORK", env) || "";
   if (!isWorkerDockerIsolate(env)) return named || "host";
-  const network = named || env.WORKER_DOCKER_BRIDGE_NAME?.trim() || "";
+  const network = named || runtimeEnv("WORKER_DOCKER_BRIDGE_NAME", env) || "";
   if (network) return network;
   throw new Error(
     "WORKER_DOCKER_ISOLATE включён: задайте имя сети площадки в WORKER_DOCKER_NETWORK или WORKER_DOCKER_BRIDGE_NAME",

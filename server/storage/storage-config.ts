@@ -27,6 +27,7 @@ import {
   type InsertStorageConfig,
 } from "@shared/schema";
 
+import { runtimeEnv } from "../services/runtime-overlay";
 import type { S3BackendParams } from "./s3-backend";
 import {
   encryptCredentials,
@@ -57,8 +58,7 @@ export const DEFAULT_LOCAL_ROOT_PATH = "uploads";
  * @returns Обрезанное значение либо пустая строка, если не задано
  */
 function readTrimmedEnv(name: string): string {
-  const raw = process.env[name];
-  return typeof raw === "string" ? raw.trim() : "";
+  return runtimeEnv(name) ?? "";
 }
 
 /**

@@ -1,9 +1,15 @@
 /**
+ * @fileoverview Запуск бота: пул воркеров или отдельный процесс
+ * @module server/bots/startBot
+ */
+
+/**
  * Модуль для запуска дочерних процессов
  * @external child_process
  */
 import { spawn } from "node:child_process";
 import { workerManager } from './botWorkerManager';
+import { isWorkerPoolEnabled } from './isWorkerPoolEnabled';
 import { precompileBotCode } from './precompileBotCode';
 /** Окружение процесса бота без секретов панели */
 import { buildWorkerBaseEnv } from './workerBaseEnv';
@@ -447,7 +453,7 @@ export async function startBot(
     }
 
     // ─── Режим воркера: запуск бота через worker pool вместо отдельного процесса ───
-    if (process.env.USE_WORKER_POOL !== 'false') {
+    if (isWorkerPoolEnabled()) {
       console.log(`🏭 [WorkerPool] Запуск бота ${projectId}/${tokenId} через воркер...`);
       console.log(`🏭 [WorkerPool] mainFile: ${mainFile}`);
 
