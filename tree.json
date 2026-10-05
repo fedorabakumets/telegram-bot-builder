@@ -31,7 +31,7 @@
       "bot-json-prompt"
     ],
     "folder_titles": {},
-    "updated_at": "2026-10-02T22:07:40Z",
+    "updated_at": "2026-10-05T18:09:09Z",
     "tags": [],
     "author": ""
   },
@@ -58,14 +58,14 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-10-03T14:16:00+03:00",
+    "updated_at": "2026-10-05T19:24:32Z",
     "tags": [],
     "author": ""
   },
   {
     "path": "api/admin",
     "title": "admin",
-    "excerpt": "Эндпоинтов: **20**",
+    "excerpt": "Эндпоинтов: **23**",
     "parts": [
       "api",
       "admin"
@@ -73,7 +73,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-10-03T14:16:00+03:00",
+    "updated_at": "2026-10-05T19:24:32Z",
     "tags": [],
     "author": ""
   },
@@ -1078,7 +1078,7 @@
     "folder_titles": {
       "deployment": "🚀 Деплой"
     },
-    "updated_at": "2026-10-01T10:43:44Z",
+    "updated_at": "2026-10-05T19:18:06Z",
     "tags": [],
     "author": ""
   },
@@ -1093,7 +1093,7 @@
     "folder_titles": {
       "deployment": "🚀 Деплой"
     },
-    "updated_at": "2026-10-01T10:43:44Z",
+    "updated_at": "2026-10-05T17:10:34Z",
     "tags": [],
     "author": ""
   },
@@ -1123,7 +1123,7 @@
     "folder_titles": {
       "deployment": "🚀 Деплой"
     },
-    "updated_at": "2026-10-02T20:26:46Z",
+    "updated_at": "2026-10-05T19:18:06Z",
     "tags": [],
     "author": ""
   },
@@ -1153,7 +1153,7 @@
     "folder_titles": {
       "deployment": "🚀 Деплой"
     },
-    "updated_at": "2026-10-01T15:35:53Z",
+    "updated_at": "2026-10-05T19:18:06Z",
     "tags": [],
     "author": ""
   },
@@ -1183,7 +1183,7 @@
     "folder_titles": {
       "deployment": "🚀 Деплой"
     },
-    "updated_at": "2026-10-01T15:35:53Z",
+    "updated_at": "2026-10-05T17:39:15Z",
     "tags": [],
     "author": ""
   },
@@ -1213,7 +1213,7 @@
     "folder_titles": {
       "deployment": "🚀 Деплой"
     },
-    "updated_at": "2026-10-01T18:55:31Z",
+    "updated_at": "2026-10-05T19:18:06Z",
     "tags": [],
     "author": ""
   },
@@ -1243,7 +1243,7 @@
     "folder_titles": {
       "deployment": "🚀 Деплой"
     },
-    "updated_at": "2026-10-02T20:26:46Z",
+    "updated_at": "2026-10-05T19:18:06Z",
     "tags": [],
     "author": ""
   },
@@ -1378,7 +1378,7 @@
     "folder_titles": {
       "features": "🧩 Возможности"
     },
-    "updated_at": "2026-10-02T22:07:40Z",
+    "updated_at": "2026-10-05T18:09:09Z",
     "tags": [],
     "author": ""
   },
@@ -2033,7 +2033,7 @@
   {
     "path": "futures/infrastructure/bot-database-access",
     "title": "Доступ ботов к базе панели",
-    "excerpt": "**Статус:** отложено. Вернуться после параметров в `psql_query`. Проблема не закрыта.",
+    "excerpt": "**Статус:** включается флагом, по умолчанию выключено. Проблема ноды `code` со своим DSN не закрыта.",
     "parts": [
       "futures",
       "infrastructure",
@@ -2043,7 +2043,7 @@
       "futures": "🔮 Планы развития",
       "infrastructure": "🏗️ Инфраструктура"
     },
-    "updated_at": "2026-10-02T22:02:59Z",
+    "updated_at": "2026-10-05T18:09:09Z",
     "tags": [],
     "author": ""
   },
@@ -2728,6 +2728,21 @@
     "author": ""
   },
   {
+    "path": "interface/admin-settings",
+    "title": "Настройки рантайма в админке",
+    "excerpt": "Длинный список переменных окружения настраивается в панели `/admin`. В боковом меню шесть разделов: хранилища, бэкапы, воркеры, исполнители,",
+    "parts": [
+      "interface",
+      "admin-settings"
+    ],
+    "folder_titles": {
+      "interface": "🖥️ Интерфейс"
+    },
+    "updated_at": "2026-10-05T20:14:28Z",
+    "tags": [],
+    "author": ""
+  },
+  {
     "path": "interface/analytics",
     "title": "📊 Вкладка «Аналитика»",
     "excerpt": "Вкладка «Аналитика» показывает, как растёт аудитория вашего бота и насколько активно люди им пользуются. Здесь собраны наглядные карточки с ",
@@ -3373,6 +3388,21 @@
       "releases": "📝 Релизы"
     },
     "updated_at": "2026-10-03T00:27:25Z",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "releases/RELEASE_NOTES_v2.2.1.5",
+    "title": "📋 Release Notes v2.2.1.5",
+    "excerpt": "**Дата выпуска:** 5 октября 2026 г.",
+    "parts": [
+      "releases",
+      "RELEASE_NOTES_v2.2.1.5"
+    ],
+    "folder_titles": {
+      "releases": "📝 Релизы"
+    },
+    "updated_at": "2026-10-05T19:18:06Z",
     "tags": [],
     "author": ""
   },
