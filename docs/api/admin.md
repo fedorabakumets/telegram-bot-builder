@@ -1,6 +1,6 @@
 # admin
 
-Эндпоинтов: **20**
+Эндпоинтов: **23**
 
 ### `GET` /admin/api/app-settings
 
@@ -220,6 +220,97 @@ curl -s -c admin.txt -b admin.txt -X POST http://localhost:5000/admin/api/logout
 | Код | Описание |
 |-----|----------|
 | 302 | Location `/admin/login`, cookie очищена |
+
+### `GET` /admin/api/runtime-settings/{group}
+
+Раздел настроек рантайма
+
+**Авторизация:** Admin cookie
+
+Поля раздела. Секрет отдаётся только флагом `configured`, без значения. Пока значение не сохранено, в `value` попадает живой process.env.
+
+**Auth:** cookie `admin_auth`. **UI:** `/admin/runtime/{group}`.
+
+```bash
+curl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  -d 'key=YOUR_ADMIN_API_KEY'
+curl -s http://localhost:5000/admin/api/runtime-settings/backups -b admin.txt
+```
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `group` | path | да | — | `"backups"` |
+| `admin_auth` | cookie | нет | Admin cookie после `/admin/login` (`ADMIN_API_KEY`). Без неё — 401 ADMIN_UNAUTHORIZED. | `"eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0"` |
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Поля и хранилища |
+| 401 | Нет admin-сессии |
+| 404 | Неизвестный раздел |
+
+### `PUT` /admin/api/runtime-settings/{group}
+
+Сохранить раздел настроек рантайма
+
+**Авторизация:** Admin cookie
+
+Пустой секрет не затирает старое значение. Пустая обычная строка удаляет ключ и возвращает чтение из env. Секреты не пишутся в process.env. Раздел backups перезапускает планировщик, storages обновляет s3-default.
+
+```bash
+curl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  -d 'key=YOUR_ADMIN_API_KEY'
+curl -s -X PUT http://localhost:5000/admin/api/runtime-settings/workers -b admin.txt \
+  -H 'Content-Type: application/json' -d '{"values":{"USE_WORKER_POOL":"true"}}'
+```
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `group` | path | да | — | — |
+| `admin_auth` | cookie | нет | Admin cookie после `/admin/login` (`ADMIN_API_KEY`). Без неё — 401 ADMIN_UNAUTHORIZED. | `"eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0"` |
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Сохранено |
+| 400 | Публичное хранилище или неверное тело |
+| 401 | Нет admin-сессии |
+
+### `POST` /admin/api/runtime-settings/backups/run
+
+Снять бэкап сейчас
+
+**Авторизация:** Admin cookie
+
+Дамп всех целей расписания. Публичное хранилище отклоняется.
+
+```bash
+curl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  -d 'key=YOUR_ADMIN_API_KEY'
+curl -s -X POST http://localhost:5000/admin/api/runtime-settings/backups/run -b admin.txt
+```
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `admin_auth` | cookie | нет | Admin cookie после `/admin/login` (`ADMIN_API_KEY`). Без неё — 401 ADMIN_UNAUTHORIZED. | `"eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0"` |
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Метки баз |
+| 401 | Нет admin-сессии |
 
 ### `GET` /admin/api/status
 
