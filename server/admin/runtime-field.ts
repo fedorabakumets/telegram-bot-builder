@@ -16,6 +16,16 @@ export interface RuntimeField {
   kind: RuntimeFieldKind;
   /** Короткая подсказка под полем */
   hint?: string;
+  /** Пример в placeholder. Сам не подставляется и не сохраняется */
+  placeholder?: string;
+}
+
+/** Ссылка на документ раздела под заголовком страницы */
+export interface RuntimeDocLink {
+  /** Подпись ссылки */
+  label: string;
+  /** Адрес внутри панели, например /admin/guides/uploads-s3 */
+  href: string;
 }
 
 /** Префикс ключа в `app_settings` */
@@ -38,6 +48,8 @@ export interface RuntimeGroup {
   title: string;
   /** Описание под заголовком */
   description: string;
+  /** Ссылки на документы этого раздела */
+  docs?: RuntimeDocLink[];
   /** Поля раздела */
   fields: RuntimeField[];
 }

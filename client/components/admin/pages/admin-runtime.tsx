@@ -5,6 +5,7 @@
 
 import { Loader2 } from 'lucide-react';
 import { useParams } from 'wouter';
+import { RuntimeDocLinks } from '../runtime/runtime-doc-links';
 import { RuntimeSettingsForm } from '../runtime/runtime-settings-form';
 import { useRuntimeSettings } from '../runtime/use-runtime-settings';
 
@@ -34,6 +35,7 @@ export function AdminRuntimePage() {
       <div>
         <h1 className="text-2xl font-bold">{query.data.title}</h1>
         <p className="text-muted-foreground mt-1">{query.data.description}</p>
+        <RuntimeDocLinks docs={query.data.docs} />
       </div>
       <RuntimeSettingsForm data={query.data} />
     </div>

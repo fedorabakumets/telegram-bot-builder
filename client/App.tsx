@@ -130,6 +130,7 @@ function Router() {
       <Switch>
         <Route path="/admin/settings" component={AdminPanel} />
         <Route path="/admin/runtime/:group" component={AdminPanel} />
+        <Route path="/admin/guides/:slug" component={AdminPanel} />
         <Route path="/admin/docs/:viewer" component={AdminPanel} />
         <Route path="/admin/docs" component={AdminPanel} />
         <Route path="/admin/schema/:tableName" component={AdminPanel} />
