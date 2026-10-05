@@ -25,4 +25,6 @@ export interface PsqlQueryTemplateParams {
   connectionString: string;
   /** Разрешён ли режим builtin (БД платформы); при false узел builtin генерирует заглушку без запроса */
   builtinEnabled: boolean;
+  /** Запрещён ли режим env с переменной DATABASE_URL; при false код подключения не меняется */
+  panelDsnDenied: boolean;
 }

@@ -12,12 +12,14 @@ import { renderPartialTemplate } from '../template-renderer';
 export interface PsqlQueryRenderOptions {
   /** Разрешён ли режим builtin (БД платформы); по умолчанию true для обратной совместимости */
   builtinEnabled?: boolean;
+  /** Запрещён ли режим env с переменной DATABASE_URL; по умолчанию false — код как раньше */
+  panelDsnDenied?: boolean;
 }
 
 /**
  * Собирает параметры шаблона для всех узлов типа psql_query.
  * @param nodes - Массив узлов холста
- * @param options - Опции генерации (разрешён ли builtin)
+ * @param options - Опции генерации (разрешён ли builtin, запрещён ли DATABASE_URL)
  * @returns Массив PsqlQueryTemplateParams для генерации кода
  */
 export function collectPsqlQueryEntries(
@@ -25,6 +27,7 @@ export function collectPsqlQueryEntries(
   options: PsqlQueryRenderOptions = {},
 ): PsqlQueryTemplateParams[] {
   const builtinEnabled = options.builtinEnabled ?? true;
+  const panelDsnDenied = options.panelDsnDenied ?? false;
   return nodes
     .filter(n => n != null && n.type === 'psql_query')
     .map(node => ({
@@ -38,6 +41,7 @@ export function collectPsqlQueryEntries(
       connectionEnvVar: node.data?.connectionEnvVar || '',
       connectionString: node.data?.connectionString || '',
       builtinEnabled,
+      panelDsnDenied,
     }));
 }
 
@@ -45,7 +49,7 @@ export function collectPsqlQueryEntries(
  * Генерирует Python-код обработчиков для всех узлов psql_query.
  * Если есть узлы с режимами env/custom, один раз добавляет хелпер `_psql_safe_dsn`.
  * @param nodes - Массив узлов холста
- * @param options - Опции генерации (разрешён ли builtin)
+ * @param options - Опции генерации (разрешён ли builtin, запрещён ли DATABASE_URL)
  * @returns Сгенерированный Python-код или пустая строка
  */
 export function generatePsqlQueryHandlers(

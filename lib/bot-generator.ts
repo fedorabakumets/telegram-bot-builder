@@ -162,6 +162,11 @@ export interface GeneratePythonCodeOptions {
    * сервер передаёт PSQL_BUILTIN_ENABLED (по умолчанию false).
    */
   psqlBuiltinEnabled?: boolean;
+  /**
+   * Запретить режим env с переменной DATABASE_URL. По умолчанию false;
+   * сервер передаёт PSQL_PANEL_DSN_DENIED. Пока false, код узла не меняется.
+   */
+  psqlPanelDsnDenied?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -220,6 +225,7 @@ function buildGenerationContext(
     thumbnailFileIds = {},
     thumbnailUrls = {},
     psqlBuiltinEnabled = true,
+    psqlPanelDsnDenied = false,
   } = options;
 
   const genOptions: GenerationOptions = {
@@ -238,6 +244,7 @@ function buildGenerationContext(
     thumbnailFileIds,
     thumbnailUrls,
     psqlBuiltinEnabled,
+    psqlPanelDsnDenied,
   };
 
   const context = createGenerationContext(botData, botName, groups, genOptions);
@@ -365,6 +372,7 @@ function generateCodeSections(
     context.options.thumbnailUrls || {},
     context.projectId ?? null,
     context.options.psqlBuiltinEnabled ?? true,
+    context.options.psqlPanelDsnDenied ?? false,
   );
 
   // --- allReferencedNodeIds (теперь часть контекста секции) ---

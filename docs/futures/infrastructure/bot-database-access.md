@@ -25,6 +25,7 @@ SELECT token FROM bot_tokens
 ## Что уже сделано рядом
 
 - `psql_query` в режиме `builtin` выключен флагом `PSQL_BUILTIN_ENABLED` (по умолчанию выключен). Режим `env` с `DATABASE_URL` панели по-прежнему открыт.
+- Шаг A — флаг `PSQL_PANEL_DSN_DENIED` (по умолчанию выключен): при включении узел `psql_query` в режиме `env` не подключается по переменной `DATABASE_URL`. Роль `bot_runtime` он не заменяет.
 - Воркер не кладёт в базу процесса `SESSION_SECRET`, `DATABASE_URL` и `REDIS_URL` панели. Свой `DATABASE_URL` бот по-прежнему видит из своего словаря. Ссылки `${{VAR}}` раскрываются только из `WORKER_ENV_PASSTHROUGH`.
 - У каждого бота в воркере свой словарь переменных (`server/python/bot_env_overlay.py`).
 - Рассылка больше не выбирает пользователей всех проектов: `PROJECT_ID` и `TOKEN_ID` передаются параметрами.

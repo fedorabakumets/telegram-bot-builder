@@ -255,6 +255,7 @@ function generateCommandEntryHandler(node: Node, callbackHandlerCode: string): s
  * @param thumbnailUrls - Словарь прямых URL обложек видео (ключ — URL видео, значение — URL обложки)
  * @param projectId - ID проекта (для поддержки get_content)
  * @param psqlBuiltinEnabled - Разрешён ли узлу psql_query режим builtin (БД платформы)
+ * @param psqlPanelDsnDenied - Запрещён ли режим env с переменной DATABASE_URL
  * @returns Сгенерированный код обработчиков узлов
  *
  * @example
@@ -269,6 +270,7 @@ export function generateNodeHandlers(
   thumbnailUrls: Record<string, string> = {},
   projectId: number | null = null,
   psqlBuiltinEnabled: boolean = true,
+  psqlPanelDsnDenied: boolean = false,
 ): string {
   // Собираем код в массив строк
   const codeLines: string[] = [];
@@ -509,7 +511,10 @@ export function generateNodeHandlers(
   }
 
   // --- Обработчики узлов psql_query ---
-  const psqlQueryCode = generatePsqlQueryHandlers(nodes, { builtinEnabled: psqlBuiltinEnabled });
+  const psqlQueryCode = generatePsqlQueryHandlers(nodes, {
+    builtinEnabled: psqlBuiltinEnabled,
+    panelDsnDenied: psqlPanelDsnDenied,
+  });
   if (psqlQueryCode) {
     codeLines.push('\n# Обработчики узлов SQL-запроса');
     psqlQueryCode.split('\n').forEach(line => codeLines.push(line));

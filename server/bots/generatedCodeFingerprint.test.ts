@@ -21,6 +21,7 @@ const baseInput: GeneratedCodeInput = {
   protectContent: false,
   contentCache: false,
   psqlBuiltinEnabled: false,
+  psqlPanelDsnDenied: false,
   generatorVersion: 'gen-v1',
 };
 
@@ -62,6 +63,15 @@ describe('buildGeneratedCodeFingerprint', () => {
     const b = buildGeneratedCodeFingerprint({
       ...baseInput,
       saveIncomingMedia: true,
+    });
+    assert.notStrictEqual(a, b);
+  });
+
+  it('меняется при изменении psqlPanelDsnDenied', () => {
+    const a = buildGeneratedCodeFingerprint(baseInput);
+    const b = buildGeneratedCodeFingerprint({
+      ...baseInput,
+      psqlPanelDsnDenied: true,
     });
     assert.notStrictEqual(a, b);
   });
