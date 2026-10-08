@@ -168,3 +168,11 @@ export function MyComponent({ ... }: MyProps) { ... }
 
 Всегда сверяться с существующими нодами того же типа в project.json — копировать формат `data` из рабочих нод, а не выдумывать свой.
 
+## Cursor Cloud specific instructions
+
+PostgreSQL 16, Redis 7 и dev-сервер конструктора поднимаются при старте агента. Панель: `http://127.0.0.1:5000`. Вход без Telegram — форма с Telegram ID (`auth_login_mode=dev_login`).
+
+`python` и `python3` — это venv `/opt/tbb-py` с пакетами из `requirements.txt`. Фазовые тесты проверяют код через `python -m py_compile`. Go для соседнего репозитория `bot-builder-agent` — `/usr/local/bin/go` 1.26; проверка без сети: `go test ./...`.
+
+Полный `npm run check` и `tsc` по-прежнему не запускать. Узкая проверка генератора: `npm run test:phase1`. Если `.env` нет, старт копирует `.env.example` и дописывает `REDIS_URL=redis://127.0.0.1:6379`. Токены Telegram и OpenRouter для локальной панели не нужны.
+
