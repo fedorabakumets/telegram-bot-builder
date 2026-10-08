@@ -66,6 +66,8 @@ export type ProjectEventType =
   | 'token-created'
   | 'token-deleted'
   | 'token-updated'
+  /** Изменение шага авторизации юзербота без кода, пароля и сессии */
+  | 'userbot-auth-progress'
   | 'bot-started'
   | 'bot-stopped'
   | 'bot-error'

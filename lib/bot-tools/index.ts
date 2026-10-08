@@ -39,3 +39,7 @@ export * from './bot-runtime-db.ts';
 export * from './bot-token-settings-db.ts';
 export * from './bot-token-create-db.ts';
 export * from './bot-token-update-db.ts';
+/** Настройка и авторизация аккаунта Telethon */
+export * from './userbot-settings-db.ts';
+export * from './userbot-auth-db.ts';
+export type { UserbotResult } from './userbot-request-db.ts';

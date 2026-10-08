@@ -57,7 +57,7 @@ export function registerProjectTokensUserbotAuthPaths(
     tags: ["project-tokens"],
     summary: "Userbot auth: отправить код",
     description:
-      "Шаг 1: `{ apiId, apiHash, phone }` → Python `userbotAuth`.\n\n" +
+      "Шаг 1: `{ apiId, apiHash?, phone }` → Python `userbotAuth`. При пропуске, пустой строке или маске apiHash используется сохранённый API Hash. MCP: `db_userbot_send_code`. Сначала сохраните API ID и Hash через настройки userbot. При успешной отправке кода WS `userbot-auth-progress` передаёт шаг `code` и телефон вкладкам с доступом к проекту; код и секреты не передаются.\n\n" +
       auth +
       "```bash\ncurl -s -X POST http://localhost:5000/api/projects/42/tokens/7/userbot/send-code \\\n" +
       "  -b cookies.txt -H 'Content-Type: application/json' \\\n" +
@@ -93,7 +93,7 @@ export function registerProjectTokensUserbotAuthPaths(
     tags: ["project-tokens"],
     summary: "Userbot auth: код из SMS/Telegram",
     description:
-      "Шаг 2: `{ phone, code }`. При `session_string` — сохраняет в БД + userbotEnabled=1.\n\n" +
+      "Шаг 2: `{ phone, code }`. При `needs_2fa` WS `userbot-auth-progress` передаёт шаг `2fa` и телефон. При `session_string` — сохраняет в БД + userbotEnabled=1 и отправляет WS `token-updated` всем вкладкам с доступом к проекту. Секрет сессии в событие не включается. WS `userbot-auth-progress` передаёт шаг `done` после входа.\n\n" +
       auth +
       "```bash\ncurl -s -X POST http://localhost:5000/api/projects/42/tokens/7/userbot/sign-in \\\n" +
       "  -b cookies.txt -H 'Content-Type: application/json' \\\n" +
@@ -124,7 +124,7 @@ export function registerProjectTokensUserbotAuthPaths(
     tags: ["project-tokens"],
     summary: "Userbot auth: пароль 2FA",
     description:
-      "Шаг 3: `{ password }`. При успехе сохраняет session + userbotEnabled=1.\n\n" +
+      "Шаг 3: `{ password }`. При успехе сохраняет session + userbotEnabled=1 и отправляет WS `token-updated` всем вкладкам с доступом к проекту. Секрет сессии в событие не включается. WS `userbot-auth-progress` передаёт шаг `done` после входа.\n\n" +
       auth +
       "```bash\ncurl -s -X POST http://localhost:5000/api/projects/42/tokens/7/userbot/sign-in-2fa \\\n" +
       "  -b cookies.txt -H 'Content-Type: application/json' -d '{\"password\":\"…\"}'\n```",

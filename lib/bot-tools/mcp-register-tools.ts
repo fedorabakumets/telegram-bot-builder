@@ -7,6 +7,7 @@
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
+import { registerUserbotTools } from './mcp-register-userbot-tools.ts';
 import {
   addNodeInDb,
   addNodeToProject,
@@ -114,6 +115,8 @@ function textResult(data: unknown) {
  * @param options - Опции (файловые тулы)
  */
 export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOptions = {}): void {
+  /** Настройка юзербота доступна в обоих транспортах */
+  registerUserbotTools(server);
   const enableFileTools = options.enableFileTools === true;
   const disabledSet = new Set(options.disabledNodeTypes ?? []);
 

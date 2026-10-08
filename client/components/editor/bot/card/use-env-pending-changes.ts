@@ -9,6 +9,7 @@ import { apiRequest } from '@/queryClient';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { invalidateBotStatusQueries } from '../invalidate-bot-status-queries';
+import { useUserbotPendingSync } from './use-userbot-pending-sync';
 
 /** Одно несохранённое изменение */
 export interface PendingChange {
@@ -38,6 +39,9 @@ export function useEnvPendingChanges(projectId: number, tokenId: number) {
   const [isSaving, setIsSaving] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  /** Изменение, уже сохранённое извне, больше не считается локальным черновиком */
+  useUserbotPendingSync(projectId, tokenId, changes, setChanges);
 
   /** URL batch-эндпоинта */
   const batchUrl = `/api/projects/${projectId}/tokens/${tokenId}/env-batch`;

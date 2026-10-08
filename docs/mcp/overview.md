@@ -82,3 +82,7 @@
 - [[mcp/example-simple-bot]] — разбор примера `/start` + `/help`
 - [[futures/mcp/mcp-live-editing]] — live-редактирование и runtime
 - [[bot-json-prompt]] — формат JSON
+
+## Telethon Userbot
+
+Настройка аккаунта: `db_set_userbot_settings` → `db_userbot_send_code` → `db_userbot_sign_in` → при `needs_2fa` — `db_userbot_sign_in_2fa` → запуск или перезапуск бота. Все шаги используют `project_id` и `token_id`; секреты в результатах не возвращаются. Доступно на stdio и HTTP `/mcp`. Подробные параметры и ограничения: [[mcp/bot-builder#Настройка Telethon Userbot через MCP]].

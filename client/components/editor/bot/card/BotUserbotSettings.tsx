@@ -4,7 +4,7 @@
  * @module BotUserbotSettings
  */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Bot, ExternalLink, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
+import { useUserbotAuthProgress } from './use-userbot-auth-progress';
 
 /** Шаги авторизации */
 type AuthStep = 'idle' | 'phone' | 'code' | '2fa' | 'done';
@@ -78,6 +79,39 @@ export function BotUserbotSettings({
   const [loading, setLoading] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  /** Обновляет переключатель после сохранения настроек в другой вкладке */
+  useEffect(() => {
+    setEnabled(userbotEnabled === 1);
+  }, [projectId, tokenId, userbotEnabled]);
+
+  /** Обновляет API ID только при изменении его сохранённого значения */
+  useEffect(() => {
+    setApiId(userbotApiId ?? '');
+  }, [projectId, tokenId, userbotApiId]);
+
+  /** Синхронизирует маску API Hash без раскрытия секрета */
+  useEffect(() => {
+    setApiHash(userbotApiHash ?? '');
+  }, [projectId, tokenId, userbotApiHash]);
+
+  /** Завершает локальный шаг при появлении сохранённой сессии */
+  useEffect(() => {
+    setStep(userbotSessionString ? 'done' : 'idle');
+    setPhone('');
+    setCode('');
+    setPassword('');
+    setError('');
+  }, [projectId, tokenId, userbotSessionString]);
+
+  /** Переводит форму на шаг входа, начатого через MCP или другую вкладку */
+  useUserbotAuthProgress(projectId, tokenId, (progress) => {
+    setStep(progress.step);
+    setPhone(progress.phone ?? '');
+    setCode('');
+    setPassword('');
+    setError('');
+  });
 
   /** Мутация сохранения базовых настроек */
   const saveMutation = useMutation({
@@ -235,7 +269,7 @@ export function BotUserbotSettings({
         />
       </div>
 
-      {enabled && (
+      {(enabled || step === 'code' || step === '2fa') && (
         <div className="space-y-3 rounded-md border border-border/50 bg-muted/20 p-3 ml-10">
           {/* Ссылка на my.telegram.org */}
           <div className="flex items-center gap-2 text-xs text-muted-foreground">

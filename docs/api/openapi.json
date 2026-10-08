@@ -20045,7 +20045,7 @@
           "project-tokens"
         ],
         "summary": "Настройки Telethon userbot",
-        "description": "Сохраняет `userbotEnabled` 0|1 и apiId/hash/session; USERBOT_* попадут в env бота при следующем запуске. WS `token-updated` (changedFields: userbotEnabled).\n\n**Auth:** `requireTokenOwnership`.\n\n```bash\ncurl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/userbot \\\n  -b cookies.txt -H 'Content-Type: application/json' \\\n  -d '{\"userbotEnabled\":1,\"userbotApiId\":\"123\",\"userbotApiHash\":\"abc\",\"userbotSessionString\":null}'\n```",
+        "description": "Сохраняет `userbotEnabled` 0|1 и apiId/hash/session; USERBOT_* попадут в env бота при следующем запуске. Пропущенные поля не меняются. API ID: null или пустая строка очищают значение; API Hash и session string: null, пустая строка или маска сохраняют секрет. MCP: `db_set_userbot_settings`. Автоматического перезапуска нет. WS `token-updated` (changedFields: userbotEnabled).\n\n**Auth:** `requireTokenOwnership`.\n\n```bash\ncurl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/userbot \\\n  -b cookies.txt -H 'Content-Type: application/json' \\\n  -d '{\"userbotEnabled\":1,\"userbotApiId\":\"123\",\"userbotApiHash\":\"abc\",\"userbotSessionString\":null}'\n```",
         "security": [
           {
             "cookieAuth": []
@@ -20180,7 +20180,7 @@
           "project-tokens"
         ],
         "summary": "Userbot auth: отправить код",
-        "description": "Шаг 1: `{ apiId, apiHash, phone }` → Python `userbotAuth`.\n\n**Auth:** `requireTokenOwnership`.\n\n```bash\ncurl -s -X POST http://localhost:5000/api/projects/42/tokens/7/userbot/send-code \\\n  -b cookies.txt -H 'Content-Type: application/json' \\\n  -d '{\"apiId\":\"123\",\"apiHash\":\"abc\",\"phone\":\"+79001234567\"}'\n```",
+        "description": "Шаг 1: `{ apiId, apiHash?, phone }` → Python `userbotAuth`. При пропуске, пустой строке или маске apiHash используется сохранённый API Hash. MCP: `db_userbot_send_code`. Сначала сохраните API ID и Hash через настройки userbot. При успешной отправке кода WS `userbot-auth-progress` передаёт шаг `code` и телефон вкладкам с доступом к проекту; код и секреты не передаются.\n\n**Auth:** `requireTokenOwnership`.\n\n```bash\ncurl -s -X POST http://localhost:5000/api/projects/42/tokens/7/userbot/send-code \\\n  -b cookies.txt -H 'Content-Type: application/json' \\\n  -d '{\"apiId\":\"123\",\"apiHash\":\"abc\",\"phone\":\"+79001234567\"}'\n```",
         "security": [
           {
             "cookieAuth": []
@@ -20304,7 +20304,7 @@
           "project-tokens"
         ],
         "summary": "Userbot auth: код из SMS/Telegram",
-        "description": "Шаг 2: `{ phone, code }`. При `session_string` — сохраняет в БД + userbotEnabled=1.\n\n**Auth:** `requireTokenOwnership`.\n\n```bash\ncurl -s -X POST http://localhost:5000/api/projects/42/tokens/7/userbot/sign-in \\\n  -b cookies.txt -H 'Content-Type: application/json' \\\n  -d '{\"phone\":\"+79001234567\",\"code\":\"12345\"}'\n```",
+        "description": "Шаг 2: `{ phone, code }`. При `needs_2fa` WS `userbot-auth-progress` передаёт шаг `2fa` и телефон. При `session_string` — сохраняет в БД + userbotEnabled=1 и отправляет WS `token-updated` всем вкладкам с доступом к проекту. Секрет сессии в событие не включается. WS `userbot-auth-progress` передаёт шаг `done` после входа.\n\n**Auth:** `requireTokenOwnership`.\n\n```bash\ncurl -s -X POST http://localhost:5000/api/projects/42/tokens/7/userbot/sign-in \\\n  -b cookies.txt -H 'Content-Type: application/json' \\\n  -d '{\"phone\":\"+79001234567\",\"code\":\"12345\"}'\n```",
         "security": [
           {
             "cookieAuth": []
@@ -20425,7 +20425,7 @@
           "project-tokens"
         ],
         "summary": "Userbot auth: пароль 2FA",
-        "description": "Шаг 3: `{ password }`. При успехе сохраняет session + userbotEnabled=1.\n\n**Auth:** `requireTokenOwnership`.\n\n```bash\ncurl -s -X POST http://localhost:5000/api/projects/42/tokens/7/userbot/sign-in-2fa \\\n  -b cookies.txt -H 'Content-Type: application/json' -d '{\"password\":\"…\"}'\n```",
+        "description": "Шаг 3: `{ password }`. При успехе сохраняет session + userbotEnabled=1 и отправляет WS `token-updated` всем вкладкам с доступом к проекту. Секрет сессии в событие не включается. WS `userbot-auth-progress` передаёт шаг `done` после входа.\n\n**Auth:** `requireTokenOwnership`.\n\n```bash\ncurl -s -X POST http://localhost:5000/api/projects/42/tokens/7/userbot/sign-in-2fa \\\n  -b cookies.txt -H 'Content-Type: application/json' -d '{\"password\":\"…\"}'\n```",
         "security": [
           {
             "cookieAuth": []
@@ -29889,9 +29889,7 @@
           }
         },
         "required": [
-          "userbotEnabled",
-          "userbotApiId",
-          "userbotApiHash"
+          "userbotEnabled"
         ]
       },
       "UserbotAuthResult": {
@@ -29938,7 +29936,6 @@
         },
         "required": [
           "apiId",
-          "apiHash",
           "phone"
         ]
       },

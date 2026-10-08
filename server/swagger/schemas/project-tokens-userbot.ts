@@ -11,10 +11,10 @@ export const UserbotPutRequestSchema = z
   .object({
     /** 0/1 включить userbot */
     userbotEnabled: z.union([z.literal(0), z.literal(1)]).openapi({ example: 1 }),
-    /** API ID my.telegram.org */
-    userbotApiId: z.string().nullable().openapi({ example: "12345" }),
-    /** API Hash (секрет) */
-    userbotApiHash: z.string().nullable().openapi({ example: "abcdef0123456789" }),
+    /** API ID; пропуск сохраняет значение, null или пустая строка очищают */
+    userbotApiId: z.string().nullable().optional().openapi({ example: "12345" }),
+    /** API Hash; пропуск, null, пустая строка или маска сохраняют секрет */
+    userbotApiHash: z.string().nullable().optional().openapi({ example: "abcdef0123456789" }),
     /** Session string (секрет) */
     userbotSessionString: z.string().nullable().optional(),
   })
@@ -23,7 +23,9 @@ export const UserbotPutRequestSchema = z
 /** Ответ PUT userbot */
 export const UserbotPutResponseSchema = z
   .object({
+    /** Успешность сохранения */
     success: z.literal(true),
+    /** Сохранённое состояние режима */
     userbotEnabled: z.union([z.literal(0), z.literal(1)]),
   })
   .openapi("UserbotPutResponse");
@@ -33,8 +35,8 @@ export const UserbotSendCodeRequestSchema = z
   .object({
     /** API ID */
     apiId: z.string().openapi({ example: "12345" }),
-    /** API Hash */
-    apiHash: z.string().openapi({ example: "abcdef0123456789" }),
+    /** API Hash; при пропуске, пустой строке или маске используется сохранённый */
+    apiHash: z.string().optional().openapi({ example: "abcdef0123456789" }),
     /** Телефон +E.164 */
     phone: z.string().openapi({ example: "+79001234567" }),
   })

@@ -21,6 +21,11 @@ FROM (
     AND chat_id IS NOT NULL
     AND token_id IS NOT NULL
     AND token_id > 0
+    -- История удалённых токенов сохраняется; связываем только существующие токены проекта
+    AND EXISTS (
+      SELECT 1 FROM bot_tokens bt
+      WHERE bt.id = bot_messages.token_id AND bt.project_id = bot_messages.project_id
+    )
   ORDER BY project_id, chat_id, created_at DESC
 ) sub
 WHERE bg.project_id = sub.project_id
@@ -47,6 +52,11 @@ WHERE bm.chat_type IN ('group', 'supergroup', 'channel')
   AND bm.chat_id IS NOT NULL
   AND bm.token_id IS NOT NULL
   AND bm.token_id > 0
+  -- Исключаем удалённые токены и ссылки на токены другого проекта
+  AND EXISTS (
+    SELECT 1 FROM bot_tokens bt
+    WHERE bt.id = bm.token_id AND bt.project_id = bm.project_id
+  )
   AND NOT EXISTS (
     SELECT 1 FROM bot_groups bg
     WHERE bg.project_id = bm.project_id

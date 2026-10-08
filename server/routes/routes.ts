@@ -1277,6 +1277,12 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         phone,
       });
 
+      /** Успешная отправка кода переводит открытые формы на следующий шаг */
+      if (result.ok) {
+        const { emitUserbotAuthProgress } = await import('./botTokens/emit-userbot-auth-progress');
+        await emitUserbotAuthProgress(parseInt(req.params.projectId), tokenId, { step: 'code', phone });
+      }
+
       res.json(result);
     } catch (error: any) {
       res.status(500).json({ ok: false, message: error.message || "Ошибка отправки кода" });
@@ -1299,13 +1305,15 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const { sendAuthCommand } = await import('../bots/userbotAuthManager');
       const result = await sendAuthCommand(tokenId, 'sign_in', { phone, code });
 
-      // Если получили session_string — сохраняем в БД
-      if (result.ok && result.session_string) {
-        await storage.updateBotToken(tokenId, {
-          userbotSessionString: result.session_string,
-          userbotEnabled: 1,
-        });
+      /** Требование второго фактора отображается во всех открытых формах */
+      if (result.ok && result.needs_2fa) {
+        const { emitUserbotAuthProgress } = await import('./botTokens/emit-userbot-auth-progress');
+        await emitUserbotAuthProgress(parseInt(req.params.projectId), tokenId, { step: '2fa', phone });
       }
+
+      /** Сохранение сессии уведомляет вкладки через безопасное событие настроек */
+      const { saveUserbotAuthResult } = await import('./botTokens/save-userbot-auth-result');
+      await saveUserbotAuthResult(parseInt(req.params.projectId), tokenId, result);
 
       const { toPublicAuthResult } = await import('./botTokens/build-userbot-update');
       res.json(toPublicAuthResult(result));
@@ -1330,13 +1338,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const { sendAuthCommand } = await import('../bots/userbotAuthManager');
       const result = await sendAuthCommand(tokenId, 'sign_in_2fa', { password });
 
-      // Если получили session_string — сохраняем в БД
-      if (result.ok && result.session_string) {
-        await storage.updateBotToken(tokenId, {
-          userbotSessionString: result.session_string,
-          userbotEnabled: 1,
-        });
-      }
+      /** Вход с паролем второго фактора обновляет настройки во всех вкладках */
+      const { saveUserbotAuthResult } = await import('./botTokens/save-userbot-auth-result');
+      await saveUserbotAuthResult(parseInt(req.params.projectId), tokenId, result);
 
       const { toPublicAuthResult } = await import('./botTokens/build-userbot-update');
       res.json(toPublicAuthResult(result));

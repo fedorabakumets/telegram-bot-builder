@@ -24,6 +24,13 @@ function collectToolNames(enableFileTools: boolean): string[] {
 }
 
 describe('registerMcpTools', () => {
+  /** Четыре шага управления аккаунтом доступны в обоих транспортах */
+  it.each([false, true])('регистрирует юзербот на транспорте с файловыми инструментами=%s', (fileTools) => {
+    expect(collectToolNames(fileTools)).toEqual(expect.arrayContaining([
+      'db_set_userbot_settings', 'db_userbot_send_code',
+      'db_userbot_sign_in', 'db_userbot_sign_in_2fa',
+    ]));
+  });
   it('на HTTP (enableFileTools=false) нет load_project/save_project', () => {
     const names = collectToolNames(false);
     expect(names).not.toContain('load_project');
