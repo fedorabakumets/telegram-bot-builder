@@ -14,6 +14,7 @@ import {
 } from "./dbBackupIndex";
 import { runPgDump } from "./pgDumpRestore";
 import { countTableRows } from "./tableRowCounts";
+import { deliverTelegramBackup } from "./telegramBackupDelivery";
 
 /** Параметры создания бэкапа */
 export interface CreateDbBackupOptions {
@@ -37,6 +38,8 @@ export interface CreateDbBackupResult {
   entry: DbBackupEntry;
   /** Сколько старых бэкапов удалено */
   dropped: number;
+  /** Предупреждение о доставке; сам бэкап уже сохранён */
+  telegramWarning?: string;
 }
 
 /** Снятый дамп с проверочными данными */
@@ -101,5 +104,8 @@ export async function createDbBackup(options: CreateDbBackupOptions): Promise<Cr
     await backend.delete(old.key).catch((error) => log(`не удалён старый бэкап ${old.key}: ${String(error)}`));
   }
   if (dropped.length > 0) log(`удалено старых бэкапов: ${dropped.length}`);
-  return { entry, dropped: dropped.length };
+  // Отправляем только после сохранения дампа и индекса, не отменяя бэкап при сбое Telegram
+  const telegramWarning = await deliverTelegramBackup(dump, label, entry);
+  if (telegramWarning) log(telegramWarning);
+  return { entry, dropped: dropped.length, telegramWarning };
 }

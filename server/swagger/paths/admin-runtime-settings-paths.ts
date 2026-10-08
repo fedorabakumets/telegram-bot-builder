@@ -7,6 +7,7 @@ import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import { z } from "zod";
 import { ADMIN_SECURITY, AdminCookiesSchema, AdminUnauthorizedSchema } from "../schemas/admin-common";
 import { ADMIN_CURL_LOGIN, ADMIN_UNAUTHORIZED_EXAMPLE } from "./admin-examples";
+import { registerAdminBackupTelegramPaths } from "./admin-backup-telegram-paths";
 
 /** Поле раздела без секрета */
 const FieldSchema = z.object({
@@ -38,6 +39,7 @@ const GroupSchema = z.object({
  * @returns void
  */
 export function registerAdminRuntimeSettingsPaths(registry: OpenAPIRegistry): void {
+  registerAdminBackupTelegramPaths(registry);
   const denied = {
     description: "Нет admin-сессии",
     content: { "application/json": { schema: AdminUnauthorizedSchema, example: ADMIN_UNAUTHORIZED_EXAMPLE } },
@@ -92,12 +94,12 @@ export function registerAdminRuntimeSettingsPaths(registry: OpenAPIRegistry): vo
     path: "/admin/api/runtime-settings/backups/run",
     tags: ["admin"],
     summary: "Снять бэкап сейчас",
-    description: "Дамп всех целей расписания. Публичное хранилище отклоняется.\n\n" +
+    description: "Дамп всех целей расписания. Публичное хранилище отклоняется. При включённой доставке файл отправляется в Telegram. Ошибка доставки возвращается в warnings, сохранённый бэкап остаётся доступен.\n\n" +
       `\`\`\`bash\n${ADMIN_CURL_LOGIN}\ncurl -s -X POST http://localhost:5000/admin/api/runtime-settings/backups/run -b admin.txt\n\`\`\``,
     security: ADMIN_SECURITY,
     request: { cookies: AdminCookiesSchema },
     responses: {
-      200: { description: "Метки баз", content: { "application/json": { schema: z.object({ ok: z.literal(true), labels: z.array(z.string()) }) } } },
+      200: { description: "Метки баз и предупреждения доставки", content: { "application/json": { schema: z.object({ ok: z.literal(true), labels: z.array(z.string()), warnings: z.array(z.string()) }) } } },
       401: denied,
     },
   });

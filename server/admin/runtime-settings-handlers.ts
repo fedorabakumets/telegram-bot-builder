@@ -70,8 +70,9 @@ export async function handlePutRuntimeSettings(req: Request, res: Response): Pro
  */
 export async function handleRunRuntimeBackup(_req: Request, res: Response): Promise<void> {
   try {
-    const labels = await backupNow();
-    res.json({ ok: true, labels });
+    const warnings: string[] = [];
+    const labels = await backupNow((message) => warnings.push(message));
+    res.json({ ok: true, labels, warnings });
   } catch (error) {
     sendError(res, error);
   }

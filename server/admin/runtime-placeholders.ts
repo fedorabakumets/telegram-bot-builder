@@ -22,6 +22,8 @@ export const RUNTIME_PLACEHOLDERS: Record<string, string> = {
   DB_BACKUPS_KEEP: "7",
   DB_BACKUP_LABEL: "panel",
   DB_BACKUP_TARGETS: "railway-tbb-bots=postgresql://user:pass@host:5432/db",
+  DB_BACKUP_TELEGRAM_BOT_TOKEN: "123456:AA...",
+  DB_BACKUP_TELEGRAM_CHAT_ID: "-1001234567890",
   WORKER_GROUPING: "owner",
   WORKER_RUNTIME: "docker",
   WORKER_DOCKER_IMAGE: "tbb-worker:local",

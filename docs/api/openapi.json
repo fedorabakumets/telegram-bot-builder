@@ -24612,6 +24612,78 @@
         }
       }
     },
+    "/admin/api/runtime-settings/backups/telegram/test": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Проверить доставку бэкапов в Telegram",
+        "description": "Отправляет небольшой файл по сохранённым DB_BACKUP_TELEGRAM_BOT_TOKEN и DB_BACKUP_TELEGRAM_CHAT_ID. Работает и при выключенной автоматической доставке. Данных базы в файле нет, токен в ответ не возвращается.",
+        "security": [
+          {
+            "adminCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Admin cookie после `/admin/login` (ключ `ADMIN_API_KEY`). Без неё — 401.",
+              "example": "eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0"
+            },
+            "required": false,
+            "description": "Admin cookie после `/admin/login` (`ADMIN_API_KEY`). Без неё — 401 ADMIN_UNAUTHORIZED.",
+            "example": "eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0",
+            "name": "admin_auth",
+            "in": "cookie"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Проверочный файл отправлен",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Некорректные настройки или ошибка Telegram",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет admin-сессии"
+          }
+        }
+      }
+    },
     "/admin/api/runtime-settings/{group}": {
       "get": {
         "tags": [
@@ -24783,7 +24855,7 @@
           "admin"
         ],
         "summary": "Снять бэкап сейчас",
-        "description": "Дамп всех целей расписания. Публичное хранилище отклоняется.\n\n```bash\ncurl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \\\n  -H 'Content-Type: application/x-www-form-urlencoded' \\\n  -d 'key=YOUR_ADMIN_API_KEY'\ncurl -s -X POST http://localhost:5000/admin/api/runtime-settings/backups/run -b admin.txt\n```",
+        "description": "Дамп всех целей расписания. Публичное хранилище отклоняется. При включённой доставке файл отправляется в Telegram. Ошибка доставки возвращается в warnings, сохранённый бэкап остаётся доступен.\n\n```bash\ncurl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \\\n  -H 'Content-Type: application/x-www-form-urlencoded' \\\n  -d 'key=YOUR_ADMIN_API_KEY'\ncurl -s -X POST http://localhost:5000/admin/api/runtime-settings/backups/run -b admin.txt\n```",
         "security": [
           {
             "adminCookie": []
@@ -24805,7 +24877,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Метки баз",
+            "description": "Метки баз и предупреждения доставки",
             "content": {
               "application/json": {
                 "schema": {
@@ -24822,11 +24894,18 @@
                       "items": {
                         "type": "string"
                       }
+                    },
+                    "warnings": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
                     }
                   },
                   "required": [
                     "ok",
-                    "labels"
+                    "labels",
+                    "warnings"
                   ]
                 }
               }

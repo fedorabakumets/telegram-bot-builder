@@ -1,5 +1,5 @@
 /**
- * @fileoverview Страница справочника API (markdown)
+ * @fileoverview Опубликованный справочник API во фрейме панели управления.
  * @module components/admin/pages/admin-api-docs
  */
 
@@ -7,20 +7,21 @@ import { useParams } from 'wouter';
 import { AdminEmbedFrame } from '../admin-embed-frame';
 
 /**
- * Просмотр docs/api с боковым меню
+ * Открывает справочник сайта документации с возвратом в панель или список разделов.
  * @returns JSX элемент страницы справочника
  */
 export function AdminApiDocsPage() {
   const params = useParams<{ slug?: string }>();
   const slug = params.slug && params.slug !== 'embed' ? params.slug : undefined;
-  const embedSrc = slug ? `/admin/api-docs/embed/${slug}` : '/admin/api-docs/embed';
+  const docsUrl = 'https://fedorabakumets.github.io/telegram-bot-builder/docs/api';
+  const embedSrc = slug ? `${docsUrl}/${encodeURIComponent(slug)}` : docsUrl;
 
   return (
     <AdminEmbedFrame
-      title={slug ?? 'API Reference'}
+      title={slug ?? 'Справочник API'}
       embedSrc={embedSrc}
-      backHref={slug ? '/admin/api-docs' : undefined}
-      backLabel="Все разделы"
+      backHref={slug ? '/admin/api-docs' : '/admin'}
+      backLabel="Назад"
     />
   );
 }

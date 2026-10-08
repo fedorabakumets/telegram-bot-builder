@@ -1,6 +1,6 @@
 # admin
 
-Эндпоинтов: **23**
+Эндпоинтов: **24**
 
 ### `GET` /admin/api/app-settings
 
@@ -290,7 +290,7 @@ curl -s -X PUT http://localhost:5000/admin/api/runtime-settings/workers -b admin
 
 **Авторизация:** Admin cookie
 
-Дамп всех целей расписания. Публичное хранилище отклоняется.
+Дамп всех целей расписания. Публичное хранилище отклоняется. При включённой доставке файл отправляется в Telegram. Ошибка доставки возвращается в warnings, сохранённый бэкап остаётся доступен.
 
 ```bash
 curl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \
@@ -309,7 +309,29 @@ curl -s -X POST http://localhost:5000/admin/api/runtime-settings/backups/run -b 
 
 | Код | Описание |
 |-----|----------|
-| 200 | Метки баз |
+| 200 | Метки баз и предупреждения доставки |
+| 401 | Нет admin-сессии |
+
+### `POST` /admin/api/runtime-settings/backups/telegram/test
+
+Проверить доставку бэкапов в Telegram
+
+**Авторизация:** Admin cookie
+
+Отправляет небольшой файл по сохранённым DB_BACKUP_TELEGRAM_BOT_TOKEN и DB_BACKUP_TELEGRAM_CHAT_ID. Работает и при выключенной автоматической доставке. Данных базы в файле нет, токен в ответ не возвращается.
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `admin_auth` | cookie | нет | Admin cookie после `/admin/login` (`ADMIN_API_KEY`). Без неё — 401 ADMIN_UNAUTHORIZED. | `"eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0"` |
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Проверочный файл отправлен |
+| 400 | Некорректные настройки или ошибка Telegram |
 | 401 | Нет admin-сессии |
 
 ### `GET` /admin/api/status

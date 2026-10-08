@@ -34,12 +34,12 @@ import { ADMIN_CLIENT_PAGES, passAdminPageToClient } from "./admin-client-pages"
 import {
   serveApiDocsEmbedIndex,
   serveApiDocsEmbedTag,
-} from "./pages/api-docs-page";
+} from "./pages/published-reference-page";
 import { serveAdminLoginPage } from "./pages/login-page";
 import {
   serveSchemaDocsEmbedIndex,
   serveSchemaDocsEmbedTable,
-} from "./pages/schema-docs-page";
+} from "./pages/published-reference-page";
 import { isAdminEnabled, resolveAdminApiKey } from "./resolve-admin-key";
 import { setupAdminSupportRoutes } from "../support/setup-support-routes";
 import { setupRuntimeSettingsRoutes } from "./setup-runtime-settings-routes";
@@ -82,7 +82,7 @@ export function setupAdminRoutes(app: Express): void {
     redirectAfterAdminLogin(req, res);
   });
 
-  app.post("/admin/api/logout", (req, res) => {
+  app.post("/admin/api/logout", (_req, res) => {
     clearAdminCookie(res);
     res.redirect(302, "/admin/login");
   });
