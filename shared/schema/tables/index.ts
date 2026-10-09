@@ -39,7 +39,7 @@ export type { BotMessage, InsertBotMessage, BotMessageMedia, InsertBotMessageMed
 export { messageActivityDaily } from "./message-activity-daily";
 export type { MessageActivityDaily, InsertMessageActivityDaily } from "./message-activity-daily";
 
-export { buttonSchema } from "./button-schema";
+export { buttonSchema, buttonStyleSchema } from "./button-schema";
 export type { Button } from "./button-schema";
 
 export { assignmentSchema, ASSIGNMENT_MODES } from "./assignment-schema";

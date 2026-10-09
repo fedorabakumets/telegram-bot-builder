@@ -325,9 +325,11 @@ MCP **не раздувает** `data` дефолтами клавиатуры. 
 |----------|----------|
 | `project_json` | Текущий проект |
 | `node` / `node_id` / `patch` | Что менять |
-| `sheet_id` | Опционально; иначе activeSheetId или первый лист |
+| `sheet_id` | Опционально. Для `add_node` — activeSheetId/первый лист; для `update_node`/`remove_node` — автопоиск ноды по всем листам |
 
-`update_node`: shallow merge для `data`.
+`update_node`: shallow merge для `data`. Если нода не найдена — `{ error: "Нода не найдена: …" }` (не silent ok / не пустая версия).
+
+Легаси `buttons[].style: "default"` принимается и нормализуется в «без стиля» — обычный update без `skip_validation`.
 
 #### `connect_nodes`
 

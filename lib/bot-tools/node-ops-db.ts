@@ -74,9 +74,9 @@ export async function addNodeInDb(
  * @param projectId - Числовой ID проекта
  * @param nodeId - ID ноды
  * @param patch - Частичное обновление ноды { type?, position?, data? }
- * @param sheetId - ID листа (опционально)
+ * @param sheetId - ID листа (опционально; иначе автопоиск ноды по всем листам)
  * @param options - Опции записи в БД
- * @returns Результат записи или ошибка
+ * @returns Результат записи или ошибка «Нода не найдена»
  */
 export async function updateNodeInDb(
   projectId: number,
@@ -94,9 +94,9 @@ export async function updateNodeInDb(
  * Удаляет ноду из проекта живой БД и обновляет холст (live).
  * @param projectId - Числовой ID проекта
  * @param nodeId - ID ноды
- * @param sheetId - ID листа (опционально)
+ * @param sheetId - ID листа (опционально; иначе автопоиск ноды по всем листам)
  * @param options - Опции записи в БД
- * @returns Результат записи или ошибка
+ * @returns Результат записи или ошибка «Нода не найдена»
  */
 export async function removeNodeInDb(
   projectId: number,
