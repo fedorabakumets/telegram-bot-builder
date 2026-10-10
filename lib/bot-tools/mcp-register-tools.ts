@@ -7,6 +7,7 @@
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
+import { registerUserbotTools } from './mcp-register-userbot-tools.ts';
 import {
   addNodeInDb,
   addNodeToProject,
@@ -114,6 +115,8 @@ function textResult(data: unknown) {
  * @param options - Опции (файловые тулы)
  */
 export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOptions = {}): void {
+  /** Настройка юзербота доступна в обоих транспортах */
+  registerUserbotTools(server);
   const enableFileTools = options.enableFileTools === true;
   const disabledSet = new Set(options.disabledNodeTypes ?? []);
 
@@ -267,12 +270,12 @@ export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOpt
   server.registerTool(
     'update_node',
     {
-      description: 'Обновить ноду в project.json по id',
+      description: 'Обновить ноду в project.json по id. Без sheet_id ищет ноду по всем листам; если не найдена — ошибка (не silent ok)',
       inputSchema: {
         project_json: z.union([z.string(), z.record(z.unknown())]),
         node_id: z.string(),
         patch: z.record(z.unknown()).describe('{ position?, data?, type? }'),
-        sheet_id: z.string().optional(),
+        sheet_id: z.string().optional().describe('ID листа (иначе автопоиск по всем листам)'),
       },
     },
     async ({ project_json, node_id, patch, sheet_id }) =>
@@ -282,11 +285,11 @@ export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOpt
   server.registerTool(
     'remove_node',
     {
-      description: 'Удалить ноду из project.json',
+      description: 'Удалить ноду из project.json. Без sheet_id ищет ноду по всем листам; если не найдена — ошибка',
       inputSchema: {
         project_json: z.union([z.string(), z.record(z.unknown())]),
         node_id: z.string(),
-        sheet_id: z.string().optional(),
+        sheet_id: z.string().optional().describe('ID листа (иначе автопоиск по всем листам)'),
       },
     },
     async ({ project_json, node_id, sheet_id }) =>
@@ -383,12 +386,12 @@ export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOpt
   server.registerTool(
     'db_update_node',
     {
-      description: 'Обновить ноду по id в проекте в БД живого приложения с обновлением холста (live). Адресация по числовому projectId из URL редактора',
+      description: 'Обновить ноду по id в БД (live). Без sheet_id ищет по всем листам; если ноды нет — ошибка, не silent ok. Адресация по projectId из URL',
       inputSchema: {
         project_id: z.number().describe('Числовой ID проекта из URL редактора'),
         node_id: z.string(),
         patch: z.record(z.unknown()).describe('{ position?, data?, type? }'),
-        sheet_id: z.string().optional(),
+        sheet_id: z.string().optional().describe('ID листа (иначе автопоиск по всем листам)'),
         commit_message: z.string().optional().describe('Заметка к версии (ручной чекпоинт)'),
       },
     },
@@ -401,11 +404,11 @@ export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOpt
   server.registerTool(
     'db_remove_node',
     {
-      description: 'Удалить ноду из проекта в БД живого приложения с обновлением холста (live). Адресация по числовому projectId из URL редактора',
+      description: 'Удалить ноду из проекта в БД (live). Без sheet_id ищет по всем листам; если ноды нет — ошибка. Адресация по projectId из URL',
       inputSchema: {
         project_id: z.number().describe('Числовой ID проекта из URL редактора'),
         node_id: z.string(),
-        sheet_id: z.string().optional(),
+        sheet_id: z.string().optional().describe('ID листа (иначе автопоиск по всем листам)'),
         commit_message: z.string().optional().describe('Заметка к версии (ручной чекпоинт)'),
       },
     },
@@ -648,10 +651,10 @@ export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOpt
   server.registerTool(
     'db_find_nodes',
     {
-      description: 'Поиск нод проекта в БД живого приложения по подстроке (в тексте/команде/имени/переменной/id) и опционально по типу ноды. Read-only. Адресация по числовому projectId из URL редактора',
+      description: 'Поиск нод по подстроке (регистронезависимо): текст/команда/id и поля кнопок (url, copyText, text). Read-only. Адресация по projectId из URL',
       inputSchema: {
         project_id: z.number().describe('Числовой ID проекта из URL редактора'),
-        query: z.string().describe('Подстрока для поиска (регистронезависимо)'),
+        query: z.string().describe('Подстрока для поиска (регистронезависимо; в т.ч. URL кнопки)'),
         type: z.string().optional().describe('Фильтр по типу ноды (точное совпадение)'),
         sheet_id: z.string().optional().describe('ID листа (по умолчанию все листы)'),
       },
@@ -872,12 +875,12 @@ export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOpt
   server.registerTool(
     'db_apply_ops',
     {
-      description: 'Применить несколько операций к проекту в БД живого приложения за одну транзакцию (один live-broadcast и одна версия). Прерывается на первой ошибке без записи. Операции: add_node/update_node/remove_node/connect_nodes/disconnect_nodes/move_node/duplicate_node/add_sheet/rename_sheet/remove_sheet/duplicate_sheet/set_active_sheet — тип задаётся полем op. Адресация по числовому projectId из URL редактора',
+      description: 'Пакет операций к проекту в БД за одну транзакцию (один live-broadcast/версия). update_node/remove_node без sheet_id ищут ноду по всем листам; при отсутствии — ошибка, без записи. Адресация по projectId из URL',
       inputSchema: {
         project_id: z.number().describe('Числовой ID проекта из URL редактора'),
-        ops: z.array(z.record(z.unknown())).describe('Массив операций; в каждой поле op задаёт тип (add_node, update_node, remove_node, connect_nodes, move_node, add_sheet, rename_sheet, remove_sheet, set_active_sheet)'),
+        ops: z.array(z.record(z.unknown())).describe('Массив операций; поле op: add_node, update_node, remove_node, connect_nodes, …; для update/remove без sheet_id — автопоиск по листам'),
         commit_message: z.string().optional().describe('Заметка к версии (ручной чекпоинт)'),
-        skip_validation: z.boolean().optional().describe('Пропустить валидацию перед записью (для легаси-проектов с битыми ссылками)'),
+        skip_validation: z.boolean().optional().describe('Пропустить валидацию перед записью (для легаси с битыми ссылками; style:default уже принимается)'),
       },
     },
     async ({ project_id, ops, commit_message, skip_validation }) => {

@@ -89,10 +89,11 @@ export async function saveRuntimeGroup(groupId: string, input: Record<string, un
 
 /**
  * Снимает бэкап всех целей сразу, без ожидания интервала
+ * @param onWarning - Получатель предупреждений о доставке
  * @returns Метки баз, которые сохранены
  */
-export async function backupNow(): Promise<string[]> {
-  const labels = await runDbBackupNow();
+export async function backupNow(onWarning?: (message: string) => void): Promise<string[]> {
+  const labels = await runDbBackupNow(onWarning);
   if (labels.length === 0) throw new RuntimeSettingsError("Нет баз для бэкапа: не задан DATABASE_URL", 400);
   return labels;
 }

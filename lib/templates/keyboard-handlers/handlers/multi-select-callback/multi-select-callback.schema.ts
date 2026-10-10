@@ -49,8 +49,11 @@ const completeButtonSchema = z.object({
   text: z.string(),
   /** Target для перехода */
   target: z.string(),
-  /** Визуальный стиль кнопки */
-  style: z.enum(['primary', 'success', 'danger']).optional(),
+  /** Визуальный стиль кнопки; легаси `default` → без стиля */
+  style: z.preprocess(
+    (value) => (value === 'default' || value === '' || value === null ? undefined : value),
+    z.enum(['primary', 'success', 'danger']).optional(),
+  ),
 });
 
 /** Схема для узла multi-select */

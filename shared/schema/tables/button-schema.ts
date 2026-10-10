@@ -5,6 +5,16 @@
 
 import { z } from "zod";
 
+/**
+ * Визуальный стиль кнопки (Bot API 9.4): primary / success / danger.
+ * Легаси `default` и пустые значения нормализуются в «без стиля» (undefined),
+ * чтобы старые проекты проходили валидацию без skip_validation.
+ */
+export const buttonStyleSchema = z.preprocess(
+  (value) => (value === 'default' || value === '' || value === null ? undefined : value),
+  z.enum(['primary', 'success', 'danger']).optional(),
+);
+
 /** Схема кнопки бота */
 export const buttonSchema = z.object({
   /** Уникальный идентификатор кнопки */
@@ -33,8 +43,8 @@ export const buttonSchema = z.object({
   hideAfterClick: z.boolean().default(false),
   /** Пользовательский callback_data (если не задан — генерируется автоматически) */
   customCallbackData: z.string().optional(),
-  /** Визуальный стиль кнопки (Bot API 9.4): primary=синий, success=зелёный, danger=красный */
-  style: z.enum(['primary', 'success', 'danger']).optional(),
+  /** Визуальный стиль кнопки (Bot API 9.4); легаси `default` → без стиля */
+  style: buttonStyleSchema,
   /** Предложенное имя для создаваемого управляемого бота */
   suggestedBotName: z.string().optional(),
   /** Предложенный username для создаваемого управляемого бота */

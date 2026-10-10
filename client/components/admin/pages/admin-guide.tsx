@@ -6,8 +6,22 @@
 import { useParams } from 'wouter';
 import { AdminEmbedFrame } from '../admin-embed-frame';
 
+/** Разделы настроек, из которых открываются инструкции */
+const GUIDE_GROUPS: Record<string, string> = {
+  'uploads-s3': 'storages',
+  'db-backups': 'backups',
+  'worker-docker': 'workers',
+  'bot-runner': 'runners',
+  'bot-railway': 'runners',
+  'bot-builds': 'builds',
+  'bot-database-access': 'platform',
+  'bot-manager-auth': 'platform',
+  'mcp-http': 'platform',
+  'admin-settings': 'platform',
+};
+
 /**
- * Оболочка iframe для /admin/guides/:slug
+ * Оболочка фрейма опубликованного сайта документации для /admin/guides/:slug
  * @returns JSX элемент страницы
  */
 export function AdminGuidePage() {
@@ -16,6 +30,8 @@ export function AdminGuidePage() {
   return (
     <AdminEmbedFrame
       title="Документация"
+      backHref={`/admin/runtime/${GUIDE_GROUPS[slug] ?? 'platform'}`}
+      backLabel="Назад"
       embedSrc={`/admin/guides/embed/${encodeURIComponent(slug)}`}
     />
   );

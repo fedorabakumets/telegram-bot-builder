@@ -7,6 +7,9 @@ import { describe, it } from "node:test";
 import assert from "node:assert";
 import fs from "node:fs";
 import path from "node:path";
+import { RUNTIME_GUIDES } from "./runtime-guides";
+import { serveRuntimeGuideEmbed } from "./pages/guide-docs-page";
+import type { Request, Response } from "express";
 
 /** Корень репозитория */
 const root = path.resolve(import.meta.dirname, "..", "..");
@@ -46,6 +49,31 @@ describe("маршруты админки рантайма", () => {
   });
 });
 
+describe("опубликованные инструкции рантайма", () => {
+  it("фрейм перенаправляется на соответствующие статьи GitHub Pages", () => {
+    for (const guide of RUNTIME_GUIDES) {
+      let destination = "";
+      const response = { redirect: (status: number, url: string) => {
+        assert.equal(status, 302);
+        destination = url;
+      } } as unknown as Response;
+      serveRuntimeGuideEmbed({ params: { slug: guide.slug } } as unknown as Request, response);
+      assert.equal(destination, "https://fedorabakumets.github.io/telegram-bot-builder/docs/" + guide.file.replace(/\.md$/, ""));
+      assert.ok(fs.existsSync(path.join(root, "docs", guide.file)));
+    }
+  });
+
+  it("образ не собирает и не копирует документацию", () => {
+    const docker = readRepo("Dockerfile");
+    assert.doesNotMatch(docker, /^COPY --from=builder \/app\/docs \.\/docs$/m);
+    assert.doesNotMatch(docker, /COPY[^\n]*\/app\/docs/);
+    assert.doesNotMatch(docker, /RUN npm run docs/);
+    const ignored = readRepo(".dockerignore");
+    assert.match(ignored, /^docs\/$/m);
+    assert.match(ignored, /^docs-site\/$/m);
+  });
+});
+
 describe("снимки BotFather в образе", () => {
   it("Dockerfile копирует каталог assets", () => {
     const docker = readRepo("Dockerfile");
@@ -53,12 +81,12 @@ describe("снимки BotFather в образе", () => {
   });
 
   it("png лежат в assets/images и указаны в инструкции", () => {
-    const steps = readRepo("client/components/admin/settings/botfather-steps.tsx");
+    const steps = readRepo("docs/development/INSTALLATION.md");
     for (const name of SHOTS) {
       const file = path.join(root, "assets/images", name);
       assert.ok(fs.existsSync(file), name);
       assert.ok(fs.statSync(file).size > 1000, name);
-      assert.match(steps, new RegExp(`/assets/images/${name}`));
+      assert.match(steps, new RegExp(`assets/images/${name}`));
     }
   });
 });

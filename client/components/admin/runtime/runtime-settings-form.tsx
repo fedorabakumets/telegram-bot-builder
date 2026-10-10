@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { RuntimeFieldControl, type RuntimeFormShape } from './runtime-field-control';
 import { runtimeFormValue, type RuntimeGroupView } from './runtime-types';
 import { useRunRuntimeBackup, useSaveRuntimeSettings } from './use-runtime-settings';
+import { BackupTelegramTestButton } from './backup-telegram-test-button';
 
 /** Схема словаря строк */
 const schema = z.object({ values: z.record(z.string(), z.string()) });
@@ -87,7 +88,9 @@ export function RuntimeSettingsForm({ data }: { data: RuntimeGroupView }) {
               variant="outline"
               disabled={backup.isPending}
               onClick={() => backup.mutate(undefined, {
-                onSuccess: () => toast({ title: 'Бэкап снят' }),
+                onSuccess: (result: { warnings?: string[] }) => toast({
+                  title: 'Бэкап снят', description: result.warnings?.join(' ') || undefined,
+                }),
                 onError: (error: Error) => toast({ title: 'Бэкап не снят', description: error.message, variant: 'destructive' }),
               })}
             >
@@ -95,6 +98,7 @@ export function RuntimeSettingsForm({ data }: { data: RuntimeGroupView }) {
               Снять сейчас
             </Button>
           ) : null}
+          {data.id === 'backups' ? <BackupTelegramTestButton disabled={form.formState.isDirty || save.isPending} /> : null}
         </CardFooter>
       </form>
     </Card>

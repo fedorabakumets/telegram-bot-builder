@@ -7,22 +7,21 @@ import { useParams } from 'wouter';
 import { AdminEmbedFrame } from '../admin-embed-frame';
 
 /**
- * Просмотр docs/database с боковым меню
+ * Показывает опубликованную схему базы во фрейме с возвратом в панель.
  * @returns JSX элемент страницы схемы БД
  */
 export function AdminSchemaPage() {
   const params = useParams<{ tableName?: string }>();
   const tableName = params.tableName && params.tableName !== 'embed' ? params.tableName : undefined;
-  const embedSrc = tableName
-    ? `/admin/schema/embed/${tableName}`
-    : '/admin/schema/embed';
+  const docsUrl = 'https://fedorabakumets.github.io/telegram-bot-builder/docs/database';
+  const embedSrc = tableName ? `${docsUrl}/${encodeURIComponent(tableName)}` : docsUrl;
 
   return (
     <AdminEmbedFrame
-      title={tableName ?? 'Database Schema'}
+      title={tableName ?? 'Схема базы данных'}
       embedSrc={embedSrc}
-      backHref={tableName ? '/admin/schema' : undefined}
-      backLabel="Все таблицы"
+      backHref={tableName ? '/admin/schema' : '/admin'}
+      backLabel="Назад"
     />
   );
 }

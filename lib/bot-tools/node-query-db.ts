@@ -63,11 +63,12 @@ function buildSummary(node: RawNode): string {
 
 /**
  * Собирает из ноды строку для регистронезависимого поиска по подстроке.
- * Включает id, type и ключевые строковые поля data (текст/команда/имя/переменная и т.п.).
+ * Включает id, type, ключевые строковые поля data и поля кнопок
+ * (text / url / copyText / webAppUrl / customCallbackData / target).
  * @param node - Сырой объект ноды
  * @returns Склеенная через пробел строка в нижнем регистре
  */
-function buildSearchText(node: RawNode): string {
+export function buildSearchText(node: RawNode): string {
   const d = node.data ?? {};
   /** Ключевые строковые поля data, по которым осмысленно искать */
   const fields = [
@@ -85,6 +86,18 @@ function buildSearchText(node: RawNode): string {
   for (const key of fields) {
     const value = d[key];
     if (value !== undefined && value !== null) parts.push(String(value));
+  }
+  /** Поиск по кнопкам: URL/текст/copyText часто нужны агенту для замены ссылок */
+  const buttonFieldKeys = ['text', 'url', 'copyText', 'webAppUrl', 'customCallbackData', 'target'] as const;
+  if (Array.isArray(d.buttons)) {
+    for (const btn of d.buttons) {
+      if (!btn || typeof btn !== 'object') continue;
+      const button = btn as Record<string, unknown>;
+      for (const key of buttonFieldKeys) {
+        const value = button[key];
+        if (value !== undefined && value !== null && value !== '') parts.push(String(value));
+      }
+    }
   }
   return parts.join(' ').toLowerCase();
 }
@@ -133,8 +146,8 @@ export async function listNodesInDb(
 
 /**
  * Ищет ноды проекта в живой БД по подстроке и/или типу ноды (read-only).
- * Поиск регистронезависимый, идёт по id, type и ключевым строковым полям data
- * (messageText, command, description, inputPrompt, variable, label, text, name).
+ * Поиск регистронезависимый: id, type, ключевые поля data и поля кнопок
+ * (buttons[].text/url/copyText/webAppUrl и т.п.; href внутри messageText тоже попадает).
  * @param projectId - Числовой ID проекта из URL редактора
  * @param query - Подстрока для поиска (пустая строка — фильтр только по типу/листу)
  * @param options - Опции: type (точный тип ноды), sheetId (лист), apiBaseUrl (URL API)

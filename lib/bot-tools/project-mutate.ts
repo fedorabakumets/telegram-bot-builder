@@ -60,6 +60,28 @@ function resolveSheetIndex(project: BotDataWithSheets, sheetId?: string): number
 }
 
 /**
+ * Находит индекс листа, где лежит нода.
+ * При явном sheetId — только этот лист; без sheetId — поиск по всем листам.
+ * @param project - Проект
+ * @param nodeId - ID ноды
+ * @param sheetId - Опциональный ID листа
+ * @returns Индекс листа или -1, если нода не найдена
+ */
+function findSheetIndexForNode(
+  project: BotDataWithSheets,
+  nodeId: string,
+  sheetId?: string,
+): number {
+  const sheets = project.sheets ?? [];
+  if (sheetId) {
+    const idx = sheets.findIndex((s) => s.id === sheetId);
+    if (idx < 0) return -1;
+    return (sheets[idx]?.nodes ?? []).some((n) => n.id === nodeId) ? idx : -1;
+  }
+  return sheets.findIndex((s) => (s.nodes ?? []).some((n) => n.id === nodeId));
+}
+
+/**
  * Создаёт минимальный project.json со стартовой парой command_trigger + message
  * @param nodes - Опциональный список нод (иначе дефолтный scaffold)
  * @param sheetName - Имя листа
@@ -123,11 +145,12 @@ export function addNodeToProject(projectJson: unknown, node: Node, sheetId?: str
 }
 
 /**
- * Обновляет ноду по id (shallow merge data)
+ * Обновляет ноду по id (shallow merge data).
+ * Без sheetId ищет ноду по всем листам; если не найдена — явная ошибка (не silent ok).
  * @param projectJson - project.json
  * @param nodeId - ID ноды
  * @param patch - Частичное обновление ноды
- * @param sheetId - ID листа
+ * @param sheetId - ID листа (опционально; иначе автопоиск по всем листам)
  */
 export function updateNodeInProject(
   projectJson: unknown,
@@ -138,7 +161,9 @@ export function updateNodeInProject(
   const project = parseProject(projectJson);
   if (!project) return { error: 'Невалидный project_json' };
 
-  const idx = resolveSheetIndex(project, sheetId);
+  const idx = findSheetIndexForNode(project, nodeId, sheetId);
+  if (idx < 0) return { error: `Нода не найдена: ${nodeId}` };
+
   const sheets = [...(project.sheets ?? [])];
   const nodes = (sheets[idx]?.nodes ?? []).map((n) => {
     if (n.id !== nodeId) return n;
@@ -156,10 +181,11 @@ export function updateNodeInProject(
 }
 
 /**
- * Удаляет ноду из проекта
+ * Удаляет ноду из проекта.
+ * Без sheetId ищет ноду по всем листам; если не найдена — явная ошибка.
  * @param projectJson - project.json
  * @param nodeId - ID ноды
- * @param sheetId - ID листа
+ * @param sheetId - ID листа (опционально; иначе автопоиск по всем листам)
  */
 export function removeNodeFromProject(
   projectJson: unknown,
@@ -169,7 +195,9 @@ export function removeNodeFromProject(
   const project = parseProject(projectJson);
   if (!project) return { error: 'Невалидный project_json' };
 
-  const idx = resolveSheetIndex(project, sheetId);
+  const idx = findSheetIndexForNode(project, nodeId, sheetId);
+  if (idx < 0) return { error: `Нода не найдена: ${nodeId}` };
+
   const sheets = [...(project.sheets ?? [])];
   sheets[idx] = {
     ...sheets[idx],
@@ -203,7 +231,8 @@ export function connectNodes(
 
   const portType = options.portType ?? 'auto-transition';
   const branchId = options.branch;
-  const idx = resolveSheetIndex(project, options.sheetId);
+  const idx = findSheetIndexForNode(project, fromId, options.sheetId);
+  if (idx < 0) return { error: `Нода не найдена: from=${fromId}` };
   const sheets = [...(project.sheets ?? [])];
 
   const nodes = (sheets[idx]?.nodes ?? []).map((n) => {
@@ -277,7 +306,8 @@ export function disconnectNodes(
   }
 
   const branchId = options.branch;
-  const idx = resolveSheetIndex(project, options.sheetId);
+  const idx = findSheetIndexForNode(project, fromId, options.sheetId);
+  if (idx < 0) return { error: `Нода не найдена: from=${fromId}` };
   const sheets = [...(project.sheets ?? [])];
 
   let changed = false;
@@ -375,7 +405,8 @@ export function duplicateNodeInProject(
   const project = parseProject(projectJson);
   if (!project) return { error: 'Невалидный project_json' };
 
-  const idx = resolveSheetIndex(project, options?.sheetId);
+  const idx = findSheetIndexForNode(project, nodeId, options?.sheetId);
+  if (idx < 0) return { error: `Нода не найдена: ${nodeId}` };
   const sheets = [...(project.sheets ?? [])];
   const source = (sheets[idx]?.nodes ?? []).find((n) => n.id === nodeId);
   if (!source) return { error: `Нода не найдена: ${nodeId}` };

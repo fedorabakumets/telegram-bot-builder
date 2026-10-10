@@ -661,7 +661,7 @@ npm run dev
 
 При первом открытии приложения в продакшене появится Setup Wizard — он попросит ввести данные для авторизации через Telegram.
 
-**Как получить данные из BotFather:**
+### Как получить данные из BotFather {#botfather}
 
 **1.** Откройте [@BotFather](https://t.me/BotFather) → выберите бота → **Bot Settings** → **Login Widget**
 

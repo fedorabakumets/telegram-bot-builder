@@ -34,6 +34,7 @@ export function registerProjectTokensUserbotPaths(
     summary: "Настройки Telethon userbot",
     description:
       "Сохраняет `userbotEnabled` 0|1 и apiId/hash/session; USERBOT_* попадут в env бота при следующем запуске. " +
+      "Пропущенные поля не меняются. API ID: null или пустая строка очищают значение; API Hash и session string: null, пустая строка или маска сохраняют секрет. MCP: `db_set_userbot_settings`. Автоматического перезапуска нет. " +
       "WS `token-updated` (changedFields: userbotEnabled).\n\n" +
       "**Auth:** `requireTokenOwnership`.\n\n" +
       "```bash\ncurl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/userbot \\\n" +

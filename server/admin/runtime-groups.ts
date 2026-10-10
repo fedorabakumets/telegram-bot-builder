@@ -29,6 +29,9 @@ const backups: RuntimeField[] = [
   { env: "DB_BACKUPS_KEEP", label: "Сколько хранить", kind: "number" },
   { env: "DB_BACKUP_LABEL", label: "Метка базы панели", kind: "text" },
   { env: "DB_BACKUP_TARGETS", label: "Другие базы", kind: "secret", hint: "метка=адрес через пробел. Пустое поле секрет не стирает" },
+  { env: "DB_BACKUP_TELEGRAM_ENABLED", label: "Отправлять в Telegram", kind: "bool", hint: "Дополнительная копия после сохранения в хранилище" },
+  { env: "DB_BACKUP_TELEGRAM_BOT_TOKEN", label: "Токен бота Telegram", kind: "secret", hint: "Пустое поле сохраняет прежний токен" },
+  { env: "DB_BACKUP_TELEGRAM_CHAT_ID", label: "Chat ID Telegram", kind: "text", hint: "Личный чат или закрытая группа. Файл до 50 МБ" },
 ];
 
 /** Запуск ботов */

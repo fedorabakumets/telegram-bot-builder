@@ -1177,7 +1177,7 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/save-incoming-medi
 
 **Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
-Сохраняет `userbotEnabled` 0|1 и apiId/hash/session; USERBOT_* попадут в env бота при следующем запуске. WS `token-updated` (changedFields: userbotEnabled).
+Сохраняет `userbotEnabled` 0|1 и apiId/hash/session; USERBOT_* попадут в env бота при следующем запуске. Пропущенные поля не меняются. API ID: null или пустая строка очищают значение; API Hash и session string: null, пустая строка или маска сохраняют секрет. MCP: `db_set_userbot_settings`. Автоматического перезапуска нет. WS `token-updated` (changedFields: userbotEnabled).
 
 **Auth:** `requireTokenOwnership`.
 
@@ -1223,7 +1223,7 @@ Userbot auth: отправить код
 
 **Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
-Шаг 1: `{ apiId, apiHash, phone }` → Python `userbotAuth`.
+Шаг 1: `{ apiId, apiHash?, phone }` → Python `userbotAuth`. При пропуске, пустой строке или маске apiHash используется сохранённый API Hash. MCP: `db_userbot_send_code`. Сначала сохраните API ID и Hash через настройки userbot. При успешной отправке кода WS `userbot-auth-progress` передаёт шаг `code` и телефон вкладкам с доступом к проекту; код и секреты не передаются.
 
 **Auth:** `requireTokenOwnership`.
 
@@ -1267,7 +1267,7 @@ Userbot auth: код из SMS/Telegram
 
 **Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
-Шаг 2: `{ phone, code }`. При `session_string` — сохраняет в БД + userbotEnabled=1.
+Шаг 2: `{ phone, code }`. При `needs_2fa` WS `userbot-auth-progress` передаёт шаг `2fa` и телефон. При `session_string` — сохраняет в БД + userbotEnabled=1 и отправляет WS `token-updated` всем вкладкам с доступом к проекту. Секрет сессии в событие не включается. WS `userbot-auth-progress` передаёт шаг `done` после входа.
 
 **Auth:** `requireTokenOwnership`.
 
@@ -1303,7 +1303,7 @@ Userbot auth: пароль 2FA
 
 **Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
-Шаг 3: `{ password }`. При успехе сохраняет session + userbotEnabled=1.
+Шаг 3: `{ password }`. При успехе сохраняет session + userbotEnabled=1 и отправляет WS `token-updated` всем вкладкам с доступом к проекту. Секрет сессии в событие не включается. WS `userbot-auth-progress` передаёт шаг `done` после входа.
 
 **Auth:** `requireTokenOwnership`.
 

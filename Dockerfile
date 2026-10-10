@@ -1,4 +1,5 @@
 # syntax=docker/dockerfile:1
+# @fileoverview Сборка конструктора; документация открывается с внешнего сайта.
 # Dockerfile для конструктора Telegram-ботов
 # Многоэтапная сборка: build-stage собирает клиент, runtime-stage содержит только необходимое
 # Кэш npm/pip хранится в BuildKit cache mounts. Railway требует id с префиксом
@@ -15,11 +16,8 @@ COPY package*.json .npmrc ./
 RUN --mount=type=cache,id=s/a8481b49-5ca6-45bc-a1a5-3e1e8b80a79b-/root/.npm,target=/root/.npm \
     npm ci --ignore-scripts --prefer-offline --no-audit --no-fund
 
-# Копируем исходный код, генерируем docs для /admin/schema и /admin/api-docs, собираем клиент
+# Копируем исходный код и собираем клиент без генерации сайта документации
 COPY . .
-# DATABASE_URL нужен только для импорта registerRoutes при docs:api; к БД на build не подключаемся
-ENV DATABASE_URL=postgresql://build:build@127.0.0.1:5432/build
-RUN npm run docs
 RUN npm run build:client
 
 # ── Runtime stage ─────────────────────────────────────────────────────────────
@@ -56,10 +54,6 @@ COPY tsconfig*.json ./
 COPY drizzle.config.ts* ./
 COPY migrations ./migrations
 COPY version.json ./version.json
-
-# Документация для /admin/schema и /admin/api-docs (генерируется на build-stage)
-COPY --from=builder /app/docs/database ./docs/database
-COPY --from=builder /app/docs/api ./docs/api
 
 # Снимки BotFather и прочие картинки UI: сервер отдаёт каталог как /assets
 COPY assets ./assets
