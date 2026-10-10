@@ -7,6 +7,7 @@
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
+import { registerBotLogTools } from './mcp-register-log-tools.ts';
 import { registerUserbotTools } from './mcp-register-userbot-tools.ts';
 import {
   addNodeInDb,
@@ -974,6 +975,9 @@ export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOpt
     },
     async ({ token_id }) => textResult(await botStatusInDb(token_id)),
   );
+
+  /** Подключает ограниченные страницы и экспорт логов через защищённые API. */
+  registerBotLogTools(server, enableFileTools);
 
   server.registerTool(
     'db_bot_logs',

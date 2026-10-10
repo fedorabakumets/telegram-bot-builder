@@ -3,6 +3,7 @@
  * @module server/routes/botManagement/handlers/botLaunchLogsHandler
  */
 
+import { parseLaunchPage } from './launch-page-query';
 import type { Request, Response } from 'express';
 import { storage } from '../../../storages/storage';
 import { getOwnerIdFromRequest } from '../../../telegram/auth-middleware';
@@ -23,6 +24,11 @@ export async function handleGetLaunchLogs(req: Request, res: Response): Promise<
     return;
   }
 
+  const page = parseLaunchPage(req.query, 100, 500);
+  if ('error' in page) {
+    res.status(400).json({ error: page.error });
+    return;
+  }
   try {
     const launch = await storage.getLaunchHistoryById(launchId);
     if (!launch) {
@@ -42,7 +48,7 @@ export async function handleGetLaunchLogs(req: Request, res: Response): Promise<
       return;
     }
 
-    res.json(await storage.getBotLogsByLaunch(launchId));
+    res.json(await storage.getBotLogsByLaunch(launchId, req.query.limit === undefined && req.query.beforeId === undefined ? undefined : page));
   } catch (err) {
     console.error('[botLaunchLogsHandler] Ошибка получения логов запуска:', err);
     res.status(500).json({ error: 'Ошибка получения логов' });

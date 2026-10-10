@@ -3,7 +3,7 @@
  */
 
 import { type BotGroup, botGroups, type BotInstance, botInstances, type BotMessage, type BotMessageMedia, botMessageMedia, botMessages, type BotProject, botProjects, type BotTemplate, botTemplates, type BotToken, botTokens, type BotUser, botUsers, type GroupMember, groupMembers, type MediaFile, mediaFiles, type TelegramUserDB, telegramUsers, botLogs, type BotLog, botLaunchHistory, type BotLaunchHistory, projectCollaborators, type ProjectCollaborator, userProjectArchives, broadcasts, broadcastResults, broadcastCampaigns, type Broadcast, type BroadcastResult, type BroadcastFilters, type BroadcastCampaign, botEnvVariables, type BotEnvVariable, botTables, botTableColumns, botTableRows, type BotTable, type BotTableColumn, type BotTableRow, workerProcesses, type WorkerProcess, projectVersions, type ProjectVersion, agentTokens, type AgentToken } from "@shared/schema";
-import { and, asc, desc, eq, gte, ilike, inArray, isNull, notInArray, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, ilike, lt, inArray, isNull, notInArray, or, sql } from "drizzle-orm";
 import { IStorage } from "../storages/storage";
 import type { StorageBotGroupInput, StorageBotGroupUpdate, StorageBotInstanceInput, StorageBotInstanceUpdate, StorageBotLaunchHistoryInput, StorageBotLaunchHistoryUpdate, StorageBotLogInput, StorageBotMessageInput, StorageBotMessageMediaInput, StorageBotProjectInput, StorageBotProjectUpdate, StorageBotTemplateInput, StorageBotTemplateUpdate, StorageBotTokenInput, StorageBotTokenUpdate, StorageGroupMemberInput, StorageGroupMemberUpdate, StorageMediaFileInput, StorageMediaFileUpdate, StorageTelegramUserInput, StorageBroadcastInput, StorageBroadcastUpdate, StorageBroadcastResultInput, StorageBroadcastCampaignInput, StorageBroadcastCampaignUpdate, StorageBotEnvVariableInput, StorageBotEnvVariableUpdate, StorageBotTableInput, StorageBotTableColumnInput, StorageBotTableRowInput, StorageWorkerProcessInput } from "../storages/storageTypes";
 import { db } from "./db";
@@ -1597,14 +1597,15 @@ export class DatabaseStorage implements IStorage {
    * Получить последние N запусков для токена
    * @param tokenId - ID токена
    * @param limit - Максимальное количество записей (по умолчанию 10)
+   * @param beforeId - Курсор для чтения более старых запусков
    * @returns Массив записей истории запусков
    */
-  async getLaunchHistory(tokenId: number, limit = 10): Promise<BotLaunchHistory[]> {
+  async getLaunchHistory(tokenId: number, limit = 10, beforeId?: number): Promise<BotLaunchHistory[]> {
     return await this.db
       .select()
       .from(botLaunchHistory)
-      .where(eq(botLaunchHistory.tokenId, tokenId))
-      .orderBy(desc(botLaunchHistory.startedAt))
+      .where(and(eq(botLaunchHistory.tokenId, tokenId), beforeId === undefined ? undefined : lt(botLaunchHistory.id, beforeId)))
+      .orderBy(desc(botLaunchHistory.id))
       .limit(limit);
   }
 
@@ -1621,9 +1622,16 @@ export class DatabaseStorage implements IStorage {
   /**
    * Получить логи конкретного запуска бота
    * @param launchId - ID записи в bot_launch_history
+   * @param page - Ограниченная страница; отсутствие сохраняет прежнее поведение
    * @returns Массив записей логов
    */
-  async getBotLogsByLaunch(launchId: number): Promise<BotLog[]> {
+  async getBotLogsByLaunch(launchId: number, page?: { limit: number; beforeId?: number }): Promise<BotLog[]> {
+    if (page) {
+      const logs = await this.db.select().from(botLogs)
+        .where(and(eq(botLogs.launchId, launchId), page.beforeId === undefined ? undefined : lt(botLogs.id, page.beforeId)))
+        .orderBy(desc(botLogs.id)).limit(page.limit);
+      return logs.reverse();
+    }
     return await this.db
       .select()
       .from(botLogs)

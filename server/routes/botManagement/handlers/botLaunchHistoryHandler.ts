@@ -3,6 +3,7 @@
  * @module server/routes/botManagement/handlers/botLaunchHistoryHandler
  */
 
+import { parseLaunchPage } from './launch-page-query';
 import type { Request, Response } from "express";
 import { storage } from "../../../storages/storage";
 import { getOwnerIdFromRequest } from "../../../telegram/auth-middleware";
@@ -21,6 +22,11 @@ export async function handleGetLaunchHistory(req: Request, res: Response): Promi
   const tokenId = parseInt(req.params.tokenId, 10);
   if (isNaN(tokenId)) {
     res.status(400).json({ error: "Некорректный tokenId" });
+    return;
+  }
+  const page = parseLaunchPage(req.query, 10, 100);
+  if ('error' in page) {
+    res.status(400).json({ error: page.error });
     return;
   }
   try {
@@ -48,7 +54,7 @@ export async function handleGetLaunchHistory(req: Request, res: Response): Promi
 
     await reconcileLaunchHistoryForToken(tokenId, isLiveRunning);
 
-    const history = await storage.getLaunchHistory(tokenId, 10);
+    const history = await storage.getLaunchHistory(tokenId, page.limit, page.beforeId);
     res.json(history);
   } catch (err) {
     console.error("[botLaunchHistoryHandler] Ошибка получения истории:", err);

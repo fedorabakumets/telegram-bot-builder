@@ -1,3 +1,5 @@
+<!-- @fileoverview Руководство по инструментам MCP-конструктора, авторизации и сопровождению ботов. -->
+
 # MCP-сервер конструктора (botcraft-builder)
 
 > Подробное руководство по MCP-серверу BotCraft Studio для сборки `project.json` и генерации Python-кода через внешние ИИ-клиенты (Cursor, Claude Desktop, Kiro).
@@ -413,6 +415,8 @@ MCP **не раздувает** `data` дефолтами клавиатуры. 
 Код: `lib/bot-tools/bot-token-update-db.ts` → `updateBotTokenInDb`.
 
 #### `db_bot_status` / `db_bot_logs` / `db_bot_launch_history`
+
+Для постраничной истории, логов конкретного запуска, поиска и экспорта добавлены `db_list_bot_launches`, `db_get_launch_logs`, `db_search_bot_logs`, `db_export_bot_logs`. Полный контракт и ограничения: [[mcp/bot-logs]].
 
 Статус, live-логи и история запусков по `token_id` из `db_list_bot_tokens`.
 UI вкладки «Боты» грузит статусы проекта одним запросом `GET /api/projects/{id}/bot/statuses` ([[api/project-bot]]).

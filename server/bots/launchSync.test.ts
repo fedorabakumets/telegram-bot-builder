@@ -61,7 +61,7 @@ describe('Логи запуска', () => {
     mocks.access.mockResolvedValue(true);
     mocks.logs.mockResolvedValue([]);
     const res = response();
-    await handleGetLaunchLogs({ params: { launchId: '3595' } } as unknown as Request, res as unknown as Response);
+    await handleGetLaunchLogs({ params: { launchId: '3595' }, query: {} } as unknown as Request, res as unknown as Response);
     expect(res.status).not.toHaveBeenCalled();
     expect(res.json).toHaveBeenCalledWith([]);
     expect(mocks.access).toHaveBeenCalledWith(289, 123);
@@ -71,8 +71,27 @@ describe('Логи запуска', () => {
     mocks.launch.mockResolvedValue({ id: 3595, projectId: 289 });
     mocks.access.mockResolvedValue(false);
     const res = response();
-    await handleGetLaunchLogs({ params: { launchId: '3595' } } as unknown as Request, res as unknown as Response);
+    await handleGetLaunchLogs({ params: { launchId: '3595' }, query: {} } as unknown as Request, res as unknown as Response);
     expect(res.status).toHaveBeenCalledWith(403);
+    expect(mocks.logs).not.toHaveBeenCalled();
+  });
+
+  /** Проверяет передачу ограничений только после проверки доступа. */
+  it('передаёт размер страницы и курсор в хранилище', async () => {
+    mocks.launch.mockResolvedValue({ id: 3595, projectId: 289 });
+    mocks.access.mockResolvedValue(true);
+    mocks.logs.mockResolvedValue([]);
+    const res = response();
+    await handleGetLaunchLogs({ params: { launchId: '3595' }, query: { limit: '20', beforeId: '100' } } as unknown as Request, res as unknown as Response);
+    expect(mocks.logs).toHaveBeenCalledWith(3595, { limit: 20, beforeId: 100 });
+  });
+
+  /** Неверный лимит не должен приводить к чтению истории или логов. */
+  it('отклоняет превышение лимита страницы', async () => {
+    const res = response();
+    await handleGetLaunchLogs({ params: { launchId: '3595' }, query: { limit: '501' } } as unknown as Request, res as unknown as Response);
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(mocks.launch).not.toHaveBeenCalled();
     expect(mocks.logs).not.toHaveBeenCalled();
   });
 });

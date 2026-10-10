@@ -1,3 +1,5 @@
+<!-- @fileoverview Краткий обзор возможностей и подключения MCP-конструктора ботов. -->
+
 # MCP-конструктор ботов — обзор
 
 > Краткое введение. Полное руководство: [[mcp/bot-builder]]. Пример: [[mcp/example-simple-bot]].
@@ -61,6 +63,8 @@
 **Живая БД (сценарий):** `get_project_db`, `update_project_db`, `db_*` ноды/листы/версии/проекты, `db_apply_ops`, `db_auto_layout`, …
 
 **Runtime ботов:** `db_list_bot_tokens`, `db_add_bot_token`, `db_update_bot_token`, `db_bot_status`, `db_bot_logs`, `db_bot_launch_history`, `db_start_bot`, `db_stop_bot`, `db_restart_bot`, `db_restart_all_bots`, `db_start_offline_bots`, `db_delete_bot_token`
+
+**История и диагностика:** `db_list_bot_launches`, `db_get_launch_logs`, `db_search_bot_logs`, `db_export_bot_logs` — страницы истории, отдельный запуск, поиск по периоду и ограниченный экспорт. Примеры и ограничения: [[mcp/bot-logs]].
 
 **Настройки токена:** `db_set_messages_retention` — срок хранения сообщений (`0` / `7` / `30` / `60` / `90` / `180` / `365`). UI обновляется live через WS `token-updated` ([[features/token-settings-realtime]], [[api/realtime-events]]).
 
