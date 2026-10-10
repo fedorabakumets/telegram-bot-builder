@@ -1,0 +1,53 @@
+/** @fileoverview Декоративные кольца и импульсы статуса бота с поддержкой уменьшения движения. */
+.bot-status-motion {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  color: #38bdf8;
+}
+.bot-status-motion[data-status="online"], .bot-status-motion[data-pulse="online"] { color: #34d399; }
+.bot-status-motion[data-status="stopping"], .bot-status-motion[data-pulse="offline"] { color: #fbbf24; }
+.bot-status-motion:is([data-status="failed"], [data-status="invalid"], [data-status="error"]) { color: #f87171; }
+.bot-status-halo {
+  position: absolute;
+  inset: -3px;
+  border-radius: 12px;
+  pointer-events: none;
+  opacity: 0;
+  box-shadow: 0 0 0 1px currentColor, 0 0 16px currentColor;
+}
+.bot-status-orbit {
+  position: absolute;
+  inset: -4px;
+  width: calc(100% + 8px);
+  height: calc(100% + 8px);
+  pointer-events: none;
+  opacity: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-dasharray: 36 103;
+}
+.bot-status-motion:is([data-status="starting"], [data-status="restarting"]) .bot-status-orbit {
+  opacity: 1;
+  animation: bot-status-spin 1.6s linear infinite;
+}
+.bot-status-motion[data-status="starting"] .bot-status-halo {
+  animation: bot-status-breathe 1.8s ease-in-out infinite;
+}
+.bot-status-motion[data-status="stopping"] .bot-status-halo {
+  animation: bot-status-breathe 1.2s ease-in-out infinite reverse;
+}
+.bot-status-motion[data-pulse] .bot-status-halo { animation: bot-status-result .9s ease-out; }
+.bot-status-dot[data-status="starting"], .bot-status-dot[data-status="restarting"] {
+  animation: bot-status-breathe 1.4s ease-in-out infinite;
+}
+.bot-status-dot[data-status="stopping"] { animation: bot-status-breathe 1.2s ease-in-out infinite; }
+@keyframes bot-status-spin { to { transform: rotate(360deg); } }
+@keyframes bot-status-breathe { 0%, 100% { opacity: .25; } 50% { opacity: .75; } }
+@keyframes bot-status-result { 0% { opacity: .8; } 100% { opacity: 0; transform: scale(1.15); } }
+@media (prefers-reduced-motion: reduce) {
+  .bot-status-motion *, .bot-status-dot { animation: none !important; }
+  .bot-status-motion:is([data-status="starting"], [data-status="stopping"], [data-status="restarting"]) .bot-status-halo { opacity: .35; }
+}

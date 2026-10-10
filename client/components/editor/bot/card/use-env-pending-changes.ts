@@ -8,7 +8,7 @@ import { useState, useCallback } from 'react';
 import { apiRequest } from '@/queryClient';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import { invalidateBotStatusQueries } from '../invalidate-bot-status-queries';
+import { useBotEnvRestart } from './use-bot-env-restart';
 import { useUserbotPendingSync } from './use-userbot-pending-sync';
 
 /** Одно несохранённое изменение */
@@ -39,6 +39,7 @@ export function useEnvPendingChanges(projectId: number, tokenId: number) {
   const [isSaving, setIsSaving] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { mutateAsync: restartBot } = useBotEnvRestart(projectId, tokenId);
 
   /** Изменение, уже сохранённое извне, больше не считается локальным черновиком */
   useUserbotPendingSync(projectId, tokenId, changes, setChanges);
@@ -100,17 +101,15 @@ export function useEnvPendingChanges(projectId: number, tokenId: number) {
       await apiRequest('PUT', batchUrl, { changes: entries });
       setChanges(new Map());
       invalidateAll();
-      // Останавливаем и запускаем заново
-      try { await apiRequest('POST', `/api/projects/${projectId}/bot/stop`, { tokenId }); } catch { /* может быть уже остановлен */ }
-      await apiRequest('POST', `/api/projects/${projectId}/bot/start`, { tokenId });
-      invalidateBotStatusQueries(queryClient, projectId, tokenId);
+      /** Перезапуск отслеживается общей анимацией карточки и панели. */
+      await restartBot();
       toast({ title: 'Бот перезапущен', description: 'Изменения сохранены, бот перезапущен' });
     } catch (error: any) {
       toast({ title: 'Ошибка', description: error.message || 'Не удалось сохранить', variant: 'destructive' });
     } finally {
       setIsSaving(false);
     }
-  }, [changes, batchUrl, projectId, tokenId, queryClient, invalidateAll, toast]);
+  }, [changes, batchUrl, restartBot, invalidateAll, toast]);
 
   return { changes, changesCount, addChange, discardAll, getPendingValue, saveAll, saveAndRestart, isSaving };
 }
