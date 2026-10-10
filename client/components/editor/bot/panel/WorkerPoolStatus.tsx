@@ -6,7 +6,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { Activity, ChevronDown } from 'lucide-react';
 import { apiRequest } from '@/queryClient';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { formatMobileWorkerPoolSummary } from './worker-pool-summary';
 import { WorkerPoolDetails, type WorkerStats } from './worker-pool-details';
@@ -19,7 +18,7 @@ interface WorkerPoolStatusProps {
 
 /**
  * Компактный индикатор состояния Worker Pool.
- * На десктопе — tooltip по hover, на мобильных — popover по тапу с детализацией по проектам.
+ * Детализация по проектам открывается нажатием на индикатор на любом экране.
  * @param props - Свойства компонента
  * @returns JSX элемент или null если воркеров нет
  */
@@ -37,10 +36,10 @@ export function WorkerPoolStatus({ projects }: WorkerPoolStatusProps) {
 
   return (
     <>
-      {/* Десктоп: hover-tooltip */}
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <div className={`${badgeBase} cursor-default hidden @[600px]:flex`}>
+      {/* Десктоп: раскрываемая кнопка с детализацией */}
+      <Popover>
+        <PopoverTrigger asChild>
+          <button type="button" aria-label="Статус Worker Pool" className={`${badgeBase} hidden @[600px]:flex hover:bg-emerald-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 data-[state=open]:bg-emerald-500/20`}>
             <Activity className="w-3 h-3 shrink-0" />
             <span>{data.workers} воркер{data.workers > 1 ? 'а' : ''}</span>
             <span className="text-muted-foreground">·</span>
@@ -51,12 +50,13 @@ export function WorkerPoolStatus({ projects }: WorkerPoolStatusProps) {
                 <span>{data.totalMemoryMb} MB</span>
               </>
             )}
-          </div>
-        </TooltipTrigger>
-        <TooltipContent side="bottom" className="text-xs max-w-xs">
+            <ChevronDown className="w-3 h-3 shrink-0 opacity-60" />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent side="bottom" align="start" className="w-72 p-3">
           <WorkerPoolDetails data={data} projects={projects} />
-        </TooltipContent>
-      </Tooltip>
+        </PopoverContent>
+      </Popover>
 
       {/* Мобильные: tap-popover с читаемой сводкой */}
       <Popover>

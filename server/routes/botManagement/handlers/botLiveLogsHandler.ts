@@ -5,6 +5,7 @@
 
 import type { Request, Response } from "express";
 import { storage } from "../../../storages/storage";
+import { parseBotLogPeriodQuery } from './bot-log-period-query';
 
 /**
  * GET /api/projects/:projectId/tokens/:tokenId/logs
@@ -15,14 +16,22 @@ export async function handleGetLiveBotLogs(req: Request, res: Response): Promise
   try {
     const projectId = parseInt(req.params.projectId);
     const tokenId = parseInt(req.params.tokenId);
-    const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 500;
+    let query;
+    try { query = parseBotLogPeriodQuery(req.query); }
+    catch (error) {
+      res.status(400).json({ error: error instanceof Error ? error.message : 'Некорректный период' });
+      return;
+    }
 
     if (isNaN(projectId) || isNaN(tokenId)) {
       res.status(400).json({ error: "Некорректные projectId или tokenId" });
       return;
     }
 
-    const logs = await storage.getLatestLaunchLogs(projectId, tokenId, limit);
+    /** Без диапазона сохраняем живые логи последнего запуска. */
+    const logs = query.from && query.to
+      ? await storage.getBotLogsInPeriod(projectId, tokenId, query.from, query.to, query.limit, query.beforeId)
+      : await storage.getLatestLaunchLogs(projectId, tokenId, query.limit);
     res.json(logs);
   } catch (err) {
     console.error("[LiveBotLogs] Ошибка получения логов:", err);

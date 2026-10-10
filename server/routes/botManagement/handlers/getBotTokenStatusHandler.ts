@@ -11,6 +11,7 @@ import { findActiveProcessForToken } from '../../../utils/findActiveProcessForTo
 import { workerManager } from '../../../bots/botWorkerManager';
 import { isWorkerPoolEnabled } from '../../../bots/isWorkerPoolEnabled';
 import { reconcileLaunchHistoryForToken } from '../../../bots/reconcileLaunchHistory';
+import { isBotStarting } from '../../../bots/botStartState';
 import { resolveStoppedErrorMessage, formatBotStatusLabel } from '../../../bots/resolveStoppedErrorMessage';
 import { isTokenPendingRestore } from '../../../bots/restoreState';
 
@@ -183,7 +184,7 @@ export async function getBotTokenStatusHandler(req: Request, res: Response): Pro
 
         // Обновляем статус в БД если изменился
         const restorePending = isTokenPendingRestore(tokenId);
-        if (instance.status !== actualStatus) {
+        if (instance.status !== actualStatus && !isBotStarting(tokenId)) {
             await storage.updateBotInstance(instance.id, {
                 status: actualStatus,
                 errorMessage: resolveStoppedErrorMessage(instance.errorMessage, actualStatus),

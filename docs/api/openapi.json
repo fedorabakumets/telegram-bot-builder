@@ -19482,7 +19482,7 @@
           "project-tokens"
         ],
         "summary": "Live-логи бота (bot_logs)",
-        "description": "Последние строки `getLatestLaunchLogs` (default limit=500).\n\n**Auth:** cookie / Bearer PAT + `requireProjectAccess`.\n\n**Клиент:** терминал логов бота.\n\n```bash\ncurl -s 'http://localhost:5000/api/projects/42/tokens/7/logs?limit=100' -b cookies.txt\n```",
+        "description": "Без from/to — последние строки текущего запуска (default limit=500, максимум 1000).\n\nС from/to — сохранённые логи всех запусков токена за период [from, to). Даты ISO с часовым поясом. Для следующей страницы передайте beforeId, равный минимальному id предыдущей страницы. Страницы выбираются по id, строки ответа отсортированы по времени.\n\n**Auth:** cookie / Bearer PAT + `requireProjectAccess`.\n\n**Клиент:** терминал логов бота.\n\n```bash\ncurl -s 'http://localhost:5000/api/projects/42/tokens/7/logs?limit=100' -b cookies.txt\n```",
         "security": [
           {
             "cookieAuth": []
@@ -19519,10 +19519,39 @@
           {
             "schema": {
               "type": "string",
+              "format": "date-time",
+              "description": "Начало периода ISO; требуется вместе с to"
+            },
+            "required": false,
+            "name": "from",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Конец периода ISO; должен быть позже from"
+            },
+            "required": false,
+            "name": "to",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Загрузить id меньше курсора; только при заданном периоде"
+            },
+            "required": false,
+            "name": "beforeId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
               "example": "500"
             },
             "required": false,
-            "description": "Максимум строк логов (по умолчанию 500)",
+            "description": "Максимум строк логов: 1–1000 (по умолчанию 500)",
             "example": "500",
             "name": "limit",
             "in": "query"
@@ -19578,7 +19607,7 @@
             }
           },
           "400": {
-            "description": "Некорректные id",
+            "description": "Некорректные id, границы периода, лимит или курсор",
             "content": {
               "application/json": {
                 "schema": {

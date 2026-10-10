@@ -8,14 +8,19 @@
  */
 
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import { replaceCurrentLaunchSnapshot } from './current-launch-log-snapshot';
 
 /**
  * Тип для одной строки лога
  */
 interface LogEntry {
+  /** Уникальный идентификатор строки */
   id: string;
+  /** Текст события */
   content: string;
+  /** Поток вывода */
   type: 'stdout' | 'stderr';
+  /** Время события */
   timestamp: Date;
 }
 
@@ -23,11 +28,17 @@ interface LogEntry {
  * Тип для хранилища логов по ключу проекта/токена
  */
 interface BotLogsStore {
+  /** Строки по ключу бота */
   logs: Record<string, LogEntry[]>;
+  /** Добавить событие живого потока */
   addLog: (key: string, entry: LogEntry) => void;
+  /** Получить строки бота */
   getLogs: (key: string) => LogEntry[];
   /** Загрузить или слить логи из БД (по id без дублей) */
   hydrateLogs: (key: string, entries: LogEntry[]) => void;
+  /** Заменить кеш выборкой текущего запуска с сохранением новых событий */
+  replaceLaunchLogs: (key: string, entries: LogEntry[], requestedAt: number) => void;
+  /** Очистить строки бота */
   clearLogs: (key: string) => void;
 }
 
@@ -70,12 +81,22 @@ export function BotLogsProvider({ children }: { children: ReactNode }) {
 
   const getLogs = useCallback((key: string) => logs[key] || [], [logs]);
 
+  /**
+   * Синхронизирует текущий запуск с БД и удаляет строки прежних запусков.
+   * @param key - Ключ проекта и токена
+   * @param entries - Снимок последнего запуска
+   * @param requestedAt - Время начала загрузки снимка
+   */
+  const replaceLaunchLogs = useCallback((key: string, entries: LogEntry[], requestedAt: number) => {
+    setLogs(prev => ({ ...prev, [key]: replaceCurrentLaunchSnapshot(prev[key] || [], entries, requestedAt) }));
+  }, []);
+
   const clearLogs = useCallback((key: string) => {
     setLogs(prev => ({ ...prev, [key]: [] }));
   }, []);
 
   return (
-    <BotLogsContext.Provider value={{ logs, addLog, getLogs, hydrateLogs, clearLogs }}>
+    <BotLogsContext.Provider value={{ logs, addLog, getLogs, hydrateLogs, replaceLaunchLogs, clearLogs }}>
       {children}
     </BotLogsContext.Provider>
   );

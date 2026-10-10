@@ -9,6 +9,7 @@ import { IdBadge } from '@/components/editor/database/user-database/components/h
 import { BotServiceNodeFooter } from './BotServiceNodeFooter';
 import { useBotVisualStatus } from './use-bot-visual-status';
 import { BotStatusMotion } from './BotStatusMotion';
+import { getBotProfileLabels } from './bot-profile-labels';
 import type { BotServiceFailure } from './bot-service-failure';
 import type { BotToken } from '@shared/schema';
 import type { NodePos } from './use-bot-node-layout';
@@ -51,8 +52,9 @@ export function BotServiceNode({
   scale,
   onMove,
 }: BotServiceNodeProps) {
-  const title = token.botFirstName || token.name || `Бот ${token.id}`;
-  const username = token.botUsername ? `@${token.botUsername}` : 'Telegram Bot';
+  const profile = getBotProfileLabels(token);
+  const title = profile.title;
+  const username = profile.username ? `@${profile.username}` : 'Telegram Bot';
   const left = position?.left ?? 0;
   const top = position?.top ?? 0;
   const drag = useRef<{

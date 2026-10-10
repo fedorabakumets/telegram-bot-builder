@@ -10,6 +10,7 @@ import { IdBadge } from '@/components/editor/database/user-database/components/h
 import { isTokenActiveForBroadcast } from '@shared/broadcast-unauthorized';
 import { useBotVisualStatus } from './use-bot-visual-status';
 import { BotStatusMotion } from './BotStatusMotion';
+import { getBotProfileLabels } from './bot-profile-labels';
 import { BotRunStatusBadge } from './bot-run-status-badge';
 import type { BotToken } from '@shared/schema';
 
@@ -47,7 +48,7 @@ const ACTION_BTN =
 export function BotDetailHeader({
   token,
   projectId,
-  title,
+  title: fallbackTitle,
   isRunning,
   controlPending,
   deletePending,
@@ -55,6 +56,9 @@ export function BotDetailHeader({
   onDelete,
   onClose,
 }: BotDetailHeaderProps) {
+  /** Подписи профиля с поддержкой имени старого формата. */
+  const profile = getBotProfileLabels(token);
+  const title = profile.title || fallbackTitle;
   const tokenOk = isTokenActiveForBroadcast(token.isActive);
   const status = useBotVisualStatus(token.id, projectId, token.isActive, isRunning);
   const busy = controlPending || ['starting', 'stopping', 'restarting'].includes(status);
@@ -78,15 +82,15 @@ export function BotDetailHeader({
           <IdBadge id={token.id} className="text-[11px] shrink-0" />
           <BotRunStatusBadge status={status} />
         </div>
-        {token.botUsername ? (
+        {profile.username ? (
           <a
-            href={`https://t.me/${token.botUsername}`}
+            href={`https://t.me/${profile.username}`}
             target="_blank"
             rel="noopener noreferrer"
             className="mt-0.5 block truncate text-xs text-muted-foreground transition-colors hover:text-foreground hover:underline"
             title="Открыть бота в Telegram"
           >
-            @{token.botUsername}
+            @{profile.username}
           </a>
         ) : (
           <p className="mt-0.5 truncate text-xs text-muted-foreground">Telegram Bot</p>

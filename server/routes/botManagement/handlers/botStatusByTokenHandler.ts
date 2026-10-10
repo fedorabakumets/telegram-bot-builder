@@ -10,6 +10,7 @@ import { getOwnerIdFromRequest } from '../../../telegram/auth-middleware';
 import { toPublicBotInstance } from '../../botTokens/to-public-bot-token';
 import { reconcileLaunchHistoryForToken } from '../../../bots/reconcileLaunchHistory';
 import { computeLiveBotStatus } from '../compute-live-bot-status';
+import { isBotStarting } from '../../../bots/botStartState';
 
 /**
  * Обрабатывает GET /api/tokens/:tokenId/bot-status
@@ -57,7 +58,7 @@ export async function handleBotStatusByToken(req: Request, res: Response): Promi
       }
     }
 
-    if (instance.status !== actualStatus) {
+    if (instance.status !== actualStatus && !isBotStarting(tokenId)) {
       await storage.updateBotInstance(instance.id, {
         status: actualStatus,
         errorMessage: actualStatus === 'stopped' ? 'Процесс завершен' : null,
