@@ -31,7 +31,7 @@
       "bot-json-prompt"
     ],
     "folder_titles": {},
-    "updated_at": "2026-10-05T18:09:09Z",
+    "updated_at": "2026-10-08T05:35:54+03:00",
     "tags": [],
     "author": ""
   },
@@ -58,14 +58,14 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-10-05T19:24:32Z",
+    "updated_at": "2026-10-08T08:53:27+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "api/admin",
     "title": "admin",
-    "excerpt": "Эндпоинтов: **23**",
+    "excerpt": "Эндпоинтов: **24**",
     "parts": [
       "api",
       "admin"
@@ -73,7 +73,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-10-05T19:24:32Z",
+    "updated_at": "2026-10-08T08:53:27+03:00",
     "tags": [],
     "author": ""
   },
@@ -358,7 +358,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-10-01T10:44:51Z",
+    "updated_at": "2026-10-08T05:35:54+03:00",
     "tags": [],
     "author": ""
   },
@@ -1153,7 +1153,7 @@
     "folder_titles": {
       "deployment": "🚀 Деплой"
     },
-    "updated_at": "2026-10-05T19:18:06Z",
+    "updated_at": "2026-10-08T08:53:27+03:00",
     "tags": [],
     "author": ""
   },
@@ -1248,6 +1248,21 @@
     "author": ""
   },
   {
+    "path": "deployment/bot-database-access",
+    "title": "Доступ ботов к базе панели",
+    "excerpt": "**Статус:** включается флагом, по умолчанию выключено. Проблема ноды `code` со своим DSN не закрыта.",
+    "parts": [
+      "deployment",
+      "bot-database-access"
+    ],
+    "folder_titles": {
+      "deployment": "🚀 Деплой"
+    },
+    "updated_at": "2026-10-08T08:53:27+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
     "path": "development/CONTRIBUTING",
     "title": "🤝 Как внести вклад в проект",
     "excerpt": "Спасибо за интерес к развитию Telegram Bot Builder! Мы рады любой помощи.",
@@ -1303,7 +1318,7 @@
     "folder_titles": {
       "development": "🛠️ Разработка"
     },
-    "updated_at": "2026-08-05T15:24:19+03:00",
+    "updated_at": "2026-10-08T08:53:27+03:00",
     "tags": [],
     "author": ""
   },
@@ -2033,7 +2048,7 @@
   {
     "path": "futures/infrastructure/bot-database-access",
     "title": "Доступ ботов к базе панели",
-    "excerpt": "**Статус:** включается флагом, по умолчанию выключено. Проблема ноды `code` со своим DSN не закрыта.",
+    "excerpt": "Актуальная инструкция: [Доступ ботов к базе панели](../../deployment/bot-database-access.md).",
     "parts": [
       "futures",
       "infrastructure",
@@ -2043,7 +2058,7 @@
       "futures": "🔮 Планы развития",
       "infrastructure": "🏗️ Инфраструктура"
     },
-    "updated_at": "2026-10-05T18:09:09Z",
+    "updated_at": "2026-10-08T08:53:27+03:00",
     "tags": [],
     "author": ""
   },
@@ -2230,7 +2245,7 @@
       "futures": "🔮 Планы развития",
       "mcp": "🤖 MCP"
     },
-    "updated_at": "2026-08-18T17:25:44+03:00",
+    "updated_at": "2026-10-10T00:47:22+03:00",
     "tags": [],
     "author": ""
   },
@@ -2738,7 +2753,7 @@
     "folder_titles": {
       "interface": "🖥️ Интерфейс"
     },
-    "updated_at": "2026-10-05T20:14:28Z",
+    "updated_at": "2026-10-08T08:53:27+03:00",
     "tags": [],
     "author": ""
   },
@@ -3107,7 +3122,7 @@
     "folder_titles": {
       "mcp": "🤖 MCP-конструктор"
     },
-    "updated_at": "2026-09-25T14:53:05+03:00",
+    "updated_at": "2026-10-10T00:47:22+03:00",
     "tags": [],
     "author": ""
   },
@@ -3137,7 +3152,7 @@
     "folder_titles": {
       "mcp": "🤖 MCP-конструктор"
     },
-    "updated_at": "2026-09-25T14:53:05+03:00",
+    "updated_at": "2026-10-08T05:35:54+03:00",
     "tags": [],
     "author": ""
   },
