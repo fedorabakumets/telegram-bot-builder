@@ -76,11 +76,14 @@ interface CustomTooltipProps {
 /**
  * Преобразует массив точек в накопительный (каждая точка = сумма всех предыдущих)
  * @param points - Исходный массив точек
+ * @param total - Общее число с учётом значений до начала периода
  * @returns Массив с накопительными значениями
  */
-export function toCumulative(points: GrowthPoint[]): GrowthPoint[] {
-  let sum = 0;
-  return points.map(p => ({ date: p.date, count: (sum += p.count) }));
+export function toCumulative(points: GrowthPoint[], total?: number): GrowthPoint[] {
+  /** Хронологический порядок нужен для корректного нарастающего итога. */
+  const sorted = [...points].sort((a, b) => a.date.localeCompare(b.date));
+  let sum = total === undefined ? 0 : Math.max(0, total - sorted.reduce((acc, p) => acc + p.count, 0));
+  return sorted.map(p => ({ date: p.date, count: (sum += p.count) }));
 }
 
 /**
