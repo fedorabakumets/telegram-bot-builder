@@ -6,6 +6,9 @@
 export * from './types.ts';
 export * from './constants.ts';
 export * from './api-fetch.ts';
+/** Чтение сводки и графика аудитории через API приложения. */
+export * from './users-analytics-db.ts';
+export * from './users-analytics-types.ts';
 export * from './mcp-request-context.ts';
 export * from './introspection.ts';
 export * from './validate-project.ts';

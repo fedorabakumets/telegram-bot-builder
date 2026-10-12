@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import { calculateCumulativeGrowth } from '@shared/analytics/users-growth';
 import { GrowthPoint } from '../../hooks/queries/use-growth';
 
 /**
@@ -80,10 +81,7 @@ interface CustomTooltipProps {
  * @returns Массив с накопительными значениями
  */
 export function toCumulative(points: GrowthPoint[], total?: number): GrowthPoint[] {
-  /** Хронологический порядок нужен для корректного нарастающего итога. */
-  const sorted = [...points].sort((a, b) => a.date.localeCompare(b.date));
-  let sum = total === undefined ? 0 : Math.max(0, total - sorted.reduce((acc, p) => acc + p.count, 0));
-  return sorted.map(p => ({ date: p.date, count: (sum += p.count) }));
+  return calculateCumulativeGrowth(points, total);
 }
 
 /**

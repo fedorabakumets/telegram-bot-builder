@@ -2576,18 +2576,27 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       // Режим гранулярности — новый параметр
       if (granularity) {
         const cfg = getChartSeriesGranularity(granularity);
+        /** Пятиминутные слоты округляем одинаково для регистраций и временной шкалы. */
+        const slotExpression = granularity === '5m'
+          ? "DATE_TRUNC('hour', registered_at) + INTERVAL '5 min' * FLOOR(EXTRACT(MINUTE FROM registered_at) / 5)"
+          : `DATE_TRUNC('${cfg.truncate}', registered_at)`;
+        /** Начало и конец пятиминутной шкалы совпадают со шкалой источников. */
+        const seriesFrom = granularity === '5m' ? 'hour' : cfg.truncate;
+        const seriesTo = granularity === '5m'
+          ? "DATE_TRUNC('hour', NOW()) + INTERVAL '55 minutes'"
+          : `DATE_TRUNC('${cfg.truncate}', NOW())`;
 
         const queryText = `
           WITH series AS (
             SELECT generate_series(
-              DATE_TRUNC('${cfg.truncate}', NOW() - INTERVAL '${cfg.window}'),
-              DATE_TRUNC('${cfg.truncate}', NOW()),
+              DATE_TRUNC('${seriesFrom}', NOW() - INTERVAL '${cfg.window}'),
+              ${seriesTo},
               INTERVAL '${cfg.step}'
             ) AS slot
           ),
           users AS (
             SELECT
-              DATE_TRUNC('${cfg.truncate}', registered_at) AS slot,
+              ${slotExpression} AS slot,
               COUNT(*) AS cnt
             FROM bot_users
             WHERE project_id = $1
