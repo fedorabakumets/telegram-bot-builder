@@ -31,7 +31,7 @@
       "bot-json-prompt"
     ],
     "folder_titles": {},
-    "updated_at": "2026-10-08T05:35:54+03:00",
+    "updated_at": "2026-10-11T01:45:31+03:00",
     "tags": [],
     "author": ""
   },
@@ -58,7 +58,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-10-08T08:53:27+03:00",
+    "updated_at": "2026-10-13T03:53:01Z",
     "tags": [],
     "author": ""
   },
@@ -335,7 +335,7 @@
   {
     "path": "api/project-tables",
     "title": "project-tables",
-    "excerpt": "Эндпоинтов: **13**",
+    "excerpt": "Эндпоинтов: **15**",
     "parts": [
       "api",
       "project-tables"
@@ -343,7 +343,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-08-12T00:53:11+03:00",
+    "updated_at": "2026-10-13T03:53:01Z",
     "tags": [],
     "author": ""
   },
@@ -358,7 +358,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-10-08T05:35:54+03:00",
+    "updated_at": "2026-10-11T01:29:17+03:00",
     "tags": [],
     "author": ""
   },
@@ -373,7 +373,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-09-13T17:59:58Z",
+    "updated_at": "2026-10-13T00:58:27Z",
     "tags": [],
     "author": ""
   },
@@ -395,7 +395,7 @@
   {
     "path": "api/projects",
     "title": "projects",
-    "excerpt": "Эндпоинтов: **18**",
+    "excerpt": "Эндпоинтов: **19**",
     "parts": [
       "api",
       "projects"
@@ -403,7 +403,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-10-01T10:44:51Z",
+    "updated_at": "2026-10-13T02:56:47Z",
     "tags": [],
     "author": ""
   },
@@ -1393,7 +1393,7 @@
     "folder_titles": {
       "features": "🧩 Возможности"
     },
-    "updated_at": "2026-10-05T18:09:09Z",
+    "updated_at": "2026-10-11T01:45:31+03:00",
     "tags": [],
     "author": ""
   },
@@ -2768,7 +2768,7 @@
     "folder_titles": {
       "interface": "🖥️ Интерфейс"
     },
-    "updated_at": "2026-10-05T18:42:43+03:00",
+    "updated_at": "2026-10-13T06:51:31+03:00",
     "tags": [],
     "author": ""
   },
@@ -2888,7 +2888,7 @@
     "folder_titles": {
       "interface": "🖥️ Интерфейс"
     },
-    "updated_at": "2026-07-28T20:24:40+03:00",
+    "updated_at": "2026-10-11T01:29:17+03:00",
     "tags": [],
     "author": ""
   },
@@ -3114,7 +3114,7 @@
   {
     "path": "mcp/bot-builder",
     "title": "MCP-сервер конструктора (botcraft-builder)",
-    "excerpt": "> Подробное руководство по MCP-серверу BotCraft Studio для сборки `project.json` и генерации Python-кода через внешние ИИ-клиенты (Cursor, C",
+    "excerpt": "<!-- @fileoverview Руководство по инструментам MCP-конструктора, авторизации и сопровождению ботов. -->",
     "parts": [
       "mcp",
       "bot-builder"
@@ -3122,7 +3122,22 @@
     "folder_titles": {
       "mcp": "🤖 MCP-конструктор"
     },
-    "updated_at": "2026-10-10T00:47:22+03:00",
+    "updated_at": "2026-10-13T06:51:31+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/bot-logs",
+    "title": "История запусков и логи через MCP",
+    "excerpt": "<!-- @fileoverview Инструменты MCP для истории запусков, поиска и экспорта сохранённых логов. -->",
+    "parts": [
+      "mcp",
+      "bot-logs"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор"
+    },
+    "updated_at": "2026-10-11T02:07:21+03:00",
     "tags": [],
     "author": ""
   },
@@ -3144,7 +3159,7 @@
   {
     "path": "mcp/overview",
     "title": "MCP-конструктор ботов — обзор",
-    "excerpt": "> Краткое введение. Полное руководство: [[mcp/bot-builder]]. Пример: [[mcp/example-simple-bot]].",
+    "excerpt": "<!-- @fileoverview Краткий обзор возможностей и подключения MCP-конструктора ботов. -->",
     "parts": [
       "mcp",
       "overview"
@@ -3152,7 +3167,7 @@
     "folder_titles": {
       "mcp": "🤖 MCP-конструктор"
     },
-    "updated_at": "2026-10-08T05:35:54+03:00",
+    "updated_at": "2026-10-11T02:07:21+03:00",
     "tags": [],
     "author": ""
   },
@@ -3448,6 +3463,21 @@
       "roadmaps": "🗺️ Roadmaps"
     },
     "updated_at": "2026-09-01T21:35:38+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "roadmaps/bot-logs-s3",
+    "title": "Логи ботов в S3",
+    "excerpt": "<!--",
+    "parts": [
+      "roadmaps",
+      "bot-logs-s3"
+    ],
+    "folder_titles": {
+      "roadmaps": "🗺️ Roadmaps"
+    },
+    "updated_at": "2026-10-11T02:07:21+03:00",
     "tags": [],
     "author": ""
   },
