@@ -24,19 +24,23 @@ interface UseTerminalLogsHydrationParams {
  * @param params - projectId и tokenId
  */
 export function useTerminalLogsHydration({ projectId, tokenId }: UseTerminalLogsHydrationParams): void {
-  const { hydrateLogs } = useBotLogs();
+  const { replaceLaunchLogs } = useBotLogs();
   const logKey = projectId && tokenId ? `${projectId}-${tokenId}` : null;
 
-  const { data } = useQuery<BotLog[]>({
-    queryKey: ['/api/projects', projectId, 'tokens', tokenId, 'logs'],
-    queryFn: () => apiRequest('GET', `/api/projects/${projectId}/tokens/${tokenId}/logs`),
+  const { data } = useQuery({
+    queryKey: ['/api/projects', projectId, 'tokens', tokenId, 'logs', 'current-launch'],
+    queryFn: async () => {
+      const requestedAt = Date.now();
+      const entries: BotLog[] = await apiRequest('GET', `/api/projects/${projectId}/tokens/${tokenId}/logs`);
+      return { entries, requestedAt };
+    },
     enabled: !!projectId && !!tokenId,
     staleTime: 3_000,
     refetchInterval: 8_000,
   });
 
   useEffect(() => {
-    if (!logKey || !data?.length) return;
-    hydrateLogs(logKey, data.map(botLogToTerminalLine));
-  }, [logKey, data, hydrateLogs]);
+    if (!logKey || !data) return;
+    replaceLaunchLogs(logKey, data.entries.map(botLogToTerminalLine), data.requestedAt);
+  }, [logKey, data, replaceLaunchLogs]);
 }

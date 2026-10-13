@@ -7,7 +7,7 @@
  * @module Terminal
  */
 
-import { forwardRef, useImperativeHandle, useCallback, useState, useRef, useEffect } from 'react';
+import { forwardRef, useImperativeHandle, useCallback, useState, useRef, useEffect, useMemo } from 'react';
 import { TerminalOutput } from './TerminalOutput';
 import { TerminalLogsToolbar } from './TerminalLogsToolbar';
 import { TerminalLogDetail } from './TerminalLogDetail';
@@ -23,6 +23,10 @@ import { useTerminalSearch } from './useTerminalSearch';
 import { useTerminalLogUrl } from './use-terminal-log-url';
 import { useTerminalLogsHydration } from './use-terminal-logs-hydration';
 import { useActiveTerminals } from '../bot/contexts/ActiveTerminalsContext';
+import { useTerminalPeriod } from './use-terminal-period';
+import { TerminalPeriodPicker } from './TerminalPeriodPicker';
+import { TerminalPeriodSummary } from './TerminalPeriodSummary';
+import { isVisibleTerminalNotice } from './terminal-log-notices';
 
 export type { TerminalHandle, TerminalProps };
 
@@ -35,7 +39,6 @@ export type { TerminalHandle, TerminalProps };
 export const Terminal = forwardRef<TerminalHandle, TerminalProps>((props, ref) => {
   const {
     isVisible = true,
-    onToggleVisibility,
     wsConnection,
     projectId,
     tokenId
@@ -59,7 +62,10 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>((props, ref) =
   }, [tabId, adjustTabScale]);
 
   // Хук строк
-  const { lines, outputContainerRef, setLines } = useTerminalLines(logKey);
+  const { lines: liveLines, outputContainerRef, setLines } = useTerminalLines(logKey, false);
+  const periodState = useTerminalPeriod(projectId, tokenId, liveLines);
+  /** Строки для отображения, поиска и экспорта без служебного уведомления OpenSSL. */
+  const lines = useMemo(() => periodState.lines.filter(isVisibleTerminalNotice), [periodState.lines]);
 
   useTerminalLogsHydration({ projectId, tokenId });
 
@@ -93,7 +99,6 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>((props, ref) =
     setSearchQuery,
     goToNextMatch,
     goToPrevMatch,
-    clearSearch,
   } = useTerminalSearch(visibleLines);
 
   /** Флаг: нужно ли скроллить к совпадению (только при навигации ↑/↓) */
@@ -169,6 +174,11 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>((props, ref) =
       className={`overflow-hidden ${themeClasses.terminalBgClass} ${themeClasses.terminalTextClass} font-mono text-sm w-full h-full flex flex-col ${isVisible ? 'opacity-100' : 'hidden'}`}
     >
       <TerminalLogsToolbar
+        periodControl={projectId && tokenId ? <TerminalPeriodPicker
+          period={periodState.period} range={periodState.range}
+          onChange={value => { closeDetail(); periodState.selectPeriod(value); }}
+          onCustomRange={value => { closeDetail(); periodState.selectCustom(value); }}
+        /> : undefined}
         searchQuery={searchQuery}
         onSearchChange={handleSearchChange}
         currentMatch={currentMatchIndex}
@@ -180,13 +190,18 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>((props, ref) =
         stderrCount={stderrCount(lines)}
         onZoomIn={() => adjustScale(1.2)}
         onZoomOut={() => adjustScale(0.8)}
-        onClear={clearTerminal}
+        onClear={periodState.range ? undefined : clearTerminal}
         onCopy={(format) => copyTerminalOutput(visibleLines, format)}
         onSave={(format) => saveTerminalOutput(visibleLines, format)}
       />
+      <TerminalPeriodSummary state={periodState} />
       <div className="flex-1 overflow-hidden min-h-0 flex">
         <div className="flex-1 min-w-0">
           <TerminalOutput
+            showDate={periodState.showDate}
+            emptyMessage={periodState.isLoading ? 'Загрузка логов…' : periodState.error
+              ? 'Не удалось загрузить логи. Нажмите «Обновить период».'
+              : periodState.range ? 'За выбранный период логов нет.' : undefined}
             lines={visibleLines}
             containerRef={outputContainerRef}
             scale={scale}

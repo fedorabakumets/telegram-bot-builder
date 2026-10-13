@@ -17,6 +17,12 @@ import { LIVE_LOG_EXAMPLE } from "./project-tokens-examples";
 
 /** Query limit для live-логов */
 const LiveLogsQuerySchema = z.object({
+  /** Начало периода включительно, с часовым поясом */
+  from: z.string().datetime({ offset: true }).optional().openapi({ description: 'Начало периода ISO; требуется вместе с to' }),
+  /** Конец периода исключительно, с часовым поясом */
+  to: z.string().datetime({ offset: true }).optional().openapi({ description: 'Конец периода ISO; должен быть позже from' }),
+  /** Курсор более ранних строк: минимальный id предыдущей страницы */
+  beforeId: z.string().optional().openapi({ description: 'Загрузить id меньше курсора; только при заданном периоде' }),
   /** Макс. строк (default 500) */
   limit: z
     .string()
@@ -24,7 +30,7 @@ const LiveLogsQuerySchema = z.object({
     .openapi({
       example: "500",
       param: {
-        description: "Максимум строк логов (по умолчанию 500)",
+        description: "Максимум строк логов: 1–1000 (по умолчанию 500)",
         example: "500",
       },
     }),
@@ -46,7 +52,10 @@ export function registerProjectTokensLiveLogsPaths(
     tags: ["project-tokens"],
     summary: "Live-логи бота (bot_logs)",
     description:
-      "Последние строки `getLatestLaunchLogs` (default limit=500).\n\n" +
+      "Без from/to — последние строки текущего запуска (default limit=500, максимум 1000).\n\n" +
+      "С from/to — сохранённые логи всех запусков токена за период [from, to). Даты ISO с часовым поясом. " +
+      "Для следующей страницы передайте beforeId, равный минимальному id предыдущей страницы. " +
+      "Страницы выбираются по id, строки ответа отсортированы по времени.\n\n" +
       "**Auth:** cookie / Bearer PAT + `requireProjectAccess`.\n\n" +
       "**Клиент:** терминал логов бота.\n\n" +
       "```bash\ncurl -s 'http://localhost:5000/api/projects/42/tokens/7/logs?limit=100' -b cookies.txt\n```",
@@ -68,7 +77,7 @@ export function registerProjectTokensLiveLogsPaths(
         },
       },
       400: {
-        description: "Некорректные id",
+        description: "Некорректные id, границы периода, лимит или курсор",
         content: {
           "application/json": {
             schema: z.object({ error: z.string() }),

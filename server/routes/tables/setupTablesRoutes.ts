@@ -3,8 +3,10 @@
  * @module routes/tables/setupTablesRoutes
  */
 
-import type { Express } from "express";
+import type { Express, RequestHandler } from "express";
+import { pool } from "../../database/db";
 import { requireProjectAccess } from "../../middleware/requireProjectAccess";
+import { setupTableChartRoutes } from "./chart/setup-table-chart-routes";
 import { applyOpsHandler } from "./handlers/applyOpsHandler";
 import { clearRowsHandler } from "./handlers/clearRowsHandler";
 import { countRowsHandler, queryRowsHandler } from "./handlers/queryRowsHandler";
@@ -37,7 +39,7 @@ import { updateRowHandler } from "./handlers/updateRowHandler";
  */
 export function setupTablesRoutes(
   app: Express,
-  requireDbReady: (_req: unknown, res: unknown, next: unknown) => unknown,
+  requireDbReady: RequestHandler,
 ): void {
   const base = "/api/projects/:id/tables";
   const guard = [requireDbReady, requireProjectAccess] as const;
@@ -67,4 +69,5 @@ export function setupTablesRoutes(
   app.put(`${base}/:tableId/rows/:rowId`, ...guard, updateRowHandler);
   app.patch(`${base}/:tableId/rows/:rowId`, ...guard, patchRowHandler);
   app.delete(`${base}/:tableId/rows/:rowId`, ...guard, deleteRowHandler);
+  setupTableChartRoutes(app, requireDbReady, requireProjectAccess, pool);
 }

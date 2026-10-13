@@ -11,6 +11,7 @@ import {
   getChartGranularityRefetchInterval,
 } from './chart-granularity';
 import { GrowthPoint } from './use-growth';
+import { getMessagesActivitySeries } from '@shared/analytics/messages-activity';
 
 /** Доступные значения гранулярности для графика активности */
 export type Granularity = ChartGranularity;
@@ -111,10 +112,8 @@ export function useMessagesActivity(params: UseMessagesActivityParams) {
 
   if (split) {
     const splitPoints = (data ?? []) as ActivitySplitPoint[];
-    /** Входящие как GrowthPoint для SparklineChart */
-    const incomingPoints: GrowthPoint[] = splitPoints.map(p => ({ date: p.date, count: p.incoming }));
-    /** Исходящие как GrowthPoint для SparklineChart */
-    const outgoingPoints: GrowthPoint[] = splitPoints.map(p => ({ date: p.date, count: p.outgoing }));
+    /** Общие с MCP серии направлений для графика активности. */
+    const { incomingPoints, outgoingPoints } = getMessagesActivitySeries(splitPoints);
     const weeklyIncoming = calcWeeklyMessages(incomingPoints);
     const weeklyOutgoing = calcWeeklyMessages(outgoingPoints);
     return {

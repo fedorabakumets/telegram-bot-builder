@@ -35,7 +35,7 @@ export function TableChartInfo(): React.JSX.Element {
         </li>
       </ul>
       <p className="text-muted-foreground/60">
-        Показываются топ-50 категорий, данные обновляются автоматически.
+        Показываются 50 групп с наибольшими значениями. График пересчитывается при открытии вкладки и смене настроек.
       </p>
     </ChartInfoSpoiler>
   );

@@ -26,6 +26,8 @@ export interface TerminalLogRowLine {
 
 /** Пропсы строки */
 interface TerminalLogRowProps {
+  /** Дополнять время датой для многодневного диапазона */
+  showDate?: boolean;
   /** Данные строки */
   line: TerminalLogRowLine;
   /** Чётная строка (зебра) */
@@ -52,6 +54,7 @@ interface TerminalLogRowProps {
  * @returns JSX элемент
  */
 export function TerminalLogRow({
+  showDate,
   line,
   even,
   selected,
@@ -91,6 +94,9 @@ export function TerminalLogRow({
         dateTime={line.timestamp?.toISOString()}
         title={formatLogTimeTitle(line.timestamp)}
       >
+        {showDate && line.timestamp && <span className="block text-[10px]">
+          {line.timestamp.toLocaleDateString('ru-RU', { day: '2-digit', month: 'short' })}
+        </span>}
         {formatLogTime(line.timestamp)}
       </time>
       <span className="pt-0.5 flex justify-start">

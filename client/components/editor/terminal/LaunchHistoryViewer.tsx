@@ -14,6 +14,7 @@ import { TerminalLogsToolbar } from './TerminalLogsToolbar';
 import { TerminalLogsContextBar } from './TerminalLogsContextBar';
 import { copyTerminalOutput, saveTerminalOutput } from './terminalUtils';
 import { botLogToTerminalLine } from './bot-log-utils';
+import { isVisibleTerminalNotice } from './terminal-log-notices';
 
 /** Пропсы компонента просмотра истории запуска */
 interface LaunchHistoryViewerProps {
@@ -60,7 +61,8 @@ export function LaunchHistoryViewer({ launchId, startedAt }: LaunchHistoryViewer
   }, [historyTabId, removeTerminalById]);
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const lines = useMemo(() => logs.map(botLogToTerminalLine), [logs]);
+  /** Строки истории без служебного уведомления о необязательном OpenSSL. */
+  const lines = useMemo(() => logs.map(botLogToTerminalLine).filter(isVisibleTerminalNotice), [logs]);
   const { filter, setFilter, filterLines, stderrCount } = useTerminalFilter();
   const visibleLines = useMemo(() => filterLines(lines), [filterLines, lines]);
   const {

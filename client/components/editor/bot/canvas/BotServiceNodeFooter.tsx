@@ -5,7 +5,7 @@
 
 import { AlertTriangle, KeyRound } from 'lucide-react';
 import { formatRelativeRu } from '../card/launch-history-utils';
-import { resolveBotCanvasStatus } from './bot-canvas-status';
+import { resolveBotCanvasStatus, type BotCanvasStatus } from './bot-canvas-status';
 import { BotRunStatusBadge } from './bot-run-status-badge';
 import type { BotServiceFailure } from './bot-service-failure';
 
@@ -17,6 +17,8 @@ interface BotServiceNodeFooterProps {
   failure?: BotServiceFailure | null;
   /** isActive токена: 0 — Telegram отклонил */
   isActive?: number | null;
+  /** Общий статус операции и процесса */
+  visualStatus?: BotCanvasStatus;
 }
 
 /**
@@ -28,8 +30,9 @@ export function BotServiceNodeFooter({
   isRunning,
   failure,
   isActive,
+  visualStatus,
 }: BotServiceNodeFooterProps) {
-  const status = resolveBotCanvasStatus({
+  const status = visualStatus ?? resolveBotCanvasStatus({
     isActive,
     isRunning,
     hasFailure: !!failure,

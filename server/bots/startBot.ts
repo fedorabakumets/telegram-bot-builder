@@ -66,6 +66,7 @@ import { normalizeProjectNameToFile } from "../files/normalizeFileName";
 import { storage } from "../storages/storage";
 import { broadcastProjectEvent } from '../terminal/broadcastProjectEvent';
 import { pendingLaunchIds } from '../terminal/setupBotProcessListeners';
+import { beginBotStart, finishBotStart } from './botStartState';
 import { clearBotLogs } from '../terminal/botLogsBuffer';
 import { setActiveLaunchId, clearActiveLaunchId } from '../terminal/activeLaunchIds';
 import { closeActiveLaunchHistory } from './closeActiveLaunchHistory';
@@ -139,6 +140,7 @@ export async function startBot(
   options?: { clearLogs?: boolean; reuseGeneratedCode?: boolean },
 ): Promise<{ success: boolean; error?: string; processId?: string | undefined; }> {
   const shouldClearLogs = options?.clearLogs !== false; // по умолчанию true
+  if (!beginBotStart(tokenId)) return { success: false, error: 'Бот уже запускается' };
   try {
     const tokenRecord = await storage.getBotToken(tokenId);
     const inactiveError = refuseInactiveBotStart(tokenRecord?.isActive);
@@ -730,5 +732,7 @@ export async function startBot(
   } catch (error) {
     console.error('Ошибка запуска бота:', error);
     return { success: false, error: error instanceof Error ? error.message : 'Неизвестная ошибка' };
+  } finally {
+    finishBotStart(tokenId);
   }
 }

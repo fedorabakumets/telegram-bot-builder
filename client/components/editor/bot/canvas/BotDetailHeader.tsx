@@ -8,7 +8,9 @@ import { Button } from '@/components/ui/button';
 import { BotAvatar } from '../card/BotAvatar';
 import { IdBadge } from '@/components/editor/database/user-database/components/header/project-name-label';
 import { isTokenActiveForBroadcast } from '@shared/broadcast-unauthorized';
-import { resolveBotCanvasStatus } from './bot-canvas-status';
+import { useBotVisualStatus } from './use-bot-visual-status';
+import { BotStatusMotion } from './BotStatusMotion';
+import { getBotProfileLabels } from './bot-profile-labels';
 import { BotRunStatusBadge } from './bot-run-status-badge';
 import type { BotToken } from '@shared/schema';
 
@@ -46,7 +48,7 @@ const ACTION_BTN =
 export function BotDetailHeader({
   token,
   projectId,
-  title,
+  title: fallbackTitle,
   isRunning,
   controlPending,
   deletePending,
@@ -54,14 +56,15 @@ export function BotDetailHeader({
   onDelete,
   onClose,
 }: BotDetailHeaderProps) {
+  /** Подписи профиля с поддержкой имени старого формата. */
+  const profile = getBotProfileLabels(token);
+  const title = profile.title || fallbackTitle;
   const tokenOk = isTokenActiveForBroadcast(token.isActive);
-  const status = resolveBotCanvasStatus({
-    isActive: token.isActive,
-    isRunning,
-  });
-  const badgeStatus = status === 'failed' ? 'offline' : status;
+  const status = useBotVisualStatus(token.id, projectId, token.isActive, isRunning);
+  const busy = controlPending || ['starting', 'stopping', 'restarting'].includes(status);
   return (
     <div className="flex items-center gap-3 border-b border-border/60 bg-background px-4 py-3.5 shrink-0">
+      <BotStatusMotion key={token.id} status={status}>
       <BotAvatar
         tokenId={token.id}
         projectId={projectId}
@@ -70,23 +73,24 @@ export function BotDetailHeader({
         size={40}
         variant="service"
       />
+      </BotStatusMotion>
       <div className="min-w-0 flex-1">
         <div className="flex min-w-0 items-center gap-2">
           <h2 className="truncate text-[15px] font-semibold leading-tight tracking-tight">
             {title}
           </h2>
           <IdBadge id={token.id} className="text-[11px] shrink-0" />
-          <BotRunStatusBadge status={badgeStatus} />
+          <BotRunStatusBadge status={status} />
         </div>
-        {token.botUsername ? (
+        {profile.username ? (
           <a
-            href={`https://t.me/${token.botUsername}`}
+            href={`https://t.me/${profile.username}`}
             target="_blank"
             rel="noopener noreferrer"
             className="mt-0.5 block truncate text-xs text-muted-foreground transition-colors hover:text-foreground hover:underline"
             title="Открыть бота в Telegram"
           >
-            @{token.botUsername}
+            @{profile.username}
           </a>
         ) : (
           <p className="mt-0.5 truncate text-xs text-muted-foreground">Telegram Bot</p>
@@ -103,7 +107,7 @@ export function BotDetailHeader({
           size="icon"
           variant="ghost"
           className={ACTION_BTN}
-          disabled={controlPending || !tokenOk}
+          disabled={busy || !tokenOk}
           onClick={onToggleRun}
           aria-label={isRunning ? 'Остановить' : 'Запустить'}
           title={!tokenOk ? 'Сначала обновите токен' : undefined}

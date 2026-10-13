@@ -67,11 +67,13 @@ export function BotDetailPanel({
     <BotDetailTabProvider setTab={setTab}>
       <div className="flex h-full min-w-0 flex-col bg-background">
         <BotDetailHeader
+          key={token.id}
           token={token}
           projectId={project.id}
           title={title}
           isRunning={isRunning}
-          controlPending={startBotMutation.isPending || stopBotMutation.isPending}
+          controlPending={(startBotMutation.isPending && startBotMutation.variables?.tokenId === token.id)
+            || (stopBotMutation.isPending && stopBotMutation.variables?.tokenId === token.id)}
           deletePending={deleteBotMutation.isPending}
           onToggleRun={() =>
             isRunning

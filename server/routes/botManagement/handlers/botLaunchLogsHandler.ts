@@ -3,6 +3,7 @@
  * @module server/routes/botManagement/handlers/botLaunchLogsHandler
  */
 
+import { parseLaunchPage } from './launch-page-query';
 import type { Request, Response } from 'express';
 import { storage } from '../../../storages/storage';
 import { getOwnerIdFromRequest } from '../../../telegram/auth-middleware';
@@ -10,9 +11,7 @@ import { getOwnerIdFromRequest } from '../../../telegram/auth-middleware';
 /**
  * Обрабатывает GET /api/launch/:launchId/logs
  * Возвращает все логи, привязанные к конкретному запуску бота.
- * projectId запуска резолвится через сами логи (поле projectId), после чего
- * проверяется владение проектом. Пустой набор логов трактуется как
- * отсутствие запуска (404).
+ * Доступ проверяется по записи запуска; существующий запуск без логов возвращает [].
  * @param req - HTTP запрос с параметром launchId
  * @param res - HTTP ответ
  * @returns Promise<void>
@@ -25,11 +24,14 @@ export async function handleGetLaunchLogs(req: Request, res: Response): Promise<
     return;
   }
 
+  const page = parseLaunchPage(req.query, 100, 500);
+  if ('error' in page) {
+    res.status(400).json({ error: page.error });
+    return;
+  }
   try {
-    const logs = await storage.getBotLogsByLaunch(launchId);
-
-    // Резолвим projectId запуска из самих логов (нет прямого метода по launchId)
-    if (logs.length === 0) {
+    const launch = await storage.getLaunchHistoryById(launchId);
+    if (!launch) {
       res.status(404).json({ error: 'Запуск не найден' });
       return;
     }
@@ -40,13 +42,13 @@ export async function handleGetLaunchLogs(req: Request, res: Response): Promise<
       res.status(403).json({ error: 'Нет прав доступа' });
       return;
     }
-    const hasAccess = await storage.hasProjectAccess(logs[0].projectId, ownerId);
+    const hasAccess = await storage.hasProjectAccess(launch.projectId, ownerId);
     if (!hasAccess) {
       res.status(403).json({ error: 'Нет прав доступа' });
       return;
     }
 
-    res.json(logs);
+    res.json(await storage.getBotLogsByLaunch(launchId, req.query.limit === undefined && req.query.beforeId === undefined ? undefined : page));
   } catch (err) {
     console.error('[botLaunchLogsHandler] Ошибка получения логов запуска:', err);
     res.status(500).json({ error: 'Ошибка получения логов' });

@@ -19,6 +19,7 @@ import {
 import { GrowthPoint } from '../../hooks/queries/use-growth';
 import { fmtTick, fmtTooltipDate, getTickIndices, toCumulative } from './sparkline-utils';
 import { ChartType } from './chart-type-toggle';
+import { mergeChartLines } from './sparkline-series';
 
 /**
  * Данные для одной линии в multi-line режиме
@@ -50,6 +51,8 @@ export interface SparklineChartProps {
   granularity?: string;
   /** Накопительный режим: данные суммируются нарастающим итогом */
   cumulative?: boolean;
+  /** Общее число для учёта значений до периода в одиночной накопительной серии */
+  cumulativeTotal?: number;
   /** Высота графика в пикселях (по умолчанию 80) */
   height?: number;
   /**
@@ -152,6 +155,7 @@ export function SparklineChart({
   lineColor = '#3b82f6',
   granularity,
   cumulative,
+  cumulativeTotal,
   height = 80,
   chartType,
 }: SparklineChartProps): React.JSX.Element | null {
@@ -165,22 +169,8 @@ export function SparklineChart({
       ? multiLineData.map(line => ({ ...line, data: toCumulative(line.data) }))
       : multiLineData;
 
-    // Объединяем все точки из всех источников в один массив для оси X
-    const allDates = new Set<string>();
-    processedLines.forEach(line => {
-      line.data.forEach(point => allDates.add(point.date));
-    });
-    const sortedDates = Array.from(allDates).sort();
-
-    // Создаём объединённый массив данных для recharts
-    const chartData = sortedDates.map(date => {
-      const dataPoint: any = { date };
-      processedLines.forEach(line => {
-        const point = line.data.find(p => p.date === date);
-        dataPoint[line.name] = point?.count ?? 0;
-      });
-      return dataPoint;
-    });
+    /** В накопительном режиме пропуски сохраняют предыдущий итог серии. */
+    const chartData = mergeChartLines(processedLines, cumulative);
 
     if (chartData.length < 2) return null;
 
@@ -277,7 +267,7 @@ export function SparklineChart({
   if (!data || data.length < 2) return null;
 
   /** Применяем накопительное преобразование если нужно */
-  const chartData = cumulative ? toCumulative(data) : data;
+  const chartData = cumulative ? toCumulative(data, cumulativeTotal) : data;
 
   const tickIndices = getTickIndices(chartData.length);
   const tickValues = tickIndices.map(i => chartData[i].date);

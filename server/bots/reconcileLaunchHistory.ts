@@ -6,6 +6,7 @@
 import { storage } from '../storages/storage';
 import { clearActiveLaunchId } from '../terminal/activeLaunchIds';
 import { closeActiveLaunchHistory } from './closeActiveLaunchHistory';
+import { isBotStarting } from './botStartState';
 
 /** Сообщение по умолчанию при закрытии сиротских running-записей */
 const DEFAULT_RECONCILE_MSG = 'Синхронизация: процесс не найден';
@@ -22,7 +23,7 @@ export async function reconcileLaunchHistoryForToken(
   isLiveRunning: boolean,
   errorMessage: string | null = DEFAULT_RECONCILE_MSG,
 ): Promise<number> {
-  if (isLiveRunning) {
+  if (isLiveRunning || isBotStarting(tokenId)) {
     return 0;
   }
   const closed = await storage.closeAllRunningLaunchHistory(tokenId, {

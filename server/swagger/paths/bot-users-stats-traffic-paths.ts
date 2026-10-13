@@ -52,7 +52,8 @@ export function registerBotUsersStatsTrafficPaths(
     },
     responses: {
       200: {
-        description: "Агрегаты (числа после parseInt на сервере)",
+        /** Среднее число сообщений сохраняет дробную часть. */
+        description: "Агрегаты; среднее на пользователя может быть дробным",
         content: {
           "application/json": {
             schema: BotUserStatsSchema,

@@ -989,7 +989,9 @@ Live-логи бота (bot_logs)
 
 **Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
-Последние строки `getLatestLaunchLogs` (default limit=500).
+Без from/to — последние строки текущего запуска (default limit=500, максимум 1000).
+
+С from/to — сохранённые логи всех запусков токена за период [from, to). Даты ISO с часовым поясом. Для следующей страницы передайте beforeId, равный минимальному id предыдущей страницы. Страницы выбираются по id, строки ответа отсортированы по времени.
 
 **Auth:** cookie / Bearer PAT + `requireProjectAccess`.
 
@@ -1005,7 +1007,10 @@ curl -s 'http://localhost:5000/api/projects/42/tokens/7/logs?limit=100' -b cooki
 |-----|-----|--------------|----------|--------|
 | `projectId` | path | да | Числовой ID проекта | `"42"` |
 | `tokenId` | path | да | Числовой ID токена бота | `"7"` |
-| `limit` | query | нет | Максимум строк логов (по умолчанию 500) | `"500"` |
+| `from` | query | нет | — | — |
+| `to` | query | нет | — | — |
+| `beforeId` | query | нет | — | — |
+| `limit` | query | нет | Максимум строк логов: 1–1000 (по умолчанию 500) | `"500"` |
 | `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
 | `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
@@ -1014,7 +1019,7 @@ curl -s 'http://localhost:5000/api/projects/42/tokens/7/logs?limit=100' -b cooki
 | Код | Описание |
 |-----|----------|
 | 200 | Массив строк логов |
-| 400 | Некорректные id |
+| 400 | Некорректные id, границы периода, лимит или курсор |
 | 401 | Не авторизован |
 | 403 | Нет доступа к проекту |
 

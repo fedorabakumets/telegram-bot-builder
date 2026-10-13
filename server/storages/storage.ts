@@ -739,6 +739,18 @@ export interface IStorage {
   getBotLogs(projectId: number, tokenId: number, limit?: number): Promise<BotLog[]>;
 
   /**
+   * Получает страницу логов токена за абсолютный период из всех запусков.
+   * @param projectId - Идентификатор проекта
+   * @param tokenId - Идентификатор токена
+   * @param from - Начало периода включительно
+   * @param to - Конец периода исключительно
+   * @param limit - Максимум строк
+   * @param beforeId - Исключительный курсор страницы
+   * @returns Строки логов в порядке времени
+   */
+  getBotLogsInPeriod(projectId: number, tokenId: number, from: Date, to: Date, limit: number, beforeId?: number): Promise<BotLog[]>;
+
+  /**
    * Получить одну запись лога по ID
    * @param id - ID записи в bot_logs
    * @returns Запись лога или undefined
@@ -775,14 +787,16 @@ export interface IStorage {
    * @param limit - Максимальное количество записей (по умолчанию 10)
    * @returns Массив записей истории запусков
    */
-  getLaunchHistory(tokenId: number, limit?: number): Promise<BotLaunchHistory[]>;
+  getLaunchHistory(tokenId: number, limit?: number, beforeId?: number): Promise<BotLaunchHistory[]>;
+  /** Получает запись запуска по идентификатору независимо от наличия логов. */
+  getLaunchHistoryById(launchId: number): Promise<BotLaunchHistory | undefined>;
 
   /**
    * Получить логи конкретного запуска бота
    * @param launchId - ID записи в bot_launch_history
    * @returns Массив записей логов
    */
-  getBotLogsByLaunch(launchId: number): Promise<BotLog[]>;
+  getBotLogsByLaunch(launchId: number, page?: { /** Размер страницы. */ limit: number; /** Курсор старых строк. */ beforeId?: number }): Promise<BotLog[]>;
 
   /**
    * Получить активную (со статусом 'running') запись истории запуска для токена

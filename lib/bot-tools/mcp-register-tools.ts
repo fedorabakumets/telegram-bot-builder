@@ -7,6 +7,16 @@
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
+import { registerBotLogTools } from './mcp-register-log-tools.ts';
+import { registerPopularButtonsTools } from './mcp-register-popular-buttons-tools.ts';
+import { registerPremiumTools } from './mcp-register-premium-tools.ts';
+import { registerTrafficSourcesTools } from './mcp-register-traffic-sources-tools.ts';
+import { registerLanguagesTools } from './mcp-register-languages-tools.ts';
+import { registerActiveUsersTools } from './mcp-register-active-users-tools.ts';
+import { registerUsersAnalyticsTools } from './mcp-register-analytics-tools.ts';
+import { registerRangeAnalyticsTools } from './mcp-register-range-analytics-tools.ts';
+import { registerMessagesAnalyticsTools } from './mcp-register-message-analytics-tools.ts';
+import { registerTableChartTools } from './mcp-register-table-chart-tools.ts';
 import { registerTableTools } from './mcp-register-table-tools.ts';
 import { registerUserbotTools } from './mcp-register-userbot-tools.ts';
 import {
@@ -975,6 +985,25 @@ export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOpt
     },
     async ({ token_id }) => textResult(await botStatusInDb(token_id)),
   );
+
+  /** Подключает ограниченные страницы и экспорт логов через защищённые API. */
+  registerBotLogTools(server, enableFileTools);
+  /** Подключает рейтинг кнопок и снимок распределения Premium. */
+  registerPopularButtonsTools(server);
+  registerPremiumTools(server);
+  /** Подключает доли и динамику источников трафика. */
+  registerTrafficSourcesTools(server);
+  /** Подключает снимок распределения известных языков аудитории. */
+  registerLanguagesTools(server);
+  /** Подключает уникальную активность пользователей для обоих транспортов. */
+  registerActiveUsersTools(server);
+  /** Подключает аналитику пользователей для stdio и удалённого HTTP. */
+  registerUsersAnalyticsTools(server);
+  registerRangeAnalyticsTools(server);
+  /** Подключает сводку и график активности сообщений для обоих транспортов. */
+  registerMessagesAnalyticsTools(server);
+  /** Подключает график пользовательских таблиц для обоих транспортов. */
+  registerTableChartTools(server);
 
   server.registerTool(
     'db_bot_logs',
