@@ -10,6 +10,8 @@ import { UserBotData } from '@shared/schema';
 import { UserAvatar } from '../../dialog/components/user-avatar';
 import { formatRelativeTime } from '../utils/format-relative-time';
 import { formatUserName } from '../utils';
+import { GroupAccessStatus } from './group-access-status';
+import type { GroupSyncStatus } from '../hooks/group-sync-request';
 
 /**
  * Маппинг текстовых плейсхолдеров медиа на читаемый вид с эмодзи
@@ -77,6 +79,10 @@ interface DialogListItemProps {
   projectId: number;
   /** ID токена для аватара */
   tokenId?: number | null;
+  /** Результат проверки доступа выбранного бота к группе. */
+  groupSyncStatus?: GroupSyncStatus;
+  /** Ручная проверка доступа после возвращения бота в группу. */
+  onCheckGroupAccess?: () => void;
 }
 
 /**
@@ -91,6 +97,8 @@ export function DialogListItem({
   onClick,
   projectId,
   tokenId,
+  groupSyncStatus,
+  onCheckGroupAccess,
 }: DialogListItemProps): React.JSX.Element {
   const entry = user as DialogWithMeta;
   const [groupAvatarError, setGroupAvatarError] = useState(false);
@@ -103,6 +111,7 @@ export function DialogListItem({
   const showGroupPhoto = !!groupAvatarUrl && !groupAvatarError;
 
   return (
+    <div className={isSelected ? 'bg-primary/15' : undefined}>
     <button
       type="button"
       onClick={onClick}
@@ -110,7 +119,7 @@ export function DialogListItem({
         'w-full flex items-center gap-3 px-3 py-3 text-left',
         'transition-colors border-b border-border/30',
         'hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-        isSelected ? 'bg-primary/15 border-l-2 border-l-primary' : '',
+        isSelected ? 'border-l-2 border-l-primary' : '',
       ].join(' ')}
     >
       {/* Аватар: для групп — фото из Telegram или иконка, для пользователей — фото */}
@@ -181,5 +190,9 @@ export function DialogListItem({
         <p className="text-xs text-muted-foreground truncate mt-0.5">{preview}</p>
       </div>
     </button>
+    {entry.isGroup && onCheckGroupAccess && (
+      <GroupAccessStatus status={groupSyncStatus} onCheck={onCheckGroupAccess} />
+    )}
+    </div>
   );
 }
