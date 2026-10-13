@@ -30,6 +30,8 @@ import {
   stopBotInDb,
   restartBotInDb,
   restartAllBotsInDb,
+  reportButtonNavigationInDb,
+  rewriteButtonNavigationInDb,
   setMessagesRetentionInDb,
   startOfflineBotsInDb,
   addBotTokenInDb,
@@ -40,6 +42,7 @@ import {
   disconnectNodesInDb,
   createNode,
   fetchProjectFromDb,
+  findInboundReferencesInDb,
   findNodesInDb,
   generateBotCode,
   getNodeExampleTool,
@@ -683,6 +686,51 @@ export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOpt
       },
     },
     async ({ project_id }) => textResult(await listConnectionsInDb(project_id)),
+  );
+
+  server.registerTool(
+    'db_find_inbound',
+    {
+      description: 'Найти все входящие ссылки на ноду: кнопки, автопереходы, ветки и служебные связи. Read-only; цель может уже отсутствовать.',
+      inputSchema: {
+        project_id: z.number().describe('Числовой ID проекта из URL редактора'),
+        node_id: z.string().describe('ID ноды, на которую ищутся ссылки'),
+      },
+    },
+    async ({ project_id, node_id }) =>
+      textResult(await findInboundReferencesInDb(project_id, node_id)),
+  );
+
+  server.registerTool(
+    'db_report_button_navigation',
+    {
+      description: 'Показать эффект каждой кнопки: новое сообщение, редактирование текущего, смена клавиатуры, внешнее действие или битая цель. Read-only.',
+      inputSchema: {
+        project_id: z.number().describe('Числовой ID проекта из URL редактора'),
+        sheet_id: z.string().optional().describe('Показывать кнопки только этого листа'),
+      },
+    },
+    async ({ project_id, sheet_id }) =>
+      textResult(await reportButtonNavigationInDb(project_id, { sheetId: sheet_id })),
+  );
+
+  server.registerTool(
+    'db_rewrite_button_navigation',
+    {
+      description: 'Массово переключить кнопочную навигацию между новыми сообщениями и edit_message. Без confirm возвращает только план; запись выполняется одной версией.',
+      inputSchema: {
+        project_id: z.number().describe('Числовой ID проекта из URL редактора'),
+        mode: z.enum(['edit_current', 'send_new']).describe('edit_current — менять текущее сообщение; send_new — отменить правки этого инструмента'),
+        confirm: z.boolean().default(false).describe('true — применить показанный план'),
+        sheet_id: z.string().optional().describe('Менять целевые экраны только этого листа'),
+        commit_message: z.string().optional().describe('Заметка к версии проекта'),
+      },
+    },
+    async ({ project_id, mode, confirm, sheet_id, commit_message }) =>
+      textResult(await rewriteButtonNavigationInDb(project_id, mode, confirm, {
+        sheetId: sheet_id,
+        commitMessage: commit_message,
+      })),
   );
 
   server.registerTool(

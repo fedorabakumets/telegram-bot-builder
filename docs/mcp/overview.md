@@ -60,7 +60,7 @@
 
 **Сборка (файлы):** `create_node`, `scaffold_minimal_project`, `add_node`, `update_node`, `remove_node`, `connect_nodes`, `load_project`, `save_project`
 
-**Живая БД (сценарий):** `get_project_db`, `update_project_db`, `db_*` ноды/листы/версии/проекты, `db_apply_ops`, `db_auto_layout`, …
+**Живая БД (сценарий):** `get_project_db`, `update_project_db`, `db_*` ноды/листы/версии/проекты, `db_apply_ops`, `db_auto_layout`, `db_find_inbound`, `db_report_button_navigation`, `db_rewrite_button_navigation`, …
 
 **Runtime ботов:** `db_list_bot_tokens`, `db_add_bot_token`, `db_update_bot_token`, `db_bot_status`, `db_bot_logs`, `db_bot_launch_history`, `db_start_bot`, `db_stop_bot`, `db_restart_bot`, `db_restart_all_bots`, `db_start_offline_bots`, `db_delete_bot_token`
 

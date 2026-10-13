@@ -538,9 +538,27 @@ MCP **не раздувает** `data` дефолтами клавиатуры. 
 
 Требуют `MCP_AGENT_TOKEN` и доступ к проекту. Пишут в БД приложения и обновляют открытый холст (live).
 
-Ключевые тулы: `get_project_db`, `update_project_db`, `db_project_summary`, `db_list_projects`, `db_create_project`, `db_list_nodes`, `db_find_nodes`, `db_get_node`, `db_add_node`, `db_update_node`, `db_remove_node`, `db_connect_nodes`, `db_disconnect_nodes`, `db_move_node`, `db_duplicate_node`, `db_auto_layout`, `db_list_sheets`, `db_add_sheet`, `db_rename_sheet`, `db_remove_sheet`, `db_duplicate_sheet`, `db_set_active_sheet`, `db_reorder_sheets`, `db_move_sheet_to_project`, `db_list_versions`, `db_restore_version`, `db_delete_version`, `db_prune_versions`, `db_apply_ops`, …
+Ключевые тулы: `get_project_db`, `update_project_db`, `db_project_summary`, `db_list_projects`, `db_create_project`, `db_list_nodes`, `db_find_nodes`, `db_get_node`, `db_find_inbound`, `db_report_button_navigation`, `db_rewrite_button_navigation`, `db_add_node`, `db_update_node`, `db_remove_node`, `db_connect_nodes`, `db_disconnect_nodes`, `db_move_node`, `db_duplicate_node`, `db_auto_layout`, `db_list_sheets`, `db_add_sheet`, `db_rename_sheet`, `db_remove_sheet`, `db_duplicate_sheet`, `db_set_active_sheet`, `db_reorder_sheets`, `db_move_sheet_to_project`, `db_list_versions`, `db_restore_version`, `db_delete_version`, `db_prune_versions`, `db_apply_ops`, …
 
 Подробнее: [[futures/mcp/mcp-live-editing]].
+
+#### Анализ и переключение кнопочной навигации
+
+`db_find_inbound(project_id, node_id)` возвращает все места, которые ссылаются на ноду: кнопки, автопереходы, ветки, переходы ввода и служебные связи. Цель может отсутствовать — это позволяет находить битые входящие ссылки.
+
+`db_report_button_navigation(project_id, sheet_id?)` объясняет эффект каждой кнопки: отправка нового сообщения, редактирование текущего, смена одной клавиатуры, внешнее действие или отсутствующая цель. Reply-клавиатуры помечаются отдельно и не считаются способом редактировать текст текущего сообщения.
+
+`db_rewrite_button_navigation` массово меняет кнопочные переходы:
+
+| Параметр | Описание |
+|----------|----------|
+| `mode: "edit_current"` | Экраны, открываемые inline-кнопками, переводятся на `edit_message` |
+| `mode: "send_new"` | Отменяются только изменения, ранее созданные этим инструментом |
+| `confirm` | Без `true` выполняется только чтение и возвращается план; PUT не вызывается |
+| `sheet_id` | Необязательное ограничение по листу целевых экранов |
+| `commit_message` | Заметка к одной создаваемой версии проекта |
+
+Первый экран после команды остаётся `message`. Если в него также ведёт кнопка «Меню», инструмент создаёт рядом отдельную `edit_message`-копию и перенаправляет на неё только inline-кнопки. Reply-клавиатуры и легаси-сообщения со встроенными кнопками без отдельной keyboard-ноды пропускаются с причиной. Применение сохраняется одним запросом и одной версией.
 
 ---
 
