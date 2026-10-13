@@ -11,7 +11,7 @@ import {
   BotUsersTokenQuerySchema,
 } from "./bot-users-params";
 
-/** Агрегаты GET /users/stats (после parseInt на сервере) */
+/** Агрегаты GET /users/stats с сохранением дробной части среднего. */
 export const BotUserStatsSchema = z
   .object({
     /** Всего пользователей */
@@ -30,8 +30,8 @@ export const BotUserStatsSchema = z
     usersWithResponses: z.number().openapi({ example: 45 }),
     /** COUNT(*) из bot_messages */
     totalInteractions: z.number().openapi({ example: 3200 }),
-    /** totalInteractions / totalUsers (или 0) */
-    avgInteractionsPerUser: z.number().openapi({ example: 21 }),
+    /** Сохранённые сообщения на запись пользователя, включая дробную часть; при отсутствии пользователей — 0. */
+    avgInteractionsPerUser: z.number().openapi({ example: 21.33 }),
     /** Уникальные language_code */
     uniqueLanguages: z.number().openapi({ example: 5 }),
     /** deep_link_param не null и не 'direct' */

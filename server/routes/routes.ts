@@ -2456,10 +2456,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       `, [projectId, tokenId]);
 
       const stats = result.rows[0];
-      // Convert strings to numbers
+      /** Сохраняем дробную часть среднего при преобразовании числовых значений PostgreSQL. */
       Object.keys(stats).forEach(key => {
         if (typeof stats[key] === 'string' && !isNaN(stats[key] as any)) {
-          stats[key] = parseInt(stats[key] as any);
+          stats[key] = Number(stats[key]);
         }
       });
 
@@ -3012,7 +3012,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         let queryText: string;
 
         if (split) {
-          // Режим split: группируем по слоту И message_type, затем pivot через FILTER
+          /** Входящие — user, исходящие — остальные типы, как в дневных агрегатах. */
           if (granularity === "5m") {
             queryText = `
               WITH series AS (
@@ -3026,7 +3026,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
                 SELECT
                   DATE_TRUNC('hour', created_at) + INTERVAL '5 min' * FLOOR(EXTRACT(MINUTE FROM created_at) / 5) AS slot,
                   COUNT(*) FILTER (WHERE message_type = 'user') AS incoming,
-                  COUNT(*) FILTER (WHERE message_type = 'bot')  AS outgoing
+                  COUNT(*) FILTER (WHERE message_type <> 'user') AS outgoing
                 FROM bot_messages
                 WHERE project_id = $1
                   AND ($2::integer IS NULL OR token_id = $2)
@@ -3053,7 +3053,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
                 SELECT
                   DATE_TRUNC('${cfg.truncate}', created_at) AS slot,
                   COUNT(*) FILTER (WHERE message_type = 'user') AS incoming,
-                  COUNT(*) FILTER (WHERE message_type = 'bot')  AS outgoing
+                  COUNT(*) FILTER (WHERE message_type <> 'user') AS outgoing
                 FROM bot_messages
                 WHERE project_id = $1
                   AND ($2::integer IS NULL OR token_id = $2)

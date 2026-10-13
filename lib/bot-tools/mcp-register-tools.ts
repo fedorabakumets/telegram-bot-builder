@@ -9,6 +9,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { registerBotLogTools } from './mcp-register-log-tools.ts';
 import { registerUsersAnalyticsTools } from './mcp-register-analytics-tools.ts';
+import { registerMessagesAnalyticsTools } from './mcp-register-message-analytics-tools.ts';
 import { registerUserbotTools } from './mcp-register-userbot-tools.ts';
 import {
   addNodeInDb,
@@ -981,6 +982,8 @@ export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOpt
   registerBotLogTools(server, enableFileTools);
   /** Подключает аналитику пользователей для stdio и удалённого HTTP. */
   registerUsersAnalyticsTools(server);
+  /** Подключает сводку и график активности сообщений для обоих транспортов. */
+  registerMessagesAnalyticsTools(server);
 
   server.registerTool(
     'db_bot_logs',

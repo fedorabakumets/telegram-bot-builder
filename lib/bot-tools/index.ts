@@ -9,6 +9,9 @@ export * from './api-fetch.ts';
 /** Чтение сводки и графика аудитории через API приложения. */
 export * from './users-analytics-db.ts';
 export * from './users-analytics-types.ts';
+/** Чтение активности сообщений через авторизованный API приложения. */
+export * from './messages-analytics-db.ts';
+export * from './messages-analytics-types.ts';
 export * from './mcp-request-context.ts';
 export * from './introspection.ts';
 export * from './validate-project.ts';
