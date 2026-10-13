@@ -17,6 +17,7 @@ import { registerUsersAnalyticsTools } from './mcp-register-analytics-tools.ts';
 import { registerRangeAnalyticsTools } from './mcp-register-range-analytics-tools.ts';
 import { registerMessagesAnalyticsTools } from './mcp-register-message-analytics-tools.ts';
 import { registerTableChartTools } from './mcp-register-table-chart-tools.ts';
+import { registerTableTools } from './mcp-register-table-tools.ts';
 import { registerUserbotTools } from './mcp-register-userbot-tools.ts';
 import {
   addNodeInDb,
@@ -1106,6 +1107,8 @@ export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOpt
     async ({ project_id, token_id, confirm }) =>
       textResult(await deleteBotTokenInDb(project_id, token_id, { confirm })),
   );
+
+  registerTableTools(server, enableFileTools);
 }
 
 /**

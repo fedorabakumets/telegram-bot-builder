@@ -4,7 +4,11 @@
  */
 
 import type { Request, Response } from "express";
-import { storage } from "../../../storages/storage";
+import { deleteTableInProject } from "../../../database/bot-tables/mutate-table";
+import { fail, sqlFailure } from "../http-error";
+import { notifyTableChange } from "../notify-table-change";
+import { ownedTable } from "../owned-table";
+import { tablePool } from "../table-db";
 
 /**
  * Обрабатывает DELETE /api/projects/:id/tables/:tableId
@@ -13,21 +17,17 @@ import { storage } from "../../../storages/storage";
  */
 export async function deleteTableHandler(req: Request, res: Response): Promise<void> {
   try {
-    const tableId = parseInt(req.params.tableId, 10);
-    if (isNaN(tableId)) {
-      res.status(400).json({ message: "Некорректный ID таблицы" });
+    const owned = await ownedTable(req, res);
+    if (!owned) return;
+    const deleted = await deleteTableInProject(tablePool, owned.projectId, owned.table.id);
+    if ("status" in deleted) {
+      fail(res, deleted.status, deleted.message);
       return;
     }
-
-    const deleted = await storage.deleteBotTable(tableId);
-    if (!deleted) {
-      res.status(404).json({ message: "Таблица не найдена" });
-      return;
-    }
-
     res.json({ success: true });
+    await notifyTableChange(owned.projectId, owned.table.id, owned.table.name);
   } catch (error) {
-    console.error("[deleteTableHandler] Ошибка:", error);
-    res.status(500).json({ message: "Не удалось удалить таблицу" });
+    const parsed = sqlFailure(error);
+    fail(res, parsed.status, parsed.message);
   }
 }

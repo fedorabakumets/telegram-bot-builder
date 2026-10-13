@@ -4,7 +4,10 @@
  */
 
 import type { Request, Response } from "express";
-import { storage } from "../../../storages/storage";
+import { listRowsInProject } from "../../../database/bot-tables/list-rows";
+import { fail, sqlFailure } from "../http-error";
+import { ownedTable } from "../owned-table";
+import { tablePool } from "../table-db";
 
 /**
  * Обрабатывает GET /api/projects/:id/tables/:tableId/rows
@@ -13,16 +16,11 @@ import { storage } from "../../../storages/storage";
  */
 export async function getRowsHandler(req: Request, res: Response): Promise<void> {
   try {
-    const tableId = parseInt(req.params.tableId, 10);
-    if (isNaN(tableId)) {
-      res.status(400).json({ message: "Некорректный ID таблицы" });
-      return;
-    }
-
-    const rows = await storage.getBotTableRows(tableId);
-    res.json(rows);
+    const owned = await ownedTable(req, res);
+    if (!owned) return;
+    res.json(await listRowsInProject(tablePool, owned.projectId, owned.table.id));
   } catch (error) {
-    console.error("[getRowsHandler] Ошибка:", error);
-    res.status(500).json({ message: "Не удалось получить строки" });
+    const parsed = sqlFailure(error);
+    fail(res, parsed.status, parsed.message);
   }
 }

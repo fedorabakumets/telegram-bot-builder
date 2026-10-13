@@ -52,6 +52,7 @@ import { registerProjectTablesColumnsMutatePaths } from "./paths/project-tables-
 import { registerProjectTablesRowsPaths } from "./paths/project-tables-rows-paths";
 import { registerProjectTablesChartPaths } from "./paths/project-tables-chart-paths";
 import { registerProjectTablesRowsMutatePaths } from "./paths/project-tables-rows-mutate-paths";
+import { registerProjectTablesQueryPaths } from "./paths/project-tables-query-paths";
 import { registerProjectTablesReindexPaths } from "./paths/project-tables-reindex-paths";
 import { registerProjectMessagesAllPaths } from "./paths/project-messages-all-paths";
 import { registerProjectMessagesActivityPaths } from "./paths/project-messages-activity-paths";
@@ -214,6 +215,7 @@ registerProjectTablesReindexPaths(documentedRegistry, cookieSecurity);
 registerProjectTablesRowsPaths(documentedRegistry, cookieSecurity);
 registerProjectTablesChartPaths(documentedRegistry, cookieSecurity);
 registerProjectTablesRowsMutatePaths(documentedRegistry, cookieSecurity);
+registerProjectTablesQueryPaths(documentedRegistry, cookieSecurity);
 registerProjectMessagesAllPaths(documentedRegistry, cookieSecurity);
 registerProjectMessagesActivityPaths(documentedRegistry, cookieSecurity);
 registerProjectMessagesDeletePaths(documentedRegistry, cookieSecurity);

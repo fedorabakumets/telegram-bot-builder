@@ -4,7 +4,12 @@
  */
 
 import type { Request, Response } from "express";
-import { storage } from "../../../storages/storage";
+import { addColumnInProject } from "../../../database/bot-tables/mutate-column";
+import { parseEntityName } from "../../../database/bot-tables/validate-cells";
+import { fail, sqlFailure } from "../http-error";
+import { notifyTableChange } from "../notify-table-change";
+import { ownedTable } from "../owned-table";
+import { tablePool } from "../table-db";
 
 /**
  * Обрабатывает POST /api/projects/:id/tables/:tableId/columns
@@ -13,26 +18,23 @@ import { storage } from "../../../storages/storage";
  */
 export async function createColumnHandler(req: Request, res: Response): Promise<void> {
   try {
-    const tableId = parseInt(req.params.tableId, 10);
-    if (isNaN(tableId)) {
-      res.status(400).json({ message: "Некорректный ID таблицы" });
+    const owned = await ownedTable(req, res);
+    if (!owned) return;
+    const name = parseEntityName(req.body?.name, false);
+    if (typeof name !== "string") {
+      fail(res, 400, name.message);
       return;
     }
-
-    const { name, position } = req.body;
-    if (!name || typeof name !== "string") {
-      res.status(400).json({ message: "Название колонки обязательно" });
+    const position = typeof req.body?.position === "number" ? req.body.position : owned.columns.length;
+    const column = await addColumnInProject(tablePool, owned.projectId, owned.table.id, name, position);
+    if ("status" in column) {
+      fail(res, column.status, column.message);
       return;
     }
-
-    const column = await storage.createBotTableColumn({
-      tableId,
-      name,
-      position: typeof position === "number" ? position : 0,
-    });
     res.status(201).json(column);
+    await notifyTableChange(owned.projectId, owned.table.id, owned.table.name);
   } catch (error) {
-    console.error("[createColumnHandler] Ошибка:", error);
-    res.status(500).json({ message: "Не удалось создать колонку" });
+    const parsed = sqlFailure(error);
+    fail(res, parsed.status, parsed.message);
   }
 }
