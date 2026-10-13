@@ -2,27 +2,6 @@
 
 Эндпоинтов: **25**
 
-Новые маршруты ниже проверяют, что таблица, столбец и строка принадлежат проекту из адреса. Чужой идентификатор отвечает `404`. Таблицу `_content` нельзя переименовать или удалить, её строки по-прежнему можно менять. После изменения публикуется одно событие Redis `bot:table_updated:{projectId}`.
-
-| Метод | Путь | Назначение |
-|-------|------|------------|
-| `GET` | `/api/projects/{id}/tables/search?q=` | Поиск по части имени |
-| `POST` | `/api/projects/{id}/tables/import` | JSON версии 1, `mode=create\|replace`, замена требует `confirm: true` |
-| `GET` | `/api/projects/{id}/tables/{tableId}` | Таблица, столбцы (`id` и имя) и сводка |
-| `GET` | `/api/projects/{id}/tables/{tableId}/summary` | Число строк и заполненность столбцов |
-| `PUT` | `…/columns/reorder` | Полный порядок `column_ids` |
-| `POST` | `…/rows/query` | До 5 фильтров, `limit` 100–500, сортировка `id`, `row_index` или `column:<id>` |
-| `POST` | `…/rows/count` | Подсчёт по тем же фильтрам |
-| `POST` | `…/rows/import` | До 200 строк, `append` или `replace` |
-| `GET` | `…/rows/{rowId}` | Одна строка |
-| `PATCH` | `…/rows/{rowId}` | Слияние ячеек, пустая строка допустима |
-| `DELETE` | `…/rows` | Очистка, тело `{ "confirm": true }` |
-| `POST` | `…/apply-ops` | До 50 операций, откат и `failed_op_index` |
-
-Старый `GET …/rows` по-прежнему отдаёт все строки для интерфейса. Операторы фильтра: `equals`, `not_equals`, `contains`, `starts_with`, `ends_with`, `filled`, `empty`, `greater_than`, `less_than`. Произвольный SQL и регулярные выражения не принимаются. Время запроса ограничено 5 секундами.
-
-
-
 ### `GET` /api/projects/{id}/tables
 
 Список таблиц контента проекта
@@ -170,6 +149,32 @@ curl -s -X DELETE http://localhost:5000/api/projects/42/tables/1 -b cookies.txt
 }
 ```
 
+### `GET` /api/projects/{id}/tables/{tableId}
+
+Таблица, столбцы и сводка
+
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+
+Столбцы содержат числовой id и имя. Чужой tableId даёт 404.
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `id` | path | да | ID проекта bot_projects | `"42"` |
+| `tableId` | path | да | ID таблицы bot_tables | `"1"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Схема |
+| 401 | Нет session cookie и Bearer PAT |
+| 403 | Нет доступа к проекту |
+| 404 | Таблица не найдена |
+
 ### `PUT` /api/projects/{id}/tables/{tableId}
 
 Переименовать таблицу
@@ -227,6 +232,34 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tables/1 -b cookies.txt \
   "createdAt": "2026-08-01T10:00:00.000Z"
 }
 ```
+
+### `POST` /api/projects/{id}/tables/{tableId}/apply-ops
+
+Пакет операций в одной транзакции
+
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+
+До 50 операций. Удаление требует confirm: true. Ошибка возвращает failed_op_index и откатывает пакет. Уведомление Redis одно.
+
+**Тело запроса:** `ApplyTableOpsBody`
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `id` | path | да | ID проекта bot_projects | `"42"` |
+| `tableId` | path | да | ID таблицы bot_tables | `"1"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Результаты по порядку |
+| 400 | Откат |
+| 401 | Нет session cookie и Bearer PAT |
+| 403 | Нет доступа к проекту |
 
 ### `GET` /api/projects/{id}/tables/{tableId}/columns
 
@@ -447,6 +480,34 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tables/1/columns/3 \
 }
 ```
 
+### `PUT` /api/projects/{id}/tables/{tableId}/columns/reorder
+
+PUT /api/projects/{id}/tables/{tableId}/columns/reorder
+
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Успешный ответ |
+| 401 | Требуется авторизация (сессия или Bearer PAT) |
+| 503 | Приложение не настроено — настройка в /admin |
+
+### `DELETE` /api/projects/{id}/tables/{tableId}/rows
+
+DELETE /api/projects/{id}/tables/{tableId}/rows
+
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Успешный ответ |
+| 401 | Требуется авторизация (сессия или Bearer PAT) |
+| 503 | Приложение не настроено — настройка в /admin |
+
 ### `GET` /api/projects/{id}/tables/{tableId}/rows
 
 Список строк таблицы
@@ -615,6 +676,34 @@ curl -s -X DELETE http://localhost:5000/api/projects/42/tables/1/rows/10 \
 }
 ```
 
+### `GET` /api/projects/{id}/tables/{tableId}/rows/{rowId}
+
+GET /api/projects/{id}/tables/{tableId}/rows/{rowId}
+
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Успешный ответ |
+| 401 | Требуется авторизация (сессия или Bearer PAT) |
+| 503 | Приложение не настроено — настройка в /admin |
+
+### `PATCH` /api/projects/{id}/tables/{tableId}/rows/{rowId}
+
+PATCH /api/projects/{id}/tables/{tableId}/rows/{rowId}
+
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Успешный ответ |
+| 401 | Требуется авторизация (сессия или Bearer PAT) |
+| 503 | Приложение не настроено — настройка в /admin |
+
 ### `PUT` /api/projects/{id}/tables/{tableId}/rows/{rowId}
 
 Обновить строку
@@ -681,6 +770,62 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tables/1/rows/10 \
 }
 ```
 
+### `POST` /api/projects/{id}/tables/{tableId}/rows/count
+
+POST /api/projects/{id}/tables/{tableId}/rows/count
+
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Успешный ответ |
+| 401 | Требуется авторизация (сессия или Bearer PAT) |
+| 503 | Приложение не настроено — настройка в /admin |
+
+### `POST` /api/projects/{id}/tables/{tableId}/rows/import
+
+POST /api/projects/{id}/tables/{tableId}/rows/import
+
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Успешный ответ |
+| 401 | Требуется авторизация (сессия или Bearer PAT) |
+| 503 | Приложение не настроено — настройка в /admin |
+
+### `POST` /api/projects/{id}/tables/{tableId}/rows/query
+
+Страница строк с фильтрами
+
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+
+До 5 условий, limit по умолчанию 100 и не больше 500, таймаут SQL 5 с. Старый GET …/rows без лимита сохранён для интерфейса.
+
+**Тело запроса:** `QueryTableRowsBody`
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `id` | path | да | ID проекта bot_projects | `"42"` |
+| `tableId` | path | да | ID таблицы bot_tables | `"1"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Страница |
+| 400 | Плохой фильтр |
+| 401 | Нет session cookie и Bearer PAT |
+| 403 | Нет доступа к проекту |
+
 ### `POST` /api/projects/{id}/tables/{tableId}/rows/reindex
 
 Переиндексировать строки
@@ -724,3 +869,56 @@ curl -s -X POST http://localhost:5000/api/projects/42/tables/1/rows/reindex \
   "success": true
 }
 ```
+
+### `GET` /api/projects/{id}/tables/{tableId}/summary
+
+GET /api/projects/{id}/tables/{tableId}/summary
+
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Успешный ответ |
+| 401 | Требуется авторизация (сессия или Bearer PAT) |
+| 503 | Приложение не настроено — настройка в /admin |
+
+### `POST` /api/projects/{id}/tables/import
+
+POST /api/projects/{id}/tables/import
+
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Успешный ответ |
+| 401 | Требуется авторизация (сессия или Bearer PAT) |
+| 503 | Приложение не настроено — настройка в /admin |
+
+### `GET` /api/projects/{id}/tables/search
+
+Найти таблицы по части имени
+
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+
+Только пользовательские bot_tables. Параметр q обязателен, limit от 1 до 100.
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `id` | path | да | ID проекта bot_projects | `"42"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Найденные таблицы |
+| 400 | Нет q |
+| 401 | Нет session cookie и Bearer PAT |
+| 403 | Нет доступа к проекту |

@@ -8678,6 +8678,112 @@
           }
         }
       },
+      "get": {
+        "tags": [
+          "project-tables"
+        ],
+        "summary": "Таблица, столбцы и сводка",
+        "description": "Столбцы содержат числовой id и имя. Чужой tableId даёт 404.",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "agentToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта bot_projects",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта bot_projects",
+            "example": "42",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID таблицы bot_tables",
+              "example": "1"
+            },
+            "required": true,
+            "description": "ID таблицы bot_tables",
+            "example": "1",
+            "name": "tableId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Схема"
+          },
+          "401": {
+            "description": "Нет session cookie и Bearer PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                },
+                "example": {
+                  "message": "Нет доступа к проекту"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Таблица не найдена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
+          }
+        }
+      },
       "put": {
         "tags": [
           "project-tables"
@@ -8832,6 +8938,123 @@
                 },
                 "example": {
                   "message": "Не удалось переименовать таблицу"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/tables/{tableId}/apply-ops": {
+      "post": {
+        "tags": [
+          "project-tables"
+        ],
+        "summary": "Пакет операций в одной транзакции",
+        "description": "До 50 операций. Удаление требует confirm: true. Ошибка возвращает failed_op_index и откатывает пакет. Уведомление Redis одно.",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "agentToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта bot_projects",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта bot_projects",
+            "example": "42",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID таблицы bot_tables",
+              "example": "1"
+            },
+            "required": true,
+            "description": "ID таблицы bot_tables",
+            "example": "1",
+            "name": "tableId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApplyTableOpsBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Результаты по порядку"
+          },
+          "400": {
+            "description": "Откат",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplyTableOpsError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет session cookie и Bearer PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                },
+                "example": {
+                  "message": "Нет доступа к проекту"
                 }
               }
             }
@@ -9463,7 +9686,43 @@
         }
       }
     },
+    "/api/projects/{id}/tables/{tableId}/columns/reorder": {
+      "put": {
+        "tags": [
+          "project-tables"
+        ],
+        "summary": "PUT /api/projects/{id}/tables/{tableId}/columns/reorder",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено — настройка в /admin"
+          }
+        }
+      }
+    },
     "/api/projects/{id}/tables/{tableId}/rows": {
+      "delete": {
+        "tags": [
+          "project-tables"
+        ],
+        "summary": "DELETE /api/projects/{id}/tables/{tableId}/rows",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено — настройка в /admin"
+          }
+        }
+      },
       "get": {
         "tags": [
           "project-tables"
@@ -9923,6 +10182,40 @@
           }
         }
       },
+      "get": {
+        "tags": [
+          "project-tables"
+        ],
+        "summary": "GET /api/projects/{id}/tables/{tableId}/rows/{rowId}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено — настройка в /admin"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "project-tables"
+        ],
+        "summary": "PATCH /api/projects/{id}/tables/{tableId}/rows/{rowId}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено — настройка в /admin"
+          }
+        }
+      },
       "put": {
         "tags": [
           "project-tables"
@@ -10102,6 +10395,168 @@
         }
       }
     },
+    "/api/projects/{id}/tables/{tableId}/rows/count": {
+      "post": {
+        "tags": [
+          "project-tables"
+        ],
+        "summary": "POST /api/projects/{id}/tables/{tableId}/rows/count",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено — настройка в /admin"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/tables/{tableId}/rows/import": {
+      "post": {
+        "tags": [
+          "project-tables"
+        ],
+        "summary": "POST /api/projects/{id}/tables/{tableId}/rows/import",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено — настройка в /admin"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/tables/{tableId}/rows/query": {
+      "post": {
+        "tags": [
+          "project-tables"
+        ],
+        "summary": "Страница строк с фильтрами",
+        "description": "До 5 условий, limit по умолчанию 100 и не больше 500, таймаут SQL 5 с. Старый GET …/rows без лимита сохранён для интерфейса.",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "agentToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта bot_projects",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта bot_projects",
+            "example": "42",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID таблицы bot_tables",
+              "example": "1"
+            },
+            "required": true,
+            "description": "ID таблицы bot_tables",
+            "example": "1",
+            "name": "tableId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QueryTableRowsBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Страница",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueryTableRowsResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Плохой фильтр",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет session cookie и Bearer PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                },
+                "example": {
+                  "message": "Нет доступа к проекту"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/projects/{id}/tables/{tableId}/rows/reindex": {
       "post": {
         "tags": [
@@ -10229,6 +10684,140 @@
                 },
                 "example": {
                   "message": "Не удалось переиндексировать строки"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/tables/{tableId}/summary": {
+      "get": {
+        "tags": [
+          "project-tables"
+        ],
+        "summary": "GET /api/projects/{id}/tables/{tableId}/summary",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено — настройка в /admin"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/tables/import": {
+      "post": {
+        "tags": [
+          "project-tables"
+        ],
+        "summary": "POST /api/projects/{id}/tables/import",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено — настройка в /admin"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/tables/search": {
+      "get": {
+        "tags": [
+          "project-tables"
+        ],
+        "summary": "Найти таблицы по части имени",
+        "description": "Только пользовательские bot_tables. Параметр q обязателен, limit от 1 до 100.",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "agentToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта bot_projects",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта bot_projects",
+            "example": "42",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Найденные таблицы"
+          },
+          "400": {
+            "description": "Нет q",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет session cookie и Bearer PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                },
+                "example": {
+                  "message": "Нет доступа к проекту"
                 }
               }
             }
@@ -33973,6 +34562,132 @@
         },
         "required": [
           "data"
+        ]
+      },
+      "QueryTableRowsResult": {
+        "type": "object",
+        "properties": {
+          "rows": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": {
+                "nullable": true
+              }
+            }
+          },
+          "total": {
+            "type": "integer"
+          },
+          "limit": {
+            "type": "integer"
+          },
+          "offset": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "rows",
+          "total",
+          "limit",
+          "offset"
+        ]
+      },
+      "TableRowFilter": {
+        "type": "object",
+        "properties": {
+          "column_id": {
+            "type": "integer"
+          },
+          "operator": {
+            "type": "string",
+            "enum": [
+              "equals",
+              "not_equals",
+              "contains",
+              "starts_with",
+              "ends_with",
+              "filled",
+              "empty",
+              "greater_than",
+              "less_than"
+            ]
+          },
+          "value": {
+            "type": "string",
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "column_id",
+          "operator"
+        ]
+      },
+      "QueryTableRowsBody": {
+        "type": "object",
+        "properties": {
+          "filters": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TableRowFilter"
+            },
+            "maxItems": 5
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 500
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "sort": {
+            "type": "string"
+          },
+          "columns": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          }
+        }
+      },
+      "ApplyTableOpsError": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "failed_op_index": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "message",
+          "failed_op_index"
+        ]
+      },
+      "ApplyTableOpsBody": {
+        "type": "object",
+        "properties": {
+          "confirm": {
+            "type": "boolean"
+          },
+          "ops": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": {
+                "nullable": true
+              }
+            },
+            "minItems": 1,
+            "maxItems": 50
+          }
+        },
+        "required": [
+          "ops"
         ]
       },
       "ProjectMessageListItem": {
