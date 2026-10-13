@@ -93,6 +93,7 @@ import {
 } from "./messages/queryActivityFromDaily";
 import { queryActivityFromDailyPeriod } from "./messages/queryActivityFromDailyPeriod";
 import { handleUserActivity } from "./users/handle-user-activity";
+import { setupAnalyticsRangeRoutes } from './analytics/setup-range-routes';
 import { updateMessagesRetentionHandler } from "./userProjectsTokens/handlers/tokens/updateMessagesRetentionHandler";
 import { getFirstProjectTokenHandler } from "./projectRoutes/handlers/getFirstProjectTokenHandler";
 
@@ -468,6 +469,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // Deny-by-default: все /api закрыты, кроме публичного allowlist.
   // Подключается ПОСЛЕ identifyUser/identifyAgent — личность уже установлена.
   app.use("/api", requireApiAuth);
+  /** Подключает точные временные диапазоны после общей авторизации. */
+  setupAnalyticsRangeRoutes(app, dbPool, requireProjectAccess);
 
   // Отключаем HTTP-кеширование для API — ответы зависят от сессии.
   // Успешные аватарки/telegram-file перезаписывают заголовки в setPrivateMediaCacheHeaders

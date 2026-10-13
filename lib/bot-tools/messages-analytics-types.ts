@@ -2,6 +2,7 @@
  * @fileoverview Контракты параметров и временных окон MCP-аналитики сообщений.
  */
 import { USERS_ANALYTICS_PERIODS, USERS_ANALYTICS_WINDOWS, type UsersAnalyticsPeriod } from './users-analytics-types.ts';
+import type { AnalyticsRangeOptions } from '../../shared/analytics/range.ts';
 
 /** Допустимые периоды карточки активности сообщений. */
 export const MESSAGES_ANALYTICS_PERIODS = USERS_ANALYTICS_PERIODS;
@@ -9,7 +10,7 @@ export const MESSAGES_ANALYTICS_PERIODS = USERS_ANALYTICS_PERIODS;
 export const MESSAGES_ANALYTICS_WINDOWS = USERS_ANALYTICS_WINDOWS;
 
 /** Параметры сводки и графика активности. */
-export interface MessagesAnalyticsOptions {
+export interface MessagesAnalyticsOptions extends AnalyticsRangeOptions {
   /** Готовый период, по умолчанию 30 дней. */
   period?: UsersAnalyticsPeriod;
   /** Один бот либо все боты проекта при отсутствии значения. */

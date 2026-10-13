@@ -1,6 +1,7 @@
 /**
  * @fileoverview Контракты и ограничения аналитики аудитории через MCP.
  */
+import type { AnalyticsRangeOptions } from '../../shared/analytics/range.ts';
 
 /** Допустимые периоды карточки аудитории. */
 export const USERS_ANALYTICS_PERIODS = ['1h', '3h', '24h', '7d', '30d', '12w', '12m'] as const;
@@ -8,7 +9,7 @@ export const USERS_ANALYTICS_PERIODS = ['1h', '3h', '24h', '7d', '30d', '12w', '
 export type UsersAnalyticsPeriod = typeof USERS_ANALYTICS_PERIODS[number];
 
 /** Параметры чтения сводки и графика. */
-export interface UsersAnalyticsOptions {
+export interface UsersAnalyticsOptions extends AnalyticsRangeOptions {
   /** Готовое окно выборки; по умолчанию 30 дней. */
   period?: UsersAnalyticsPeriod;
   /** Токен одного бота; без значения учитываются все боты проекта. */

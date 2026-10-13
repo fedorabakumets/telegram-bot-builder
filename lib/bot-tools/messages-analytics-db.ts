@@ -5,6 +5,7 @@ import { calculateCumulativeMessages, getMessagesActivitySeries, getMessagesActi
 import { MESSAGES_ANALYTICS_WINDOWS, type MessagesAnalyticsOptions } from './messages-analytics-types.ts';
 import { messagesAnalyticsError, parseMessagesActivity, readMessagesAnalytics, validMessagesOptions } from './messages-analytics-read.ts';
 import { validUsersCount } from './users-analytics-read.ts';
+import { getExactCardAnalytics } from './analytics-range-db.ts';
 
 /**
  * Загружает сохранённые счётчики и активность через маршруты с проверкой доступа.
@@ -33,7 +34,8 @@ async function loadMessagesAnalytics(projectId: number, options: MessagesAnalyti
   if (![counts.periodMessages, counts.incomingMessages, counts.outgoingMessages].every(validUsersCount)) {
     throw new Error('Некорректная сумма сообщений API');
   }
-  const windowDays = ({ '7d': 7, '30d': 30, '12w': 91, '12m': 365 } as Partial<Record<string, number>>)[period] ?? null;
+  /** Двенадцать недель имеют одинаковую длительность во всех карточках. */
+  const windowDays = ({ '7d': 7, '30d': 30, '12w': 84, '12m': 365 } as Partial<Record<string, number>>)[period] ?? null;
   return { points, summary: {
     project_id: projectId, token_id: options.tokenId ?? null, period, ...window, window_days: windowDays,
     from: points[0]?.date ?? null, to: points.at(-1)?.date ?? null,
@@ -45,7 +47,7 @@ async function loadMessagesAnalytics(projectId: number, options: MessagesAnalyti
     activity_source: windowDays === null ? 'bot_messages' : 'message_activity_daily',
     metric_description: 'total_messages — сейчас сохранённые сообщения, не итог за всё время. incoming — тип user; outgoing — все остальные типы. total_users — записи bot_users, один человек у разных ботов учитывается повторно. average_per_user = total_messages / total_users, при нулевом знаменателе 0.',
     retention_description: 'Очистка истории уменьшает total_messages и короткие ряды 1h/3h/24h. Длинные ряды берутся из дневных агрегатов и сохраняются после очистки; period_messages может превышать total_messages. Данные до начала ведения агрегатов могут отсутствовать.',
-    range_description: 'from/to — начала первого и последнего слотов API, не точные границы фильтра. Окно 12w соответствует существующей карточке: 91 день; 12m — 365 дней. Группировка выполняется в UTC.',
+    range_description: 'from/to — начала первого и последнего слотов API, не точные границы фильтра. Окно 12w — 84 дня; 12m — 365 дней. Группировка выполняется в UTC.',
   } };
 }
 
@@ -57,6 +59,7 @@ async function loadMessagesAnalytics(projectId: number, options: MessagesAnalyti
  */
 export async function getMessagesSummaryInDb(projectId: number, options: MessagesAnalyticsOptions = {}) {
   if (!validMessagesOptions(projectId, options)) return { error: 'Некорректные параметры аналитики' };
+  if (options.from !== undefined || options.to !== undefined || options.step !== undefined) return getExactCardAnalytics(projectId, 'messages', options, false);
   try { return (await loadMessagesAnalytics(projectId, options)).summary; }
   catch (error) { return messagesAnalyticsError(error); }
 }
@@ -69,6 +72,7 @@ export async function getMessagesSummaryInDb(projectId: number, options: Message
  */
 export async function getMessagesChartInDb(projectId: number, options: MessagesAnalyticsOptions = {}) {
   if (!validMessagesOptions(projectId, options)) return { error: 'Некорректные параметры аналитики' };
+  if (options.from !== undefined || options.to !== undefined || options.step !== undefined) return getExactCardAnalytics(projectId, 'messages', options, true);
   try {
     const data = await loadMessagesAnalytics(projectId, options);
     const mode = options.mode ?? 'period';

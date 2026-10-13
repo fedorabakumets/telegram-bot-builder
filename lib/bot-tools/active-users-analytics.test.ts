@@ -37,9 +37,9 @@ describe('Активные пользователи через MCP', () => {
     expect(new URL(url).searchParams.get('tokenId')).toBe('18');
     expect(new Headers(init.headers).get('Authorization')).toBe('Bearer test-token');
   });
-  it('описывает дневные отметки и фактическое окно 91 день', async () => {
+  it('описывает дневные отметки и единое окно 84 дня', async () => {
     expect(await getActiveUsersSummaryInDb(289, { period: '12w' })).toMatchObject({
-      window_days: 91, activity_source: 'user_activity_daily', bucket_timezone: 'UTC',
+      window_days: 84, activity_source: 'user_activity_daily', bucket_timezone: 'UTC',
     });
   });
   it('сохраняет пустое окно без выдуманных точек', async () => {

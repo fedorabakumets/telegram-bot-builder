@@ -19,7 +19,8 @@ const DAILY_CONFIG: Record<
 > = {
   "1w": { window: "7 days", truncate: "day", step: "1 day" },
   "1d": { window: "30 days", truncate: "day", step: "1 day" },
-  "7d": { window: "91 days", truncate: "week", step: "1 week" },
+  /** Двенадцать недель составляют 84 дня во всех графиках. */
+  "7d": { window: "84 days", truncate: "week", step: "1 week" },
   "30d": { window: "365 days", truncate: "month", step: "1 month" },
 };
 

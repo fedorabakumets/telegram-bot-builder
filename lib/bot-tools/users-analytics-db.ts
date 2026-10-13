@@ -2,6 +2,7 @@
  * @fileoverview Сводка и графики аудитории с расчётами, общими для UI и MCP.
  */
 import { calculateCumulativeGrowth, getUsersGrowthSummary } from '../../shared/analytics/users-growth.ts';
+import { getExactCardAnalytics } from './analytics-range-db.ts';
 import { USERS_ANALYTICS_WINDOWS, type UsersAnalyticsOptions, type UsersSourcePoint } from './users-analytics-types.ts';
 import { parseUsersGrowth, parseUsersSources, readUsersAnalytics, validUsersAnalyticsOptions, validUsersCount } from './users-analytics-read.ts';
 
@@ -58,6 +59,7 @@ function analyticsError(error: unknown) {
  */
 export async function getUsersSummaryInDb(projectId: number, options: UsersAnalyticsOptions = {}) {
   if (!validUsersAnalyticsOptions(projectId, options)) return { error: 'Некорректные параметры аналитики' };
+  if (options.from !== undefined || options.to !== undefined || options.step !== undefined) return getExactCardAnalytics(projectId, 'registrations', options, false);
   try { return (await loadUsersAnalytics(projectId, options)).summary; }
   catch (error) { return analyticsError(error); }
 }
@@ -90,6 +92,7 @@ function accumulateSources(points: UsersSourcePoint[]): UsersSourcePoint[] {
  */
 export async function getUsersChartInDb(projectId: number, options: UsersAnalyticsOptions = {}) {
   if (!validUsersAnalyticsOptions(projectId, options)) return { error: 'Некорректные параметры аналитики' };
+  if (options.from !== undefined || options.to !== undefined || options.step !== undefined) return getExactCardAnalytics(projectId, 'registrations', options, true);
   try {
     const data = await loadUsersAnalytics(projectId, options);
     const mode = options.mode ?? 'period';

@@ -3,9 +3,10 @@
  */
 import { USERS_ANALYTICS_PERIODS, type UsersAnalyticsPeriod } from './users-analytics-types.ts';
 import { validUsersCount } from './users-analytics-read.ts';
+import type { AnalyticsRangeOptions } from '../../shared/analytics/range.ts';
 
 /** Параметры чтения активности пользователей. */
-export interface ActiveUsersAnalyticsOptions {
+export interface ActiveUsersAnalyticsOptions extends AnalyticsRangeOptions {
   /** Готовое окно карточки; по умолчанию 30 дней. */
   period?: UsersAnalyticsPeriod;
   /** Один бот; отсутствие значения означает всех ботов проекта. */

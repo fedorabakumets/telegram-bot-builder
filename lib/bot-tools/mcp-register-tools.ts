@@ -14,6 +14,7 @@ import { registerTrafficSourcesTools } from './mcp-register-traffic-sources-tool
 import { registerLanguagesTools } from './mcp-register-languages-tools.ts';
 import { registerActiveUsersTools } from './mcp-register-active-users-tools.ts';
 import { registerUsersAnalyticsTools } from './mcp-register-analytics-tools.ts';
+import { registerRangeAnalyticsTools } from './mcp-register-range-analytics-tools.ts';
 import { registerMessagesAnalyticsTools } from './mcp-register-message-analytics-tools.ts';
 import { registerUserbotTools } from './mcp-register-userbot-tools.ts';
 import {
@@ -996,6 +997,7 @@ export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOpt
   registerActiveUsersTools(server);
   /** Подключает аналитику пользователей для stdio и удалённого HTTP. */
   registerUsersAnalyticsTools(server);
+  registerRangeAnalyticsTools(server);
   /** Подключает сводку и график активности сообщений для обоих транспортов. */
   registerMessagesAnalyticsTools(server);
 
