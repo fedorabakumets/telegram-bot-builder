@@ -12342,7 +12342,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Агрегаты (числа после parseInt на сервере)",
+            "description": "Агрегаты; среднее на пользователя может быть дробным",
             "content": {
               "application/json": {
                 "schema": {
@@ -28505,7 +28505,7 @@
           },
           "avgInteractionsPerUser": {
             "type": "number",
-            "example": 21
+            "example": 21.33
           },
           "uniqueLanguages": {
             "type": "number",
