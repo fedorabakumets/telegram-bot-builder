@@ -3,7 +3,8 @@
  * @module editor/tables/utils/export-json
  */
 
-import type { TableColumn, TableRow } from '../types';
+import { tableToJson as rowsToJson } from "@shared/tables/io";
+import type { TableColumn, TableRow } from "../types";
 
 /**
  * Конвертирует данные таблицы в JSON-строку (массив объектов)
@@ -12,13 +13,5 @@ import type { TableColumn, TableRow } from '../types';
  * @returns Строка JSON с отступом 2 пробела
  */
 export function tableToJson(columns: TableColumn[], rows: TableRow[]): string {
-  const data = rows.map((row) => {
-    const obj: Record<string, string> = {};
-    for (const col of columns) {
-      obj[col.name] = row.cells[col.id] ?? '';
-    }
-    return obj;
-  });
-
-  return JSON.stringify(data, null, 2);
+  return rowsToJson(columns, rows);
 }

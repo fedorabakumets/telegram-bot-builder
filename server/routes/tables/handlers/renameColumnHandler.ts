@@ -4,7 +4,12 @@
  */
 
 import type { Request, Response } from "express";
-import { storage } from "../../../storages/storage";
+import { renameColumnInProject } from "../../../database/bot-tables/mutate-column";
+import { parseEntityName } from "../../../database/bot-tables/validate-cells";
+import { fail, positiveId, sqlFailure } from "../http-error";
+import { notifyTableChange } from "../notify-table-change";
+import { ownedTable } from "../owned-table";
+import { tablePool } from "../table-db";
 
 /**
  * Обрабатывает PUT /api/projects/:id/tables/:tableId/columns/:columnId
@@ -13,27 +18,27 @@ import { storage } from "../../../storages/storage";
  */
 export async function renameColumnHandler(req: Request, res: Response): Promise<void> {
   try {
-    const columnId = parseInt(req.params.columnId, 10);
-    if (isNaN(columnId)) {
-      res.status(400).json({ message: "Некорректный ID колонки" });
+    const owned = await ownedTable(req, res);
+    if (!owned) return;
+    const columnId = positiveId(req.params.columnId);
+    if (columnId === null) {
+      fail(res, 400, "Некорректный ID колонки");
       return;
     }
-
-    const { name } = req.body;
-    if (!name || typeof name !== "string") {
-      res.status(400).json({ message: "Новое название обязательно" });
+    const name = parseEntityName(req.body?.name, false);
+    if (typeof name !== "string") {
+      fail(res, 400, name.message);
       return;
     }
-
-    const column = await storage.renameBotTableColumn(columnId, name);
-    if (!column) {
-      res.status(404).json({ message: "Колонка не найдена" });
+    const column = await renameColumnInProject(tablePool, owned.projectId, owned.table.id, columnId, name);
+    if ("status" in column) {
+      fail(res, column.status, column.message);
       return;
     }
-
     res.json(column);
+    await notifyTableChange(owned.projectId, owned.table.id, owned.table.name);
   } catch (error) {
-    console.error("[renameColumnHandler] Ошибка:", error);
-    res.status(500).json({ message: "Не удалось переименовать колонку" });
+    const parsed = sqlFailure(error);
+    fail(res, parsed.status, parsed.message);
   }
 }

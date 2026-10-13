@@ -1,6 +1,27 @@
 # project-tables
 
-Эндпоинтов: **13**
+Эндпоинтов: **25**
+
+Новые маршруты ниже проверяют, что таблица, столбец и строка принадлежат проекту из адреса. Чужой идентификатор отвечает `404`. Таблицу `_content` нельзя переименовать или удалить, её строки по-прежнему можно менять. После изменения публикуется одно событие Redis `bot:table_updated:{projectId}`.
+
+| Метод | Путь | Назначение |
+|-------|------|------------|
+| `GET` | `/api/projects/{id}/tables/search?q=` | Поиск по части имени |
+| `POST` | `/api/projects/{id}/tables/import` | JSON версии 1, `mode=create\|replace`, замена требует `confirm: true` |
+| `GET` | `/api/projects/{id}/tables/{tableId}` | Таблица, столбцы (`id` и имя) и сводка |
+| `GET` | `/api/projects/{id}/tables/{tableId}/summary` | Число строк и заполненность столбцов |
+| `PUT` | `…/columns/reorder` | Полный порядок `column_ids` |
+| `POST` | `…/rows/query` | До 5 фильтров, `limit` 100–500, сортировка `id`, `row_index` или `column:<id>` |
+| `POST` | `…/rows/count` | Подсчёт по тем же фильтрам |
+| `POST` | `…/rows/import` | До 200 строк, `append` или `replace` |
+| `GET` | `…/rows/{rowId}` | Одна строка |
+| `PATCH` | `…/rows/{rowId}` | Слияние ячеек, пустая строка допустима |
+| `DELETE` | `…/rows` | Очистка, тело `{ "confirm": true }` |
+| `POST` | `…/apply-ops` | До 50 операций, откат и `failed_op_index` |
+
+Старый `GET …/rows` по-прежнему отдаёт все строки для интерфейса. Операторы фильтра: `equals`, `not_equals`, `contains`, `starts_with`, `ends_with`, `filled`, `empty`, `greater_than`, `less_than`. Произвольный SQL и регулярные выражения не принимаются. Время запроса ограничено 5 секундами.
+
+
 
 ### `GET` /api/projects/{id}/tables
 

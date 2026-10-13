@@ -4,7 +4,8 @@
  */
 
 import type { Request, Response } from "express";
-import { storage } from "../../../storages/storage";
+import { fail, sqlFailure } from "../http-error";
+import { ownedTable } from "../owned-table";
 
 /**
  * Обрабатывает GET /api/projects/:id/tables/:tableId/columns
@@ -13,16 +14,11 @@ import { storage } from "../../../storages/storage";
  */
 export async function getColumnsHandler(req: Request, res: Response): Promise<void> {
   try {
-    const tableId = parseInt(req.params.tableId, 10);
-    if (isNaN(tableId)) {
-      res.status(400).json({ message: "Некорректный ID таблицы" });
-      return;
-    }
-
-    const columns = await storage.getBotTableColumns(tableId);
-    res.json(columns);
+    const owned = await ownedTable(req, res);
+    if (!owned) return;
+    res.json(owned.columns);
   } catch (error) {
-    console.error("[getColumnsHandler] Ошибка:", error);
-    res.status(500).json({ message: "Не удалось получить колонки" });
+    const parsed = sqlFailure(error);
+    fail(res, parsed.status, parsed.message);
   }
 }

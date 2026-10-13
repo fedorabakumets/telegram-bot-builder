@@ -7,6 +7,7 @@
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
+import { registerTableTools } from './mcp-register-table-tools.ts';
 import { registerUserbotTools } from './mcp-register-userbot-tools.ts';
 import {
   addNodeInDb,
@@ -1077,6 +1078,8 @@ export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOpt
     async ({ project_id, token_id, confirm }) =>
       textResult(await deleteBotTokenInDb(project_id, token_id, { confirm })),
   );
+
+  registerTableTools(server, enableFileTools);
 }
 
 /**
