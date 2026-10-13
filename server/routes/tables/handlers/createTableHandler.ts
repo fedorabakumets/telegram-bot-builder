@@ -4,7 +4,10 @@
  */
 
 import type { Request, Response } from "express";
-import { storage } from "../../../storages/storage";
+import { mapTable } from "../../../database/bot-tables/map-records";
+import { parseEntityName } from "../../../database/bot-tables/validate-cells";
+import { fail, positiveId, sqlFailure } from "../http-error";
+import { tablePool } from "../table-db";
 
 /**
  * Обрабатывает POST /api/projects/:id/tables
@@ -13,22 +16,23 @@ import { storage } from "../../../storages/storage";
  */
 export async function createTableHandler(req: Request, res: Response): Promise<void> {
   try {
-    const projectId = parseInt(req.params.id, 10);
-    if (isNaN(projectId)) {
-      res.status(400).json({ message: "Некорректный ID проекта" });
+    const projectId = positiveId(req.params.id);
+    if (projectId === null) {
+      fail(res, 400, "Некорректный ID проекта");
       return;
     }
-
-    const { name } = req.body;
-    if (!name || typeof name !== "string") {
-      res.status(400).json({ message: "Название таблицы обязательно" });
+    const name = parseEntityName(req.body?.name, true);
+    if (typeof name !== "string") {
+      fail(res, 400, name.message);
       return;
     }
-
-    const table = await storage.createBotTable({ projectId, name });
-    res.status(201).json(table);
+    const inserted = await tablePool.query(
+      `INSERT INTO bot_tables (project_id, name) VALUES ($1, $2) RETURNING id, project_id, name, created_at`,
+      [projectId, name],
+    );
+    res.status(201).json(mapTable(inserted.rows[0] as never));
   } catch (error) {
-    console.error("[createTableHandler] Ошибка:", error);
-    res.status(500).json({ message: "Не удалось создать таблицу" });
+    const parsed = sqlFailure(error);
+    fail(res, parsed.status, "Не удалось создать таблицу");
   }
 }

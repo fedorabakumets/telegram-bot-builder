@@ -1,11 +1,15 @@
 /**
- * @fileoverview Хендлер обновления строки таблицы
+ * @fileoverview Хендлер полной замены строки таблицы
  * @module routes/tables/handlers/updateRowHandler
  */
 
 import type { Request, Response } from "express";
-import { storage } from "../../../storages/storage";
-import { syncTableToScenario } from "../../../services/content-table";
+import { replaceRowInProject } from "../../../database/bot-tables/mutate-row";
+import { validateCells } from "../../../database/bot-tables/validate-cells";
+import { fail, positiveId, sqlFailure } from "../http-error";
+import { notifyTableChange } from "../notify-table-change";
+import { ownedTable } from "../owned-table";
+import { tablePool } from "../table-db";
 
 /**
  * Обрабатывает PUT /api/projects/:id/tables/:tableId/rows/:rowId
@@ -14,51 +18,27 @@ import { syncTableToScenario } from "../../../services/content-table";
  */
 export async function updateRowHandler(req: Request, res: Response): Promise<void> {
   try {
-    const rowId = parseInt(req.params.rowId, 10);
-    if (isNaN(rowId)) {
-      res.status(400).json({ message: "Некорректный ID строки" });
+    const owned = await ownedTable(req, res);
+    if (!owned) return;
+    const rowId = positiveId(req.params.rowId);
+    if (rowId === null) {
+      fail(res, 400, "Некорректный ID строки");
       return;
     }
-
-    const { data } = req.body;
-    if (!data || typeof data !== "object") {
-      res.status(400).json({ message: "Поле data обязательно и должно быть объектом" });
+    const cells = validateCells(req.body?.data, new Set(owned.columns.map((column) => String(column.id))));
+    if (!cells.ok) {
+      fail(res, 400, cells.message);
       return;
     }
-
-    const row = await storage.updateBotTableRow(rowId, data);
-    if (!row) {
-      res.status(404).json({ message: "Строка не найдена" });
+    const row = await replaceRowInProject(tablePool, owned.projectId, owned.table.id, rowId, cells.data);
+    if ("status" in row) {
+      fail(res, row.status, row.message);
       return;
     }
-
     res.json(row);
-
-    // Обратная синхронизация и уведомление бота
-    const projectId = parseInt(req.params.id, 10);
-    const tableId = parseInt(req.params.tableId, 10);
-    if (!isNaN(projectId) && !isNaN(tableId)) {
-      try {
-        const tables = await storage.getBotTables(projectId);
-        const contentTable = tables.find((t) => t.name === "_content");
-        if (contentTable && contentTable.id === tableId) {
-          await syncTableToScenario(projectId, tableId, data);
-        }
-      } catch (err) {
-        console.error("[updateRowHandler] Ошибка обратной синхронизации _content:", err);
-      }
-
-      // Мгновенное уведомление бота через Redis pub/sub (для любой таблицы проекта)
-      try {
-        const { getRedisPublisher } = await import("../../../redis/redisClient");
-        const pub = getRedisPublisher();
-        if (pub) {
-          await pub.publish(`bot:table_updated:${projectId}`, JSON.stringify({ tableId }));
-        }
-      } catch {}
-    }
+    await notifyTableChange(owned.projectId, owned.table.id, owned.table.name, [row.data]);
   } catch (error) {
-    console.error("[updateRowHandler] Ошибка:", error);
-    res.status(500).json({ message: "Не удалось обновить строку" });
+    const parsed = sqlFailure(error);
+    fail(res, parsed.status, parsed.message);
   }
 }

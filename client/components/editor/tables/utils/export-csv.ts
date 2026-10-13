@@ -3,19 +3,8 @@
  * @module editor/tables/utils/export-csv
  */
 
-import type { TableColumn, TableRow } from '../types';
-
-/**
- * Экранирует значение для CSV — оборачивает в кавычки при необходимости
- * @param value - Исходное значение ячейки
- * @returns Экранированное значение
- */
-function escapeCsvValue(value: string): string {
-  if (value.includes(',') || value.includes('"') || value.includes('\n')) {
-    return `"${value.replace(/"/g, '""')}"`;
-  }
-  return value;
-}
+import { tableToCsv as rowsToCsv } from "@shared/tables/io";
+import type { TableColumn, TableRow } from "../types";
 
 /**
  * Конвертирует данные таблицы в строку CSV
@@ -24,13 +13,5 @@ function escapeCsvValue(value: string): string {
  * @returns Строка в формате CSV
  */
 export function tableToCsv(columns: TableColumn[], rows: TableRow[]): string {
-  const header = columns.map((col) => escapeCsvValue(col.name)).join(',');
-
-  const body = rows.map((row) =>
-    columns
-      .map((col) => escapeCsvValue(row.cells[col.id] ?? ''))
-      .join(',')
-  );
-
-  return [header, ...body].join('\n');
+  return rowsToCsv(columns, rows);
 }

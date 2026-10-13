@@ -157,10 +157,14 @@ export function useTablesState(projectId: number, selectedTokenId?: number | nul
   const updateCell = useCallback(
     (tableId: string, rowId: number, columnId: string, value: string) => {
       const row = serverRows.find((r) => r.id === rowId);
-      const newData = { ...(row?.data ?? {}), [columnId]: value };
+      const allowed = new Set(serverColumns.map((column) => String(column.id)));
+      const newData: Record<string, string> = {};
+      for (const [key, cell] of Object.entries({ ...(row?.data ?? {}), [columnId]: value })) {
+        if (allowed.has(key)) newData[key] = cell;
+      }
       updateRowMut.mutate({ tableId: Number(tableId), rowId, data: newData });
     },
-    [updateRowMut, serverRows],
+    [updateRowMut, serverRows, serverColumns],
   );
 
   /** Импортировать новую таблицу с колонками и данными */

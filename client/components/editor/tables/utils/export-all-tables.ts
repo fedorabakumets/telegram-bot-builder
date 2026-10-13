@@ -3,28 +3,9 @@
  * @module editor/tables/utils/export-all-tables
  */
 
+import { buildAllTablesExport, type ExportedTable } from '@shared/tables/io';
 import * as api from '../api/tables-api';
 import { downloadFile } from './download-file';
-
-/** Формат экспорта одной таблицы */
-interface ExportedTable {
-  /** Имя таблицы */
-  name: string;
-  /** Имена колонок по порядку */
-  columns: string[];
-  /** Строки данных (массив массивов значений) */
-  rows: string[][];
-}
-
-/** Формат файла экспорта всех таблиц */
-interface AllTablesExport {
-  /** Версия формата */
-  version: 1;
-  /** Дата экспорта */
-  exportedAt: string;
-  /** Массив таблиц */
-  tables: ExportedTable[];
-}
 
 /**
  * Экспортирует все таблицы проекта в один JSON-файл и скачивает его
@@ -52,11 +33,7 @@ export async function exportAllTables(projectId: number, projectName?: string): 
     }),
   );
 
-  const payload: AllTablesExport = {
-    version: 1,
-    exportedAt: new Date().toISOString(),
-    tables: exported,
-  };
+  const payload = buildAllTablesExport(exported, new Date().toISOString());
 
   const fileName = projectName
     ? `${projectName}_tables_export.json`

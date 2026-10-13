@@ -63,3 +63,7 @@ export * from './bot-token-update-db.ts';
 export * from './userbot-settings-db.ts';
 export * from './userbot-auth-db.ts';
 export type { UserbotResult } from './userbot-request-db.ts';
+export * from './bot-tables-read.ts';
+export * from './bot-tables-write.ts';
+export * from './bot-tables-batch.ts';
+export * from './mcp-register-table-tools.ts';

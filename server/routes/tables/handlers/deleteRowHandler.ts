@@ -4,7 +4,11 @@
  */
 
 import type { Request, Response } from "express";
-import { storage } from "../../../storages/storage";
+import { deleteRowInProject } from "../../../database/bot-tables/mutate-row";
+import { fail, positiveId, sqlFailure } from "../http-error";
+import { notifyTableChange } from "../notify-table-change";
+import { ownedTable } from "../owned-table";
+import { tablePool } from "../table-db";
 
 /**
  * Обрабатывает DELETE /api/projects/:id/tables/:tableId/rows/:rowId
@@ -13,21 +17,22 @@ import { storage } from "../../../storages/storage";
  */
 export async function deleteRowHandler(req: Request, res: Response): Promise<void> {
   try {
-    const rowId = parseInt(req.params.rowId, 10);
-    if (isNaN(rowId)) {
-      res.status(400).json({ message: "Некорректный ID строки" });
+    const owned = await ownedTable(req, res);
+    if (!owned) return;
+    const rowId = positiveId(req.params.rowId);
+    if (rowId === null) {
+      fail(res, 400, "Некорректный ID строки");
       return;
     }
-
-    const deleted = await storage.deleteBotTableRow(rowId);
-    if (!deleted) {
-      res.status(404).json({ message: "Строка не найдена" });
+    const deleted = await deleteRowInProject(tablePool, owned.projectId, owned.table.id, rowId);
+    if ("status" in deleted) {
+      fail(res, deleted.status, deleted.message);
       return;
     }
-
     res.json({ success: true });
+    await notifyTableChange(owned.projectId, owned.table.id, owned.table.name);
   } catch (error) {
-    console.error("[deleteRowHandler] Ошибка:", error);
-    res.status(500).json({ message: "Не удалось удалить строку" });
+    const parsed = sqlFailure(error);
+    fail(res, parsed.status, parsed.message);
   }
 }

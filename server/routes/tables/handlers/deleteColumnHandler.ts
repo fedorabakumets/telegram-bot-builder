@@ -4,7 +4,11 @@
  */
 
 import type { Request, Response } from "express";
-import { storage } from "../../../storages/storage";
+import { deleteColumnInProject } from "../../../database/bot-tables/mutate-column";
+import { fail, positiveId, sqlFailure } from "../http-error";
+import { notifyTableChange } from "../notify-table-change";
+import { ownedTable } from "../owned-table";
+import { tablePool } from "../table-db";
 
 /**
  * Обрабатывает DELETE /api/projects/:id/tables/:tableId/columns/:columnId
@@ -13,21 +17,22 @@ import { storage } from "../../../storages/storage";
  */
 export async function deleteColumnHandler(req: Request, res: Response): Promise<void> {
   try {
-    const columnId = parseInt(req.params.columnId, 10);
-    if (isNaN(columnId)) {
-      res.status(400).json({ message: "Некорректный ID колонки" });
+    const owned = await ownedTable(req, res);
+    if (!owned) return;
+    const columnId = positiveId(req.params.columnId);
+    if (columnId === null) {
+      fail(res, 400, "Некорректный ID колонки");
       return;
     }
-
-    const deleted = await storage.deleteBotTableColumn(columnId);
-    if (!deleted) {
-      res.status(404).json({ message: "Колонка не найдена" });
+    const deleted = await deleteColumnInProject(tablePool, owned.projectId, owned.table.id, columnId);
+    if ("status" in deleted) {
+      fail(res, deleted.status, deleted.message);
       return;
     }
-
     res.json({ success: true });
+    await notifyTableChange(owned.projectId, owned.table.id, owned.table.name);
   } catch (error) {
-    console.error("[deleteColumnHandler] Ошибка:", error);
-    res.status(500).json({ message: "Не удалось удалить колонку" });
+    const parsed = sqlFailure(error);
+    fail(res, parsed.status, parsed.message);
   }
 }
