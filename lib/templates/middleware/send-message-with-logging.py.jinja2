@@ -57,15 +57,9 @@ def _wrap_bot_send_message(bot_instance):
         )
         # Вызываем обработчики триггеров исходящих сообщений
         try:
-            _omt_handlers = globals().get('_outgoing_message_trigger_handlers', [])
-            if _omt_handlers:
-                _omt_user_id = _out_chat_id_int if _out_chat_id_int > 0 else 0
-                if _omt_user_id > 0:
-                    for _omt_handler in _omt_handlers:
-                        try:
-                            await _omt_handler(_omt_user_id, result.message_id if result else None, text, chat_id=_omt_user_id)
-                        except Exception as _omt_e:
-                            logging.warning(f"Ошибка в outgoing_message_trigger handler: {_omt_e}")
+            _emit_omt = globals().get('_emit_outgoing_message_trigger')
+            if _emit_omt is not None and result is not None:
+                await _emit_omt(result.message_id, text, chat_id, getattr(getattr(result, 'chat', None), 'type', ''))
         except Exception as _omt_outer_e:
             logging.warning(f"Ошибка при вызове outgoing_message_trigger handlers: {_omt_outer_e}")
         return result
@@ -83,15 +77,9 @@ def _wrap_bot_send_sticker(bot_instance):
         result = await original_send_sticker(chat_id, sticker, *args, **kwargs)
         # Вызываем обработчики триггеров исходящих сообщений
         try:
-            _omt_handlers = globals().get('_outgoing_message_trigger_handlers', [])
-            if _omt_handlers:
-                _omt_user_id = int(str(chat_id)) if str(chat_id).lstrip('-').isdigit() else 0
-                if _omt_user_id > 0:
-                    for _omt_handler in _omt_handlers:
-                        try:
-                            await _omt_handler(_omt_user_id, result.message_id if result else None, "[Стикер]", chat_id=_omt_user_id)
-                        except Exception as _omt_e:
-                            logging.warning(f"Ошибка в outgoing_message_trigger handler: {_omt_e}")
+            _emit_omt = globals().get('_emit_outgoing_message_trigger')
+            if _emit_omt is not None and result is not None:
+                await _emit_omt(result.message_id, "[Стикер]", chat_id, getattr(getattr(result, 'chat', None), 'type', ''))
         except Exception as _omt_outer_e:
             logging.warning(f"Ошибка при вызове outgoing_message_trigger handlers: {_omt_outer_e}")
         return result
@@ -108,15 +96,9 @@ def _wrap_bot_send_voice(bot_instance):
         result = await original_send_voice(chat_id, voice, *args, caption=caption, **kwargs)
         # Вызываем обработчики триггеров исходящих сообщений
         try:
-            _omt_handlers = globals().get('_outgoing_message_trigger_handlers', [])
-            if _omt_handlers:
-                _omt_user_id = int(str(chat_id)) if str(chat_id).lstrip('-').isdigit() else 0
-                if _omt_user_id > 0:
-                    for _omt_handler in _omt_handlers:
-                        try:
-                            await _omt_handler(_omt_user_id, result.message_id if result else None, caption or "[Голосовое]", chat_id=_omt_user_id)
-                        except Exception as _omt_e:
-                            logging.warning(f"Ошибка в outgoing_message_trigger handler: {_omt_e}")
+            _emit_omt = globals().get('_emit_outgoing_message_trigger')
+            if _emit_omt is not None and result is not None:
+                await _emit_omt(result.message_id, caption or "[Голосовое]", chat_id, getattr(getattr(result, 'chat', None), 'type', ''))
         except Exception as _omt_outer_e:
             logging.warning(f"Ошибка при вызове outgoing_message_trigger handlers: {_omt_outer_e}")
         return result
@@ -133,15 +115,9 @@ def _wrap_bot_send_animation(bot_instance):
         result = await original_send_animation(chat_id, animation, *args, caption=caption, **kwargs)
         # Вызываем обработчики триггеров исходящих сообщений
         try:
-            _omt_handlers = globals().get('_outgoing_message_trigger_handlers', [])
-            if _omt_handlers:
-                _omt_user_id = int(str(chat_id)) if str(chat_id).lstrip('-').isdigit() else 0
-                if _omt_user_id > 0:
-                    for _omt_handler in _omt_handlers:
-                        try:
-                            await _omt_handler(_omt_user_id, result.message_id if result else None, caption or "[Анимация]", chat_id=_omt_user_id)
-                        except Exception as _omt_e:
-                            logging.warning(f"Ошибка в outgoing_message_trigger handler: {_omt_e}")
+            _emit_omt = globals().get('_emit_outgoing_message_trigger')
+            if _emit_omt is not None and result is not None:
+                await _emit_omt(result.message_id, caption or "[Анимация]", chat_id, getattr(getattr(result, 'chat', None), 'type', ''))
         except Exception as _omt_outer_e:
             logging.warning(f"Ошибка при вызове outgoing_message_trigger handlers: {_omt_outer_e}")
         return result
@@ -159,16 +135,10 @@ def _wrap_bot_send_media_group(bot_instance):
         # Вызываем обработчики триггеров исходящих сообщений
         # result — список сообщений, берём message_id первого
         try:
-            _omt_handlers = globals().get('_outgoing_message_trigger_handlers', [])
-            if _omt_handlers:
-                _omt_user_id = int(str(chat_id)) if str(chat_id).lstrip('-').isdigit() else 0
-                if _omt_user_id > 0:
-                    _first_msg_id = result[0].message_id if result and len(result) > 0 else None
-                    for _omt_handler in _omt_handlers:
-                        try:
-                            await _omt_handler(_omt_user_id, _first_msg_id, "[Медиагруппа]", chat_id=_omt_user_id)
-                        except Exception as _omt_e:
-                            logging.warning(f"Ошибка в outgoing_message_trigger handler: {_omt_e}")
+            _first_msg = result[0] if result else None
+            _emit_omt = globals().get('_emit_outgoing_message_trigger')
+            if _emit_omt is not None and _first_msg is not None:
+                await _emit_omt(_first_msg.message_id, "[Медиагруппа]", chat_id, getattr(getattr(_first_msg, 'chat', None), 'type', ''))
         except Exception as _omt_outer_e:
             logging.warning(f"Ошибка при вызове outgoing_message_trigger handlers: {_omt_outer_e}")
         return result
@@ -231,15 +201,9 @@ def _wrap_bot_send_video(bot_instance):
             logging.warning(f"Ошибка логирования send_video: {e}")
         # Вызываем обработчики триггеров исходящих сообщений
         try:
-            _omt_handlers = globals().get('_outgoing_message_trigger_handlers', [])
-            if _omt_handlers:
-                _omt_user_id = int(str(chat_id)) if str(chat_id).lstrip('-').isdigit() else 0
-                if _omt_user_id > 0:
-                    for _omt_handler in _omt_handlers:
-                        try:
-                            await _omt_handler(_omt_user_id, result.message_id if result else None, caption or "[Видео]", chat_id=_omt_user_id)
-                        except Exception as _omt_e:
-                            logging.warning(f"Ошибка в outgoing_message_trigger handler: {_omt_e}")
+            _emit_omt = globals().get('_emit_outgoing_message_trigger')
+            if _emit_omt is not None and result is not None:
+                await _emit_omt(result.message_id, caption or "[Видео]", chat_id, getattr(getattr(result, 'chat', None), 'type', ''))
         except Exception as _omt_outer_e:
             logging.warning(f"Ошибка при вызове outgoing_message_trigger handlers: {_omt_outer_e}")
         return result
@@ -284,15 +248,9 @@ def _wrap_bot_send_audio(bot_instance):
             logging.warning(f"Ошибка логирования send_audio: {e}")
         # Вызываем обработчики триггеров исходящих сообщений
         try:
-            _omt_handlers = globals().get('_outgoing_message_trigger_handlers', [])
-            if _omt_handlers:
-                _omt_user_id = int(str(chat_id)) if str(chat_id).lstrip('-').isdigit() else 0
-                if _omt_user_id > 0:
-                    for _omt_handler in _omt_handlers:
-                        try:
-                            await _omt_handler(_omt_user_id, result.message_id if result else None, caption or "[Аудио]", chat_id=_omt_user_id)
-                        except Exception as _omt_e:
-                            logging.warning(f"Ошибка в outgoing_message_trigger handler: {_omt_e}")
+            _emit_omt = globals().get('_emit_outgoing_message_trigger')
+            if _emit_omt is not None and result is not None:
+                await _emit_omt(result.message_id, caption or "[Аудио]", chat_id, getattr(getattr(result, 'chat', None), 'type', ''))
         except Exception as _omt_outer_e:
             logging.warning(f"Ошибка при вызове outgoing_message_trigger handlers: {_omt_outer_e}")
         return result
@@ -335,15 +293,9 @@ def _wrap_bot_send_document(bot_instance):
             logging.warning(f"Ошибка логирования send_document: {e}")
         # Вызываем обработчики триггеров исходящих сообщений
         try:
-            _omt_handlers = globals().get('_outgoing_message_trigger_handlers', [])
-            if _omt_handlers:
-                _omt_user_id = int(str(chat_id)) if str(chat_id).lstrip('-').isdigit() else 0
-                if _omt_user_id > 0:
-                    for _omt_handler in _omt_handlers:
-                        try:
-                            await _omt_handler(_omt_user_id, result.message_id if result else None, caption or "[Документ]", chat_id=_omt_user_id)
-                        except Exception as _omt_e:
-                            logging.warning(f"Ошибка в outgoing_message_trigger handler: {_omt_e}")
+            _emit_omt = globals().get('_emit_outgoing_message_trigger')
+            if _emit_omt is not None and result is not None:
+                await _emit_omt(result.message_id, caption or "[Документ]", chat_id, getattr(getattr(result, 'chat', None), 'type', ''))
         except Exception as _omt_outer_e:
             logging.warning(f"Ошибка при вызове outgoing_message_trigger handlers: {_omt_outer_e}")
         return result

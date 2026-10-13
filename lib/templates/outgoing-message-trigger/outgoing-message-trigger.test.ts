@@ -44,7 +44,7 @@ describe('generateOutgoingMessageTriggers()', () => {
 
   it('вызывает handle_callback с правильным targetNodeId', () => {
     const r = generateOutgoingMessageTriggers(validParamsSingle);
-    expect(r).toContain('await handle_callback_fwd_to_admin(fake_cb)');
+    expect(r).toContain('await handle_callback_fwd_to_admin(fake_cb, state=None)');
   });
 
   it('содержит logging.info с user_id', () => {
@@ -175,9 +175,9 @@ describe('Специфика триггера исходящих', () => {
     expect(r).toContain('_is_fake = True');
   });
 
-  it('обработчик принимает user_id, message_id, message_text, chat_id', () => {
+  it('обработчик принимает user_id, message_id, message_text, chat_id и chat_type', () => {
     const r = generateOutgoingMessageTriggers(validParamsSingle);
-    expect(r).toContain('user_id: int, message_id, message_text: str, chat_id: int = 0');
+    expect(r).toContain('user_id: int, message_id, message_text: str, chat_id: int = 0, chat_type: str = \'\'');
   });
 
   /** Проверяет наличие FakeMessage с полем self.chat в сгенерированном коде */
@@ -197,6 +197,15 @@ describe('Специфика триггера исходящих', () => {
   it('обработчик принимает chat_id параметр', () => {
     const r = generateOutgoingMessageTriggers(validParamsSingle);
     expect(r).toContain('chat_id: int = 0');
+  });
+
+  /** Отрицательный id группы не подменяется id пользователя */
+  it('сохраняет отрицательный chat_id и тип чата на FakeMessage', () => {
+    const r = generateOutgoingMessageTriggers(validParamsSingle);
+    expect(r).toContain('chat_id if chat_id != 0 else user_id');
+    expect(r).toContain("'type': chat_type_val");
+    expect(r).toContain('if user_id > 0:');
+    expect(r).toContain('async def _emit_outgoing_message_trigger');
   });
 });
 

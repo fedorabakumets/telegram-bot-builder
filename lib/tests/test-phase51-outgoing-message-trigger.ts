@@ -8,6 +8,7 @@
  * Блок E: FakeMessage и chat_id (7 тестов)
  * Блок F: Медиа-сообщения и last_bot_message_id (4 теста)
  * Блок G: Стикеры, голосовые, анимации, медиагруппы (5 тестов)
+ * Блок H: Группы — отрицательный chat_id и тип чата (3 теста)
  */
 
 import fs from 'fs';
@@ -280,7 +281,7 @@ test('A04', 'обработчик содержит message_text', () => {
 test('A05', 'обработчик вызывает handle_callback_<targetId>', () => {
   const p = makeCleanProject([makeOutgoingMessageTriggerNode('omt1', 'msg_target'), makeMessageNode('msg_target')]);
   const code = gen(p, 'a05');
-  ok(code.includes('await handle_callback_msg_target(fake_cb)'), 'вызов handle_callback_msg_target должен быть в коде');
+  ok(code.includes('await handle_callback_msg_target(fake_cb, state=None)'), 'вызов handle_callback_msg_target должен быть в коде');
 });
 
 test('A06', 'обработчик содержит logging.info', () => {
@@ -680,6 +681,43 @@ test('G05', 'полный сценарий со всеми типами нод �
     { id: 'voice1', type: 'voice', position: { x: 0, y: 0 }, data: { voiceUrl: 'https://example.com/voice.ogg', buttons: [], keyboardType: 'none' } },
   ]);
   syntax(gen(p, 'g05'), 'g05');
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// БЛОК H: Группы — отрицательный chat_id и тип чата
+// ════════════════════════════════════════════════════════════════════════════
+
+console.log('── Блок H: Группы ────────────────────────────────────────────────');
+
+/** H01: Отрицательный id чата не заменяется id пользователя */
+test('H01', 'обработчик сохраняет отрицательный chat_id', () => {
+  const p = makeCleanProject([makeOutgoingMessageTriggerNode('omt1', 'msg1'), makeMessageNode('msg1')]);
+  const code = gen(p, 'h01');
+  ok(code.includes('chat_id if chat_id != 0 else user_id'), 'отрицательный chat_id должен сохраняться');
+  ok(code.includes('if user_id > 0:'), 'user_data пишется только для положительного user_id');
+  syntax(code, 'h01');
+});
+
+/** H02: У фейкового чата есть type для условия is_group */
+test('H02', 'FakeMessage.chat содержит type', () => {
+  const p = makeCleanProject([makeOutgoingMessageTriggerNode('omt1', 'msg1'), makeMessageNode('msg1')]);
+  const code = gen(p, 'h02');
+  ok(code.includes("'type': chat_type_val"), 'chat.type должен быть на FakeMessage');
+  ok(code.includes('chat_type: str = \'\''), 'сигнатура должна принимать chat_type');
+  syntax(code, 'h02');
+});
+
+/** H03: Обёртки отправки зовут хелпер и не отсекают группы порогом > 0 */
+test('H03', 'middleware вызывает _emit_outgoing_message_trigger без порога > 0', () => {
+  const p = makeCleanProject([makeOutgoingMessageTriggerNode('omt1', 'msg1'), makeMessageNode('msg1')]);
+  const code = generatePythonCode(p as any, {
+    botName: 'PhaseOMT_h03',
+    userDatabaseEnabled: true,
+  });
+  ok(code.includes('_emit_outgoing_message_trigger'), 'хелпер должен быть в коде');
+  ok(code.includes("globals().get('_emit_outgoing_message_trigger')"), 'обёртка должна звать хелпер');
+  ok(!code.includes('_omt_user_id > 0'), 'порог user_id > 0 не должен отсекать группы');
+  syntax(code, 'h03');
 });
 
 // ─── Итоги ───────────────────────────────────────────────────────────────────

@@ -7,27 +7,81 @@
     - targetNodeType: string  — тип целевого узла
 #}
 
+def _omt_parse_chat_id(chat_id):
+    """Числовой id чата, включая отрицательный id группы."""
+    try:
+        text = str(chat_id).strip()
+        if text.lstrip('-').isdigit() and text not in ('', '-'):
+            return int(text)
+    except (TypeError, ValueError):
+        pass
+    return 0
+
+
+def _omt_type_name(chat_type):
+    """Строковый тип чата Telegram: private, group, supergroup, channel."""
+    if chat_type is None or chat_type == '':
+        return ''
+    raw = getattr(chat_type, 'value', chat_type)
+    return str(raw) if raw is not None else ''
+
+
+def _omt_user_id(chat_id_int, from_user):
+    """Положительный id человека. Id группы в user_data не попадает."""
+    if from_user is not None and not getattr(from_user, 'is_bot', False):
+        try:
+            uid = int(getattr(from_user, 'id', 0) or 0)
+        except (TypeError, ValueError):
+            uid = 0
+        if uid > 0:
+            return uid
+    if chat_id_int > 0:
+        return chat_id_int
+    return 0
+
+
+async def _emit_outgoing_message_trigger(message_id, message_text, chat_id, chat_type='', from_user=None):
+    """Вызывает триггеры исходящего сообщения с раздельными id пользователя и чата."""
+    handlers = globals().get('_outgoing_message_trigger_handlers', [])
+    if not handlers or message_id is None:
+        return
+    chat_id_int = _omt_parse_chat_id(chat_id)
+    if chat_id_int == 0:
+        return
+    user_id = _omt_user_id(chat_id_int, from_user)
+    type_name = _omt_type_name(chat_type)
+    if not type_name and chat_id_int > 0:
+        type_name = 'private'
+    for _omt_handler in handlers:
+        try:
+            await _omt_handler(user_id, message_id, message_text or '', chat_id=chat_id_int, chat_type=type_name)
+        except Exception as _omt_e:
+            logging.warning(f"Ошибка в outgoing_message_trigger handler: {_omt_e}")
+
+
 # Обработчики триггеров исходящих сообщений
 {% for entry in outgoingMessageTriggerEntries -%}
 {%- set sanitized_node_id = entry.nodeId | safe_name -%}
 {%- set sanitized_target_id = entry.targetNodeId | safe_name -%}
 
-async def outgoing_message_trigger_{{ sanitized_node_id }}_handler(user_id: int, message_id, message_text: str, chat_id: int = 0):
-    """Срабатывает когда бот отправляет сообщение пользователю"""
+async def outgoing_message_trigger_{{ sanitized_node_id }}_handler(user_id: int, message_id, message_text: str, chat_id: int = 0, chat_type: str = ''):
+    """Срабатывает когда бот отправляет сообщение в чат"""
     try:
         logging.info(f"Исходящее сообщение для {user_id} — триггер узла {{ entry.nodeId }}")
-        # Сохраняем данные последнего исходящего сообщения
-        if user_id not in user_data:
-            user_data[user_id] = {}
-        user_data[user_id]["last_bot_message_id"] = message_id
-        user_data[user_id]["message_text"] = message_text or ""
-        # Используем chat_id для определения чата (для личных сообщений chat_id == user_id)
-        _effective_chat_id = chat_id if chat_id > 0 else user_id
+        # Переменные пишем только живому пользователю, не в общую корзину группы
+        if user_id > 0:
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]["last_bot_message_id"] = message_id
+            user_data[user_id]["message_text"] = message_text or ""
+        # Отрицательный id группы сохраняем. Ноль — запасной путь на id пользователя.
+        _effective_chat_id = chat_id if chat_id != 0 else user_id
+        _effective_chat_type = chat_type or ('private' if _effective_chat_id > 0 else '')
 
         class FakeMessage:
-            """Фейковый объект сообщения для forward_message"""
-            def __init__(self, chat_id_val, message_id_val):
-                self.chat = type('Chat', (), {'id': chat_id_val})()
+            """Фейковый объект сообщения для forward_message и delete_message"""
+            def __init__(self, chat_id_val, message_id_val, chat_type_val):
+                self.chat = type('Chat', (), {'id': chat_id_val, 'type': chat_type_val})()
                 self.message_id = message_id_val
                 self.message_thread_id = None
 
@@ -35,16 +89,17 @@ async def outgoing_message_trigger_{{ sanitized_node_id }}_handler(user_id: int,
                 pass
 
         class FakeCallbackQuery:
-            def __init__(self, user_id_val, chat_id_val, msg_id_val):
-                self.from_user = type('User', (), {'id': user_id_val, 'username': user_data.get(user_id_val, {}).get('username', ''), 'first_name': user_data.get(user_id_val, {}).get('first_name', ''), 'last_name': user_data.get(user_id_val, {}).get('last_name', ''), 'language_code': '', 'is_premium': False, 'is_bot': False})()
-                self.message = FakeMessage(chat_id_val, msg_id_val)
+            def __init__(self, user_id_val, chat_id_val, msg_id_val, chat_type_val):
+                _profile = user_data.get(user_id_val, {}) if user_id_val else {}
+                self.from_user = type('User', (), {'id': user_id_val, 'username': _profile.get('username', ''), 'first_name': _profile.get('first_name', ''), 'last_name': _profile.get('last_name', ''), 'language_code': '', 'is_premium': False, 'is_bot': False})()
+                self.message = FakeMessage(chat_id_val, msg_id_val, chat_type_val)
                 self.data = "{{ entry.targetNodeId }}"
                 self._is_fake = True
 
             async def answer(self, *args, **kwargs):
                 pass
 
-        fake_cb = FakeCallbackQuery(user_id, _effective_chat_id, message_id or 0)
+        fake_cb = FakeCallbackQuery(user_id, _effective_chat_id, message_id or 0, _effective_chat_type)
         await handle_callback_{{ sanitized_target_id }}(fake_cb, state=None)
     except Exception as e:
         logging.error(f"Ошибка в outgoing_message_trigger {{ entry.nodeId }}: {e}")

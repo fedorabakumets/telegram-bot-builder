@@ -75,6 +75,7 @@
 | `command_trigger` | Команда `/start`, `/help` и т.д. |
 | `text_trigger` | Текстовое сообщение (точное / содержит) |
 | `incoming_message_trigger` | Любое входящее сообщение (с фильтрами чата) |
+| `outgoing_message_trigger` | Бот отправил сообщение в личку, группу, супергруппу или канал |
 | `incoming_callback_trigger` | Callback от inline-кнопки |
 | `callback_trigger` | Конкретный `callback_data` |
 | `group_message_trigger` | Сообщение в группе. При `BOT_RUNTIME_ENABLED` и заданном `BOT_DATABASE_URL` поиск в `bot_users` фильтрует `project_id` и `token_id`; без флага — только `project_id` |
@@ -238,6 +239,18 @@
 | `autoTransitionTo` | ID целевого узла |
 
 Пример охраны группы: `incoming_message_trigger` (фильтр group + chat id) → `stop_processing` → дальнейшая логика.
+
+### outgoing_message_trigger — исходящее сообщение бота
+
+Срабатывает после отправки ботом. Поле одно: `autoTransitionTo` — следующий узел. Обёртки отправки есть только при включённой базе пользователей.
+
+Id чата группы отрицательный и в переменные пользователя не пишется. `{last_bot_message_id}` обновляется только для живого положительного id. Условие `is_group` видит тип чата этой отправки.
+
+Удалить сообщение бота в группе через 5 минут:
+
+`outgoing_message_trigger` → `condition` (`is_group`, иначе пустой конец) → `delay` (`seconds: "5"`, `unit: "minutes"`, `mode: "background"`) → `delete_message` (`messageIdSource: "current_message"`).
+
+Источник «текущее» здесь — сообщение, которое бот только что отправил. Медиагруппа представлена id первого сообщения.
 
 ### Поля member_trigger
 

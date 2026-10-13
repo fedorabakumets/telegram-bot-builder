@@ -2,7 +2,7 @@
 
 ## Описание
 
-Шаблон генерирует Python обработчики для узлов типа `outgoing_message_trigger`. Обработчики вызываются из middleware после каждой отправки сообщения ботом — включая текст, фото, видео, аудио и документы. Работают параллельно — не прерывают основной поток. Сохраняют `last_bot_message_id` и `message_text` в `user_data`.
+Шаблон генерирует Python обработчики для узлов типа `outgoing_message_trigger`. Обёртки отправки вызывают `_emit_outgoing_message_trigger` после текста, фото, видео, аудио, документов, стикеров, голосовых, анимаций и медиагрупп. Срабатывает в личке, группе, супергруппе и канале. Обёртки ставятся при включённой базе пользователей. `last_bot_message_id` и `message_text` пишутся в `user_data` только при положительном id человека.
 
 ## Параметры
 
@@ -36,38 +36,37 @@ const nodes: Node[] = [
 ## Пример выходного Python кода
 
 ```python
-async def outgoing_message_trigger_omt_1_handler(user_id: int, message_id, message_text: str, chat_id: int = 0):
-    """Срабатывает когда бот отправляет сообщение пользователю"""
+async def outgoing_message_trigger_omt_1_handler(user_id: int, message_id, message_text: str, chat_id: int = 0, chat_type: str = ''):
+    """Срабатывает когда бот отправляет сообщение в чат"""
     try:
         logging.info(f"Исходящее сообщение для {user_id} — триггер узла omt_1")
-        if user_id not in user_data:
-            user_data[user_id] = {}
-        user_data[user_id]["last_bot_message_id"] = message_id
-        user_data[user_id]["message_text"] = message_text or ""
-        _effective_chat_id = chat_id if chat_id else user_id
-        fake_msg = FakeMessage(_effective_chat_id, message_id)
-        # ... FakeCallbackQuery и вызов handle_callback_fwd_to_admin
+        if user_id > 0:
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]["last_bot_message_id"] = message_id
+            user_data[user_id]["message_text"] = message_text or ""
+        _effective_chat_id = chat_id if chat_id != 0 else user_id
+        _effective_chat_type = chat_type or ('private' if _effective_chat_id > 0 else '')
+        # FakeCallbackQuery с chat.id, chat.type и message_id этой отправки
     except Exception as e:
         logging.error(f"Ошибка в outgoing_message_trigger omt_1: {e}")
-
-_outgoing_message_trigger_handlers = [
-    outgoing_message_trigger_omt_1_handler,
-]
 ```
 
-## Связь исходящего сообщения с пользователем
+## Связь исходящего сообщения с чатом
 
-Обработчик принимает `chat_id` — ID чата куда было отправлено сообщение. Для личных сообщений `chat_id == user_id`. Создаётся `FakeMessage` с `chat.id = chat_id` и `message_id` — это позволяет `forward_message` знать из какого чата пересылать сообщение.
+`user_id` — положительный id человека. В личке это id чата. В группе при ответе на сообщение человека это отправитель. Иначе `0`, и `user_data` не трогается.
+
+`chat_id` сохраняется как есть, включая отрицательный id группы. `chat_type` — `private`, `group`, `supergroup` или `channel`. Знак id для типа не используется.
 
 ```python
 class FakeMessage:
-    def __init__(self, chat_id_val, message_id_val):
-        self.chat = type('Chat', (), {'id': chat_id_val})()
+    def __init__(self, chat_id_val, message_id_val, chat_type_val):
+        self.chat = type('Chat', (), {'id': chat_id_val, 'type': chat_type_val})()
         self.message_id = message_id_val
         self.message_thread_id = None
 ```
 
-Если `chat_id` не передан (0) — используется `user_id` как fallback.
+Если `chat_id` равен 0 — используется `user_id`. Медиагруппа передаёт id первого сообщения.
 
 ## Использование
 
