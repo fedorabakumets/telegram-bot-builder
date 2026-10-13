@@ -111,6 +111,9 @@ const SEND_NEW_NODE_TYPES = new Set([
   'animation', 'location', 'contact', 'forward_message',
 ]);
 
+/** Действия inline-кнопок, которые безопасно перенаправлять на edit_message */
+const REWRITABLE_BUTTON_ACTIONS = new Set(['goto', 'command', 'default']);
+
 /**
  * Вычисляет эффект кнопки.
  * @param action - Действие кнопки
@@ -206,6 +209,7 @@ export function findInboundReferences(project: Record<string, unknown>, nodeId: 
  */
 function isInlineButton(reference: NodeReference, sourceMap: Map<string, Node>): boolean {
   if (!reference.isButton) return false;
+  if (!REWRITABLE_BUTTON_ACTIONS.has(reference.buttonAction ?? 'goto')) return false;
   const source = sourceMap.get(reference.sourceId);
   const data = (source?.data ?? {}) as Record<string, any>;
   const conditionalMatch = reference.path.match(/^conditionalMessages\[(\d+)]/);
@@ -214,6 +218,36 @@ function isInlineButton(reference: NodeReference, sourceMap: Map<string, Node>):
     : undefined;
   const keyboardType = conditionalType ?? data.keyboardType ?? (source?.type === 'keyboard' ? 'inline' : 'none');
   return keyboardType === 'inline';
+}
+
+/**
+ * Объясняет, почему message-ноду нельзя безопасно заменить на edit_message.
+ * @param data - Данные message-ноды
+ * @returns Причина пропуска либо undefined
+ */
+function unsafeMessageReason(data: Record<string, any>): string | undefined {
+  if (data.keyboardType === 'reply') return 'reply_keyboard';
+  if (Array.isArray(data.buttons) && data.buttons.length && !data.keyboardNodeId) {
+    return 'inline_buttons_without_keyboard_node';
+  }
+  if (
+    data.imageUrl || data.videoUrl || data.audioUrl || data.documentUrl
+    || (Array.isArray(data.mediaItems) && data.mediaItems.length)
+    || (Array.isArray(data.attachedMedia) && data.attachedMedia.length)
+  ) return 'message_contains_media';
+  if (
+    data.collectUserInput || data.inputTargetNodeId || data.responseType === 'buttons'
+    || (Array.isArray(data.responseOptions) && data.responseOptions.length)
+  ) return 'message_collects_input';
+  if (data.enableConditionalMessages || (Array.isArray(data.conditionalMessages) && data.conditionalMessages.length)) {
+    return 'message_has_conditional_content';
+  }
+  if (
+    data.enableBroadcast || (data.broadcastTargetNode && data.broadcastTargetNode !== 'all')
+    || (Array.isArray(data.messageSendRecipients) && data.messageSendRecipients.length)
+    || data.messageSendTarget
+  ) return 'message_has_special_recipients';
+  return undefined;
 }
 
 /**
@@ -265,8 +299,11 @@ function redirectButtons(project: BotDataWithSheets, fromId: string, toId: strin
     const data = (node.data ?? {}) as Record<string, any>;
     if (Array.isArray(data.buttons) && data.keyboardType !== 'reply') {
       for (const button of data.buttons) {
-        if (button?.target !== fromId) continue;
-        button.target = toId;
+        const action = typeof button?.action === 'string' ? button.action : 'goto';
+        if (!REWRITABLE_BUTTON_ACTIONS.has(action)) continue;
+        const targetKey = button?.target === fromId ? 'target' : (button?.targetNodeId === fromId ? 'targetNodeId' : '');
+        if (!targetKey) continue;
+        button[targetKey] = toId;
         count++;
       }
     }
@@ -274,8 +311,11 @@ function redirectButtons(project: BotDataWithSheets, fromId: string, toId: strin
     for (const condition of data.conditionalMessages) {
       if (condition?.keyboardType === 'reply' || !Array.isArray(condition?.buttons)) continue;
       for (const button of condition.buttons) {
-        if (button?.target !== fromId) continue;
-        button.target = toId;
+        const action = typeof button?.action === 'string' ? button.action : 'goto';
+        if (!REWRITABLE_BUTTON_ACTIONS.has(action)) continue;
+        const targetKey = button?.target === fromId ? 'target' : (button?.targetNodeId === fromId ? 'targetNodeId' : '');
+        if (!targetKey) continue;
+        button[targetKey] = toId;
         count++;
       }
     }
@@ -321,12 +361,9 @@ export function rewriteButtonNavigation(
       const inlineButtons = incoming.filter((reference) => isInlineButton(reference, sourceMap));
       if (!inlineButtons.length) continue;
       const data = (node.data ?? {}) as Record<string, any>;
-      if (data.keyboardType === 'reply') {
-        skipped.push({ nodeId: node.id, reason: 'reply_keyboard' });
-        continue;
-      }
-      if (Array.isArray(data.buttons) && data.buttons.length && !data.keyboardNodeId) {
-        skipped.push({ nodeId: node.id, reason: 'inline_buttons_without_keyboard_node' });
+      const unsafeReason = unsafeMessageReason(data);
+      if (unsafeReason) {
+        skipped.push({ nodeId: node.id, reason: unsafeReason });
         continue;
       }
       const navigationIncoming = incoming.filter((reference) =>

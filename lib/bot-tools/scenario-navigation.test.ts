@@ -74,6 +74,20 @@ describe('анализ навигации сценария', () => {
     ]);
   });
 
+  it('находит легаси targetNodeId и дополнительные выходы', () => {
+    const project = makeProject();
+    const source = project.sheets[0].nodes[2];
+    (source.data.buttons as any[])[0] = {
+      id: 'legacy', text: 'Сайт', action: 'goto', targetNodeId: 'site',
+    };
+    (source.data as any).afterLoopTo = 'site';
+    const inbound = findInboundReferences(project as unknown as Record<string, unknown>, 'site');
+    expect(inbound.references.map((item) => item.path)).toEqual([
+      'afterLoopTo',
+      'buttons[0].targetNodeId',
+    ]);
+  });
+
   it('отличает отправку сообщения от внешнего действия', () => {
     const project = makeProject();
     (project.sheets[0].nodes[2].data.buttons as any[]).push({
@@ -107,5 +121,14 @@ describe('массовая правка навигации', () => {
     expect(nodes.find((node) => node.id === 'menu_button_edit')).toBeUndefined();
     expect(nodes.find((node) => node.id === 'site')?.type).toBe('message');
     expect((nodes.find((node) => node.id === 'site-kb')?.data.buttons as any[])[0].target).toBe('menu');
+  });
+
+  it('пропускает message-ноду с медиа или сбором ввода', () => {
+    const project = makeProject();
+    const site = project.sheets[0].nodes.find((node) => node.id === 'site')!;
+    site.data.imageUrl = 'https://example.com/image.jpg';
+    const result = rewriteButtonNavigation(project, 'edit_current');
+    expect(result.project.sheets[0].nodes.find((node) => node.id === 'site')?.type).toBe('message');
+    expect(result.plan.skipped).toContainEqual({ nodeId: 'site', reason: 'message_contains_media' });
   });
 });

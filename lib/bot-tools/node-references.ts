@@ -38,6 +38,7 @@ const REFERENCE_FIELDS = [
   'refundEmptyTarget', 'refundNotFoundTarget', 'refundAlreadyRefundedTarget',
   'continueButtonTarget', 'broadcastTargetNode', 'afterPaymentTo',
   'subscriptionEmptyTarget', 'subscriptionErrorTarget', 'balanceErrorTarget',
+  'afterLoopTo',
 ] as const;
 
 /** Массивы объектов с полем target */
@@ -72,7 +73,10 @@ export function collectReferencesFromNode(node: Node, sheetId: string, sheetName
   const base = { sourceId: node.id, sourceType: node.type, sourceSheetId: sheetId, sourceSheetName: sheetName };
   const result: NodeReference[] = [];
 
-  for (const field of REFERENCE_FIELDS) addReference(result, base, data[field], field);
+  for (const field of REFERENCE_FIELDS) {
+    if (field === 'broadcastTargetNode' && data[field] === 'all') continue;
+    addReference(result, base, data[field], field);
+  }
   for (const arrayName of TARGET_ARRAYS) {
     const items = data[arrayName];
     if (!Array.isArray(items)) continue;
@@ -80,11 +84,12 @@ export function collectReferencesFromNode(node: Node, sheetId: string, sheetName
   }
   if (Array.isArray(data.buttons)) {
     data.buttons.forEach((button: Record<string, unknown>, index: number) => {
-      if (typeof button?.target !== 'string' || !button.target.trim()) return;
+      const target = typeof button?.target === 'string' ? button.target : button?.targetNodeId;
+      if (typeof target !== 'string' || !target.trim()) return;
       result.push({
         ...base,
-        targetId: button.target,
-        path: `buttons[${index}].target`,
+        targetId: target,
+        path: `buttons[${index}].${button.target ? 'target' : 'targetNodeId'}`,
         isButton: true,
         buttonIndex: index,
         buttonText: typeof button.text === 'string' ? button.text : '',
@@ -98,11 +103,12 @@ export function collectReferencesFromNode(node: Node, sheetId: string, sheetName
       addReference(result, base, item?.nextNodeAfterInput, `conditionalMessages[${index}].nextNodeAfterInput`);
       if (!Array.isArray(item?.buttons)) return;
       item.buttons.forEach((button: Record<string, unknown>, buttonIndex: number) => {
-        if (typeof button?.target !== 'string' || !button.target.trim()) return;
+        const target = typeof button?.target === 'string' ? button.target : button?.targetNodeId;
+        if (typeof target !== 'string' || !target.trim()) return;
         result.push({
           ...base,
-          targetId: button.target,
-          path: `conditionalMessages[${index}].buttons[${buttonIndex}].target`,
+          targetId: target,
+          path: `conditionalMessages[${index}].buttons[${buttonIndex}].${button.target ? 'target' : 'targetNodeId'}`,
           isButton: true,
           buttonIndex,
           buttonText: typeof button.text === 'string' ? button.text : '',
