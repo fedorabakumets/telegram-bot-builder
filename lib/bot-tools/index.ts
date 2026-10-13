@@ -6,6 +6,9 @@
 export * from './types.ts';
 export * from './constants.ts';
 export * from './api-fetch.ts';
+/** Чтение уникальной активности пользователей через API. */
+export * from './active-users-analytics-db.ts';
+export * from './active-users-analytics-read.ts';
 /** Чтение сводки и графика аудитории через API приложения. */
 export * from './users-analytics-db.ts';
 export * from './users-analytics-types.ts';
