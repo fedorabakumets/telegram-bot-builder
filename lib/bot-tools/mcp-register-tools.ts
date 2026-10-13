@@ -16,6 +16,7 @@ import { registerActiveUsersTools } from './mcp-register-active-users-tools.ts';
 import { registerUsersAnalyticsTools } from './mcp-register-analytics-tools.ts';
 import { registerRangeAnalyticsTools } from './mcp-register-range-analytics-tools.ts';
 import { registerMessagesAnalyticsTools } from './mcp-register-message-analytics-tools.ts';
+import { registerTableChartTools } from './mcp-register-table-chart-tools.ts';
 import { registerUserbotTools } from './mcp-register-userbot-tools.ts';
 import {
   addNodeInDb,
@@ -1000,6 +1001,8 @@ export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOpt
   registerRangeAnalyticsTools(server);
   /** Подключает сводку и график активности сообщений для обоих транспортов. */
   registerMessagesAnalyticsTools(server);
+  /** Подключает график пользовательских таблиц для обоих транспортов. */
+  registerTableChartTools(server);
 
   server.registerTool(
     'db_bot_logs',

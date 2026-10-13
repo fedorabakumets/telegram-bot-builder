@@ -4,7 +4,9 @@
  */
 
 import type { Express } from "express";
+import { pool } from "../../database/db";
 import { requireProjectAccess } from "../../middleware/requireProjectAccess";
+import { setupTableChartRoutes } from "./chart/setup-table-chart-routes";
 import { getTablesHandler } from "./handlers/getTablesHandler";
 import { createTableHandler } from "./handlers/createTableHandler";
 import { deleteTableHandler } from "./handlers/deleteTableHandler";
@@ -41,6 +43,9 @@ export function setupTablesRoutes(
   app.post(`${base}/:tableId/columns`, requireDbReady, requireProjectAccess, createColumnHandler);
   app.delete(`${base}/:tableId/columns/:columnId`, requireDbReady, requireProjectAccess, deleteColumnHandler);
   app.put(`${base}/:tableId/columns/:columnId`, requireDbReady, requireProjectAccess, renameColumnHandler);
+
+  /** Подключает подсчёт графика после проверки доступа к проекту. */
+  setupTableChartRoutes(app, requireDbReady, requireProjectAccess, pool);
 
   // Строки
   app.get(`${base}/:tableId/rows`, requireDbReady, requireProjectAccess, getRowsHandler);

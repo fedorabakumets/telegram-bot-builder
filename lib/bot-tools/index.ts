@@ -23,6 +23,8 @@ export * from './users-analytics-db.ts';
 export * from './users-analytics-types.ts';
 /** Чтение активности сообщений через авторизованный API приложения. */
 export * from './messages-analytics-db.ts';
+/** График и рекомендация по пользовательской таблице. */
+export * from './table-chart-db.ts';
 export * from './messages-analytics-types.ts';
 export * from './mcp-request-context.ts';
 export * from './introspection.ts';
