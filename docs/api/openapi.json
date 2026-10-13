@@ -6403,6 +6403,25 @@
         }
       }
     },
+    "/api/projects/{id}/analytics/range": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/{id}/analytics/range",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено — настройка в /admin"
+          }
+        }
+      }
+    },
     "/api/projects/{id}/archive": {
       "post": {
         "tags": [
