@@ -8858,6 +8858,311 @@
         }
       }
     },
+    "/api/projects/{id}/tables/{tableId}/chart": {
+      "get": {
+        "tags": [
+          "project-tables"
+        ],
+        "summary": "График по таблице",
+        "description": "Группирует строки таблицы проекта. Не больше 50 групп. Чужая таблица и чужой столбец не раскрываются.",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "agentToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта bot_projects",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта bot_projects",
+            "example": "42",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID таблицы bot_tables",
+              "example": "1"
+            },
+            "required": true,
+            "description": "ID таблицы bot_tables",
+            "example": "1",
+            "name": "tableId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "example": "3"
+            },
+            "required": true,
+            "name": "xColumnId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "example": "4"
+            },
+            "required": true,
+            "name": "yColumnId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "count",
+                "sum",
+                "avg",
+                "min",
+                "max"
+              ],
+              "example": "count"
+            },
+            "required": false,
+            "name": "aggregation",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "example": "50"
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Точки графика",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TableChartResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Некорректные параметры или чужой столбец",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Столбец не принадлежит таблице"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет session cookie и Bearer PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                },
+                "example": {
+                  "message": "Нет доступа к проекту"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Таблица не найдена в проекте",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Таблица не найдена"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка подсчёта",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Не удалось построить график"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/tables/{tableId}/chart/recommendations": {
+      "get": {
+        "tags": [
+          "project-tables"
+        ],
+        "summary": "Рекомендация графика по таблице",
+        "description": "Предлагает столбцы, подсчёт и вид рисунка по сводке значений, не возвращая сами строки.",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "agentToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта bot_projects",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта bot_projects",
+            "example": "42",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID таблицы bot_tables",
+              "example": "1"
+            },
+            "required": true,
+            "description": "ID таблицы bot_tables",
+            "example": "1",
+            "name": "tableId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Рекомендация",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TableChartSuggestion"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет session cookie и Bearer PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                },
+                "example": {
+                  "message": "Нет доступа к проекту"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Таблица не найдена в проекте",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Таблица не найдена"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/projects/{id}/tables/{tableId}/columns": {
       "get": {
         "tags": [
@@ -34003,6 +34308,241 @@
         },
         "required": [
           "rows"
+        ]
+      },
+      "TableChartPoint": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "example": "Фото"
+          },
+          "value": {
+            "type": "number",
+            "example": 4
+          }
+        },
+        "required": [
+          "label",
+          "value"
+        ]
+      },
+      "TableChartResponse": {
+        "type": "object",
+        "properties": {
+          "project_id": {
+            "type": "number",
+            "example": 42
+          },
+          "table_id": {
+            "type": "number",
+            "example": 1
+          },
+          "table_name": {
+            "type": "string",
+            "example": "_content"
+          },
+          "x_column_id": {
+            "type": "number",
+            "example": 3
+          },
+          "x_column_name": {
+            "type": "string",
+            "example": "type"
+          },
+          "y_column_id": {
+            "type": "number",
+            "example": 4
+          },
+          "y_column_name": {
+            "type": "string",
+            "example": "value"
+          },
+          "aggregation": {
+            "type": "string",
+            "enum": [
+              "count",
+              "sum",
+              "avg",
+              "min",
+              "max"
+            ],
+            "example": "count"
+          },
+          "y_is_numeric": {
+            "type": "boolean",
+            "example": false
+          },
+          "row_count": {
+            "type": "number",
+            "example": 12
+          },
+          "group_count": {
+            "type": "number",
+            "example": 3
+          },
+          "limit": {
+            "type": "number",
+            "example": 50
+          },
+          "truncated": {
+            "type": "boolean",
+            "example": false
+          },
+          "points": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TableChartPoint"
+            }
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": []
+          }
+        },
+        "required": [
+          "project_id",
+          "table_id",
+          "table_name",
+          "x_column_id",
+          "x_column_name",
+          "y_column_id",
+          "y_column_name",
+          "aggregation",
+          "y_is_numeric",
+          "row_count",
+          "group_count",
+          "limit",
+          "truncated",
+          "points",
+          "warnings"
+        ]
+      },
+      "TableColumnProfile": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "example": 3
+          },
+          "name": {
+            "type": "string",
+            "example": "type"
+          },
+          "filled": {
+            "type": "number",
+            "example": 12
+          },
+          "distinctCount": {
+            "type": "number",
+            "example": 3
+          },
+          "avgLength": {
+            "type": "number",
+            "example": 5
+          },
+          "isNumeric": {
+            "type": "boolean",
+            "example": false
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "filled",
+          "distinctCount",
+          "avgLength",
+          "isNumeric"
+        ]
+      },
+      "TableChartSuggestion": {
+        "type": "object",
+        "properties": {
+          "project_id": {
+            "type": "number",
+            "example": 42
+          },
+          "table_id": {
+            "type": "number",
+            "example": 1
+          },
+          "table_name": {
+            "type": "string",
+            "example": "_content"
+          },
+          "row_count": {
+            "type": "number",
+            "example": 12
+          },
+          "x_column_id": {
+            "type": "number",
+            "nullable": true,
+            "example": 3
+          },
+          "x_column_name": {
+            "type": "string",
+            "nullable": true,
+            "example": "type"
+          },
+          "y_column_id": {
+            "type": "number",
+            "nullable": true,
+            "example": 4
+          },
+          "y_column_name": {
+            "type": "string",
+            "nullable": true,
+            "example": "value"
+          },
+          "aggregation": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "count",
+              "sum",
+              "avg",
+              "min",
+              "max"
+            ],
+            "example": "count"
+          },
+          "chart_type": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "bar",
+              "line",
+              "pie"
+            ],
+            "example": "pie"
+          },
+          "reason": {
+            "type": "string",
+            "example": "Для групп подходит «type»."
+          },
+          "columns": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TableColumnProfile"
+            }
+          }
+        },
+        "required": [
+          "project_id",
+          "table_id",
+          "table_name",
+          "row_count",
+          "x_column_id",
+          "x_column_name",
+          "y_column_id",
+          "y_column_name",
+          "aggregation",
+          "chart_type",
+          "reason",
+          "columns"
         ]
       },
       "UpdateBotTableRowBody": {
