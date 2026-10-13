@@ -8,6 +8,10 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { registerBotLogTools } from './mcp-register-log-tools.ts';
+import { registerPopularButtonsTools } from './mcp-register-popular-buttons-tools.ts';
+import { registerPremiumTools } from './mcp-register-premium-tools.ts';
+import { registerTrafficSourcesTools } from './mcp-register-traffic-sources-tools.ts';
+import { registerLanguagesTools } from './mcp-register-languages-tools.ts';
 import { registerActiveUsersTools } from './mcp-register-active-users-tools.ts';
 import { registerUsersAnalyticsTools } from './mcp-register-analytics-tools.ts';
 import { registerMessagesAnalyticsTools } from './mcp-register-message-analytics-tools.ts';
@@ -981,6 +985,13 @@ export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOpt
 
   /** Подключает ограниченные страницы и экспорт логов через защищённые API. */
   registerBotLogTools(server, enableFileTools);
+  /** Подключает рейтинг кнопок и снимок распределения Premium. */
+  registerPopularButtonsTools(server);
+  registerPremiumTools(server);
+  /** Подключает доли и динамику источников трафика. */
+  registerTrafficSourcesTools(server);
+  /** Подключает снимок распределения известных языков аудитории. */
+  registerLanguagesTools(server);
   /** Подключает уникальную активность пользователей для обоих транспортов. */
   registerActiveUsersTools(server);
   /** Подключает аналитику пользователей для stdio и удалённого HTTP. */
