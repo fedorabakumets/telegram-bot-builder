@@ -3,7 +3,7 @@
  * @module terminal/TerminalLogsToolbar
  */
 
-import { useRef } from 'react';
+import { useRef, type ReactNode } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +14,8 @@ import type { ExportFormat } from './terminalUtils';
 
 /** Пропсы Railway-style панели логов */
 export interface TerminalLogsToolbarProps {
+  /** Выбор периода для живого терминала */
+  periodControl?: ReactNode;
   /** Поисковый запрос */
   searchQuery: string;
   /** Смена запроса */
@@ -72,7 +74,7 @@ export function TerminalLogsToolbar(props: TerminalLogsToolbarProps) {
   };
 
   return (
-    <div className="flex h-10 items-center gap-2 px-4 border-b border-border bg-background shrink-0">
+    <div className="flex min-h-10 flex-wrap items-center gap-2 px-4 py-1 border-b border-border bg-background shrink-0">
       <div className="flex flex-1 min-w-0 items-center gap-1.5 rounded-md border border-border/70 bg-muted/20 px-2 h-8">
         <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
         <Input
@@ -100,6 +102,7 @@ export function TerminalLogsToolbar(props: TerminalLogsToolbarProps) {
         )}
       </div>
 
+      {props.periodControl}
       <div className="hidden sm:flex items-center gap-0.5 shrink-0">
         {FILTERS.map(({ label, value }) => (
           <Button

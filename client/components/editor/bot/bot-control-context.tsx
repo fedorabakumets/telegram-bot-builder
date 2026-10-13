@@ -41,12 +41,20 @@ interface BotControlContextValue {
   /** Мутация запуска бота */
   startBotMutation: {
     isPending: boolean;
+    /** Последняя операция завершилась ошибкой */
+    isError?: boolean;
+    /** Время начала последней операции */
+    submittedAt?: number;
     variables?: { tokenId: number; projectId: number };
     mutate: (vars: { tokenId: number; projectId: number }) => void;
   };
   /** Мутация остановки бота */
   stopBotMutation: {
     isPending: boolean;
+    /** Последняя операция завершилась ошибкой */
+    isError?: boolean;
+    /** Время начала последней операции */
+    submittedAt?: number;
     variables?: { tokenId: number; projectId: number };
     mutate: (vars: { tokenId: number; projectId: number }) => void;
   };
@@ -64,6 +72,8 @@ interface BotControlContextValue {
   /** Мутация перезапуска всех ботов проекта */
   restartAllBotsMutation: {
     isPending: boolean;
+    /** Проект последнего перезапуска */
+    variables?: number;
     mutate: (projectId: number) => void;
   };
   /** Мутация запуска всех офлайн-ботов проекта */

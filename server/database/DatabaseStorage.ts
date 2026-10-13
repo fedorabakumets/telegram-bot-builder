@@ -3,7 +3,7 @@
  */
 
 import { type BotGroup, botGroups, type BotInstance, botInstances, type BotMessage, type BotMessageMedia, botMessageMedia, botMessages, type BotProject, botProjects, type BotTemplate, botTemplates, type BotToken, botTokens, type BotUser, botUsers, type GroupMember, groupMembers, type MediaFile, mediaFiles, type TelegramUserDB, telegramUsers, botLogs, type BotLog, botLaunchHistory, type BotLaunchHistory, projectCollaborators, type ProjectCollaborator, userProjectArchives, broadcasts, broadcastResults, broadcastCampaigns, type Broadcast, type BroadcastResult, type BroadcastFilters, type BroadcastCampaign, botEnvVariables, type BotEnvVariable, botTables, botTableColumns, botTableRows, type BotTable, type BotTableColumn, type BotTableRow, workerProcesses, type WorkerProcess, projectVersions, type ProjectVersion, agentTokens, type AgentToken } from "@shared/schema";
-import { and, asc, desc, eq, ilike, inArray, isNull, notInArray, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, ilike, lt, inArray, isNull, notInArray, or, sql } from "drizzle-orm";
 import { IStorage } from "../storages/storage";
 import type { StorageBotGroupInput, StorageBotGroupUpdate, StorageBotInstanceInput, StorageBotInstanceUpdate, StorageBotLaunchHistoryInput, StorageBotLaunchHistoryUpdate, StorageBotLogInput, StorageBotMessageInput, StorageBotMessageMediaInput, StorageBotProjectInput, StorageBotProjectUpdate, StorageBotTemplateInput, StorageBotTemplateUpdate, StorageBotTokenInput, StorageBotTokenUpdate, StorageGroupMemberInput, StorageGroupMemberUpdate, StorageMediaFileInput, StorageMediaFileUpdate, StorageTelegramUserInput, StorageBroadcastInput, StorageBroadcastUpdate, StorageBroadcastResultInput, StorageBroadcastCampaignInput, StorageBroadcastCampaignUpdate, StorageBotEnvVariableInput, StorageBotEnvVariableUpdate, StorageBotTableInput, StorageBotTableColumnInput, StorageBotTableRowInput, StorageWorkerProcessInput } from "../storages/storageTypes";
 import { db } from "./db";
@@ -11,6 +11,7 @@ import { generateAgentToken, hashAgentToken } from "../utils/agent-token-crypto"
 import { incrementMessageActivityDaily } from "./incrementMessageActivityDaily";
 import { markUserActivityDaily } from "../routes/users/mark-user-activity-daily";
 import { resolveLaunchIdsForLogs, mergeLogsByTimestampAsc } from "../bots/selectLatestLaunchLogs";
+import { selectBotLogsInPeriod } from './selectBotLogsInPeriod';
 
 /**
  * Реализация хранилища данных с использованием базы данных
@@ -1483,6 +1484,20 @@ export class DatabaseStorage implements IStorage {
   }
 
   /**
+   * Получает страницу логов за период из всех запусков конкретного бота.
+   * @param projectId - Идентификатор проекта
+   * @param tokenId - Идентификатор токена
+   * @param from - Начало периода включительно
+   * @param to - Конец периода исключительно
+   * @param limit - Максимум строк
+   * @param beforeId - Курсор страницы
+   * @returns Сохранённые строки по времени
+   */
+  async getBotLogsInPeriod(projectId: number, tokenId: number, from: Date, to: Date, limit: number, beforeId?: number): Promise<BotLog[]> {
+    return selectBotLogsInPeriod(this.db, projectId, tokenId, from, to, limit, beforeId);
+  }
+
+  /**
    * Получить логи только последнего запуска бота
    * @param projectId - Идентификатор проекта
    * @param tokenId - Идентификатор токена
@@ -1492,10 +1507,10 @@ export class DatabaseStorage implements IStorage {
   async getLatestLaunchLogs(projectId: number, tokenId: number, limit = 500): Promise<BotLog[]> {
     // Последний launch из истории (не из bot_logs) — устойчивее к mis-routed строкам
     const [lastLaunch] = await this.db
-      .select({ id: botLaunchHistory.id, status: botLaunchHistory.status })
+      .select({ id: botLaunchHistory.id, status: botLaunchHistory.status, startedAt: botLaunchHistory.startedAt })
       .from(botLaunchHistory)
-      .where(eq(botLaunchHistory.tokenId, tokenId))
-      .orderBy(desc(botLaunchHistory.startedAt))
+      .where(and(eq(botLaunchHistory.projectId, projectId), eq(botLaunchHistory.tokenId, tokenId)))
+      .orderBy(desc(botLaunchHistory.startedAt), desc(botLaunchHistory.id))
       .limit(1);
 
     const launchIds = resolveLaunchIdsForLogs(
@@ -1512,6 +1527,8 @@ export class DatabaseStorage implements IStorage {
               eq(botLogs.projectId, projectId),
               eq(botLogs.tokenId, tokenId),
               sql`${botLogs.launchId} IS NULL`,
+              // Непривязанные строки допустимы только после начала актуального запуска.
+              lastLaunch ? (lastLaunch.startedAt ? gte(botLogs.timestamp, lastLaunch.startedAt) : sql`false`) : undefined,
             )
             : and(
               eq(botLogs.projectId, projectId),
@@ -1580,23 +1597,41 @@ export class DatabaseStorage implements IStorage {
    * Получить последние N запусков для токена
    * @param tokenId - ID токена
    * @param limit - Максимальное количество записей (по умолчанию 10)
+   * @param beforeId - Курсор для чтения более старых запусков
    * @returns Массив записей истории запусков
    */
-  async getLaunchHistory(tokenId: number, limit = 10): Promise<BotLaunchHistory[]> {
+  async getLaunchHistory(tokenId: number, limit = 10, beforeId?: number): Promise<BotLaunchHistory[]> {
     return await this.db
       .select()
       .from(botLaunchHistory)
-      .where(eq(botLaunchHistory.tokenId, tokenId))
-      .orderBy(desc(botLaunchHistory.startedAt))
+      .where(and(eq(botLaunchHistory.tokenId, tokenId), beforeId === undefined ? undefined : lt(botLaunchHistory.id, beforeId)))
+      .orderBy(desc(botLaunchHistory.id))
       .limit(limit);
+  }
+
+  /**
+   * Получает запись запуска для проверки существования и доступа к пустым логам.
+   * @param launchId - Идентификатор запуска
+   * @returns Запись запуска или undefined
+   */
+  async getLaunchHistoryById(launchId: number): Promise<BotLaunchHistory | undefined> {
+    const [launch] = await this.db.select().from(botLaunchHistory).where(eq(botLaunchHistory.id, launchId)).limit(1);
+    return launch;
   }
 
   /**
    * Получить логи конкретного запуска бота
    * @param launchId - ID записи в bot_launch_history
+   * @param page - Ограниченная страница; отсутствие сохраняет прежнее поведение
    * @returns Массив записей логов
    */
-  async getBotLogsByLaunch(launchId: number): Promise<BotLog[]> {
+  async getBotLogsByLaunch(launchId: number, page?: { limit: number; beforeId?: number }): Promise<BotLog[]> {
+    if (page) {
+      const logs = await this.db.select().from(botLogs)
+        .where(and(eq(botLogs.launchId, launchId), page.beforeId === undefined ? undefined : lt(botLogs.id, page.beforeId)))
+        .orderBy(desc(botLogs.id)).limit(page.limit);
+      return logs.reverse();
+    }
     return await this.db
       .select()
       .from(botLogs)

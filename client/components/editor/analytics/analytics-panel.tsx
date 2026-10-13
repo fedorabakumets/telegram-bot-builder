@@ -190,6 +190,8 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken, allP
               trend={growthTrend}
               subtitle={weeklyGrowth > 0 ? `+${weeklyGrowth} за неделю` : undefined}
               cumulative={growthMode === 'cumulative'}
+              /** Учитываем пользователей, пришедших до выбранного периода. */
+              cumulativeTotal={stats.totalUsers}
               chartGranularity={growthGranularity}
               chartHeight={160}
               chartType={growthChartType}

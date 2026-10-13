@@ -1,6 +1,6 @@
 /**
  * @fileoverview Создание токена бота через живой API (MCP)
- * @description Эквивалент модалки «Подключить бота»: POST /api/projects/:id/tokens.
+ * @description Получает профиль через tokens/parse, затем сохраняет через tokens, как модалка.
  * Ответ агенту без секрета token (сервер отдаёт полный token — здесь вырезаем).
  * @module lib/bot-tools/bot-token-create-db
  */
@@ -77,10 +77,32 @@ export async function addBotTokenInDb(
     };
   }
 
-  const name = (options?.name?.trim() || 'Основной токен');
+  /** Профиль получаем до создания, чтобы сбой Telegram не оставлял неполную запись. */
+  let profile: Record<string, unknown>;
+  try {
+    const parsed = await apiFetch(`/api/projects/${projectId}/tokens/parse`, {
+      apiBaseUrl: options?.apiBaseUrl,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: trimmed }),
+    });
+    if (!parsed.ok) {
+      return { error: `Не удалось получить профиль бота (HTTP ${parsed.status})` };
+    }
+    profile = await parsed.json();
+    if (!profile || typeof profile.botFirstName !== 'string' || !profile.botFirstName.trim()) {
+      return { error: 'Сервер не вернул имя бота при получении профиля' };
+    }
+  } catch {
+    return { error: 'Не удалось получить профиль бота. Проверьте доступность сервера и Telegram.' };
+  }
+  const name = options?.name?.trim() || `${profile.botFirstName}${profile.botUsername ? ` (@${profile.botUsername})` : ''}`;
   const body: Record<string, unknown> = {
+    ...profile,
     name,
     token: trimmed,
+    description: profile.botShortDescription,
+    isActive: 1,
     isDefault: options?.isDefault === true ? 1 : 0,
   };
 

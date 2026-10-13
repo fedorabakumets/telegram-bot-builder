@@ -1,6 +1,6 @@
 # projects
 
-Эндпоинтов: **18**
+Эндпоинтов: **19**
 
 ### `GET` /api/projects
 
@@ -484,6 +484,20 @@ curl -s -X POST http://localhost:5000/api/projects/42/admin-ids/remove \
   "adminIds": "123456789"
 }
 ```
+
+### `GET` /api/projects/{id}/analytics/range
+
+GET /api/projects/{id}/analytics/range
+
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Успешный ответ |
+| 401 | Требуется авторизация (сессия или Bearer PAT) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `POST` /api/projects/{id}/archive
 

@@ -7,7 +7,9 @@ import { useRef } from 'react';
 import { BotAvatar } from '../card/BotAvatar';
 import { IdBadge } from '@/components/editor/database/user-database/components/header/project-name-label';
 import { BotServiceNodeFooter } from './BotServiceNodeFooter';
-import { resolveBotCanvasStatus } from './bot-canvas-status';
+import { useBotVisualStatus } from './use-bot-visual-status';
+import { BotStatusMotion } from './BotStatusMotion';
+import { getBotProfileLabels } from './bot-profile-labels';
 import type { BotServiceFailure } from './bot-service-failure';
 import type { BotToken } from '@shared/schema';
 import type { NodePos } from './use-bot-node-layout';
@@ -50,8 +52,9 @@ export function BotServiceNode({
   scale,
   onMove,
 }: BotServiceNodeProps) {
-  const title = token.botFirstName || token.name || `Бот ${token.id}`;
-  const username = token.botUsername ? `@${token.botUsername}` : 'Telegram Bot';
+  const profile = getBotProfileLabels(token);
+  const title = profile.title;
+  const username = profile.username ? `@${profile.username}` : 'Telegram Bot';
   const left = position?.left ?? 0;
   const top = position?.top ?? 0;
   const drag = useRef<{
@@ -61,13 +64,8 @@ export function BotServiceNode({
     top: number;
     moved: boolean;
   } | null>(null);
-  const hasFailure = !isRunning && !!failure;
-  const canvasStatus = resolveBotCanvasStatus({
-    isActive: token.isActive,
-    isRunning,
-    hasFailure,
-  });
-  const alertBorder = canvasStatus === 'invalid' || canvasStatus === 'failed';
+  const canvasStatus = useBotVisualStatus(token.id, projectId, token.isActive, isRunning);
+  const alertBorder = ['invalid', 'failed', 'error'].includes(canvasStatus);
 
   return (
     <button
@@ -125,6 +123,7 @@ export function BotServiceNode({
       }}
     >
       <div className="flex items-center gap-3 px-3 pt-3 pb-2.5 pointer-events-none">
+        <BotStatusMotion status={canvasStatus}>
         <BotAvatar
           tokenId={token.id}
           projectId={projectId}
@@ -134,6 +133,7 @@ export function BotServiceNode({
           variant="service"
           className="shadow-sm"
         />
+        </BotStatusMotion>
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 items-center gap-1.5">
             <div className="text-sm font-semibold truncate leading-tight">{title}</div>
@@ -142,7 +142,7 @@ export function BotServiceNode({
           <div className="text-[11px] text-muted-foreground truncate mt-0.5">{username}</div>
         </div>
       </div>
-      <BotServiceNodeFooter isRunning={isRunning} failure={failure} isActive={token.isActive} />
+      <BotServiceNodeFooter isRunning={isRunning} failure={failure} isActive={token.isActive} visualStatus={canvasStatus} />
     </button>
   );
 }

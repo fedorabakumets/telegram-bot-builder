@@ -29,9 +29,10 @@ interface UseTerminalLinesResult {
 /**
  * Хук для управления строками терминала
  * @param logKey - Ключ для доступа к логам в контексте
+ * @param autoScroll - Принудительно прокручивать живой поток
  * @returns Объект со строками, ссылкой на контейнер и no-op setLines
  */
-export function useTerminalLines(logKey: string | null): UseTerminalLinesResult {
+export function useTerminalLines(logKey: string | null, autoScroll = true): UseTerminalLinesResult {
   const { getLogs } = useBotLogs();
   const outputContainerRef = useRef<HTMLDivElement>(null);
 
@@ -40,11 +41,12 @@ export function useTerminalLines(logKey: string | null): UseTerminalLinesResult 
 
   // Автопрокрутка к последней строке при изменении логов
   useEffect(() => {
+    if (!autoScroll) return;
     if (outputContainerRef.current) {
       outputContainerRef.current.scrollTop =
         outputContainerRef.current.scrollHeight;
     }
-  }, [lines]);
+  }, [lines, autoScroll]);
 
   /**
    * No-op: управление строками осуществляется через контекст

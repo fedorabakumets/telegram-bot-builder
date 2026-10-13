@@ -141,6 +141,8 @@ export function StatsDashboard(props: StatsDashboardProps): React.JSX.Element {
           trend={growthTrend}
           subtitle={weeklyGrowth > 0 ? `+${weeklyGrowth} за неделю` : undefined}
           cumulative={growthMode === 'cumulative'}
+          /** Учитываем аудиторию до начала выбранного периода. */
+          cumulativeTotal={stats.totalUsers}
           chartGranularity={growthGranularity}
           chartType={growthChartType}
           stackHeader

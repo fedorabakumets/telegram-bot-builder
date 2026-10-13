@@ -93,6 +93,7 @@ import {
 } from "./messages/queryActivityFromDaily";
 import { queryActivityFromDailyPeriod } from "./messages/queryActivityFromDailyPeriod";
 import { handleUserActivity } from "./users/handle-user-activity";
+import { setupAnalyticsRangeRoutes } from './analytics/setup-range-routes';
 import { updateMessagesRetentionHandler } from "./userProjectsTokens/handlers/tokens/updateMessagesRetentionHandler";
 import { getFirstProjectTokenHandler } from "./projectRoutes/handlers/getFirstProjectTokenHandler";
 
@@ -468,6 +469,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // Deny-by-default: все /api закрыты, кроме публичного allowlist.
   // Подключается ПОСЛЕ identifyUser/identifyAgent — личность уже установлена.
   app.use("/api", requireApiAuth);
+  /** Подключает точные временные диапазоны после общей авторизации. */
+  setupAnalyticsRangeRoutes(app, dbPool, requireProjectAccess);
 
   // Отключаем HTTP-кеширование для API — ответы зависят от сессии.
   // Успешные аватарки/telegram-file перезаписывают заголовки в setPrivateMediaCacheHeaders
@@ -2456,10 +2459,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       `, [projectId, tokenId]);
 
       const stats = result.rows[0];
-      // Convert strings to numbers
+      /** Сохраняем дробную часть среднего при преобразовании числовых значений PostgreSQL. */
       Object.keys(stats).forEach(key => {
         if (typeof stats[key] === 'string' && !isNaN(stats[key] as any)) {
-          stats[key] = parseInt(stats[key] as any);
+          stats[key] = Number(stats[key]);
         }
       });
 
@@ -2576,18 +2579,27 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       // Режим гранулярности — новый параметр
       if (granularity) {
         const cfg = getChartSeriesGranularity(granularity);
+        /** Пятиминутные слоты округляем одинаково для регистраций и временной шкалы. */
+        const slotExpression = granularity === '5m'
+          ? "DATE_TRUNC('hour', registered_at) + INTERVAL '5 min' * FLOOR(EXTRACT(MINUTE FROM registered_at) / 5)"
+          : `DATE_TRUNC('${cfg.truncate}', registered_at)`;
+        /** Начало и конец пятиминутной шкалы совпадают со шкалой источников. */
+        const seriesFrom = granularity === '5m' ? 'hour' : cfg.truncate;
+        const seriesTo = granularity === '5m'
+          ? "DATE_TRUNC('hour', NOW()) + INTERVAL '55 minutes'"
+          : `DATE_TRUNC('${cfg.truncate}', NOW())`;
 
         const queryText = `
           WITH series AS (
             SELECT generate_series(
-              DATE_TRUNC('${cfg.truncate}', NOW() - INTERVAL '${cfg.window}'),
-              DATE_TRUNC('${cfg.truncate}', NOW()),
+              DATE_TRUNC('${seriesFrom}', NOW() - INTERVAL '${cfg.window}'),
+              ${seriesTo},
               INTERVAL '${cfg.step}'
             ) AS slot
           ),
           users AS (
             SELECT
-              DATE_TRUNC('${cfg.truncate}', registered_at) AS slot,
+              ${slotExpression} AS slot,
               COUNT(*) AS cnt
             FROM bot_users
             WHERE project_id = $1
@@ -3003,7 +3015,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         let queryText: string;
 
         if (split) {
-          // Режим split: группируем по слоту И message_type, затем pivot через FILTER
+          /** Входящие — user, исходящие — остальные типы, как в дневных агрегатах. */
           if (granularity === "5m") {
             queryText = `
               WITH series AS (
@@ -3017,7 +3029,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
                 SELECT
                   DATE_TRUNC('hour', created_at) + INTERVAL '5 min' * FLOOR(EXTRACT(MINUTE FROM created_at) / 5) AS slot,
                   COUNT(*) FILTER (WHERE message_type = 'user') AS incoming,
-                  COUNT(*) FILTER (WHERE message_type = 'bot')  AS outgoing
+                  COUNT(*) FILTER (WHERE message_type <> 'user') AS outgoing
                 FROM bot_messages
                 WHERE project_id = $1
                   AND ($2::integer IS NULL OR token_id = $2)
@@ -3044,7 +3056,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
                 SELECT
                   DATE_TRUNC('${cfg.truncate}', created_at) AS slot,
                   COUNT(*) FILTER (WHERE message_type = 'user') AS incoming,
-                  COUNT(*) FILTER (WHERE message_type = 'bot')  AS outgoing
+                  COUNT(*) FILTER (WHERE message_type <> 'user') AS outgoing
                 FROM bot_messages
                 WHERE project_id = $1
                   AND ($2::integer IS NULL OR token_id = $2)

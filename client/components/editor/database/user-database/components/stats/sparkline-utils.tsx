@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import { calculateCumulativeGrowth } from '@shared/analytics/users-growth';
 import { GrowthPoint } from '../../hooks/queries/use-growth';
 
 /**
@@ -76,11 +77,11 @@ interface CustomTooltipProps {
 /**
  * Преобразует массив точек в накопительный (каждая точка = сумма всех предыдущих)
  * @param points - Исходный массив точек
+ * @param total - Общее число с учётом значений до начала периода
  * @returns Массив с накопительными значениями
  */
-export function toCumulative(points: GrowthPoint[]): GrowthPoint[] {
-  let sum = 0;
-  return points.map(p => ({ date: p.date, count: (sum += p.count) }));
+export function toCumulative(points: GrowthPoint[], total?: number): GrowthPoint[] {
+  return calculateCumulativeGrowth(points, total);
 }
 
 /**

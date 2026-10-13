@@ -10,6 +10,7 @@ import { computeLiveBotStatus } from '../compute-live-bot-status';
 import { mapProjectBotStatusItems } from '../map-project-bot-status-items';
 import { resolveStoppedErrorMessage } from '../../../bots/resolveStoppedErrorMessage';
 import { isTokenPendingRestore } from '../../../bots/restoreState';
+import { isBotStarting } from '../../../bots/botStartState';
 
 /**
  * Запрещает кэш ответа со статусами
@@ -50,7 +51,7 @@ export async function handleBotProjectStatuses(req: Request, res: Response): Pro
       const live = computeLiveBotStatus(projectId, token.id, instance);
       liveByTokenId.set(token.id, live);
       if (!instance) continue;
-      if (instance.status !== live) {
+      if (instance.status !== live && !isBotStarting(token.id)) {
         await storage.updateBotInstance(instance.id, {
           status: live,
           errorMessage: resolveStoppedErrorMessage(instance.errorMessage, live),

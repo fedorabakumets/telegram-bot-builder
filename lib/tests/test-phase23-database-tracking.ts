@@ -15,7 +15,8 @@
  */
 
 import fs from 'fs';
-import { execSync } from 'child_process';
+import { fileURLToPath } from 'url';
+import { execFileSync, execSync } from 'child_process';
 import { generateDatabase } from '../templates/database/database.renderer.ts';
 import { generateDatabaseVariablesCode } from '../templates/database/database-variables.renderer.ts';
 import { generateBroadcastClient } from '../templates/broadcast-client/broadcast-client.renderer.ts';
@@ -191,6 +192,16 @@ test('B06', 'group_activity пишется только без роли', () => 
   const on = generateGroupHandlers(groups, true);
   ok(off.includes('INSERT INTO group_activity'), 'без роли запись в шаблоне остаётся');
   ok(!on.includes('group_activity'), 'с ролью запись не генерируется');
+});
+
+/** Проверяет запись и восстановление на исполняемых сгенерированных функциях Python. */
+test('C01', 'атомарная запись, повторы временных сбоев и безопасные логи', () => {
+  const harness = new URL('./database-write-resilience.py', import.meta.url);
+  const output = execFileSync('python', ['-X', 'utf8', fileURLToPath(harness)], {
+    input: dbCode,
+    encoding: 'utf8',
+  });
+  ok(output.includes('пройдены'), 'исполняемые проверки должны завершиться успешно');
 });
 
 // ─── Итоги ───────────────────────────────────────────────────────────────────

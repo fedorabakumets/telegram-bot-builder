@@ -1,6 +1,6 @@
 # project-tables
 
-Эндпоинтов: **13**
+Эндпоинтов: **15**
 
 ### `GET` /api/projects/{id}/tables
 
@@ -206,6 +206,64 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tables/1 -b cookies.txt \
   "createdAt": "2026-08-01T10:00:00.000Z"
 }
 ```
+
+### `GET` /api/projects/{id}/tables/{tableId}/chart
+
+График по таблице
+
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+
+Группирует строки таблицы проекта. Не больше 50 групп. Чужая таблица и чужой столбец не раскрываются.
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `id` | path | да | ID проекта bot_projects | `"42"` |
+| `tableId` | path | да | ID таблицы bot_tables | `"1"` |
+| `xColumnId` | query | да | — | `"3"` |
+| `yColumnId` | query | да | — | `"4"` |
+| `aggregation` | query | нет | — | `"count"` |
+| `limit` | query | нет | — | `"50"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Точки графика |
+| 400 | Некорректные параметры или чужой столбец |
+| 401 | Нет session cookie и Bearer PAT |
+| 403 | Нет доступа к проекту |
+| 404 | Таблица не найдена в проекте |
+| 500 | Ошибка подсчёта |
+
+### `GET` /api/projects/{id}/tables/{tableId}/chart/recommendations
+
+Рекомендация графика по таблице
+
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+
+Предлагает столбцы, подсчёт и вид рисунка по сводке значений, не возвращая сами строки.
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `id` | path | да | ID проекта bot_projects | `"42"` |
+| `tableId` | path | да | ID таблицы bot_tables | `"1"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Рекомендация |
+| 401 | Нет session cookie и Bearer PAT |
+| 403 | Нет доступа к проекту |
+| 404 | Таблица не найдена в проекте |
 
 ### `GET` /api/projects/{id}/tables/{tableId}/columns
 

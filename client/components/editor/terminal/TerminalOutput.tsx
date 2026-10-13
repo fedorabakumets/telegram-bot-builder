@@ -21,6 +21,10 @@ interface TerminalLine {
 
 /** Пропсы компонента вывода терминала */
 interface TerminalOutputProps {
+  /** Показывать дату рядом со временем при просмотре нескольких дней */
+  showDate?: boolean;
+  /** Подпись пустой таблицы или состояния загрузки */
+  emptyMessage?: string;
   /** Массив строк для отображения */
   lines: TerminalLine[];
   /** Ссылка на контейнер прокрутки */
@@ -60,6 +64,8 @@ function checkIsAtBottom(el: HTMLDivElement): boolean {
  * @returns JSX элемент
  */
 export function TerminalOutput({
+  showDate,
+  emptyMessage,
   lines,
   containerRef,
   scale,
@@ -121,11 +127,12 @@ export function TerminalOutput({
       >
         {lines.length === 0 ? (
           <div className={`flex items-center justify-center h-full italic text-sm ${placeholderTextClass}`}>
-            Нет вывода...
+            {emptyMessage ?? 'Нет вывода...'}
           </div>
         ) : (
           lines.map((line, i) => (
             <TerminalLogRow
+              showDate={showDate}
               key={line.id}
               line={line}
               even={i % 2 === 1}
