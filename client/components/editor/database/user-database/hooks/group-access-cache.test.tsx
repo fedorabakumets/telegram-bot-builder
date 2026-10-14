@@ -65,6 +65,6 @@ it('показывает блокировку пользователя в кар
   }
   render(<><PrivateSync /><DialogListItem user={user} projectId={9} tokenId={5}
     isSelected onClick={vi.fn()} /><DialogHeaderIdentity user={user} projectId={9} tokenId={5} /></>, { wrapper: Wrapper });
-  await waitFor(() => expect(screen.getAllByText('Бот заблокирован')).toHaveLength(2));
+  await waitFor(() => expect(screen.getAllByText('Пользователь заблокировал бота')).toHaveLength(2));
   expect(screen.getAllByRole('button', { name: 'Проверить доступ' })).toHaveLength(1);
 });

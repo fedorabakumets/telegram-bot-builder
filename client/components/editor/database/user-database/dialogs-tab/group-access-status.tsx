@@ -36,7 +36,7 @@ export function GroupAccessStatus({ status, onCheck, chatType }: GroupAccessStat
           <Tooltip>
             <TooltipTrigger asChild>
               <span tabIndex={0} className="rounded bg-amber-500/15 px-1.5 py-0.5 text-amber-700 dark:text-amber-300">
-                {kicked ? (privateChat ? 'Бот заблокирован' : 'Бот исключён') : 'Ошибка проверки'}
+                {kicked ? (privateChat ? 'Пользователь заблокировал бота' : 'Бот исключён') : 'Ошибка проверки'}
               </span>
             </TooltipTrigger>
             <TooltipContent className="max-w-64">{explanation}</TooltipContent>
