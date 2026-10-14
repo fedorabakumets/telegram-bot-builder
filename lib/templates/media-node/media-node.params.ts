@@ -50,4 +50,14 @@ export interface MediaNodeTemplateParams {
    * Используется если thumbnailFileIds не содержит file_id для данного видео.
    */
   thumbnailUrls?: Record<string, string>;
+  /**
+   * URL видео, которые нужно отправить как GIF (sendAnimation).
+   * Файл .gif и так всегда анимация, в список его класть не нужно.
+   */
+  sendAsGifUrls?: string[];
+  /**
+   * Подпись только для анимации.
+   * У блока «Медиафайл» своего текста нет: поле живёт для переноса старого узла animation.
+   */
+  mediaCaption?: string;
 }

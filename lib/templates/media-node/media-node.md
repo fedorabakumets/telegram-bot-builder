@@ -32,8 +32,9 @@
 
 | Расширения                        | Метод отправки   | InputMedia класс   |
 |-----------------------------------|------------------|--------------------|
-| `.jpg`, `.jpeg`, `.png`, `.gif`, `.webp` | `answer_photo`   | `InputMediaPhoto`  |
-| `.mp4`, `.avi`, `.mov`            | `answer_video`   | `InputMediaVideo`  |
+| `.gif` и видео из `sendAsGifUrls` | `answer_animation` / `send_animation` | `InputMediaAnimation` |
+| `.jpg`, `.jpeg`, `.png`, `.webp` | `answer_photo`   | `InputMediaPhoto`  |
+| `.mp4`, `.avi`, `.mov`, `.webm`, `.mkv`, `.m4v` | `answer_video`   | `InputMediaVideo`  |
 | `.mp3`, `.wav`, `.ogg`            | `answer_audio`   | `InputMediaAudio`  |
 | остальные                         | `answer_document`| `InputMediaDocument`|
 | `{переменная}` с `type: "file"` | `answer_photo` / `answer_audio` / `answer_video` / `answer_document` через `BufferedInputFile` (выбор по `mimeType`) | — |

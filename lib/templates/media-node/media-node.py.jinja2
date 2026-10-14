@@ -10,27 +10,40 @@
   @param {boolean}  enableAutoTransition    - включить автопереход
   @param {string}   autoTransitionTo        - ID целевого узла автоперехода
   @param {array}    messageSendRecipients   - список получателей (пустой = отправка пользователю)
+  @param {array}    sendAsGifUrls           - URL видео, которые слать как GIF
+  @param {string}   mediaCaption            - подпись только для анимации (старый узел animation)
 #}
 
-{#- Макрос: определяет тип медиа по расширению URL -#}
-{%- macro get_media_type(url) -%}
+{#- Макрос: тип по расширению. .gif и отмеченные видео — animation, не photo. -#}
+{%- macro get_media_type(url, gif_urls) -%}
 {%- set u = url | lower -%}
-{%- if '.jpg' in u or '.jpeg' in u or '.png' in u or '.gif' in u or '.webp' in u -%}photo
-{%- elif '.mp4' in u or '.avi' in u or '.mov' in u -%}video
+{%- if '.gif' in u or (gif_urls and url in gif_urls) -%}animation
+{%- elif '.jpg' in u or '.jpeg' in u or '.png' in u or '.webp' in u -%}photo
+{%- elif '.mp4' in u or '.avi' in u or '.mov' in u or '.webm' in u or '.mkv' in u or '.m4v' in u -%}video
 {%- elif '.mp3' in u or '.wav' in u or '.ogg' in u -%}audio
 {%- else -%}document
 {%- endif -%}
 {%- endmacro -%}
 
-{#- Макрос: определяет класс InputMedia по расширению URL -#}
-{%- macro get_input_media_class(url) -%}
+{#- Макрос: класс InputMedia. GIF — InputMediaAnimation. -#}
+{%- macro get_input_media_class(url, gif_urls) -%}
 {%- set u = url | lower -%}
-{%- if '.jpg' in u or '.jpeg' in u or '.png' in u or '.gif' in u or '.webp' in u -%}InputMediaPhoto
-{%- elif '.mp4' in u or '.avi' in u or '.mov' in u -%}InputMediaVideo
+{%- if '.gif' in u or (gif_urls and url in gif_urls) -%}InputMediaAnimation
+{%- elif '.jpg' in u or '.jpeg' in u or '.png' in u or '.webp' in u -%}InputMediaPhoto
+{%- elif '.mp4' in u or '.avi' in u or '.mov' in u or '.webm' in u or '.mkv' in u or '.m4v' in u -%}InputMediaVideo
 {%- elif '.mp3' in u or '.wav' in u or '.ogg' in u -%}InputMediaAudio
 {%- else -%}InputMediaDocument
 {%- endif -%}
 {%- endmacro -%}
+
+{#- Подпись только у одиночной анимации (перенос старого узла animation). -#}
+{%- set _gif_urls = sendAsGifUrls or [] %}
+{%- set _single_url = attachedMedia[0] if attachedMedia and attachedMedia|length == 1 else '' %}
+{%- set _single_type = get_media_type(_single_url, _gif_urls) | trim if _single_url and '{' not in _single_url else '' %}
+{%- set _cap_arg = '' %}
+{%- if mediaCaption and _single_type == 'animation' %}
+{%- set _cap_arg = ', caption=_anim_caption' %}
+{%- endif %}
 
 {#- Вычисляем hasUserRecipient: если все получатели chat_id — пользователю не отправляем -#}
 {%- set hasUserRecipient = true %}
@@ -67,7 +80,9 @@ async def handle_callback_{{ nodeId|safe_name }}(callback_query: types.CallbackQ
     def _extract_file_id_from_message(_msg, _mtype: str) -> str:
         """Извлекает file_id из ответного сообщения Telegram по типу медиа"""
         try:
-            if _mtype == "photo" and _msg.photo:
+            if _mtype == "animation" and _msg.animation:
+                return _msg.animation.file_id
+            elif _mtype == "photo" and _msg.photo:
                 return _msg.photo[-1].file_id
             elif _mtype == "video" and _msg.video:
                 return _msg.video.file_id
@@ -78,6 +93,15 @@ async def handle_callback_{{ nodeId|safe_name }}(callback_query: types.CallbackQ
         except Exception:
             pass
         return ""
+
+{%- if _cap_arg %}
+    _anim_caption = "{{ mediaCaption|e }}"
+    try:
+        _anim_vars = await init_all_user_vars(callback_query.from_user.id)
+        _anim_caption = replace_variables_in_text(_anim_caption, _anim_vars, {})
+    except Exception:
+        pass
+{%- endif %}
 
 {%- if hasChatIdRecipients %}
     # Инициализируем переменные пользователя для подстановки в chat_id получателях
@@ -113,7 +137,9 @@ async def handle_callback_{{ nodeId|safe_name }}(callback_query: types.CallbackQ
             _file_name = _media_value.get("fileName", "file")
             _buf_file = _BufFile(file=_file_bytes, filename=_file_name)
             _mime = _media_value.get("mimeType", "")
-            if "image" in _mime:
+            if "gif" in _mime or str(_file_name).lower().endswith(".gif"):
+                await callback_query.message.answer_animation(_buf_file)
+            elif "image" in _mime:
                 await callback_query.message.answer_photo(_buf_file)
             elif "audio" in _mime:
                 await callback_query.message.answer_audio(_buf_file)
@@ -168,7 +194,7 @@ async def handle_callback_{{ nodeId|safe_name }}(callback_query: types.CallbackQ
     else:
         await callback_query.message.answer_document(_resolved_media)
 {%- else %}
-{%- set mtype = get_media_type(url) | trim %}
+{%- set mtype = get_media_type(url, _gif_urls) | trim %}
 {%- set cached_file_id = (telegramFileIds or {})[url] if telegramFileIds and url in telegramFileIds else '' %}
 {%- set _thumb_fid = (thumbnailFileIds or {})[url] if thumbnailFileIds and url in thumbnailFileIds else '' %}
 {%- set _thumb_url = (thumbnailUrls or {})[url] if thumbnailUrls and url in thumbnailUrls else '' %}
@@ -186,7 +212,7 @@ async def handle_callback_{{ nodeId|safe_name }}(callback_query: types.CallbackQ
 {%- if cached_file_id %}
     # Отправка через кэшированный Telegram file_id (повторная отправка)
     logging.info(f"📎 Узел {{ nodeId }}: отправка через кэшированный file_id={{ cached_file_id }}...")
-    await callback_query.message.answer_{{ mtype }}("{{ cached_file_id }}"{{ _thumb_arg }})
+    await callback_query.message.answer_{{ mtype }}("{{ cached_file_id }}"{{ _thumb_arg }}{{ _cap_arg }})
 {%- elif '/uploads/' in url %}
     _file_path = get_upload_file_path("{{ url }}")
     if not os.path.exists(_file_path):
@@ -197,7 +223,7 @@ async def handle_callback_{{ nodeId|safe_name }}(callback_query: types.CallbackQ
     if _cached_fid:
         logging.info(f"📎 Узел {{ nodeId }}: отправка через in-memory file_id (без перегенерации)")
         try:
-            await callback_query.message.answer_{{ mtype }}(_cached_fid{{ _thumb_arg }})
+            await callback_query.message.answer_{{ mtype }}(_cached_fid{{ _thumb_arg }}{{ _cap_arg }})
             _sent_via_cache = True
         except Exception as _fid_err:
             if not _is_wrong_file_id_error(_fid_err):
@@ -218,7 +244,7 @@ async def handle_callback_{{ nodeId|safe_name }}(callback_query: types.CallbackQ
 {%- endif %}
 {%- endif %}
         _media_file = FSInputFile(_file_path)
-        _sent_msg = await callback_query.message.answer_{{ mtype }}(_media_file{{ _thumb_arg }})
+        _sent_msg = await callback_query.message.answer_{{ mtype }}(_media_file{{ _thumb_arg }}{{ _cap_arg }})
         _new_file_id = _extract_file_id_from_message(_sent_msg, "{{ mtype }}")
         if _new_file_id:
             await _save_media_file_id("{{ url }}", _new_file_id, "{{ mtype }}", "application/octet-stream")
@@ -243,7 +269,7 @@ async def handle_callback_{{ nodeId|safe_name }}(callback_query: types.CallbackQ
     logging.info(f"🖼 Узел {{ nodeId }}: обложка не установлена")
 {%- endif %}
 {%- endif %}
-    _sent_msg = await callback_query.message.answer_{{ mtype }}("{{ url|e }}"{{ _thumb_arg }})
+    _sent_msg = await callback_query.message.answer_{{ mtype }}("{{ url|e }}"{{ _thumb_arg }}{{ _cap_arg }})
     _new_file_id = _extract_file_id_from_message(_sent_msg, "{{ mtype }}")
     if _new_file_id:
         await _save_media_file_id("{{ url }}", _new_file_id, "{{ mtype }}", "application/octet-stream")
@@ -264,8 +290,8 @@ async def handle_callback_{{ nodeId|safe_name }}(callback_query: types.CallbackQ
     # Индексы элементов, которые реально попали в группу (для сопоставления с ответом)
     _media_group_urls = []
 {%- for url in attachedMedia %}
-{%- set cls = get_input_media_class(url) | trim %}
-{%- set mtype_g = get_media_type(url) | trim %}
+{%- set cls = get_input_media_class(url, _gif_urls) | trim %}
+{%- set mtype_g = get_media_type(url, _gif_urls) | trim %}
 {%- if '/uploads/' in url %}
     _fp_{{ loop.index }} = get_upload_file_path("{{ url }}")
     if not os.path.exists(_fp_{{ loop.index }}):
@@ -295,19 +321,27 @@ async def handle_callback_{{ nodeId|safe_name }}(callback_query: types.CallbackQ
                 break
             _gurl = _media_group_urls[_gi]
             _gfid = None
+            _gtype = "document"
             try:
-                if _gmsg.photo:
+                if _gmsg.animation:
+                    _gfid = _gmsg.animation.file_id
+                    _gtype = "animation"
+                elif _gmsg.photo:
                     _gfid = _gmsg.photo[-1].file_id
+                    _gtype = "photo"
                 elif _gmsg.video:
                     _gfid = _gmsg.video.file_id
+                    _gtype = "video"
                 elif _gmsg.audio:
                     _gfid = _gmsg.audio.file_id
+                    _gtype = "audio"
                 elif _gmsg.document:
                     _gfid = _gmsg.document.file_id
+                    _gtype = "document"
             except Exception:
                 pass
             if _gfid:
-                await _save_media_file_id(_gurl, _gfid, "document", "application/octet-stream")
+                await _save_media_file_id(_gurl, _gfid, _gtype, "application/octet-stream")
                 logging.info(f"✅ Узел {{ nodeId }}: медиагруппа[{_gi}] file_id={_gfid[:20]}... для {_gurl[:40]}")
 
 {%- else %}
@@ -350,7 +384,7 @@ async def handle_callback_{{ nodeId|safe_name }}(callback_query: types.CallbackQ
             else:
                 await _b.send_document(_target_chat_id, _rval, message_thread_id=_thread_id)
 {%- else %}
-{%- set mtype = get_media_type(url) | trim %}
+{%- set mtype = get_media_type(url, _gif_urls) | trim %}
 {%- if '/uploads/' in url %}
             _fp = get_upload_file_path("{{ url }}")
             if not os.path.exists(_fp):
@@ -361,7 +395,7 @@ async def handle_callback_{{ nodeId|safe_name }}(callback_query: types.CallbackQ
             if _cached_fid_r:
                 logging.info(f"📎 Узел {{ nodeId }}: доп. получатель — отправка через in-memory file_id")
                 try:
-                    _sent_r = await _b.send_{{ mtype }}(_target_chat_id, _cached_fid_r, message_thread_id=_thread_id)
+                    _sent_r = await _b.send_{{ mtype }}(_target_chat_id, _cached_fid_r, message_thread_id=_thread_id{{ _cap_arg }})
                 except Exception as _fid_err:
                     if not _is_wrong_file_id_error(_fid_err):
                         raise
@@ -369,21 +403,21 @@ async def handle_callback_{{ nodeId|safe_name }}(callback_query: types.CallbackQ
                     await _invalidate_media_file_id("{{ url }}")
             if _sent_r is None:
                 logging.info(f"📤 Узел {{ nodeId }}: доп. получатель — первая отправка через FSInputFile")
-                _sent_r = await _b.send_{{ mtype }}(_target_chat_id, FSInputFile(_fp), message_thread_id=_thread_id)
+                _sent_r = await _b.send_{{ mtype }}(_target_chat_id, FSInputFile(_fp), message_thread_id=_thread_id{{ _cap_arg }})
                 _new_fid_r = _extract_file_id_from_message(_sent_r, "{{ mtype }}")
                 if _new_fid_r:
                     await _save_media_file_id("{{ url }}", _new_fid_r, "{{ mtype }}", "application/octet-stream")
                     logging.info(f"✅ Узел {{ nodeId }}: доп. получатель — file_id={_new_fid_r[:20]}... сохранён в кеш")
 {%- else %}
-            await _b.send_{{ mtype }}(_target_chat_id, "{{ url|e }}", message_thread_id=_thread_id)
+            await _b.send_{{ mtype }}(_target_chat_id, "{{ url|e }}", message_thread_id=_thread_id{{ _cap_arg }})
 {%- endif %}
 {%- endif %}
 {%- elif attachedMedia and attachedMedia | length > 1 %}
             _mg = []
             _mg_urls = []
 {%- for url in attachedMedia %}
-{%- set cls = get_input_media_class(url) | trim %}
-{%- set mtype_r = get_media_type(url) | trim %}
+{%- set cls = get_input_media_class(url, _gif_urls) | trim %}
+{%- set mtype_r = get_media_type(url, _gif_urls) | trim %}
 {%- if '/uploads/' in url %}
             _fp2_{{ loop.index }} = get_upload_file_path("{{ url }}")
             if os.path.exists(_fp2_{{ loop.index }}):
@@ -407,15 +441,27 @@ async def handle_callback_{{ nodeId|safe_name }}(callback_query: types.CallbackQ
                             break
                         _mgurl = _mg_urls[_mgi]
                         _mgfid = None
+                        _mgtype = "document"
                         try:
-                            if _mgmsg.photo: _mgfid = _mgmsg.photo[-1].file_id
-                            elif _mgmsg.video: _mgfid = _mgmsg.video.file_id
-                            elif _mgmsg.audio: _mgfid = _mgmsg.audio.file_id
-                            elif _mgmsg.document: _mgfid = _mgmsg.document.file_id
+                            if _mgmsg.animation:
+                                _mgfid = _mgmsg.animation.file_id
+                                _mgtype = "animation"
+                            elif _mgmsg.photo:
+                                _mgfid = _mgmsg.photo[-1].file_id
+                                _mgtype = "photo"
+                            elif _mgmsg.video:
+                                _mgfid = _mgmsg.video.file_id
+                                _mgtype = "video"
+                            elif _mgmsg.audio:
+                                _mgfid = _mgmsg.audio.file_id
+                                _mgtype = "audio"
+                            elif _mgmsg.document:
+                                _mgfid = _mgmsg.document.file_id
+                                _mgtype = "document"
                         except Exception:
                             pass
                         if _mgfid and _mgurl not in _media_file_id_cache:
-                            await _save_media_file_id(_mgurl, _mgfid, "document", "application/octet-stream")
+                            await _save_media_file_id(_mgurl, _mgfid, _mgtype, "application/octet-stream")
                             logging.info(f"✅ Узел {{ nodeId }}: доп. получатель медиагруппа[{_mgi}] file_id={_mgfid[:20]}...")
 {%- else %}
             pass

@@ -28,6 +28,10 @@ export interface MultiMediaSelectorProps {
   thumbnailsMap?: Record<string, string>;
   /** Callback при изменении обложек в ноде */
   onThumbnailsChange?: (thumbnails: Record<string, string>) => void;
+  /** URL видео, которые нужно отправить как GIF */
+  sendAsGifUrls?: string[];
+  /** Новый список URL видео-как-GIF */
+  onSendAsGifUrlsChange?: (urls: string[]) => void;
   /** Переключение на вкладку Файлы */
   onSwitchToFilesTab?: () => void;
 }
@@ -47,6 +51,8 @@ export function MultiMediaSelector({
   nodeId,
   thumbnailsMap = {},
   onThumbnailsChange,
+  sendAsGifUrls = [],
+  onSendAsGifUrlsChange,
   onSwitchToFilesTab,
 }: MultiMediaSelectorProps) {
   // Проверяем, включена ли клавиатура (для определения скрытых файлов)
@@ -81,6 +87,7 @@ export function MultiMediaSelector({
           thumbnailUrl: thumbnailsMap[url] ?? null,
           thumbnailDirectUrl: null,
           projectId,
+          sendAsGif: sendAsGifUrls.includes(url),
         };
       } catch { /* fallthrough */ }
     }
@@ -99,6 +106,7 @@ export function MultiMediaSelector({
       thumbnailUrl: thumbnailsMap[url] ?? null,
       thumbnailDirectUrl: null,
       projectId: projectId,
+      sendAsGif: sendAsGifUrls.includes(url),
     };
   });
 
@@ -156,6 +164,13 @@ export function MultiMediaSelector({
               updated[videoUrl] = thumbUrl;
             }
             onThumbnailsChange(updated);
+          }}
+          onSendAsGifChange={(fileUrl, enabled) => {
+            if (!onSendAsGifUrlsChange) return;
+            const next = enabled
+              ? (sendAsGifUrls.includes(fileUrl) ? sendAsGifUrls : [...sendAsGifUrls, fileUrl])
+              : sendAsGifUrls.filter((item) => item !== fileUrl);
+            onSendAsGifUrlsChange(next);
           }}
         />
       )}

@@ -124,6 +124,8 @@ export interface NodeData {
    * - Telegram file_id по токенам (JSON): `'{"__type":"file_id","mediaType":"photo","fileIdsByToken":{"42":"AgACAgI..."}}'`
    */
   attachedMedia?: string[];
+  /** URL видео этого узла, которые отправляются как GIF */
+  sendAsGifUrls?: string[];
 
   // --- Отображение в меню ---
   /** Показывать команду в меню BotFather */

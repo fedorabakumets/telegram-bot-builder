@@ -1598,11 +1598,31 @@ await bot.edit_message_text('Опрашиваю… 3/15', chat_id=chat_id,
 | `audio` | Отправить аудио (`audioUrl`) |
 | `document` | Отправить документ (`documentUrl`, `documentName`) |
 | `sticker` | Отправить стикер при входе в блок (`stickerFileId` или `stickerUrl`). Подписи нет |
-| `animation` | Отправить GIF при входе в блок (`animationUrl`, подпись `mediaCaption`) |
 | `location` | Отправить геолокацию |
 | `contact` | Отправить контакт |
 
-`sticker` и `animation` вызываются как `delete_message`: callback при входе в блок и автопереход `enableAutoTransition` + `autoTransitionTo`. Не команда и не фильтр входящего сообщения. `command` в `data` можно оставить, на запуск он не влияет. У остальных медиа-узлов есть `mediaCaption`.
+GIF — блок `media`, не отдельный тип. Файл `.gif` в `attachedMedia` сам уходит через `send_animation`. Видео отправляется как гиф, если его URL есть в `sendAsGifUrls` (галочка на этот файл). Тип `animation` для новых сценариев не создавай. Старый узел `animation` при открытии становится `media`.
+
+`sticker` — отдельный шаг без подписи. Вызов как у `delete_message`: callback при входе в блок и автопереход `enableAutoTransition` + `autoTransitionTo`. Не команда и не фильтр входящего сообщения.
+
+### media — медиафайл
+
+```json
+{
+  "type": "media",
+  "data": {
+    "attachedMedia": [
+      "https://example.com/clip.mp4",
+      "https://example.com/anim.gif"
+    ],
+    "sendAsGifUrls": ["https://example.com/clip.mp4"],
+    "enableAutoTransition": true,
+    "autoTransitionTo": "next_node_id"
+  }
+}
+```
+
+У блока нет текста. `sendAsGifUrls` — только видео, которые нужно послать как GIF. `.gif` в список не клади. Подпись `mediaCaption` у нового медиафайла не задаётся; она остаётся только если проект перенёс старый узел `animation`.
 
 ### Пример photo
 

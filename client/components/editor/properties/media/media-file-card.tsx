@@ -16,6 +16,7 @@ import { Eye, X } from "lucide-react";
 import { ThumbnailSelector } from "./thumbnail-selector";
 import { TelegramFileIdOwner } from "./telegram-file-id-owner";
 import { useProjectTokenLabels } from "./use-project-token-labels";
+import { SendAsGifToggle, showSendAsGifToggle } from "./send-as-gif-toggle";
 
 /**
  * Проверяет, является ли строка переменной вида {var.path}
@@ -81,6 +82,10 @@ export interface MediaFileCardProps {
   projectId?: number;
   /** Callback при установке/сбросе обложки — передаёт URL видео и URL обложки */
   onThumbnailSet?: (videoUrl: string, thumbnailUrl: string | null) => void;
+  /** Это видео отмечено как GIF */
+  sendAsGif?: boolean;
+  /** Включить или снять отправку файла как GIF */
+  onSendAsGifChange?: (url: string, enabled: boolean) => void;
 }
 
 /** Иконка для типа файла */
@@ -115,6 +120,8 @@ export function MediaFileCard({
   thumbnailDirectUrl,
   projectId,
   onThumbnailSet,
+  sendAsGif = false,
+  onSendAsGifChange,
 }: MediaFileCardProps) {
   /** Флаг ошибки загрузки превью через прокси (fallback на иконку) */
   const [previewError, setPreviewError] = useState(false);
@@ -264,15 +271,21 @@ export function MediaFileCard({
         </div>
       )}
 
-      {/* Выбор обложки для видео — только для обычных файлов, не для JSON file_id записей */}
-      {fileType === 'video' && projectId && !fileIdsByToken && (
-        <div className="mt-2">
-          <ThumbnailSelector
-            currentThumbnailUrl={thumbnailUrl}
-            projectId={projectId}
-            videoFileId={mediaFileId}
-            onThumbnailSet={(thumbUrl) => onThumbnailSet?.(url, thumbUrl)}
+      {/* Видео: галочка «как гиф» и обложка. У .gif галочки нет. */}
+      {showSendAsGifToggle(fileType, url) && (
+        <div className="mt-2 space-y-2">
+          <SendAsGifToggle
+            checked={sendAsGif}
+            onChange={(enabled) => onSendAsGifChange?.(url, enabled)}
           />
+          {projectId && !fileIdsByToken && (
+            <ThumbnailSelector
+              currentThumbnailUrl={thumbnailUrl}
+              projectId={projectId}
+              videoFileId={mediaFileId}
+              onThumbnailSet={(thumbUrl) => onThumbnailSet?.(url, thumbUrl)}
+            />
+          )}
         </div>
       )}
     </div>

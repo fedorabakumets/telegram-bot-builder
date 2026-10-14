@@ -36,6 +36,8 @@ export interface MediaFileData {
   thumbnailDirectUrl?: string | null;
   /** ID проекта (нужен для загрузки фото для выбора обложки) */
   projectId?: number;
+  /** Отправить это видео как GIF */
+  sendAsGif?: boolean;
 }
 
 /** Пропсы списка файлов */
@@ -45,12 +47,14 @@ export interface MediaFilesListProps {
   isHidden?: (index: number) => boolean;
   /** Callback при установке/сбросе обложки — передаёт URL видео и URL обложки */
   onThumbnailSet?: (videoUrl: string, thumbnailUrl: string | null) => void;
+  /** Включить или снять отправку конкретного видео как GIF */
+  onSendAsGifChange?: (url: string, enabled: boolean) => void;
 }
 
 /**
  * Компонент списка медиафайлов
  */
-export function MediaFilesList({ files, onRemove, isHidden, onThumbnailSet }: MediaFilesListProps) {
+export function MediaFilesList({ files, onRemove, isHidden, onThumbnailSet, onSendAsGifChange }: MediaFilesListProps) {
   return (
     <div className="space-y-3">
       {files.map((file, index) => (
@@ -60,6 +64,7 @@ export function MediaFilesList({ files, onRemove, isHidden, onThumbnailSet }: Me
           onRemove={() => onRemove(index)}
           isHidden={isHidden?.(index) ?? file.isHidden ?? false}
           onThumbnailSet={onThumbnailSet}
+          onSendAsGifChange={onSendAsGifChange}
         />
       ))}
     </div>

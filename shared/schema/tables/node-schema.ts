@@ -563,6 +563,11 @@ export const nodeSchema = z.object({
      * - Telegram file_id по токенам (JSON): `'{"__type":"file_id","mediaType":"photo","fileIdsByToken":{"42":"AgACAgI..."}}'`
      */
     attachedMedia: z.array(z.string()).default([]),
+    /**
+     * URL видео внутри блока «Медиафайл», которые нужно отправить как GIF.
+     * Галочка на конкретный файл. .gif в список не входит: он и так анимация.
+     */
+    sendAsGifUrls: z.array(z.string()).optional(),
     /** Произвольный текст (используется в некоторых узлах) */
     text: z.string().optional(),
     /** Действие узла (используется в некоторых узлах) */
