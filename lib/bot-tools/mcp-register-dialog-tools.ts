@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { searchDialogMessagesInDb } from './dialog-search-db.ts';
 import { listDialogsInDb } from './dialogs-db.ts';
 import { getDialogMessagesInDb } from './dialog-messages-db.ts';
+import { checkChatAccessInDb } from './chat-access-db.ts';
 
 /**
  * Регистрирует чтение известных панели диалогов выбранного бота.
@@ -11,6 +12,24 @@ import { getDialogMessagesInDb } from './dialog-messages-db.ts';
  * @returns Ничего
  */
 export function registerDialogTools(server: McpServer): void {
+  server.registerTool('db_check_chat_access', {
+    description: 'Читает сохранённое состояние доступа бота к чату. Не вызывает Telegram; без сохранённой проверки возвращает unknown.',
+    annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+    inputSchema: {
+      /** Проект с разрешённым доступом. */
+      project_id: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
+      /** Явно выбранный токен бота. */
+      token_id: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
+      /** Идентификатор чата Telegram. */
+      chat_id: z.string().regex(/^-?[1-9]\d{0,19}$/),
+      /** Тип чата из списка диалогов. */
+      chat_type: z.enum(['private', 'group', 'supergroup', 'channel']),
+    },
+  }, async ({ project_id, ...options }) => {
+    const value = await checkChatAccessInDb(project_id, options);
+    return { content: [{ type: 'text' as const, text: JSON.stringify(value) }],
+      ...('error' in value ? { isError: true } : {}) };
+  });
   /** Поиск доступен обоим транспортам и читает только сохранённый текст. */
   server.registerTool('db_search_dialog_messages', {
     description: 'Поиск буквальной подстроки без учёта регистра в сохранённых сообщениях выбранного бота. Без chat_id поиск идёт по всем чатам; для chat_id требуется chat_type. По умолчанию десять последних совпадений, порядок от новых к старым, курсор ведёт к более старым. Не вызывает Telegram; история ограничена сроком хранения.',

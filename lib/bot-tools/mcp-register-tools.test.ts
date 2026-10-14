@@ -33,6 +33,7 @@ describe('registerMcpTools', () => {
       'db_get_dialog_messages',
       /** Поиск сохранённого текста доступен HTTP и stdio. */
       'db_search_dialog_messages',
+      'db_check_chat_access',
     ]));
   });
   it('на HTTP (enableFileTools=false) нет load_project/save_project', () => {

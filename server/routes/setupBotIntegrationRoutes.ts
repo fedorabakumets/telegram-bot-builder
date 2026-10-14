@@ -31,6 +31,7 @@ import { setupBroadcastRoutes } from "./setupBroadcastRoutes";
 import { listDialogsHandler } from './dialogs/list-dialogs-handler';
 import { searchDialogMessagesHandler } from './dialogs/search-dialog-messages-handler';
 import { getDialogMessagesHandler } from './dialogs/get-dialog-messages-handler';
+import { checkChatAccessHandler } from './dialogs/check-chat-access-handler';
 
 /**
  * Регистрирует маршруты bot-integration для проекта.
@@ -41,6 +42,8 @@ export function setupBotIntegrationRoutes(app: Express) {
   app.get('/api/projects/:projectId/dialogs', requireProjectAccess, listDialogsHandler);
   /** Поиск сохранённого текста требует разрешения на проект и явного токена. */
   app.get('/api/projects/:projectId/dialogs/messages/search', requireProjectAccess, searchDialogMessagesHandler);
+  /** Читает только сохранённое состояние доступа к выбранному чату. */
+  app.get('/api/projects/:projectId/dialogs/:chatId/access', requireProjectAccess, checkChatAccessHandler);
   /** История конкретного чата требует разрешения на проект и явного токена. */
   app.get('/api/projects/:projectId/dialogs/:chatId/messages', requireProjectAccess, getDialogMessagesHandler);
   app.get("/api/projects/:projectId/bot/data", requireProjectAccess, getBotDataHandler);
