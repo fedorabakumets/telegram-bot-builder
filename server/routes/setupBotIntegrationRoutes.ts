@@ -28,6 +28,7 @@ import { getGroupsHandler, syncGroupHandler } from "./botIntegration/handlers/gr
 import { getBotInfoHandler } from "./botIntegration/handlers/botInfo";
 import { sendGroupMessageHandler } from "./botIntegration/handlers/telegramGroups";
 import { setupBroadcastRoutes } from "./setupBroadcastRoutes";
+import { listDialogsHandler } from './dialogs/list-dialogs-handler';
 
 /**
  * Регистрирует маршруты bot-integration для проекта.
@@ -35,6 +36,7 @@ import { setupBroadcastRoutes } from "./setupBroadcastRoutes";
  * @returns void
  */
 export function setupBotIntegrationRoutes(app: Express) {
+  app.get('/api/projects/:projectId/dialogs', requireProjectAccess, listDialogsHandler);
   app.get("/api/projects/:projectId/bot/data", requireProjectAccess, getBotDataHandler);
   app.get(
     "/api/projects/:projectId/users/:userId/avatar",

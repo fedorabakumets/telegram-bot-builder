@@ -11,6 +11,7 @@ import { UserAvatar } from '../../dialog/components/user-avatar';
 import { formatRelativeTime } from '../utils/format-relative-time';
 import { formatUserName } from '../utils';
 import { GroupAccessStatus } from './group-access-status';
+import { useGroupAccess } from '../hooks/use-group-access';
 import type { GroupSyncStatus } from '../hooks/group-sync-request';
 
 /**
@@ -81,8 +82,6 @@ interface DialogListItemProps {
   tokenId?: number | null;
   /** Результат проверки доступа выбранного бота к группе. */
   groupSyncStatus?: GroupSyncStatus;
-  /** Ручная проверка доступа после возвращения бота в группу. */
-  onCheckGroupAccess?: () => void;
 }
 
 /**
@@ -98,20 +97,20 @@ export function DialogListItem({
   projectId,
   tokenId,
   groupSyncStatus,
-  onCheckGroupAccess,
 }: DialogListItemProps): React.JSX.Element {
   const entry = user as DialogWithMeta;
-  const [groupAvatarError, setGroupAvatarError] = useState(false);
+  const { data: access } = useGroupAccess(projectId, tokenId, String(user.userId));
+  const [groupAvatarError, setGroupAvatarError] = useState<string | null>(null);
   const preview = formatPreview(entry.lastMessageText);
   const timestamp = formatRelativeTime(entry.lastMessageAt ?? user.lastInteraction);
-  const name = entry.isGroup ? (user.firstName ?? 'Группа') : formatUserName(user);
+  const name = entry.isGroup ? (access?.name ?? user.firstName ?? String(user.userId)) : formatUserName(user);
   const isChannel = entry.chatType === 'channel';
   /** URL аватарки группы из bot_groups.avatar_url (заполняется после синка) */
-  const groupAvatarUrl = entry.isGroup ? (user.avatarUrl ?? null) : null;
-  const showGroupPhoto = !!groupAvatarUrl && !groupAvatarError;
+  const groupAvatarUrl = entry.isGroup
+    ? (access?.avatarUrl !== undefined ? access.avatarUrl : user.avatarUrl ?? null) : null;
+  const showGroupPhoto = !!groupAvatarUrl && groupAvatarError !== groupAvatarUrl;
 
   return (
-    <div className={isSelected ? 'bg-primary/15' : undefined}>
     <button
       type="button"
       onClick={onClick}
@@ -119,7 +118,7 @@ export function DialogListItem({
         'w-full flex items-center gap-3 px-3 py-3 text-left',
         'transition-colors border-b border-border/30',
         'hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-        isSelected ? 'border-l-2 border-l-primary' : '',
+        isSelected ? 'bg-primary/15 border-l-2 border-l-primary' : '',
       ].join(' ')}
     >
       {/* Аватар: для групп — фото из Telegram или иконка, для пользователей — фото */}
@@ -131,7 +130,7 @@ export function DialogListItem({
               alt={name}
               style={{ width: 40, height: 40 }}
               className="rounded-full object-cover"
-              onError={() => setGroupAvatarError(true)}
+              onError={() => setGroupAvatarError(groupAvatarUrl)}
             />
           ) : (
           <div
@@ -188,11 +187,8 @@ export function DialogListItem({
           <span className="text-xs text-muted-foreground flex-shrink-0">{timestamp}</span>
         </div>
         <p className="text-xs text-muted-foreground truncate mt-0.5">{preview}</p>
+        {entry.isGroup && <GroupAccessStatus status={access?.status ?? groupSyncStatus} />}
       </div>
     </button>
-    {entry.isGroup && onCheckGroupAccess && (
-      <GroupAccessStatus status={groupSyncStatus} onCheck={onCheckGroupAccess} />
-    )}
-    </div>
   );
 }

@@ -78,6 +78,10 @@ export const SyncGroupResponseSchema = z
   .object({
     synced: z.literal(true).openapi({ example: true }),
     group: BotGroupSchema,
+    /** Сохранённый результат проверки выбранным ботом. */
+    accessStatus: z.enum(['available', 'kicked', 'error']).optional(),
+    /** Время проверки доступа в UTC. */
+    accessCheckedAt: z.string().datetime().nullable().optional(),
   })
   .openapi("SyncGroupResponse");
 

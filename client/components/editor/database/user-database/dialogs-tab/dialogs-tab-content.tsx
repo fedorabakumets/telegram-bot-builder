@@ -4,21 +4,20 @@
  * На мобайле — переключение между списком и открытым диалогом.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, MessageSquare, Megaphone, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TabHeader } from '@/components/ui/tab-header';
 import type { UserBotData } from '@/types/bot';
 import { DialogPanel } from '../../dialog/dialog-panel';
 import { BroadcastDialogPanel } from '../../dialog/broadcast-dialog-panel';
-import { UserAvatar } from '../../dialog/components/user-avatar';
 import { DialogList } from './dialog-list';
+import { DialogHeaderIdentity } from './dialog-header-identity';
 import { useLiveInvalidate } from '../hooks/use-live-invalidate';
 import { useBroadcastLiveInvalidate } from '@/components/editor/broadcast/hooks/use-broadcast-live-invalidate';
 import { useProjectTokens } from '@/hooks/use-project-tokens';
 import { BotTokenSelector, ProjectSelector } from '../components/header';
 import { NewBroadcastModal } from '@/components/editor/broadcast/wizard/new-broadcast-modal';
-import { formatUserName } from '../../utils';
 
 /**
  * Пропсы компонента DialogsTabContent
@@ -88,6 +87,16 @@ export function DialogsTabContent({
   );
   const resolvedTokenId =
     selectedTokenIdProp !== undefined ? selectedTokenIdProp : internalTokenId;
+  const previousScope = useRef(`${projectId}:${resolvedTokenId}`);
+
+  /** При смене области закрываем диалог предыдущего бота. */
+  useEffect(() => {
+    const scope = `${projectId}:${resolvedTokenId}`;
+    if (previousScope.current === scope) return;
+    previousScope.current = scope;
+    setSelectedUser(null);
+    setIsBroadcastDialogOpen(false);
+  }, [projectId, resolvedTokenId]);
 
   useEffect(() => {
     if (selectedTokenIdProp !== undefined) {
@@ -195,15 +204,8 @@ export function DialogsTabContent({
                     </>
                   ) : (
                     <>
-                      <UserAvatar
-                        key={selectedUser?.userId}
-                        messageType="user"
-                        user={selectedUser}
-                        projectId={projectId}
-                        tokenId={resolvedTokenId}
-                        size={24}
-                      />
-                      <span className="text-xs font-medium truncate">{formatUserName(selectedUser)}</span>
+                      {selectedUser && <DialogHeaderIdentity key={`${resolvedTokenId}:${selectedUser.userId}`}
+                        user={selectedUser} projectId={projectId} tokenId={resolvedTokenId} />}
                     </>
                   )}
                 </div>
@@ -339,15 +341,8 @@ export function DialogsTabContent({
               <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={handleClose}>
                 <ArrowLeft className="h-4 w-4" />
               </Button>
-              <UserAvatar
-                key={selectedUser.userId}
-                messageType="user"
-                user={selectedUser}
-                projectId={projectId}
-                tokenId={resolvedTokenId}
-                size={24}
-              />
-              <span className="text-sm font-medium truncate flex-1 min-w-0">{formatUserName(selectedUser)}</span>
+              <DialogHeaderIdentity key={`${resolvedTokenId}:${selectedUser.userId}`}
+                user={selectedUser} projectId={projectId} tokenId={resolvedTokenId} />
               <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={handleClose}>
                 <X className="h-4 w-4" />
               </Button>

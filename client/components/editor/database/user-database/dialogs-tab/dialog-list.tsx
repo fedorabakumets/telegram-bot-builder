@@ -61,7 +61,7 @@ export function DialogList({
     });
 
   /** Синк названий/аватарок для групп, видимых в текущем списке */
-  const { statuses, checkAccess } = useSyncGroups(projectId, selectedTokenId, allUsers);
+  const { statuses } = useSyncGroups(projectId, selectedTokenId, allUsers);
 
   /** Последняя рассылка для превью в виртуальном элементе */
   const { previewText: broadcastPreview, progress: broadcastProgress } = useBroadcastRowPreview({
@@ -152,7 +152,6 @@ export function DialogList({
                 projectId={projectId}
                 tokenId={selectedTokenId}
                 groupSyncStatus={statuses[String(user.userId)]}
-                onCheckGroupAccess={() => { void checkAccess(String(user.userId)); }}
               />
             ))}
 

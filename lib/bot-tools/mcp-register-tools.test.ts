@@ -29,6 +29,7 @@ describe('registerMcpTools', () => {
     expect(collectToolNames(fileTools)).toEqual(expect.arrayContaining([
       'db_set_userbot_settings', 'db_userbot_send_code',
       'db_userbot_sign_in', 'db_userbot_sign_in_2fa',
+      'db_list_dialogs',
     ]));
   });
   it('на HTTP (enableFileTools=false) нет load_project/save_project', () => {

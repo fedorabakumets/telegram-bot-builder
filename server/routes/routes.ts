@@ -24,6 +24,7 @@ import { cleanupBotStates } from "../bots/cleanupBotStates";
 import { stopBot } from "../bots/stopBot";
 import { db, pool as dbPool } from "../database/db";
 import { initializeDatabaseTables } from "../database/init-db";
+import { enrichDialogAccess } from './dialogs/access-store';
 import { ensureDefaultProject } from "../utils/ensureDefaultProject";
 import { downloadFileFromUrl } from "../files/downloadFileFromUrl";
 import { getFileType } from "../files/getFileType";
@@ -2375,7 +2376,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         ]);
 
         const total: number = countResult.rows[0]?.total ?? 0;
-        const users = dataResult.rows;
+        const users = await enrichDialogAccess(projectId, tokenId, dataResult.rows);
         console.log(`Paginated: project ${projectId}, kind=${dialogKind}, offset=${offset}, limit=${limit}, total=${total}`);
         return res.json({ users, total, hasMore: offset + users.length < total });
       }
@@ -2389,7 +2390,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
             : `${selectBase} ORDER BY u.last_interaction DESC`;
       const result = await dbPool.query(selectSql, [projectId, tokenId]);
       console.log(`Found ${result.rows.length} users for project ${projectId} (kind=${dialogKind})`);
-      res.json(result.rows);
+      res.json(await enrichDialogAccess(projectId, tokenId, result.rows));
     } catch (error) {
       console.error("Error fetching user data:", error);
       // Fallback: прямой запрос к bot_users если основной запрос не сработал
@@ -2405,8 +2406,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
            ORDER BY last_interaction DESC`,
           [parseInt(req.params.id), tokenId]
         );
-        const users = fallbackResult.rows;
         const projectId = parseInt(req.params.id);
+        const users = await enrichDialogAccess(projectId, tokenId, fallbackResult.rows);
         console.log(`Found ${users.length} users for project ${projectId} from fallback`);
         res.json(limit !== null ? { users, total: users.length, hasMore: false } : users);
       } catch (fallbackError) {

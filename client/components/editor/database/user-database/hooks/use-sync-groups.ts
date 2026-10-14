@@ -5,7 +5,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { UserBotData } from '@shared/schema';
-import { requestGroupSync, type GroupSyncStatus } from './group-sync-request';
+import type { GroupSyncStatus, GroupAccessData } from './group-sync-request';
+import { checkGroupAccess, groupAccessKey } from './group-access-cache';
 
 /** Данные проверки доступа для карточек групп. */
 interface GroupSyncResult {
@@ -49,9 +50,9 @@ export function useSyncGroups(
     pendingRef.current.add(key);
     setStates((previous) => ({ ...previous, [key]: 'checking' }));
     try {
-      const status = await requestGroupSync(projectId, groupId, selectedTokenId);
-      setStates((previous) => ({ ...previous, [key]: status }));
-      if (refresh && status === 'available') {
+      const { status } = await checkGroupAccess(queryClient, projectId, selectedTokenId, groupId);
+      if (status !== 'unknown') setStates((previous) => ({ ...previous, [key]: status }));
+      if (refresh) {
         await queryClient.refetchQueries({ queryKey: ['infinite-users', projectId] });
       }
     } finally {
@@ -65,9 +66,21 @@ export function useSyncGroups(
       const meta = dialog as UserBotData & {
         /** Флаг группового диалога из ответа сервера. */
         isGroup?: boolean;
+        /** Сохранённый результат проверки доступа. */
+        accessStatus?: GroupAccessData['status'];
+        /** Время серверной проверки. */
+        accessCheckedAt?: string | null;
       };
       if (!meta.isGroup || !dialog.userId) continue;
       const groupId = String(dialog.userId);
+      const cacheKey = groupAccessKey(projectId, selectedTokenId, groupId);
+      const cached = queryClient.getQueryData<GroupAccessData>(cacheKey);
+      if (!cached && meta.accessStatus && meta.accessStatus !== 'unknown') {
+        queryClient.setQueryData(cacheKey, { status: meta.accessStatus, checkedAt: meta.accessCheckedAt });
+      }
+      if ((cached && cached.status !== 'unknown') || (meta.accessStatus && meta.accessStatus !== 'unknown')) {
+        continue;
+      }
       if (!attemptedRef.current.has(`${scope}${groupId}`)) {
         checks.push(checkAccess(groupId, false));
       }

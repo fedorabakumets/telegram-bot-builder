@@ -3,14 +3,14 @@
  */
 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import type { GroupSyncStatus } from '../hooks/group-sync-request';
+import type { GroupAccessData } from '../hooks/group-sync-request';
 
 /** Свойства строки состояния группового чата. */
 interface GroupAccessStatusProps {
   /** Результат последней проверки доступа. */
-  status?: GroupSyncStatus;
+  status?: GroupAccessData['status'];
   /** Обработчик повторного запроса к Telegram. */
-  onCheck: () => void;
+  onCheck?: () => void;
 }
 
 /**
@@ -19,7 +19,7 @@ interface GroupAccessStatusProps {
  * @returns Строка состояния или отсутствие элемента для доступного чата
  */
 export function GroupAccessStatus({ status, onCheck }: GroupAccessStatusProps) {
-  if (!status || status === 'available') return null;
+  if (!status || status === 'available' || status === 'unknown') return null;
   const checking = status === 'checking';
   const kicked = status === 'kicked';
   const explanation = kicked
@@ -27,7 +27,7 @@ export function GroupAccessStatus({ status, onCheck }: GroupAccessStatusProps) {
     : 'Не удалось проверить доступ к чату. История сообщений сохранена. Можно повторить проверку.';
 
   return (
-    <div className="flex flex-wrap items-center gap-2 pl-16 pr-3 pb-2 text-[11px]">
+    <div className="flex flex-wrap items-center gap-2 text-[11px]">
       {checking ? <span role="status">Проверка доступа…</span> : (
         <TooltipProvider>
           <Tooltip>
@@ -40,10 +40,10 @@ export function GroupAccessStatus({ status, onCheck }: GroupAccessStatusProps) {
           </Tooltip>
         </TooltipProvider>
       )}
-      <button type="button" onClick={onCheck} disabled={checking}
+      {onCheck && <button type="button" onClick={onCheck} disabled={checking}
         className="text-primary underline underline-offset-2 disabled:opacity-50">
         Проверить доступ
-      </button>
+      </button>}
     </div>
   );
 }

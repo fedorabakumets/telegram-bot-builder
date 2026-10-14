@@ -6,6 +6,7 @@
 import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
 import { fetchWithProxy } from "../../../../utils/telegram-proxy";
+import { saveChatAccess } from '../../../dialogs/access-store';
 import {
   getRequestTokenId,
   resolveProjectBotToken,
@@ -18,6 +19,14 @@ import {
  * @returns Promise<void>
  */
 export async function syncGroupHandler(req: Request, res: Response): Promise<void> {
+  let selected: {
+    /** Проект проверяемой группы. */
+    projectId: number;
+    /** Бот, выполняющий проверку. */
+    tokenId: number;
+    /** Идентификатор группы. */
+    chatId: string;
+  } | undefined;
   try {
     const projectId = parseInt(req.params.projectId);
     const telegramGroupId = req.params.groupId;
@@ -28,11 +37,22 @@ export async function syncGroupHandler(req: Request, res: Response): Promise<voi
     }
 
     const requestedTokenId = getRequestTokenId(req);
-    const botToken = await resolveProjectBotToken(projectId, requestedTokenId);
+    const rawTokenId = req.query.tokenId ?? req.body?.tokenId;
+    if (rawTokenId != null && requestedTokenId == null) {
+      res.status(400).json({ message: 'Некорректный токен бота' }); return;
+    }
+    const botToken = requestedTokenId != null
+      ? await storage.getBotToken(requestedTokenId)
+      : await resolveProjectBotToken(projectId, null);
+    if (botToken && botToken.projectId !== projectId) {
+      res.status(404).json({ message: 'Бот не найден в проекте' }); return;
+    }
     if (!botToken?.token) {
       res.status(400).json({ message: "Токен бота не найден" });
       return;
     }
+
+    selected = { projectId, tokenId: botToken.id, chatId: telegramGroupId };
 
     const chatResponse = await fetchWithProxy(
       `https://api.telegram.org/bot${botToken.token}/getChat`,
@@ -40,14 +60,18 @@ export async function syncGroupHandler(req: Request, res: Response): Promise<voi
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ chat_id: telegramGroupId }),
+        signal: AbortSignal.timeout(12_000),
       },
     );
 
     const chatResult = await chatResponse.json();
     if (!chatResponse.ok || !chatResult.ok) {
+      const status = /\bbot was kicked\b/i.test(String(chatResult.description ?? '')) ? 'kicked' : 'error';
+      const access = await saveChatAccess(projectId, botToken.id, telegramGroupId, status);
       res.status(400).json({
         message: "Не удалось получить данные группы из Telegram",
         error: chatResult.description,
+        ...access,
       });
       return;
     }
@@ -79,7 +103,8 @@ export async function syncGroupHandler(req: Request, res: Response): Promise<voi
         tokenId,
         updatedAt: new Date(),
       });
-      res.json({ synced: true, group: updated });
+      const access = await saveChatAccess(projectId, tokenId, telegramGroupId, 'available');
+      res.json({ synced: true, group: updated, ...access });
       return;
     }
 
@@ -93,9 +118,13 @@ export async function syncGroupHandler(req: Request, res: Response): Promise<voi
       chatType,
       isActive: 1,
     });
-    res.json({ synced: true, group: created });
+    const access = await saveChatAccess(projectId, tokenId, telegramGroupId, 'available');
+    res.json({ synced: true, group: created, ...access });
   } catch (error) {
+    const access = selected
+      ? await saveChatAccess(selected.projectId, selected.tokenId, selected.chatId, 'error').catch(() => undefined)
+      : undefined;
     console.error("Ошибка синхронизации группы:", error);
-    res.status(500).json({ message: "Не удалось синхронизировать группу" });
+    res.status(500).json({ message: "Не удалось синхронизировать группу", ...access });
   }
 }
