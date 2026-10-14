@@ -13,8 +13,8 @@ import { checkChatAccessInDb } from './chat-access-db.ts';
  */
 export function registerDialogTools(server: McpServer): void {
   server.registerTool('db_check_chat_access', {
-    description: 'Читает сохранённое состояние доступа бота к чату. Не вызывает Telegram; без сохранённой проверки возвращает unknown.',
-    annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+    description: 'Проверяет через Telegram актуальный доступ бота к группе или каналу, сохраняет статус и обновляет название с аватаром при успехе.',
+    annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
     inputSchema: {
       /** Проект с разрешённым доступом. */
       project_id: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
@@ -23,7 +23,7 @@ export function registerDialogTools(server: McpServer): void {
       /** Идентификатор чата Telegram. */
       chat_id: z.string().regex(/^-?[1-9]\d{0,19}$/),
       /** Тип чата из списка диалогов. */
-      chat_type: z.enum(['private', 'group', 'supergroup', 'channel']),
+      chat_type: z.enum(['group', 'supergroup', 'channel']),
     },
   }, async ({ project_id, ...options }) => {
     const value = await checkChatAccessInDb(project_id, options);

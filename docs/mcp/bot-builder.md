@@ -859,6 +859,22 @@ REST API: [[api/project-tokens]]. Отдельный OpenAPI→MCP также с
 
 ## Чтение диалогов выбранного бота
 
+### Проверка доступа `db_check_chat_access`
+
+Инструмент выполняет реальный запрос `getChat` в Telegram для группы или канала.
+Обязательны `project_id`, `token_id`, `chat_id` и `chat_type` (`group`,
+`supergroup` или `channel`). Личные чаты не поддерживаются. Явно выбранный токен
+должен принадлежать проекту и не заменяется дефолтным.
+
+При успехе инструмент сохраняет `available`, обновляет название и аватар чата и
+возвращает их вместе с `access_checked_at`. Явный ответ Telegram об исключении
+сохраняется как `kicked`, остальные сбои — как `error`; прежние название и аватар
+при ошибке остаются без изменений. Токен и сырой ответ Telegram не возвращаются.
+
+```json
+{"project_id": 12, "token_id": 9, "chat_id": "-1004465403276", "chat_type": "supergroup"}
+```
+
 ### Чтение истории `db_get_dialog_messages`
 
 После `db_list_dialogs` передайте `project_id`, `token_id`, `chat_id` и `chat_type`
