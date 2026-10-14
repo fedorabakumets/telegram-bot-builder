@@ -10,7 +10,7 @@
  */
 
 import { Node } from '@shared/schema';
-import { generateBroadcastHandler, generateStickerHandler, generateVoiceHandler, resolveMediaUrls, isLocalUploadPath } from './node-handlers.renderer';
+import { generateBroadcastHandler, generateStickerHandler, generateVoiceHandler, resolveMediaUrls } from './node-handlers.renderer';
 import { sortButtonsByLayout } from '../keyboard/keyboard.renderer';
 import { generateMessage } from '../message/message.renderer';
 import { generateContactHandler, generateLocationHandler } from './contact-location.renderer';
@@ -22,7 +22,6 @@ import { generateCreateForumTopicFromNode } from '../create-forum-topic';
 /** Генератор callback-обработчика для узла HTTP запроса */
 import { generateHttpRequestFromNode } from '../http-request';
 import { generateUserHandlerFromNode } from '../user-handler';
-import { generateAnimationHandler } from '../animation-handler/animation-handler.renderer';
 import { generateAdminRightsFromNode } from '../admin-rights/admin-rights.renderer';
 import { collectSynonymEntries } from '../synonyms/synonyms.renderer';
 import { generateCommandTriggerHandlers } from '../command-trigger/command-trigger.renderer';
@@ -360,11 +359,6 @@ export function generateNodeHandlers(
     command: (node) => generateCommandEntryHandler(node, generateMessage(buildMessageHandlerParams(node))),
     sticker: generateStickerHandler,
     voice: generateVoiceHandler,
-    animation: (node) => generateAnimationHandler({
-      nodeId: node.id,
-      animationUrl: node.data?.animationUrl || '',
-      isLocalAnimationUrl: isLocalUploadPath(node.data?.animationUrl || ''),
-    }),
     location: generateLocationHandler,
     contact: generateContactHandler,
     pin_message: generateMessageHandlerFromNode,
@@ -411,6 +405,10 @@ export function generateNodeHandlers(
       thumbnailFileIds: { ...(thumbnailFileIds || {}), ...((node.data as any)?.thumbnailFileIds || {}) },
       /** Словарь прямых URL обложек видео для media-ноды */
       thumbnailUrls: { ...(thumbnailUrls || {}), ...((node.data as any)?.thumbnailUrls || {}) },
+      /** Видео из этого списка уходят через send_animation */
+      sendAsGifUrls: (node.data as any)?.sendAsGifUrls || [],
+      /** Подпись старого узла animation, у обычного медиафайла пустая */
+      mediaCaption: (node.data as any)?.mediaCaption || '',
     }),
   };
 

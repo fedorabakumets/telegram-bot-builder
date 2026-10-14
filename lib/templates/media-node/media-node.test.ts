@@ -64,9 +64,55 @@ describe('media-node.py.jinja2 шаблон', () => {
       expect(result).toContain('answer_audio');
     });
 
+    it('gif даёт send_animation, а не send_photo', () => {
+      const result = generateMediaNode({
+        nodeId: 'gif1',
+        attachedMedia: ['https://example.com/anim.gif'],
+        messageSendRecipients: [
+          { id: 'u', type: 'user' },
+          { id: 'r1', type: 'chat_id', chatId: '123' },
+        ],
+      });
+      expect(result).toContain('answer_animation');
+      expect(result).toContain('send_animation');
+      expect(result).not.toContain('answer_photo');
+      expect(result).not.toContain('send_photo');
+      expect(result).toContain('_save_media_file_id("https://example.com/anim.gif", _new_file_id, "animation"');
+    });
+
+    it('mp4 без галочки остаётся видео', () => {
+      const result = generateMediaNode({ nodeId: 'vid1', attachedMedia: ['https://example.com/clip.mp4'] });
+      expect(result).toContain('answer_video');
+      expect(result).not.toContain('answer_animation');
+    });
+
+    it('mp4 из sendAsGifUrls уходит через send_animation', () => {
+      const url = 'https://example.com/clip.mp4';
+      const result = generateMediaNode({
+        nodeId: 'gifvid',
+        attachedMedia: [url],
+        sendAsGifUrls: [url],
+        messageSendRecipients: [{ id: 'r1', type: 'chat_id', chatId: '123' }],
+      });
+      expect(result).toContain('send_animation');
+      expect(result).not.toContain('send_video');
+      expect(result).not.toContain('answer_video');
+    });
+
     it('должен НЕ использовать answer_media_group при одном файле', () => {
       const result = generateMediaNode(fixtureOnePhoto);
       expect(result).not.toContain('answer_media_group');
+    });
+
+    it('подпись старого узла попадает только в анимацию', () => {
+      const result = generateMediaNode({
+        nodeId: 'cap1',
+        attachedMedia: ['https://example.com/anim.gif'],
+        mediaCaption: 'Привет, {name}',
+      });
+      expect(result).toContain('caption=_anim_caption');
+      expect(result).toContain('Привет, {name}');
+      expect(result).toContain('answer_animation');
     });
 
     it('должен резолвить {photo} из пользовательской переменной как медиа, а не literal document', () => {
@@ -90,6 +136,16 @@ describe('media-node.py.jinja2 шаблон', () => {
     it('должен использовать InputMediaPhoto в медиагруппе для фото', () => {
       const result = generateMediaNode(fixtureMixedGroup);
       expect(result).toContain('InputMediaPhoto');
+    });
+
+    it('должен использовать InputMediaAnimation для gif в группе', () => {
+      const result = generateMediaNode({
+        nodeId: 'g1',
+        attachedMedia: ['https://example.com/a.gif', 'https://example.com/b.jpg'],
+      });
+      expect(result).toContain('InputMediaAnimation');
+      expect(result).toContain('InputMediaPhoto');
+      expect(result).toContain('_gtype = "animation"');
     });
 
     it('должен использовать InputMediaVideo в медиагруппе для видео', () => {

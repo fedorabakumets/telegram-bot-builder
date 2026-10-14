@@ -1,35 +1,61 @@
 {#
-  Шаблон обработчика анимации (GIF)
+  Шаблон шага сценария «анимация» (GIF).
 
-  @fileoverview Генерирует Python-код полноценного обработчика анимации (GIF).
+  @fileoverview Отправка GIF, когда сценарий дошёл до блока.
+  Входящие анимации не перехватываются: декоратора F.animation нет.
+  У sendAnimation подпись есть — передаётся mediaCaption, если она задана.
 
-  @param {string} animationUrl — URL анимации (GIF)
-  @param {string} nodeId       — ID узла
+  @param {string} nodeId - ID узла, он же callback_data
+  @param {string} animationUrl - URL или путь /uploads/
+  @param {boolean} isLocalAnimationUrl - локальный файл из /uploads/
+  @param {string} mediaCaption - подпись к GIF
+  @param {string} autoTransitionTo - ID следующего узла
 #}
-@dp.message(F.animation)
-async def handle_animation_{{ nodeId|safe_name }}(message: types.Message):
-    """Обработчик анимации для узла {{ nodeId }}"""
-    user_id = message.from_user.id
-    text = ""
-    parse_mode = None
-{%- if animationUrl %}
+@dp.callback_query(lambda c: c.data == "{{ nodeId }}")
+async def handle_callback_{{ nodeId|safe_name }}(callback_query: types.CallbackQuery, state: FSMContext = None):
+    """Отправка анимации при входе в узел {{ nodeId }}"""
     try:
-{%- if isLocalAnimationUrl %}
-        animation_path = get_upload_file_path("{{ animationUrl }}")
+        await callback_query.answer()
+    except Exception:
+        pass
+
+    user_id = callback_query.from_user.id
+    _chat_id = callback_query.message.chat.id if callback_query.message else user_id
+    {% if mediaCaption %}
+    text = "{{ mediaCaption|e }}"
+    all_user_vars = await init_all_user_vars(user_id)
+    variable_filters = user_data.get(user_id, {}).get("_variable_filters", {})
+    text = replace_variables_in_text(text, all_user_vars, variable_filters)
+    {% else %}
+    text = ""
+    {% endif %}
+    parse_mode = None
+    {% if animationUrl %}
+    try:
+        {% if isLocalAnimationUrl %}
+        animation_path = get_upload_file_path("{{ animationUrl|e }}")
         animation_file = FSInputFile(animation_path)
-        await bot.send_animation(message.chat.id, animation_file, caption=text, parse_mode=parse_mode)
-{%- else %}
-        await bot.send_animation(message.chat.id, "{{ animationUrl }}", caption=text, parse_mode=parse_mode)
-{%- endif %}
+        await bot.send_animation(_chat_id, animation_file, caption=text, parse_mode=parse_mode)
+        {% else %}
+        await bot.send_animation(_chat_id, "{{ animationUrl|e }}", caption=text, parse_mode=parse_mode)
+        {% endif %}
         await save_message_to_api(
             user_id=str(user_id),
             message_type="bot",
             message_text="[Анимация]",
             node_id="{{ nodeId }}"
         )
+        {% if autoTransitionTo %}
+        await handle_callback_{{ autoTransitionTo|safe_name }}(callback_query, state=None)
+        {% endif %}
     except Exception as e:
         logging.error(f"Ошибка отправки анимации: {e}")
-        await message.answer("Произошла ошибка при отправке анимации")
-{%- else %}
-    await message.answer("Анимация не настроена")
-{%- endif %}
+        {% if autoTransitionTo %}
+        await handle_callback_{{ autoTransitionTo|safe_name }}(callback_query, state=None)
+        {% endif %}
+    {% else %}
+    logging.warning(f"Анимация не настроена: узел {{ nodeId }}")
+    {% if autoTransitionTo %}
+    await handle_callback_{{ autoTransitionTo|safe_name }}(callback_query, state=None)
+    {% endif %}
+    {% endif %}

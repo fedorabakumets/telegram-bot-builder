@@ -180,7 +180,13 @@ export function MediaFileSection({
           <MultiMediaSelector
             projectId={projectId}
             value={attachedFiles}
-            onChange={(urls) => onNodeUpdate(selectedNode.id, { attachedMedia: urls })}
+            onChange={(urls) => {
+              const gifUrls: string[] = selectedNode.data.sendAsGifUrls || [];
+              onNodeUpdate(selectedNode.id, {
+                attachedMedia: urls,
+                sendAsGifUrls: gifUrls.filter((item: string) => urls.includes(item)),
+              });
+            }}
             nodeName={selectedNode.id}
             label="Прикреплённые файлы"
             placeholder="Перетащи файл или вставь ссылку"
@@ -190,6 +196,10 @@ export function MediaFileSection({
             thumbnailsMap={selectedNode.data.attachedMediaThumbnails || {}}
             onThumbnailsChange={(thumbnails) =>
               onNodeUpdate(selectedNode.id, { attachedMediaThumbnails: thumbnails })
+            }
+            sendAsGifUrls={selectedNode.data.sendAsGifUrls || []}
+            onSendAsGifUrlsChange={(urls) =>
+              onNodeUpdate(selectedNode.id, { sendAsGifUrls: urls })
             }
           />
         </div>

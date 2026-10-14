@@ -150,7 +150,10 @@ export function generateBroadcastHandler(
 }
 
 /**
- * Генерирует обработчик стикеров (sticker)
+ * Генерирует шаг отправки стикера.
+ * data.command сохраняется в узле, но отправку не запускает.
+ * @param node - Узел типа sticker
+ * @returns Python-код callback-обработчика
  */
 export function generateStickerHandler(node: Node): string {
   return generateStickerTemplate({
@@ -158,8 +161,8 @@ export function generateStickerHandler(node: Node): string {
     stickerUrl: node.data?.stickerUrl || '',
     stickerFileId: node.data?.stickerFileId || '',
     stickerSetName: node.data?.stickerSetName || '',
-    mediaCaption: node.data?.mediaCaption || '',
     disableNotification: node.data?.disableNotification || false,
+    autoTransitionTo: String(node.data?.autoTransitionTo || ''),
   });
 }
 

@@ -14,6 +14,7 @@ import { migrateLegacyMessageInputToLinkedInputs } from './utils/migrate-message
 import { migrateMessageKeyboardsToNodes } from './utils/migrate-message-keyboards';
 import { migrateForwardMessageSourceLinks } from './utils/migrate-forward-message-source-links';
 import { migrateInputNodeTarget } from './utils/migrate-input-node-target';
+import { migrateAnimationNodesToMedia } from './utils/migrate-animation-to-media';
 import { needsMessageDefaults, stripMessageJunkFields } from '@/utils/sheets/needs-message-defaults';
 
 /**
@@ -401,8 +402,11 @@ export function useBotEditor(initialData?: BotData) {
     // Преобразуем устаревшие типы start/command → message
     const migratedWithTypes = migrateLegacyNodeTypes(migratedWithCommands);
 
+    // Старый узел animation становится медиафайлом: animationUrl → attachedMedia
+    const migratedWithAnimation = migrateAnimationNodesToMedia(migratedWithTypes);
+
     // Превращаем legacy autoTransition message/media -> forward_message в source-link
-    const migratedWithForwardSourceLinks = migrateForwardMessageSourceLinks(migratedWithTypes);
+    const migratedWithForwardSourceLinks = migrateForwardMessageSourceLinks(migratedWithAnimation);
 
     // Миграция узлов с условными сообщениями в узлы condition
     const migratedWithConditions = migrateConditionalMessagesToConditionNodes(migratedWithForwardSourceLinks);

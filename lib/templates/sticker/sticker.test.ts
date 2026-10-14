@@ -19,27 +19,32 @@ import { stickerParamsSchema } from './sticker.schema';
 describe('sticker.py.jinja2 шаблон', () => {
   describe('generateSticker()', () => {
     describe('Валидные данные', () => {
-      it('должен генерировать обработчик стикера по file_id', () => {
+      it('должен генерировать шаг стикера по file_id', () => {
         const result = generateSticker(validParamsFileId);
 
-        assert.ok(result.includes('handle_sticker_sticker_1'));
-        assert.ok(result.includes('sticker_file_id'));
-        assert.ok(result.includes('answer_sticker'));
+        assert.ok(result.includes('handle_callback_sticker_1'));
+        assert.ok(result.includes('@dp.callback_query'));
+        assert.ok(result.includes('bot.send_sticker'));
+        assert.ok(result.includes('CAACAgQAAxkBAAIC'));
+        assert.ok(!result.includes('Command('));
+        assert.ok(!result.includes('caption'));
       });
 
-      it('должен генерировать обработчик стикера по URL', () => {
+      it('должен генерировать шаг стикера по URL', () => {
         const result = generateSticker(validParamsUrl);
 
-        assert.ok(result.includes('handle_sticker_sticker_2'));
+        assert.ok(result.includes('handle_callback_sticker_2'));
         assert.ok(result.includes('sticker_url'));
         assert.ok(result.includes('aiohttp.ClientSession'));
+        assert.ok(result.includes('bot.send_sticker'));
       });
 
-      it('должен генерировать обработчик стикера из набора', () => {
+      it('должен генерировать шаг стикера из набора', () => {
         const result = generateSticker(validParamsSetName);
 
-        assert.ok(result.includes('handle_sticker_sticker_3'));
+        assert.ok(result.includes('handle_callback_sticker_3'));
         assert.ok(result.includes('MyStickerPack'));
+        assert.ok(result.includes('bot.send_sticker'));
       });
 
       it('должен генерировать обработчик с disable_notification', () => {
@@ -48,11 +53,11 @@ describe('sticker.py.jinja2 шаблон', () => {
         assert.ok(result.includes('disable_notification=True'));
       });
 
-      it('должен включать замену переменных в подписи', () => {
+      it('не подставляет подпись: у send_sticker её нет', () => {
         const result = generateSticker(validParamsFileId);
 
-        assert.ok(result.includes('replace_variables_in_text'));
-        assert.ok(result.includes('init_all_user_vars'));
+        assert.ok(!result.includes('caption'));
+        assert.ok(!result.includes('replace_variables_in_text'));
       });
 
       it('должен включать обработку ошибок', () => {
@@ -63,11 +68,32 @@ describe('sticker.py.jinja2 шаблон', () => {
         assert.ok(result.includes('logging.error'));
       });
 
-      it('должен включать caption при наличии mediaCaption', () => {
+      it('игнорирует mediaCaption и не передаёт caption', () => {
         const result = generateSticker(validParamsFileId);
 
-        assert.ok(result.includes('caption ='));
-        assert.ok(result.includes('caption=caption'));
+        assert.ok(result.includes('bot.send_sticker'));
+        assert.ok(!result.includes('caption'));
+      });
+
+      it('вызывает следующий блок при автопереходе', () => {
+        const result = generateSticker({
+          ...validParamsFileId,
+          autoTransitionTo: 'next-node',
+        });
+
+        assert.ok(result.includes('handle_callback_next_node'));
+      });
+
+      it('считает file_id в stickerUrl идентификатором файла', () => {
+        const result = generateSticker({
+          nodeId: 'sticker_file',
+          stickerUrl: 'CAACAgQAAxkBAAIE',
+          stickerFileId: '',
+        });
+
+        assert.ok(result.includes('CAACAgQAAxkBAAIE'));
+        assert.ok(!result.includes('aiohttp.ClientSession'));
+        assert.ok(!result.includes('Command('));
       });
 
       it('должен генерировать сообщение об ошибке при отсутствии стикера', () => {
@@ -151,13 +177,14 @@ describe('sticker.py.jinja2 шаблон', () => {
         }
       });
 
-      it('должен генерировать разные команды для разных nodeId', () => {
+      it('должен генерировать разные callback для разных nodeId', () => {
         const result1 = generateSticker({ ...validParamsFileId, nodeId: 'node_a' });
         const result2 = generateSticker({ ...validParamsFileId, nodeId: 'node_b' });
 
-        assert.ok(result1.includes('sticker_node_a'));
-        assert.ok(result2.includes('sticker_node_b'));
-        assert.ok(!result1.includes('sticker_node_b'));
+        assert.ok(result1.includes('handle_callback_node_a'));
+        assert.ok(result2.includes('handle_callback_node_b'));
+        assert.ok(!result1.includes('handle_callback_node_b'));
+        assert.ok(!result1.includes('Command('));
       });
 
       it('должен включать disable_notification только при disableNotification=true', () => {
@@ -168,12 +195,12 @@ describe('sticker.py.jinja2 шаблон', () => {
         assert.ok(!result2.includes('disable_notification=True'));
       });
 
-      it('должен включать caption только при наличии mediaCaption', () => {
+      it('не включает caption ни с mediaCaption, ни без него', () => {
         const result1 = generateSticker({ ...validParamsFileId, mediaCaption: 'Test' });
         const result2 = generateSticker({ ...validParamsFileId, mediaCaption: undefined });
 
-        assert.ok(result1.includes('caption ='));
-        assert.ok(!result2.includes('caption ='));
+        assert.ok(!result1.includes('caption'));
+        assert.ok(!result2.includes('caption'));
       });
     });
 
@@ -246,11 +273,11 @@ describe('sticker.py.jinja2 шаблон', () => {
     });
 
     describe('Структура схемы', () => {
-      it('должен иметь 6 полей', () => {
+      it('должен иметь 8 полей', () => {
         const shape = stickerParamsSchema.shape;
         const fields = Object.keys(shape);
 
-        assert.strictEqual(fields.length, 6);
+        assert.strictEqual(fields.length, 8);
       });
 
       it('должен использовать ZodOptional для stickerUrl', () => {
@@ -271,6 +298,8 @@ describe('sticker.py.jinja2 шаблон', () => {
         assert.ok(shape.stickerSetName.isOptional());
         assert.ok(shape.mediaCaption.isOptional());
         assert.ok(shape.disableNotification.isOptional());
+        assert.ok(shape.autoTransitionTo.isOptional());
+        assert.ok(shape.isLocalStickerUrl.isOptional());
       });
     });
   });

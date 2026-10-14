@@ -337,18 +337,20 @@ MCP для **создания** нод использует **белый спи�
 
 ### Разрешены (32)
 
-`command_trigger`, `text_trigger`, `incoming_message_trigger`, `outgoing_message_trigger`, `message`, `media`, `input`, `edit_message`, `delete_message`, `forward_message`, `callback_trigger`, `incoming_callback_trigger`, `keyboard`, `answer_callback_query`, `group_message_trigger`, `create_forum_topic`, `kick_user`, `schedule_trigger`, `http_request`, `psql_query`, `bot_table`, `convert_file`, `condition`, `set_variable`, `loop`, `delay`, `parallel_split`, `userbot_message`, `userbot_click_button`, `userbot_inline_query`, `userbot_edit_trigger`, `comment`
+`command_trigger`, `text_trigger`, `incoming_message_trigger`, `outgoing_message_trigger`, `message`, `media`, `sticker`, `input`, `edit_message`, `delete_message`, `forward_message`, `callback_trigger`, `incoming_callback_trigger`, `keyboard`, `answer_callback_query`, `group_message_trigger`, `create_forum_topic`, `kick_user`, `schedule_trigger`, `http_request`, `psql_query`, `bot_table`, `convert_file`, `condition`, `set_variable`, `loop`, `delay`, `parallel_split`, `userbot_message`, `userbot_click_button`, `userbot_inline_query`, `userbot_edit_trigger`, `comment`
+
+Стикер создавать можно. Тип `animation` создавать нельзя: GIF — это `media` (файл `.gif` или видео из `sendAsGifUrls`).
 
 ### Запрещены для create_node / list_node_types
 
-Legacy и типы вне палитры: `start`, `command`, `photo`, `video`, `audio`, `document`, `animation`, `sticker`, `voice`, `location`, `contact`, user-management кроме `kick_user`, `broadcast`, `client_auth`, `get_managed_bot_token`, `managed_bot_updated_trigger` и др.
+Legacy и типы вне палитры: `start`, `command`, `photo`, `video`, `audio`, `document`, `animation`, `voice`, `location`, `contact`, user-management кроме `kick_user`, `broadcast`, `client_auth`, `get_managed_bot_token`, `managed_bot_updated_trigger` и др.
 
 **Замены:**
 
 | Вместо | Используй |
 |--------|-----------|
 | `start`, `command` | `command_trigger` + `message` |
-| `photo`, `video`, `sticker`… | `media` |
+| `photo`, `video`, `animation`… | `media` |
 
 **Нюанс:** `validate_bot_project` всё ещё принимает legacy-типы в **старых** проектах. Whitelist ограничивает только **создание** через MCP.
 

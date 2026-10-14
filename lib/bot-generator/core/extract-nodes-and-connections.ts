@@ -7,6 +7,7 @@
  */
 
 import { BotData, BotDataWithSheets, Node } from '@shared/schema';
+import { migrateAnimationNodesToMedia } from './migrate-animation-to-media';
 
 type GraphConnection = {
   id: string;
@@ -46,7 +47,7 @@ function transformNodeData(nodes: Node[]): Node[] {
     return [];
   }
 
-  return nodes
+  return migrateAnimationNodesToMedia(nodes)
     .filter((node): node is Node => node !== null && node !== undefined)
     .map(node => {
       const hasImage = node.data?.imageUrl;

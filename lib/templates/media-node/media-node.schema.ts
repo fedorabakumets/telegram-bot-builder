@@ -48,6 +48,16 @@ export const mediaNodeParamsSchema = z.object({
    * Используется если thumbnailFileIds не содержит file_id для данного видео.
    */
   thumbnailUrls: z.record(z.string(), z.string()).optional().default({}),
+  /**
+   * URL видео, которые нужно отправить как GIF.
+   * Пустой список — видео остаётся видео, .gif всё равно уходит как анимация.
+   */
+  sendAsGifUrls: z.array(z.string()).optional().default([]),
+  /**
+   * Подпись к анимации. В обычном медиафайле пустая.
+   * Заполняется при переносе старого узла animation.
+   */
+  mediaCaption: z.string().optional().default(''),
 });
 
 /** Тип параметров медиа-ноды (выведен из схемы) */
