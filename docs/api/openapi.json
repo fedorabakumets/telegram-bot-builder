@@ -17190,6 +17190,242 @@
         }
       }
     },
+    "/api/projects/{projectId}/dialogs": {
+      "get": {
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "agentToken": []
+          }
+        ],
+        "summary": "Список диалогов выбранного бота",
+        "tags": [
+          "Диалоги"
+        ],
+        "description": "Читает сохранённые диалоги без запросов Telegram. Статус доступа — последняя проверка, счётчик — сохранённые сообщения. Курсор привязан к проекту, токену, виду и поиску; при новых сообщениях снимок выдачи не гарантируется.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true
+            },
+            "required": true,
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true
+            },
+            "required": true,
+            "name": "tokenId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "all",
+                "users",
+                "groups",
+                "channels"
+              ],
+              "default": "all"
+            },
+            "required": false,
+            "name": "kind",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "required": false,
+            "name": "search",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 2048
+            },
+            "required": false,
+            "name": "cursor",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Страница диалогов и сохранённые проверки доступа",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "project_id": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "exclusiveMinimum": true
+                    },
+                    "token_id": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "exclusiveMinimum": true
+                    },
+                    "dialogs": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "chat_id": {
+                            "type": "string"
+                          },
+                          "chat_type": {
+                            "type": "string",
+                            "enum": [
+                              "private",
+                              "group",
+                              "supergroup",
+                              "channel"
+                            ]
+                          },
+                          "title": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "display_name": {
+                            "type": "string"
+                          },
+                          "username": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "last_activity_at": {
+                            "type": "string",
+                            "nullable": true,
+                            "format": "date-time"
+                          },
+                          "last_message": {
+                            "type": "object",
+                            "nullable": true,
+                            "properties": {
+                              "preview": {
+                                "type": "string",
+                                "maxLength": 200
+                              },
+                              "direction": {
+                                "type": "string",
+                                "enum": [
+                                  "incoming",
+                                  "outgoing"
+                                ]
+                              },
+                              "created_at": {
+                                "type": "string",
+                                "nullable": true,
+                                "format": "date-time"
+                              }
+                            },
+                            "required": [
+                              "preview",
+                              "direction",
+                              "created_at"
+                            ]
+                          },
+                          "retained_message_count": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "access_status": {
+                            "type": "string",
+                            "enum": [
+                              "unknown",
+                              "available",
+                              "kicked",
+                              "error"
+                            ]
+                          },
+                          "access_checked_at": {
+                            "type": "string",
+                            "nullable": true,
+                            "format": "date-time"
+                          }
+                        },
+                        "required": [
+                          "chat_id",
+                          "chat_type",
+                          "title",
+                          "display_name",
+                          "username",
+                          "last_activity_at",
+                          "last_message",
+                          "retained_message_count",
+                          "access_status",
+                          "access_checked_at"
+                        ]
+                      }
+                    },
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "next_cursor": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "ok",
+                    "project_id",
+                    "token_id",
+                    "dialogs",
+                    "has_more",
+                    "next_cursor"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Некорректные параметры или курсор"
+          },
+          "401": {
+            "description": "Требуется авторизация"
+          },
+          "403": {
+            "description": "Нет доступа к проекту"
+          },
+          "404": {
+            "description": "Бот не принадлежит проекту"
+          },
+          "500": {
+            "description": "Не удалось прочитать диалоги"
+          }
+        }
+      }
+    },
     "/api/projects/{projectId}/files": {
       "delete": {
         "tags": [
@@ -35561,6 +35797,19 @@
           },
           "group": {
             "$ref": "#/components/schemas/BotGroup"
+          },
+          "accessStatus": {
+            "type": "string",
+            "enum": [
+              "available",
+              "kicked",
+              "error"
+            ]
+          },
+          "accessCheckedAt": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
           }
         },
         "required": [
