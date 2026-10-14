@@ -1,6 +1,6 @@
 # projects
 
-Эндпоинтов: **19**
+Эндпоинтов: **20**
 
 ### `GET` /api/projects
 
@@ -911,6 +911,20 @@ curl -s http://localhost:5000/api/projects/42/collaborators -b cookies.txt
   }
 ]
 ```
+
+### `POST` /api/projects/{projectId}/dialogs/{chatId}/check-access
+
+POST /api/projects/{projectId}/dialogs/{chatId}/check-access
+
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Успешный ответ |
+| 401 | Требуется авторизация (сессия или Bearer PAT) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `GET` /api/projects/list
 

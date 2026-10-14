@@ -17426,6 +17426,25 @@
         }
       }
     },
+    "/api/projects/{projectId}/dialogs/{chatId}/check-access": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{projectId}/dialogs/{chatId}/check-access",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено — настройка в /admin"
+          }
+        }
+      }
+    },
     "/api/projects/{projectId}/dialogs/{chatId}/messages": {
       "get": {
         "security": [
