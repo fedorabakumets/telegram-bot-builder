@@ -41,6 +41,7 @@ REST API визуального конструктора Telegram-ботов. А
 | [tokens](./tokens.md) | 2 |
 | [webhook](./webhook.md) | 1 |
 | [workers](./workers.md) | 1 |
+| [Диалоги](./Диалоги.md) | 1 |
 
 ## Авторизация
 
