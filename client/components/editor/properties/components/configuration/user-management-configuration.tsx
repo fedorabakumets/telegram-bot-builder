@@ -8,10 +8,10 @@
 
 import { Node } from '@shared/schema';
 import { Input } from '@/components/ui/input';
-import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { SynonymEditor } from '../synonyms/synonym-editor';
 import { AdminRightsEditor } from '../admin/admin-rights-editor';
+import { MutePermissionSwitches } from './mute-permission-switches';
 
 /**
  * Пропсы компонента настройки управления пользователями
@@ -168,39 +168,7 @@ export function UserManagementConfiguration({
             </div>
           </div>
 
-          {/* Permissions */}
-          <div className="bg-gradient-to-br from-slate-50/50 to-gray-50/30 dark:from-slate-950/20 dark:to-gray-950/10 border border-slate-200/30 dark:border-slate-800/30 rounded-lg p-4">
-            <div className="flex items-center space-x-2 mb-3">
-              <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-900/50 flex items-center justify-center">
-                <i className="fas fa-ban text-slate-600 dark:text-slate-400 text-xs"></i>
-              </div>
-              <Label className="text-sm font-semibold text-slate-900 dark:text-slate-100">Ограничения</Label>
-            </div>
-
-            <div className="grid grid-cols-1 gap-3">
-              {[
-                { key: 'canSendMessages', label: 'Отправлять сообщения', icon: 'fas fa-comment' },
-                { key: 'canSendMediaMessages', label: 'Отправлять медиа', icon: 'fas fa-image' },
-                { key: 'canSendPolls', label: 'Создавать опросы', icon: 'fas fa-poll' },
-                { key: 'canSendOtherMessages', label: 'Отправлять стикеры/GIF', icon: 'fas fa-laugh' },
-                { key: 'canAddWebPagePreviews', label: 'Добавлять превью ссылок', icon: 'fas fa-link' },
-                { key: 'canChangeGroupInfo', label: 'Изменять информацию группы', icon: 'fas fa-edit' },
-                { key: 'canInviteUsers2', label: 'Приглашать пользователей', icon: 'fas fa-user-plus' },
-                { key: 'canPinMessages2', label: 'Закреплять сообщения', icon: 'fas fa-thumbtack' }
-              ].map(({ key, label, icon }) => (
-                <div key={key} className="flex items-center justify-between p-2 rounded-lg bg-card/50 border border-slate-200/30 dark:border-slate-800/30">
-                  <div className="flex items-center space-x-2">
-                    <i className={`${icon} text-slate-600 dark:text-slate-400 text-xs`}></i>
-                    <Label className="text-xs text-slate-700 dark:text-slate-300">{label}</Label>
-                  </div>
-                  <Switch
-                    checked={(selectedNode.data as any)[key] ?? false}
-                    onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { [key]: checked } as any)}
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
+          <MutePermissionSwitches selectedNode={selectedNode} onNodeUpdate={onNodeUpdate} />
         </div>
       )}
 

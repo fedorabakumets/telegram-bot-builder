@@ -257,8 +257,20 @@ export interface NodeData {
   duration?: number;
   /** Разрешить отправку сообщений */
   canSendMessages?: boolean;
-  /** Разрешить отправку медиа */
-  canSendMediaMessages?: boolean;
+  /** Разрешить отправку аудио */
+  canSendAudios?: boolean;
+  /** Разрешить отправку документов */
+  canSendDocuments?: boolean;
+  /** Разрешить отправку фото */
+  canSendPhotos?: boolean;
+  /** Разрешить отправку видео */
+  canSendVideos?: boolean;
+  /** Разрешить отправку видеозаметок */
+  canSendVideoNotes?: boolean;
+  /** Разрешить отправку голосовых */
+  canSendVoiceNotes?: boolean;
+  /** Разрешить реакции */
+  canReactToMessages?: boolean;
   /** Разрешить отправку опросов */
   canSendPolls?: boolean;
   /** Разрешить отправку других сообщений */
@@ -289,4 +301,16 @@ export interface NodeData {
   canManageTopics?: boolean;
   /** Анонимный администратор */
   isAnonymous?: boolean;
+  /** Управлять чатом. В вызов попадает только если задано */
+  canManageChat?: boolean;
+  /** Публиковать сообщения. В вызов попадает только если задано */
+  canPostMessages?: boolean;
+  /** Редактировать сообщения. В вызов попадает только если задано */
+  canEditMessages?: boolean;
+  /** Управлять личными сообщениями. В вызов попадает только если задано */
+  canManageDirectMessages?: boolean;
+  /** Управлять тегами. В вызов попадает только если задано */
+  canManageTags?: boolean;
+  /** Отправлять приветствия. В вызов попадает только если задано */
+  canSendWelcomeMessages?: boolean;
 }

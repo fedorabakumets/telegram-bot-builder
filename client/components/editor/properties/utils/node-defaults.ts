@@ -192,7 +192,13 @@ export function getNodeDefaults(type: Node['type']): any {
       reason: 'Нарушение правил группы',
       duration: 3600,
       canSendMessages: false,
-      canSendMediaMessages: false,
+      canSendAudios: false,
+      canSendDocuments: false,
+      canSendPhotos: false,
+      canSendVideos: false,
+      canSendVideoNotes: false,
+      canSendVoiceNotes: false,
+      canReactToMessages: false,
       canSendPolls: false,
       canSendOtherMessages: false,
       canAddWebPagePreviews: false,
@@ -274,7 +280,10 @@ export function getNodeDefaults(type: Node['type']): any {
       can_invite_users: true,
       can_pin_messages: true,
       can_manage_topics: false,
-      is_anonymous: false
+      is_anonymous: false,
+      can_manage_direct_messages: false,
+      can_manage_tags: false,
+      can_send_welcome_messages: false
     },
     broadcast: {
       enableConfirmation: true,

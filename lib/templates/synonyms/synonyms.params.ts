@@ -51,8 +51,32 @@ export interface SynonymEntry {
   duration?: number;
   /** Разрешить отправку сообщений */
   canSendMessages?: boolean;
-  /** Разрешить отправку медиа */
-  canSendMediaMessages?: boolean;
+  /** Разрешить аудио */
+  canSendAudios?: boolean;
+  /** Разрешить документы */
+  canSendDocuments?: boolean;
+  /** Разрешить фото */
+  canSendPhotos?: boolean;
+  /** Разрешить видео */
+  canSendVideos?: boolean;
+  /** Разрешить видеозаметки */
+  canSendVideoNotes?: boolean;
+  /** Разрешить голосовые */
+  canSendVoiceNotes?: boolean;
+  /** Разрешить опросы */
+  canSendPolls?: boolean;
+  /** Разрешить стикеры и прочие сообщения */
+  canSendOtherMessages?: boolean;
+  /** Разрешить предпросмотр ссылок */
+  canAddWebPagePreviews?: boolean;
+  /** Разрешить реакции */
+  canReactToMessages?: boolean;
+  /** Разрешить менять описание группы */
+  canChangeGroupInfo?: boolean;
+  /** Разрешить приглашения */
+  canInviteUsers2?: boolean;
+  /** Разрешить закрепление */
+  canPinMessages2?: boolean;
 
   // --- Для promote_user ---
   /** Удаление сообщений */
@@ -61,6 +85,18 @@ export interface SynonymEntry {
   canInviteUsers?: boolean;
   /** Закрепление сообщений */
   canPinMessages?: boolean;
+  /** Управлять чатом. В вызов попадает только если задано */
+  canManageChat?: boolean;
+  /** Публиковать сообщения. В вызов попадает только если задано */
+  canPostMessages?: boolean;
+  /** Редактировать сообщения. В вызов попадает только если задано */
+  canEditMessages?: boolean;
+  /** Управлять личными сообщениями. В вызов попадает только если задано */
+  canManageDirectMessages?: boolean;
+  /** Управлять тегами. В вызов попадает только если задано */
+  canManageTags?: boolean;
+  /** Отправлять приветствия. В вызов попадает только если задано */
+  canSendWelcomeMessages?: boolean;
 }
 
 /** Параметры для генерации всех обработчиков синонимов */

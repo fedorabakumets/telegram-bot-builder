@@ -48,7 +48,14 @@ const ADMIN_RIGHTS: AdminRight[] = [
   { key: 'canRestrictMembers', label: 'Ограничивать участников', icon: 'fas fa-user-lock' },
   { key: 'canPromoteMembers', label: 'Повышать участников', icon: 'fas fa-arrow-up' },
   { key: 'canManageVideoChats', label: 'Управлять видеозвонками', icon: 'fas fa-video' },
-  { key: 'isAnonymous', label: 'Анонимный админ', icon: 'fas fa-user-secret' }
+  { key: 'canManageTopics', label: 'Управлять темами', icon: 'fas fa-comments' },
+  { key: 'isAnonymous', label: 'Анонимный админ', icon: 'fas fa-user-secret' },
+  { key: 'canManageChat', label: 'Управлять чатом', icon: 'fas fa-cog' },
+  { key: 'canPostMessages', label: 'Публиковать сообщения', icon: 'fas fa-bullhorn' },
+  { key: 'canEditMessages', label: 'Редактировать сообщения', icon: 'fas fa-pencil' },
+  { key: 'canManageDirectMessages', label: 'Личные сообщения', icon: 'fas fa-envelope' },
+  { key: 'canManageTags', label: 'Управлять тегами', icon: 'fas fa-tag' },
+  { key: 'canSendWelcomeMessages', label: 'Приветственные сообщения', icon: 'fas fa-smile' },
 ];
 
 /**

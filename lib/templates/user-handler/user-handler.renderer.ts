@@ -7,21 +7,52 @@ import type { Node } from '@shared/schema';
 import type { UserHandlerTemplateParams } from './user-handler.params';
 import { userHandlerParamsSchema } from './user-handler.schema';
 import { renderPartialTemplate } from '../template-renderer';
+import { omitUndefined, stripLegacyMediaPermission } from '../chat-permissions/resolve-mute-media';
+
+/** Права promote, которые попадают в вызов только если уже есть в данных блока */
+const OPTIONAL_PROMOTE_KEYS = [
+  'canManageChat',
+  'canPostMessages',
+  'canEditMessages',
+  'canManageDirectMessages',
+  'canManageTags',
+  'canSendWelcomeMessages',
+] as const;
+
+/**
+ * Оставляет только явно заданные boolean-права.
+ * @param data - Данные узла
+ * @returns Права, которые нужно передать в promoteChatMember
+ */
+function pickOptionalPromoteRights(data: Node['data']): Partial<UserHandlerTemplateParams> {
+  const source = data as Record<string, unknown>;
+  const picked: Partial<UserHandlerTemplateParams> = {};
+  for (const key of OPTIONAL_PROMOTE_KEYS) {
+    if (typeof source[key] === 'boolean') {
+      picked[key] = source[key] as boolean;
+    }
+  }
+  return picked;
+}
 
 /**
  * Генерирует Python обработчик управления пользователями из параметров (низкоуровневый API)
  */
 export function generateUserHandler(params: UserHandlerTemplateParams): string {
-  const validated = userHandlerParamsSchema.parse(params);
-  return renderPartialTemplate('user-handler/user-handler.py.jinja2', validated);
+  const validated = userHandlerParamsSchema.parse(stripLegacyMediaPermission(params));
+  return renderPartialTemplate(
+    'user-handler/user-handler.py.jinja2',
+    omitUndefined(validated),
+  );
 }
 
 /**
  * Собирает параметры UserHandlerTemplateParams из узла графа
  */
 export function nodeToUserHandlerParams(node: Node): UserHandlerTemplateParams {
+  const data = stripLegacyMediaPermission(node.data);
   const safeName = node.id.replace(/[^a-zA-Z0-9_]/g, '_');
-  const rawSynonyms = node.data.synonyms as any;
+  const rawSynonyms = data.synonyms as any;
 
   const synonyms: string[] = Array.isArray(rawSynonyms)
     ? rawSynonyms.map((s: string) => s.trim().toLowerCase()).filter(Boolean)
@@ -43,27 +74,34 @@ export function nodeToUserHandlerParams(node: Node): UserHandlerTemplateParams {
     nodeId: node.id,
     safeName,
     synonyms: synonyms.length > 0 ? synonyms : (defaults[node.type] ?? []),
-    targetGroupId: node.data.targetGroupId || '',
-    reason: node.data.reason ? String(node.data.reason).replace(/"/g, '\\"') : undefined,
-    untilDate: node.data.untilDate ?? 0,
-    duration: node.data.duration ?? 3600,
-    canSendMessages: node.data.canSendMessages ?? false,
-    canSendMediaMessages: node.data.canSendMediaMessages ?? false,
-    canSendPolls: node.data.canSendPolls ?? false,
-    canSendOtherMessages: node.data.canSendOtherMessages ?? false,
-    canAddWebPagePreviews: node.data.canAddWebPagePreviews ?? false,
-    canChangeGroupInfo: node.data.canChangeGroupInfo ?? false,
-    canInviteUsers2: node.data.canInviteUsers2 ?? false,
-    canPinMessages2: node.data.canPinMessages2 ?? false,
-    canChangeInfo: node.data.canChangeInfo ?? false,
-    canDeleteMessages: node.data.canDeleteMessages ?? true,
-    canInviteUsers: node.data.canInviteUsers ?? true,
-    canRestrictMembers: node.data.canRestrictMembers ?? false,
-    canPinMessages: node.data.canPinMessages ?? true,
-    canPromoteMembers: node.data.canPromoteMembers ?? false,
-    canManageVideoChats: node.data.canManageVideoChats ?? false,
-    canManageTopics: node.data.canManageTopics ?? false,
-    isAnonymous: node.data.isAnonymous ?? false,
+    targetGroupId: data.targetGroupId || '',
+    reason: data.reason ? String(data.reason).replace(/"/g, '\\"') : undefined,
+    untilDate: data.untilDate ?? 0,
+    duration: data.duration ?? 3600,
+    canSendMessages: data.canSendMessages ?? false,
+    canSendAudios: data.canSendAudios,
+    canSendDocuments: data.canSendDocuments,
+    canSendPhotos: data.canSendPhotos,
+    canSendVideos: data.canSendVideos,
+    canSendVideoNotes: data.canSendVideoNotes,
+    canSendVoiceNotes: data.canSendVoiceNotes,
+    canReactToMessages: data.canReactToMessages,
+    canSendPolls: data.canSendPolls ?? false,
+    canSendOtherMessages: data.canSendOtherMessages ?? false,
+    canAddWebPagePreviews: data.canAddWebPagePreviews ?? false,
+    canChangeGroupInfo: data.canChangeGroupInfo ?? false,
+    canInviteUsers2: data.canInviteUsers2 ?? false,
+    canPinMessages2: data.canPinMessages2 ?? false,
+    canChangeInfo: data.canChangeInfo ?? false,
+    canDeleteMessages: data.canDeleteMessages ?? true,
+    canInviteUsers: data.canInviteUsers ?? true,
+    canRestrictMembers: data.canRestrictMembers ?? false,
+    canPinMessages: data.canPinMessages ?? true,
+    canPromoteMembers: data.canPromoteMembers ?? false,
+    canManageVideoChats: data.canManageVideoChats ?? false,
+    canManageTopics: data.canManageTopics ?? false,
+    isAnonymous: data.isAnonymous ?? false,
+    ...pickOptionalPromoteRights(data),
   };
 }
 

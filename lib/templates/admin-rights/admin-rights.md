@@ -19,6 +19,12 @@
 | `can_delete_stories` | Удаление историй |
 | `is_anonymous` | Анонимность администратора |
 | `can_promote_members` | Назначение администраторов |
+| `can_manage_chat` | Управление чатом |
+| `can_post_messages` | Публикация сообщений |
+| `can_edit_messages` | Редактирование сообщений |
+| `can_manage_direct_messages` | Личные сообщения |
+| `can_manage_tags` | Управление тегами |
+| `can_send_welcome_messages` | Приветственные сообщения |
 
 ## Параметры
 
@@ -89,7 +95,7 @@ async def handle_callback_<safeName>(callback_query: types.CallbackQuery, bot):
     ...
 ```
 
-### 4. Toggle handlers (11 штук — по одному на каждое право)
+### 4. Toggle handlers (17 штук — по одному на каждое право)
 
 ```python
 @dp.callback_query(lambda c: c.data.startswith("tr_can_change_in_"))

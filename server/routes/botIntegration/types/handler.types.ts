@@ -24,16 +24,28 @@ export interface HandlerResponse {
  * Параметры Telegram Bot API для ограничения участника
  */
 export interface ChatPermissions {
-    /** Может ли отправлять сообщения */
+    /** Может ли отправлять текстовые сообщения */
     can_send_messages?: boolean;
-    /** Может ли отправлять медиа */
-    can_send_media_messages?: boolean;
+    /** Может ли отправлять аудио */
+    can_send_audios?: boolean;
+    /** Может ли отправлять документы */
+    can_send_documents?: boolean;
+    /** Может ли отправлять фото */
+    can_send_photos?: boolean;
+    /** Может ли отправлять видео */
+    can_send_videos?: boolean;
+    /** Может ли отправлять видеозаметки */
+    can_send_video_notes?: boolean;
+    /** Может ли отправлять голосовые */
+    can_send_voice_notes?: boolean;
     /** Может ли отправлять опросы */
     can_send_polls?: boolean;
-    /** Может ли отправлять другие сообщения */
+    /** Может ли отправлять стикеры и другие сообщения */
     can_send_other_messages?: boolean;
     /** Может ли добавлять предпросмотр ссылок */
     can_add_web_page_previews?: boolean;
+    /** Может ли ставить реакции */
+    can_react_to_messages?: boolean;
     /** Может ли изменять информацию о чате */
     can_change_info?: boolean;
     /** Может ли приглашать новых участников */

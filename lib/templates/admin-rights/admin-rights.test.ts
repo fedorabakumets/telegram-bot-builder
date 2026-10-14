@@ -62,7 +62,7 @@ describe('generateAdminRightsHandler()', () => {
       assert.ok(r.includes('InlineKeyboardBuilder'));
     });
 
-    it('содержит все 11 прав администратора', () => {
+    it('содержит все 17 прав администратора', () => {
       const r = generateAdminRightsHandler(fixtureAdminRights);
       assert.ok(r.includes('can_change_info'));
       assert.ok(r.includes('can_delete_messages'));
@@ -75,6 +75,14 @@ describe('generateAdminRightsHandler()', () => {
       assert.ok(r.includes('can_delete_stories'));
       assert.ok(r.includes('is_anonymous'));
       assert.ok(r.includes('can_promote_members'));
+      assert.ok(r.includes('can_manage_chat'));
+      assert.ok(r.includes('can_post_messages'));
+      assert.ok(r.includes('can_edit_messages'));
+      assert.ok(r.includes('can_manage_direct_messages'));
+      assert.ok(r.includes('can_manage_tags'));
+      assert.ok(r.includes('can_send_welcome_messages'));
+      assert.ok(r.includes('tr_can_manage_ch_'));
+      assert.ok(r.includes('tr_can_welcome_m_'));
     });
 
     it('генерирует get_admin_rights функцию', () => {

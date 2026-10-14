@@ -72,7 +72,13 @@ export const validParamsMuteUser: SynonymsTemplateParams = {
       duration: 3600,
       reason: 'Флуд',
       canSendMessages: false,
-      canSendMediaMessages: false,
+      canSendAudios: false,
+      canSendDocuments: false,
+      canSendPhotos: false,
+      canSendVideos: false,
+      canSendVideoNotes: false,
+      canSendVoiceNotes: false,
+      canReactToMessages: false,
     },
   ],
 };
@@ -153,6 +159,7 @@ export const nodesWithMuteSynonym: Node[] = [
     reason: 'Флуд',
     canSendMessages: false,
     canSendMediaMessages: false,
+    canSendPhotos: true,
   }),
 ];
 

@@ -52,8 +52,32 @@ const synonymEntrySchema = z.object({
   duration: z.number().optional(),
   /** Разрешить отправку сообщений */
   canSendMessages: z.boolean().optional(),
-  /** Разрешить отправку медиа */
-  canSendMediaMessages: z.boolean().optional(),
+  /** Разрешить аудио */
+  canSendAudios: z.boolean().optional(),
+  /** Разрешить документы */
+  canSendDocuments: z.boolean().optional(),
+  /** Разрешить фото */
+  canSendPhotos: z.boolean().optional(),
+  /** Разрешить видео */
+  canSendVideos: z.boolean().optional(),
+  /** Разрешить видеозаметки */
+  canSendVideoNotes: z.boolean().optional(),
+  /** Разрешить голосовые */
+  canSendVoiceNotes: z.boolean().optional(),
+  /** Разрешить опросы */
+  canSendPolls: z.boolean().optional(),
+  /** Разрешить стикеры и прочие сообщения */
+  canSendOtherMessages: z.boolean().optional(),
+  /** Разрешить предпросмотр ссылок */
+  canAddWebPagePreviews: z.boolean().optional(),
+  /** Разрешить реакции */
+  canReactToMessages: z.boolean().optional(),
+  /** Разрешить менять описание группы */
+  canChangeGroupInfo: z.boolean().optional(),
+  /** Разрешить приглашения */
+  canInviteUsers2: z.boolean().optional(),
+  /** Разрешить закрепление */
+  canPinMessages2: z.boolean().optional(),
 
   // --- Для promote_user ---
   /** Удаление сообщений */
@@ -62,6 +86,18 @@ const synonymEntrySchema = z.object({
   canInviteUsers: z.boolean().optional(),
   /** Закрепление сообщений */
   canPinMessages: z.boolean().optional(),
+  /** Управлять чатом, только если задано */
+  canManageChat: z.boolean().optional(),
+  /** Публиковать сообщения, только если задано */
+  canPostMessages: z.boolean().optional(),
+  /** Редактировать сообщения, только если задано */
+  canEditMessages: z.boolean().optional(),
+  /** Управлять личными сообщениями, только если задано */
+  canManageDirectMessages: z.boolean().optional(),
+  /** Управлять тегами, только если задано */
+  canManageTags: z.boolean().optional(),
+  /** Отправлять приветствия, только если задано */
+  canSendWelcomeMessages: z.boolean().optional(),
 });
 
 export const synonymsParamsSchema = z.object({

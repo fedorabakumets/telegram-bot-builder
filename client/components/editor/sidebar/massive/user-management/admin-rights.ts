@@ -32,6 +32,9 @@ export const adminRights: ComponentDefinition = {
     can_invite_users: true,
     can_pin_messages: true,
     can_manage_topics: false,
-    is_anonymous: false
+    is_anonymous: false,
+    can_manage_direct_messages: false,
+    can_manage_tags: false,
+    can_send_welcome_messages: false
   }
 };

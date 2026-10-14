@@ -495,10 +495,34 @@ export const nodeSchema = z.object({
     canManageTopics: z.boolean().default(false),
     /** Администратор анонимен */
     isAnonymous: z.boolean().default(false),
+    /** Право управлять чатом (promote_user), только если задано */
+    canManageChat: z.boolean().optional(),
+    /** Право публиковать сообщения (promote_user), только если задано */
+    canPostMessages: z.boolean().optional(),
+    /** Право редактировать сообщения (promote_user), только если задано */
+    canEditMessages: z.boolean().optional(),
+    /** Право управлять личными сообщениями (promote_user), только если задано */
+    canManageDirectMessages: z.boolean().optional(),
+    /** Право управлять тегами (promote_user), только если задано */
+    canManageTags: z.boolean().optional(),
+    /** Право отправлять приветствия (promote_user), только если задано */
+    canSendWelcomeMessages: z.boolean().optional(),
     /** Разрешить отправку сообщений (для mute_user) */
     canSendMessages: z.boolean().default(true),
-    /** Разрешить отправку медиа (для mute_user) */
-    canSendMediaMessages: z.boolean().default(true),
+    /** Разрешить отправку аудио (для mute_user) */
+    canSendAudios: z.boolean().optional(),
+    /** Разрешить отправку документов (для mute_user) */
+    canSendDocuments: z.boolean().optional(),
+    /** Разрешить отправку фото (для mute_user) */
+    canSendPhotos: z.boolean().optional(),
+    /** Разрешить отправку видео (для mute_user) */
+    canSendVideos: z.boolean().optional(),
+    /** Разрешить отправку видеозаметок (для mute_user) */
+    canSendVideoNotes: z.boolean().optional(),
+    /** Разрешить отправку голосовых (для mute_user) */
+    canSendVoiceNotes: z.boolean().optional(),
+    /** Разрешить реакции (для mute_user) */
+    canReactToMessages: z.boolean().optional(),
     /** Разрешить отправку опросов (для mute_user) */
     canSendPolls: z.boolean().default(true),
     /** Разрешить отправку других сообщений (для mute_user) */
@@ -549,6 +573,12 @@ export const nodeSchema = z.object({
     can_manage_topics: z.boolean().default(false),
     /** Администратор анонимен (admin_rights) */
     is_anonymous: z.boolean().default(false),
+    /** Право управлять личными сообщениями (admin_rights) */
+    can_manage_direct_messages: z.boolean().optional(),
+    /** Право управлять тегами (admin_rights) */
+    can_manage_tags: z.boolean().optional(),
+    /** Право отправлять приветственные сообщения (admin_rights) */
+    can_send_welcome_messages: z.boolean().optional(),
     /** ID чата для управления правами */
     adminChatId: z.string().optional(),
     /** Источник ID чата: "manual", "variable", "current_chat" */

@@ -43,14 +43,20 @@
 |---|---|---|---|
 | duration | number | 3600 | Длительность в секундах |
 | reason | string | 'Нарушение правил группы' | Причина |
-| canSendMessages | boolean | false | |
-| canSendMediaMessages | boolean | false | |
-| canSendPolls | boolean | false | |
-| canSendOtherMessages | boolean | false | |
-| canAddWebPagePreviews | boolean | false | |
-| canChangeGroupInfo | boolean | false | |
-| canInviteUsers2 | boolean | false | |
-| canPinMessages2 | boolean | false | |
+| canSendMessages | boolean | false | Текст |
+| canSendAudios | boolean | false | Аудио |
+| canSendDocuments | boolean | false | Документы |
+| canSendPhotos | boolean | false | Фото |
+| canSendVideos | boolean | false | Видео |
+| canSendVideoNotes | boolean | false | Кружки |
+| canSendVoiceNotes | boolean | false | Голосовые |
+| canSendPolls | boolean | false | Опросы |
+| canSendOtherMessages | boolean | false | Стикеры |
+| canAddWebPagePreviews | boolean | false | Превью ссылок |
+| canReactToMessages | boolean | false | Реакции |
+| canChangeGroupInfo | boolean | false | Описание группы |
+| canInviteUsers2 | boolean | false | Приглашения |
+| canPinMessages2 | boolean | false | Закрепление |
 
 ### promote_user
 
@@ -65,6 +71,14 @@
 | canManageVideoChats | boolean | false | |
 | canManageTopics | boolean | false | |
 | isAnonymous | boolean | false | |
+| canManageChat | boolean | не передаётся | Только если задано |
+| canPostMessages | boolean | не передаётся | Только если задано |
+| canEditMessages | boolean | не передаётся | Только если задано |
+| canManageDirectMessages | boolean | не передаётся | Только если задано |
+| canManageTags | boolean | не передаётся | Только если задано |
+| canSendWelcomeMessages | boolean | не передаётся | Только если задано |
+
+`demote_user` передаёт `False` для всех boolean-прав `ChatAdministratorRights`.
 
 ## Примеры использования
 

@@ -22,7 +22,7 @@ interface AdminRightsInfoProps {
  * 
  * Отображает:
  * - Описание функционала
- * - Список из 11 возможностей с иконками
+ * - Список возможностей с иконками
  * - Информацию об автоматическом определении участника
  * 
  * @param {AdminRightsInfoProps} props - Пропсы компонента
@@ -40,7 +40,7 @@ export function AdminRightsInfo({ title = 'Права администратор
 
       <div className="space-y-3">
         <div className="text-sm text-violet-800 dark:text-violet-200">
-          При вызове команды автоматически отправляется сообщение с 11 инлайн кнопками, показывающими текущие права администратора:
+          При вызове команды автоматически отправляется сообщение с инлайн-кнопками, показывающими текущие права администратора:
         </div>
 
         <div className="grid grid-cols-2 gap-2 text-xs">
@@ -55,6 +55,12 @@ export function AdminRightsInfo({ title = 'Права администратор
           <div className="text-violet-600 dark:text-violet-400">• 🗑️ Удаление историй</div>
           <div className="text-violet-600 dark:text-violet-400">• 🔒 Анонимность</div>
           <div className="text-violet-600 dark:text-violet-400">• 👑 Назначение администраторов</div>
+          <div className="text-violet-600 dark:text-violet-400">• 🛠️ Управление чатом</div>
+          <div className="text-violet-600 dark:text-violet-400">• 📝 Публикация сообщений</div>
+          <div className="text-violet-600 dark:text-violet-400">• ✏️ Редактирование сообщений</div>
+          <div className="text-violet-600 dark:text-violet-400">• ✉️ Личные сообщения</div>
+          <div className="text-violet-600 dark:text-violet-400">• 🏷️ Управление тегами</div>
+          <div className="text-violet-600 dark:text-violet-400">• 👋 Приветственные сообщения</div>
         </div>
 
         <div className="mt-3 p-3 bg-violet-100/50 dark:bg-violet-900/20 rounded-lg border border-violet-200 dark:border-violet-700">

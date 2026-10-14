@@ -54,7 +54,19 @@ export const fixtureMuteUser: UserHandlerTemplateParams = {
   duration: 3600,
   reason: 'Флуд',
   canSendMessages: false,
-  canSendMediaMessages: false,
+  canSendAudios: false,
+  canSendDocuments: false,
+  canSendPhotos: false,
+  canSendVideos: false,
+  canSendVideoNotes: false,
+  canSendVoiceNotes: false,
+  canSendPolls: false,
+  canSendOtherMessages: false,
+  canAddWebPagePreviews: false,
+  canReactToMessages: false,
+  canChangeGroupInfo: false,
+  canInviteUsers2: false,
+  canPinMessages2: false,
 };
 
 export const fixtureUnmuteUser: UserHandlerTemplateParams = {
