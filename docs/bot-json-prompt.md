@@ -1205,6 +1205,21 @@ parallel_split → ветка N: … → set_variable (done = int({done}) + 1, m
 | `saveOrderNameTo` / `EmailTo` / `PhoneTo` | После оплаты ← `order_info` (пусто = не писать) |
 | `keyboardNodeId` | Опционально: id узла `keyboard` со счётом |
 | `autoTransitionTo` | Узел после успешной оплаты (`enableAutoTransition: true`) |
+| `preCheckoutMode` | `always` (дефолт, поле можно не писать) — `pre_checkout` всегда `ok=True`. `condition` — отказ до списания |
+| `preCheckoutVariable` | Имя переменной пользователя для `condition` |
+| `preCheckoutOperator` | Как у `condition`, только по переменной: `filled`, `empty`, `equals`, `not_equals`, `contains`, `not_contains`, `starts_with`, `ends_with`, `matches_regex`, `greater_than`, `less_than`, `between`, `is_even`, `is_odd`, `divisible_by`. Не `is_private` / подписка / `else` |
+| `preCheckoutValue` / `preCheckoutValue2` | Значение сравнения (`value2` только для `between`). Допускает `{переменные}` |
+| `preCheckoutErrorMessage` | Текст `error_message` при ложном условии, `{переменные}`, до 200 знаков. Пусто → «Оплата сейчас недоступна» |
+
+Отказ решается сразу в `pre_checkout` (лимит Telegram 10 секунд), без узла `input`. Условие истинно → `ok=True`, дальше обычная оплата и `autoTransitionTo`. Ложно → `ok=False`. Несколько счетов: правило по payload (сначала цель этой сессии, иначе статическая метка без `{переменных}`). Метка вида `order_{id}` проверяется в том же запуске бота после создания счёта. Неизвестный оператор не отказывает.
+
+```json
+"preCheckoutMode": "condition",
+"preCheckoutVariable": "can_pay",
+"preCheckoutOperator": "equals",
+"preCheckoutValue": "yes",
+"preCheckoutErrorMessage": "Оплата недоступна: {reason}"
+```
 
 Типичная цепочка: `command_trigger` `/buy` → `send_invoice` → (после оплаты) `message` «спасибо».  
 Подписка 30 дней у `send_invoice` **недоступна** (Telegram: `SUBSCRIPTION_EXPORT_MISSING`) — только `create_invoice_link` + `invoiceSubscription` и только при `XTR`.
@@ -1245,6 +1260,7 @@ parallel_split → ветка N: … → set_variable (done = int({done}) + 1, m
 | `saveInvoiceLinkTo` | Переменная под URL (`https://t.me/$…`) |
 | `autoTransitionTo` | Сразу после создания ссылки |
 | `afterPaymentTo` | После оплаты по этой ссылке (в текущей сессии) |
+| `preCheckoutMode` и соседние поля | Как у `send_invoice`: общий `pre_checkout`, выбор правила по `invoicePayload` |
 
 Цепочка: `/buy` → `create_invoice_link` → `message` «Нажмите кнопку, чтобы оплатить» + url-кнопка `{invoice_url}` (не показывать голый URL в тексте).
 
@@ -1597,12 +1613,12 @@ await bot.edit_message_text('Опрашиваю… 3/15', chat_id=chat_id,
 | `video` | Отправить видео (`videoUrl`) |
 | `audio` | Отправить аудио (`audioUrl`) |
 | `document` | Отправить документ (`documentUrl`, `documentName`) |
-| `sticker` | Отправить стикер |
-| `animation` | Отправить GIF |
+| `sticker` | Отправить стикер при входе в блок (`stickerFileId` или `stickerUrl`). Подписи нет |
+| `animation` | Отправить GIF при входе в блок (`animationUrl`, подпись `mediaCaption`) |
 | `location` | Отправить геолокацию |
 | `contact` | Отправить контакт |
 
-Все медиа-узлы поддерживают `mediaCaption` — подпись.
+`sticker` и `animation` вызываются как `delete_message`: callback при входе в блок и автопереход `enableAutoTransition` + `autoTransitionTo`. Не команда и не фильтр входящего сообщения. `command` в `data` можно оставить, на запуск он не влияет. У остальных медиа-узлов есть `mediaCaption`.
 
 ### Пример photo
 

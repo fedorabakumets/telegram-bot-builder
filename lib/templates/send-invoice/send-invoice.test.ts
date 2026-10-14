@@ -21,6 +21,7 @@ describe('collectSendInvoiceEntries()', () => {
     assert.equal(entries[0].payload, 'inv_1');
     assert.equal(entries[0].amount, '50');
     assert.equal(entries[0].autoTransitionTo, 'msg_1');
+    assert.equal(entries[0].preCheckoutMode, 'always');
   });
 
   it('возвращает пустой массив без счетов', () => {
@@ -44,6 +45,8 @@ describe('generateSendInvoiceHandlers()', () => {
     assert.ok(code.includes('LabeledPrice'));
     assert.ok(code.includes('pre_checkout_query'));
     assert.ok(code.includes('ok=True'));
+    assert.ok(!code.includes('ok=False'));
+    assert.ok(!code.includes('pre_mode'));
     assert.ok(code.includes('successful_payment'));
     assert.ok(code.includes('handle_callback_msg_1'));
   });
@@ -268,5 +271,197 @@ describe('generateSendInvoiceHandlers()', () => {
     assert.ok(code.includes('replace_variables_in_text("{shop_currency}"') || code.includes("replace_variables_in_text('{shop_currency}'"));
     assert.ok(code.includes('need_email'));
     assert.ok(code.includes('_currency != "XTR"') || code.includes("_currency != 'XTR'"));
+  });
+
+  it('condition: отказ по payload, текст с переменной, переход после оплаты на месте', () => {
+    const nodes = [
+      {
+        id: 'inv_gate',
+        type: 'send_invoice',
+        position: { x: 0, y: 0 },
+        data: {
+          invoiceTitle: 'Товар',
+          invoiceDescription: 'Описание',
+          invoiceAmount: '5',
+          invoicePayload: 'sku_1',
+          preCheckoutMode: 'condition',
+          preCheckoutVariable: 'can_pay',
+          preCheckoutOperator: 'equals',
+          preCheckoutValue: 'yes',
+          preCheckoutErrorMessage: 'Нельзя: {reason}',
+          autoTransitionTo: 'msg_ok',
+          keyboardType: 'none',
+          buttons: [],
+        },
+      },
+      {
+        id: 'msg_ok',
+        type: 'message',
+        position: { x: 100, y: 0 },
+        data: { messageText: 'ок', buttons: [], keyboardType: 'none' },
+      },
+    ];
+    const code = generateSendInvoiceHandlers(nodes as any);
+    assert.ok(code.includes('ok=False'));
+    assert.ok(code.includes('error_message'));
+    assert.ok(code.includes('"sku_1"'));
+    assert.ok(code.includes('"can_pay"'));
+    assert.ok(code.includes('"equals"'));
+    assert.ok(code.includes('Нельзя: {reason}'));
+    assert.ok(code.includes('_stars_pre_checkout_rules'));
+    assert.ok(code.includes('_stars_pre_checkout_ok'));
+    assert.ok(code.includes('handle_callback_msg_ok'));
+    assert.ok(code.includes('successful_payment'));
+  });
+
+  it('пустой текст отказа заменяется коротким русским', () => {
+    const nodes = [
+      {
+        id: 'inv_empty_err',
+        type: 'send_invoice',
+        position: { x: 0, y: 0 },
+        data: {
+          invoiceTitle: 'Товар',
+          invoiceDescription: 'Описание',
+          invoiceAmount: '1',
+          invoicePayload: 'sku_empty',
+          preCheckoutMode: 'condition',
+          preCheckoutVariable: 'vip',
+          preCheckoutOperator: 'filled',
+          preCheckoutErrorMessage: '   ',
+          keyboardType: 'none',
+          buttons: [],
+        },
+      },
+    ];
+    const code = generateSendInvoiceHandlers(nodes as any);
+    assert.ok(code.includes('"pre_error": "Оплата сейчас недоступна"'));
+  });
+
+  it('два счёта: в статической карте только payload с condition', () => {
+    const base = {
+      invoiceTitle: 'Товар',
+      invoiceDescription: 'Описание',
+      invoiceAmount: '1',
+      keyboardType: 'none',
+      buttons: [],
+    };
+    const nodes = [
+      {
+        id: 'inv_open',
+        type: 'send_invoice',
+        position: { x: 0, y: 0 },
+        data: { ...base, invoicePayload: 'payload_open' },
+      },
+      {
+        id: 'inv_gate',
+        type: 'send_invoice',
+        position: { x: 0, y: 80 },
+        data: {
+          ...base,
+          invoicePayload: 'payload_gate',
+          preCheckoutMode: 'condition',
+          preCheckoutVariable: 'score',
+          preCheckoutOperator: 'greater_than',
+          preCheckoutValue: '10',
+          preCheckoutErrorMessage: 'Мало баллов',
+        },
+      },
+    ];
+    const code = generateSendInvoiceHandlers(nodes as any);
+    const start = code.indexOf('_stars_pre_checkout_rules');
+    const end = code.indexOf('@dp.callback_query', start);
+    const rules = code.slice(start, end);
+    assert.ok(rules.includes('payload_gate'));
+    assert.ok(!rules.includes('payload_open'));
+    assert.ok(code.includes('"greater_than"'));
+    assert.ok(code.includes('ok=True'));
+  });
+
+  it('payload с {переменной} не кладётся в статическую карту, но пишется при создании счёта', () => {
+    const nodes = [
+      {
+        id: 'inv_dyn',
+        type: 'send_invoice',
+        position: { x: 0, y: 0 },
+        data: {
+          invoiceTitle: 'Товар',
+          invoiceDescription: 'Описание',
+          invoiceAmount: '1',
+          invoicePayload: 'order_{id}',
+          preCheckoutMode: 'condition',
+          preCheckoutVariable: 'can_pay',
+          preCheckoutOperator: 'equals',
+          preCheckoutValue: '1',
+          preCheckoutErrorMessage: 'Нет',
+          keyboardType: 'none',
+          buttons: [],
+        },
+      },
+    ];
+    const code = generateSendInvoiceHandlers(nodes as any);
+    const start = code.indexOf('_stars_pre_checkout_rules');
+    const end = code.indexOf('@dp.callback_query', start);
+    const rules = code.slice(start, end);
+    assert.ok(!rules.includes('order_{id}'));
+    const handlerEnd = code.indexOf('@dp.pre_checkout_query');
+    const handler = code.slice(0, handlerEnd);
+    assert.ok(handler.includes('"pre_mode": "condition"'));
+    assert.ok(handler.includes('order_{id}'));
+  });
+
+  it('неизвестный оператор не включает отказ', () => {
+    const nodes = [
+      {
+        id: 'inv_bad',
+        type: 'send_invoice',
+        position: { x: 0, y: 0 },
+        data: {
+          invoiceTitle: 'Товар',
+          invoiceDescription: 'Описание',
+          invoiceAmount: '1',
+          preCheckoutMode: 'condition',
+          preCheckoutVariable: 'x',
+          preCheckoutOperator: 'is_admin',
+          preCheckoutErrorMessage: 'Нет',
+          keyboardType: 'none',
+          buttons: [],
+        },
+      },
+    ];
+    const code = generateSendInvoiceHandlers(nodes as any);
+    assert.ok(code.includes('ok=True'));
+    assert.ok(!code.includes('ok=False'));
+    assert.ok(!code.includes('pre_mode'));
+  });
+
+  it('create_invoice_link: condition и переход после оплаты', () => {
+    const nodes = [
+      {
+        id: 'link_1',
+        type: 'create_invoice_link',
+        position: { x: 0, y: 0 },
+        data: {
+          invoiceTitle: 'Товар',
+          invoiceDescription: 'Описание',
+          invoiceAmount: '2',
+          invoicePayload: 'link_sku',
+          saveInvoiceLinkTo: 'invoice_url',
+          preCheckoutMode: 'condition',
+          preCheckoutVariable: 'can_pay',
+          preCheckoutOperator: 'filled',
+          preCheckoutErrorMessage: '',
+          afterPaymentTo: 'msg_paid',
+          autoTransitionTo: 'msg_link',
+        },
+      },
+    ];
+    const code = generateSendInvoiceHandlers(nodes as any);
+    assert.ok(code.includes('create_invoice_link'));
+    assert.ok(code.includes('ok=False'));
+    assert.ok(code.includes('"link_sku"'));
+    assert.ok(code.includes('"pre_error": "Оплата сейчас недоступна"'));
+    assert.ok(code.includes('handle_callback_msg_paid'));
+    assert.ok(code.includes('handle_callback_msg_link'));
   });
 });

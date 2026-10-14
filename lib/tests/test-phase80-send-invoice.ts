@@ -4,6 +4,7 @@
  * Блок A: Генерация счёта (answer_invoice, XTR, LabeledPrice)
  * Блок B: pre_checkout и successful_payment
  * Блок C: нет перехода сразу после отправки; импорт LabeledPrice
+ * Блок G: отказ pre_checkout до списания
  */
 
 import fs from 'fs';
@@ -498,6 +499,117 @@ test('F04', 'message_thread_id и disable_notification', () => {
   ok(body.includes('reply_to_message_id'), 'reply_to_message_id');
   ok(body.includes('allow_paid_broadcast'), 'allow_paid_broadcast');
   syntax(gen(p, 'f04s'), 'f04s');
+});
+
+console.log('── Блок G: отказ до списания ───────────────────────────────────');
+
+test('G01', 'без condition нет ok=False', () => {
+  const p = makeCleanProject([makeInvoiceNode('inv1', 'msg1'), makeMessageNode('msg1')]);
+  const code = gen(p, 'g01');
+  ok(code.includes('ok=True') || code.includes('ok = True'), 'подтверждение счёта');
+  ok(!code.includes('ok=False') && !code.includes('ok = False'), 'нет отказа');
+  ok(!code.includes('pre_mode'), 'нет правила condition');
+  syntax(code, 'g01');
+});
+
+test('G02', 'condition: ok=False, текст и переход после оплаты', () => {
+  const p = makeCleanProject([
+    makeInvoiceNode('inv1', 'msg1', {
+      invoicePayload: 'sku_1',
+      preCheckoutMode: 'condition',
+      preCheckoutVariable: 'can_pay',
+      preCheckoutOperator: 'equals',
+      preCheckoutValue: 'yes',
+      preCheckoutErrorMessage: 'Нельзя: {reason}',
+    }),
+    makeMessageNode('msg1'),
+  ]);
+  const code = gen(p, 'g02');
+  ok(code.includes('ok=False'), 'отказ ok=False');
+  ok(code.includes('error_message'), 'error_message');
+  ok(code.includes('sku_1'), 'payload счёта');
+  ok(code.includes('can_pay'), 'переменная');
+  ok(code.includes('Нельзя: {reason}'), 'текст с переменной');
+  ok(code.includes('handle_callback_msg1'), 'переход после успеха на месте');
+  ok(code.includes('successful_payment'), 'обработчик успешной оплаты');
+  syntax(code, 'g02');
+});
+
+test('G03', 'два счёта: статическое правило только у своего payload', () => {
+  const p = makeCleanProject([
+    makeInvoiceNode('inv1', 'msg1', { invoicePayload: 'payload_open' }),
+    makeInvoiceNode('inv2', 'msg1', {
+      invoicePayload: 'payload_gate',
+      preCheckoutMode: 'condition',
+      preCheckoutVariable: 'score',
+      preCheckoutOperator: 'greater_than',
+      preCheckoutValue: '10',
+      preCheckoutErrorMessage: 'Мало баллов',
+    }),
+    makeMessageNode('msg1'),
+  ]);
+  const code = gen(p, 'g03');
+  const start = code.indexOf('_stars_pre_checkout_rules');
+  const end = code.indexOf('@dp.callback_query', start);
+  const rules = code.slice(start, end);
+  ok(start >= 0, 'есть карта правил');
+  ok(rules.includes('payload_gate'), 'в карте payload условия');
+  ok(!rules.includes('payload_open'), 'в карте нет payload без условия');
+  ok(code.includes('ok=True'), 'второй счёт можно подтвердить');
+  syntax(code, 'g03');
+});
+
+test('G04', 'пустой текст отказа → запасная фраза', () => {
+  const p = makeCleanProject([
+    makeInvoiceNode('inv1', 'msg1', {
+      invoicePayload: 'sku_empty',
+      preCheckoutMode: 'condition',
+      preCheckoutVariable: 'vip',
+      preCheckoutOperator: 'filled',
+      preCheckoutErrorMessage: '   ',
+    }),
+    makeMessageNode('msg1'),
+  ]);
+  const code = gen(p, 'g04');
+  ok(code.includes('Оплата сейчас недоступна'), 'запасной русский текст');
+  syntax(code, 'g04');
+});
+
+test('G05', 'ссылка на счёт: condition и afterPaymentTo', () => {
+  const p = makeCleanProject([
+    {
+      id: 'link1',
+      type: 'create_invoice_link',
+      position: { x: 0, y: 0 },
+      data: {
+        invoiceTitle: 'Товар',
+        invoiceDescription: 'Описание',
+        invoiceAmount: '2',
+        invoicePayload: 'link_sku',
+        saveInvoiceLinkTo: 'invoice_url',
+        preCheckoutMode: 'condition',
+        preCheckoutVariable: 'can_pay',
+        preCheckoutOperator: 'filled',
+        preCheckoutErrorMessage: '',
+        afterPaymentTo: 'msg1',
+        autoTransitionTo: 'msg_link',
+        enableAutoTransition: true,
+      },
+    },
+    makeMessageNode('msg1'),
+    {
+      id: 'msg_link',
+      type: 'message',
+      position: { x: 200, y: 80 },
+      data: { messageText: 'ссылка', buttons: [], keyboardType: 'none', formatMode: 'none' },
+    },
+  ]);
+  const code = gen(p, 'g05');
+  ok(code.includes('create_invoice_link') || code.includes('createInvoiceLink'), 'создание ссылки');
+  ok(code.includes('ok=False'), 'отказ у ссылки');
+  ok(code.includes('link_sku'), 'payload ссылки');
+  ok(code.includes('handle_callback_msg1'), 'переход после оплаты');
+  syntax(code, 'g05');
 });
 
 console.log('\n── Итог ─────────────────────────────────────────────────────────');

@@ -4,11 +4,17 @@
  */
 
 import type { Node } from '@shared/schema';
-import type {
-  CreateInvoiceLinkEntry,
-  InvoicePaymentCommon,
-  InvoiceProviderSource,
-  SendInvoiceEntry,
+import {
+  PRE_CHECKOUT_FALLBACK_ERROR,
+  PRE_CHECKOUT_OPERATORS,
+  type CreateInvoiceLinkEntry,
+  type InvoicePaymentCommon,
+  type InvoiceProviderSource,
+  type PreCheckoutFields,
+  type PreCheckoutMode,
+  type PreCheckoutOperator,
+  type PreCheckoutRule,
+  type SendInvoiceEntry,
 } from './send-invoice.params';
 import {
   normalizeInvoiceCurrency,
@@ -84,6 +90,59 @@ function resolveInvoicePaymentFields(data: any, fallbackLabel: string): InvoiceP
   };
 }
 
+/** Допустимые операторы отказа до списания */
+const PRE_CHECKOUT_OP_SET = new Set<string>(PRE_CHECKOUT_OPERATORS);
+
+/**
+ * Читает режим и условие pre_checkout. Неизвестный оператор не блокирует оплату.
+ * @param data - Data узла счёта или ссылки
+ * @returns Поля проверки перед списанием
+ */
+function resolvePreCheckoutFields(data: any): PreCheckoutFields {
+  const requested: PreCheckoutMode = data?.preCheckoutMode === 'condition' ? 'condition' : 'always';
+  const opRaw = String(data?.preCheckoutOperator || '').trim();
+  let mode: PreCheckoutMode = requested;
+  let operator: PreCheckoutOperator = 'filled';
+  if (requested === 'condition') {
+    if (!opRaw) {
+      operator = 'filled';
+    } else if (PRE_CHECKOUT_OP_SET.has(opRaw)) {
+      operator = opRaw as PreCheckoutOperator;
+    } else {
+      mode = 'always';
+    }
+  }
+  const error = String(data?.preCheckoutErrorMessage || '').trim();
+  return {
+    preCheckoutMode: mode,
+    preCheckoutVariable: String(data?.preCheckoutVariable || '').trim(),
+    preCheckoutOperator: operator,
+    preCheckoutValue: String(data?.preCheckoutValue ?? ''),
+    preCheckoutValue2: String(data?.preCheckoutValue2 ?? ''),
+    preCheckoutErrorMessage: mode === 'condition' ? (error || PRE_CHECKOUT_FALLBACK_ERROR) : error,
+  };
+}
+
+/**
+ * Статические правила отказа: payload без {переменных} живёт в коде и после рестарта
+ * @param entries - Счета и ссылки
+ * @returns Правила для карты _stars_pre_checkout_rules
+ */
+function collectStaticPreCheckoutRules(
+  entries: Array<SendInvoiceEntry | CreateInvoiceLinkEntry>,
+): PreCheckoutRule[] {
+  return entries
+    .filter((entry) => entry.preCheckoutMode === 'condition' && !entry.payload.includes('{'))
+    .map((entry) => ({
+      payload: entry.payload,
+      variable: entry.preCheckoutVariable,
+      operator: entry.preCheckoutOperator,
+      value: entry.preCheckoutValue,
+      value2: entry.preCheckoutValue2,
+      errorMessage: entry.preCheckoutErrorMessage || PRE_CHECKOUT_FALLBACK_ERROR,
+    }));
+}
+
 /**
  * Собирает SendInvoiceEntry[] из узлов холста
  * @param nodes - Массив узлов
@@ -126,6 +185,7 @@ export function collectSendInvoiceEntries(nodes: Node[]): SendInvoiceEntry[] {
         saveOrderNameTo: data?.saveOrderNameTo || '',
         saveOrderEmailTo: data?.saveOrderEmailTo || '',
         saveOrderPhoneTo: data?.saveOrderPhoneTo || '',
+        ...resolvePreCheckoutFields(data),
         autoTransitionTo: targetId,
         targetNodeType: targetNode?.type || 'message',
         hasKeyboard,
@@ -162,6 +222,7 @@ export function collectCreateInvoiceLinkEntries(nodes: Node[]): CreateInvoiceLin
         saveOrderNameTo: data?.saveOrderNameTo || '',
         saveOrderEmailTo: data?.saveOrderEmailTo || '',
         saveOrderPhoneTo: data?.saveOrderPhoneTo || '',
+        ...resolvePreCheckoutFields(data),
         autoTransitionTo: data?.autoTransitionTo || '',
         afterPaymentTo: data?.afterPaymentTo || '',
         subscription:
@@ -184,6 +245,8 @@ export function generateSendInvoiceHandlers(nodes: Node[]): string {
     return '';
   }
 
+  const invoiceEntries = [...entries, ...linkEntries];
+  const hasPreCheckoutRules = invoiceEntries.some((entry) => entry.preCheckoutMode === 'condition');
   return renderPartialTemplate('send-invoice/send-invoice.py.jinja2', {
     sendInvoiceEntries: entries.map((entry) => ({
       ...entry,
@@ -191,5 +254,7 @@ export function generateSendInvoiceHandlers(nodes: Node[]): string {
     })),
     createInvoiceLinkEntries: linkEntries,
     successfulPaymentTriggerEntries: triggerEntries,
+    hasPreCheckoutRules,
+    preCheckoutRules: collectStaticPreCheckoutRules(invoiceEntries),
   });
 }

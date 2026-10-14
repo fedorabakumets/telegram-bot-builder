@@ -1,0 +1,12 @@
+{#
+  @fileoverview Поля отказа в _stars_payment_targets. Контекст: entry.
+  Пишутся только в режиме condition, чтобы старый счёт оставался без pre_mode.
+#}
+{% if entry.preCheckoutMode == 'condition' %}
+        "pre_mode": "condition",
+        "pre_var": {{ entry.preCheckoutVariable | tojson }},
+        "pre_op": {{ entry.preCheckoutOperator | tojson }},
+        "pre_value": {{ entry.preCheckoutValue | tojson }},
+        "pre_value2": {{ entry.preCheckoutValue2 | tojson }},
+        "pre_error": {{ entry.preCheckoutErrorMessage | tojson }},
+{% endif %}

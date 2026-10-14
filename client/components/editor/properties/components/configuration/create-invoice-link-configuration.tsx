@@ -19,6 +19,7 @@ import { InvoiceOrderInfoFields } from './invoice-order-info-fields';
 import { InvoicePricesEditor } from './invoice-prices-editor';
 import { InvoiceTipsFields } from './invoice-tips-fields';
 import { InvoiceProviderDataField } from './invoice-provider-data-field';
+import { InvoicePreCheckoutFields } from './invoice-pre-checkout-fields';
 import type { Variable } from '../../../inline-rich/types';
 
 /** Пропсы панели ссылки на счёт */
@@ -209,6 +210,13 @@ export function CreateInvoiceLinkConfiguration({
           placeholder="payment_charge_id"
         />
       </div>
+
+      <InvoicePreCheckoutFields
+        nodeId={selectedNode.id}
+        data={data}
+        onNodeUpdate={onNodeUpdate}
+        textVariables={textVariables}
+      />
 
       <div className="flex flex-col p-3 rounded-lg bg-gradient-to-br from-sky-50/60 to-cyan-50/40 dark:from-sky-950/30 dark:to-cyan-950/20 border border-sky-200/40 dark:border-sky-700/40">
         <Label className="text-xs font-semibold text-sky-700 dark:text-sky-300 mb-1">

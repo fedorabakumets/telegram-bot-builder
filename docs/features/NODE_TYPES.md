@@ -213,12 +213,12 @@ keyboard (кнопка с customCallbackData: "approve_{user_id}")
 | `video` | Видео | `videoUrl` |
 | `audio` | Аудиофайл | `audioUrl` |
 | `document` | Документ | `documentUrl`, `documentName` |
-| `sticker` | Стикер | — |
-| `animation` | GIF-анимацию | — |
+| `sticker` | Стикер | `stickerFileId` или `stickerUrl` |
+| `animation` | GIF-анимацию | `animationUrl` |
 | `location` | Геолокацию | — |
 | `contact` | Контакт | — |
 
-Все медиа-узлы поддерживают подпись (`mediaCaption`) и автопереход.
+`sticker` и `animation` — шаги сценария: бот отправляет файл, когда выполнение дошло до блока (кнопка или `autoTransitionTo`). Это не команда и не ответ на входящий стикер или GIF. У стикера подписи нет (`sendSticker` её не принимает). У анимации подпись — `mediaCaption`. Поле `command` в старых данных сохраняется, но отправку не запускает. Остальные медиа-узлы поддерживают подпись (`mediaCaption`) и автопереход.
 
 ---
 
@@ -587,8 +587,11 @@ In-memory счётчик событий в **скользящем временн
 | Сохранить order_info | После оплаты: `saveOrderNameTo` / `saveOrderEmailTo` / `saveOrderPhoneTo` ← `order_info` |
 | Клавиатура | При добавлении — соседний `keyboard` с «Оплатить»; стрелка «после оплаты» от кнопки pay |
 | Следующий узел | `autoTransitionTo` + `enableAutoTransition: true` — после оплаты |
+| Проверка перед оплатой | `preCheckoutMode`: `always` (по умолчанию, всегда `ok=True`) или `condition` |
 
-Если в проекте есть хотя бы один `send_invoice` или `create_invoice_link`, бот отвечает на `pre_checkout_query` всегда «да» (лимит Телеграма — 10 секунд). **Подписка на 30 дней в чат не ставится** — Telegram отвечает `SUBSCRIPTION_EXPORT_MISSING`; только узел «Ссылка на счёт» и только при `XTR`. Отмена автопродления — узел `edit_star_subscription`.
+Если в проекте есть хотя бы один `send_invoice` или `create_invoice_link`, бот отвечает на `pre_checkout_query` (лимит Телеграма — 10 секунд). Без режима `condition` ответ по-прежнему «да». **Подписка на 30 дней в чат не ставится** — Telegram отвечает `SUBSCRIPTION_EXPORT_MISSING`; только узел «Ссылка на счёт» и только при `XTR`. Отмена автопродления — узел `edit_star_subscription`.
+
+**Отказ до списания.** `preCheckoutMode: "condition"` проверяет переменную пользователя прямо в обработчике `pre_checkout`, без ожидания ввода. Если условие ложно — `answerPreCheckoutQuery` с `ok=False` и `error_message` из `preCheckoutErrorMessage` (подстановка `{переменных}`, пустой текст → «Оплата сейчас недоступна», обрезка до 200 знаков). Если истинно — `ok=True`, оплата и переход после успеха не меняются. Операторы те же, что у `condition` для переменной: `filled`, `empty`, `equals`, `not_equals`, `contains`, `not_contains`, `starts_with`, `ends_with`, `matches_regex`, `greater_than`, `less_than`, `between` (`preCheckoutValue2`), `is_even`, `is_odd`, `divisible_by`. Системные (`is_private`, подписка и т.п.) здесь не используются. При нескольких счетах правило выбирается по payload: сначала запись этой сессии (`_stars_payment_targets`), иначе статическая карта для метки без `{переменных}`. Метка с `{переменными}` проверяется в том же запуске бота, после создания счёта. Неизвестный оператор не включает отказ — счёт подтверждается.
 
 Для ботов с цифровой оплатой Телеграм требует `/paysupport` (и обычно `/terms`) — сделайте их обычными `command_trigger` + `message`.
 
@@ -609,6 +612,7 @@ In-memory счётчик событий в **скользящем временн
 | Без полей чата | Нет protect / start_parameter / thread / silent / reply (только у `send_invoice`) |
 | После создания | `autoTransitionTo` + `enableAutoTransition` — сразу после URL |
 | После оплаты | `afterPaymentTo` — опционально |
+| Проверка перед оплатой | Те же `preCheckoutMode` / `preCheckoutVariable` / `preCheckoutOperator` / `preCheckoutValue` / `preCheckoutValue2` / `preCheckoutErrorMessage`, что у `send_invoice`. Общий `pre_checkout` выбирает правило по payload |
 
 Клавиатуру pay не создаёт. Типичная цепочка: `/buy` → `create_invoice_link` → `message` без голого URL + inline url-кнопка «Оплатить» с `{invoice_url}`.
 

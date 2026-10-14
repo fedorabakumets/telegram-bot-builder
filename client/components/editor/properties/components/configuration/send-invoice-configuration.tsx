@@ -19,6 +19,7 @@ import { InvoicePricesEditor } from './invoice-prices-editor';
 import { InvoiceTipsFields } from './invoice-tips-fields';
 import { InvoiceProviderDataField } from './invoice-provider-data-field';
 import { InvoiceDeliveryFields } from './invoice-delivery-fields';
+import { InvoicePreCheckoutFields } from './invoice-pre-checkout-fields';
 import type { Variable } from '../../../inline-rich/types';
 import { getKeyboardNodeId } from '../../../canvas/canvas-node/keyboard-connection';
 import { findPayButtonOnKeyboard } from '../../utils/invoice-pay-connection';
@@ -209,6 +210,13 @@ export function SendInvoiceConfiguration({
           placeholder="payment_charge_id"
         />
       </div>
+
+      <InvoicePreCheckoutFields
+        nodeId={selectedNode.id}
+        data={data}
+        onNodeUpdate={onNodeUpdate}
+        textVariables={textVariables}
+      />
 
       <div className="flex flex-col p-3 rounded-lg bg-gradient-to-br from-yellow-50/60 to-amber-50/40 dark:from-yellow-950/30 dark:to-amber-950/20 border border-yellow-200/40 dark:border-yellow-700/40">
         <Label className="text-xs font-semibold text-yellow-700 dark:text-yellow-300 mb-1">

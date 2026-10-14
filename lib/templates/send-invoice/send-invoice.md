@@ -23,7 +23,7 @@
 1. `handle_callback_{id}` вызывает `answer_invoice` с `currency="XTR"` и пустым токеном кассы.
 2. Если есть клавиатура — передаёт `reply_markup` с `pay=True` на первой кнопке.
 3. Переход **не** выполняется после отправки счёта.
-4. Глобальный `pre_checkout_query` отвечает `ok=True`.
+4. Глобальный `pre_checkout_query` отвечает `ok=True`, если `preCheckoutMode` не `condition`. В режиме `condition` ложное условие даёт `ok=False` и `error_message` сразу, без ожидания ввода.
 5. `successful_payment` сохраняет переменные и вызывает следующий узел.
 
 ## API

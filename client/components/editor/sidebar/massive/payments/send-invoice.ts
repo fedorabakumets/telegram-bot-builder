@@ -50,6 +50,18 @@ export const sendInvoiceNode: ComponentDefinition = {
     saveOrderEmailTo: '',
     /** Переменная для телефона покупателя */
     saveOrderPhoneTo: '',
+    /** Проверка перед списанием: всегда разрешать */
+    preCheckoutMode: 'always',
+    /** Переменная условия отказа */
+    preCheckoutVariable: '',
+    /** Оператор условия */
+    preCheckoutOperator: 'filled',
+    /** Значение сравнения */
+    preCheckoutValue: '',
+    /** Второе значение для between */
+    preCheckoutValue2: '',
+    /** Текст отказа до списания */
+    preCheckoutErrorMessage: '',
     /** ID следующего узла после оплаты */
     autoTransitionTo: '',
     /** Включить автопереход после оплаты */
