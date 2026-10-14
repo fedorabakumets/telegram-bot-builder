@@ -17204,7 +17204,7 @@
         "tags": [
           "Диалоги"
         ],
-        "description": "Читает сохранённые диалоги без запросов Telegram. Статус доступа — последняя проверка, счётчик — сохранённые сообщения. Курсор привязан к проекту, токену, виду и поиску; при новых сообщениях снимок выдачи не гарантируется.",
+        "description": "Читает сохранённые диалоги без запросов Telegram. Личные карточки требуют личных сообщений выбранного бота; групповые сообщения не меняют их превью и порядок. Статус доступа — последняя проверка, счётчик — сохранённые сообщения. Курсор привязан к проекту, токену, виду и поиску; при новых сообщениях снимок выдачи не гарантируется.",
         "parameters": [
           {
             "schema": {
@@ -22330,7 +22330,7 @@
           "project-dialogs"
         ],
         "summary": "История сообщений диалога",
-        "description": "Последние N сообщений `bot_messages` (+ media), в хронологическом порядке. По умолчанию limit=100. Фильтр `messageType=user|bot`. Скоуп по `tokenId`.\n\n**Клиент:** панель диалога, last-message, детали пользователя.\n\n```bash\ncurl -s -b cookies.txt \\\n  'http://localhost:5000/api/projects/42/users/123456789/messages?tokenId=7&limit=50'\n```",
+        "description": "Последние N сообщений `bot_messages` (+ media), в хронологическом порядке. По умолчанию limit=100. Фильтр `messageType=user|bot`. Скоуп по `tokenId`.\n\n`includeGroupContext=true` добавляет входящие сообщения этого человека в группах выбранного бота, с `chatType`, `chatId`, `sourceChatTitle`. Без параметра возвращается только личная история. Групповые ответы бота исключены; отправка из личной панели остаётся личной.\n\n**Клиент:** панель диалога, last-message, детали пользователя.\n\n```bash\ncurl -s -b cookies.txt \\\n  'http://localhost:5000/api/projects/42/users/123456789/messages?tokenId=7&limit=50'\n```",
         "security": [
           {
             "cookieAuth": []
@@ -22374,6 +22374,19 @@
             "description": "ID токена бота проекта",
             "example": "7",
             "name": "tokenId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "description": "По умолчанию только личная история; true включает групповой контекст пользователя."
+            },
+            "required": false,
+            "name": "includeGroupContext",
             "in": "query"
           },
           {
@@ -29111,6 +29124,18 @@
             "items": {
               "$ref": "#/components/schemas/DialogMessageMedia"
             }
+          },
+          "chatType": {
+            "type": "string",
+            "nullable": true
+          },
+          "chatId": {
+            "type": "string",
+            "nullable": true
+          },
+          "sourceChatTitle": {
+            "type": "string",
+            "nullable": true
           }
         },
         "required": [
