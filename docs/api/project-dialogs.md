@@ -91,6 +91,8 @@ curl -s -X DELETE -b cookies.txt \
 
 Последние N сообщений `bot_messages` (+ media), в хронологическом порядке. По умолчанию limit=100. Фильтр `messageType=user|bot`. Скоуп по `tokenId`.
 
+`includeGroupContext=true` добавляет входящие сообщения этого человека в группах выбранного бота, с `chatType`, `chatId`, `sourceChatTitle`. Без параметра возвращается только личная история. Групповые ответы бота исключены; отправка из личной панели остаётся личной.
+
 **Клиент:** панель диалога, last-message, детали пользователя.
 
 ```bash
@@ -105,6 +107,7 @@ curl -s -b cookies.txt \
 | `projectId` | path | да | ID проекта | `"42"` |
 | `userId` | path | да | Telegram user_id (или `bot` для аватара бота) | `"123456789"` |
 | `tokenId` | query | нет | ID токена бота проекта | `"7"` |
+| `includeGroupContext` | query | нет | — | — |
 | `limit` | query | нет | — | `"100"` |
 | `messageType` | query | нет | — | `"bot"` |
 | `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
