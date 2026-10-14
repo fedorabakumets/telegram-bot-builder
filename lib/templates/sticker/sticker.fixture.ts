@@ -56,52 +56,15 @@ export const invalidParamsMissingField = {
   // отсутствует nodeId
 };
 
-/** Ожидаемый вывод: стикер по file_id */
+/** Ожидаемый вывод: стикер по file_id, без подписи и без команды */
 export const expectedOutputFileId = `
-@dp.message(Command("sticker_sticker_1"))
-async def handle_sticker_sticker_1(message: types.Message):
-    """Обработчик отправки стикера для узла sticker_1"""
-    user_id = message.from_user.id
-
-    {# Отправка по file_id #}
-    sticker_file_id = "CAACAgQAAxkBAAIC"
-
-    caption = "Привет!"
-
-    {# Замена переменных #}
-    all_user_vars = await init_all_user_vars(user_id)
-    variable_filters = user_data.get(user_id, {}).get("_variable_filters", {})
-    caption = replace_variables_in_text(caption, all_user_vars, variable_filters)
-
-    try:
-        await message.answer_sticker(
-            sticker=sticker_file_id,
-            caption=caption
-        )
-    except Exception as e:
-        logging.error(f"Ошибка отправки стикера: {e}")
-        await message.answer("Произошла ошибка при отправке стикера")
+@dp.callback_query(lambda c: c.data == "sticker_1")
+async def handle_callback_sticker_1(callback_query: types.CallbackQuery, state: FSMContext = None):
+    """Отправка стикера при входе в узел sticker_1"""
 `.trim();
 
 /** Ожидаемый вывод: стикер по URL */
 export const expectedOutputUrl = `
-@dp.message(Command("sticker_sticker_2"))
-async def handle_sticker_sticker_2(message: types.Message):
-    """Обработчик отправки стикера для узла sticker_2"""
-    user_id = message.from_user.id
-
-    {# Отправка по URL #}
-    sticker_url = "https://example.com/sticker.webp"
-
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(sticker_url) as resp:
-                sticker_data = await resp.read()
-                await message.answer_sticker(
-                    sticker=sticker_data,
-                    disable_notification=True
-                )
-    except Exception as e:
-        logging.error(f"Ошибка отправки стикера: {e}")
-        await message.answer("Произошла ошибка при отправке стикера")
+sticker_url = "https://example.com/sticker.webp"
+async with aiohttp.ClientSession() as session:
 `.trim();

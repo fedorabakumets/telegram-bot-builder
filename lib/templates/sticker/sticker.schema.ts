@@ -5,25 +5,26 @@
 
 import { z } from 'zod';
 
-/** Схема для валидации параметров стикера */
+/** Схема для валидации параметров шага стикера */
 export const stickerParamsSchema = z.object({
-  // --- Идентификация ---
   /** Уникальный идентификатор узла */
   nodeId: z.string(),
 
-  // --- Медиа ---
-  /** URL стикера для отправки */
+  /** URL стикера (HTTP или путь /uploads/) */
   stickerUrl: z.string().optional(),
   /** File ID стикера */
   stickerFileId: z.string().optional(),
-  /** Название набора стикеров */
+  /** Запасной идентификатор стикера из набора */
   stickerSetName: z.string().optional(),
 
-  // --- Поведение ---
-  /** Подпись к стикеру */
+  /** Подпись из старых данных; в send_sticker не передаётся */
   mediaCaption: z.string().optional(),
   /** Отправить без уведомления */
   disableNotification: z.boolean().optional(),
+  /** ID следующего узла автоперехода */
+  autoTransitionTo: z.string().optional(),
+  /** stickerUrl — локальный путь /uploads/ */
+  isLocalStickerUrl: z.boolean().optional(),
 });
 
 /** Тип параметров стикера (выведен из схемы) */

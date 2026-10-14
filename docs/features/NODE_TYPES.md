@@ -213,12 +213,12 @@ keyboard (кнопка с customCallbackData: "approve_{user_id}")
 | `video` | Видео | `videoUrl` |
 | `audio` | Аудиофайл | `audioUrl` |
 | `document` | Документ | `documentUrl`, `documentName` |
-| `sticker` | Стикер | — |
-| `animation` | GIF-анимацию | — |
+| `sticker` | Стикер | `stickerFileId` или `stickerUrl` |
+| `animation` | GIF-анимацию | `animationUrl` |
 | `location` | Геолокацию | — |
 | `contact` | Контакт | — |
 
-Все медиа-узлы поддерживают подпись (`mediaCaption`) и автопереход.
+`sticker` и `animation` — шаги сценария: бот отправляет файл, когда выполнение дошло до блока (кнопка или `autoTransitionTo`). Это не команда и не ответ на входящий стикер или GIF. У стикера подписи нет (`sendSticker` её не принимает). У анимации подпись — `mediaCaption`. Поле `command` в старых данных сохраняется, но отправку не запускает. Остальные медиа-узлы поддерживают подпись (`mediaCaption`) и автопереход.
 
 ---
 

@@ -364,6 +364,8 @@ export function generateNodeHandlers(
       nodeId: node.id,
       animationUrl: node.data?.animationUrl || '',
       isLocalAnimationUrl: isLocalUploadPath(node.data?.animationUrl || ''),
+      mediaCaption: node.data?.mediaCaption || '',
+      autoTransitionTo: String(node.data?.autoTransitionTo || ''),
     }),
     location: generateLocationHandler,
     contact: generateContactHandler,

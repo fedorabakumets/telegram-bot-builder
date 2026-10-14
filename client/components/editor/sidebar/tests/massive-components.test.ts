@@ -14,6 +14,9 @@ describe('sidebar massive components', () => {
     const messages = botApi?.subcategories.find((s) => s.title === 'Сообщения');
     expect(messages).toBeTruthy();
     expect(messages?.components.some((c) => c.type === 'input')).toBe(true);
+    const types = messages?.components.map((c) => c.type) ?? [];
+    const mediaIdx = types.indexOf('media');
+    expect(types[mediaIdx + 1]).toBe('sticker');
   });
 
   it('имеет ровно три главные категории', () => {

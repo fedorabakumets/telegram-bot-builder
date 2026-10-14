@@ -5,7 +5,7 @@
  */
 
 import { ComponentDefinition } from '@shared/schema';
-import { textMessage, mediaMessage, keyboardMessage, saveAnswerNode } from './massive/messages';
+import { textMessage, mediaMessage, stickerMessage, keyboardMessage, saveAnswerNode } from './massive/messages';
 import { allCommandPresets } from './massive/commands';
 import type { CommandPreset } from './massive/commands';
 import {
@@ -71,7 +71,7 @@ export const componentCategories: PaletteMainCategory[] = [
         description: 'Триггеры и отправка сообщений',
         components: [
           commandTrigger, textTrigger, anyMessageTrigger, outgoingMessageTrigger,
-          textMessage, mediaMessage, saveAnswerNode, editMessageNode, deleteMessage, forwardMessage,
+          textMessage, mediaMessage, stickerMessage, saveAnswerNode, editMessageNode, deleteMessage, forwardMessage,
         ],
       },
       {

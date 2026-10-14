@@ -3,23 +3,27 @@
  * @module templates/sticker/sticker.params
  */
 
-/** Параметры для генерации обработчика стикера */
+/** Параметры для генерации шага отправки стикера */
 export interface StickerTemplateParams {
-  // --- Идентификация ---
   /** Уникальный идентификатор узла */
   nodeId: string;
 
-  // --- Медиа ---
-  /** URL стикера для отправки */
+  /** URL стикера (HTTP или путь /uploads/) */
   stickerUrl?: string;
   /** File ID стикера */
   stickerFileId?: string;
-  /** Название набора стикеров */
+  /** Запасной идентификатор стикера из набора */
   stickerSetName?: string;
 
-  // --- Поведение ---
-  /** Подпись к стикеру */
+  /**
+   * Подпись из старых проектов.
+   * В код не попадает: у sendSticker нет caption.
+   */
   mediaCaption?: string;
   /** Отправить без уведомления */
   disableNotification?: boolean;
+  /** ID следующего узла автоперехода */
+  autoTransitionTo?: string;
+  /** stickerUrl — локальный путь /uploads/ */
+  isLocalStickerUrl?: boolean;
 }

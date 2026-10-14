@@ -15,10 +15,14 @@ import {
 import { animationHandlerParamsSchema } from './animation-handler.schema';
 
 describe('generateAnimationHandler()', () => {
-  it('генерирует send_animation для URL', () => {
+  it('генерирует send_animation для URL при входе в блок', () => {
     const result = generateAnimationHandler(validParamsWithUrl);
     assert.ok(result.includes('bot.send_animation'));
     assert.ok(result.includes('https://example.com/animation.gif'));
+    assert.ok(result.includes('@dp.callback_query'));
+    assert.ok(result.includes('handle_callback_node_anim_1'));
+    assert.ok(!result.includes('F.animation'));
+    assert.ok(!result.includes('@dp.message'));
   });
 
   it('генерирует FSInputFile для /uploads/ пути', () => {
@@ -41,6 +45,32 @@ describe('generateAnimationHandler()', () => {
     const result = generateAnimationHandler(validParamsWithUrl);
     assert.ok(result.includes('caption=text'));
     assert.ok(result.includes('parse_mode=parse_mode'));
+  });
+
+  it('подставляет подпись mediaCaption', () => {
+    const result = generateAnimationHandler({
+      ...validParamsWithUrl,
+      mediaCaption: 'Привет, {name}',
+    });
+    assert.ok(result.includes('Привет, {name}'));
+    assert.ok(result.includes('replace_variables_in_text'));
+  });
+
+  it('вызывает следующий блок при автопереходе', () => {
+    const result = generateAnimationHandler({
+      ...validParamsWithUrl,
+      autoTransitionTo: 'next-step',
+    });
+    assert.ok(result.includes('handle_callback_next_step'));
+  });
+
+  it('внешний URL с /uploads/ в пути не становится локальным файлом', () => {
+    const result = generateAnimationHandler({
+      nodeId: 'anim_ext',
+      animationUrl: 'https://example.com/wp-content/uploads/anim.gif',
+    });
+    assert.ok(!result.includes('get_upload_file_path'));
+    assert.ok(!result.includes('F.animation'));
   });
 });
 

@@ -1,81 +1,74 @@
 {#
-  Шаблон обработчика отправки стикеров
+  Шаблон шага сценария «стикер».
 
-  @fileoverview Генерирует Python код для отправки стикеров Telegram
-  @param {string} nodeId - Уникальный идентификатор узла
-  @param {string} stickerUrl - URL стикера для отправки
-  @param {string} stickerFileId - File ID стикера
-  @param {string} stickerSetName - Название набора стикеров
-  @param {string} mediaCaption - Подпись к стикеру
-  @param {boolean} disableNotification - Отправить без уведомления
+  @fileoverview Отправка стикера, когда сценарий дошёл до блока
+  (кнопка или автопереход). Команда Command() не регистрируется.
+  У sendSticker нет параметра caption — подпись не передаётся.
+
+  @param {string} nodeId - ID узла, он же callback_data
+  @param {string} stickerUrl - HTTP(S) URL или локальный путь /uploads/
+  @param {string} stickerFileId - file_id стикера
+  @param {string} stickerSetName - запасной идентификатор стикера
+  @param {boolean} disableNotification - отправить без звука
+  @param {boolean} isLocalStickerUrl - stickerUrl начинается с /uploads/
+  @param {string} autoTransitionTo - ID следующего узла
 #}
+@dp.callback_query(lambda c: c.data == "{{ nodeId }}")
+async def handle_callback_{{ nodeId|safe_name }}(callback_query: types.CallbackQuery, state: FSMContext = None):
+    """Отправка стикера при входе в узел {{ nodeId }}"""
+    try:
+        await callback_query.answer()
+    except Exception:
+        pass
 
-@dp.message(Command("sticker_{{ nodeId|safe_name }}"))
-async def handle_sticker_{{ nodeId|safe_name }}(message: types.Message):
-    """Обработчик отправки стикера для узла {{ nodeId }}"""
-    user_id = message.from_user.id
-
-    {%- if stickerFileId %}
-    {# Отправка по file_id #}
-    sticker_file_id = "{{ stickerFileId|e }}"
-    {%- elif stickerUrl %}
-    {# Отправка по URL #}
-    sticker_url = "{{ stickerUrl|e }}"
-    {%- endif %}
-
-    {%- if mediaCaption %}
-    caption = "{{ mediaCaption|e }}"
-
-    {# Замена переменных #}
-    all_user_vars = await init_all_user_vars(user_id)
-    variable_filters = user_data.get(user_id, {}).get("_variable_filters", {})
-    caption = replace_variables_in_text(caption, all_user_vars, variable_filters)
-    {%- endif %}
+    user_id = callback_query.from_user.id
+    _chat_id = callback_query.message.chat.id if callback_query.message else user_id
 
     try:
-        {%- if stickerFileId %}
-        await message.answer_sticker(
-            sticker=sticker_file_id
-            {%- if mediaCaption %}, caption=caption{%- endif %}
-            {%- if disableNotification %}, disable_notification=True{%- endif %}
+        {% if stickerFileId %}
+        await bot.send_sticker(
+            chat_id=_chat_id,
+            sticker="{{ stickerFileId|e }}"{% if disableNotification %},
+            disable_notification=True{% endif %}
         )
-        await save_message_to_api(
-            user_id=str(user_id),
-            message_type="bot",
-            message_text="[Стикер]",
-            node_id="{{ nodeId }}"
+        {% elif isLocalStickerUrl %}
+        _sticker_file = FSInputFile(get_upload_file_path("{{ stickerUrl|e }}"))
+        await bot.send_sticker(
+            chat_id=_chat_id,
+            sticker=_sticker_file{% if disableNotification %},
+            disable_notification=True{% endif %}
         )
-        {%- elif stickerUrl %}
+        {% elif stickerUrl %}
+        sticker_url = "{{ stickerUrl|e }}"
+        from aiogram.types import BufferedInputFile as _StickerFile
         async with aiohttp.ClientSession() as session:
             async with session.get(sticker_url) as resp:
                 sticker_data = await resp.read()
-                await message.answer_sticker(
-                    sticker=sticker_data
-                    {%- if mediaCaption %}, caption=caption{%- endif %}
-                    {%- if disableNotification %}, disable_notification=True{%- endif %}
+                await bot.send_sticker(
+                    chat_id=_chat_id,
+                    sticker=_StickerFile(sticker_data, filename="sticker.webp"){% if disableNotification %},
+                    disable_notification=True{% endif %}
                 )
-                await save_message_to_api(
-                    user_id=str(user_id),
-                    message_type="bot",
-                    message_text="[Стикер]",
-                    node_id="{{ nodeId }}"
-                )
-        {%- elif stickerSetName %}
-        {# Отправка из набора стикеров #}
-        await message.answer_sticker(
-            sticker="{{ stickerSetName|e }}"
-            {%- if mediaCaption %}, caption=caption{%- endif %}
-            {%- if disableNotification %}, disable_notification=True{%- endif %}
+        {% elif stickerSetName %}
+        await bot.send_sticker(
+            chat_id=_chat_id,
+            sticker="{{ stickerSetName|e }}"{% if disableNotification %},
+            disable_notification=True{% endif %}
         )
+        {% else %}
+        logging.warning(f"Стикер не настроен: узел {{ nodeId }}")
+        {% endif %}
         await save_message_to_api(
             user_id=str(user_id),
             message_type="bot",
             message_text="[Стикер]",
             node_id="{{ nodeId }}"
         )
-        {%- else %}
-        await message.answer("Стикер не настроен")
-        {%- endif %}
+        {% if autoTransitionTo %}
+        await handle_callback_{{ autoTransitionTo|safe_name }}(callback_query, state=None)
+        {% endif %}
     except Exception as e:
         logging.error(f"Ошибка отправки стикера: {e}")
-        await message.answer("Произошла ошибка при отправке стикера")
+        {% if autoTransitionTo %}
+        await handle_callback_{{ autoTransitionTo|safe_name }}(callback_query, state=None)
+        {% endif %}

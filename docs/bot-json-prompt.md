@@ -1597,12 +1597,12 @@ await bot.edit_message_text('Опрашиваю… 3/15', chat_id=chat_id,
 | `video` | Отправить видео (`videoUrl`) |
 | `audio` | Отправить аудио (`audioUrl`) |
 | `document` | Отправить документ (`documentUrl`, `documentName`) |
-| `sticker` | Отправить стикер |
-| `animation` | Отправить GIF |
+| `sticker` | Отправить стикер при входе в блок (`stickerFileId` или `stickerUrl`). Подписи нет |
+| `animation` | Отправить GIF при входе в блок (`animationUrl`, подпись `mediaCaption`) |
 | `location` | Отправить геолокацию |
 | `contact` | Отправить контакт |
 
-Все медиа-узлы поддерживают `mediaCaption` — подпись.
+`sticker` и `animation` вызываются как `delete_message`: callback при входе в блок и автопереход `enableAutoTransition` + `autoTransitionTo`. Не команда и не фильтр входящего сообщения. `command` в `data` можно оставить, на запуск он не влияет. У остальных медиа-узлов есть `mediaCaption`.
 
 ### Пример photo
 
