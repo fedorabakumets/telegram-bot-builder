@@ -8,7 +8,7 @@ export interface ChatAccessOptions {
   /** Идентификатор чата Telegram. */
   chat_id: string;
   /** Тип чата из списка диалогов. */
-  chat_type: 'group' | 'supergroup' | 'channel';
+  chat_type: 'private' | 'group' | 'supergroup' | 'channel';
 }
 
 /**
@@ -20,7 +20,10 @@ export interface ChatAccessOptions {
 export async function checkChatAccessInDb(projectId: number, options: ChatAccessOptions) {
   try {
     const params = new URLSearchParams({ tokenId: String(options.token_id) });
-    const response = await apiFetch(`/api/projects/${projectId}/groups/${encodeURIComponent(options.chat_id)}/sync?${params}`, {
+    const path = options.chat_type === 'private'
+      ? `/api/projects/${projectId}/dialogs/${encodeURIComponent(options.chat_id)}/check-access?${params}`
+      : `/api/projects/${projectId}/groups/${encodeURIComponent(options.chat_id)}/sync?${params}`;
+    const response = await apiFetch(path, {
       method: 'POST',
     });
     const value = await response.json();
@@ -32,6 +35,7 @@ export async function checkChatAccessInDb(projectId: number, options: ChatAccess
     return { ok: true, project_id: projectId, token_id: options.token_id,
       chat_id: options.chat_id, chat_type: group?.chatType ?? options.chat_type,
       access_status: status, access_checked_at: value.accessCheckedAt ?? null,
-      title: group?.name ?? null, avatar_url: group?.avatarUrl ?? null };
+      title: group?.name ?? null, avatar_url: group?.avatarUrl ?? null,
+      blocked: options.chat_type === 'private' ? value.blocked === true : null };
   } catch { return { error: 'Не удалось получить состояние доступа из API приложения' }; }
 }
