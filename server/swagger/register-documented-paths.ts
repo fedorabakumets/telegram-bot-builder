@@ -60,6 +60,7 @@ import { registerProjectMessagesDeletePaths } from "./paths/project-messages-del
 import { registerProjectMessagesPatchPaths } from "./paths/project-messages-patch-paths";
 import { registerProjectGroupsListPaths } from "./paths/project-groups-list-paths";
 import { registerProjectDialogsPaths } from './paths/project-dialogs-paths';
+import { registerDialogMessageHistoryPaths } from './paths/dialog-message-history-paths';
 import { registerProjectGroupsMessagesPaths } from "./paths/project-groups-messages-paths";
 import { registerProjectGroupsSendPaths } from "./paths/project-groups-send-paths";
 import { registerProjectFilesGetPaths } from "./paths/project-files-get-paths";
@@ -223,6 +224,7 @@ registerProjectMessagesDeletePaths(documentedRegistry, cookieSecurity);
 registerProjectMessagesPatchPaths(documentedRegistry, cookieSecurity);
 registerProjectGroupsListPaths(documentedRegistry, cookieSecurity);
 registerProjectDialogsPaths(documentedRegistry, cookieSecurity);
+registerDialogMessageHistoryPaths(documentedRegistry, cookieSecurity);
 registerProjectGroupsMessagesPaths(documentedRegistry, cookieSecurity);
 registerProjectGroupsSendPaths(documentedRegistry, cookieSecurity);
 registerProjectFilesGetPaths(documentedRegistry, cookieSecurity);

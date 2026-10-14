@@ -9,8 +9,8 @@ export const dialogParams = z.object({
   kind: z.enum(['all', 'users', 'groups', 'channels']).default('all'),
   /** Поиск по сохранённым данным. */
   search: z.string().max(200).default(''),
-  /** Размер страницы. */
-  limit: z.coerce.number().int().min(1).max(100).default(50),
+  /** Размер страницы: по умолчанию 10 последних диалогов. */
+  limit: z.coerce.number().int().min(1).max(100).default(10),
   /** Курсор следующей страницы. */
   cursor: z.string().max(2048).optional(),
 });

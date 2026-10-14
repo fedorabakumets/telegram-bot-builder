@@ -72,3 +72,6 @@ export * from './bot-tables-batch.ts';
 export * from './mcp-register-table-tools.ts';
 /** Чтение диалогов выбранного бота через API приложения. */
 export { listDialogsInDb } from './dialogs-db.ts';
+/** Чтение страницы сохранённой истории конкретного чата. */
+export { getDialogMessagesInDb } from './dialog-messages-db.ts';
+export type { DialogMessagesOptions } from './dialog-messages-db.ts';

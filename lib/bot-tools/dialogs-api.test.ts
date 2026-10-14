@@ -26,7 +26,8 @@ describe('Список диалогов', () => {
   it('проверяет обязательный токен и границы страницы', () => {
     expect(dialogParams.safeParse({}).success).toBe(false);
     expect(dialogParams.safeParse({ tokenId: 9, limit: 101 }).success).toBe(false);
-    expect(dialogParams.parse({ tokenId: '9' })).toMatchObject({ limit: 50, kind: 'all' });
+    expect(dialogParams.parse({ tokenId: '9' })).toMatchObject({ limit: 10, kind: 'all' });
+    expect(dialogParams.parse({ tokenId: '9', limit: 70 }).limit).toBe(70);
   });
   it('привязывает курсор к фильтрам и проверяет его содержимое', () => {
     const cursor = encodeDialogCursor({ scope: '12:9', time: null, type: 'supergroup', id: '-1001' });
@@ -44,7 +45,7 @@ describe('Список диалогов', () => {
     mocks.query.mockResolvedValue({ rows: [] });
     const res = await invoke({ tokenId: 9, kind: 'groups', search: 'CULT' });
     expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ dialogs: [], has_more: false, next_cursor: null }));
-    expect(mocks.query.mock.calls[0][1]).toEqual([12, 9, 'groups', '%CULT%', 51]);
+    expect(mocks.query.mock.calls[0][1]).toEqual([12, 9, 'groups', '%CULT%', 11]);
   });
   it('создаёт курсор и продолжает после равной или пустой даты', async () => {
     const row = { chat_id: '-1001', chat_type: 'supergroup', last_activity_at: null };
@@ -71,7 +72,8 @@ describe('Список диалогов', () => {
   it('регистрирует инструмент чтения для общей регистрации транспортов', () => {
     const registerTool = vi.fn();
     registerDialogTools({ registerTool } as never);
-    expect(registerTool.mock.calls[0][0]).toBe('db_list_dialogs');
-    expect(registerTool.mock.calls[0][1].annotations.readOnlyHint).toBe(true);
+    const entry = registerTool.mock.calls.find(([name]) => name === 'db_list_dialogs');
+    expect(entry).toBeDefined();
+    expect(entry?.[1].annotations.readOnlyHint).toBe(true);
   });
 });

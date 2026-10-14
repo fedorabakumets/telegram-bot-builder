@@ -16,7 +16,7 @@ export function registerProjectDialogsPaths(registry: OpenAPIRegistry, security:
     request: { params: z.object({ projectId: z.coerce.number().int().positive() }),
       query: z.object({ tokenId: z.coerce.number().int().positive(),
         kind: z.enum(['all', 'users', 'groups', 'channels']).default('all'),
-        search: z.string().max(200).optional(), limit: z.coerce.number().int().min(1).max(100).default(50),
+        search: z.string().max(200).optional(), limit: z.coerce.number().int().min(1).max(100).default(10),
         cursor: z.string().max(2048).optional() }) },
     responses: {
       200: { description: 'Страница диалогов и сохранённые проверки доступа',

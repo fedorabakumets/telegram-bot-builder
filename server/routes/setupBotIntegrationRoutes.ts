@@ -29,6 +29,7 @@ import { getBotInfoHandler } from "./botIntegration/handlers/botInfo";
 import { sendGroupMessageHandler } from "./botIntegration/handlers/telegramGroups";
 import { setupBroadcastRoutes } from "./setupBroadcastRoutes";
 import { listDialogsHandler } from './dialogs/list-dialogs-handler';
+import { getDialogMessagesHandler } from './dialogs/get-dialog-messages-handler';
 
 /**
  * Регистрирует маршруты bot-integration для проекта.
@@ -37,6 +38,8 @@ import { listDialogsHandler } from './dialogs/list-dialogs-handler';
  */
 export function setupBotIntegrationRoutes(app: Express) {
   app.get('/api/projects/:projectId/dialogs', requireProjectAccess, listDialogsHandler);
+  /** История конкретного чата требует разрешения на проект и явного токена. */
+  app.get('/api/projects/:projectId/dialogs/:chatId/messages', requireProjectAccess, getDialogMessagesHandler);
   app.get("/api/projects/:projectId/bot/data", requireProjectAccess, getBotDataHandler);
   app.get(
     "/api/projects/:projectId/users/:userId/avatar",
