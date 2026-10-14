@@ -929,6 +929,18 @@ export const nodeSchema = z.object({
     saveInvoiceLinkTo: z.string().optional().default(''),
     /** ID узла после оплаты по ссылке (create_invoice_link) */
     afterPaymentTo: z.string().optional().default(''),
+    /** Проверка pre_checkout: always (по умолчанию, всегда ok=True) или condition */
+    preCheckoutMode: z.string().optional().default('always'),
+    /** Переменная пользователя для режима condition */
+    preCheckoutVariable: z.string().optional().default(''),
+    /** Оператор как у condition: equals, filled, greater_than и остальные переменные */
+    preCheckoutOperator: z.string().optional().default('filled'),
+    /** Значение сравнения, допускает {переменные} */
+    preCheckoutValue: z.string().optional().default(''),
+    /** Второе значение для оператора between */
+    preCheckoutValue2: z.string().optional().default(''),
+    /** Текст отказа до списания (answerPreCheckoutQuery error_message); пусто — запасной русский */
+    preCheckoutErrorMessage: z.string().optional().default(''),
     /** Источник user_id для возврата: current_user | custom */
     refundUserSource: z.string().optional().default('current_user'),
     /** ID пользователя или {переменная} при refundUserSource=custom */

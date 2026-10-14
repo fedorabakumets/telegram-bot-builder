@@ -1,0 +1,98 @@
+{#
+  @fileoverview Карта отказа по статическому payload и проверка переменной в pre_checkout.
+  Контекст: preCheckoutRules (payload без фигурных скобок).
+  Динамический payload пишется в _stars_payment_targets при создании счёта.
+#}
+_stars_pre_checkout_rules = {
+{% for rule in preCheckoutRules %}
+    {{ rule.payload | tojson }}: {
+        "pre_mode": "condition",
+        "pre_var": {{ rule.variable | tojson }},
+        "pre_op": {{ rule.operator | tojson }},
+        "pre_value": {{ rule.value | tojson }},
+        "pre_value2": {{ rule.value2 | tojson }},
+        "pre_error": {{ rule.errorMessage | tojson }},
+    },
+{% endfor %}
+}
+
+def _stars_pre_checkout_ok(_route, _all_vars):
+    """True, если pre_checkout можно подтвердить. Неизвестный оператор не блокирует оплату."""
+    if str((_route or {}).get("pre_mode") or "") != "condition":
+        return True
+    _var = str(_route.get("pre_var") or "")
+    _raw = ""
+    if _var:
+        if "." in _var:
+            _head, _tail = _var.split(".", 1)
+            _obj = _all_vars.get(_head, {})
+            if isinstance(_obj, dict):
+                _raw = _obj.get(_tail, "")
+            if _raw in ("", None):
+                _raw = _all_vars.get(_var, "")
+        else:
+            _raw = _all_vars.get(_var, "")
+    if _raw is None:
+        _raw = ""
+    val = _raw
+    _op = str(_route.get("pre_op") or "filled")
+    _exp = str(replace_variables_in_text(str(_route.get("pre_value") or ""), _all_vars, {}) or "")
+    _exp2 = str(replace_variables_in_text(str(_route.get("pre_value2") or ""), _all_vars, {}) or "")
+    try:
+        _num_val = float(str(val).strip())
+    except (ValueError, TypeError):
+        _num_val = None
+    if _op == "filled":
+        return bool(val)
+    if _op == "empty":
+        return not bool(val)
+    if _op == "equals":
+        return str(val) == _exp
+    if _op == "not_equals":
+        return str(val) != _exp
+    if _op == "contains":
+        return _exp in str(val)
+    if _op == "not_contains":
+        return _exp not in str(val)
+    if _op == "starts_with":
+        return str(val).startswith(_exp)
+    if _op == "ends_with":
+        return str(val).endswith(_exp)
+    if _op == "matches_regex":
+        try:
+            import re as _re_pre
+            return _re_pre.search(_exp, str(val)) is not None
+        except Exception:
+            return False
+    if _op == "greater_than":
+        try:
+            return _num_val is not None and _num_val > float(_exp or "0")
+        except (ValueError, TypeError):
+            return False
+    if _op == "less_than":
+        try:
+            return _num_val is not None and _num_val < float(_exp or "0")
+        except (ValueError, TypeError):
+            return False
+    if _op == "between":
+        try:
+            return _num_val is not None and float(_exp or "0") <= _num_val <= float(_exp2 or "0")
+        except (ValueError, TypeError):
+            return False
+    if _op == "is_even":
+        try:
+            return _num_val is not None and int(_num_val) % 2 == 0
+        except (ValueError, TypeError, OverflowError):
+            return False
+    if _op == "is_odd":
+        try:
+            return _num_val is not None and int(_num_val) % 2 != 0
+        except (ValueError, TypeError, OverflowError):
+            return False
+    if _op == "divisible_by":
+        try:
+            _div = int(float(_exp or "1"))
+            return _num_val is not None and _div != 0 and int(_num_val) % _div == 0
+        except (ValueError, TypeError, OverflowError):
+            return False
+    return True

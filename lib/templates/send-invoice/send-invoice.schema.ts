@@ -43,6 +43,18 @@ export const sendInvoiceEntrySchema = z.object({
   saveOrderEmailTo: z.string().default(''),
   /** Переменная для телефона */
   saveOrderPhoneTo: z.string().default(''),
+  /** Режим pre_checkout: always | condition */
+  preCheckoutMode: z.enum(['always', 'condition']).optional().default('always'),
+  /** Переменная для условия отказа */
+  preCheckoutVariable: z.string().optional().default(''),
+  /** Оператор условия */
+  preCheckoutOperator: z.string().optional().default('filled'),
+  /** Значение сравнения */
+  preCheckoutValue: z.string().optional().default(''),
+  /** Второе значение для between */
+  preCheckoutValue2: z.string().optional().default(''),
+  /** Текст отказа */
+  preCheckoutErrorMessage: z.string().optional().default(''),
   /** ID узла после оплаты */
   autoTransitionTo: z.string().default(''),
   /** Тип целевого узла */
