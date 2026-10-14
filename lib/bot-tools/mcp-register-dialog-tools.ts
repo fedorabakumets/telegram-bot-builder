@@ -1,6 +1,7 @@
 /** @fileoverview Общая регистрация инструмента чтения диалогов для HTTP и stdio. */
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
+import { searchDialogMessagesInDb } from './dialog-search-db.ts';
 import { listDialogsInDb } from './dialogs-db.ts';
 import { getDialogMessagesInDb } from './dialog-messages-db.ts';
 
@@ -10,6 +11,31 @@ import { getDialogMessagesInDb } from './dialog-messages-db.ts';
  * @returns Ничего
  */
 export function registerDialogTools(server: McpServer): void {
+  /** Поиск доступен обоим транспортам и читает только сохранённый текст. */
+  server.registerTool('db_search_dialog_messages', {
+    description: 'Поиск буквальной подстроки без учёта регистра в сохранённых сообщениях выбранного бота. Без chat_id поиск идёт по всем чатам; для chat_id требуется chat_type. По умолчанию десять последних совпадений, порядок от новых к старым, курсор ведёт к более старым. Не вызывает Telegram; история ограничена сроком хранения.',
+    annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+    inputSchema: {
+      /** Проект с разрешённым доступом. */
+      project_id: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
+      /** Явно выбранный токен бота. */
+      token_id: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
+      /** Буквальная непустая подстрока. */
+      query: z.string().trim().min(1).max(200),
+      /** Ограничение конкретным чатом. */
+      chat_id: z.string().regex(/^-?[1-9]\d{0,19}$/).optional(),
+      /** Тип чата; обязателен при указании chat_id. */
+      chat_type: z.enum(['private', 'group', 'supergroup', 'channel']).optional(),
+      /** Размер страницы, по умолчанию десять совпадений. */
+      limit: z.number().int().min(1).max(100).default(10),
+      /** Продолжение поиска с теми же фильтрами. */
+      cursor: z.string().max(2048).optional(),
+    },
+  }, async ({ project_id, ...options }) => {
+    const value = await searchDialogMessagesInDb(project_id, options);
+    return { content: [{ type: 'text' as const, text: JSON.stringify(value) }],
+      ...('error' in value ? { isError: true } : {}) };
+  });
   /** История доступна в обоих транспортах через общую регистрацию. */
   server.registerTool('db_get_dialog_messages', {
     description: 'Читает сохранённые сообщения конкретного чата выбранного бота. Первая страница — последние сообщения, курсор ведёт к более старым; внутри страницы хронологический порядок. Контекст групп доступен только для private и содержит лишь входящие сообщения этого пользователя. Не вызывает Telegram; история ограничена сроком хранения.',

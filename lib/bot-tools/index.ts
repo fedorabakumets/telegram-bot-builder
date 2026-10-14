@@ -75,3 +75,7 @@ export { listDialogsInDb } from './dialogs-db.ts';
 /** Чтение страницы сохранённой истории конкретного чата. */
 export { getDialogMessagesInDb } from './dialog-messages-db.ts';
 export type { DialogMessagesOptions } from './dialog-messages-db.ts';
+
+/** Поиск сохранённого текста диалогов через API. */
+export { searchDialogMessagesInDb } from './dialog-search-db.ts';
+export type { DialogSearchOptions } from './dialog-search-db.ts';

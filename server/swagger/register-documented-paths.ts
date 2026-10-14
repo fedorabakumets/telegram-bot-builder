@@ -60,6 +60,7 @@ import { registerProjectMessagesDeletePaths } from "./paths/project-messages-del
 import { registerProjectMessagesPatchPaths } from "./paths/project-messages-patch-paths";
 import { registerProjectGroupsListPaths } from "./paths/project-groups-list-paths";
 import { registerProjectDialogsPaths } from './paths/project-dialogs-paths';
+import { registerDialogMessageSearchPaths } from './paths/dialog-message-search-paths';
 import { registerDialogMessageHistoryPaths } from './paths/dialog-message-history-paths';
 import { registerProjectGroupsMessagesPaths } from "./paths/project-groups-messages-paths";
 import { registerProjectGroupsSendPaths } from "./paths/project-groups-send-paths";
@@ -236,3 +237,6 @@ registerProjectBroadcastsDetailPaths(documentedRegistry, cookieSecurity);
 registerProjectBroadcastsMutatePaths(documentedRegistry, cookieSecurity);
 registerProjectBroadcastCampaignsListPaths(documentedRegistry, cookieSecurity);
 registerProjectBroadcastCampaignsMutatePaths(documentedRegistry, cookieSecurity);
+
+/** Буквальный поиск сохранённых сообщений диалогов. */
+registerDialogMessageSearchPaths(documentedRegistry, cookieSecurity);

@@ -31,6 +31,8 @@ describe('registerMcpTools', () => {
       'db_userbot_sign_in', 'db_userbot_sign_in_2fa',
       'db_list_dialogs',
       'db_get_dialog_messages',
+      /** Поиск сохранённого текста доступен HTTP и stdio. */
+      'db_search_dialog_messages',
     ]));
   });
   it('на HTTP (enableFileTools=false) нет load_project/save_project', () => {
