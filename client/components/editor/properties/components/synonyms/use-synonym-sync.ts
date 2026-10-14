@@ -1,5 +1,5 @@
 /**
- * @fileoverview Sync synonyms with text_trigger nodes on the canvas.
+ * @fileoverview Синхронизация синонимов с узлами text_trigger на холсте.
  */
 
 import { useCallback, useEffect, useMemo } from 'react';
@@ -133,6 +133,13 @@ export function useSynonymSync({
         isAnonymous: false,
         canSendMessages: true,
         canSendMediaMessages: true,
+        canSendAudios: false,
+        canSendDocuments: false,
+        canSendPhotos: false,
+        canSendVideos: false,
+        canSendVideoNotes: false,
+        canSendVoiceNotes: false,
+        canReactToMessages: false,
         canSendPolls: true,
         canSendOtherMessages: true,
         canAddWebPagePreviews: true,
@@ -155,6 +162,9 @@ export function useSynonymSync({
         can_pin_messages: false,
         can_manage_topics: false,
         is_anonymous: false,
+        can_manage_direct_messages: false,
+        can_manage_tags: false,
+        can_send_welcome_messages: false,
         adminChatIdSource: 'current_chat',
       } as any,
     };

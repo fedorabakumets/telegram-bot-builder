@@ -153,6 +153,7 @@ export const nodesWithMuteSynonym: Node[] = [
     reason: 'Флуд',
     canSendMessages: false,
     canSendMediaMessages: false,
+    canSendPhotos: true,
   }),
 ];
 

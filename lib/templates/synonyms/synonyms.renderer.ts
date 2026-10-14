@@ -8,6 +8,51 @@ import type { SynonymEntry, SynonymsTemplateParams } from './synonyms.params';
 import { synonymsParamsSchema } from './synonyms.schema';
 import { renderPartialTemplate } from '../template-renderer';
 import { NODE_TYPES } from '../../bot-generator/types/node-type.constants';
+import { omitUndefined, resolveMuteMediaPermissions } from '../chat-permissions/resolve-mute-media';
+
+/** Права ограничения и назначения, которые переносятся в синоним как есть */
+const PASSTHROUGH_BOOL_KEYS = [
+  'canSendMessages',
+  'canSendMediaMessages',
+  'canSendAudios',
+  'canSendDocuments',
+  'canSendPhotos',
+  'canSendVideos',
+  'canSendVideoNotes',
+  'canSendVoiceNotes',
+  'canSendPolls',
+  'canSendOtherMessages',
+  'canAddWebPagePreviews',
+  'canReactToMessages',
+  'canChangeGroupInfo',
+  'canInviteUsers2',
+  'canPinMessages2',
+  'canDeleteMessages',
+  'canInviteUsers',
+  'canPinMessages',
+  'canManageChat',
+  'canPostMessages',
+  'canEditMessages',
+  'canManageDirectMessages',
+  'canManageTags',
+  'canSendWelcomeMessages',
+] as const;
+
+/**
+ * Копирует заданные boolean-поля узла в запись синонима.
+ * @param data - Данные узла
+ * @returns Только те права, которые явно заданы
+ */
+function pickBoolFields(data: Node['data']): Partial<SynonymEntry> {
+  const source = data as Record<string, unknown>;
+  const picked: Partial<SynonymEntry> = {};
+  for (const key of PASSTHROUGH_BOOL_KEYS) {
+    if (typeof source[key] === 'boolean') {
+      picked[key] = source[key] as boolean;
+    }
+  }
+  return picked;
+}
 
 const USER_MANAGEMENT_TYPES = new Set([
   NODE_TYPES.BAN_USER, NODE_TYPES.UNBAN_USER, NODE_TYPES.MUTE_USER, NODE_TYPES.UNMUTE_USER,
@@ -43,11 +88,7 @@ export function collectSynonymEntries(nodes: Node[]): SynonymEntry[] {
           reason: node.data.reason,
           untilDate: node.data.untilDate,
           duration: node.data.duration,
-          canSendMessages: node.data.canSendMessages,
-          canSendMediaMessages: node.data.canSendMediaMessages,
-          canDeleteMessages: node.data.canDeleteMessages,
-          canInviteUsers: node.data.canInviteUsers,
-          canPinMessages: node.data.canPinMessages,
+          ...pickBoolFields(node.data),
         });
       }
     }
@@ -62,7 +103,10 @@ export function collectSynonymEntries(nodes: Node[]): SynonymEntry[] {
 export function generateSynonyms(params: SynonymsTemplateParams): string {
   if (params.synonyms.length === 0) return '';
   const validated = synonymsParamsSchema.parse(params);
-  return renderPartialTemplate('synonyms/synonyms.py.jinja2', { synonymEntries: validated.synonyms });
+  const synonymEntries = validated.synonyms.map((entry) =>
+    omitUndefined(entry.nodeType === 'mute_user' ? resolveMuteMediaPermissions(entry) : entry),
+  );
+  return renderPartialTemplate('synonyms/synonyms.py.jinja2', { synonymEntries });
 }
 
 /**

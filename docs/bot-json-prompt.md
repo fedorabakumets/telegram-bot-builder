@@ -1720,6 +1720,81 @@ await bot.edit_message_text('Опрашиваю… 3/15', chat_id=chat_id,
 | `demote_user` | Снять права администратора |
 | `admin_rights` | Установить конкретные права |
 
+### mute_user — Ограничить участника
+
+`canSendMediaMessages` хранится для старых сценариев и в Python не передаётся. Если новые поля медиа не заданы, их значение равно `canSendMediaMessages` (фото, видео, голосовые, кружки, аудио, документы). Если заданы — берутся они. Новый блок по умолчанию запрещает все права ниже.
+
+```json
+{
+  "id": "mute-1",
+  "type": "mute_user",
+  "position": { "x": 400, "y": 300 },
+  "data": {
+    "duration": 3600,
+    "reason": "Нарушение правил группы",
+    "canSendMessages": false,
+    "canSendMediaMessages": false,
+    "canSendAudios": false,
+    "canSendDocuments": false,
+    "canSendPhotos": false,
+    "canSendVideos": false,
+    "canSendVideoNotes": false,
+    "canSendVoiceNotes": false,
+    "canSendPolls": false,
+    "canSendOtherMessages": false,
+    "canAddWebPagePreviews": false,
+    "canReactToMessages": false,
+    "canChangeGroupInfo": false,
+    "canInviteUsers2": false,
+    "canPinMessages2": false
+  }
+}
+```
+
+| Поле | Тип | Описание |
+|------|-----|----------|
+| `duration` | number | Длительность в секундах |
+| `canSendMessages` | boolean | Текст |
+| `canSendAudios` | boolean | Аудио. Пусто = `canSendMediaMessages` |
+| `canSendDocuments` | boolean | Документы. Пусто = `canSendMediaMessages` |
+| `canSendPhotos` | boolean | Фото. Пусто = `canSendMediaMessages` |
+| `canSendVideos` | boolean | Видео. Пусто = `canSendMediaMessages` |
+| `canSendVideoNotes` | boolean | Кружки. Пусто = `canSendMediaMessages` |
+| `canSendVoiceNotes` | boolean | Голосовые. Пусто = `canSendMediaMessages` |
+| `canSendPolls` | boolean | Опросы |
+| `canSendOtherMessages` | boolean | Стикеры и GIF |
+| `canAddWebPagePreviews` | boolean | Предпросмотр ссылок |
+| `canReactToMessages` | boolean | Реакции. Пусто = `canSendMediaMessages` |
+| `canChangeGroupInfo` | boolean | Описание группы |
+| `canInviteUsers2` | boolean | Приглашения |
+| `canPinMessages2` | boolean | Закрепление |
+| `canSendMediaMessages` | boolean | Устаревший флаг медиа, в код не передаётся |
+
+### unmute_user — Снять ограничение
+
+Разрешает текст, все виды медиа, опросы, стикеры, предпросмотр ссылок и реакции. Описание группы, приглашения и закрепление остаются закрытыми.
+
+### promote_user — Назначить администратора
+
+В `promoteChatMember` попадают только те новые права, которые уже есть в данных блока. Не добавляй их молча.
+
+| Поле | Тип | Описание |
+|------|-----|----------|
+| `canManageChat` | boolean | Управление чатом, только если задано |
+| `canPostMessages` | boolean | Публикация сообщений, только если задано |
+| `canEditMessages` | boolean | Редактирование сообщений, только если задано |
+| `canManageDirectMessages` | boolean | Личные сообщения, только если задано |
+| `canManageTags` | boolean | Теги, только если задано |
+| `canSendWelcomeMessages` | boolean | Приветствия, только если задано |
+
+### demote_user — Снять администратора
+
+Снятие передаёт `False` для всех boolean-прав `ChatAdministratorRights`, включая `can_post_stories`, `can_edit_stories`, `can_delete_stories`, `can_post_messages`, `can_edit_messages`, `can_manage_direct_messages`, `can_manage_tags` и `can_send_welcome_messages`.
+
+### admin_rights — Панель прав
+
+Интерактивная панель текущих прав. Кроме прежних переключателей есть: `can_manage_chat`, `can_post_messages`, `can_edit_messages`, `can_manage_direct_messages`, `can_manage_tags`, `can_send_welcome_messages`.
+
 ### kick_user — Исключить пользователя
 
 Исключает пользователя из группы (может вернуться по ссылке). Использует `unbanChatMember(only_if_banned=False)`.

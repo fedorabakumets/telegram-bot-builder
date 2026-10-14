@@ -255,8 +255,22 @@ export interface NodeData {
   duration?: number;
   /** Разрешить отправку сообщений */
   canSendMessages?: boolean;
-  /** Разрешить отправку медиа */
+  /** Устаревшее общее право на медиа. В Python не передаётся */
   canSendMediaMessages?: boolean;
+  /** Разрешить отправку аудио. Пусто — как canSendMediaMessages */
+  canSendAudios?: boolean;
+  /** Разрешить отправку документов. Пусто — как canSendMediaMessages */
+  canSendDocuments?: boolean;
+  /** Разрешить отправку фото. Пусто — как canSendMediaMessages */
+  canSendPhotos?: boolean;
+  /** Разрешить отправку видео. Пусто — как canSendMediaMessages */
+  canSendVideos?: boolean;
+  /** Разрешить отправку видеозаметок. Пусто — как canSendMediaMessages */
+  canSendVideoNotes?: boolean;
+  /** Разрешить отправку голосовых. Пусто — как canSendMediaMessages */
+  canSendVoiceNotes?: boolean;
+  /** Разрешить реакции. Пусто — как canSendMediaMessages */
+  canReactToMessages?: boolean;
   /** Разрешить отправку опросов */
   canSendPolls?: boolean;
   /** Разрешить отправку других сообщений */
@@ -287,4 +301,16 @@ export interface NodeData {
   canManageTopics?: boolean;
   /** Анонимный администратор */
   isAnonymous?: boolean;
+  /** Управлять чатом. В вызов попадает только если задано */
+  canManageChat?: boolean;
+  /** Публиковать сообщения. В вызов попадает только если задано */
+  canPostMessages?: boolean;
+  /** Редактировать сообщения. В вызов попадает только если задано */
+  canEditMessages?: boolean;
+  /** Управлять личными сообщениями. В вызов попадает только если задано */
+  canManageDirectMessages?: boolean;
+  /** Управлять тегами. В вызов попадает только если задано */
+  canManageTags?: boolean;
+  /** Отправлять приветствия. В вызов попадает только если задано */
+  canSendWelcomeMessages?: boolean;
 }

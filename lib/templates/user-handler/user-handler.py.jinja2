@@ -16,10 +16,17 @@
     @param {number} duration           — длительность в секундах
     @param {string} reason             — причина мута
     @param {bool}   canSendMessages
-    @param {bool}   canSendMediaMessages
+    @param {bool}   canSendMediaMessages — устаревшее поле, в API не передаётся
+    @param {bool}   canSendAudios
+    @param {bool}   canSendDocuments
+    @param {bool}   canSendPhotos
+    @param {bool}   canSendVideos
+    @param {bool}   canSendVideoNotes
+    @param {bool}   canSendVoiceNotes
     @param {bool}   canSendPolls
     @param {bool}   canSendOtherMessages
     @param {bool}   canAddWebPagePreviews
+    @param {bool}   canReactToMessages
     @param {bool}   canChangeGroupInfo
     @param {bool}   canInviteUsers2
     @param {bool}   canPinMessages2
@@ -34,6 +41,12 @@
     @param {bool} canManageVideoChats
     @param {bool} canManageTopics
     @param {bool} isAnonymous
+    @param {bool} canManageChat — только если задано
+    @param {bool} canPostMessages — только если задано
+    @param {bool} canEditMessages — только если задано
+    @param {bool} canManageDirectMessages — только если задано
+    @param {bool} canManageTags — только если задано
+    @param {bool} canSendWelcomeMessages — только если задано
 #}
 
 {# ── Вычисляем условие фильтрации чата ── #}
@@ -45,6 +58,71 @@
 
 {# ── Синонимы в виде Python-списка строк ── #}
 {% set synonyms_list = synonyms | join('", "') %}
+
+{# Права ограничения: устаревшее общее медиа-поле в API не передаётся #}
+{% macro mute_chat_permissions(can_send, can_audios, can_documents, can_photos, can_videos, can_video_notes, can_voice, can_polls, can_other, can_previews, can_react, can_change, can_invite, can_pin) %}
+                can_send_messages={{ can_send | to_python_boolean }},
+                can_send_audios={{ can_audios | to_python_boolean }},
+                can_send_documents={{ can_documents | to_python_boolean }},
+                can_send_photos={{ can_photos | to_python_boolean }},
+                can_send_videos={{ can_videos | to_python_boolean }},
+                can_send_video_notes={{ can_video_notes | to_python_boolean }},
+                can_send_voice_notes={{ can_voice | to_python_boolean }},
+                can_send_polls={{ can_polls | to_python_boolean }},
+                can_send_other_messages={{ can_other | to_python_boolean }},
+                can_add_web_page_previews={{ can_previews | to_python_boolean }},
+                can_react_to_messages={{ can_react | to_python_boolean }},
+                can_change_info={{ can_change | to_python_boolean }},
+                can_invite_users={{ can_invite | to_python_boolean }},
+                can_pin_messages={{ can_pin | to_python_boolean }}
+{% endmacro %}
+
+{# Снятие ограничения: текст, медиа, опросы, стикеры, превью и реакции #}
+{% macro unmute_chat_permissions() %}
+                can_send_messages=True,
+                can_send_audios=True,
+                can_send_documents=True,
+                can_send_photos=True,
+                can_send_videos=True,
+                can_send_video_notes=True,
+                can_send_voice_notes=True,
+                can_send_polls=True,
+                can_send_other_messages=True,
+                can_add_web_page_previews=True,
+                can_react_to_messages=True,
+                can_change_info=False,
+                can_invite_users=False,
+                can_pin_messages=False
+{% endmacro %}
+
+{# Снятие администратора: False для всех boolean-прав ChatAdministratorRights #}
+{% macro demote_admin_rights() %}
+            is_anonymous=False,
+            can_manage_chat=False,
+            can_delete_messages=False,
+            can_manage_video_chats=False,
+            can_restrict_members=False,
+            can_promote_members=False,
+            can_change_info=False,
+            can_invite_users=False,
+            can_post_stories=False,
+            can_edit_stories=False,
+            can_delete_stories=False,
+            can_post_messages=False,
+            can_edit_messages=False,
+            can_pin_messages=False,
+            can_manage_topics=False,
+            can_manage_direct_messages=False,
+            can_manage_tags=False,
+            can_send_welcome_messages=False
+{% endmacro %}
+
+{# Новое право назначения попадает в вызов только если оно задано в данных блока #}
+{% macro optional_promote_right(py_name, value) %}
+{%- if value is defined and value is not none %}
+            {{ py_name }}={{ value | to_python_boolean }},
+{%- endif %}
+{% endmacro %}
 
 {# ============================================================ #}
 {# COMMAND HANDLER                                               #}
@@ -121,14 +199,7 @@ async def {{ nodeType }}_{{ safeName }}_command_handler(message: types.Message):
             chat_id=chat_id,
             user_id=target_user_id,
             permissions=types.ChatPermissions(
-                can_send_messages={{ canSendMessages | default(false) | to_python_boolean }},
-                can_send_media_messages={{ canSendMediaMessages | default(false) | to_python_boolean }},
-                can_send_polls={{ canSendPolls | default(false) | to_python_boolean }},
-                can_send_other_messages={{ canSendOtherMessages | default(false) | to_python_boolean }},
-                can_add_web_page_previews={{ canAddWebPagePreviews | default(false) | to_python_boolean }},
-                can_change_info={{ canChangeGroupInfo | default(false) | to_python_boolean }},
-                can_invite_users={{ canInviteUsers2 | default(false) | to_python_boolean }},
-                can_pin_messages={{ canPinMessages2 | default(false) | to_python_boolean }}
+{{ mute_chat_permissions(canSendMessages | default(false), canSendAudios | default(false), canSendDocuments | default(false), canSendPhotos | default(false), canSendVideos | default(false), canSendVideoNotes | default(false), canSendVoiceNotes | default(false), canSendPolls | default(false), canSendOtherMessages | default(false), canAddWebPagePreviews | default(false), canReactToMessages | default(false), canChangeGroupInfo | default(false), canInviteUsers2 | default(false), canPinMessages2 | default(false)) }}
             ),
             until_date=until_date
         )
@@ -148,14 +219,7 @@ async def {{ nodeType }}_{{ safeName }}_command_handler(message: types.Message):
             chat_id=chat_id,
             user_id=target_user_id,
             permissions=types.ChatPermissions(
-                can_send_messages=True,
-                can_send_media_messages=True,
-                can_send_polls=True,
-                can_send_other_messages=True,
-                can_add_web_page_previews=True,
-                can_change_info=False,
-                can_invite_users=False,
-                can_pin_messages=False
+{{ unmute_chat_permissions() }}
             )
         )
         await message.answer(f"✅ Ограничения с пользователя {target_user_id} сняты")
@@ -180,7 +244,13 @@ async def {{ nodeType }}_{{ safeName }}_command_handler(message: types.Message):
 {% if canManageTopics %}
             can_manage_topics={{ canManageTopics | to_python_boolean }},
 {% endif %}
-            is_anonymous={{ isAnonymous | default(false) | to_python_boolean }}
+            is_anonymous={{ isAnonymous | default(false) | to_python_boolean }},
+{{ optional_promote_right("can_manage_chat", canManageChat) }}
+{{ optional_promote_right("can_post_messages", canPostMessages) }}
+{{ optional_promote_right("can_edit_messages", canEditMessages) }}
+{{ optional_promote_right("can_manage_direct_messages", canManageDirectMessages) }}
+{{ optional_promote_right("can_manage_tags", canManageTags) }}
+{{ optional_promote_right("can_send_welcome_messages", canSendWelcomeMessages) }}
         )
         await message.answer(f"✅ Пользователь {target_user_id} назначен администратором!")
         logging.info(f"Пользователь {target_user_id} назначен администратором {user_id} в группе {chat_id}")
@@ -196,15 +266,7 @@ async def {{ nodeType }}_{{ safeName }}_command_handler(message: types.Message):
         await bot.promote_chat_member(
             chat_id=chat_id,
             user_id=target_user_id,
-            can_change_info=False,
-            can_delete_messages=False,
-            can_invite_users=False,
-            can_restrict_members=False,
-            can_pin_messages=False,
-            can_promote_members=False,
-            can_manage_video_chats=False,
-            can_manage_topics=False,
-            is_anonymous=False
+{{ demote_admin_rights() }}
         )
         await message.answer(f"✅ Пользователь {target_user_id} снят с должности администратора!")
         logging.info(f"Пользователь {target_user_id} понижен администратором {user_id} в группе {chat_id}")
@@ -288,14 +350,7 @@ async def {{ nodeType }}_{{ safeName }}_handler(message: types.Message):
             chat_id=chat_id,
             user_id=target_user_id,
             permissions=types.ChatPermissions(
-                can_send_messages={{ canSendMessages | default(false) | to_python_boolean }},
-                can_send_media_messages={{ canSendMediaMessages | default(false) | to_python_boolean }},
-                can_send_polls={{ canSendPolls | default(false) | to_python_boolean }},
-                can_send_other_messages={{ canSendOtherMessages | default(false) | to_python_boolean }},
-                can_add_web_page_previews={{ canAddWebPagePreviews | default(false) | to_python_boolean }},
-                can_change_info={{ canChangeGroupInfo | default(false) | to_python_boolean }},
-                can_invite_users={{ canInviteUsers2 | default(false) | to_python_boolean }},
-                can_pin_messages={{ canPinMessages2 | default(false) | to_python_boolean }}
+{{ mute_chat_permissions(canSendMessages | default(false), canSendAudios | default(false), canSendDocuments | default(false), canSendPhotos | default(false), canSendVideos | default(false), canSendVideoNotes | default(false), canSendVoiceNotes | default(false), canSendPolls | default(false), canSendOtherMessages | default(false), canAddWebPagePreviews | default(false), canReactToMessages | default(false), canChangeGroupInfo | default(false), canInviteUsers2 | default(false), canPinMessages2 | default(false)) }}
             ),
             until_date=until_date
         )
@@ -315,14 +370,7 @@ async def {{ nodeType }}_{{ safeName }}_handler(message: types.Message):
             chat_id=chat_id,
             user_id=target_user_id,
             permissions=types.ChatPermissions(
-                can_send_messages=True,
-                can_send_media_messages=True,
-                can_send_polls=True,
-                can_send_other_messages=True,
-                can_add_web_page_previews=True,
-                can_change_info=False,
-                can_invite_users=False,
-                can_pin_messages=False
+{{ unmute_chat_permissions() }}
             )
         )
         await message.answer(f"✅ Ограничения с пользователя {target_user_id} сняты")
@@ -347,7 +395,13 @@ async def {{ nodeType }}_{{ safeName }}_handler(message: types.Message):
 {% if canManageTopics %}
             can_manage_topics={{ canManageTopics | to_python_boolean }},
 {% endif %}
-            is_anonymous={{ isAnonymous | default(false) | to_python_boolean }}
+            is_anonymous={{ isAnonymous | default(false) | to_python_boolean }},
+{{ optional_promote_right("can_manage_chat", canManageChat) }}
+{{ optional_promote_right("can_post_messages", canPostMessages) }}
+{{ optional_promote_right("can_edit_messages", canEditMessages) }}
+{{ optional_promote_right("can_manage_direct_messages", canManageDirectMessages) }}
+{{ optional_promote_right("can_manage_tags", canManageTags) }}
+{{ optional_promote_right("can_send_welcome_messages", canSendWelcomeMessages) }}
         )
         await message.answer(f"✅ Пользователь {target_user_id} назначен администратором!")
         logging.info(f"Пользователь {target_user_id} назначен администратором {user_id} в группе {chat_id}")
@@ -363,15 +417,7 @@ async def {{ nodeType }}_{{ safeName }}_handler(message: types.Message):
         await bot.promote_chat_member(
             chat_id=chat_id,
             user_id=target_user_id,
-            can_change_info=False,
-            can_delete_messages=False,
-            can_invite_users=False,
-            can_restrict_members=False,
-            can_pin_messages=False,
-            can_promote_members=False,
-            can_manage_video_chats=False,
-            can_manage_topics=False,
-            is_anonymous=False
+{{ demote_admin_rights() }}
         )
         await message.answer(f"✅ Права администратора сняты с пользователя {target_user_id}")
         logging.info(f"Права администратора сняты с пользователя {target_user_id} пользователем {user_id} в группе {chat_id}")

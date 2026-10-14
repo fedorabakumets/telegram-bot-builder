@@ -179,6 +179,14 @@ describe('generateSynonyms()', () => {
       assert.ok(r.includes('bot.restrict_chat_member'));
       assert.ok(r.includes('types.ChatPermissions'));
       assert.ok(r.includes('can_send_messages=False'));
+      assert.ok(!r.includes('can_send_media_messages'));
+    });
+
+    it('старое поле false раскладывается на фото, видео и голосовые', () => {
+      const r = generateSynonyms(validParamsMuteUser);
+      assert.ok(r.includes('can_send_photos=False'));
+      assert.ok(r.includes('can_send_videos=False'));
+      assert.ok(r.includes('can_send_voice_notes=False'));
     });
 
     it('вычисляет время из duration', () => {
@@ -192,7 +200,11 @@ describe('generateSynonyms()', () => {
     it('снимает все ограничения', () => {
       const r = generateSynonyms(validParamsUnmuteUser);
       assert.ok(r.includes('can_send_messages=True'));
+      assert.ok(r.includes('can_send_photos=True'));
       assert.ok(r.includes('can_send_polls=True'));
+      assert.ok(r.includes('can_react_to_messages=True'));
+      assert.ok(r.includes('can_change_info=False'));
+      assert.ok(!r.includes('can_send_media_messages'));
       assert.ok(r.includes('Ограничения с пользователя'));
     });
   });
@@ -204,6 +216,20 @@ describe('generateSynonyms()', () => {
       assert.ok(r.includes('can_delete_messages=True'));
       assert.ok(r.includes('can_invite_users=True'));
       assert.ok(r.includes('can_pin_messages=False'));
+      assert.ok(!r.includes('can_manage_chat'));
+      assert.ok(!r.includes('can_send_welcome_messages'));
+    });
+
+    it('передаёт новое право, если оно задано', () => {
+      const r = generateSynonyms({
+        synonyms: [{
+          ...validParamsPromoteUser.synonyms[0],
+          canManageChat: true,
+          canSendWelcomeMessages: false,
+        }],
+      });
+      assert.ok(r.includes('can_manage_chat=True'));
+      assert.ok(r.includes('can_send_welcome_messages=False'));
     });
   });
 
@@ -212,6 +238,8 @@ describe('generateSynonyms()', () => {
       const r = generateSynonyms(validParamsDemoteUser);
       assert.ok(r.includes('can_change_info=False'));
       assert.ok(r.includes('can_promote_members=False'));
+      assert.ok(r.includes('can_post_stories=False'));
+      assert.ok(r.includes('can_send_welcome_messages=False'));
       assert.ok(r.includes('Права администратора сняты'));
     });
   });
@@ -310,6 +338,9 @@ describe('collectSynonymEntries()', () => {
     const entries = collectSynonymEntries(nodesWithMuteSynonym);
     assert.strictEqual(entries[0].duration, 3600);
     assert.strictEqual(entries[0].canSendMessages, false);
+    assert.strictEqual(entries[0].canSendMediaMessages, false);
+    assert.strictEqual(entries[0].canSendPhotos, true);
+    assert.strictEqual(entries[0].canSendVideos, undefined);
   });
 
   it('собирает promote_user синонимы с правами', () => {

@@ -304,8 +304,22 @@ export const defaultNodeData = {
   isAnonymous: false,
   /** Может отправлять сообщения */
   canSendMessages: true,
-  /** Может отправлять медиасообщения */
+  /** Может отправлять медиасообщения. Устаревшее поле, в Python не передаётся */
   canSendMediaMessages: true,
+  /** Может отправлять аудио. Пустое значение берётся из canSendMediaMessages */
+  canSendAudios: false,
+  /** Может отправлять документы */
+  canSendDocuments: false,
+  /** Может отправлять фото */
+  canSendPhotos: false,
+  /** Может отправлять видео */
+  canSendVideos: false,
+  /** Может отправлять видеозаметки */
+  canSendVideoNotes: false,
+  /** Может отправлять голосовые */
+  canSendVoiceNotes: false,
+  /** Может ставить реакции */
+  canReactToMessages: false,
   /** Может отправлять опросы */
   canSendPolls: true,
   /** Может отправлять другие сообщения */
@@ -356,6 +370,12 @@ export const defaultNodeData = {
   can_manage_topics: false,
   /** Анонимный */
   is_anonymous: false,
+  /** Может управлять личными сообщениями */
+  can_manage_direct_messages: false,
+  /** Может управлять тегами */
+  can_manage_tags: false,
+  /** Может отправлять приветственные сообщения */
+  can_send_welcome_messages: false,
   /** ID чата для админ-действий */
   adminChatId: undefined,
   /** Источник ID чата: "current_chat", "variable" */

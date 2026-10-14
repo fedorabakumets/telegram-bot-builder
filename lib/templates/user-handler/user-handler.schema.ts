@@ -41,8 +41,22 @@ export const userHandlerParamsSchema = z.object({
   duration: z.number().optional().default(3600),
   /** Разрешить отправку сообщений */
   canSendMessages: z.boolean().optional().default(false),
-  /** Разрешить отправку медиа */
+  /** Устаревшее общее право на медиа. В Python не передаётся */
   canSendMediaMessages: z.boolean().optional().default(false),
+  /** Разрешить аудио. Пусто — как canSendMediaMessages */
+  canSendAudios: z.boolean().optional(),
+  /** Разрешить документы. Пусто — как canSendMediaMessages */
+  canSendDocuments: z.boolean().optional(),
+  /** Разрешить фото. Пусто — как canSendMediaMessages */
+  canSendPhotos: z.boolean().optional(),
+  /** Разрешить видео. Пусто — как canSendMediaMessages */
+  canSendVideos: z.boolean().optional(),
+  /** Разрешить видеозаметки. Пусто — как canSendMediaMessages */
+  canSendVideoNotes: z.boolean().optional(),
+  /** Разрешить голосовые. Пусто — как canSendMediaMessages */
+  canSendVoiceNotes: z.boolean().optional(),
+  /** Разрешить реакции. Пусто — как canSendMediaMessages */
+  canReactToMessages: z.boolean().optional(),
   /** Разрешить отправку опросов */
   canSendPolls: z.boolean().optional().default(false),
   /** Разрешить отправку других сообщений */
@@ -75,6 +89,18 @@ export const userHandlerParamsSchema = z.object({
   canManageTopics: z.boolean().optional().default(false),
   /** Анонимность администратора */
   isAnonymous: z.boolean().optional().default(false),
+  /** Управлять чатом, только если задано */
+  canManageChat: z.boolean().optional(),
+  /** Публиковать сообщения, только если задано */
+  canPostMessages: z.boolean().optional(),
+  /** Редактировать сообщения, только если задано */
+  canEditMessages: z.boolean().optional(),
+  /** Управлять личными сообщениями, только если задано */
+  canManageDirectMessages: z.boolean().optional(),
+  /** Управлять тегами, только если задано */
+  canManageTags: z.boolean().optional(),
+  /** Отправлять приветствия, только если задано */
+  canSendWelcomeMessages: z.boolean().optional(),
 });
 
 export type UserHandlerParams = z.infer<typeof userHandlerParamsSchema>;

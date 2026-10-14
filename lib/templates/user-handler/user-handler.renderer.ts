@@ -7,13 +7,43 @@ import type { Node } from '@shared/schema';
 import type { UserHandlerTemplateParams } from './user-handler.params';
 import { userHandlerParamsSchema } from './user-handler.schema';
 import { renderPartialTemplate } from '../template-renderer';
+import { omitUndefined, resolveMuteMediaPermissions } from '../chat-permissions/resolve-mute-media';
+
+/** Права promote, которые попадают в вызов только если уже есть в данных блока */
+const OPTIONAL_PROMOTE_KEYS = [
+  'canManageChat',
+  'canPostMessages',
+  'canEditMessages',
+  'canManageDirectMessages',
+  'canManageTags',
+  'canSendWelcomeMessages',
+] as const;
+
+/**
+ * Оставляет только явно заданные boolean-права.
+ * @param data - Данные узла
+ * @returns Права, которые нужно передать в promoteChatMember
+ */
+function pickOptionalPromoteRights(data: Node['data']): Partial<UserHandlerTemplateParams> {
+  const source = data as Record<string, unknown>;
+  const picked: Partial<UserHandlerTemplateParams> = {};
+  for (const key of OPTIONAL_PROMOTE_KEYS) {
+    if (typeof source[key] === 'boolean') {
+      picked[key] = source[key] as boolean;
+    }
+  }
+  return picked;
+}
 
 /**
  * Генерирует Python обработчик управления пользователями из параметров (низкоуровневый API)
  */
 export function generateUserHandler(params: UserHandlerTemplateParams): string {
   const validated = userHandlerParamsSchema.parse(params);
-  return renderPartialTemplate('user-handler/user-handler.py.jinja2', validated);
+  return renderPartialTemplate(
+    'user-handler/user-handler.py.jinja2',
+    omitUndefined(resolveMuteMediaPermissions(validated)),
+  );
 }
 
 /**
@@ -49,6 +79,13 @@ export function nodeToUserHandlerParams(node: Node): UserHandlerTemplateParams {
     duration: node.data.duration ?? 3600,
     canSendMessages: node.data.canSendMessages ?? false,
     canSendMediaMessages: node.data.canSendMediaMessages ?? false,
+    canSendAudios: node.data.canSendAudios,
+    canSendDocuments: node.data.canSendDocuments,
+    canSendPhotos: node.data.canSendPhotos,
+    canSendVideos: node.data.canSendVideos,
+    canSendVideoNotes: node.data.canSendVideoNotes,
+    canSendVoiceNotes: node.data.canSendVoiceNotes,
+    canReactToMessages: node.data.canReactToMessages,
     canSendPolls: node.data.canSendPolls ?? false,
     canSendOtherMessages: node.data.canSendOtherMessages ?? false,
     canAddWebPagePreviews: node.data.canAddWebPagePreviews ?? false,
@@ -64,6 +101,7 @@ export function nodeToUserHandlerParams(node: Node): UserHandlerTemplateParams {
     canManageVideoChats: node.data.canManageVideoChats ?? false,
     canManageTopics: node.data.canManageTopics ?? false,
     isAnonymous: node.data.isAnonymous ?? false,
+    ...pickOptionalPromoteRights(node.data),
   };
 }
 
