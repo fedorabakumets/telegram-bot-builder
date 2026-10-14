@@ -17725,6 +17725,304 @@
         }
       }
     },
+    "/api/projects/{projectId}/dialogs/messages/search": {
+      "get": {
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "agentToken": []
+          }
+        ],
+        "tags": [
+          "Диалоги"
+        ],
+        "summary": "Поиск по сохранённым сообщениям бота",
+        "description": "Буквальная подстрока без регистра, включая %, _ и обратную косую черту. Без chatId поиск по всем чатам; chatType допустим как самостоятельный фильтр. Для chatId требуется chatType. Порядок от новых к старым; курсор привязан к проекту, токену, запросу и фильтрам. Только сохранённый текст, без Telegram.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true
+            },
+            "required": true,
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true
+            },
+            "required": true,
+            "name": "tokenId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "required": true,
+            "name": "query",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^-?[1-9]\\d{0,19}$"
+            },
+            "required": false,
+            "name": "chatId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "private",
+                "group",
+                "supergroup",
+                "channel"
+              ]
+            },
+            "required": false,
+            "name": "chatType",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 2048
+            },
+            "required": false,
+            "name": "cursor",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Совпадения от новых к старым с полным текстом и безопасными метаданными.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "project_id": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "exclusiveMinimum": true
+                    },
+                    "token_id": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "exclusiveMinimum": true
+                    },
+                    "query": {
+                      "type": "string"
+                    },
+                    "chat_id": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "chat_type": {
+                      "type": "string",
+                      "nullable": true,
+                      "enum": [
+                        "private",
+                        "group",
+                        "supergroup",
+                        "channel"
+                      ]
+                    },
+                    "messages": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "integer"
+                          },
+                          "user_id": {
+                            "type": "string"
+                          },
+                          "chat_id": {
+                            "type": "string"
+                          },
+                          "chat_type": {
+                            "type": "string",
+                            "enum": [
+                              "private",
+                              "group",
+                              "supergroup",
+                              "channel"
+                            ]
+                          },
+                          "source_chat_title": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "message_type": {
+                            "type": "string"
+                          },
+                          "direction": {
+                            "type": "string",
+                            "enum": [
+                              "incoming",
+                              "outgoing"
+                            ]
+                          },
+                          "message_text": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "telegram_message_id": {
+                            "type": "integer",
+                            "nullable": true
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "nullable": true,
+                            "format": "date-time"
+                          },
+                          "media": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "integer"
+                                },
+                                "file_name": {
+                                  "type": "string"
+                                },
+                                "file_type": {
+                                  "type": "string"
+                                },
+                                "file_size": {
+                                  "type": "integer"
+                                },
+                                "mime_type": {
+                                  "type": "string"
+                                },
+                                "media_kind": {
+                                  "type": "string"
+                                },
+                                "order_index": {
+                                  "type": "integer",
+                                  "nullable": true
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "file_name",
+                                "file_type",
+                                "file_size",
+                                "mime_type",
+                                "media_kind",
+                                "order_index"
+                              ]
+                            }
+                          },
+                          "telegram_media": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string"
+                                },
+                                "file_id": {
+                                  "type": "string"
+                                },
+                                "file_unique_id": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "type"
+                              ]
+                            }
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "user_id",
+                          "chat_id",
+                          "chat_type",
+                          "source_chat_title",
+                          "message_type",
+                          "direction",
+                          "message_text",
+                          "telegram_message_id",
+                          "created_at",
+                          "media",
+                          "telegram_media"
+                        ]
+                      }
+                    },
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "next_cursor": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "ok",
+                    "project_id",
+                    "token_id",
+                    "query",
+                    "chat_id",
+                    "chat_type",
+                    "messages",
+                    "has_more",
+                    "next_cursor"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Некорректные параметры или курсор"
+          },
+          "401": {
+            "description": "Требуется авторизация"
+          },
+          "403": {
+            "description": "Нет доступа к проекту"
+          },
+          "404": {
+            "description": "Бот не принадлежит проекту"
+          },
+          "500": {
+            "description": "Не удалось выполнить поиск"
+          }
+        }
+      }
+    },
     "/api/projects/{projectId}/files": {
       "delete": {
         "tags": [
