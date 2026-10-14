@@ -123,7 +123,6 @@ export function migrateSynonymsToTextTriggers(nodes: Node[]): Node[] {
           canManageTopics: false,
           isAnonymous: false,
           canSendMessages: true,
-          canSendMediaMessages: true,
           canSendAudios: false,
           canSendDocuments: false,
           canSendPhotos: false,

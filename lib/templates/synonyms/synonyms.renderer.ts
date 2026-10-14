@@ -8,12 +8,11 @@ import type { SynonymEntry, SynonymsTemplateParams } from './synonyms.params';
 import { synonymsParamsSchema } from './synonyms.schema';
 import { renderPartialTemplate } from '../template-renderer';
 import { NODE_TYPES } from '../../bot-generator/types/node-type.constants';
-import { omitUndefined, resolveMuteMediaPermissions } from '../chat-permissions/resolve-mute-media';
+import { omitUndefined, stripLegacyMediaPermission } from '../chat-permissions/resolve-mute-media';
 
 /** Права ограничения и назначения, которые переносятся в синоним как есть */
 const PASSTHROUGH_BOOL_KEYS = [
   'canSendMessages',
-  'canSendMediaMessages',
   'canSendAudios',
   'canSendDocuments',
   'canSendPhotos',
@@ -83,12 +82,13 @@ export function collectSynonymEntries(nodes: Node[]): SynonymEntry[] {
         });
 
       } else if (USER_MANAGEMENT_TYPES.has(node.type as any)) {
+        const data = stripLegacyMediaPermission(node.data);
         entries.push({
           ...base,
-          reason: node.data.reason,
-          untilDate: node.data.untilDate,
-          duration: node.data.duration,
-          ...pickBoolFields(node.data),
+          reason: data.reason,
+          untilDate: data.untilDate,
+          duration: data.duration,
+          ...pickBoolFields(data),
         });
       }
     }
@@ -102,10 +102,12 @@ export function collectSynonymEntries(nodes: Node[]): SynonymEntry[] {
  */
 export function generateSynonyms(params: SynonymsTemplateParams): string {
   if (params.synonyms.length === 0) return '';
-  const validated = synonymsParamsSchema.parse(params);
-  const synonymEntries = validated.synonyms.map((entry) =>
-    omitUndefined(entry.nodeType === 'mute_user' ? resolveMuteMediaPermissions(entry) : entry),
-  );
+  const prepared = {
+    ...params,
+    synonyms: params.synonyms.map((entry) => stripLegacyMediaPermission(entry)),
+  };
+  const validated = synonymsParamsSchema.parse(prepared);
+  const synonymEntries = validated.synonyms.map((entry) => omitUndefined(entry));
   return renderPartialTemplate('synonyms/synonyms.py.jinja2', { synonymEntries });
 }
 

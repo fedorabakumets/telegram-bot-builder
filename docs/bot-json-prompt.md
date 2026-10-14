@@ -1722,7 +1722,7 @@ await bot.edit_message_text('Опрашиваю… 3/15', chat_id=chat_id,
 
 ### mute_user — Ограничить участника
 
-`canSendMediaMessages` хранится для старых сценариев и в Python не передаётся. Если новые поля медиа не заданы, их значение равно `canSendMediaMessages` (фото, видео, голосовые, кружки, аудио, документы). Если заданы — берутся они. Новый блок по умолчанию запрещает все права ниже.
+Новый блок по умолчанию запрещает все права ниже.
 
 ```json
 {
@@ -1733,7 +1733,6 @@ await bot.edit_message_text('Опрашиваю… 3/15', chat_id=chat_id,
     "duration": 3600,
     "reason": "Нарушение правил группы",
     "canSendMessages": false,
-    "canSendMediaMessages": false,
     "canSendAudios": false,
     "canSendDocuments": false,
     "canSendPhotos": false,
@@ -1755,20 +1754,19 @@ await bot.edit_message_text('Опрашиваю… 3/15', chat_id=chat_id,
 |------|-----|----------|
 | `duration` | number | Длительность в секундах |
 | `canSendMessages` | boolean | Текст |
-| `canSendAudios` | boolean | Аудио. Пусто = `canSendMediaMessages` |
-| `canSendDocuments` | boolean | Документы. Пусто = `canSendMediaMessages` |
-| `canSendPhotos` | boolean | Фото. Пусто = `canSendMediaMessages` |
-| `canSendVideos` | boolean | Видео. Пусто = `canSendMediaMessages` |
-| `canSendVideoNotes` | boolean | Кружки. Пусто = `canSendMediaMessages` |
-| `canSendVoiceNotes` | boolean | Голосовые. Пусто = `canSendMediaMessages` |
+| `canSendAudios` | boolean | Аудио |
+| `canSendDocuments` | boolean | Документы |
+| `canSendPhotos` | boolean | Фото |
+| `canSendVideos` | boolean | Видео |
+| `canSendVideoNotes` | boolean | Кружки |
+| `canSendVoiceNotes` | boolean | Голосовые |
 | `canSendPolls` | boolean | Опросы |
 | `canSendOtherMessages` | boolean | Стикеры и GIF |
 | `canAddWebPagePreviews` | boolean | Предпросмотр ссылок |
-| `canReactToMessages` | boolean | Реакции. Пусто = `canSendMediaMessages` |
+| `canReactToMessages` | boolean | Реакции |
 | `canChangeGroupInfo` | boolean | Описание группы |
 | `canInviteUsers2` | boolean | Приглашения |
 | `canPinMessages2` | boolean | Закрепление |
-| `canSendMediaMessages` | boolean | Устаревший флаг медиа, в код не передаётся |
 
 ### unmute_user — Снять ограничение
 

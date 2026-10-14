@@ -202,7 +202,6 @@ export function getNodePresetData(type: Node['type']): Record<string, unknown> {
       reason: 'Нарушение правил группы',
       duration: 3600,
       canSendMessages: false,
-      canSendMediaMessages: false,
       canSendAudios: false,
       canSendDocuments: false,
       canSendPhotos: false,

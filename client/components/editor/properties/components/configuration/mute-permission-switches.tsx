@@ -17,8 +17,6 @@ interface MutePermissionSwitch {
   label: string;
   /** Иконка Font Awesome */
   icon: string;
-  /** Если поле пустое, показать значение canSendMediaMessages */
-  useMediaFallback?: boolean;
 }
 
 /**
@@ -31,35 +29,33 @@ interface MutePermissionSwitchesProps {
   onNodeUpdate: (nodeId: string, updates: Partial<Node['data']>) => void;
 }
 
-/** Отдельные права вместо устаревшего «Отправлять медиа» */
+/** Отдельные права ограничения участника */
 const MUTE_PERMISSIONS: MutePermissionSwitch[] = [
   { key: 'canSendMessages', label: 'Отправлять сообщения', icon: 'fas fa-comment' },
-  { key: 'canSendAudios', label: 'Отправлять аудио', icon: 'fas fa-music', useMediaFallback: true },
-  { key: 'canSendDocuments', label: 'Отправлять документы', icon: 'fas fa-file', useMediaFallback: true },
-  { key: 'canSendPhotos', label: 'Отправлять фото', icon: 'fas fa-image', useMediaFallback: true },
-  { key: 'canSendVideos', label: 'Отправлять видео', icon: 'fas fa-video', useMediaFallback: true },
-  { key: 'canSendVideoNotes', label: 'Отправлять кружки', icon: 'fas fa-circle', useMediaFallback: true },
-  { key: 'canSendVoiceNotes', label: 'Отправлять голосовые', icon: 'fas fa-microphone', useMediaFallback: true },
+  { key: 'canSendAudios', label: 'Отправлять аудио', icon: 'fas fa-music' },
+  { key: 'canSendDocuments', label: 'Отправлять документы', icon: 'fas fa-file' },
+  { key: 'canSendPhotos', label: 'Отправлять фото', icon: 'fas fa-image' },
+  { key: 'canSendVideos', label: 'Отправлять видео', icon: 'fas fa-video' },
+  { key: 'canSendVideoNotes', label: 'Отправлять кружки', icon: 'fas fa-circle' },
+  { key: 'canSendVoiceNotes', label: 'Отправлять голосовые', icon: 'fas fa-microphone' },
   { key: 'canSendPolls', label: 'Создавать опросы', icon: 'fas fa-poll' },
   { key: 'canSendOtherMessages', label: 'Отправлять стикеры/GIF', icon: 'fas fa-laugh' },
   { key: 'canAddWebPagePreviews', label: 'Добавлять превью ссылок', icon: 'fas fa-link' },
-  { key: 'canReactToMessages', label: 'Ставить реакции', icon: 'fas fa-heart', useMediaFallback: true },
+  { key: 'canReactToMessages', label: 'Ставить реакции', icon: 'fas fa-heart' },
   { key: 'canChangeGroupInfo', label: 'Изменять информацию группы', icon: 'fas fa-edit' },
   { key: 'canInviteUsers2', label: 'Приглашать пользователей', icon: 'fas fa-user-plus' },
   { key: 'canPinMessages2', label: 'Закреплять сообщения', icon: 'fas fa-thumbtack' },
 ];
 
 /**
- * Возвращает положение переключателя с учётом старого запрета медиа
+ * Возвращает положение переключателя
  * @param data - Данные узла
- * @param item - Описание права
+ * @param key - Ключ права
  * @returns Включено ли право
  */
-function isPermissionOn(data: Node['data'], item: MutePermissionSwitch): boolean {
-  const value = (data as Record<string, unknown>)[item.key];
-  if (typeof value === 'boolean') return value;
-  if (item.useMediaFallback) return data.canSendMediaMessages ?? false;
-  return false;
+function isPermissionOn(data: Node['data'], key: string): boolean {
+  const value = (data as Record<string, unknown>)[key];
+  return typeof value === 'boolean' ? value : false;
 }
 
 /**
@@ -85,7 +81,7 @@ export function MutePermissionSwitches({ selectedNode, onNodeUpdate }: MutePermi
               <Label className="text-xs text-slate-700 dark:text-slate-300">{item.label}</Label>
             </div>
             <Switch
-              checked={isPermissionOn(selectedNode.data, item)}
+              checked={isPermissionOn(selectedNode.data, item.key)}
               onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { [item.key]: checked } as Partial<Node['data']>)}
             />
           </div>

@@ -20,7 +20,6 @@ export const muteUser: ComponentDefinition = {
     duration: 3600,
     reason: 'Нарушение правил группы',
     canSendMessages: false,
-    canSendMediaMessages: false,
     canSendAudios: false,
     canSendDocuments: false,
     canSendPhotos: false,

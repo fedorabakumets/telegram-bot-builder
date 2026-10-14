@@ -304,9 +304,7 @@ export const defaultNodeData = {
   isAnonymous: false,
   /** Может отправлять сообщения */
   canSendMessages: true,
-  /** Может отправлять медиасообщения. Устаревшее поле, в Python не передаётся */
-  canSendMediaMessages: true,
-  /** Может отправлять аудио. Пустое значение берётся из canSendMediaMessages */
+  /** Может отправлять аудио */
   canSendAudios: false,
   /** Может отправлять документы */
   canSendDocuments: false,

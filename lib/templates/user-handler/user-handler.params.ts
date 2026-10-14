@@ -31,19 +31,17 @@ export interface UserHandlerTemplateParams {
   duration?: number;
   /** Разрешить текст */
   canSendMessages?: boolean;
-  /** Устаревший общий запрет медиа. В Python не передаётся */
-  canSendMediaMessages?: boolean;
-  /** Разрешить аудио. Пусто — как canSendMediaMessages */
+  /** Разрешить аудио */
   canSendAudios?: boolean;
-  /** Разрешить документы. Пусто — как canSendMediaMessages */
+  /** Разрешить документы */
   canSendDocuments?: boolean;
-  /** Разрешить фото. Пусто — как canSendMediaMessages */
+  /** Разрешить фото */
   canSendPhotos?: boolean;
-  /** Разрешить видео. Пусто — как canSendMediaMessages */
+  /** Разрешить видео */
   canSendVideos?: boolean;
-  /** Разрешить видеозаметки. Пусто — как canSendMediaMessages */
+  /** Разрешить видеозаметки */
   canSendVideoNotes?: boolean;
-  /** Разрешить голосовые. Пусто — как canSendMediaMessages */
+  /** Разрешить голосовые */
   canSendVoiceNotes?: boolean;
   /** Разрешить опросы */
   canSendPolls?: boolean;
@@ -51,7 +49,7 @@ export interface UserHandlerTemplateParams {
   canSendOtherMessages?: boolean;
   /** Разрешить предпросмотр ссылок */
   canAddWebPagePreviews?: boolean;
-  /** Разрешить реакции. Пусто — как canSendMediaMessages */
+  /** Разрешить реакции */
   canReactToMessages?: boolean;
   /** Разрешить менять описание группы */
   canChangeGroupInfo?: boolean;

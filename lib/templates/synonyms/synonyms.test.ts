@@ -182,7 +182,7 @@ describe('generateSynonyms()', () => {
       assert.ok(!r.includes('can_send_media_messages'));
     });
 
-    it('старое поле false раскладывается на фото, видео и голосовые', () => {
+    it('явные поля фото, видео и голосовых попадают в ограничение', () => {
       const r = generateSynonyms(validParamsMuteUser);
       assert.ok(r.includes('can_send_photos=False'));
       assert.ok(r.includes('can_send_videos=False'));
@@ -338,9 +338,10 @@ describe('collectSynonymEntries()', () => {
     const entries = collectSynonymEntries(nodesWithMuteSynonym);
     assert.strictEqual(entries[0].duration, 3600);
     assert.strictEqual(entries[0].canSendMessages, false);
-    assert.strictEqual(entries[0].canSendMediaMessages, false);
+    assert.strictEqual('canSendMediaMessages' in entries[0], false);
     assert.strictEqual(entries[0].canSendPhotos, true);
-    assert.strictEqual(entries[0].canSendVideos, undefined);
+    assert.strictEqual(entries[0].canSendVideos, false);
+    assert.strictEqual(entries[0].canSendVoiceNotes, false);
   });
 
   it('собирает promote_user синонимы с правами', () => {

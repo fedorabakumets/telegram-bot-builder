@@ -44,17 +44,16 @@
 | duration | number | 3600 | Длительность в секундах |
 | reason | string | 'Нарушение правил группы' | Причина |
 | canSendMessages | boolean | false | Текст |
-| canSendMediaMessages | boolean | false | Устаревшее поле, в Python не передаётся |
-| canSendAudios | boolean | как canSendMediaMessages | Аудио |
-| canSendDocuments | boolean | как canSendMediaMessages | Документы |
-| canSendPhotos | boolean | как canSendMediaMessages | Фото |
-| canSendVideos | boolean | как canSendMediaMessages | Видео |
-| canSendVideoNotes | boolean | как canSendMediaMessages | Кружки |
-| canSendVoiceNotes | boolean | как canSendMediaMessages | Голосовые |
+| canSendAudios | boolean | false | Аудио |
+| canSendDocuments | boolean | false | Документы |
+| canSendPhotos | boolean | false | Фото |
+| canSendVideos | boolean | false | Видео |
+| canSendVideoNotes | boolean | false | Кружки |
+| canSendVoiceNotes | boolean | false | Голосовые |
 | canSendPolls | boolean | false | Опросы |
 | canSendOtherMessages | boolean | false | Стикеры |
 | canAddWebPagePreviews | boolean | false | Превью ссылок |
-| canReactToMessages | boolean | как canSendMediaMessages | Реакции |
+| canReactToMessages | boolean | false | Реакции |
 | canChangeGroupInfo | boolean | false | Описание группы |
 | canInviteUsers2 | boolean | false | Приглашения |
 | canPinMessages2 | boolean | false | Закрепление |

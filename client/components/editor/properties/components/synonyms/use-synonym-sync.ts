@@ -132,7 +132,6 @@ export function useSynonymSync({
         canManageTopics: false,
         isAnonymous: false,
         canSendMessages: true,
-        canSendMediaMessages: true,
         canSendAudios: false,
         canSendDocuments: false,
         canSendPhotos: false,

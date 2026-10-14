@@ -15,6 +15,7 @@ import { migrateMessageKeyboardsToNodes } from './utils/migrate-message-keyboard
 import { migrateForwardMessageSourceLinks } from './utils/migrate-forward-message-source-links';
 import { migrateInputNodeTarget } from './utils/migrate-input-node-target';
 import { needsMessageDefaults, stripMessageJunkFields } from '@/utils/sheets/needs-message-defaults';
+import { stripLegacyMediaFromNodes } from './utils/strip-legacy-media-permission';
 
 /**
  * Интерфейс для состояния истории изменений
@@ -216,10 +217,10 @@ export function useBotEditor(initialData?: BotData) {
         }
       }
 
-      const normalizedNode = {
+      const normalizedNode = stripLegacyMediaFromNodes([{
         ...node,
         data: normalizedData
-      } as Node;
+      } as Node])[0];
 
       const migratedWithSynonyms = migrateSynonymsToTextTriggers([normalizedNode]);
       const migratedNodes = migrateCommandsToCommandTriggers(migratedWithSynonyms);
@@ -416,9 +417,10 @@ export function useBotEditor(initialData?: BotData) {
     // Миграция autoTransitionTo → inputTargetNodeId для input-узлов
     const migratedWithInputTargets = migrateInputNodeTarget(migratedWithLinkedInputs);
 
-    const finalNodes = skipLayout
+    const laidOutNodes = skipLayout
       ? migratedWithInputTargets
       : applyTemplateLayout(migratedWithInputTargets, [], templateName, nodeSizes);
+    const finalNodes = stripLegacyMediaFromNodes(laidOutNodes);
 
     setNodes(finalNodes);
     if (!preserveSelection) {

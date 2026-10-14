@@ -509,21 +509,19 @@ export const nodeSchema = z.object({
     canSendWelcomeMessages: z.boolean().optional(),
     /** Разрешить отправку сообщений (для mute_user) */
     canSendMessages: z.boolean().default(true),
-    /** Разрешить отправку медиа (для mute_user). Устаревшее поле, в Python не передаётся */
-    canSendMediaMessages: z.boolean().default(true),
-    /** Разрешить отправку аудио (для mute_user). Пусто — как canSendMediaMessages */
+    /** Разрешить отправку аудио (для mute_user) */
     canSendAudios: z.boolean().optional(),
-    /** Разрешить отправку документов (для mute_user). Пусто — как canSendMediaMessages */
+    /** Разрешить отправку документов (для mute_user) */
     canSendDocuments: z.boolean().optional(),
-    /** Разрешить отправку фото (для mute_user). Пусто — как canSendMediaMessages */
+    /** Разрешить отправку фото (для mute_user) */
     canSendPhotos: z.boolean().optional(),
-    /** Разрешить отправку видео (для mute_user). Пусто — как canSendMediaMessages */
+    /** Разрешить отправку видео (для mute_user) */
     canSendVideos: z.boolean().optional(),
-    /** Разрешить отправку видеозаметок (для mute_user). Пусто — как canSendMediaMessages */
+    /** Разрешить отправку видеозаметок (для mute_user) */
     canSendVideoNotes: z.boolean().optional(),
-    /** Разрешить отправку голосовых (для mute_user). Пусто — как canSendMediaMessages */
+    /** Разрешить отправку голосовых (для mute_user) */
     canSendVoiceNotes: z.boolean().optional(),
-    /** Разрешить реакции (для mute_user). Пусто — как canSendMediaMessages */
+    /** Разрешить реакции (для mute_user) */
     canReactToMessages: z.boolean().optional(),
     /** Разрешить отправку опросов (для mute_user) */
     canSendPolls: z.boolean().default(true),

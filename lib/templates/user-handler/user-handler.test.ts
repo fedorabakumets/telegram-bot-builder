@@ -6,6 +6,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { generateUserHandler } from './user-handler.renderer';
+import { stripLegacyMediaPermission } from '../chat-permissions/resolve-mute-media';
 import { userHandlerParamsSchema } from './user-handler.schema';
 import {
   fixtureBanUser,
@@ -112,7 +113,7 @@ describe('mute_user', () => {
     assert.ok(!r.includes('can_send_media_messages'));
   });
 
-  it('старое поле false раскладывается на фото, видео и голосовые', () => {
+  it('явные поля фото, видео и голосовых попадают в ограничение', () => {
     const r = generateUserHandler(fixtureMuteUser);
     assert.ok(r.includes('can_send_photos=False'));
     assert.ok(r.includes('can_send_videos=False'));
@@ -122,10 +123,21 @@ describe('mute_user', () => {
     assert.ok(r.includes('can_send_video_notes=False'));
   });
 
-  it('явно заданное фото не заменяется общим запретом медиа', () => {
+  it('явно заданное фото передаётся как True', () => {
     const r = generateUserHandler({ ...fixtureMuteUser, canSendPhotos: true });
     assert.ok(r.includes('can_send_photos=True'));
     assert.ok(r.includes('can_send_videos=False'));
+  });
+
+  it('зачистка убирает старый ключ и не затирает заданное фото', () => {
+    const cleaned = stripLegacyMediaPermission({
+      canSendMediaMessages: false,
+      canSendPhotos: true,
+    } as Record<string, unknown>);
+    assert.strictEqual('canSendMediaMessages' in cleaned, false);
+    assert.strictEqual(cleaned.canSendPhotos, true);
+    assert.strictEqual(cleaned.canSendVideos, false);
+    assert.strictEqual(cleaned.canSendVoiceNotes, false);
   });
 
   it('вычисляет время из duration', () => {

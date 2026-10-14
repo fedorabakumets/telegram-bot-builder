@@ -255,21 +255,19 @@ export interface NodeData {
   duration?: number;
   /** Разрешить отправку сообщений */
   canSendMessages?: boolean;
-  /** Устаревшее общее право на медиа. В Python не передаётся */
-  canSendMediaMessages?: boolean;
-  /** Разрешить отправку аудио. Пусто — как canSendMediaMessages */
+  /** Разрешить отправку аудио */
   canSendAudios?: boolean;
-  /** Разрешить отправку документов. Пусто — как canSendMediaMessages */
+  /** Разрешить отправку документов */
   canSendDocuments?: boolean;
-  /** Разрешить отправку фото. Пусто — как canSendMediaMessages */
+  /** Разрешить отправку фото */
   canSendPhotos?: boolean;
-  /** Разрешить отправку видео. Пусто — как canSendMediaMessages */
+  /** Разрешить отправку видео */
   canSendVideos?: boolean;
-  /** Разрешить отправку видеозаметок. Пусто — как canSendMediaMessages */
+  /** Разрешить отправку видеозаметок */
   canSendVideoNotes?: boolean;
-  /** Разрешить отправку голосовых. Пусто — как canSendMediaMessages */
+  /** Разрешить отправку голосовых */
   canSendVoiceNotes?: boolean;
-  /** Разрешить реакции. Пусто — как canSendMediaMessages */
+  /** Разрешить реакции */
   canReactToMessages?: boolean;
   /** Разрешить отправку опросов */
   canSendPolls?: boolean;

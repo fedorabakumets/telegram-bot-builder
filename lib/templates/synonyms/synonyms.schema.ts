@@ -52,19 +52,17 @@ const synonymEntrySchema = z.object({
   duration: z.number().optional(),
   /** Разрешить отправку сообщений */
   canSendMessages: z.boolean().optional(),
-  /** Устаревшее общее право на медиа. В Python не передаётся */
-  canSendMediaMessages: z.boolean().optional(),
-  /** Разрешить аудио. Пусто — как canSendMediaMessages */
+  /** Разрешить аудио */
   canSendAudios: z.boolean().optional(),
-  /** Разрешить документы. Пусто — как canSendMediaMessages */
+  /** Разрешить документы */
   canSendDocuments: z.boolean().optional(),
-  /** Разрешить фото. Пусто — как canSendMediaMessages */
+  /** Разрешить фото */
   canSendPhotos: z.boolean().optional(),
-  /** Разрешить видео. Пусто — как canSendMediaMessages */
+  /** Разрешить видео */
   canSendVideos: z.boolean().optional(),
-  /** Разрешить видеозаметки. Пусто — как canSendMediaMessages */
+  /** Разрешить видеозаметки */
   canSendVideoNotes: z.boolean().optional(),
-  /** Разрешить голосовые. Пусто — как canSendMediaMessages */
+  /** Разрешить голосовые */
   canSendVoiceNotes: z.boolean().optional(),
   /** Разрешить опросы */
   canSendPolls: z.boolean().optional(),
@@ -72,7 +70,7 @@ const synonymEntrySchema = z.object({
   canSendOtherMessages: z.boolean().optional(),
   /** Разрешить предпросмотр ссылок */
   canAddWebPagePreviews: z.boolean().optional(),
-  /** Разрешить реакции. Пусто — как canSendMediaMessages */
+  /** Разрешить реакции */
   canReactToMessages: z.boolean().optional(),
   /** Разрешить менять описание группы */
   canChangeGroupInfo: z.boolean().optional(),

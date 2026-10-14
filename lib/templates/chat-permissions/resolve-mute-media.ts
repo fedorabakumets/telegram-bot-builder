@@ -1,9 +1,9 @@
 /**
- * @fileoverview Подстановка устаревшего запрета медиа в новые поля ограничения
+ * @fileoverview Разовая зачистка устаревшего запрета медиа в данных ограничения
  * @module templates/chat-permissions/resolve-mute-media
  */
 
-/** Новые права ChatPermissions: виды медиа и реакции */
+/** Отдельные права, куда копируется устаревший общий запрет медиа */
 const MUTE_MEDIA_SPLIT_FIELDS = [
   'canSendAudios',
   'canSendDocuments',
@@ -13,6 +13,9 @@ const MUTE_MEDIA_SPLIT_FIELDS = [
   'canSendVoiceNotes',
   'canReactToMessages',
 ] as const;
+
+/** Имя устаревшего ключа, которого больше нет в схеме */
+const LEGACY_MEDIA_KEY = 'canSendMediaMessages';
 
 /**
  * Убирает незаданные поля, чтобы шаблон не считал их явным false.
@@ -26,19 +29,25 @@ export function omitUndefined<T extends object>(value: T): T {
 }
 
 /**
- * Если новое право ограничения не задано, берёт значение canSendMediaMessages.
- * Явно заданные поля не перезаписывает.
- * @param params - Параметры узла или синонима
- * @returns Копия с заполненными новыми правами
+ * Копирует устаревший запрет медиа в ещё не заданные отдельные права и удаляет ключ.
+ * Уже заданные boolean не перезаписывает. Если ключа нет, возвращает объект как есть.
+ * @param params - Данные блока или параметры шаблона
+ * @returns Данные без устаревшего ключа
  */
-export function resolveMuteMediaPermissions<T extends { canSendMediaMessages?: boolean }>(params: T): T {
+export function stripLegacyMediaPermission<T extends object>(params: T): T {
   const source = params as T & Record<string, unknown>;
-  const media = source.canSendMediaMessages === true;
+  if (!Object.prototype.hasOwnProperty.call(source, LEGACY_MEDIA_KEY)) {
+    return params;
+  }
   const next: Record<string, unknown> = { ...source };
-  for (const field of MUTE_MEDIA_SPLIT_FIELDS) {
-    if (typeof next[field] !== 'boolean') {
-      next[field] = media;
+  const media = next[LEGACY_MEDIA_KEY];
+  if (typeof media === 'boolean') {
+    for (const field of MUTE_MEDIA_SPLIT_FIELDS) {
+      if (typeof next[field] !== 'boolean') {
+        next[field] = media;
+      }
     }
   }
+  delete next[LEGACY_MEDIA_KEY];
   return next as T;
 }
