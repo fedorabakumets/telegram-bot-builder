@@ -29,7 +29,8 @@ export function DialogHeaderIdentity({ user, projectId, tokenId }: Props) {
     /** Тип группового чата. */
     chatType?: string;
   };
-  const { data, check } = useGroupAccess(projectId, tokenId, String(user.userId));
+  const chatType = meta.isGroup ? (meta.chatType ?? 'group') : 'private';
+  const { data, check } = useGroupAccess(projectId, tokenId, String(user.userId), chatType);
   const [failedPhoto, setFailedPhoto] = useState<string | null>(null);
   const photo = data?.avatarUrl !== undefined ? data.avatarUrl : user.avatarUrl;
   const name = meta.isGroup ? (data?.name ?? user.firstName ?? String(user.userId)) : formatUserName(user);
@@ -42,7 +43,7 @@ export function DialogHeaderIdentity({ user, projectId, tokenId }: Props) {
     ) : <UserAvatar messageType="user" user={user} projectId={projectId} tokenId={tokenId} size={24} />}
     <div className="min-w-0 flex-1">
       <div className="text-sm font-medium truncate">{name}</div>
-      {meta.isGroup && <GroupAccessStatus status={data?.status} onCheck={() => { void check(); }} />}
+      <GroupAccessStatus status={data?.status} chatType={chatType} onCheck={() => { void check(); }} />
     </div>
   </div>;
 }

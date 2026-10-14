@@ -8,16 +8,18 @@ import type { GroupAccessData } from './group-sync-request';
  * @param projectId - Проект
  * @param tokenId - Бот
  * @param chatId - Чат
+ * @param chatType - Тип чата
  * @returns Общие данные и ручная проверка
  */
-export function useGroupAccess(projectId: number, tokenId: number | null | undefined, chatId: string) {
+export function useGroupAccess(projectId: number, tokenId: number | null | undefined,
+  chatId: string, chatType = 'group') {
   const client = useQueryClient();
   const { data } = useQuery<GroupAccessData>({ queryKey: groupAccessKey(projectId, tokenId, chatId),
     queryFn: async () => client.getQueryData<GroupAccessData>(groupAccessKey(projectId, tokenId, chatId)) ?? { status: 'unknown' },
     enabled: false, staleTime: Infinity, gcTime: Infinity });
   /** Запускает явную проверку и обновляет серверный список диалогов. */
   const check = async () => {
-    await checkGroupAccess(client, projectId, tokenId, chatId);
+    await checkGroupAccess(client, projectId, tokenId, chatId, chatType);
     await client.refetchQueries({ queryKey: ['infinite-users', projectId] });
   };
   return { data, check };

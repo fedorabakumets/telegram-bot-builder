@@ -1,6 +1,4 @@
-/**
- * @fileoverview Запрос синхронизации группы и распознавание потери доступа бота.
- */
+/** @fileoverview Запрос проверки доступа бота к личке, группе или каналу. */
 
 /** Состояние последней проверки доступа к групповому чату. */
 export type GroupSyncStatus = 'checking' | 'available' | 'kicked' | 'error';
@@ -22,21 +20,26 @@ export interface GroupAccessData {
  * @param projectId - Идентификатор проекта
  * @param groupId - Идентификатор группового чата
  * @param tokenId - Идентификатор выбранного токена
+ * @param chatType - Тип проверяемого чата
  * @returns Результат проверки и обновлённые данные группы
  */
 export async function requestGroupSyncDetails(
   projectId: number,
   groupId: string,
   tokenId?: number | null,
+  chatType = 'group',
 ): Promise<GroupAccessData> {
   try {
     const query = tokenId != null ? `?tokenId=${tokenId}` : '';
+    const path = chatType === 'private'
+      ? `/api/projects/${projectId}/dialogs/${encodeURIComponent(groupId)}/check-access${query}`
+      : `/api/projects/${projectId}/groups/${encodeURIComponent(groupId)}/sync${query}`;
     const response = await fetch(
-      `/api/projects/${projectId}/groups/${encodeURIComponent(groupId)}/sync${query}`,
+      path,
       { method: 'POST', credentials: 'include', signal: AbortSignal.timeout(15_000) },
     );
     const body = await response.json();
-    if (response.ok) return { status: 'available', checkedAt: body.accessCheckedAt,
+    if (response.ok) return { status: body.accessStatus ?? 'available', checkedAt: body.accessCheckedAt,
       name: body.group?.name, avatarUrl: body.group?.avatarUrl };
     const error = typeof body.error === 'string' ? body.error : '';
     return { status: /\bbot was kicked\b/i.test(error) ? 'kicked' : 'error', checkedAt: body.accessCheckedAt };

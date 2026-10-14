@@ -38,5 +38,5 @@ export const DIALOG_QUERY = `WITH messages AS (
   FROM identities i LEFT JOIN history h ON h.dialog_id = i.chat_id AND h.kind = i.chat_type
   LEFT JOIN latest l ON l.dialog_id = i.chat_id AND l.kind = i.chat_type
   LEFT JOIN chat_access a ON a.project_id = $1 AND a.token_id = $2
-    AND a.chat_id = i.chat_id AND i.chat_type != 'private'
+    AND a.chat_id = i.chat_id
 ) SELECT * FROM dialogs`;

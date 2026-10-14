@@ -7,6 +7,7 @@ import { requestGroupSyncDetails, type GroupAccessData } from './group-sync-requ
  * @param projectId - Проект
  * @param tokenId - Бот
  * @param chatId - Чат
+ * @param chatType - Тип чата
  * @returns Ключ кэша
  */
 export function groupAccessKey(projectId: number, tokenId: number | null | undefined, chatId: string) {
@@ -22,12 +23,12 @@ export function groupAccessKey(projectId: number, tokenId: number | null | undef
  * @returns Состояние группы
  */
 export async function checkGroupAccess(client: QueryClient, projectId: number,
-  tokenId: number | null | undefined, chatId: string) {
+  tokenId: number | null | undefined, chatId: string, chatType = 'group') {
   const key = groupAccessKey(projectId, tokenId, chatId);
   const previous = client.getQueryData<GroupAccessData>(key);
   if (previous?.status === 'checking') return previous;
   client.setQueryData(key, { ...previous, status: 'checking' });
-  const result = await requestGroupSyncDetails(projectId, chatId, tokenId);
+  const result = await requestGroupSyncDetails(projectId, chatId, tokenId, chatType);
   const next = { ...previous, ...result };
   client.setQueryData(key, next);
   return next;

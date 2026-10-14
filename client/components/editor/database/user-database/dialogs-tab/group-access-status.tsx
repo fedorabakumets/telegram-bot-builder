@@ -1,6 +1,4 @@
-/**
- * @fileoverview Метка исключённого бота и ручная проверка доступа к группе.
- */
+/** @fileoverview Метка потери доступа бота и ручная проверка любого чата. */
 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { GroupAccessData } from '../hooks/group-sync-request';
@@ -11,6 +9,8 @@ interface GroupAccessStatusProps {
   status?: GroupAccessData['status'];
   /** Обработчик повторного запроса к Telegram. */
   onCheck?: () => void;
+  /** Тип чата для точной формулировки причины. */
+  chatType?: string;
 }
 
 /**
@@ -18,12 +18,15 @@ interface GroupAccessStatusProps {
  * @param props - Состояние чата и обработчик проверки
  * @returns Строка состояния или отсутствие элемента для доступного чата
  */
-export function GroupAccessStatus({ status, onCheck }: GroupAccessStatusProps) {
+export function GroupAccessStatus({ status, onCheck, chatType }: GroupAccessStatusProps) {
   if (!status || status === 'available' || status === 'unknown') return null;
   const checking = status === 'checking';
   const kicked = status === 'kicked';
+  const privateChat = chatType === 'private';
   const explanation = kicked
-    ? 'Бота исключили из чата. Нет доступа к названию и аватарке. История сообщений сохранена.'
+    ? privateChat
+      ? 'Пользователь заблокировал бота. Сохранённая история сообщений доступна.'
+      : 'Бота исключили из чата. Нет доступа к названию и аватарке. История сообщений сохранена.'
     : 'Не удалось проверить доступ к чату. История сообщений сохранена. Можно повторить проверку.';
 
   return (
@@ -33,7 +36,7 @@ export function GroupAccessStatus({ status, onCheck }: GroupAccessStatusProps) {
           <Tooltip>
             <TooltipTrigger asChild>
               <span tabIndex={0} className="rounded bg-amber-500/15 px-1.5 py-0.5 text-amber-700 dark:text-amber-300">
-                {kicked ? 'Бот исключён' : 'Ошибка проверки'}
+                {kicked ? (privateChat ? 'Бот заблокирован' : 'Бот исключён') : 'Ошибка проверки'}
               </span>
             </TooltipTrigger>
             <TooltipContent className="max-w-64">{explanation}</TooltipContent>

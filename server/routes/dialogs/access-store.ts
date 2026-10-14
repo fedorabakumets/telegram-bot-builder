@@ -28,14 +28,14 @@ export async function saveChatAccess(projectId: number, tokenId: number, chatId:
 export async function enrichDialogAccess<T extends { userId: string; isGroup?: boolean }>(
   projectId: number, tokenId: number | null, entries: T[],
 ) {
-  const ids = entries.filter((entry) => entry.isGroup).map((entry) => String(entry.userId));
+  const ids = entries.map((entry) => String(entry.userId));
   const rows = tokenId && ids.length ? (await dbPool.query(
     `SELECT chat_id, status, checked_at FROM chat_access
      WHERE project_id = $1 AND token_id = $2 AND chat_id = ANY($3::text[])`, [projectId, tokenId, ids],
   )).rows : [];
   const statuses = new Map(rows.map((row) => [row.chat_id, row]));
   return entries.map((entry) => {
-    const access = entry.isGroup ? statuses.get(String(entry.userId)) : undefined;
+    const access = statuses.get(String(entry.userId));
     return { ...entry, accessStatus: access?.status ?? 'unknown', accessCheckedAt: access?.checked_at ?? null };
   });
 }

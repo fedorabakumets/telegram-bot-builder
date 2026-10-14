@@ -99,7 +99,8 @@ export function DialogListItem({
   groupSyncStatus,
 }: DialogListItemProps): React.JSX.Element {
   const entry = user as DialogWithMeta;
-  const { data: access } = useGroupAccess(projectId, tokenId, String(user.userId));
+  const chatType = entry.isGroup ? (entry.chatType ?? 'group') : 'private';
+  const { data: access } = useGroupAccess(projectId, tokenId, String(user.userId), chatType);
   const [groupAvatarError, setGroupAvatarError] = useState<string | null>(null);
   const preview = formatPreview(entry.lastMessageText);
   const timestamp = formatRelativeTime(entry.lastMessageAt ?? user.lastInteraction);
@@ -187,7 +188,7 @@ export function DialogListItem({
           <span className="text-xs text-muted-foreground flex-shrink-0">{timestamp}</span>
         </div>
         <p className="text-xs text-muted-foreground truncate mt-0.5">{preview}</p>
-        {entry.isGroup && <GroupAccessStatus status={access?.status ?? groupSyncStatus} />}
+        <GroupAccessStatus status={access?.status ?? groupSyncStatus} chatType={chatType} />
       </div>
     </button>
   );

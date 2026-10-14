@@ -66,10 +66,13 @@ it('проверка доступа не пропускает чужой про�
   expect(res.status).toHaveBeenCalledWith(403);
   expect(next).not.toHaveBeenCalled();
 });
-it('восстанавливает статус UI из точной области и не назначает его личному чату', async () => {
-  mocks.query.mockResolvedValue({ rows: [{ chat_id: '-1001', status: 'kicked', checked_at: '2026-10-13' }] });
+it('восстанавливает статусы UI для группы и заблокировавшего пользователя', async () => {
+  mocks.query.mockResolvedValue({ rows: [
+    { chat_id: '-1001', status: 'kicked', checked_at: '2026-10-13' },
+    { chat_id: '1', status: 'kicked', checked_at: '2026-10-14' },
+  ] });
   const result = await enrichDialogAccess(12, 9, [{ userId: '-1001', isGroup: true }, { userId: '1' }]);
   expect(result[0].accessStatus).toBe('kicked');
-  expect(result[1].accessStatus).toBe('unknown');
-  expect(mocks.query.mock.calls[0][1]).toEqual([12, 9, ['-1001']]);
+  expect(result[1].accessStatus).toBe('kicked');
+  expect(mocks.query.mock.calls[0][1]).toEqual([12, 9, ['-1001', '1']]);
 });

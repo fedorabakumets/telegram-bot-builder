@@ -48,3 +48,23 @@ it('сохранённая метка не вызывает запрос и им
   await act(async () => { client.setQueryData(groupAccessKey(12, 10, '-1001'), { status: 'kicked', name: 'Чужое название' }); });
   expect(screen.queryByText('Чужое название')).not.toBeInTheDocument();
 });
+
+it('показывает блокировку пользователя в карточке и шапке', async () => {
+  const client = new QueryClient();
+  const user = { userId: '12345', firstName: '12345', userName: 'Spy43210',
+    accessStatus: 'kicked' } as unknown as UserBotData;
+  /** Подключает сохранённый личный статус к общему кэшу. */
+  function PrivateSync() { useSyncGroups(9, 5, [user]); return null; }
+  /**
+   * Предоставляет тестовым компонентам общий клиент запросов.
+   * @param props - Дочерние компоненты
+   * @returns Провайдер кэша
+   */
+  function Wrapper({ children }: { /** Содержимое. */ children: ReactNode }) {
+    return createElement(QueryClientProvider, { client }, children);
+  }
+  render(<><PrivateSync /><DialogListItem user={user} projectId={9} tokenId={5}
+    isSelected onClick={vi.fn()} /><DialogHeaderIdentity user={user} projectId={9} tokenId={5} /></>, { wrapper: Wrapper });
+  await waitFor(() => expect(screen.getAllByText('Бот заблокирован')).toHaveLength(2));
+  expect(screen.getAllByRole('button', { name: 'Проверить доступ' })).toHaveLength(1);
+});
