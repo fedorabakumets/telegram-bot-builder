@@ -2231,7 +2231,16 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // Get all user data for a project
   app.get("/api/projects/:id/users", async (req, res) => {
     const projectId = parseInt(req.params.id);
-    const tokenId = getRequestTokenId(req);
+    let tokenId = getRequestTokenId(req);
+    /** Фильтрация реальных личных переписок применяется только к списку диалогов. */
+    const isDialogList = req.query.dialogKind !== undefined || req.query.includeGroups === 'true';
+    if (isDialogList) {
+      const token = tokenId ? await storage.getBotToken(tokenId) : await storage.getDefaultBotToken(projectId);
+      if (!token || token.projectId !== projectId || (req.query.tokenId !== undefined && !tokenId)) {
+        return res.status(404).json({ message: 'Бот проекта не найден' });
+      }
+      tokenId = token.id;
+    }
 
     // Проверяем права доступа к проекту для авторизованных пользователей
     const ownerId = getOwnerIdFromRequest(req);
@@ -2254,13 +2263,13 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
     // Белый список колонок для ORDER BY (защита от SQL injection)
     const sortColumnMap: Record<string, string> = {
-      lastInteraction: 'u.last_interaction',
+      lastInteraction: isDialogList ? 'lm.created_at' : 'u.last_interaction',
       createdAt: 'u.registered_at',
       interactionCount: 'u.interaction_count',
       firstName: 'u.first_name',
       userName: 'u.username',
     };
-    const sortColumn = sortColumnMap[sortBy as string] ?? 'u.last_interaction';
+    const sortColumn = sortColumnMap[sortBy as string] ?? sortColumnMap.lastInteraction;
     const sortOrder = sortDir === 'asc' ? 'ASC' : 'DESC';
 
     const selectBase = `
@@ -2273,7 +2282,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         u.avatar_url AS "avatarUrl",
         u.registered_at AS "registeredAt",
         u.registered_at AS "createdAt",
-        u.last_interaction AS "lastInteraction",
+        ${isDialogList ? 'lm.created_at' : 'u.last_interaction'} AS "lastInteraction",
         COALESCE(u.interaction_count, 0)::integer AS "interactionCount",
         CASE WHEN u.is_active = 1 THEN TRUE ELSE FALSE END AS "isActive",
         CASE WHEN u.is_premium = 1 THEN TRUE ELSE FALSE END AS "isPremium",
@@ -2290,16 +2299,19 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         NULL AS "chatType"
       FROM bot_users u
       LEFT JOIN LATERAL (
-        SELECT message_text, created_at
+        SELECT id, message_text, created_at
         FROM bot_messages
         WHERE user_id = u.user_id::text
           AND project_id = u.project_id
-        ORDER BY created_at DESC
+          AND token_id = u.token_id
+          AND COALESCE(chat_type, 'private') = 'private'
+        ORDER BY created_at DESC NULLS LAST, id DESC
         LIMIT 1
       ) lm ON true
       WHERE u.is_bot = 0
         AND u.project_id = $1
         AND ($2::integer IS NULL OR u.token_id = $2)
+        ${isDialogList ? 'AND lm.id IS NOT NULL' : ''}
     `;
 
     // Фильтр вкладки «Диалоги»: all | users | groups | channels (includeGroups — legacy)
@@ -2333,6 +2345,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
                 WHERE bm.project_id = u.project_id
                   AND bm.user_id = u.user_id::text
                   AND ($2::integer IS NULL OR bm.token_id = $2)
+                  AND bm.token_id = u.token_id
+                  AND COALESCE(bm.chat_type, 'private') = 'private'
                   AND COALESCE(bm.message_text, '') ILIKE $${paramIdx}
               )
             )
@@ -2364,7 +2378,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           countSql = `SELECT COUNT(*)::integer AS total FROM (${groupsSelectSql}) AS dialogs${groupsSearchOuter}`;
         } else {
           dataSql = `${selectBase}${whereExtra} ORDER BY ${sortColumn} ${sortOrder} LIMIT $${paramIdx} OFFSET $${paramIdx + 1}`;
-          countSql = `SELECT COUNT(*)::integer AS total FROM bot_users u WHERE u.is_bot = 0 AND u.project_id = $1 AND ($2::integer IS NULL OR u.token_id = $2)${whereExtra}`;
+          countSql = `SELECT COUNT(*)::integer AS total FROM (${selectBase}${whereExtra}) AS dialogs`;
         }
 
         const dataParams = [...params, limit, offset];
@@ -2387,12 +2401,14 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           ? `SELECT * FROM (${selectBase}${groupsUnionSql}) AS dialogs ORDER BY "lastInteraction" DESC NULLS LAST`
           : includeGroupsPart
             ? `SELECT * FROM (${groupsSelectSql}) AS dialogs ORDER BY "lastInteraction" DESC NULLS LAST`
-            : `${selectBase} ORDER BY u.last_interaction DESC`;
+            : `${selectBase} ORDER BY ${sortColumnMap.lastInteraction} DESC NULLS LAST`;
       const result = await dbPool.query(selectSql, [projectId, tokenId]);
       console.log(`Found ${result.rows.length} users for project ${projectId} (kind=${dialogKind})`);
       res.json(await enrichDialogAccess(projectId, tokenId, result.rows));
     } catch (error) {
       console.error("Error fetching user data:", error);
+      /** Ошибка выборки диалогов не должна возвращать групповых отправителей через запасной список. */
+      if (isDialogList) return res.status(500).json({ message: 'Не удалось получить диалоги' });
       // Fallback: прямой запрос к bot_users если основной запрос не сработал
       try {
         const fallbackResult = await dbPool.query(

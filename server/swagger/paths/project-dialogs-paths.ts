@@ -12,7 +12,7 @@ import { ProjectDialogsResponseSchema } from '../schemas/project-dialogs';
 export function registerProjectDialogsPaths(registry: OpenAPIRegistry, security: Array<Record<string, string[]>>) {
   registry.registerPath({ method: 'get', path: '/api/projects/{projectId}/dialogs', security,
     summary: 'Список диалогов выбранного бота', tags: ['Диалоги'],
-    description: 'Читает сохранённые диалоги без запросов Telegram. Статус доступа — последняя проверка, счётчик — сохранённые сообщения. Курсор привязан к проекту, токену, виду и поиску; при новых сообщениях снимок выдачи не гарантируется.',
+    description: 'Читает сохранённые диалоги без запросов Telegram. Личные карточки требуют личных сообщений выбранного бота; групповые сообщения не меняют их превью и порядок. Статус доступа — последняя проверка, счётчик — сохранённые сообщения. Курсор привязан к проекту, токену, виду и поиску; при новых сообщениях снимок выдачи не гарантируется.',
     request: { params: z.object({ projectId: z.coerce.number().int().positive() }),
       query: z.object({ tokenId: z.coerce.number().int().positive(),
         kind: z.enum(['all', 'users', 'groups', 'channels']).default('all'),

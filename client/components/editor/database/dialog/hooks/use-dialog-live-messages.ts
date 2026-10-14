@@ -51,6 +51,8 @@ function eventToMessage(
     tokenId: tokenId ?? event.tokenId ?? 0,
     userId: event.data.userId,
     messageType: event.data.messageType,
+    chatId: event.data.chatId ?? null,
+    chatType: event.data.chatType ?? 'private',
     messageText: event.data.messageText ?? null,
     messageData: event.data.messageData ?? {},
     nodeId: event.data.nodeId ?? null,
@@ -116,6 +118,8 @@ export function useDialogLiveMessages(
     const userIdStr = String(userId);
 
     const unsubscribe = liveContext.subscribe((msg) => {
+      /** Любое событие должно принадлежать выбранному проекту и боту. */
+      if (msg.projectId !== projectId || (selectedTokenId && msg.tokenId !== selectedTokenId)) return;
       // Обрабатываем событие удаления сообщения
       if (msg.type === 'message-deleted') {
         const deleted = msg as MessageDeletedLiveEvent;
@@ -147,6 +151,8 @@ export function useDialogLiveMessages(
         if (msg.data?.chatId !== chatId) return;
       } else {
         if (String(msg.data?.userId) !== userIdStr) return;
+        if (msg.data.chatType && msg.data.chatType !== 'private' && msg.data.messageType !== 'user') return;
+        if (msg.data.chatType === 'channel') return;
       }
 
       const newMsg = eventToMessage(msg, projectId, selectedTokenId);
@@ -178,6 +184,7 @@ export function useDialogLiveMessages(
       try {
         const msg = raw as { type: string; projectId: number; tokenId?: number; data?: unknown; timestamp: string };
         if (msg.projectId !== projectId) return;
+        if (selectedTokenId && msg.tokenId !== selectedTokenId) return;
 
         // Обрабатываем событие удаления сообщения
         if (msg.type === 'message-deleted') {
@@ -212,6 +219,9 @@ export function useDialogLiveMessages(
           if ((msg.data as { chatId?: string })?.chatId !== chatId) return;
         } else {
           if (String((msg.data as { userId?: string })?.userId) !== userIdStr) return;
+          const data = (msg as NewMessageLiveEvent).data;
+          if (data.chatType && data.chatType !== 'private' && data.messageType !== 'user') return;
+          if (data.chatType === 'channel') return;
         }
 
         const newMsg = eventToMessage(msg as NewMessageLiveEvent, projectId, selectedTokenId);

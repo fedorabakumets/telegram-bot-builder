@@ -16,6 +16,7 @@ import { buildUsersApiUrl } from '@/components/editor/database/utils';
 import { UserStats } from '../types';
 import { UserBotData } from '@shared/schema';
 import { createUsersActivityInvalidator } from './throttle-users-activity-invalidate';
+import { isDialogListCache } from '../../dialog/utils/dialog-message-source';
 
 /**
  * Параметры хука useLiveInvalidate
@@ -48,6 +49,7 @@ interface UsersPageResponse {
  * @param userId - Идентификатор пользователя
  * @param messageText - Текст последнего сообщения для обновления превью
  * @param messageAt - Время последнего сообщения
+ * @param isPrivate - Принадлежит ли событие личному чату
  */
 function updateUserInCache(
   queryClient: ReturnType<typeof useQueryClient>,
@@ -56,10 +58,12 @@ function updateUserInCache(
   userId: string,
   messageText?: string | null,
   messageAt?: Date,
+  isPrivate = true,
 ): void {
   const now = messageAt ?? new Date();
   queryClient.setQueriesData<InfiniteData<UsersPageResponse>>(
-    { queryKey: ['infinite-users', projectId] },
+    { queryKey: ['infinite-users', projectId, normalizedTokenId ?? undefined],
+      predicate: (query) => isPrivate || !isDialogListCache(query.queryKey) },
     (old) => {
       if (!old) return old;
       return {
@@ -139,7 +143,8 @@ function addNewUserToCache(
   };
 
   queryClient.setQueriesData<InfiniteData<UsersPageResponse>>(
-    { queryKey: ['infinite-users', projectId] },
+    { queryKey: ['infinite-users', projectId, normalizedTokenId ?? undefined],
+      predicate: (query) => !isDialogListCache(query.queryKey) },
     (old) => {
       // Если кэш пустой (0 пользователей) — создаём начальную структуру
       const base: InfiniteData<UsersPageResponse> = old ?? {
@@ -191,6 +196,8 @@ export function useLiveInvalidate({ projectId, selectedTokenId }: UseLiveInvalid
     const usersActivity = createUsersActivityInvalidator(queryClient, projectId);
 
     const unsubscribe = liveContext.subscribe((event: LiveEvent) => {
+      /** События другого бота не обновляют статистику и карточки выбранного бота. */
+      if (event.projectId !== projectId || (selectedTokenId && event.tokenId !== selectedTokenId)) return;
       if (event.type === 'new-message') {
         const msg = event as NewMessageLiveEvent;
         const userId = msg.data?.userId;
@@ -215,6 +222,7 @@ export function useLiveInvalidate({ projectId, selectedTokenId }: UseLiveInvalid
             userId,
             msg.data.messageText ?? null,
             new Date(msg.data.createdAt),
+            !msg.data.chatType || msg.data.chatType === 'private',
           );
         }
 

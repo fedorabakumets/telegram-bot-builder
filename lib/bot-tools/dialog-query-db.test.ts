@@ -6,9 +6,10 @@ import { DIALOG_QUERY } from '../../server/routes/dialogs/dialog-query';
 import { buildDialogListQuery } from '../../server/routes/dialogs/dialog-list-query';
 import { dialogParams, encodeDialogCursor } from '../../server/routes/dialogs/dialog-pagination';
 import { CHAT_ACCESS_DDL } from '../../server/database/ensure-chat-access';
+import { USER_HISTORY_QUERY, mapUserHistoryRow } from '../../server/routes/dialogs/user-history-query';
 vi.mock('../../server/database/db', () => ({ db: {} }));
 
-it('изолирует историю ботов, сохраняет пустые диалоги и отделяет отправителя группы', async () => {
+it('изолирует ботов, скрывает групповых отправителей из личек и сохраняет контекст истории', async () => {
   const url = process.env.DATABASE_URL;
   if (!url || !['localhost', '127.0.0.1', '::1'].includes(new URL(url).hostname)) {
     throw new Error('Для проверки требуется локальный PostgreSQL');
@@ -25,31 +26,33 @@ it('изолирует историю ботов, сохраняет пусты�
       CREATE TEMP TABLE chat_access (project_id int, token_id int, chat_id text, status text, checked_at timestamptz);
       INSERT INTO bot_users VALUES ('1',12,9,0,'Иван',NULL,'ivan','2026-10-13'),
       ('2',12,9,0,'Без сообщений',NULL,NULL,NULL),('3',12,9,1,'Бот',NULL,NULL,NULL),
-      ('1',12,10,0,'Другой бот',NULL,NULL,'2026-10-14');
+      ('1',12,10,0,'Другой бот',NULL,NULL,'2026-10-14'),
+      ('777000',12,9,0,'Telegram',NULL,NULL,'2026-10-15');
       INSERT INTO bot_messages VALUES (1,12,9,'1',NULL,'private','Привет','user','2026-10-13'),
       (2,12,10,'1',NULL,'private','Чужой текст','user','2026-10-14'),
       (3,12,9,'1','-1001','supergroup','В группе','user','2026-10-13'),
       (4,12,9,'1','-1001','supergroup','Ответ','bot','2026-10-13 01:00'),
-      (5,13,9,'1',NULL,'private','Другой проект','user','2026-10-15');
+      (5,13,9,'1',NULL,'private','Другой проект','user','2026-10-15'),
+      (6,12,9,'2','-1001','supergroup','Только в группе','user','2026-10-14'),
+      (7,12,9,'777000','-1001','supergroup','От имени канала','user','2026-10-15');
       INSERT INTO bot_groups VALUES (1,12,9,'-1001','Наша группа','https://t.me/our_group',NULL),
       (2,12,10,'-1001','Чужая группа','',NULL);
       INSERT INTO chat_access VALUES (12,9,'-1001','kicked',now());`);
     const rows = (await client.query(DIALOG_QUERY, [12, 9])).rows;
-    expect(rows).toHaveLength(3);
+    expect(rows).toHaveLength(2);
     const personal = rows.find((row) => row.chat_id === '1');
     expect(personal.retained_message_count).toBe(1);
     expect(personal.last_message.preview).toBe('Привет');
     expect(personal.access_status).toBe('unknown');
-    const empty = rows.find((row) => row.chat_id === '2');
-    expect(empty.last_message).toBeNull();
-    expect(empty.retained_message_count).toBe(0);
+    expect(rows.find((row) => row.chat_id === '2')).toBeUndefined();
+    expect(rows.find((row) => row.chat_id === '777000')).toBeUndefined();
     const group = rows.find((row) => row.chat_id === '-1001');
     expect(group.title).toBe('Наша группа');
     expect(group.username).toBe('our_group');
-    expect(group.retained_message_count).toBe(2);
-    expect(group.last_message.direction).toBe('outgoing');
+    expect(group.retained_message_count).toBe(4);
+    expect(group.last_message.direction).toBe('incoming');
     expect(group.access_status).toBe('kicked');
-    for (const [kind, count] of [['all', 3], ['users', 2], ['groups', 1], ['channels', 0]] as const) {
+    for (const [kind, count] of [['all', 2], ['users', 1], ['groups', 1], ['channels', 0]] as const) {
       const query = buildDialogListQuery(12, dialogParams.parse({ tokenId: 9, kind }));
       expect((await client.query(query.sql, query.values)).rows).toHaveLength(count);
     }
@@ -57,7 +60,13 @@ it('изолирует историю ботов, сохраняет пусты�
       const query = buildDialogListQuery(12, dialogParams.parse({ tokenId: 9, search }));
       expect((await client.query(query.sql, query.values)).rows).toHaveLength(1);
     }
-    await client.query("UPDATE bot_users SET last_interaction = '2026-10-13 01:00' WHERE user_id = '1' AND token_id = 9");
+    const history = (await client.query(USER_HISTORY_QUERY, [12, 9, '1', null, 100])).rows;
+    expect(history.map((message) => message.message_text)).toEqual(['В группе', 'Привет']);
+    const context = mapUserHistoryRow(history.find((message) => message.chat_type === 'supergroup'));
+    expect(context).toMatchObject({ chatId: '-1001', sourceChatTitle: 'Наша группа', messageType: 'user' });
+    const bots = (await client.query(USER_HISTORY_QUERY, [12, 9, '1', 'bot', 100])).rows;
+    expect(bots).toHaveLength(0);
+    await client.query("UPDATE bot_messages SET created_at = '2026-10-15' WHERE id = 1");
     const query = buildDialogListQuery(12, dialogParams.parse({ tokenId: 9, limit: 1 }));
     const sorted = (await client.query(query.sql, query.values)).rows;
     const first = sorted[0];
@@ -66,7 +75,7 @@ it('изолирует историю ботов, сохраняет пусты�
     const next = buildDialogListQuery(12, dialogParams.parse({ tokenId: 9, limit: 1, cursor }));
     const rest = (await client.query(next.sql, next.values)).rows;
     expect(rest.map((row) => row.chat_id)).not.toContain(first.chat_id);
-    expect(rest).toHaveLength(2);
+    expect(rest).toHaveLength(1);
     const final = buildDialogListQuery(12, dialogParams.parse({ tokenId: 9, limit: 1,
       cursor: encodeDialogCursor({ scope: query.scope, time: null, type: 'private', id: '2' }) }));
     expect((await client.query(final.sql, final.values)).rows).toHaveLength(0);

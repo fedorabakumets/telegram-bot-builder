@@ -41,6 +41,10 @@ export const DialogTokenQuerySchema = z.object({
 
 /** Query GET …/messages */
 export const DialogMessagesQuerySchema = DialogTokenQuerySchema.extend({
+  /** Добавить входящие сообщения человека из групп того же бота. */
+  includeGroupContext: z.enum(['true', 'false']).optional().openapi({
+    description: 'По умолчанию только личная история; true включает групповой контекст пользователя.',
+  }),
   /** Сколько последних сообщений вернуть (по умолчанию 100) */
   limit: z.string().optional().openapi({
     example: "100",
@@ -83,6 +87,12 @@ export const DialogMessageSchema = z
       example: "2026-08-11T15:00:00.000Z",
     }),
     media: z.array(DialogMessageMediaSchema).optional(),
+    /** Исходный тип чата сообщения. */
+    chatType: z.string().nullable().optional(),
+    /** Исходный идентификатор чата Telegram. */
+    chatId: z.string().nullable().optional(),
+    /** Сохранённое название группы для контекста внутри лички. */
+    sourceChatTitle: z.string().nullable().optional(),
   })
   .openapi("DialogMessage");
 

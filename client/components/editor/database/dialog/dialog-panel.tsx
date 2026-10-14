@@ -28,6 +28,7 @@ import { DialogInput } from './components/dialog-input';
 import { LoadingMessages } from './components/loading-messages';
 import { NoUserSelected } from './components/no-user-selected';
 import { NodeSender } from './components/node-sender';
+import { canActOnDialogMessage } from './utils/dialog-message-source';
 
 /**
  * Дедуплицирует и сортирует сообщения по id и времени создания.
@@ -108,9 +109,9 @@ export function DialogPanel({
 
   // URL для загрузки сообщений: группа или личный диалог
   const requestUrl = isGroup
-    ? `/api/projects/${projectId}/groups/${encodeURIComponent(groupChatId ?? '')}/messages`
+    ? buildUsersApiUrl(`/api/projects/${projectId}/groups/${encodeURIComponent(groupChatId ?? '')}/messages`, selectedTokenId)
     : buildUsersApiUrl(
-        `/api/projects/${projectId}/users/${user?.userId}/messages`,
+        `/api/projects/${projectId}/users/${user?.userId}/messages?includeGroupContext=true`,
         selectedTokenId
       );
 
@@ -157,7 +158,7 @@ export function DialogPanel({
     setDeletedMessageIds(new Set());
     setEditedMessages(new Map());
     prevMessageCountRef.current = 0;
-  }, [user?.userId, resetLiveMessages]);
+  }, [user?.userId, selectedTokenId, resetLiveMessages]);
 
   /** Автопрокрутка при первой загрузке и при новых live-сообщениях */
   useLayoutEffect(() => {
@@ -321,12 +322,14 @@ export function DialogPanel({
                   projectId={projectId}
                   tokenId={selectedTokenId}
                   isGroupDialog={isGroup}
-                  onDelete={(id) => deleteMessageMutation.mutate(id)}
+                  showSource={!isGroup}
+                  onDelete={!canActOnDialogMessage(isGroup, message.chatType)
+                    ? undefined : (id) => deleteMessageMutation.mutate(id)}
                   isDeleting={
                     deleteMessageMutation.isPending &&
                     deleteMessageMutation.variables === message.id
                   }
-                  onEdit={(messageId, newText, originalText, buttons, buttonsPerRow) =>
+                  onEdit={!canActOnDialogMessage(isGroup, message.chatType) ? undefined : (messageId, newText, originalText, buttons, buttonsPerRow) =>
                     editMessageMutation.mutate({ messageId, messageText: newText, originalText, buttons, buttonsPerRow })
                   }
                   availableNodes={availableNodes}

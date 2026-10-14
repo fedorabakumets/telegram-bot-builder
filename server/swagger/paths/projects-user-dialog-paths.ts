@@ -120,6 +120,7 @@ export function registerProjectsUserDialogPaths(
     description:
       "Последние N сообщений `bot_messages` (+ media), в хронологическом порядке. " +
       "По умолчанию limit=100. Фильтр `messageType=user|bot`. Скоуп по `tokenId`.\n\n" +
+      "`includeGroupContext=true` добавляет входящие сообщения этого человека в группах выбранного бота, с `chatType`, `chatId`, `sourceChatTitle`. Без параметра возвращается только личная история. Групповые ответы бота исключены; отправка из личной панели остаётся личной.\n\n" +
       "**Клиент:** панель диалога, last-message, детали пользователя.\n\n" +
       "```bash\n" +
       "curl -s -b cookies.txt \\\n" +

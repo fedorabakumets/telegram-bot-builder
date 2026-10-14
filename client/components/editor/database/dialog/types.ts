@@ -9,6 +9,8 @@ import { BotMessage, UserBotData } from '@shared/schema';
  * Расширенный тип сообщения бота с медиафайлами
  */
 export type BotMessageWithMedia = BotMessage & {
+  /** Сохранённое название исходной группы для общей истории пользователя */
+  sourceChatTitle?: string | null;
   /** Медиафайлы сообщения */
   media?: Array<{
     /** Идентификатор медиафайла */

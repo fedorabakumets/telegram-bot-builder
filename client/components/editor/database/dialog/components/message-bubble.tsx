@@ -18,6 +18,7 @@ import { MessageTimestamp } from './message-timestamp';
 import { DialogButtonsEditor } from './dialog-buttons-editor';
 import { hasButtons, getButtons, hasButtonClicked, getButtonText } from '../utils/message-utils';
 import type { NodeWithSheet } from '../utils/node-utils';
+import { isGroupSource } from '../utils/dialog-message-source';
 
 /**
  * Свойства компонента сообщения
@@ -51,6 +52,8 @@ interface MessageBubbleProps {
   isEditing?: boolean;
   /** Флаг группового диалога — показывает имя отправителя над сообщением */
   isGroupDialog?: boolean;
+  /** Показывать исходный чат сообщения в общей истории пользователя */
+  showSource?: boolean;
   /** Узлы проекта для выбора цели действия goto в редакторе кнопок */
   availableNodes?: NodeWithSheet[];
 }
@@ -102,7 +105,7 @@ function getSenderName(message: BotMessageWithMedia): string | null {
  */
 export function MessageBubble({
   message, index, user, bot, projectId, tokenId,
-  onDelete, isDeleting, onEdit, isEditing, isGroupDialog, availableNodes,
+  onDelete, isDeleting, onEdit, isEditing, isGroupDialog, showSource, availableNodes,
 }: MessageBubbleProps) {
   const isBot = message.messageType === 'bot';
   const isUser = message.messageType === 'user';
@@ -222,6 +225,12 @@ export function MessageBubble({
         </div>
 
         <div className="flex flex-col gap-1 min-w-0" onDoubleClick={isBot && message.id > 0 && !!message.telegramMessageId && !!onEdit ? handleOpenEdit : undefined}>
+          {showSource && (
+            <span className="text-[10px] font-medium text-muted-foreground px-1 break-words">
+              {isGroupSource(message.chatType)
+                ? `Группа: ${message.sourceChatTitle || message.chatId}` : 'Личка'}
+            </span>
+          )}
           {/* Имя отправителя в групповом диалоге — показывается над сообщением пользователя */}
           {isGroupDialog && isUser && (
             <span className="text-[10px] font-medium text-violet-600 dark:text-violet-400 px-1">

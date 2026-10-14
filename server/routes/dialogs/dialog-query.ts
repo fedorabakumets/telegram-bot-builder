@@ -14,8 +14,9 @@ export const DIALOG_QUERY = `WITH messages AS (
 ), identities AS (
   SELECT u.user_id::text AS chat_id, 'private'::text AS chat_type,
     NULLIF(TRIM(CONCAT_WS(' ', u.first_name, u.last_name)), '') AS title,
-    u.username AS username, u.last_interaction AS activity, NULL::text AS avatar_url
-  FROM bot_users u WHERE u.project_id = $1 AND u.token_id = $2 AND COALESCE(u.is_bot, 0) = 0
+    u.username AS username, ph.message_at AS activity, NULL::text AS avatar_url
+  FROM bot_users u JOIN history ph ON ph.dialog_id = u.user_id::text AND ph.kind = 'private'
+  WHERE u.project_id = $1 AND u.token_id = $2 AND COALESCE(u.is_bot, 0) = 0
   UNION ALL
   SELECT h.dialog_id, h.kind, NULLIF(bg.name, h.dialog_id),
     CASE WHEN bg.url LIKE 'https://t.me/%' THEN SUBSTRING(bg.url FROM 14) ELSE NULL END,
