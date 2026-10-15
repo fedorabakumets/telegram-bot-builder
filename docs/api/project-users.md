@@ -1,6 +1,6 @@
 # project-users
 
-Эндпоинтов: **11**
+Эндпоинтов: **12**
 
 ### `DELETE` /api/projects/{id}/users
 
@@ -606,3 +606,33 @@ curl -s -X PUT 'http://localhost:5000/api/projects/42/users/123456789?tokenId=7'
   "is_active": 1
 }
 ```
+
+### `GET` /api/projects/{projectId}/users/unavailable
+
+Удалённые и заблокировавшие бота
+
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+
+Люди выбранного бота с is_deleted или is_blocked. Telegram не вызывается, текст сообщений не возвращается.
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `projectId` | path | да | ID проекта | `"12"` |
+| `tokenId` | query | да | ID бота | `"10"` |
+| `kind` | query | нет | — | `"both"` |
+| `limit` | query | нет | — | `"20"` |
+| `offset` | query | нет | — | `"0"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Страница людей |
+| 400 | Нет бота или неверная страница |
+| 401 | Нет авторизации |
+| 403 | Нет доступа к проекту |
+| 404 | Бот не принадлежит проекту |

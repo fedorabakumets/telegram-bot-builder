@@ -23755,6 +23755,155 @@
         }
       }
     },
+    "/api/projects/{projectId}/users/unavailable": {
+      "get": {
+        "tags": [
+          "project-users"
+        ],
+        "summary": "Удалённые и заблокировавшие бота",
+        "description": "Люди выбранного бота с is_deleted или is_blocked. Telegram не вызывается, текст сообщений не возвращается.",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "agentToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "12"
+            },
+            "required": true,
+            "description": "ID проекта",
+            "example": "12",
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "example": "10"
+            },
+            "required": true,
+            "description": "ID бота",
+            "example": "10",
+            "name": "tokenId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "deleted",
+                "blocked",
+                "both"
+              ],
+              "example": "both"
+            },
+            "required": false,
+            "name": "kind",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "example": "20"
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "example": "0"
+            },
+            "required": false,
+            "name": "offset",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Страница людей",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnavailableUsersPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Нет бота или неверная страница",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Бот не принадлежит проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/projects/list": {
       "get": {
         "tags": [
@@ -30692,6 +30841,80 @@
         "required": [
           "sources",
           "languages"
+        ]
+      },
+      "UnavailableUser": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "example": "8791555566"
+          },
+          "userName": {
+            "type": "string",
+            "nullable": true,
+            "example": "Ho4y28"
+          },
+          "firstName": {
+            "type": "string",
+            "nullable": true,
+            "example": "."
+          },
+          "lastName": {
+            "type": "string",
+            "nullable": true,
+            "example": null
+          },
+          "isDeleted": {
+            "type": "boolean",
+            "example": true
+          },
+          "isBlocked": {
+            "type": "boolean",
+            "example": false
+          }
+        },
+        "required": [
+          "userId",
+          "userName",
+          "firstName",
+          "lastName",
+          "isDeleted",
+          "isBlocked"
+        ]
+      },
+      "UnavailableUsersPage": {
+        "type": "object",
+        "properties": {
+          "users": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UnavailableUser"
+            }
+          },
+          "total": {
+            "type": "number",
+            "example": 2
+          },
+          "hasMore": {
+            "type": "boolean",
+            "example": false
+          },
+          "limit": {
+            "type": "number",
+            "example": 20
+          },
+          "offset": {
+            "type": "number",
+            "example": 0
+          }
+        },
+        "required": [
+          "users",
+          "total",
+          "hasMore",
+          "limit",
+          "offset"
         ]
       },
       "GrowthPoint": {
