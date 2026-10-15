@@ -78,6 +78,7 @@ export type ProjectEventType =
   | 'message-edited'
   | 'new-user'
   | 'broadcast-progress'
+  | 'chat-access-check-progress'
   | 'start-offline-progress'
   | 'stdout'
   | 'stderr'
@@ -175,6 +176,83 @@ export interface BroadcastProgressEvent {
   status: 'running' | 'stopped' | 'done' | 'failed';
   /** Аварийная остановка из‑за недействительного токена */
   abortReason?: 'unauthorized';
+}
+
+/** Статус массовой проверки доступов. */
+export type ChatAccessCheckStatus =
+  | 'pending'
+  | 'running'
+  | 'cancelling'
+  | 'cancelled'
+  | 'completed'
+  | 'failed';
+
+/** Безопасный снимок прогресса проверки: без токена и текста Telegram. */
+export interface ChatAccessCheckProgressPayload {
+  /** Идентификатор задачи. */
+  jobId: number;
+  /** Токен бота. */
+  tokenId: number;
+  /** Текущее состояние. */
+  status: ChatAccessCheckStatus;
+  /** Уже проверено. */
+  processedCount: number;
+  /** Всего в очереди. */
+  totalCount: number;
+  /** Доступны. */
+  availableCount: number;
+  /** Заблокировали бота. */
+  kickedCount: number;
+  /** Аккаунт удалён. */
+  deletedCount: number;
+  /** Ошибки отдельных запросов. */
+  errorCount: number;
+}
+
+/** Карточка задачи для API и восстановления UI после перезагрузки. */
+export interface ChatAccessCheckJobView extends ChatAccessCheckProgressPayload {
+  /** Проект. */
+  projectId: number;
+  /** ISO-время старта. */
+  startedAt: string | null;
+  /** ISO-время завершения. */
+  finishedAt: string | null;
+}
+
+const CHAT_ACCESS_CHECK_STATUSES: readonly ChatAccessCheckStatus[] = [
+  'pending', 'running', 'cancelling', 'cancelled', 'completed', 'failed',
+];
+
+/**
+ * Оставляет в payload только whitelist-поля прогресса.
+ * @param input - Счётчики задачи
+ * @returns Безопасный payload для WS
+ */
+export function toChatAccessCheckProgressPayload(
+  input: ChatAccessCheckProgressPayload,
+): ChatAccessCheckProgressPayload {
+  const status = CHAT_ACCESS_CHECK_STATUSES.includes(input.status) ? input.status : 'failed';
+  const count = (value: number) => (Number.isFinite(value) ? Math.max(0, Math.trunc(value)) : 0);
+  return {
+    jobId: count(input.jobId),
+    tokenId: count(input.tokenId),
+    status,
+    processedCount: count(input.processedCount),
+    totalCount: count(input.totalCount),
+    availableCount: count(input.availableCount),
+    kickedCount: count(input.kickedCount),
+    deletedCount: count(input.deletedCount),
+    errorCount: count(input.errorCount),
+  };
+}
+
+/**
+ * Активна ли задача и нельзя запускать вторую.
+ * @param status - Статус задачи
+ * @returns true для pending, running и cancelling
+ */
+export function isActiveChatAccessCheckStatus(status: string): boolean {
+  return status === 'pending' || status === 'running' || status === 'cancelling';
 }
 
 /** Поля токена, допустимые в TokenUpdatedPayload / changedFields */

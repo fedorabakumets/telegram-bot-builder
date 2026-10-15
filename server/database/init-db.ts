@@ -6,6 +6,7 @@ import { sql } from 'drizzle-orm';
 import { db } from './db';
 import { ensureSupportTables } from './ensure-support-tables';
 import { ensureChatAccess } from './ensure-chat-access';
+import { ensureChatAccessCheckJobs } from './ensure-chat-access-check-jobs';
 
 /**
  * Асинхронная функция для выполнения SQL-запроса с повторными попытками
@@ -894,6 +895,7 @@ export async function initializeDatabaseTables() {
 
     await ensureSupportTables();
     await ensureChatAccess();
+    await ensureChatAccessCheckJobs();
 
     console.log('✅ Таблицы базы данных успешно инициализированы!');
     return true;

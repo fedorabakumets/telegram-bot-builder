@@ -27,6 +27,7 @@ export type { BotUser, InsertBotUser } from "./schema/tables/bot-users";
 
 export { botGroups, insertBotGroupSchema } from "./schema/tables/bot-groups";
 export { chatAccess } from './schema/tables/chat-access';
+export { chatAccessCheckJobs } from './schema/tables/chat-access-check-jobs';
 export type { BotGroup, InsertBotGroup } from "./schema/tables/bot-groups";
 
 export { groupMembers, insertGroupMemberSchema } from "./schema/tables/group-members";

@@ -19,7 +19,7 @@ import { SourceModeToggle, SourceMode } from './source-mode-toggle';
 import { ActivitySplitToggle, ActivitySplitMode } from './activity-split-toggle';
 import { aggregateTopSources } from './source-aggregation-utils';
 import { AnalyticsSourcesPair } from '@/components/editor/analytics/analytics-sources-pair';
-import { AnalyticsAudienceReachNote } from '@/components/editor/analytics/analytics-audience-reach-note';
+import { AnalyticsAccessCheckPanel } from '@/components/editor/analytics/analytics-access-check-panel';
 
 /**
  * Пропсы компонента StatsDashboard
@@ -147,7 +147,10 @@ export function StatsDashboard(props: StatsDashboardProps): React.JSX.Element {
           chartType={growthChartType}
           stackHeader
           footerExtra={
-            <AnalyticsAudienceReachNote
+            <AnalyticsAccessCheckPanel
+              projectId={projectId}
+              tokenId={selectedTokenId}
+              totalUsers={stats.totalUsers ?? 0}
               blockedBotUsers={stats.blockedBotUsers}
               deletedUsers={stats.deletedUsers}
             />

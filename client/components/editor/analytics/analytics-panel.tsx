@@ -29,7 +29,7 @@ import { useLiveInvalidate } from '@/components/editor/database/user-database/ho
 import { AnalyticsSourcesPair } from './analytics-sources-pair';
 import { AnalyticsPopularButtonsChart } from './analytics-popular-buttons-chart';
 import { AnalyticsTableChartCard } from './table-chart/analytics-table-chart-card';
-import { AnalyticsAudienceReachNote } from './analytics-audience-reach-note';
+import { AnalyticsAccessCheckPanel } from './analytics-access-check-panel';
 import { AnalyticsUsersActivityCard } from './analytics-users-activity-card';
 import {
   TotalUsersChartInfo,
@@ -197,7 +197,10 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken, allP
               chartType={growthChartType}
               info={<TotalUsersChartInfo />}
               footerExtra={
-                <AnalyticsAudienceReachNote
+                <AnalyticsAccessCheckPanel
+                  projectId={projectId}
+                  tokenId={selectedTokenId}
+                  totalUsers={stats.totalUsers ?? 0}
                   blockedBotUsers={stats.blockedBotUsers}
                   deletedUsers={stats.deletedUsers}
                 />

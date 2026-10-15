@@ -32,6 +32,11 @@ import { listDialogsHandler } from './dialogs/list-dialogs-handler';
 import { searchDialogMessagesHandler } from './dialogs/search-dialog-messages-handler';
 import { getDialogMessagesHandler } from './dialogs/get-dialog-messages-handler';
 import { checkPrivateChatAccessHandler } from './dialogs/check-private-chat-access-handler';
+import {
+  cancelChatAccessCheckHandler,
+  getActiveChatAccessCheckHandler,
+  startChatAccessCheckHandler,
+} from './dialogs/chat-access-check-handlers';
 
 /**
  * Регистрирует маршруты bot-integration для проекта.
@@ -46,6 +51,10 @@ export function setupBotIntegrationRoutes(app: Express) {
   app.get('/api/projects/:projectId/dialogs/:chatId/messages', requireProjectAccess, getDialogMessagesHandler);
   /** Проверяет личный чат без отправки сообщения пользователю. */
   app.post('/api/projects/:projectId/dialogs/:chatId/check-access', requireProjectAccess, checkPrivateChatAccessHandler);
+  /** Массовая проверка личных диалогов выбранного бота. */
+  app.post('/api/projects/:projectId/chat-access-checks', requireProjectAccess, startChatAccessCheckHandler);
+  app.get('/api/projects/:projectId/chat-access-checks/active', requireProjectAccess, getActiveChatAccessCheckHandler);
+  app.post('/api/projects/:projectId/chat-access-checks/:jobId/cancel', requireProjectAccess, cancelChatAccessCheckHandler);
   app.get("/api/projects/:projectId/bot/data", requireProjectAccess, getBotDataHandler);
   app.get(
     "/api/projects/:projectId/users/:userId/avatar",

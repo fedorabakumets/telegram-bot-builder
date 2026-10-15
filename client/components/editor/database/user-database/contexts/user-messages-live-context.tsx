@@ -80,8 +80,42 @@ export interface NewUserLiveEvent {
   timestamp: string;
 }
 
-/** Все типы live-событий */
-export type LiveEvent = NewMessageLiveEvent | NewUserLiveEvent | BroadcastProgressLiveEvent | MessageDeletedLiveEvent | MessageEditedLiveEvent;
+/**
+ * Структура WS-события прогресса массовой проверки доступов
+ */
+export interface ChatAccessCheckLiveEvent {
+  /** Тип события */
+  type: 'chat-access-check-progress';
+  /** Идентификатор проекта */
+  projectId: number;
+  /** Идентификатор токена */
+  tokenId?: number;
+  /** Безопасные счётчики задачи */
+  data: {
+    /** Идентификатор задачи */
+    jobId: number;
+    /** Токен бота */
+    tokenId: number;
+    /** Состояние задачи */
+    status: 'pending' | 'running' | 'cancelling' | 'cancelled' | 'completed' | 'failed';
+    /** Уже проверено */
+    processedCount: number;
+    /** Всего в очереди */
+    totalCount: number;
+    /** Доступны */
+    availableCount: number;
+    /** Заблокировали бота */
+    kickedCount: number;
+    /** Аккаунт удалён */
+    deletedCount: number;
+    /** Ошибки отдельных запросов */
+    errorCount: number;
+  };
+  /** Временная метка события */
+  timestamp: string;
+}
+
+export type LiveEvent = NewMessageLiveEvent | NewUserLiveEvent | BroadcastProgressLiveEvent | MessageDeletedLiveEvent | MessageEditedLiveEvent | ChatAccessCheckLiveEvent;
 
 /**
  * Структура WS-события редактирования сообщения в диалоге
@@ -210,6 +244,7 @@ export function UserMessagesLiveProvider({ projectId, children }: UserMessagesLi
           msg.type !== 'new-message' &&
           msg.type !== 'new-user' &&
           msg.type !== 'broadcast-progress' &&
+          msg.type !== 'chat-access-check-progress' &&
           msg.type !== 'message-deleted' &&
           msg.type !== 'message-edited'
         ) {
