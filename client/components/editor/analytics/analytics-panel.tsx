@@ -27,6 +27,7 @@ import { useProjectTokens } from '@/hooks/use-project-tokens';
 import { useNormalizeSelectedTokenId } from '@/hooks/use-normalize-selected-token';
 import { useLiveInvalidate } from '@/components/editor/database/user-database/hooks/use-live-invalidate';
 import { AnalyticsGroupsCard } from './analytics-groups-card';
+import { combinePeriodCounts, periodGrowthLabel } from './period-growth-label';
 import { AnalyticsSourcesPair } from './analytics-sources-pair';
 import { AnalyticsPopularButtonsChart } from './analytics-popular-buttons-chart';
 import { AnalyticsTableChartCard } from './table-chart/analytics-table-chart-card';
@@ -125,10 +126,10 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken, allP
   useNormalizeSelectedTokenId(tokens, selectedTokenId, resetDeletedToken);
 
   const { stats, refetchStats } = useStats({ projectId, selectedTokenId });
-  const { points: growthPoints, weeklyGrowth } = useGrowth({ projectId, selectedTokenId, granularity: growthGranularity });
+  const { points: growthPoints } = useGrowth({ projectId, selectedTokenId, granularity: growthGranularity });
   const { points: sourcePoints } = useGrowthBySource({ projectId, selectedTokenId, granularity: growthGranularity });
   const { languages } = useTraffic({ projectId, selectedTokenId });
-  const { points: messagePoints, outgoingPoints, weeklyMessages } = useMessagesActivity({ projectId, selectedTokenId, granularity: msgGranularity, split: activitySplitMode === 'split' });
+  const { points: messagePoints, outgoingPoints } = useMessagesActivity({ projectId, selectedTokenId, granularity: msgGranularity, split: activitySplitMode === 'split' });
 
   /** Multi-line данные для графика активности: входящие + исходящие (только в режиме split) */
   const activityMultiLine = activitySplitMode === 'split' ? [
@@ -137,7 +138,12 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken, allP
   ] : undefined;
 
   const total = stats.totalUsers ?? 0;
-  const growthTrend = weeklyGrowth > 0 ? 'up' : weeklyGrowth < 0 ? 'down' : 'neutral';
+  const growthPeriod = periodGrowthLabel(growthPoints);
+  const messagesPeriod = periodGrowthLabel(combinePeriodCounts(
+    messagePoints,
+    activitySplitMode === 'split' ? outgoingPoints : [],
+  ));
+  const growthTrend = growthPeriod.total > 0 ? 'up' : 'neutral';
   const multiLineData = aggregateTopSources(sourcePoints, 5);
 
   /** Элементы для donut-карточки языков */
@@ -189,7 +195,7 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken, allP
               sparklineData={sourceMode === 'total' ? growthPoints : undefined}
               multiLineData={sourceMode === 'by-source' ? multiLineData : undefined}
               trend={growthTrend}
-              subtitle={weeklyGrowth > 0 ? `+${weeklyGrowth} за неделю` : undefined}
+              subtitle={growthPeriod.text}
               cumulative={growthMode === 'cumulative'}
               /** Учитываем пользователей, пришедших до выбранного периода. */
               cumulativeTotal={stats.totalUsers}
@@ -222,9 +228,9 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken, allP
               multiLineData={activityMultiLine}
               lineColor="#10b981"
               gradientId="analyticsActivity"
-              subtitle={weeklyMessages > 0 ? `+${weeklyMessages} за неделю` : undefined}
+              subtitle={messagesPeriod.text}
               secondarySubtitle={stats.avgInteractionsPerUser !== undefined ? `~${stats.avgInteractionsPerUser.toFixed(1)} среднее` : undefined}
-              trend={weeklyMessages > 0 ? 'up' : 'neutral'}
+              trend={messagesPeriod.total > 0 ? 'up' : 'neutral'}
               cumulative={activityMode === 'cumulative'}
               chartGranularity={msgGranularity}
               chartHeight={160}

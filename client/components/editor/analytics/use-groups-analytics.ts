@@ -17,17 +17,8 @@ export interface GroupsAnalyticsStats {
   availableGroups: number;
   /** Бота исключили. */
   kickedGroups: number;
-}
-
-/**
- * Считает, сколько групп впервые сохранилось за последние 7 дней.
- * @param points - Точки графика
- * @returns Сумма
- */
-function weeklyAdded(points: GrowthPoint[]): number {
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - 7);
-  return points.filter((point) => new Date(point.date) >= cutoff).reduce((sum, point) => sum + point.count, 0);
+  /** Впервые сохранены за последние 7 дней. */
+  addedLast7Days: number;
 }
 
 /**
@@ -35,7 +26,7 @@ function weeklyAdded(points: GrowthPoint[]): number {
  * @param projectId - Проект
  * @param tokenId - Выбранный бот
  * @param granularity - Период графика
- * @returns Сводка, точки и прирост за неделю
+ * @returns Сводка и точки графика
  */
 export function useGroupsAnalytics(projectId: number, tokenId: number | null, granularity: ChartGranularity) {
   const enabled = !!projectId && !!tokenId;
@@ -66,10 +57,5 @@ export function useGroupsAnalytics(projectId: number, tokenId: number | null, gr
     placeholderData: keepPreviousData,
     refetchInterval: getChartGranularityRefetchInterval(granularity),
   });
-  const points = growth.data ?? [];
-  return {
-    stats: stats.data,
-    points,
-    weeklyAdded: weeklyAdded(points),
-  };
+  return { stats: stats.data, points: growth.data ?? [] };
 }

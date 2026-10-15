@@ -11,6 +11,7 @@ import { ChartTypeToggle, ChartType } from '@/components/editor/database/user-da
 import { ChartGranularity } from '@/components/editor/database/user-database/hooks/queries/chart-granularity';
 import { AnalyticsGroupsReachNote } from './analytics-groups-reach-note';
 import { GroupsChartInfo } from './analytics-chart-info-texts';
+import { periodGrowthLabel } from './period-growth-label';
 import { useGroupsAnalytics } from './use-groups-analytics';
 
 /** Пропсы карточки групп. */
@@ -34,7 +35,8 @@ export function AnalyticsGroupsCard({ projectId, selectedTokenId, stackHeader }:
   const [granularity, setGranularity] = useState<ChartGranularity>('1d');
   const [mode, setMode] = useState<ChartMode>('period');
   const [chartType, setChartType] = useState<ChartType>('line');
-  const { stats, points, weeklyAdded } = useGroupsAnalytics(projectId, tokenId, granularity);
+  const { stats, points } = useGroupsAnalytics(projectId, tokenId, granularity);
+  const period = periodGrowthLabel(points);
 
   if (!tokenId) {
     return (
@@ -49,8 +51,8 @@ export function AnalyticsGroupsCard({ projectId, selectedTokenId, stackHeader }:
       title="Группы"
       value={stats?.totalGroups}
       sparklineData={points}
-      subtitle={weeklyAdded > 0 ? `+${weeklyAdded} за неделю` : undefined}
-      trend={weeklyAdded > 0 ? 'up' : 'neutral'}
+      subtitle={period.text}
+      trend={period.total > 0 ? 'up' : 'neutral'}
       cumulative={mode === 'cumulative'}
       cumulativeTotal={stats?.totalGroups}
       chartGranularity={granularity}

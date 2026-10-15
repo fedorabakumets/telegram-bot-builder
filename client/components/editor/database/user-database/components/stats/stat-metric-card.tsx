@@ -20,7 +20,7 @@ export interface StatMetricCardProps {
   title: string;
   /** Числовое значение для отображения */
   value: number | undefined;
-  /** Подпись рядом с заголовком, например "+8 за неделю" */
+  /** Подпись рядом с заголовком, например "+8 за период, 8 окт. — 15 окт." */
   subtitle?: string;
   /** Направление тренда */
   trend?: 'up' | 'down' | 'neutral';

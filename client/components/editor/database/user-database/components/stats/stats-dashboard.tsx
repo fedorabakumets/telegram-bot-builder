@@ -19,6 +19,7 @@ import { SourceModeToggle, SourceMode } from './source-mode-toggle';
 import { ActivitySplitToggle, ActivitySplitMode } from './activity-split-toggle';
 import { aggregateTopSources } from './source-aggregation-utils';
 import { AnalyticsGroupsCard } from '@/components/editor/analytics/analytics-groups-card';
+import { combinePeriodCounts, periodGrowthLabel } from '@/components/editor/analytics/period-growth-label';
 import { AnalyticsSourcesPair } from '@/components/editor/analytics/analytics-sources-pair';
 import { AnalyticsAccessCheckPanel } from '@/components/editor/analytics/analytics-access-check-panel';
 
@@ -88,10 +89,10 @@ export function StatsDashboard(props: StatsDashboardProps): React.JSX.Element {
   /** Режим отображения активности: все / входящие+исходящие */
   const [activitySplitMode, setActivitySplitMode] = useState<ActivitySplitMode>('total');
 
-  const { points, weeklyGrowth } = useGrowth({ projectId, selectedTokenId, granularity: growthGranularity });
+  const { points } = useGrowth({ projectId, selectedTokenId, granularity: growthGranularity });
   const { points: sourcePoints } = useGrowthBySource({ projectId, selectedTokenId, granularity: growthGranularity });
   const { languages } = useTraffic({ projectId, selectedTokenId });
-  const { points: messagePoints, outgoingPoints, weeklyMessages } = useMessagesActivity({
+  const { points: messagePoints, outgoingPoints } = useMessagesActivity({
     projectId,
     selectedTokenId,
     granularity: msgGranularity,
@@ -104,8 +105,12 @@ export function StatsDashboard(props: StatsDashboardProps): React.JSX.Element {
     { name: 'Исходящие', data: outgoingPoints, color: '#6366f1' },
   ] : undefined;
 
-  // Определяем тренд по недельному приросту
-  const growthTrend = weeklyGrowth > 0 ? 'up' : weeklyGrowth < 0 ? 'down' : 'neutral';
+  const growthPeriod = periodGrowthLabel(points);
+  const messagesPeriod = periodGrowthLabel(combinePeriodCounts(
+    messagePoints,
+    activitySplitMode === 'split' ? outgoingPoints : [],
+  ));
+  const growthTrend = growthPeriod.total > 0 ? 'up' : 'neutral';
 
   // Вычисляем процент premium пользователей от общего числа
   const total = stats.totalUsers ?? 0;
@@ -120,11 +125,10 @@ export function StatsDashboard(props: StatsDashboardProps): React.JSX.Element {
   }));
 
   // Формируем подпись для карточки активности
-  const activitySubtitle = weeklyMessages > 0
-    ? `+${weeklyMessages} за неделю`
-    : stats.avgInteractionsPerUser !== undefined
+  const activitySubtitle = messagesPeriod.text
+    ?? (stats.avgInteractionsPerUser !== undefined
       ? `~${formatAvg(stats.avgInteractionsPerUser)} среднее`
-      : undefined;
+      : undefined);
 
   // Агрегируем данные по источникам для multi-line графика
   const multiLineData = sourceMode === 'by-source' ? aggregateTopSources(sourcePoints, 5) : undefined;
@@ -140,7 +144,7 @@ export function StatsDashboard(props: StatsDashboardProps): React.JSX.Element {
           sparklineData={sourceMode === 'total' ? points : undefined}
           multiLineData={multiLineData}
           trend={growthTrend}
-          subtitle={weeklyGrowth > 0 ? `+${weeklyGrowth} за неделю` : undefined}
+          subtitle={growthPeriod.text}
           cumulative={growthMode === 'cumulative'}
           /** Учитываем аудиторию до начала выбранного периода. */
           cumulativeTotal={stats.totalUsers}
@@ -173,7 +177,7 @@ export function StatsDashboard(props: StatsDashboardProps): React.JSX.Element {
           sparklineData={activitySplitMode === 'total' ? messagePoints : undefined}
           multiLineData={activityMultiLine}
           subtitle={activitySubtitle}
-          trend={weeklyMessages > 0 ? 'up' : 'neutral'}
+          trend={messagesPeriod.total > 0 ? 'up' : 'neutral'}
           gradientId="msgActivity"
           lineColor="#10b981"
           chartGranularity={msgGranularity}
