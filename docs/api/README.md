@@ -29,7 +29,7 @@ REST API визуального конструктора Telegram-ботов. А
 | [project-groups](./project-groups.md) | 4 |
 | [project-messages](./project-messages.md) | 4 |
 | [project-tables](./project-tables.md) | 27 |
-| [project-tokens](./project-tokens.md) | 28 |
+| [project-tokens](./project-tokens.md) | 29 |
 | [project-users](./project-users.md) | 11 |
 | [project-versions](./project-versions.md) | 6 |
 | [projects](./projects.md) | 20 |

@@ -17,7 +17,7 @@
 | [bot_table_rows](./bot_table_rows.md) | 4 | Таблица bot_table_rows — строки пользовательской таблицы (данные в JSONB) |
 | [bot_tables](./bot_tables.md) | 4 | Таблица bot_tables — пользовательские таблицы проекта |
 | [bot_templates](./bot_templates.md) | 28 | Таблица сценариев ботов |
-| [bot_tokens](./bot_tokens.md) | 37 | Таблица токенов ботов |
+| [bot_tokens](./bot_tokens.md) | 38 | Таблица токенов ботов |
 | [bot_users](./bot_users.md) | 19 | Таблица пользователей бота |
 | [broadcast_campaigns](./broadcast_campaigns.md) | 19 | Таблица кампаний рассылок — одна запись на «большую рассылку», дочерние записи хранятся в broadcasts с ссылкой campaign_id |
 | [broadcast_results](./broadcast_results.md) | 7 | Таблица результатов рассылки — по одной записи на каждого получателя |

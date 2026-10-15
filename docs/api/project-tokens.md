@@ -1,6 +1,6 @@
 # project-tokens
 
-Эндпоинтов: **28**
+Эндпоинтов: **29**
 
 ### `GET` /api/projects/{id}/tokens
 
@@ -1173,6 +1173,48 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/save-incoming-medi
 {
   "success": true,
   "saveIncomingMedia": 1
+}
+```
+
+### `PUT` /api/projects/{projectId}/tokens/{tokenId}/track-user-blocks
+
+Отслеживание блокировок пользователей
+
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+
+`trackUserBlocks` 0|1 — обработчик Telegram my_chat_member и системные события в диалогах.
+
+**Auth:** `requireTokenOwnership`. WS `token-updated`. В env бота (при следующем запуске) — 0/1.
+
+
+
+**Тело запроса:** `TrackUserBlocksRequest`
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `projectId` | path | да | Числовой ID проекта | `"42"` |
+| `tokenId` | path | да | Числовой ID токена бота | `"7"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Сохранено |
+| 400 | Флаг не 0/1 или значение вне диапазона |
+| 401 | Не авторизован |
+| 403 | Нет владения токеном |
+| 404 | Токен не найден |
+
+#### Пример ответа `200`
+
+```json
+{
+  "success": true,
+  "trackUserBlocks": 1
 }
 ```
 

@@ -21833,6 +21833,144 @@
         }
       }
     },
+    "/api/projects/{projectId}/tokens/{tokenId}/track-user-blocks": {
+      "put": {
+        "tags": [
+          "project-tokens"
+        ],
+        "summary": "Отслеживание блокировок пользователей",
+        "description": "`trackUserBlocks` 0|1 — обработчик Telegram my_chat_member и системные события в диалогах.\n\n**Auth:** `requireTokenOwnership`. WS `token-updated`. В env бота (при следующем запуске) — 0/1.\n\n",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "agentToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Числовой ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "description": "Числовой ID проекта",
+            "example": "42",
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Числовой ID токена бота",
+              "example": "7"
+            },
+            "required": true,
+            "description": "Числовой ID токена бота",
+            "example": "7",
+            "name": "tokenId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TrackUserBlocksRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Сохранено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrackUserBlocksResponse"
+                },
+                "example": {
+                  "success": true,
+                  "trackUserBlocks": 1
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Флаг не 0/1 или значение вне диапазона",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Нет владения токеном",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Токен не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Токен не найден"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/projects/{projectId}/tokens/{tokenId}/userbot": {
       "put": {
         "tags": [
@@ -30886,6 +31024,10 @@
             "type": "number",
             "nullable": true
           },
+          "trackUserBlocks": {
+            "type": "number",
+            "nullable": true
+          },
           "contentCache": {
             "type": "number",
             "nullable": true
@@ -31086,6 +31228,10 @@
             "nullable": true
           },
           "catchAllHandlers": {
+            "type": "number",
+            "nullable": true
+          },
+          "trackUserBlocks": {
             "type": "number",
             "nullable": true
           },
@@ -31509,6 +31655,62 @@
         },
         "required": [
           "saveIncomingMedia"
+        ]
+      },
+      "TrackUserBlocksResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "trackUserBlocks": {
+            "anyOf": [
+              {
+                "type": "number",
+                "enum": [
+                  0
+                ]
+              },
+              {
+                "type": "number",
+                "enum": [
+                  1
+                ]
+              }
+            ]
+          }
+        },
+        "required": [
+          "success",
+          "trackUserBlocks"
+        ]
+      },
+      "TrackUserBlocksRequest": {
+        "type": "object",
+        "properties": {
+          "trackUserBlocks": {
+            "anyOf": [
+              {
+                "type": "number",
+                "enum": [
+                  0
+                ]
+              },
+              {
+                "type": "number",
+                "enum": [
+                  1
+                ]
+              }
+            ],
+            "example": 1
+          }
+        },
+        "required": [
+          "trackUserBlocks"
         ]
       },
       "CatchAllHandlersResponse": {
