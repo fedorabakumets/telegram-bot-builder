@@ -33,5 +33,3 @@
 | Name | Type | Definition |
 |------|------|------------|
 | pk_user_id_project_id_token_id | PRIMARY KEY | (user_id, project_id, token_id) |
-
-Массовая проверка доступов синхронизирует флаги личного диалога: доступен — `is_blocked = 0` (`is_deleted` не трогается), блокировка — `is_blocked = 1`, удалённый или несуществующий чат — `is_deleted = 1` и `is_blocked = 0`. Ошибка отдельного запроса флаги не меняет.

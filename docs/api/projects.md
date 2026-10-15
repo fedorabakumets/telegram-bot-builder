@@ -968,20 +968,6 @@ POST /api/projects/{projectId}/dialogs/{chatId}/check-access
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
 | 503 | Приложение не настроено — настройка в /admin |
 
-### `POST` /api/projects/{projectId}/chat-access-checks
-
-Запускает фоновую проверку личных диалогов выбранного бота. Тело или query: `{ "tokenId": number }`. Ответ `201`: `{ "job" }` без токена и текста Telegram. `409`, если для этой пары проект+бот проверка уже идёт.
-
-### `GET` /api/projects/{projectId}/chat-access-checks/active
-
-Query: `tokenId`. Ответ `{ "job" }` — активная задача или последняя завершённая, либо `job: null`.
-
-### `POST` /api/projects/{projectId}/chat-access-checks/{jobId}/cancel
-
-Останавливает оставшуюся очередь задачи этого проекта. Уже начатый запрос к Telegram дорабатывается, затем статус становится `cancelled`.
-
-Прогресс в реальном времени: WebSocket-событие `chat-access-check-progress` (whitelist: jobId, tokenId, status, счётчики).
-
 ### `GET` /api/projects/list
 
 Лёгкий список проектов (без секретов и data)

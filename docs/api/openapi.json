@@ -18942,6 +18942,44 @@
         }
       }
     },
+    "/api/projects/{projectId}/groups/analytics/growth": {
+      "get": {
+        "tags": [
+          "project-groups"
+        ],
+        "summary": "GET /api/projects/{projectId}/groups/analytics/growth",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено — настройка в /admin"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/groups/analytics/stats": {
+      "get": {
+        "tags": [
+          "project-groups"
+        ],
+        "summary": "GET /api/projects/{projectId}/groups/analytics/stats",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено — настройка в /admin"
+          }
+        }
+      }
+    },
     "/api/projects/{projectId}/messages/{messageId}": {
       "delete": {
         "tags": [
@@ -21886,6 +21924,25 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/tokens/{tokenId}/track-group-membership": {
+      "put": {
+        "tags": [
+          "project-tokens"
+        ],
+        "summary": "PUT /api/projects/{projectId}/tokens/{tokenId}/track-group-membership",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено — настройка в /admin"
           }
         }
       }

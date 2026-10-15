@@ -1,6 +1,6 @@
 # project-groups
 
-Эндпоинтов: **4**
+Эндпоинтов: **6**
 
 ### `POST` /api/projects/{projectId}/bot/send-group-message
 
@@ -232,3 +232,31 @@ curl -s -X POST -b cookies.txt \
   }
 }
 ```
+
+### `GET` /api/projects/{projectId}/groups/analytics/growth
+
+GET /api/projects/{projectId}/groups/analytics/growth
+
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Успешный ответ |
+| 401 | Требуется авторизация (сессия или Bearer PAT) |
+| 503 | Приложение не настроено — настройка в /admin |
+
+### `GET` /api/projects/{projectId}/groups/analytics/stats
+
+GET /api/projects/{projectId}/groups/analytics/stats
+
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Успешный ответ |
+| 401 | Требуется авторизация (сессия или Bearer PAT) |
+| 503 | Приложение не настроено — настройка в /admin |

@@ -1,6 +1,6 @@
 # project-tokens
 
-Эндпоинтов: **29**
+Эндпоинтов: **30**
 
 ### `GET` /api/projects/{id}/tokens
 
@@ -1175,6 +1175,20 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/save-incoming-medi
   "saveIncomingMedia": 1
 }
 ```
+
+### `PUT` /api/projects/{projectId}/tokens/{tokenId}/track-group-membership
+
+PUT /api/projects/{projectId}/tokens/{tokenId}/track-group-membership
+
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Успешный ответ |
+| 401 | Требуется авторизация (сессия или Bearer PAT) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `PUT` /api/projects/{projectId}/tokens/{tokenId}/track-user-blocks
 
