@@ -24,6 +24,7 @@ const base = {
   protectContent: 0,
   saveIncomingMedia: 0,
   catchAllHandlers: 1,
+  trackUserBlocks: 1,
   contentCache: 1,
   launchMode: 'polling',
   webhookBaseUrl: null as string | null,

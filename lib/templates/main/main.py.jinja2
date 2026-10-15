@@ -44,6 +44,50 @@ def request_bot_stop():
     if _bot_stop_event is not None:
         _bot_stop_event.set()
 
+{% if trackUserBlocks %}
+@dp.my_chat_member()
+async def track_private_bot_membership(update):
+    """Сохраняет блокировку или разблокировку бота пользователем в личном чате."""
+    if update.chat.type != "private" or not db_pool:
+        return
+    _new_status = getattr(update.new_chat_member.status, "value", update.new_chat_member.status)
+    if _new_status not in {"kicked", "member"}:
+        return
+    _user_id = int(update.chat.id)
+    _blocked = _new_status == "kicked"
+    _event_text = "Пользователь заблокировал бота" if _blocked else "Пользователь разблокировал бота"
+    async with db_pool.acquire() as _conn:
+        _old_value = await _conn.fetchval(
+            "SELECT is_blocked FROM bot_users WHERE project_id=$1 AND token_id=$2 AND user_id=$3",
+            PROJECT_ID, TOKEN_ID, _user_id,
+        )
+        await _conn.execute(
+            "UPDATE bot_users SET is_blocked=$4, last_interaction=NOW() WHERE project_id=$1 AND token_id=$2 AND user_id=$3",
+            PROJECT_ID, TOKEN_ID, _user_id, 1 if _blocked else 0,
+        )
+        await _conn.execute("""
+            INSERT INTO chat_access (project_id, token_id, chat_id, status, checked_at)
+            VALUES ($1, $2, $3, $4, NOW())
+            ON CONFLICT (project_id, token_id, chat_id) DO UPDATE
+            SET status=EXCLUDED.status, checked_at=EXCLUDED.checked_at
+        """, PROJECT_ID, TOKEN_ID, str(_user_id), "kicked" if _blocked else "available")
+        if _old_value is not None and bool(_old_value) == _blocked:
+            return
+        _row = await _conn.fetchrow("""
+            INSERT INTO bot_messages
+              (project_id, token_id, user_id, message_type, message_text, message_data, chat_type, created_at)
+            VALUES ($1, $2, $3, 'system', $4, $5::jsonb, 'private', NOW())
+            RETURNING id, created_at
+        """, PROJECT_ID, TOKEN_ID, str(_user_id), _event_text,
+             json.dumps({"event": "bot_blocked" if _blocked else "bot_unblocked"}))
+    if _redis_client:
+        await _redis_client.publish(f"bot:message:{PROJECT_ID}:{TOKEN_ID}", json.dumps({
+            "id": _row["id"], "userId": str(_user_id), "messageType": "system",
+            "messageText": _event_text, "messageData": {"event": "bot_blocked" if _blocked else "bot_unblocked"},
+            "chatId": None, "chatType": "private", "createdAt": _row["created_at"].isoformat(),
+        }, ensure_ascii=False))
+
+{% endif %}
 
 async def main():
     """Главная функция запуска бота"""
@@ -197,7 +241,7 @@ async def main():
             logging.info(f"🌐 Webhook режим: {full_webhook_url}")
             logging.info(f"🔌 Порт aiohttp: {WEBHOOK_PORT}")
 
-            await bot.set_webhook(full_webhook_url)
+            await bot.set_webhook(full_webhook_url, allowed_updates=dp.resolve_used_update_types())
 
             app = web.Application()
             SimpleRequestHandler(dispatcher=dp, bot=bot).register(app, path="/webhook")
@@ -236,7 +280,7 @@ async def main():
             _max_conflict_retries = 6
             while _conflict_attempt < _max_conflict_retries:
                 try:
-                    _polling_task = asyncio.create_task(dp.start_polling(bot))
+                    _polling_task = asyncio.create_task(dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types()))
                     _background_tasks.append(_polling_task)
                     await _stop_event.wait()
                     await dp.stop_polling()

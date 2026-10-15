@@ -40,6 +40,8 @@ export interface GenerationOptions {
    * независимо от значения этого флага (см. computeFeatureFlags).
    */
   catchAllHandlers?: boolean;
+  /** Генерировать обработчик блокировки/разблокировки через my_chat_member */
+  trackUserBlocks?: boolean;
   /**
    * Генерировать обёртку защиты контента от копирования/пересылки.
    * По умолчанию false — большинство ботов защиту не используют.
@@ -103,6 +105,7 @@ export const DEFAULT_GENERATION_OPTIONS: Required<GenerationOptions> = {
   webhookPort: null,
   saveIncomingMedia: false,
   catchAllHandlers: true,
+  trackUserBlocks: true,
   protectContent: false,
   contentCache: false,
   telegramFileIds: {},

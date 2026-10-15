@@ -62,6 +62,7 @@ export const TokenUpdatedPayloadSchema = z
     protectContent: z.number().nullable(),
     saveIncomingMedia: z.number().nullable(),
     catchAllHandlers: z.number().nullable(),
+    trackUserBlocks: z.number().nullable(),
     contentCache: z.number().nullable(),
     launchMode: z.string().nullable(),
     webhookBaseUrl: z.string().nullable(),

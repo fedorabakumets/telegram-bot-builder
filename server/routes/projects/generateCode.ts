@@ -65,6 +65,7 @@ export async function handleGenerateCode(req: Request, res: Response): Promise<v
     // Читаем настройку catch-all обработчиков из первого токена проекта.
     // Если токен недоступен — дефолт true (catch-all включены).
     let catchAllHandlers = true;
+    let trackUserBlocks = true;
     // Защита контента из первого токена проекта (дефолт false — защита выключена).
     let protectContent = false;
     // Живое обновление контента из первого токена проекта (дефолт false).
@@ -73,6 +74,7 @@ export async function handleGenerateCode(req: Request, res: Response): Promise<v
       const tokens = await storage.getBotTokensByProject(projectId);
       if (tokens.length > 0) {
         catchAllHandlers = tokens[0].catchAllHandlers !== 0;
+        trackUserBlocks = tokens[0].trackUserBlocks !== 0;
         protectContent = tokens[0].protectContent === 1;
         contentCache = tokens[0].contentCache === 1;
       }
@@ -243,6 +245,7 @@ export async function handleGenerateCode(req: Request, res: Response): Promise<v
       enableLogging,
       projectId,
       catchAllHandlers,
+      trackUserBlocks,
       protectContent,
       contentCache,
       telegramFileIds,

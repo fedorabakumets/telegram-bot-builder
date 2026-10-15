@@ -18,6 +18,7 @@ const baseInput: GeneratedCodeInput = {
   userDatabaseEnabled: true,
   saveIncomingMedia: false,
   catchAllHandlers: true,
+  trackUserBlocks: true,
   protectContent: false,
   contentCache: false,
   psqlBuiltinEnabled: false,
@@ -66,6 +67,12 @@ describe('buildGeneratedCodeFingerprint', () => {
       saveIncomingMedia: true,
     });
     assert.notStrictEqual(a, b);
+  });
+
+  it('меняется при отключении отслеживания блокировок', () => {
+    assert.notStrictEqual(buildGeneratedCodeFingerprint(baseInput), buildGeneratedCodeFingerprint({
+      ...baseInput, trackUserBlocks: false,
+    }));
   });
 
   it('меняется при изменении psqlPanelDsnDenied', () => {

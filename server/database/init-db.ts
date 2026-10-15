@@ -616,6 +616,14 @@ export async function initializeDatabaseTables() {
     // Миграция: добавление content_cache в bot_tokens если его нет
     try {
       await executeWithRetry(db, sql`
+        ALTER TABLE bot_tokens ADD COLUMN IF NOT EXISTS track_user_blocks INTEGER DEFAULT 1;
+      `, "Миграция: отслеживание блокировок пользователей");
+    } catch (error) {
+      console.log('⚠️ Ошибка миграции track_user_blocks:', error);
+    }
+
+    try {
+      await executeWithRetry(db, sql`
         ALTER TABLE bot_tokens
         ADD COLUMN IF NOT EXISTS content_cache INTEGER DEFAULT 0;
       `, "Миграция: добавление content_cache в bot_tokens");

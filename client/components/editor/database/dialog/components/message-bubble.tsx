@@ -19,6 +19,7 @@ import { DialogButtonsEditor } from './dialog-buttons-editor';
 import { hasButtons, getButtons, hasButtonClicked, getButtonText } from '../utils/message-utils';
 import type { NodeWithSheet } from '../utils/node-utils';
 import { isGroupSource } from '../utils/dialog-message-source';
+import { SystemMessage } from './system-message';
 
 /**
  * Свойства компонента сообщения
@@ -171,6 +172,10 @@ export function MessageBubble({
   const textChanged = editText !== (displayText ?? '');
   /** Сохранение запрещено, если текст пуст либо ничего не изменилось */
   const isSaveDisabled = editText.trim() === '' || (!textChanged && !buttonsChanged);
+
+  if (message.messageType === 'system') {
+    return <SystemMessage text={message.messageText} data={message.messageData} createdAt={message.createdAt} />;
+  }
 
   return (
     <div

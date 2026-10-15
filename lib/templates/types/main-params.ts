@@ -27,6 +27,8 @@ export interface MainTemplateParams {
   webhookUrl?: string | null;
   /** Порт aiohttp сервера для webhook режима */
   webhookPort?: number | null;
+  /** Отслеживать блокировки пользователей через my_chat_member */
+  trackUserBlocks?: boolean;
   /** ID токена для формирования пути вебхука */
   tokenId?: number | null;
   /** ID проекта для формирования пути вебхука */

@@ -81,6 +81,7 @@ export function buildSystemVars(token: BotToken, projectId: number, tokenId: num
     { key: 'PROTECT_CONTENT', value: token.protectContent ? 'true' : 'false', isSecret: false, isServerRef: false },
     { key: 'SAVE_INCOMING_MEDIA', value: token.saveIncomingMedia ? 'true' : 'false', isSecret: false, isServerRef: false },
     { key: 'MESSAGES_RETENTION_DAYS', value: String(token.messagesRetentionDays ?? 0), isSecret: false, isServerRef: false },
+    { key: 'TRACK_USER_BLOCKS', value: String(token.trackUserBlocks ?? 1), isSecret: false, isServerRef: false },
     { key: 'DATABASE_URL', value: databaseUrl.value, isSecret: true, isServerRef: databaseUrl.isServerRef },
     { key: 'MAX_UPDATE_AGE_SECONDS', value: maxUpdateAge.value, isSecret: false, isServerRef: maxUpdateAge.isServerRef },
     { key: 'WEBHOOK_PORT', value: webhookPort.value, isSecret: false, isServerRef: webhookPort.isServerRef },

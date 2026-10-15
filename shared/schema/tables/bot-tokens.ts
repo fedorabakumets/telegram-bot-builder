@@ -75,6 +75,8 @@ export const botTokens = pgTable("bot_tokens", {
    * кнопок генератор включает их принудительно независимо от флага.
    */
   catchAllHandlers: integer("catch_all_handlers").default(1),
+  /** Автоматически отслеживать блокировку и разблокировку бота пользователями */
+  trackUserBlocks: integer("track_user_blocks").default(1),
   /**
    * Живое обновление контента из таблицы _content без перезапуска
    * (0 = выключено, 1 = включено). По умолчанию выключено — меньше памяти.
@@ -177,6 +179,8 @@ export const insertBotTokenSchema = z.object({
     .optional(),
   /** Генерировать catch-all обработчики (0 = выключено, 1 = включено) */
   catchAllHandlers: z.number().min(0).max(1).default(1),
+  /** Отслеживать блокировки через Telegram my_chat_member (0/1) */
+  trackUserBlocks: z.number().min(0).max(1).default(1),
   /** Живое обновление контента из таблицы _content (0 = выключено, 1 = включено; по умолчанию выкл) */
   contentCache: z.number().min(0).max(1).default(0),
   /** Режим запуска бота: polling или webhook */

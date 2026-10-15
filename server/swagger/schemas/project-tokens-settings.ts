@@ -70,6 +70,17 @@ export const CatchAllHandlersResponseSchema = z
   .object({ success: z.literal(true), catchAllHandlers: flag01 })
   .openapi("CatchAllHandlersResponse");
 
+/** PUT track-user-blocks */
+export const TrackUserBlocksRequestSchema = z.object({
+  /** 0/1 отслеживать my_chat_member */
+  trackUserBlocks: flag01.openapi({ example: 1 }),
+}).openapi("TrackUserBlocksRequest");
+
+/** Ответ track-user-blocks */
+export const TrackUserBlocksResponseSchema = z.object({
+  success: z.literal(true), trackUserBlocks: flag01,
+}).openapi("TrackUserBlocksResponse");
+
 /** PUT content-cache */
 export const ContentCacheRequestSchema = z
   .object({

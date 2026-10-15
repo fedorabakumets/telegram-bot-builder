@@ -47,6 +47,8 @@ export const PublicBotTokenSchema = z
     saveIncomingMedia: z.number().nullable().optional(),
     /** Catch-all 0/1 */
     catchAllHandlers: z.number().nullable().optional(),
+    /** Отслеживание блокировок 0/1 */
+    trackUserBlocks: z.number().nullable().optional(),
     /** Content cache 0/1 */
     contentCache: z.number().nullable().optional(),
     /** polling | webhook */

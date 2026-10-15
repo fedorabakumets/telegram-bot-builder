@@ -38,6 +38,8 @@ export const mainParamsSchema = z.object({
   hasUserbotNodes: z.boolean().optional().default(false),
   /** Живое обновление контента (машинерия load_content/циклы). По умолчанию true */
   contentCache: z.boolean().optional().default(false),
+  /** Генерировать обработчик my_chat_member */
+  trackUserBlocks: z.boolean().optional().default(false),
 });
 
 /** Тип параметров запуска (выведен из схемы) */

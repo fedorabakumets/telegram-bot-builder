@@ -1185,6 +1185,25 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
+  /** Обновляет автоматическое отслеживание блокировок через my_chat_member. */
+  app.put("/api/projects/:projectId/tokens/:tokenId/track-user-blocks", requireTokenOwnership, async (req, res) => {
+    try {
+      const tokenId = parseInt(req.params.tokenId);
+      const projectId = parseInt(req.params.projectId);
+      const { trackUserBlocks } = req.body as { trackUserBlocks: number };
+      if (trackUserBlocks !== 0 && trackUserBlocks !== 1) {
+        return res.status(400).json({ message: "trackUserBlocks должен быть 0 или 1" });
+      }
+      const updated = await storage.updateBotToken(tokenId, { trackUserBlocks });
+      if (!updated) return res.status(404).json({ message: "Токен не найден" });
+      void emitTokenUpdated({ projectId, tokenId, changedFields: ['trackUserBlocks'], source: 'api' })
+        .catch((err) => console.error('[track-user-blocks] emitTokenUpdated:', err));
+      res.json({ success: true, trackUserBlocks });
+    } catch {
+      res.status(500).json({ message: "Ошибка обновления отслеживания блокировок" });
+    }
+  });
+
   /**
    * Обновление настройки живого обновления контента для токена бота
    * PUT /api/projects/:projectId/tokens/:tokenId/content-cache
@@ -2460,10 +2479,12 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           COUNT(*) FILTER (WHERE user_data IS NOT NULL AND user_data != '{}') as "usersWithResponses",
           (SELECT COALESCE(COUNT(*), 0) FROM bot_messages bm
            WHERE bm.project_id = $1
+             AND bm.message_type IN ('user', 'bot')
              AND ($2::integer IS NULL OR bm.token_id = $2)) as "totalInteractions",
           CASE WHEN COUNT(*) > 0
             THEN (SELECT COALESCE(COUNT(*), 0)::float FROM bot_messages bm
                   WHERE bm.project_id = $1
+                    AND bm.message_type IN ('user', 'bot')
                     AND ($2::integer IS NULL OR bm.token_id = $2)) / COUNT(*)
             ELSE 0
           END as "avgInteractionsPerUser",
@@ -3467,6 +3488,7 @@ function setupTokenEnvVariableRoutes(app: Express) {
         MESSAGES_RETENTION_DAYS: 'messagesRetentionDays',
         CATCH_ALL_HANDLERS: 'catchAllHandlers',
         CONTENT_CACHE: 'contentCache',
+        TRACK_USER_BLOCKS: 'trackUserBlocks',
         AUTO_RESTART: 'autoRestart',
         MAX_RESTART_ATTEMPTS: 'maxRestartAttempts',
         LAUNCH_MODE: 'launchMode',
@@ -3534,7 +3556,7 @@ function setupTokenEnvVariableRoutes(app: Express) {
               continue;
             }
             let dbValue: any = value;
-            if (key === 'PROTECT_CONTENT' || key === 'SAVE_INCOMING_MEDIA' || key === 'AUTO_RESTART' || key === 'CATCH_ALL_HANDLERS' || key === 'CONTENT_CACHE') {
+            if (key === 'PROTECT_CONTENT' || key === 'SAVE_INCOMING_MEDIA' || key === 'AUTO_RESTART' || key === 'CATCH_ALL_HANDLERS' || key === 'CONTENT_CACHE' || key === 'TRACK_USER_BLOCKS') {
               dbValue = value === 'true' || value === '1' ? 1 : 0;
             }
             if (key === 'MAX_RESTART_ATTEMPTS') {

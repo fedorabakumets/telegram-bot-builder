@@ -1,5 +1,5 @@
 /**
- * @fileoverview OpenAPI: catch-all-handlers / content-cache.
+ * @fileoverview OpenAPI: флаги catch-all, блокировок пользователей и кэша контента.
  * @module server/swagger/paths/project-tokens-settings-flags-paths
  */
 
@@ -11,11 +11,13 @@ import {
   CatchAllHandlersResponseSchema,
   ContentCacheRequestSchema,
   ContentCacheResponseSchema,
+  TrackUserBlocksRequestSchema,
+  TrackUserBlocksResponseSchema,
 } from "../schemas/project-tokens-settings";
 import { PROJECT_TOKEN_SETTINGS_ERRORS } from "./project-tokens-settings-errors";
 
 /**
- * Регистрирует флаги генерации catch-all и content-cache.
+ * Регистрирует флаги генерации поведения бота.
  * @param registry - Реестр zod-to-openapi
  * @param cookieSecurity - Session cookie / Bearer PAT
  * @returns void
@@ -26,6 +28,21 @@ export function registerProjectTokensSettingsFlagsPaths(
 ): void {
   const auth =
     "**Auth:** `requireTokenOwnership`. WS `token-updated`. В env бота (при следующем запуске) — 0/1.\n\n";
+
+  registry.registerPath({
+    method: "put",
+    path: "/api/projects/{projectId}/tokens/{tokenId}/track-user-blocks",
+    tags: ["project-tokens"],
+    summary: "Отслеживание блокировок пользователей",
+    description: "`trackUserBlocks` 0|1 — обработчик Telegram my_chat_member и системные события в диалогах.\n\n" + auth,
+    security: cookieSecurity,
+    request: { cookies: ProjectsCookiesSchema, headers: ProjectsAuthHeadersSchema,
+      params: ProjectTokensProjectTokenParamsSchema,
+      body: { content: { "application/json": { schema: TrackUserBlocksRequestSchema } } } },
+    responses: { 200: { description: "Сохранено", content: { "application/json": {
+      schema: TrackUserBlocksResponseSchema, example: { success: true, trackUserBlocks: 1 },
+    } } }, ...PROJECT_TOKEN_SETTINGS_ERRORS },
+  });
 
   registry.registerPath({
     method: "put",

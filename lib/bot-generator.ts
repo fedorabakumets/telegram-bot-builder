@@ -138,6 +138,8 @@ export interface GeneratePythonCodeOptions {
   saveIncomingMedia?: boolean;
   /** Генерировать catch-all обработчики (по умолчанию true) */
   catchAllHandlers?: boolean;
+  /** Отслеживать блокировки пользователей через my_chat_member */
+  trackUserBlocks?: boolean;
   /** Защита контента от копирования/пересылки (по умолчанию false) */
   protectContent?: boolean;
   /** Живое обновление контента из _content (по умолчанию true) */
@@ -224,6 +226,7 @@ function buildGenerationContext(
     webhookPort = null,
     saveIncomingMedia = false,
     catchAllHandlers = true,
+    trackUserBlocks = true,
     protectContent = false,
     contentCache = false,
     telegramFileIds = {},
@@ -244,6 +247,7 @@ function buildGenerationContext(
     webhookPort,
     saveIncomingMedia,
     catchAllHandlers,
+    trackUserBlocks,
     protectContent,
     contentCache,
     telegramFileIds,
@@ -581,6 +585,7 @@ function generateCodeSections(
       projectId: context.projectId ?? null,
       hasUserbotNodes: flags.hasUserbotNodesResult,
       contentCache: flags.generateContentResult,
+      trackUserBlocks: context.options.trackUserBlocks === true && userDatabaseEnabled,
     })
   );
 

@@ -201,9 +201,10 @@ export function useLiveInvalidate({ projectId, selectedTokenId }: UseLiveInvalid
       if (event.type === 'new-message') {
         const msg = event as NewMessageLiveEvent;
         const userId = msg.data?.userId;
+        const interaction = msg.data?.messageType === 'user' || msg.data?.messageType === 'bot';
 
         // Optimistic update статистики
-        queryClient.setQueryData<UserStats>(statsKey, (old) => {
+        if (interaction) queryClient.setQueryData<UserStats>(statsKey, (old) => {
           const newTotal = (old?.totalInteractions ?? 0) + 1;
           const users = old?.totalUsers ?? 1;
           return {
@@ -228,7 +229,7 @@ export function useLiveInvalidate({ projectId, selectedTokenId }: UseLiveInvalid
 
         // Redis publish происходит строго после INSERT RETURNING в save_message_to_api,
         // поэтому данные уже в БД к моменту получения WS-события — задержка не нужна
-        queryClient.invalidateQueries({ queryKey: statsKey });
+        if (interaction) queryClient.invalidateQueries({ queryKey: statsKey });
         queryClient.invalidateQueries({
           queryKey: ['infinite-users', projectId],
           refetchType: 'all',
@@ -236,7 +237,7 @@ export function useLiveInvalidate({ projectId, selectedTokenId }: UseLiveInvalid
 
         // Инвалидируем кэш активности сообщений — новое сообщение влияет на график.
         // queryKey в useMessagesActivity: ['messages-activity', projectId, tokenId, granularity]
-        queryClient.invalidateQueries({
+        if (interaction) queryClient.invalidateQueries({
           predicate: (query) => {
             return query.queryKey[0] === 'messages-activity' && query.queryKey[1] === projectId;
           },

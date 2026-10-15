@@ -41,6 +41,8 @@ export interface TokenUpdatedPayload {
   saveIncomingMedia: number | null;
   /** Catch-all обработчики */
   catchAllHandlers: number | null;
+  /** Отслеживать блокировки пользователей */
+  trackUserBlocks: number | null;
   /** Живой кэш контента */
   contentCache: number | null;
   /** Режим запуска */
@@ -189,6 +191,7 @@ export const TOKEN_UPDATED_FIELD_KEYS = [
   'protectContent',
   'saveIncomingMedia',
   'catchAllHandlers',
+  'trackUserBlocks',
   'contentCache',
   'launchMode',
   'webhookBaseUrl',
@@ -216,6 +219,7 @@ export type TokenLikeForUpdatedPayload = {
   protectContent?: number | null;
   saveIncomingMedia?: number | null;
   catchAllHandlers?: number | null;
+  trackUserBlocks?: number | null;
   contentCache?: number | null;
   launchMode?: string | null;
   webhookBaseUrl?: string | null;
@@ -243,6 +247,7 @@ export function toTokenUpdatedPayload(token: TokenLikeForUpdatedPayload): TokenU
     protectContent: token.protectContent ?? null,
     saveIncomingMedia: token.saveIncomingMedia ?? null,
     catchAllHandlers: token.catchAllHandlers ?? null,
+    trackUserBlocks: token.trackUserBlocks ?? null,
     contentCache: token.contentCache ?? null,
     launchMode: token.launchMode ?? null,
     webhookBaseUrl: token.webhookBaseUrl ?? null,

@@ -54,6 +54,10 @@ export function useSystemEnvUpdate(projectId: number, tokenId: number) {
           return apiRequest('PUT', `/api/projects/${projectId}/tokens/${tokenId}/messages-retention`, {
             messagesRetentionDays: parseInt(value, 10) || 0,
           });
+        case 'TRACK_USER_BLOCKS':
+          return apiRequest('PUT', `/api/projects/${projectId}/tokens/${tokenId}/track-user-blocks`, {
+            trackUserBlocks: value === '1' || value === 'true' ? 1 : 0,
+          });
         default:
           throw new Error(`Неизвестная системная переменная: ${key}`);
       }

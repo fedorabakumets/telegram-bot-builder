@@ -21,7 +21,7 @@ export interface NewMessageLiveEvent {
   data: {
     /** Идентификатор пользователя (строка) */
     userId: string;
-    /** Тип сообщения: 'user' | 'bot' */
+    /** Тип сообщения: 'user' | 'bot' | 'system' */
     messageType: string;
     /** Текст сообщения */
     messageText: string | null;

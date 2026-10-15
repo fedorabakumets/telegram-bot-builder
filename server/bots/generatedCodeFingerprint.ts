@@ -14,6 +14,7 @@ export interface GeneratedCodeInput {
   userDatabaseEnabled: boolean;
   saveIncomingMedia: boolean;
   catchAllHandlers: boolean;
+  trackUserBlocks: boolean;
   protectContent: boolean;
   contentCache: boolean;
   /** Разрешён ли узлу psql_query режим builtin (PSQL_BUILTIN_ENABLED) */
@@ -49,6 +50,7 @@ export function buildGeneratedCodeFingerprint(input: GeneratedCodeInput): string
     userDatabaseEnabled: input.userDatabaseEnabled,
     saveIncomingMedia: input.saveIncomingMedia,
     catchAllHandlers: input.catchAllHandlers,
+    trackUserBlocks: input.trackUserBlocks,
     protectContent: input.protectContent,
     contentCache: input.contentCache,
     psqlBuiltinEnabled: input.psqlBuiltinEnabled,

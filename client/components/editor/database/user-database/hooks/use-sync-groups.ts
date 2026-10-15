@@ -75,8 +75,10 @@ export function useSyncGroups(
       const groupId = String(dialog.userId);
       const cacheKey = groupAccessKey(projectId, selectedTokenId, groupId);
       const cached = queryClient.getQueryData<GroupAccessData>(cacheKey);
-      if (!cached && meta.accessStatus && meta.accessStatus !== 'unknown') {
-        queryClient.setQueryData(cacheKey, { status: meta.accessStatus, checkedAt: meta.accessCheckedAt });
+      if (cached?.status !== 'checking' && meta.accessStatus && meta.accessStatus !== 'unknown'
+        && cached?.status !== meta.accessStatus) {
+        queryClient.setQueryData(cacheKey, { ...cached,
+          status: meta.accessStatus, checkedAt: meta.accessCheckedAt });
       }
       if (!meta.isGroup) continue;
       if ((cached && cached.status !== 'unknown') || (meta.accessStatus && meta.accessStatus !== 'unknown')) {

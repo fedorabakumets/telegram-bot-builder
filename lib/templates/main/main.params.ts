@@ -33,4 +33,6 @@ export interface MainTemplateParams {
   projectId?: number | null;
   /** Живое обновление контента (машинерия load_content/циклы). По умолчанию true */
   contentCache?: boolean;
+  /** Отслеживать блокировки пользователей через my_chat_member */
+  trackUserBlocks?: boolean;
 }
