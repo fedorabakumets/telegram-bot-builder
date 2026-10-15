@@ -10,10 +10,16 @@ const fetchMock = vi.fn();
  * @param sources - Точки прироста по источникам
  * @returns Настраивает ответы подменённого HTTP-клиента
  */
+/** Текущий снимок мест, блокировки и удалённых в ответе /stats. */
+const AUDIENCE = {
+  privateUsers: 4, groupUsers: 2, channelUsers: 1, usersInSeveralPlaces: 1,
+  blockedBotUsers: 3, deletedUsers: 2,
+};
+
 function mockAnalytics(points: unknown[] = [], totalUsers = 0, sources?: unknown[]) {
   fetchMock.mockImplementation(async (input: string) => {
     const url = new URL(input);
-    if (url.pathname.endsWith('/stats')) return Response.json({ totalUsers });
+    if (url.pathname.endsWith('/stats')) return Response.json({ totalUsers, ...AUDIENCE });
     if (url.pathname.endsWith('/growth-by-source')) return Response.json(sources ?? []);
     if (url.pathname.endsWith('/growth')) return Response.json(points);
     throw new Error('Неожиданный маршрут');
@@ -34,10 +40,16 @@ describe('аналитика пользователей MCP', () => {
   it('учитывает аудиторию до периода и передаёт фильтр токена с авторизацией', async () => {
     mockAnalytics([{ date: '2026-10-11', count: 0 }, { date: '2026-10-12', count: 2 }], 7);
     const options = { period: '30d' as const, tokenId: 18, apiBaseUrl: 'http://test' };
-    expect(await getUsersSummaryInDb(289, options)).toMatchObject({ total_users: 7, new_users: 2, initial_users: 5 });
-    expect(await getUsersChartInDb(289, { ...options, mode: 'cumulative' })).toMatchObject({
+    expect(await getUsersSummaryInDb(289, options)).toMatchObject({
+      total_users: 7, new_users: 2, initial_users: 5,
+      private_users: 4, group_users: 2, channel_users: 1, users_in_several_places: 1,
+      blocked_bot_users: 3, deleted_users: 2,
+    });
+    const chart = await getUsersChartInDb(289, { ...options, mode: 'cumulative' });
+    expect(chart).toMatchObject({
       accumulation_scope: 'all_time', points: [{ date: '2026-10-11', count: 5 }, { date: '2026-10-12', count: 7 }],
     });
+    expect(chart).not.toHaveProperty('private_users');
     for (const [input, init] of fetchMock.mock.calls) {
       const url = new URL(input);
       expect(url.origin).toBe('http://test');
@@ -81,6 +93,18 @@ describe('аналитика пользователей MCP', () => {
     const result = await getUsersChartInDb(289, { mode: 'cumulative', groupBy: 'source' });
     expect(result).toHaveProperty('error');
     expect(result).not.toHaveProperty('points');
+  });
+  /** Проверяет отказ, если панель не прислала числа по местам. */
+  it('отклоняет сводку без чисел по местам', async () => {
+    fetchMock.mockImplementation(async (input: string) => {
+      const url = new URL(input);
+      if (url.pathname.endsWith('/stats')) return Response.json({ totalUsers: 7 });
+      if (url.pathname.endsWith('/growth')) return Response.json([]);
+      throw new Error('Неожиданный маршрут');
+    });
+    const result = await getUsersSummaryInDb(289);
+    expect(result).toHaveProperty('error');
+    expect(result).not.toHaveProperty('private_users');
   });
   /** Проверяет отклонение повреждённых счётчиков и дат вместо выдуманных результатов. */
   it.each([

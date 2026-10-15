@@ -14,6 +14,7 @@ import { registerTrafficSourcesTools } from './mcp-register-traffic-sources-tool
 import { registerLanguagesTools } from './mcp-register-languages-tools.ts';
 import { registerActiveUsersTools } from './mcp-register-active-users-tools.ts';
 import { registerUsersAnalyticsTools } from './mcp-register-analytics-tools.ts';
+import { registerUnavailableUsersTools } from './mcp-register-unavailable-users-tools.ts';
 import { registerGroupsAnalyticsTools } from './mcp-register-groups-analytics-tools.ts';
 import { registerRangeAnalyticsTools } from './mcp-register-range-analytics-tools.ts';
 import { registerMessagesAnalyticsTools } from './mcp-register-message-analytics-tools.ts';
@@ -1049,6 +1050,8 @@ export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOpt
   registerActiveUsersTools(server);
   /** Подключает аналитику пользователей для stdio и удалённого HTTP. */
   registerUsersAnalyticsTools(server);
+  /** Подключает список удалённых и заблокировавших выбранного бота. */
+  registerUnavailableUsersTools(server);
   /** Подключает сводку и график групп выбранного бота. */
   registerGroupsAnalyticsTools(server);
   registerRangeAnalyticsTools(server);

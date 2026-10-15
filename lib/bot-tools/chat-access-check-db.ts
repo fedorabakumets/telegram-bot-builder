@@ -30,7 +30,7 @@ export interface ChatAccessCheckSnakeJob {
   token_id: number;
   /** Состояние очереди. */
   status: (typeof STATUSES)[number];
-  /** Всего личных диалогов. */
+  /** Всего людей в проверке: с личным сообщением или без сообщений вовсе. */
   total_count: number;
   /** Уже проверено. */
   processed_count: number;
@@ -126,7 +126,7 @@ async function readJson(response: Response): Promise<unknown> {
 }
 
 /**
- * Запускает массовую проверку личных диалогов бота.
+ * Запускает массовую проверку людей, которые писали лично или ещё не писали.
  * @param projectId - Идентификатор проекта
  * @param options - Токен бота
  * @returns Карточка задачи или безопасная ошибка

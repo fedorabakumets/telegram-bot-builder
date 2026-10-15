@@ -32,7 +32,7 @@ export function registerDialogTools(server: McpServer): void {
       ...('error' in value ? { isError: true } : {}) };
   });
   server.registerTool('db_start_chat_access_check', {
-    description: 'Запускает массовую проверку личных диалогов выбранного бота. Используется краткое действие «печатает» без сообщений. Группы и каналы не входят — для них db_check_chat_access. Пока проверка идёт, повторный запуск вернёт ошибку. Отмена недоступна. Токен и сырые ответы Telegram не возвращаются.',
+    description: 'Запускает массовую проверку людей выбранного бота: у кого есть личное сообщение или ещё нет сообщений. Кто писал только в группе или канале, не входит. Для чатов групп и каналов — db_check_chat_access. Действие «печатает» без сообщений. Повторный запуск во время проверки вернёт ошибку. Отмена недоступна. Токен и сырые ответы Telegram не возвращаются.',
     annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
     inputSchema: {
       /** Проект с разрешённым доступом. */

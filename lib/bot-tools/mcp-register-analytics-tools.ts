@@ -24,7 +24,7 @@ export function registerUsersAnalyticsTools(server: McpServer): void {
     ...analyticsRangeSchema,
   };
   server.registerTool('db_get_users_summary', {
-    description: 'Всего записей пользователей ботов, новые за период и аудитория до периода. Без token_id учитываются все боты; один человек у разных ботов считается несколько раз. Доступ проверяется по проекту. Период по умолчанию 30d.',
+    description: 'Записи пользователей, новые за период и аудитория до периода. В готовом периоде ещё текущий снимок: сколько людей писали лично, в группах и каналах, сколько заблокировали бота и сколько аккаунтов удалено. Это люди, не число чатов. Точный диапазон from/to снимок не включает. Без token_id все боты; один человек у разных ботов считается несколько раз. Период по умолчанию 30d.',
     inputSchema: filters,
   }, async ({ project_id, token_id, ...options }) => result(await getUsersSummaryInDb(project_id, { ...options, tokenId: token_id })));
   server.registerTool('db_get_users_chart', {

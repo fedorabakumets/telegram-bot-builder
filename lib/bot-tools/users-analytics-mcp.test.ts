@@ -18,7 +18,8 @@ describe('протокол MCP аналитики', () => {
   /** Проверяет обнаружение инструментов, успешный вызов и признак отказа в доступе. */
   it('публикует инструменты и передаёт результат и ошибку клиенту', async () => {
     const fetchMock = vi.fn(async (input: string) => Response.json(input.includes('/stats')
-      ? { totalUsers: 7 } : [{ date: '2026-10-12', count: 2 }]));
+      ? { totalUsers: 7, privateUsers: 4, groupUsers: 2, channelUsers: 0, usersInSeveralPlaces: 0, blockedBotUsers: 1, deletedUsers: 2 }
+      : [{ date: '2026-10-12', count: 2 }]));
     vi.stubGlobal('fetch', fetchMock);
     const server = createBotcraftMcpServer({ enableFileTools: false });
     const client = new Client({ name: 'analytics-test', version: '1.0.0' });
@@ -37,6 +38,12 @@ describe('протокол MCP аналитики', () => {
       const content = result.content as TextBlock[];
       const data = JSON.parse(content.find(item => item.type === 'text')!.text!);
       expect(data).toMatchObject({ total_users: 7, initial_users: 5, points: [{ date: '2026-10-12', count: 7 }] });
+      expect(data).not.toHaveProperty('private_users');
+      const summary = await client.callTool({ name: 'db_get_users_summary', arguments: { project_id: 289 } });
+      expect(summary.isError).not.toBe(true);
+      const summaryBody = JSON.parse((summary.content as TextBlock[]).find(item => item.type === 'text')!.text!);
+      expect(summaryBody).toMatchObject({ private_users: 4, blocked_bot_users: 1, deleted_users: 2 });
+      expect(summaryBody.places_description).toContain('не число чатов');
       fetchMock.mockImplementation(async () => new Response('secret-access-data', { status: 403 }));
       const denied = await client.callTool({ name: 'db_get_users_summary', arguments: { project_id: 289 } });
       expect(denied.isError).toBe(true);

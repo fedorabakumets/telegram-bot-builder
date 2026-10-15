@@ -6,6 +6,35 @@ import { getExactCardAnalytics } from './analytics-range-db.ts';
 import { USERS_ANALYTICS_WINDOWS, type UsersAnalyticsOptions, type UsersSourcePoint } from './users-analytics-types.ts';
 import { parseUsersGrowth, parseUsersSources, readUsersAnalytics, validUsersAnalyticsOptions, validUsersCount } from './users-analytics-read.ts';
 
+/** Поля снимка аудитории: имя в API и имя для агента. */
+const AUDIENCE_FIELDS = [
+  ['privateUsers', 'private_users'],
+  ['groupUsers', 'group_users'],
+  ['channelUsers', 'channel_users'],
+  ['usersInSeveralPlaces', 'users_in_several_places'],
+  ['blockedBotUsers', 'blocked_bot_users'],
+  ['deletedUsers', 'deleted_users'],
+] as const;
+
+/** Пояснение, что числа — люди по сообщениям, а не чаты карточки «Группы». */
+const PLACES_DESCRIPTION = 'Люди по сохранённым сообщениям, не число чатов. private_users — личный чат, group_users — группа или супергруппа, channel_users — канал, users_in_several_places — сразу два или три вида. blocked_bot_users — is_blocked, deleted_users — is_deleted. Без token_id один человек у двух ботов считается дважды.';
+
+/**
+ * Оставляет текущие числа мест, блокировки и удалённых.
+ * @param stats - Ответ /users/stats
+ * @returns Снимок для сводки
+ */
+function audienceSnapshot(stats: object): Record<string, number | string> {
+  const row = stats as Record<string, unknown>;
+  const snapshot: Record<string, number | string> = { places_description: PLACES_DESCRIPTION };
+  for (const [source, target] of AUDIENCE_FIELDS) {
+    const value = row[source];
+    if (!validUsersCount(value)) throw new Error('Некорректный ответ API аналитики');
+    snapshot[target] = value;
+  }
+  return snapshot;
+}
+
 /**
  * Загружает исходные данные с проверкой доступа существующими маршрутами API.
  * @param projectId - Идентификатор проекта
@@ -30,7 +59,7 @@ async function loadUsersAnalytics(projectId: number, options: UsersAnalyticsOpti
   const points = parseUsersGrowth(growth);
   const summary = getUsersGrowthSummary(points, stats.totalUsers);
   if (!validUsersCount(summary.newUsers)) throw new Error('Некорректная сумма прироста API');
-  return { points, base, growthQuery, summary: {
+  return { points, base, growthQuery, snapshot: audienceSnapshot(stats), summary: {
     project_id: projectId, token_id: options.tokenId ?? null, period, ...window,
     from: points[0]?.date ?? null, to: points.at(-1)?.date ?? null,
     total_users: summary.totalUsers, new_users: summary.newUsers, initial_users: summary.initialUsers,
@@ -60,7 +89,10 @@ function analyticsError(error: unknown) {
 export async function getUsersSummaryInDb(projectId: number, options: UsersAnalyticsOptions = {}) {
   if (!validUsersAnalyticsOptions(projectId, options)) return { error: 'Некорректные параметры аналитики' };
   if (options.from !== undefined || options.to !== undefined || options.step !== undefined) return getExactCardAnalytics(projectId, 'registrations', options, false);
-  try { return (await loadUsersAnalytics(projectId, options)).summary; }
+  try {
+    const loaded = await loadUsersAnalytics(projectId, options);
+    return { ...loaded.summary, ...loaded.snapshot };
+  }
   catch (error) { return analyticsError(error); }
 }
 

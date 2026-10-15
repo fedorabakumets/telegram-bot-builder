@@ -37,6 +37,7 @@ import { identifyAgent } from "../middleware/agentTokenMiddleware";
 import { requireApiAuth } from "../middleware/requireApiAuth";
 import { requireProjectAccess } from "../middleware/requireProjectAccess";
 import { registerGroupsAnalyticsRoutes } from "./analytics/groups-analytics-handlers";
+import { registerUnavailableUsersRoutes } from "./analytics/unavailable-users-handlers";
 import { queryUsersByChatKind } from "./analytics/users-by-chat-kind-query";
 import { requireTokenOwnership } from "../middleware/requireResourceOwnership";
 import { requireMediaOwnership } from "../middleware/mediaOwnership";
@@ -3283,6 +3284,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // Get message history for a user with media
   setupBotIntegrationRoutes(app);
   registerGroupsAnalyticsRoutes(app);
+  registerUnavailableUsersRoutes(app);
 
   // HTML страница со встроенным Telegram Login Widget для авторизации в отдельном окне
   setupAuthRoutes(app);
