@@ -57,6 +57,10 @@ export const BOT_USERS_STATS_EXAMPLE = {
   uniqueLanguages: 5,
   deepLinkUsers: 40,
   referralUsers: 18,
+  privateUsers: 80,
+  groupUsers: 24,
+  channelUsers: 5,
+  usersInSeveralPlaces: 3,
 };
 
 /** GET /users/traffic */

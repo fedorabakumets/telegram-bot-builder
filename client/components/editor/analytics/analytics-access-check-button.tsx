@@ -52,7 +52,7 @@ export function AnalyticsAccessCheckButton({ totalUsers, pending, disabled, onCo
           <AlertDialogHeader>
             <AlertDialogTitle>Проверить доступы</AlertDialogTitle>
             <AlertDialogDescription>
-              Будут проверены личные диалоги: {totalUsers}. {ACCESS_CHECK_TYPING_HINT}
+              В карточке {totalUsers} человек. Проверяются только те, кто открывал бота в личном чате. Кто писал лишь в группе или канале, не входит. {ACCESS_CHECK_TYPING_HINT}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

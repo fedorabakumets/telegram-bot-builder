@@ -37,6 +37,7 @@ import { identifyAgent } from "../middleware/agentTokenMiddleware";
 import { requireApiAuth } from "../middleware/requireApiAuth";
 import { requireProjectAccess } from "../middleware/requireProjectAccess";
 import { registerGroupsAnalyticsRoutes } from "./analytics/groups-analytics-handlers";
+import { queryUsersByChatKind } from "./analytics/users-by-chat-kind-query";
 import { requireTokenOwnership } from "../middleware/requireResourceOwnership";
 import { requireMediaOwnership } from "../middleware/mediaOwnership";
 import { setupTemplatesRoutes } from "./templates/setupTemplatesRoutes";
@@ -2523,6 +2524,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           stats[key] = Number(stats[key]);
         }
       });
+
+      const chatKindCounts = await queryUsersByChatKind(dbPool, projectId, tokenId);
+      Object.assign(stats, chatKindCounts);
 
       res.json(stats);
     } catch (error) {

@@ -38,6 +38,14 @@ export const BotUserStatsSchema = z
     deepLinkUsers: z.number().openapi({ example: 40 }),
     /** referrer_id не null */
     referralUsers: z.number().openapi({ example: 18 }),
+    /** Люди с сообщением в личном чате */
+    privateUsers: z.number().openapi({ example: 80 }),
+    /** Люди с сообщением в группе или супергруппе */
+    groupUsers: z.number().openapi({ example: 24 }),
+    /** Люди с сообщением в канале */
+    channelUsers: z.number().openapi({ example: 5 }),
+    /** Люди сразу в двух или трёх видах чатов */
+    usersInSeveralPlaces: z.number().openapi({ example: 3 }),
   })
   .openapi("BotUserStats");
 

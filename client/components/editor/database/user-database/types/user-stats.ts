@@ -41,4 +41,16 @@ export interface UserStats {
 
   /** Количество пользователей пришедших по реферальной ссылке */
   referralUsers?: number;
+
+  /** Люди, которые хотя бы раз писали в личном чате */
+  privateUsers?: number;
+
+  /** Люди, которые хотя бы раз писали в группе или супергруппе */
+  groupUsers?: number;
+
+  /** Люди, которые хотя бы раз писали в канале */
+  channelUsers?: number;
+
+  /** Человек есть больше чем в одной из строк мест */
+  usersInSeveralPlaces?: number;
 }

@@ -14,6 +14,9 @@ it('отличает блокировку, удаление и доступно�
   expect(classifyChatAction({
     httpOk: false, errorCode: 400, description: 'Bad Request: chat not found',
   }).kind).toBe('deleted');
+  expect(classifyChatAction({
+    httpOk: false, errorCode: 403, description: "Forbidden: bot can't initiate conversation with a user",
+  }).kind).toBe('error');
 });
 
 it('не кладёт секрет и описание Telegram в payload прогресса', () => {

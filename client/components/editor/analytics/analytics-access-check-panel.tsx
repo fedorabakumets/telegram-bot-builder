@@ -4,22 +4,14 @@
  */
 import { useEffect, useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import {
-  isActiveChatAccessCheckStatus,
-  type ChatAccessCheckJobView,
-  type ChatAccessCheckProgressPayload,
-} from '@shared/project-sync/project-event';
+import { isActiveChatAccessCheckStatus } from '@shared/project-sync/project-event';
 import { AnalyticsAudienceReachNote } from './analytics-audience-reach-note';
 import { AnalyticsAccessCheckButton } from './analytics-access-check-button';
 import { AnalyticsAccessCheckProgress } from './analytics-access-check-progress';
 import { useProjectTokens } from '@/hooks/use-project-tokens';
 import { useChatAccessCheckJob } from './use-chat-access-check-job';
 import { useChatAccessCheckLive } from './use-chat-access-check-live';
-
-/** Приоритет статуса: финальный не затирается более ранним событием. */
-const STATUS_RANK: Record<string, number> = {
-  pending: 1, running: 1, cancelling: 2, cancelled: 3, completed: 3, failed: 3,
-};
+import { mergeJob } from './analytics-access-check-merge';
 
 /**
  * Пропсы блока проверки.
@@ -35,6 +27,14 @@ interface AnalyticsAccessCheckPanelProps {
   blockedBotUsers?: number;
   /** Сколько с удалённым аккаунтом. */
   deletedUsers?: number;
+  /** Люди, которые хотя бы раз писали в личном чате. */
+  privateUsers?: number;
+  /** Люди, которые хотя бы раз писали в группе или супергруппе. */
+  groupUsers?: number;
+  /** Люди, которые хотя бы раз писали в канале. */
+  channelUsers?: number;
+  /** Человек есть больше чем в одной из строк мест. */
+  usersInSeveralPlaces?: number;
 }
 
 /**
@@ -49,33 +49,13 @@ function readDismissedJobId(key: string | null): number | null {
 }
 
 /**
- * Склеивает задачу из API и более свежий WS-снимок.
- * @param current - Задача из кэша
- * @param progress - Событие WebSocket
- * @param projectId - Проект
- * @returns Актуальная карточка
- */
-function mergeJob(
-  current: ChatAccessCheckJobView | null | undefined,
-  progress: ChatAccessCheckProgressPayload,
-  projectId: number,
-): ChatAccessCheckJobView {
-  if (!current || progress.jobId > current.jobId) {
-    return { projectId, startedAt: null, finishedAt: null, ...progress };
-  }
-  if (current.jobId > progress.jobId) return current;
-  if ((STATUS_RANK[current.status] ?? 0) > (STATUS_RANK[progress.status] ?? 0)) return current;
-  if (progress.processedCount < current.processedCount) return current;
-  return { ...current, ...progress, startedAt: current.startedAt, finishedAt: current.finishedAt };
-}
-
-/**
  * Кнопка, живой прогресс и итог проверки выбранного бота.
  * @param props - Свойства компонента
  * @returns JSX элемент или null
  */
 export function AnalyticsAccessCheckPanel({
   projectId, tokenId, totalUsers, blockedBotUsers = 0, deletedUsers = 0,
+  privateUsers = 0, groupUsers = 0, channelUsers = 0, usersInSeveralPlaces = 0,
 }: AnalyticsAccessCheckPanelProps) {
   const queryClient = useQueryClient();
   const tokens = useProjectTokens([projectId])[0]?.tokens ?? [];
@@ -115,6 +95,10 @@ export function AnalyticsAccessCheckPanel({
       totalUsers={totalUsers}
       blockedBotUsers={blockedBotUsers}
       deletedUsers={deletedUsers}
+      privateUsers={privateUsers}
+      groupUsers={groupUsers}
+      channelUsers={channelUsers}
+      usersInSeveralPlaces={usersInSeveralPlaces}
     />
   );
   const canCheck = totalUsers > 0 || active;

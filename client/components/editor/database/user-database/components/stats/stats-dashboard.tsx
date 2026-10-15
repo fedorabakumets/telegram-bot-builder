@@ -158,6 +158,10 @@ export function StatsDashboard(props: StatsDashboardProps): React.JSX.Element {
               totalUsers={stats.totalUsers ?? 0}
               blockedBotUsers={stats.blockedBotUsers}
               deletedUsers={stats.deletedUsers}
+              privateUsers={stats.privateUsers}
+              groupUsers={stats.groupUsers}
+              channelUsers={stats.channelUsers}
+              usersInSeveralPlaces={stats.usersInSeveralPlaces}
             />
           }
           headerExtra={

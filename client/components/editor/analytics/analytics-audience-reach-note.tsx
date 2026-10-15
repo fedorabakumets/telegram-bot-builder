@@ -3,6 +3,8 @@
  * @module client/components/editor/analytics/analytics-audience-reach-note
  */
 
+import { AnalyticsAudiencePlacesNote } from './analytics-audience-places-note';
+
 /**
  * Пропсы подписи о доступности аудитории для рассылки
  */
@@ -13,21 +15,33 @@ interface AnalyticsAudienceReachNoteProps {
   blockedBotUsers?: number;
   /** Сколько с удалённым аккаунтом */
   deletedUsers?: number;
+  /** Люди, которые хотя бы раз писали в личном чате */
+  privateUsers?: number;
+  /** Люди, которые хотя бы раз писали в группе или супергруппе */
+  groupUsers?: number;
+  /** Люди, которые хотя бы раз писали в канале */
+  channelUsers?: number;
+  /** Человек есть больше чем в одной из строк мест */
+  usersInSeveralPlaces?: number;
 }
 
 /**
- * Короткая подпись: доступны, недоступные и что они не попадают в рассылки
+ * Короткая подпись: доступны, недоступные и где люди писали
  * @param props - Свойства компонента
- * @returns JSX элемент или null, если пользователей нет
+ * @returns JSX элемент или null, если показывать нечего
  */
 export function AnalyticsAudienceReachNote({
   totalUsers = 0,
   blockedBotUsers = 0,
   deletedUsers = 0,
+  privateUsers = 0,
+  groupUsers = 0,
+  channelUsers = 0,
+  usersInSeveralPlaces = 0,
 }: AnalyticsAudienceReachNoteProps) {
   const unavailable = blockedBotUsers + deletedUsers;
   const available = Math.max(0, totalUsers - unavailable);
-  if (totalUsers <= 0 && unavailable <= 0) return null;
+  const hasPlaces = privateUsers > 0 || groupUsers > 0 || channelUsers > 0;
 
   const parts: { className: string; label: string; value: number }[] = [];
   if (available > 0) {
@@ -39,20 +53,28 @@ export function AnalyticsAudienceReachNote({
   if (deletedUsers > 0) {
     parts.push({ className: 'text-orange-600 dark:text-orange-400', label: 'Аккаунт удалён', value: deletedUsers });
   }
-  if (parts.length === 0) return null;
+  if (parts.length === 0 && !hasPlaces) return null;
 
   return (
     <div className="space-y-0.5 text-[11px] leading-snug text-muted-foreground">
-      <p>
-        {parts.map((part, index) => (
-          <span key={part.label}>
-            {index > 0 && ' · '}
-            <span className={`${part.className} tabular-nums`}>
-              {part.label}: {part.value}
+      {parts.length > 0 && (
+        <p>
+          {parts.map((part, index) => (
+            <span key={part.label}>
+              {index > 0 && ' · '}
+              <span className={`${part.className} tabular-nums`}>
+                {part.label}: {part.value}
+              </span>
             </span>
-          </span>
-        ))}
-      </p>
+          ))}
+        </p>
+      )}
+      <AnalyticsAudiencePlacesNote
+        privateUsers={privateUsers}
+        groupUsers={groupUsers}
+        channelUsers={channelUsers}
+        usersInSeveralPlaces={usersInSeveralPlaces}
+      />
       {unavailable > 0 && <p>В рассылки не входят</p>}
     </div>
   );

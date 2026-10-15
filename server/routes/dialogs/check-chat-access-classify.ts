@@ -45,6 +45,9 @@ export function classifyChatAction(input: {
     || (input.errorCode === 400 && text.includes('chat not found'))) {
     return { kind: 'deleted', status: 'error' };
   }
+  if (text.includes("can't initiate") || text.includes('cannot initiate')) {
+    return { kind: 'error', status: 'error' };
+  }
   if (input.errorCode === 403 || text.includes('bot was blocked')) {
     return { kind: 'kicked', status: 'kicked' };
   }
