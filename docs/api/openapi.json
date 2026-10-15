@@ -13273,7 +13273,11 @@
                   "avgInteractionsPerUser": 21,
                   "uniqueLanguages": 5,
                   "deepLinkUsers": 40,
-                  "referralUsers": 18
+                  "referralUsers": 18,
+                  "privateUsers": 80,
+                  "groupUsers": 24,
+                  "channelUsers": 5,
+                  "usersInSeveralPlaces": 3
                 }
               }
             }
@@ -30560,6 +30564,22 @@
           "referralUsers": {
             "type": "number",
             "example": 18
+          },
+          "privateUsers": {
+            "type": "number",
+            "example": 80
+          },
+          "groupUsers": {
+            "type": "number",
+            "example": 24
+          },
+          "channelUsers": {
+            "type": "number",
+            "example": 5
+          },
+          "usersInSeveralPlaces": {
+            "type": "number",
+            "example": 3
           }
         },
         "required": [
@@ -30574,7 +30594,11 @@
           "avgInteractionsPerUser",
           "uniqueLanguages",
           "deepLinkUsers",
-          "referralUsers"
+          "referralUsers",
+          "privateUsers",
+          "groupUsers",
+          "channelUsers",
+          "usersInSeveralPlaces"
         ]
       },
       "TrafficSource": {

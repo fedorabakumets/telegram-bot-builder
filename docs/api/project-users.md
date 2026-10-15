@@ -375,7 +375,11 @@ curl -s 'http://localhost:5000/api/projects/42/users/stats?tokenId=7' -b cookies
   "avgInteractionsPerUser": 21,
   "uniqueLanguages": 5,
   "deepLinkUsers": 40,
-  "referralUsers": 18
+  "referralUsers": 18,
+  "privateUsers": 80,
+  "groupUsers": 24,
+  "channelUsers": 5,
+  "usersInSeveralPlaces": 3
 }
 ```
 
