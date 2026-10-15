@@ -36,6 +36,7 @@ import { getShareableServerEnvKeys } from "../bots/botEnvPolicy";
 import { identifyAgent } from "../middleware/agentTokenMiddleware";
 import { requireApiAuth } from "../middleware/requireApiAuth";
 import { requireProjectAccess } from "../middleware/requireProjectAccess";
+import { registerGroupsAnalyticsRoutes } from "./analytics/groups-analytics-handlers";
 import { requireTokenOwnership } from "../middleware/requireResourceOwnership";
 import { requireMediaOwnership } from "../middleware/mediaOwnership";
 import { setupTemplatesRoutes } from "./templates/setupTemplatesRoutes";
@@ -1201,6 +1202,25 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       res.json({ success: true, trackUserBlocks });
     } catch {
       res.status(500).json({ message: "Ошибка обновления отслеживания блокировок" });
+    }
+  });
+
+  /** Обновляет слежение за добавлением и исключением бота в группах. */
+  app.put("/api/projects/:projectId/tokens/:tokenId/track-group-membership", requireTokenOwnership, async (req, res) => {
+    try {
+      const tokenId = parseInt(req.params.tokenId);
+      const projectId = parseInt(req.params.projectId);
+      const { trackGroupMembership } = req.body as { trackGroupMembership: number };
+      if (trackGroupMembership !== 0 && trackGroupMembership !== 1) {
+        return res.status(400).json({ message: "trackGroupMembership должен быть 0 или 1" });
+      }
+      const updated = await storage.updateBotToken(tokenId, { trackGroupMembership });
+      if (!updated) return res.status(404).json({ message: "Токен не найден" });
+      void emitTokenUpdated({ projectId, tokenId, changedFields: ['trackGroupMembership'], source: 'api' })
+        .catch((err) => console.error('[track-group-membership] emitTokenUpdated:', err));
+      res.json({ success: true, trackGroupMembership });
+    } catch {
+      res.status(500).json({ message: "Ошибка обновления отслеживания групп" });
     }
   });
 
@@ -3258,6 +3278,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
   // Get message history for a user with media
   setupBotIntegrationRoutes(app);
+  registerGroupsAnalyticsRoutes(app);
 
   // HTML страница со встроенным Telegram Login Widget для авторизации в отдельном окне
   setupAuthRoutes(app);
@@ -3489,6 +3510,7 @@ function setupTokenEnvVariableRoutes(app: Express) {
         CATCH_ALL_HANDLERS: 'catchAllHandlers',
         CONTENT_CACHE: 'contentCache',
         TRACK_USER_BLOCKS: 'trackUserBlocks',
+        TRACK_GROUP_MEMBERSHIP: 'trackGroupMembership',
         AUTO_RESTART: 'autoRestart',
         MAX_RESTART_ATTEMPTS: 'maxRestartAttempts',
         LAUNCH_MODE: 'launchMode',
@@ -3556,7 +3578,7 @@ function setupTokenEnvVariableRoutes(app: Express) {
               continue;
             }
             let dbValue: any = value;
-            if (key === 'PROTECT_CONTENT' || key === 'SAVE_INCOMING_MEDIA' || key === 'AUTO_RESTART' || key === 'CATCH_ALL_HANDLERS' || key === 'CONTENT_CACHE' || key === 'TRACK_USER_BLOCKS') {
+            if (key === 'PROTECT_CONTENT' || key === 'SAVE_INCOMING_MEDIA' || key === 'AUTO_RESTART' || key === 'CATCH_ALL_HANDLERS' || key === 'CONTENT_CACHE' || key === 'TRACK_USER_BLOCKS' || key === 'TRACK_GROUP_MEMBERSHIP') {
               dbValue = value === 'true' || value === '1' ? 1 : 0;
             }
             if (key === 'MAX_RESTART_ATTEMPTS') {

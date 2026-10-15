@@ -26,6 +26,7 @@ import { BotTokenSelector } from '@/components/editor/database/user-database/com
 import { useProjectTokens } from '@/hooks/use-project-tokens';
 import { useNormalizeSelectedTokenId } from '@/hooks/use-normalize-selected-token';
 import { useLiveInvalidate } from '@/components/editor/database/user-database/hooks/use-live-invalidate';
+import { AnalyticsGroupsCard } from './analytics-groups-card';
 import { AnalyticsSourcesPair } from './analytics-sources-pair';
 import { AnalyticsPopularButtonsChart } from './analytics-popular-buttons-chart';
 import { AnalyticsTableChartCard } from './table-chart/analytics-table-chart-card';
@@ -238,6 +239,10 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken, allP
                 </div>
               }
             />
+          </div>
+
+          <div className="grid grid-cols-1 gap-3">
+            <AnalyticsGroupsCard projectId={projectId} selectedTokenId={selectedTokenId} />
           </div>
 
           {/* Строка: активность пользователей */}

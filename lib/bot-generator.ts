@@ -140,6 +140,8 @@ export interface GeneratePythonCodeOptions {
   catchAllHandlers?: boolean;
   /** Отслеживать блокировки пользователей через my_chat_member */
   trackUserBlocks?: boolean;
+  /** Сохранять добавление и исключение бота в группах */
+  trackGroupMembership?: boolean;
   /** Защита контента от копирования/пересылки (по умолчанию false) */
   protectContent?: boolean;
   /** Живое обновление контента из _content (по умолчанию true) */
@@ -227,6 +229,7 @@ function buildGenerationContext(
     saveIncomingMedia = false,
     catchAllHandlers = true,
     trackUserBlocks = true,
+    trackGroupMembership = true,
     protectContent = false,
     contentCache = false,
     telegramFileIds = {},
@@ -248,6 +251,7 @@ function buildGenerationContext(
     saveIncomingMedia,
     catchAllHandlers,
     trackUserBlocks,
+    trackGroupMembership,
     protectContent,
     contentCache,
     telegramFileIds,
@@ -586,6 +590,7 @@ function generateCodeSections(
       hasUserbotNodes: flags.hasUserbotNodesResult,
       contentCache: flags.generateContentResult,
       trackUserBlocks: context.options.trackUserBlocks === true && userDatabaseEnabled,
+      trackGroupMembership: context.options.trackGroupMembership === true && userDatabaseEnabled,
     })
   );
 

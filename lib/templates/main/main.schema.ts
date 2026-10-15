@@ -40,6 +40,8 @@ export const mainParamsSchema = z.object({
   contentCache: z.boolean().optional().default(false),
   /** Генерировать обработчик my_chat_member */
   trackUserBlocks: z.boolean().optional().default(false),
+  /** Генерировать обработчик добавления бота в группы */
+  trackGroupMembership: z.boolean().optional().default(false),
 });
 
 /** Тип параметров запуска (выведен из схемы) */

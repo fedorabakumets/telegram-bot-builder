@@ -20,6 +20,7 @@ import { BotSaveMediaToggle } from './BotSaveMediaToggle';
 import { BotMessagesRetentionSelect } from './BotMessagesRetentionSelect';
 import { BotCatchAllToggle } from './BotCatchAllToggle';
 import { BotBlockTrackingToggle } from './BotBlockTrackingToggle';
+import { BotGroupMembershipToggle } from './BotGroupMembershipToggle';
 import { BotContentCacheToggle } from './BotContentCacheToggle';
 import { BotAdminIds } from '../profile/BotAdminIds';
 import { ProjectCollaborators } from '../profile/ProjectCollaborators';
@@ -43,7 +44,7 @@ interface BotSettingsGridProps {
   /** Включена ли база данных пользователей (1 — да, 0/null — нет) */
   userDatabaseEnabled: number | null;
   /** Данные токена для настроек автоперезапуска */
-  token: Pick<BotToken, 'id' | 'token' | 'autoRestart' | 'maxRestartAttempts' | 'logLevel' | 'protectContent' | 'saveIncomingMedia' | 'messagesRetentionDays' | 'catchAllHandlers' | 'trackUserBlocks' | 'contentCache' | 'userbotEnabled' | 'userbotApiId' | 'userbotApiHash' | 'userbotSessionString'>;
+  token: Pick<BotToken, 'id' | 'token' | 'autoRestart' | 'maxRestartAttempts' | 'logLevel' | 'protectContent' | 'saveIncomingMedia' | 'messagesRetentionDays' | 'catchAllHandlers' | 'trackUserBlocks' | 'trackGroupMembership' | 'contentCache' | 'userbotEnabled' | 'userbotApiId' | 'userbotApiHash' | 'userbotSessionString'>;
   /** Мутация переключения базы данных */
   toggleDatabaseMutation: {
     /** Флаг ожидания ответа */
@@ -166,6 +167,12 @@ export function BotSettingsGrid({
           projectId={projectId}
           tokenId={tokenId}
           trackUserBlocks={token.trackUserBlocks ?? 1}
+          onPendingChange={onPendingChange}
+        />
+        <BotGroupMembershipToggle
+          projectId={projectId}
+          tokenId={tokenId}
+          trackGroupMembership={token.trackGroupMembership ?? 1}
           onPendingChange={onPendingChange}
         />
         <BotProtectContentToggle

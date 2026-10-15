@@ -35,4 +35,6 @@ export interface MainTemplateParams {
   contentCache?: boolean;
   /** Отслеживать блокировки пользователей через my_chat_member */
   trackUserBlocks?: boolean;
+  /** Сохранять добавление и исключение бота в группах */
+  trackGroupMembership?: boolean;
 }

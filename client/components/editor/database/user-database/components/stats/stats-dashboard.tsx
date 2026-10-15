@@ -18,6 +18,7 @@ import { ChartTypeToggle, ChartType } from './chart-type-toggle';
 import { SourceModeToggle, SourceMode } from './source-mode-toggle';
 import { ActivitySplitToggle, ActivitySplitMode } from './activity-split-toggle';
 import { aggregateTopSources } from './source-aggregation-utils';
+import { AnalyticsGroupsCard } from '@/components/editor/analytics/analytics-groups-card';
 import { AnalyticsSourcesPair } from '@/components/editor/analytics/analytics-sources-pair';
 import { AnalyticsAccessCheckPanel } from '@/components/editor/analytics/analytics-access-check-panel';
 
@@ -189,6 +190,8 @@ export function StatsDashboard(props: StatsDashboardProps): React.JSX.Element {
           }
         />
       </div>
+
+      <AnalyticsGroupsCard projectId={projectId} selectedTokenId={selectedTokenId} stackHeader />
 
       <AnalyticsSourcesPair
         projectId={projectId}

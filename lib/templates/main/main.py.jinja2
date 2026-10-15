@@ -88,6 +88,54 @@ async def track_private_bot_membership(update):
         }, ensure_ascii=False))
 
 {% endif %}
+{% if trackGroupMembership %}
+@dp.my_chat_member()
+async def track_group_bot_membership(update):
+    """Сохраняет добавление или исключение бота в группе."""
+    if update.chat.type not in {"group", "supergroup"} or not db_pool:
+        return
+    _new_status = getattr(update.new_chat_member.status, "value", update.new_chat_member.status)
+    if _new_status in {"member", "administrator", "creator"}:
+        _access, _event, _text = "available", "bot_added_to_group", "Бота добавили в группу"
+    elif _new_status in {"left", "kicked"}:
+        _access, _event, _text = "kicked", "bot_removed_from_group", "Бота исключили из группы"
+    else:
+        return
+    _chat_id = str(update.chat.id)
+    _title = update.chat.title or _chat_id
+    async with db_pool.acquire() as _conn:
+        _old = await _conn.fetchval(
+            "SELECT status FROM chat_access WHERE project_id=$1 AND token_id=$2 AND chat_id=$3",
+            PROJECT_ID, TOKEN_ID, _chat_id,
+        )
+        await _conn.execute("""
+            INSERT INTO chat_access (project_id, token_id, chat_id, status, checked_at)
+            VALUES ($1, $2, $3, $4, NOW())
+            ON CONFLICT (project_id, token_id, chat_id) DO UPDATE
+            SET status=EXCLUDED.status, checked_at=EXCLUDED.checked_at
+        """, PROJECT_ID, TOKEN_ID, _chat_id, _access)
+        await _conn.execute("""
+            INSERT INTO bot_groups (project_id, token_id, group_id, name, url, chat_type, is_active, created_at, updated_at)
+            VALUES ($1, $2, $3, $4, '', $5, 1, NOW(), NOW())
+            ON CONFLICT (project_id, token_id, group_id) WHERE group_id IS NOT NULL AND token_id IS NOT NULL
+            DO UPDATE SET name=EXCLUDED.name, chat_type=EXCLUDED.chat_type, updated_at=NOW()
+        """, PROJECT_ID, TOKEN_ID, _chat_id, _title, update.chat.type)
+        if _old == _access:
+            return
+        _row = await _conn.fetchrow("""
+            INSERT INTO bot_messages
+              (project_id, token_id, user_id, message_type, message_text, message_data, chat_type, chat_id, created_at)
+            VALUES ($1, $2, $3, 'system', $4, $5::jsonb, $6, $3, NOW())
+            RETURNING id, created_at
+        """, PROJECT_ID, TOKEN_ID, _chat_id, _text, json.dumps({"event": _event}), update.chat.type)
+    if _redis_client and _row:
+        await _redis_client.publish(f"bot:message:{PROJECT_ID}:{TOKEN_ID}", json.dumps({
+            "id": _row["id"], "userId": _chat_id, "messageType": "system",
+            "messageText": _text, "messageData": {"event": _event},
+            "chatId": _chat_id, "chatType": update.chat.type, "createdAt": _row["created_at"].isoformat(),
+        }, ensure_ascii=False))
+
+{% endif %}
 
 async def main():
     """Главная функция запуска бота"""

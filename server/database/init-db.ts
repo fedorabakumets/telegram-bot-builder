@@ -619,6 +619,9 @@ export async function initializeDatabaseTables() {
       await executeWithRetry(db, sql`
         ALTER TABLE bot_tokens ADD COLUMN IF NOT EXISTS track_user_blocks INTEGER DEFAULT 1;
       `, "Миграция: отслеживание блокировок пользователей");
+      await executeWithRetry(db, sql`
+        ALTER TABLE bot_tokens ADD COLUMN IF NOT EXISTS track_group_membership INTEGER DEFAULT 1;
+      `, "Миграция: отслеживание добавления бота в группы");
     } catch (error) {
       console.log('⚠️ Ошибка миграции track_user_blocks:', error);
     }

@@ -17,7 +17,9 @@ const project = { nodes: [{ id: 'start', type: 'command_trigger', position: { x:
 
 /** Генерирует код с выбранным флагом. */
 function code(enabled: boolean): string {
-  return generatePythonCode(project, { projectId: 1, userDatabaseEnabled: true, trackUserBlocks: enabled });
+  return generatePythonCode(project, {
+    projectId: 1, userDatabaseEnabled: true, trackUserBlocks: enabled, trackGroupMembership: false,
+  });
 }
 
 const enabled = code(true);

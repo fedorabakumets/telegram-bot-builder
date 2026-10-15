@@ -42,6 +42,8 @@ export interface GenerationOptions {
   catchAllHandlers?: boolean;
   /** Генерировать обработчик блокировки/разблокировки через my_chat_member */
   trackUserBlocks?: boolean;
+  /** Генерировать обработчик добавления и исключения бота в группах */
+  trackGroupMembership?: boolean;
   /**
    * Генерировать обёртку защиты контента от копирования/пересылки.
    * По умолчанию false — большинство ботов защиту не используют.
@@ -106,6 +108,7 @@ export const DEFAULT_GENERATION_OPTIONS: Required<GenerationOptions> = {
   saveIncomingMedia: false,
   catchAllHandlers: true,
   trackUserBlocks: true,
+  trackGroupMembership: true,
   protectContent: false,
   contentCache: false,
   telegramFileIds: {},

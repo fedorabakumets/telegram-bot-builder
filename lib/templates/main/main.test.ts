@@ -232,9 +232,9 @@ describe('main.py.jinja2 шаблон', () => {
     });
 
     describe('Структура схемы', () => {
-      it('должен иметь 15 полей', () => {
+      it('должен иметь 16 полей', () => {
         const shape = mainParamsSchema.shape;
-        assert.strictEqual(Object.keys(shape).length, 15);
+        assert.strictEqual(Object.keys(shape).length, 16);
       });
 
       it('должен содержать ключевые поля схемы', () => {
@@ -247,6 +247,7 @@ describe('main.py.jinja2 шаблон', () => {
           'incomingMessageTriggerMiddlewares',
           'managedBotUpdatedTriggerMiddlewares',
           'trackUserBlocks',
+          'trackGroupMembership',
           'webhookUrl',
           'hasScheduleTrigger',
           'webhookPort',

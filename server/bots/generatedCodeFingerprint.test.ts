@@ -19,6 +19,7 @@ const baseInput: GeneratedCodeInput = {
   saveIncomingMedia: false,
   catchAllHandlers: true,
   trackUserBlocks: true,
+  trackGroupMembership: true,
   protectContent: false,
   contentCache: false,
   psqlBuiltinEnabled: false,

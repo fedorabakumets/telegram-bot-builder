@@ -17,6 +17,8 @@ export const BOT_RUNTIME_TABLES = [
   "message_activity_daily",
   "user_activity_daily",
   "schedule_state",
+  "bot_groups",
+  "chat_access",
 ] as const;
 
 /**
@@ -29,6 +31,8 @@ export const BOT_RUNTIME_DIRECT_TABLES = [
   "message_activity_daily",
   "user_activity_daily",
   "schedule_state",
+  "bot_groups",
+  "chat_access",
 ] as const;
 
 /**
@@ -48,6 +52,7 @@ export const BOT_RUNTIME_SEQUENCES = [
   "bot_table_columns_id_seq",
   "bot_table_rows_id_seq",
   "schedule_state_id_seq",
+  "bot_groups_id_seq",
 ] as const;
 
 /** Служебные таблицы: роли bot_runtime права не выдаются */
@@ -62,7 +67,6 @@ export const BOT_RUNTIME_DENIED_TABLES = [
   "bot_instances",
   "bot_launch_history",
   "bot_logs",
-  "bot_groups",
   "group_members",
   "bot_templates",
   "broadcasts",

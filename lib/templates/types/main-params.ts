@@ -29,6 +29,8 @@ export interface MainTemplateParams {
   webhookPort?: number | null;
   /** Отслеживать блокировки пользователей через my_chat_member */
   trackUserBlocks?: boolean;
+  /** Сохранять добавление и исключение бота в группах */
+  trackGroupMembership?: boolean;
   /** ID токена для формирования пути вебхука */
   tokenId?: number | null;
   /** ID проекта для формирования пути вебхука */

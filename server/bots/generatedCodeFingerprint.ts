@@ -15,6 +15,8 @@ export interface GeneratedCodeInput {
   saveIncomingMedia: boolean;
   catchAllHandlers: boolean;
   trackUserBlocks: boolean;
+  /** Слежение за добавлением бота в группы */
+  trackGroupMembership: boolean;
   protectContent: boolean;
   contentCache: boolean;
   /** Разрешён ли узлу psql_query режим builtin (PSQL_BUILTIN_ENABLED) */
@@ -51,6 +53,7 @@ export function buildGeneratedCodeFingerprint(input: GeneratedCodeInput): string
     saveIncomingMedia: input.saveIncomingMedia,
     catchAllHandlers: input.catchAllHandlers,
     trackUserBlocks: input.trackUserBlocks,
+    trackGroupMembership: input.trackGroupMembership,
     protectContent: input.protectContent,
     contentCache: input.contentCache,
     psqlBuiltinEnabled: input.psqlBuiltinEnabled,

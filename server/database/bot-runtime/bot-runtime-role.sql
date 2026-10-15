@@ -18,7 +18,9 @@ DECLARE
     'bot_messages',
     'message_activity_daily',
     'user_activity_daily',
-    'schedule_state'
+    'schedule_state',
+    'bot_groups',
+    'chat_access'
   ];
   project_tables text[] := ARRAY[
     'media_files',
@@ -38,7 +40,8 @@ DECLARE
     'bot_tables_id_seq',
     'bot_table_columns_id_seq',
     'bot_table_rows_id_seq',
-    'schedule_state_id_seq'
+    'schedule_state_id_seq',
+    'bot_groups_id_seq'
   ];
   both_cols text := $policy$
     current_user <> 'bot_runtime'
