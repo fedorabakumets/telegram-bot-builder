@@ -28,3 +28,5 @@
 |--------|-------|------|
 | [bot_projects.id](./bot_projects.md) | **[chat_access.project_id](./chat_access.md)** | Many to One |
 | [bot_tokens.id](./bot_tokens.md) | **[chat_access.token_id](./chat_access.md)** | Many to One |
+
+`status`: `available` — бот может писать, `kicked` — пользователь заблокировал бота, `error` — прочая ошибка или удалённый аккаунт. Удалённый аккаунт хранится как `error` здесь и как `bot_users.is_deleted = 1`. Задачи массовой сверки — в [chat_access_check_jobs](./chat_access_check_jobs.md).

@@ -2,7 +2,7 @@
 
 ## chat_access_check_jobs
 
-Фоновая сверка доступности личных диалогов одного бота.
+Фоновая сверка доступности личных диалогов одного бота. Одновременно для пары проект+токен может быть только одна задача в статусе `pending`, `running` или `cancelling`.
 
 ### Columns
 
@@ -26,6 +26,9 @@
 
 | Name | Type | Definition |
 |------|------|------------|
+| chat_access_check_jobs_pkey | PRIMARY KEY | (id) |
+| chat_access_check_jobs_status_check | CHECK | status IN ('pending', 'running', 'cancelling', 'cancelled', 'completed', 'failed') |
+| chat_access_check_jobs_one_active | UNIQUE INDEX | (project_id, token_id) WHERE status IN ('pending', 'running', 'cancelling') |
 | fk_project_id_bot_projects | FOREIGN KEY | (project_id) → bot_projects(id) |
 | fk_token_id_bot_tokens | FOREIGN KEY | (token_id) → bot_tokens(id) |
 
@@ -35,3 +38,5 @@
 |--------|-------|------|
 | [bot_projects.id](./bot_projects.md) | **[chat_access_check_jobs.project_id](./chat_access_check_jobs.md)** | Many to One |
 | [bot_tokens.id](./bot_tokens.md) | **[chat_access_check_jobs.token_id](./chat_access_check_jobs.md)** | Many to One |
+
+Перезапуск сервера не продолжает очередь: зависшую `running` задачу можно отменить через API, после этого она станет `cancelled`.

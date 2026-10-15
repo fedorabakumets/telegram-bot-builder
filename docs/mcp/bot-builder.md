@@ -879,6 +879,42 @@ REST API: [[api/project-tokens]]. Отдельный OpenAPI→MCP также с
 {"project_id": 12, "token_id": 9, "chat_id": "-1004465403276", "chat_type": "supergroup"}
 ```
 
+### Массовая проверка `db_start_chat_access_check`
+
+Запускает сверку всех личных диалогов одного бота. Обязательны `project_id` и
+`token_id`. Группы и каналы в эту проверку не входят: для них остаётся
+`db_check_chat_access`.
+
+Инструмент сразу возвращает карточку задачи и не ждёт окончания очереди. Пока
+проверка идёт, повторный запуск отвечает ошибкой «Проверка уже выполняется».
+Отмена через MCP недоступна. На несколько секунд у человека может появиться
+статус «печатает…»; сообщений бот не отправляет. Токен и сырые ответы Telegram
+не возвращаются.
+
+Если личных пользователей нет, задача сразу приходит со `status: "completed"`
+и нулевыми счётчиками.
+
+```json
+{"project_id": 12, "token_id": 9}
+```
+
+Ответ: `ok`, `project_id`, `token_id` и `job` с полями `job_id`, `status`
+(`pending`, `running`, `cancelling`, `cancelled`, `completed`, `failed`),
+`total_count`, `processed_count`, `available_count`, `kicked_count`,
+`deleted_count`, `error_count`, `started_at`, `finished_at`.
+
+### Статус проверки `db_get_chat_access_check`
+
+Читает активную или последнюю задачу того же бота. Те же `project_id` и
+`token_id`. Telegram не вызывается.
+
+После старта опрашивайте этот инструмент, пока `job.status` равен `pending`,
+`running` или `cancelling`. Если проверок ещё не было, `job` равен `null`.
+
+```json
+{"project_id": 12, "token_id": 9}
+```
+
 ### Чтение истории `db_get_dialog_messages`
 
 После `db_list_dialogs` передайте `project_id`, `token_id`, `chat_id` и `chat_type`

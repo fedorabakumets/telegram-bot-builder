@@ -5,6 +5,7 @@ import { searchDialogMessagesInDb } from './dialog-search-db.ts';
 import { listDialogsInDb } from './dialogs-db.ts';
 import { getDialogMessagesInDb } from './dialog-messages-db.ts';
 import { checkChatAccessInDb } from './chat-access-db.ts';
+import { getChatAccessCheckInDb, startChatAccessCheckInDb } from './chat-access-check-db.ts';
 
 /**
  * Регистрирует чтение известных панели диалогов выбранного бота.
@@ -27,6 +28,34 @@ export function registerDialogTools(server: McpServer): void {
     },
   }, async ({ project_id, ...options }) => {
     const value = await checkChatAccessInDb(project_id, options);
+    return { content: [{ type: 'text' as const, text: JSON.stringify(value) }],
+      ...('error' in value ? { isError: true } : {}) };
+  });
+  server.registerTool('db_start_chat_access_check', {
+    description: 'Запускает массовую проверку личных диалогов выбранного бота. Используется краткое действие «печатает» без сообщений. Группы и каналы не входят — для них db_check_chat_access. Пока проверка идёт, повторный запуск вернёт ошибку. Отмена недоступна. Токен и сырые ответы Telegram не возвращаются.',
+    annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
+    inputSchema: {
+      /** Проект с разрешённым доступом. */
+      project_id: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
+      /** Явно выбранный токен бота. */
+      token_id: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
+    },
+  }, async ({ project_id, ...options }) => {
+    const value = await startChatAccessCheckInDb(project_id, options);
+    return { content: [{ type: 'text' as const, text: JSON.stringify(value) }],
+      ...('error' in value ? { isError: true } : {}) };
+  });
+  server.registerTool('db_get_chat_access_check', {
+    description: 'Возвращает активную или последнюю массовую проверку доступов выбранного бота. Повторяйте, пока status равен pending, running или cancelling. job равен null, если проверок ещё не было. Не вызывает Telegram.',
+    annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+    inputSchema: {
+      /** Проект с разрешённым доступом. */
+      project_id: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
+      /** Явно выбранный токен бота. */
+      token_id: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
+    },
+  }, async ({ project_id, ...options }) => {
+    const value = await getChatAccessCheckInDb(project_id, options);
     return { content: [{ type: 'text' as const, text: JSON.stringify(value) }],
       ...('error' in value ? { isError: true } : {}) };
   });
