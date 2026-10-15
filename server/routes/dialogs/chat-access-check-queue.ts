@@ -15,9 +15,8 @@ import {
   updateChatAccessCheckJob,
 } from './chat-access-check-job-store';
 import { listPrivateUserIds } from './chat-access-check-audience';
+import { runWithChatAccessPace } from './chat-access-check-pace';
 
-/** Пауза между запросами: около 20 проверок в секунду. */
-const DELAY_MS = 50;
 /** Сколько раз повторять один чат при 429. */
 const RETRY_LIMIT = 4;
 
@@ -104,11 +103,9 @@ export async function runChatAccessCheckQueue(jobId: number, botToken: string): 
     const users = await listPrivateUserIds(job.projectId, job.tokenId);
     const counts = { ...job, totalCount: users.length };
     await updateChatAccessCheckJob(jobId, { totalCount: users.length });
-    for (const chatId of users) {
-      if (activeChatAccessChecks.get(jobId) === 'stopped') {
-        await finish(jobId, 'cancelled', counts);
-        return;
-      }
+    let halt: 'unauthorized' | null = null;
+    await runWithChatAccessPace(users, async (chatId) => {
+      if (halt || activeChatAccessChecks.get(jobId) === 'stopped') return;
       let kind: Awaited<ReturnType<typeof checkOne>> | 'error' = 'error';
       try {
         kind = await checkOne(botToken, job, chatId);
@@ -116,7 +113,7 @@ export async function runChatAccessCheckQueue(jobId: number, botToken: string): 
         kind = 'error';
       }
       if (kind === 'unauthorized') {
-        await finish(jobId, 'failed', counts);
+        halt = 'unauthorized';
         return;
       }
       counts.processedCount += 1;
@@ -124,19 +121,23 @@ export async function runChatAccessCheckQueue(jobId: number, botToken: string): 
       else if (kind === 'kicked') counts.kickedCount += 1;
       else if (kind === 'deleted') counts.deletedCount += 1;
       else counts.errorCount += 1;
-      if (activeChatAccessChecks.get(jobId) === 'stopped') {
-        await finish(jobId, 'cancelled', counts);
-        return;
-      }
+      const processed = counts.processedCount;
       void publishChatAccessCheckProgress({ ...counts, status: 'running' });
-      if (counts.processedCount % 10 === 0) {
+      if (processed % 10 === 0) {
         await updateChatAccessCheckJob(jobId, {
           totalCount: counts.totalCount, processedCount: counts.processedCount,
           availableCount: counts.availableCount, kickedCount: counts.kickedCount,
           deletedCount: counts.deletedCount, errorCount: counts.errorCount,
         });
       }
-      await sleep(DELAY_MS);
+    }, () => halt !== null || activeChatAccessChecks.get(jobId) === 'stopped');
+    if (halt === 'unauthorized') {
+      await finish(jobId, 'failed', counts);
+      return;
+    }
+    if (activeChatAccessChecks.get(jobId) === 'stopped') {
+      await finish(jobId, 'cancelled', counts);
+      return;
     }
     await finish(jobId, 'completed', counts);
   } catch {

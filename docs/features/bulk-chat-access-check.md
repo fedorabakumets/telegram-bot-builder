@@ -37,7 +37,7 @@
 | GET | `/api/projects/:projectId/chat-access-checks/active?tokenId=` | `{ job }` — активная или последняя |
 | POST | `/api/projects/:projectId/chat-access-checks/:jobId/cancel` | `{ job }` |
 
-`tokenId` передаётся в JSON-теле или query. Скорость очереди — около 20 проверок в секунду, при `429` запрос повторяется.
+`tokenId` передаётся в JSON-теле или query. Одновременно идёт до 8 проверок, новые запросы стартуют не чаще 25 раз в секунду. При `429` запрос повторяется.
 
 ## Ограничения
 

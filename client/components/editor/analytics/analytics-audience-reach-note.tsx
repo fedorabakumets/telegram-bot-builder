@@ -75,7 +75,6 @@ export function AnalyticsAudienceReachNote({
         channelUsers={channelUsers}
         usersInSeveralPlaces={usersInSeveralPlaces}
       />
-      {unavailable > 0 && <p>В рассылки не входят</p>}
     </div>
   );
 }

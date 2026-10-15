@@ -18,17 +18,18 @@ interface AnalyticsAudiencePlacesNoteProps {
 }
 
 /**
- * Форма слова для фразы о людях в нескольких местах.
- * 2–4, 22–24 — «человека»; 1, 5–20, 11–14, 21, 25 — «человек».
- * @param count - Число людей
- * @returns «человек» или «человека»
+ * Фраза, что одни и те же люди писали и лично, и в группе.
+ * Для одного человека глагол «писал», для остальных «писали».
+ * @param count - Сколько таких людей
+ * @returns Готовая фраза
  */
-function overlapPeopleWord(count: number): string {
+function overlapPhrase(count: number): string {
   const abs = Math.abs(Math.trunc(count));
   const mod10 = abs % 10;
   const mod100 = abs % 100;
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return 'человека';
-  return 'человек';
+  const person = mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14) ? 'человека' : 'человек';
+  const verb = mod10 === 1 && mod100 !== 11 ? 'писал' : 'писали';
+  return `${abs} ${person} ${verb} и лично, и в группе`;
 }
 
 /**
@@ -70,10 +71,8 @@ export function AnalyticsAudiencePlacesNote({
           </span>
         ))}
       </p>
-      {overlap > 0 && (
-        <p className="text-muted-foreground">
-          {overlap} {overlapPeopleWord(overlap)} писали в нескольких местах
-        </p>
+      {overlap > 0 && channelCount <= 0 && (
+        <p className="text-muted-foreground">{overlapPhrase(overlap)}</p>
       )}
     </div>
   );
