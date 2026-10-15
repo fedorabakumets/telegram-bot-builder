@@ -17037,6 +17037,63 @@
         }
       }
     },
+    "/api/projects/{projectId}/chat-access-checks": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{projectId}/chat-access-checks",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено — настройка в /admin"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/chat-access-checks/{jobId}/cancel": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{projectId}/chat-access-checks/{jobId}/cancel",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено — настройка в /admin"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/chat-access-checks/active": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/{projectId}/chat-access-checks/active",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено — настройка в /admin"
+          }
+        }
+      }
+    },
     "/api/projects/{projectId}/collaborators": {
       "get": {
         "tags": [

@@ -1,6 +1,6 @@
 # projects
 
-Эндпоинтов: **20**
+Эндпоинтов: **23**
 
 ### `GET` /api/projects
 
@@ -859,6 +859,48 @@ curl -s -X POST http://localhost:5000/api/projects/42/unarchive -b cookies.txt
   "success": true
 }
 ```
+
+### `POST` /api/projects/{projectId}/chat-access-checks
+
+POST /api/projects/{projectId}/chat-access-checks
+
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Успешный ответ |
+| 401 | Требуется авторизация (сессия или Bearer PAT) |
+| 503 | Приложение не настроено — настройка в /admin |
+
+### `POST` /api/projects/{projectId}/chat-access-checks/{jobId}/cancel
+
+POST /api/projects/{projectId}/chat-access-checks/{jobId}/cancel
+
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Успешный ответ |
+| 401 | Требуется авторизация (сессия или Bearer PAT) |
+| 503 | Приложение не настроено — настройка в /admin |
+
+### `GET` /api/projects/{projectId}/chat-access-checks/active
+
+GET /api/projects/{projectId}/chat-access-checks/active
+
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Успешный ответ |
+| 401 | Требуется авторизация (сессия или Bearer PAT) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `GET` /api/projects/{projectId}/collaborators
 
