@@ -6,6 +6,8 @@
 import type { NextFunction, Request, Response } from "express";
 import { isAdminAuthenticated } from "./admin-auth-middleware";
 import { ADMIN_DOCS_VIEWER_PAGES } from "./admin-docs-viewer-pages";
+import { resolveAdminApiKey } from "./resolve-admin-key";
+import { setAdminCookie } from "./admin-session";
 
 /** Адреса панели, которые рисует приложение в браузере */
 export const ADMIN_CLIENT_PAGES = [
@@ -46,5 +48,7 @@ export function passAdminPageToClient(
     res.redirect(302, "/admin/login");
     return;
   }
+  const key = resolveAdminApiKey();
+  if (key) setAdminCookie(res, key, req.secure);
   next();
 }
