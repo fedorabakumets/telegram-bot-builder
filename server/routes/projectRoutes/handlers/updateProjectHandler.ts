@@ -45,7 +45,12 @@ export async function updateProjectHandler(req: Request, res: Response): Promise
             : null;
         if (req.isAdminRequest && expectedUpdatedAt !== null && !Number.isNaN(expectedUpdatedAt)) {
             const currentProject = await storage.getBotProject(projectId);
-            if (currentProject?.updatedAt && currentProject.updatedAt.getTime() !== expectedUpdatedAt) {
+            const currentUpdatedAt = currentProject?.updatedAt instanceof Date
+                ? currentProject.updatedAt.getTime()
+                : currentProject?.updatedAt
+                    ? Date.parse(String(currentProject.updatedAt))
+                    : null;
+            if (currentUpdatedAt !== null && !Number.isNaN(currentUpdatedAt) && currentUpdatedAt !== expectedUpdatedAt) {
                 res.status(409).json({
                     message: "Проект изменился в другой сессии. Обновите проект перед сохранением.",
                     code: "PROJECT_CONFLICT",
