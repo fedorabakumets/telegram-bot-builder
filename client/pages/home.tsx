@@ -1,9 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
@@ -11,7 +9,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Plus, Bot, Edit, Trash2, Calendar, User, Download } from 'lucide-react';
+import { Plus, Search, Grid2X2, List, SlidersHorizontal } from 'lucide-react';
 import { ThemeToggle } from '@/components/editor/header/components/theme-toggle';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/queryClient';
@@ -20,6 +18,8 @@ import { SheetsManager } from '@/utils/sheets/sheets-manager';
 import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
 import { useTelegramLogin } from '@/components/editor/header/hooks/use-telegram-login';
 import { isGuest } from '@/types/telegram-user';
+import { AccountSidebar } from '@/components/projects/account-sidebar';
+import { ProjectCard } from '@/components/projects/project-card';
 
 const createProjectSchema = z.object({
   name: z.string().min(1, 'Название проекта обязательно'),
@@ -90,9 +90,6 @@ export default function Home() {
       return;
     }
 
-    if (projects.length === 0 && archivedProjects.length === 0) {
-      setLocation('/');
-    }
   }, [sessionReady, isLoading, isGuestUser, projects.length, archivedProjects, setLocation]);
 
   // Создание нового проекта
@@ -210,6 +207,21 @@ export default function Home() {
     return { count: 1, names: ['Главный лист'] };
   };
 
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortMode, setSortMode] = useState<'recent' | 'name'>('recent');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
+
+  /** Отбирает и сортирует проекты для текущего представления */
+  const visibleProjects = useMemo(() => {
+    const query = searchQuery.trim().toLocaleLowerCase('ru-RU');
+    return [...projects]
+      .filter((project) => !query || project.name.toLocaleLowerCase('ru-RU').includes(query)
+        || project.description?.toLocaleLowerCase('ru-RU').includes(query))
+      .sort((a, b) => sortMode === 'name'
+        ? a.name.localeCompare(b.name, 'ru')
+        : new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime());
+  }, [projects, searchQuery, sortMode]);
+
 
   if (isAuthLoading || isLoading) {
     return (
@@ -240,48 +252,22 @@ export default function Home() {
     );
   }
   return (
-    <div className="min-h-screen bg-background">
-      {/* Заголовок */}
-      <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <i className="fab fa-telegram-plane text-primary-foreground text-lg"></i>
-            </div>
-            <div>
-              <h1 className="text-lg font-semibold text-foreground">BotCraft Studio</h1>
-              <p className="text-xs text-muted-foreground">Конструктор Telegram ботов</p>
-            </div>
-          </div>
-          
-          <div className="flex items-center space-x-4">
-            <Link href="/templates">
-              <Button variant="outline" size="sm">
-                <Bot className="h-4 w-4 mr-2" />
-                Сценарии
-              </Button>
-            </Link>
-            <ThemeToggle />
-          </div>
-        </div>
-      </header>
-
-      {/* Основной контент */}
-      <main className="container py-8">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight">Мои проекты</h2>
-            <p className="text-muted-foreground">
-              Управляйте своими Telegram ботами
-            </p>
-          </div>
-          
-          <div className="flex space-x-2">
+    <div className="flex min-h-screen bg-background">
+      <AccountSidebar />
+      <div className="min-w-0 flex-1">
+        <header className="flex h-16 items-center justify-between border-b border-border/60 px-5 lg:px-8">
+          <div><p className="text-sm font-semibold">BotCraft Studio</p><p className="text-xs text-muted-foreground">Рабочее пространство аккаунта</p></div>
+          <div className="hidden items-center gap-2 sm:flex"><Link href="/templates"><Button variant="ghost" size="sm">Шаблоны</Button></Link><ThemeToggle /></div>
+        </header>
+        <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-10">
+          <div className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <div><p className="mb-2 text-sm font-medium text-primary">Рабочее пространство</p><h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Проекты</h1><p className="mt-2 text-muted-foreground">Создавайте и запускайте Telegram-ботов без программирования</p></div>
+            <div className="flex shrink-0">
             <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
               <DialogTrigger asChild>
                 <Button>
                   <Plus className="h-4 w-4 mr-2" />
-                  Новый проект
+                  Новый бот
                 </Button>
               </DialogTrigger>
               <DialogContent>
@@ -331,98 +317,22 @@ export default function Home() {
                 </Form>
               </DialogContent>
             </Dialog>
+            </div>
           </div>
-        </div>
-
-        {/* Список проектов */}
-        {projects.length === 0 ? null : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {projects.map((project) => (
-              <Card key={project.id} className="group hover:shadow-lg transition-shadow">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <CardTitle className="text-lg">{project.name}</CardTitle>
-                      <CardDescription className="mt-1">
-                        {project.description || 'Без описания'}
-                      </CardDescription>
-                    </div>
-                    <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => handleDeleteProject(project)}
-                        className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="space-y-3">
-                    {/* Статистика */}
-                    <div className="space-y-2">
-                      <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                        <div className="flex items-center">
-                          <User className="h-4 w-4 mr-1" />
-                          {getNodeCount(project)} узлов
-                        </div>
-                        <div className="flex items-center">
-                          <Calendar className="h-4 w-4 mr-1" />
-                          {formatDate(project.updatedAt)}
-                        </div>
-                      </div>
-                      
-                      {/* Информация о листах */}
-                      {(() => {
-                        const sheetsInfo = getSheetsInfo(project);
-                        return (
-                          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                            <div className="flex items-center">
-                              <Bot className="h-4 w-4 mr-1" />
-                              {sheetsInfo.count} {sheetsInfo.count === 1 ? 'лист' : sheetsInfo.count < 5 ? 'листа' : 'листов'}:
-                            </div>
-                            <div className="flex flex-wrap gap-1">
-                              {sheetsInfo.names.slice(0, 3).map((name: string, index: number) => (
-                                <Badge key={index} variant="secondary" className="text-xs px-2 py-0.5">
-                                  {name}
-                                </Badge>
-                              ))}
-                              {sheetsInfo.names.length > 3 && (
-                                <Badge variant="outline" className="text-xs px-2 py-0.5">
-                                  +{sheetsInfo.names.length - 3}
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })()}
-                    </div>
-
-
-
-                    {/* Действия */}
-                    <div className="flex space-x-2">
-                      <Link href={`/editor/${project.id}`} className="flex-1">
-                        <Button className="w-full">
-                          <Edit className="h-4 w-4 mr-2" />
-                          Редактировать
-                        </Button>
-                      </Link>
-                      <Link href={`/editor/${project.id}?tab=export`}>
-                        <Button variant="outline" size="sm">
-                          <Download className="h-4 w-4" />
-                        </Button>
-                      </Link>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+          <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-border/60 bg-card/40 p-3 sm:flex-row sm:items-center">
+            <div className="relative min-w-0 flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="Поиск проектов..." className="h-10 border-0 bg-background/70 pl-9 shadow-none" /></div>
+            <div className="flex items-center gap-1"><Button variant="ghost" size="sm" onClick={() => setSortMode(sortMode === 'recent' ? 'name' : 'recent')}><SlidersHorizontal className="mr-2 h-4 w-4" />{sortMode === 'recent' ? 'Недавно изменённые' : 'По названию'}</Button><Button variant={viewMode === 'list' ? 'secondary' : 'ghost'} size="icon" onClick={() => setViewMode('list')} title="Список"><List className="h-4 w-4" /></Button><Button variant={viewMode === 'grid' ? 'secondary' : 'ghost'} size="icon" onClick={() => setViewMode('grid')} title="Сетка"><Grid2X2 className="h-4 w-4" /></Button></div>
           </div>
-        )}
-      </main>
+          <div className="mb-4 flex items-center justify-between"><p className="text-sm text-muted-foreground">{visibleProjects.length} {visibleProjects.length === 1 ? 'проект' : 'проектов'}</p><p className="text-xs text-muted-foreground">Все проекты</p></div>
+          {visibleProjects.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-border/70 bg-card/30 px-6 py-16 text-center"><div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary"><Plus className="h-6 w-6" /></div><h2 className="text-lg font-semibold">{searchQuery ? 'Проекты не найдены' : 'Создайте первого бота'}</h2><p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">{searchQuery ? 'Попробуйте изменить запрос поиска.' : 'Соберите сценарий визуально и запустите его в Telegram.'}</p>{!searchQuery && <Button className="mt-5" onClick={() => setIsCreateDialogOpen(true)}><Plus className="mr-2 h-4 w-4" />Создать бота</Button>}</div>
+          ) : (
+            <div className={viewMode === 'grid' ? 'grid gap-4 lg:grid-cols-2' : 'space-y-3'}>
+              {visibleProjects.map((project) => { const sheetsInfo = getSheetsInfo(project); return <ProjectCard key={project.id} project={project} nodeCount={getNodeCount(project)} sheetsCount={sheetsInfo.count} updatedAt={formatDate(project.updatedAt)} onDelete={handleDeleteProject} view={viewMode} />; })}
+            </div>
+          )}
+        </main>
+      </div>
     </div>
   );
 }

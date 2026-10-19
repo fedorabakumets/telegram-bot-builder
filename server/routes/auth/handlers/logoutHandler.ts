@@ -6,6 +6,7 @@
 import type { Request, Response } from "express";
 import { destroySession } from "../utils/sessionUtils";
 import { shouldUseSecureSessionCookie } from "../../../utils/resolveSessionCookie";
+import { removeSession } from "../../../auth/session-registry";
 
 /** Имя cookie express-session по умолчанию */
 const SESSION_COOKIE_NAME = "connect.sid";
@@ -19,6 +20,7 @@ const SESSION_COOKIE_NAME = "connect.sid";
  */
 export async function handleLogout(req: Request, res: Response): Promise<void> {
     try {
+        await removeSession(req);
         await destroySession(req);
 
         const secure = shouldUseSecureSessionCookie();

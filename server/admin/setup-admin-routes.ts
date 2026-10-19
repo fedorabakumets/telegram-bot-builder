@@ -43,6 +43,10 @@ import {
 import { isAdminEnabled, resolveAdminApiKey } from "./resolve-admin-key";
 import { setupAdminSupportRoutes } from "../support/setup-support-routes";
 import { setupRuntimeSettingsRoutes } from "./setup-runtime-settings-routes";
+import { handleGetAdminProjectAudit } from './handlers/project-audit-handlers';
+import { handleGetAdminBotTokenSecret } from './handlers/project-secret-handlers';
+import { handleGetAdminProject } from './handlers/admin-project-handlers';
+import { handleAdminRevokeUserSession, handleAdminRevokeUserSessions } from './handlers/platform-user-sessions-handlers';
 
 /** Префикс защищённых admin-маршрутов */
 export const ADMIN_PATHS_PREFIX = "/admin";
@@ -96,6 +100,15 @@ export function setupAdminRoutes(app: Express): void {
 
   app.get("/admin/api/users", requireAdminAuth, handleGetAdminPlatformUsers);
   app.get("/admin/api/users/:id", requireAdminAuth, handleGetAdminPlatformUser);
+  app.get("/admin/api/projects/:id/audit", requireAdminAuth, handleGetAdminProjectAudit);
+  app.get("/admin/api/projects/:id", requireAdminAuth, handleGetAdminProject);
+  app.get(
+    "/admin/api/projects/:id/secrets/bot-token/:tokenId",
+    requireAdminAuth,
+    handleGetAdminBotTokenSecret,
+  );
+  app.delete("/admin/api/users/:id/sessions/:sessionId", requireAdminAuth, handleAdminRevokeUserSession);
+  app.delete("/admin/api/users/:id/sessions", requireAdminAuth, handleAdminRevokeUserSessions);
 
   app.get("/admin/api/app-settings", requireAdminAuth, handleGetAdminAppSettings);
   app.put("/admin/api/app-settings", requireAdminAuth, handlePutAdminAppSettings);
@@ -136,6 +149,7 @@ export function setupAdminRoutes(app: Express): void {
   app.get("/admin/schema/:tableName", passAdminPageToClient);
   app.get("/admin/api-docs/:slug", passAdminPageToClient);
   app.get("/admin/users/:id", passAdminPageToClient);
+  app.get("/admin/projects/:id", passAdminPageToClient);
 
   setupRuntimeSettingsRoutes(app);
   setupAdminSupportRoutes(app);

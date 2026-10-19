@@ -1164,7 +1164,7 @@ export interface IStorage {
    * @param authorKind - Тип автора снимка: 'agent' — ИИ-агент (MCP), 'user'/null — обычный пользователь
    * @returns Созданная версия проекта
    */
-  createProjectVersion(projectId: number, snapshot: unknown, label?: string, authorId?: number | null, kind?: 'auto' | 'manual', authorKind?: 'user' | 'agent' | null): Promise<ProjectVersion>;
+  createProjectVersion(projectId: number, snapshot: unknown, label?: string, authorId?: number | null, kind?: 'auto' | 'manual', authorKind?: 'user' | 'agent' | 'admin' | null): Promise<ProjectVersion>;
 
   /**
    * Получить список версий проекта, отсортированный по дате создания (DESC)

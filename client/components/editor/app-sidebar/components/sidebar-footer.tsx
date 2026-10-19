@@ -3,7 +3,8 @@
  */
 
 import * as React from 'react';
-import { CreditCard, LogOut, MessageCircle, PanelTop, RefreshCw, Users, Workflow } from 'lucide-react';
+import { CreditCard, LogOut, MessageCircle, PanelTop, RefreshCw, UserRound, Users, Workflow } from 'lucide-react';
+import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -42,11 +43,13 @@ interface SidebarFooterProps {
  * @returns JSX элемент с профилем и кнопкой шапки
  */
 export function SidebarFooter({ isCollapsed, headerVisible, onToggleHeader }: SidebarFooterProps) {
+  const [location] = useLocation();
   const { user, logout } = useTelegramAuth();
   const { handleTelegramLogin } = useTelegramLogin();
   const [isLimitsOpen, setIsLimitsOpen] = React.useState(false);
 
   const isAuthed = user && isTelegramUser(user);
+  const isProfileActive = location === '/profile';
 
   return (
     <div className={cn('flex flex-col gap-2', isCollapsed && 'items-center')}>
@@ -66,6 +69,19 @@ export function SidebarFooter({ isCollapsed, headerVisible, onToggleHeader }: Si
           <PanelTop className="h-4 w-4" />
         </Button>
       )}
+
+      <Link
+        href="/profile"
+        title="Мой профиль"
+        className={cn(
+          'flex h-9 items-center gap-2 rounded-lg border border-transparent px-2 text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground',
+          isProfileActive && 'border-primary/20 bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-md shadow-blue-500/20 hover:from-blue-700 hover:to-blue-600 hover:text-white',
+          isCollapsed ? 'w-9 justify-center px-0' : 'w-full',
+        )}
+      >
+        <UserRound className="h-4 w-4 shrink-0" />
+        {!isCollapsed && <span className="text-sm">Мой профиль</span>}
+      </Link>
 
       {isAuthed ? (
         <>
@@ -123,7 +139,7 @@ export function SidebarFooter({ isCollapsed, headerVisible, onToggleHeader }: Si
               </div>
             </div>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onSelect={() => setIsLimitsOpen(true)}>
+            <DropdownMenuItem className="hidden" onSelect={() => setIsLimitsOpen(true)}>
               <CreditCard className="mr-2 h-4 w-4" />
               Тариф и лимиты
             </DropdownMenuItem>
@@ -139,10 +155,20 @@ export function SidebarFooter({ isCollapsed, headerVisible, onToggleHeader }: Si
           </DropdownMenuContent>
           </DropdownMenu>
           {isCollapsed && (
-            <div className="flex justify-center pt-0.5" aria-label="Текущий тариф Free">
+            <div className="flex flex-col items-center gap-1 pt-0.5">
               <span className="rounded px-1 py-0.5 text-[9px] font-semibold leading-none text-blue-500/80 ring-1 ring-blue-500/20">
                 Free
               </span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-muted-foreground hover:text-primary"
+                onClick={handleTelegramLogin}
+                title="Сменить аккаунт"
+                aria-label="Сменить аккаунт"
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+              </Button>
             </div>
           )}
           <Dialog open={isLimitsOpen} onOpenChange={setIsLimitsOpen}>

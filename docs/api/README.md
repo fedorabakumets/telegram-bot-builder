@@ -10,9 +10,10 @@ REST API визуального конструктора Telegram-ботов. А
 
 | Тег | Эндпоинтов |
 |-----|------------|
-| [admin](./admin.md) | 24 |
+| [Диалоги](./Диалоги.md) | 3 |
+| [admin](./admin.md) | 27 |
 | [agent-tokens](./agent-tokens.md) | 3 |
-| [auth](./auth.md) | 8 |
+| [auth](./auth.md) | 11 |
 | [bot](./bot.md) | 24 |
 | [bot-logs](./bot-logs.md) | 1 |
 | [bots](./bots.md) | 1 |
@@ -30,7 +31,7 @@ REST API визуального конструктора Telegram-ботов. А
 | [project-messages](./project-messages.md) | 4 |
 | [project-tables](./project-tables.md) | 27 |
 | [project-tokens](./project-tokens.md) | 30 |
-| [project-users](./project-users.md) | 11 |
+| [project-users](./project-users.md) | 12 |
 | [project-versions](./project-versions.md) | 6 |
 | [projects](./projects.md) | 23 |
 | [server](./server.md) | 1 |
@@ -41,7 +42,6 @@ REST API визуального конструктора Telegram-ботов. А
 | [tokens](./tokens.md) | 2 |
 | [webhook](./webhook.md) | 1 |
 | [workers](./workers.md) | 1 |
-| [Диалоги](./Диалоги.md) | 3 |
 
 ## Авторизация
 

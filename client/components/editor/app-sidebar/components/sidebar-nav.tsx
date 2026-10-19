@@ -11,8 +11,8 @@ import type { HeaderTab } from '../types';
  * Пропсы компонента SidebarNav
  */
 interface SidebarNavProps {
-  /** Текущая активная вкладка */
-  currentTab: HeaderTab;
+  /** Текущая активная вкладка, если открыт раздел проекта */
+  currentTab?: HeaderTab;
   /** Обработчик смены вкладки */
   onTabChange: (tab: HeaderTab) => void;
   /** Свёрнут ли сайдбар */

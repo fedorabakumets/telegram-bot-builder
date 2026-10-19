@@ -57,7 +57,7 @@ export const VersionPruneRequestSchema = z
     /** Фильтр по виду версии */
     kind: z.enum(["auto", "manual"]).optional().openapi({ example: "auto" }),
     /** Фильтр по типу автора */
-    authorKind: z.enum(["agent", "user"]).optional().openapi({ example: "agent" }),
+      authorKind: z.enum(["agent", "user", "admin"]).optional().openapi({ example: "agent" }),
   })
   .openapi("VersionPruneRequest");
 

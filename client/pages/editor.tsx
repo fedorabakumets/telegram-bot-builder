@@ -100,6 +100,7 @@ import {
   findPayButtonOnKeyboard,
 } from '@/components/editor/properties/utils/invoice-pay-connection';
 import { applyTemplateLayout } from '@/utils/hierarchical-layout';
+import { AdminProjectBanner } from '@/components/admin/admin-project-banner';
 
 /**
  * Компонент редактора бота
@@ -113,12 +114,15 @@ export default function Editor() {
   // Используем useLocation для получения текущего пути
   const [location, setLocation] = useLocation();
 
+  /** Признак открытия проекта из административной панели */
+  const isAdminEditor = location.startsWith('/admin/projects/');
+
   /**
    * ID проекта, извлеченный из URL
    * @type {number|null}
    */
   const projectId = (() => {
-    const match = location.match(/^\/editor\/(\d+)/) || location.match(/^\/projects\/(\d+)/);
+    const match = location.match(/^\/admin\/projects\/(\d+)/) || location.match(/^\/editor\/(\d+)/) || location.match(/^\/projects\/(\d+)/);
     return match ? parseInt(match[1]) : null;
   })();
 
@@ -386,6 +390,7 @@ export default function Editor() {
         restartOnUpdate: params.restartOnUpdate || false,
         // Передаём новое имя если оно было указано при вызове мутации
         ...(params.newName ? { name: params.newName } : {}),
+        ...(isAdminEditor && activeProject.updatedAt ? { expectedUpdatedAt: activeProject.updatedAt } : {}),
         // Непустая заметка превращает снимок в постоянный ручной чекпоинт
         ...(params.commitMessage ? { commitMessage: params.commitMessage } : {}),
       });
@@ -2136,6 +2141,7 @@ export default function Editor() {
 
   return (
     <>
+      {isAdminEditor && <AdminProjectBanner projectId={projectId} onBack={() => setLocation('/admin/users')} />}
       {useFlexibleLayout ? (
         renderFlexibleLayoutContent()
       ) : (

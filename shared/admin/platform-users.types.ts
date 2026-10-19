@@ -75,6 +75,22 @@ export interface PlatformUserProfile {
   updatedAt: string | null;
 }
 
+/** Активная сессия аккаунта для просмотра в админке */
+export interface PlatformUserSession {
+  /** Публичный идентификатор сессии */
+  id: string;
+  /** Браузер и операционная система */
+  device: string;
+  /** Тип устройства */
+  kind: 'desktop' | 'mobile';
+  /** IP-адрес последнего запроса */
+  ip: string | null;
+  /** Время создания сессии */
+  createdAt: string;
+  /** Время последней активности */
+  lastActive: string;
+}
+
 /** Ответ GET /admin/api/users/:id */
 export interface PlatformUserDetailResponse {
   /** Профиль аккаунта */
@@ -83,4 +99,6 @@ export interface PlatformUserDetailResponse {
   ownedProjects: PlatformUserProjectSummary[];
   /** Проекты, где участник */
   sharedProjects: PlatformUserSharedProjectSummary[];
+  /** Активные сессии аккаунта */
+  sessions: PlatformUserSession[];
 }

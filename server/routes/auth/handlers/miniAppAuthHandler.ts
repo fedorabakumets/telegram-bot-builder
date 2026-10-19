@@ -8,6 +8,7 @@ import { storage } from "../../../storages/storage";
 import { regenerateSession, saveSession } from "../utils/sessionUtils";
 import { getSetting } from "../../../services/app-settings.service";
 import { verifyMiniAppInitData } from "../utils/verifyMiniAppInitData";
+import { registerSession, removeSession } from "../../../auth/session-registry";
 
 /**
  * Хендлер авторизации через Telegram Mini App initData.
@@ -73,6 +74,7 @@ export async function handleMiniAppAuth(req: Request, res: Response): Promise<vo
     } else {
       switched = true;
       const oldSessionId = req.session.id;
+      await removeSession(req);
       await regenerateSession(req);
       req.session.telegramUser = userData;
       await saveSession(req);
@@ -80,6 +82,7 @@ export async function handleMiniAppAuth(req: Request, res: Response): Promise<vo
         await storage.migrateGuestProjects(oldSessionId, userData.id);
       }
     }
+    await registerSession(req, userData);
 
     console.log(
       `✅ Mini App авторизация: ${tgUser.first_name} (@${tgUser.username}), ID: ${userData.id}` +

@@ -42,6 +42,7 @@ import { registerAdminAppSettingsPaths } from "./paths/admin-app-settings-paths"
 import { registerAdminRuntimeSettingsPaths } from "./paths/admin-runtime-settings-paths";
 import { registerAdminBotFoldersCleanupPaths } from "./paths/admin-bot-folders-cleanup-paths";
 import { registerAdminUsersPaths } from "./paths/admin-users-paths";
+import { registerAdminProjectAuditPaths } from "./paths/admin-project-audit-paths";
 import { registerAdminSupportListPaths } from "./paths/admin-support-list-paths";
 import { registerAdminSupportThreadPaths } from "./paths/admin-support-thread-paths";
 import { registerAdminSupportThreadStatusPaths } from "./paths/admin-support-thread-status-paths";
@@ -127,7 +128,7 @@ documentedRegistry.registerComponent("securitySchemes", "adminCookie", {
   name: "admin_auth",
   description:
     "Admin cookie после POST /admin/api/login (ключ ADMIN_API_KEY). " +
-    "Path=/admin, httpOnly, 7 дней. User connect.sid / Bearer PAT не подходят.",
+    "Path=/, httpOnly, 7 дней. User connect.sid / Bearer PAT не подходят.",
 });
 
 /**
@@ -200,6 +201,7 @@ registerAdminAppSettingsPaths(documentedRegistry);
 registerAdminRuntimeSettingsPaths(documentedRegistry);
 registerAdminVersionPaths(documentedRegistry);
 registerAdminUsersPaths(documentedRegistry);
+registerAdminProjectAuditPaths(documentedRegistry);
 registerAdminSupportListPaths(documentedRegistry);
 registerAdminSupportThreadPaths(documentedRegistry);
 registerAdminSupportThreadStatusPaths(documentedRegistry);

@@ -17,6 +17,7 @@ import type {
 import { asc, eq } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { db } from "../../database/db";
+import { listSessions } from "../../auth/session-registry";
 
 /** Псевдоним таблицы владельца проекта */
 const ownerUser = alias(telegramUsers, "owner_user");
@@ -135,5 +136,10 @@ export async function queryPlatformUserDetail(
     ),
   }));
 
-  return { user, ownedProjects, sharedProjects };
+  const sessions = (await listSessions(userId, "")).map(({ sessionId: _sessionId, isCurrent: _isCurrent, ...session }) => ({
+    ...session,
+    ip: session.ip ?? null,
+  }));
+
+  return { user, ownedProjects, sharedProjects, sessions };
 }

@@ -20,6 +20,10 @@ declare global {
       agentScopes?: string;
       /** Действующий telegram id для `/api/bot/*` (после resolveBotApiActor) */
       botActorId?: number;
+      /** Признак запроса из административной панели */
+      isAdminRequest?: boolean;
+      /** Владелец проекта для административного запроса */
+      adminProjectOwnerId?: number | null;
     }
   }
 }
@@ -65,6 +69,7 @@ export function getOwnerIdFromRequest(req: Request): number | null {
   if (req.user) {
     return req.user.id;
   }
+  if (req.isAdminRequest && req.adminProjectOwnerId != null) return req.adminProjectOwnerId;
   return null;
 }
 

@@ -7,6 +7,12 @@
 
 /** Тип клиента ioredis (используется для типизации без прямого импорта) */
 type RedisClient = {
+  get(key: string): Promise<string | null>;
+  set(key: string, value: string, ...args: (string | number)[]): Promise<unknown>;
+  sadd(key: string, ...members: string[]): Promise<number>;
+  smembers(key: string): Promise<string[]>;
+  srem(key: string, ...members: string[]): Promise<number>;
+  expire(key: string, seconds: number): Promise<number>;
   publish(channel: string, message: string): Promise<number>;
   subscribe(...channels: string[]): Promise<unknown>;
   psubscribe(...patterns: string[]): Promise<unknown>;

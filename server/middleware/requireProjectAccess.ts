@@ -46,6 +46,17 @@ export async function requireProjectAccess(
         return;
     }
 
+    if (req.isAdminRequest) {
+        const project = await storage.getBotProject(projectId);
+        if (!project) {
+            res.status(404).json({ message: "Проект не найден" });
+            return;
+        }
+        req.adminProjectOwnerId = project.ownerId ?? null;
+        next();
+        return;
+    }
+
     const ownerId = getOwnerIdFromRequest(req);
     if (ownerId === null) {
         res.status(403).json({ message: "Нет прав доступа к проекту" });

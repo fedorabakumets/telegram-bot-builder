@@ -10,6 +10,7 @@
  */
 
 import type { Request, Response, NextFunction } from "express";
+import { isAdminAuthenticated } from "../admin/admin-auth-middleware";
 
 /**
  * Публичные префиксы (без /api — Express обрезает префикс при app.use("/api", ...)).
@@ -50,6 +51,12 @@ export function isPublicApiPath(path: string): boolean {
  */
 export function requireApiAuth(req: Request, res: Response, next: NextFunction): void {
   if (isPublicApiPath(req.path)) {
+    next();
+    return;
+  }
+
+  if (isAdminAuthenticated(req)) {
+    req.isAdminRequest = true;
     next();
     return;
   }

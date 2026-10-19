@@ -86,6 +86,8 @@ import { enrichMediaFilesWithTokens } from "./media/enrich-media-files-with-toke
 import { broadcastProjectEvent, emitTokenUpdated } from "../terminal";
 import { getRequestTokenId } from "./utils/resolve-request-token";
 import { getTelegramProxyAgent } from "../utils/telegram-proxy";
+import { sessionActivityMiddleware } from "../auth/session-registry";
+import { attachAdminAudit } from "../admin/admin-audit";
 import { setupSwagger } from "../swagger/setup-swagger";
 import {
   CHART_WINDOW_INTERVAL,
@@ -465,6 +467,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // ВАЖНО: должен быть подключен ПОСЛЕ session middleware
   app.use("/api", setupGuard);
   app.use("/api", authMiddleware);
+  app.use("/api", sessionActivityMiddleware);
 
   // Резолвер личности по персональному токену агента (PAT) — Authorization: Bearer.
   // Дополняет личность, если сессии нет (MCP/CLI). Не блокирует запрос.
@@ -473,6 +476,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // Deny-by-default: все /api закрыты, кроме публичного allowlist.
   // Подключается ПОСЛЕ identifyUser/identifyAgent — личность уже установлена.
   app.use("/api", requireApiAuth);
+  app.use("/api", attachAdminAudit);
   /** Подключает точные временные диапазоны после общей авторизации. */
   setupAnalyticsRangeRoutes(app, dbPool, requireProjectAccess);
 

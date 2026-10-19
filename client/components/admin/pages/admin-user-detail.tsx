@@ -14,6 +14,7 @@ import {
   formatPlatformUserName,
 } from '../users/platform-user-avatar';
 import { PlatformUserProjectsCard } from '../users/platform-user-projects-card';
+import { PlatformUserSessionsCard } from '../users/platform-user-sessions-card';
 
 /**
  * Профиль аккаунта и его проекты
@@ -96,6 +97,7 @@ export function AdminUserDetailPage() {
 
       <PlatformUserProjectsCard title="Проекты во владении" ownedProjects={ownedProjects} />
       <PlatformUserProjectsCard title="Участник проектов" sharedProjects={sharedProjects} />
+      <PlatformUserSessionsCard userId={user.id} sessions={data.sessions} />
     </div>
   );
 }

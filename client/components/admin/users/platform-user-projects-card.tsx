@@ -54,7 +54,7 @@ export function PlatformUserProjectsCard({
                   </p>
                 </div>
                 <Link
-                  href={`/editor/${project.id}`}
+                  href={`/admin/projects/${project.id}`}
                   className="inline-flex items-center gap-1 text-sm text-primary hover:underline shrink-0"
                 >
                   Редактор
@@ -72,7 +72,7 @@ export function PlatformUserProjectsCard({
                   </p>
                 </div>
                 <Link
-                  href={`/editor/${project.id}`}
+                  href={`/admin/projects/${project.id}`}
                   className="inline-flex items-center gap-1 text-sm text-primary hover:underline shrink-0"
                 >
                   Редактор

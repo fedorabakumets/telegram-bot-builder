@@ -34,6 +34,7 @@ import { apiRequest } from "@/queryClient";
 
 // Ленивая загрузка страниц для улучшения производительности
 const Home = lazy(() => import("@/pages/home"));
+const Profile = lazy(() => import("@/pages/profile"));
 const Editor = lazy(() => import("@/pages/editor"));
 const TemplatesPage = lazy(() => import("@/components/editor/scenariy"));
 const NotFound = lazy(() => import("@/pages/not-found"));
@@ -85,6 +86,7 @@ function ProjectsGuard({ children }: { children: React.ReactNode }) {
   // На этих страницах гард не блокирует
   const isExcluded =
     location.startsWith('/templates') ||
+    location.startsWith('/profile') ||
     location.startsWith('/not-found');
 
   const userId = isGuestUser ? 'anon' : (user as { id: number }).id;
@@ -141,6 +143,7 @@ function Router() {
         <Route path="/admin/openapi" component={AdminPanel} />
         <Route path="/admin/live-db" component={AdminPanel} />
         <Route path="/admin/users/:id" component={AdminPanel} />
+        <Route path="/admin/projects/:id" component={Editor} />
         <Route path="/admin/users" component={AdminPanel} />
         <Route path="/admin/support/:id" component={AdminPanel} />
         <Route path="/admin/support" component={AdminPanel} />
@@ -154,6 +157,7 @@ function Router() {
             <ProjectsGuard>
               <Switch>
                 <Route path="/projects" component={Home} />
+                <Route path="/profile" component={Profile} />
                 <Route path="/templates" component={TemplatesPage} />
                 <Route path="/editor/:id" component={Editor} />
                 <Route path="/projects/:id" component={Editor} />

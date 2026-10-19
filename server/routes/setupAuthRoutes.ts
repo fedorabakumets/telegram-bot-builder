@@ -19,6 +19,8 @@ import { handleMe } from "./auth/handlers/meHandler";
 import { handleLogout } from "./auth/handlers/logoutHandler";
 import { authRateLimitMiddleware } from "./auth/utils/authRateLimit";
 import { setupSetupRoutes } from "./setup";
+import { requireAuth } from "../telegram/auth-middleware";
+import { handleListSessions, handleRevokeOtherSessions, handleRevokeSession } from "./auth/handlers/sessionsHandlers";
 
 /**
  * Rate limit только для mutating auth (login/logout), не для GET /me
@@ -43,6 +45,9 @@ export function setupAuthRoutes(app: Express): void {
     app.get("/api/auth/telegram/user/:id", handleGetUser);
     app.post("/api/auth/telegram/miniapp", ...withAuthLimit(handleMiniAppAuth));
     app.post("/api/auth/dev-login", ...withAuthLimit(handleDevLogin));
+    app.get("/api/profile/sessions", requireAuth, handleListSessions);
+    app.delete("/api/profile/sessions/:id", requireAuth, handleRevokeSession);
+    app.delete("/api/profile/sessions", requireAuth, handleRevokeOtherSessions);
     app.get("/api/config", handlePublicConfig);
     app.get("/api/disabled-node-types", handlePublicDisabledNodeTypes);
     setupSetupRoutes(app);

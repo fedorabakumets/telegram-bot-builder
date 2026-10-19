@@ -2365,7 +2365,7 @@ export class DatabaseStorage implements IStorage {
    * @param authorKind - Тип автора снимка: 'agent' — ИИ-агент (MCP), 'user'/null — обычный пользователь
    * @returns Созданная версия проекта
    */
-  async createProjectVersion(projectId: number, snapshot: unknown, label?: string, authorId?: number | null, kind: 'auto' | 'manual' = 'auto', authorKind?: 'user' | 'agent' | null): Promise<ProjectVersion> {
+  async createProjectVersion(projectId: number, snapshot: unknown, label?: string, authorId?: number | null, kind: 'auto' | 'manual' = 'auto', authorKind?: 'user' | 'agent' | 'admin' | null): Promise<ProjectVersion> {
     const [version] = await this.db.insert(projectVersions).values({
       projectId,
       snapshot,

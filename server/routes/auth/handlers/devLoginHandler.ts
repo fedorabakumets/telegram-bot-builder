@@ -8,6 +8,7 @@ import type { Request, Response } from 'express';
 import { storage } from '../../../storages/storage';
 import { regenerateSession, saveSession } from '../utils/sessionUtils';
 import { isSkipAuthEnabled } from '../utils/isSkipAuthEnabled';
+import { registerSession, removeSession } from '../../../auth/session-registry';
 
 /**
  * Обрабатывает dev-вход: создаёт/находит пользователя по Telegram ID,
@@ -43,12 +44,14 @@ export async function handleDevLogin(req: Request, res: Response): Promise<void>
       return;
     }
 
+    await removeSession(req);
     await regenerateSession(req);
     req.session.telegramUser = userData;
     await saveSession(req);
 
     // Мигрируем ВСЕ гостевые проекты — включая накопленные от прошлых сессий
     await storage.migrateAllGuestProjects(userData.id);
+    await registerSession(req, userData);
 
     console.log(`🛠️ Dev-login: ${firstName} (@${username ?? '—'}), ID: ${userData.id}`);
 

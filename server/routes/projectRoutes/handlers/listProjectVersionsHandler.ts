@@ -45,7 +45,7 @@ export async function listProjectVersionsHandler(req: Request, res: Response): P
             // Имя автора: сначала реальное имя пользователя по authorId; если его
             // нет, но снимок создан MCP-агентом (authorKind='agent') — «ИИ-агент».
             const realName = v.authorId != null ? authorNames.get(v.authorId) : undefined;
-            const authorName = realName ?? (v.authorKind === "agent" ? "ИИ-агент" : undefined);
+            const authorName = realName ?? (v.authorKind === "agent" ? "ИИ-агент" : v.authorKind === "admin" ? "Администратор" : undefined);
             return {
                 id: v.id,
                 projectId: v.projectId,

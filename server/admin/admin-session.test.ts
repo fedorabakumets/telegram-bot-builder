@@ -22,13 +22,14 @@ afterEach(() => {
  * @returns Мок и чтение заголовка
  */
 function mockCookieRes(): { res: Response; header: () => string } {
-  let value = "";
+  let value: string | string[] = "";
   const res = {
-    setHeader(_name: string, headerValue: string) {
+    setHeader(_name: string, headerValue: string | string[]) {
       value = headerValue;
     },
   };
-  return { res: res as unknown as Response, header: () => value };
+  const header = () => Array.isArray(value) ? value.join("\n") : value;
+  return { res: res as unknown as Response, header };
 }
 
 describe("setAdminCookie Secure", () => {

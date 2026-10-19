@@ -38,6 +38,10 @@ export function requireResourceOwnership(
     resolveActorId: ActorIdResolver = getOwnerIdFromRequest,
 ): (req: Request, res: Response, next: NextFunction) => Promise<void> {
     return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        if (req.isAdminRequest) {
+            next();
+            return;
+        }
         const ownerId = resolveActorId(req);
         if (ownerId === null) {
             res.status(403).json({ message: "Нет прав доступа" });

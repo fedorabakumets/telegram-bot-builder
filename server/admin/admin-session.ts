@@ -78,10 +78,10 @@ export function setAdminCookie(res: Response, signingSecret: string, secure?: bo
   const token = createAdminToken(signingSecret);
   const maxAgeSec = Math.floor(MAX_AGE_MS / 1000);
   const secureAttr = shouldUseSecureAdminCookie(secure) ? "; Secure" : "";
-  res.setHeader(
-    "Set-Cookie",
-    `${ADMIN_COOKIE_NAME}=${encodeURIComponent(token)}; Path=/admin; HttpOnly; SameSite=Lax; Max-Age=${maxAgeSec}${secureAttr}`,
-  );
+  res.setHeader("Set-Cookie", [
+    `${ADMIN_COOKIE_NAME}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAgeSec}${secureAttr}`,
+    `${ADMIN_COOKIE_NAME}=; Path=/admin; HttpOnly; SameSite=Lax; Max-Age=0`,
+  ]);
 }
 
 /**
@@ -90,10 +90,10 @@ export function setAdminCookie(res: Response, signingSecret: string, secure?: bo
  * @returns void
  */
 export function clearAdminCookie(res: Response): void {
-  res.setHeader(
-    "Set-Cookie",
+  res.setHeader("Set-Cookie", [
+    `${ADMIN_COOKIE_NAME}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`,
     `${ADMIN_COOKIE_NAME}=; Path=/admin; HttpOnly; SameSite=Lax; Max-Age=0`,
-  );
+  ]);
 }
 
 /**

@@ -51,6 +51,10 @@
       "description": "Медиа проекта: upload/list/search/download URL, CRUD по id. Auth: requireProjectAccess | requireMediaOwnership | requireMediaFileOwnership. upload-from-url проверяет hasProjectAccess."
     },
     {
+      "name": "profile",
+      "description": "Эндпоинты /api/profile"
+    },
+    {
       "name": "project-bot",
       "description": "Lifecycle и профиль бота проекта: start/stop/restart, restart-all, start-offline-all, statuses (список live-статусов), info (getMe), data. Auth: requireProjectAccess. Профиль name/description — `project-tokens` …/bot-info. Группы — `project-groups`."
     },
@@ -5355,6 +5359,91 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/api/profile/sessions": {
+      "delete": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Завершить остальные сессии",
+        "description": "Завершает все сессии текущего пользователя, кроме текущей.",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "agentToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Остальные сессии завершены"
+          },
+          "401": {
+            "description": "Требуется авторизация"
+          },
+          "503": {
+            "description": "Redis временно недоступен"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Список активных сессий",
+        "description": "Возвращает активные сессии текущего пользователя. Внутренний connect.sid не раскрывается.",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "agentToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Список активных сессий"
+          },
+          "401": {
+            "description": "Требуется авторизация"
+          },
+          "503": {
+            "description": "Redis временно недоступен"
+          }
+        }
+      }
+    },
+    "/api/profile/sessions/{id}": {
+      "delete": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Завершить активную сессию",
+        "description": "Завершает выбранную сессию текущего пользователя. Текущую сессию завершить этим методом нельзя.",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "agentToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Сессия завершена"
+          },
+          "401": {
+            "description": "Требуется авторизация"
+          },
+          "404": {
+            "description": "Сессия не найдена или является текущей"
+          },
+          "503": {
+            "description": "Redis временно недоступен"
           }
         }
       }
@@ -23755,6 +23844,155 @@
         }
       }
     },
+    "/api/projects/{projectId}/users/unavailable": {
+      "get": {
+        "tags": [
+          "project-users"
+        ],
+        "summary": "Удалённые и заблокировавшие бота",
+        "description": "Люди выбранного бота с is_deleted или is_blocked. Telegram не вызывается, текст сообщений не возвращается.",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "agentToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "12"
+            },
+            "required": true,
+            "description": "ID проекта",
+            "example": "12",
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "example": "10"
+            },
+            "required": true,
+            "description": "ID бота",
+            "example": "10",
+            "name": "tokenId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "deleted",
+                "blocked",
+                "both"
+              ],
+              "example": "both"
+            },
+            "required": false,
+            "name": "kind",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "example": "20"
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "example": "0"
+            },
+            "required": false,
+            "name": "offset",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Страница людей",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnavailableUsersPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Нет бота или неверная страница",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Бот не принадлежит проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/projects/list": {
       "get": {
         "tags": [
@@ -27375,6 +27613,81 @@
         }
       }
     },
+    "/admin/api/projects/{id}": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Сведения о проекте для административного редактора",
+        "description": "Возвращает проект и безопасные сведения о владельце без секретов.",
+        "security": [
+          {
+            "adminCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Проект и владелец"
+          },
+          "401": {
+            "description": "Нет административной cookie"
+          },
+          "404": {
+            "description": "Проект не найден"
+          }
+        }
+      }
+    },
+    "/admin/api/projects/{id}/audit": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Журнал действий администратора проекта",
+        "description": "Возвращает последние административные действия проекта. Значения секретов и тело запросов не возвращаются.",
+        "security": [
+          {
+            "adminCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Журнал проекта"
+          },
+          "401": {
+            "description": "Нет административной cookie"
+          },
+          "404": {
+            "description": "Проект не найден"
+          }
+        }
+      }
+    },
+    "/admin/api/projects/{id}/secrets/bot-token/{tokenId}": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Явное раскрытие токена бота",
+        "description": "Возвращает токен только по отдельному запросу. Значение не записывается в журнал.",
+        "security": [
+          {
+            "adminCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Токен проекта"
+          },
+          "401": {
+            "description": "Нет административной cookie"
+          },
+          "404": {
+            "description": "Токен не найден"
+          }
+        }
+      }
+    },
     "/admin/api/support/threads": {
       "get": {
         "tags": [
@@ -28716,7 +29029,7 @@
         "type": "apiKey",
         "in": "cookie",
         "name": "admin_auth",
-        "description": "Admin cookie после POST /admin/api/login (ключ ADMIN_API_KEY). Path=/admin, httpOnly, 7 дней. User connect.sid / Bearer PAT не подходят."
+        "description": "Admin cookie после POST /admin/api/login (ключ ADMIN_API_KEY). Path=/, httpOnly, 7 дней. User connect.sid / Bearer PAT не подходят."
       }
     },
     "schemas": {
@@ -29900,7 +30213,8 @@
             "type": "string",
             "enum": [
               "agent",
-              "user"
+              "user",
+              "admin"
             ],
             "example": "agent"
           }
@@ -30692,6 +31006,80 @@
         "required": [
           "sources",
           "languages"
+        ]
+      },
+      "UnavailableUser": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "example": "8791555566"
+          },
+          "userName": {
+            "type": "string",
+            "nullable": true,
+            "example": "Ho4y28"
+          },
+          "firstName": {
+            "type": "string",
+            "nullable": true,
+            "example": "."
+          },
+          "lastName": {
+            "type": "string",
+            "nullable": true,
+            "example": null
+          },
+          "isDeleted": {
+            "type": "boolean",
+            "example": true
+          },
+          "isBlocked": {
+            "type": "boolean",
+            "example": false
+          }
+        },
+        "required": [
+          "userId",
+          "userName",
+          "firstName",
+          "lastName",
+          "isDeleted",
+          "isBlocked"
+        ]
+      },
+      "UnavailableUsersPage": {
+        "type": "object",
+        "properties": {
+          "users": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UnavailableUser"
+            }
+          },
+          "total": {
+            "type": "number",
+            "example": 2
+          },
+          "hasMore": {
+            "type": "boolean",
+            "example": false
+          },
+          "limit": {
+            "type": "number",
+            "example": 20
+          },
+          "offset": {
+            "type": "number",
+            "example": 0
+          }
+        },
+        "required": [
+          "users",
+          "total",
+          "hasMore",
+          "limit",
+          "offset"
         ]
       },
       "GrowthPoint": {

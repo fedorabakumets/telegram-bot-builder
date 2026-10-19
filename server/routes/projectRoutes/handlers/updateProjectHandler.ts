@@ -40,6 +40,21 @@ export async function updateProjectHandler(req: Request, res: Response): Promise
             return;
         }
 
+        const expectedUpdatedAt = typeof req.body?.expectedUpdatedAt === "string"
+            ? Date.parse(req.body.expectedUpdatedAt)
+            : null;
+        if (req.isAdminRequest && expectedUpdatedAt !== null && !Number.isNaN(expectedUpdatedAt)) {
+            const currentProject = await storage.getBotProject(projectId);
+            if (currentProject?.updatedAt && currentProject.updatedAt.getTime() !== expectedUpdatedAt) {
+                res.status(409).json({
+                    message: "Проект изменился в другой сессии. Обновите проект перед сохранением.",
+                    code: "PROJECT_CONFLICT",
+                    updatedAt: currentProject.updatedAt,
+                });
+                return;
+            }
+        }
+
         const validatedData = insertBotProjectSchema
             .partial()
             .parse(req.body) as StorageBotProjectUpdate;
@@ -77,7 +92,7 @@ export async function updateProjectHandler(req: Request, res: Response): Promise
                 // Признак авторства MCP-агента: при agentEdit=true у запроса нет
                 // сессии (authorId=null), поэтому помечаем снимок author_kind='agent',
                 // чтобы в истории версий отобразить автора «ИИ-агент».
-                const authorKind = req.body?.agentEdit === true ? 'agent' : undefined;
+                const authorKind = req.isAdminRequest ? 'admin' : req.body?.agentEdit === true ? 'agent' : undefined;
                 if (commitMessage) {
                     // Ручной чекпоинт: создаётся всегда по явному намерению
                     // пользователя — без дедупликации и без очистки истории.

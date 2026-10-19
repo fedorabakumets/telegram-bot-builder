@@ -15,8 +15,8 @@ export interface AppSidebarProps {
   projectName: string;
   /** Информация о боте */
   botInfo?: BotInfo | null;
-  /** Текущая активная вкладка */
-  currentTab: HeaderTab;
+  /** Текущая активная вкладка, если сайдбар открыт внутри проекта */
+  currentTab?: HeaderTab;
   /** Обработчик смены вкладки */
   onTabChange: (tab: HeaderTab) => void;
   /** Сохранить сценарий как шаблон */

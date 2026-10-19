@@ -12,6 +12,7 @@ import { storage } from "../../../storages/storage";
 import { regenerateSession, saveSession } from "../utils/sessionUtils";
 import { verifyTelegramIdToken, getTelegramUserIdFromToken } from "../utils/telegramJwks";
 import { isStrictAuthMode } from "../utils/isStrictAuthMode";
+import { registerSession, removeSession } from "../../../auth/session-registry";
 
 /**
  * Обрабатывает данные авторизации от Telegram.
@@ -87,6 +88,7 @@ export async function handleTelegramAuth(req: Request, res: Response): Promise<v
         } else {
             switched = true;
             const oldSessionId = req.session.id;
+            await removeSession(req);
             await regenerateSession(req);
             req.session.telegramUser = userData;
             await saveSession(req);
@@ -95,6 +97,7 @@ export async function handleTelegramAuth(req: Request, res: Response): Promise<v
                 await storage.migrateGuestProjects(oldSessionId, userData.id);
             }
         }
+        await registerSession(req, userData);
 
         console.log(
             `✅ Telegram авторизация: ${first_name} (@${username}), ID: ${userData.id}` +

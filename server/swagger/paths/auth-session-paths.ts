@@ -28,6 +28,7 @@ export function registerAuthSessionPaths(
   registry: OpenAPIRegistry,
   publicSecurity: never[],
 ): void {
+  const sessionSecurity = [{ cookieAuth: [] as string[] }, { agentToken: [] as string[] }];
   registry.registerPath({
     method: "get",
     path: "/api/auth/me",
@@ -147,6 +148,49 @@ export function registerAuthSessionPaths(
           },
         },
       },
+    },
+  });
+
+  registry.registerPath({
+    method: "get",
+    path: "/api/profile/sessions",
+    tags: ["auth"],
+    summary: "Список активных сессий",
+    description: "Возвращает активные сессии текущего пользователя. Внутренний connect.sid не раскрывается.",
+    security: sessionSecurity,
+    responses: {
+      200: { description: "Список активных сессий" },
+      401: { description: "Требуется авторизация" },
+      503: { description: "Redis временно недоступен" },
+    },
+  });
+
+  registry.registerPath({
+    method: "delete",
+    path: "/api/profile/sessions/{id}",
+    tags: ["auth"],
+    summary: "Завершить активную сессию",
+    description: "Завершает выбранную сессию текущего пользователя. Текущую сессию завершить этим методом нельзя.",
+    security: sessionSecurity,
+    responses: {
+      200: { description: "Сессия завершена" },
+      401: { description: "Требуется авторизация" },
+      404: { description: "Сессия не найдена или является текущей" },
+      503: { description: "Redis временно недоступен" },
+    },
+  });
+
+  registry.registerPath({
+    method: "delete",
+    path: "/api/profile/sessions",
+    tags: ["auth"],
+    summary: "Завершить остальные сессии",
+    description: "Завершает все сессии текущего пользователя, кроме текущей.",
+    security: sessionSecurity,
+    responses: {
+      200: { description: "Остальные сессии завершены" },
+      401: { description: "Требуется авторизация" },
+      503: { description: "Redis временно недоступен" },
     },
   });
 }
