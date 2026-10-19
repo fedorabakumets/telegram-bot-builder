@@ -11,6 +11,7 @@ import { GithubButton } from './github-button';
 import { cn } from '@/utils/utils';
 import { isTelegramUser, type AppUser } from '@/types/telegram-user';
 import { SupportChatButton } from '@/components/support/support-chat-button';
+import type { ReactNode } from 'react';
 
 /**
  * Свойства полных десктопных действий
@@ -44,6 +45,8 @@ export interface DesktopActionsFullProps {
   onLogin?: () => void;
   /** Вертикальное расположение */
   isVertical?: boolean;
+  /** Дополнительный блок рядом с аккаунтом */
+  adminModeContent?: ReactNode;
 }
 
 /**
@@ -70,6 +73,7 @@ export function DesktopActionsFull({
   onLogout,
   onLogin,
   isVertical,
+  adminModeContent,
 }: DesktopActionsFullProps) {
   return (
     <div className={cn(
@@ -116,6 +120,8 @@ export function DesktopActionsFull({
         onLogin={onLogin}
         isVertical={isVertical}
       />
+
+      {adminModeContent}
 
       <div className={cn(
         'text-xs font-medium bg-gradient-to-r from-blue-500/10 to-cyan-500/10 dark:from-blue-700/20 dark:to-cyan-600/20 rounded-lg border border-blue-400/20 dark:border-blue-500/30 backdrop-blur-sm',

@@ -33,10 +33,12 @@ interface AdminProjectBannerProps {
   projectId: number | null;
   /** Переход назад в админскую карточку */
   onBack: () => void;
+  /** Встроить панель в шапку вместо фиксированного положения */
+  embedded?: boolean;
 }
 
 /** Показывает административный режим и последние действия */
-export function AdminProjectBanner({ projectId, onBack }: AdminProjectBannerProps) {
+export function AdminProjectBanner({ projectId, onBack, embedded = false }: AdminProjectBannerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [showAudit, setShowAudit] = useState(false);
   const { data: projectInfo } = useQuery<AdminProjectInfo>({
@@ -54,7 +56,7 @@ export function AdminProjectBanner({ projectId, onBack }: AdminProjectBannerProp
   const ownerName = projectInfo?.owner?.username || projectInfo?.owner?.firstName || 'без имени';
 
   return (
-    <div className="fixed right-4 top-16 z-[100] w-[min(420px,calc(100vw-2rem))] text-sm">
+    <div className={`${embedded ? 'relative w-auto' : 'fixed right-4 top-16 w-[min(420px,calc(100vw-2rem))]'} z-[100] text-sm`}>
       {!isOpen ? (
         <button
           className="ml-auto flex max-w-full items-center gap-2 rounded-full border border-amber-500/50 bg-amber-950/90 px-3 py-2 text-amber-100 shadow-lg backdrop-blur"
@@ -65,7 +67,7 @@ export function AdminProjectBanner({ projectId, onBack }: AdminProjectBannerProp
           <span className="truncate">Админ-режим · {projectName}</span>
         </button>
       ) : (
-        <div className="rounded-lg border border-amber-500/50 bg-background/95 p-3 text-foreground shadow-xl backdrop-blur">
+        <div className="absolute right-0 top-full mt-2 w-[min(420px,calc(100vw-2rem))] rounded-lg border border-amber-500/50 bg-background/95 p-3 text-foreground shadow-xl backdrop-blur">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <div className="font-medium text-amber-200">Административный режим</div>

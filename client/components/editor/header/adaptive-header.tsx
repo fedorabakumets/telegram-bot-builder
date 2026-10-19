@@ -48,6 +48,7 @@ export function AdaptiveHeader({
   isCurrentProjectArchived = false,
   onUnarchiveCurrentProject,
   isUnarchivePending = false,
+  adminModeContent,
 }: AdaptiveHeaderProps) {
 
   // Проверка авторизации пользователя
@@ -109,6 +110,7 @@ export function AdaptiveHeader({
           onLogout={logout}
           onLogin={handleTelegramLogin}
           isVertical={isVertical}
+          adminModeContent={adminModeContent}
         />
       </header>
     );
@@ -145,6 +147,7 @@ export function AdaptiveHeader({
             currentTab={currentTab}
             onTabChange={onTabChange}
             isVertical={isVertical}
+            adminModeContent={adminModeContent}
             isCompact={isCompact}
           />
 

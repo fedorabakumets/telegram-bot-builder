@@ -1660,6 +1660,7 @@ export default function Editor() {
         isCurrentProjectArchived={isCurrentProjectArchived}
         onUnarchiveCurrentProject={handleUnarchiveCurrentProject}
         isUnarchivePending={isUnarchivePending}
+        adminModeContent={isAdminEditor ? <AdminProjectBanner embedded projectId={projectId} onBack={() => setLocation('/admin/users')} /> : undefined}
       />
     );
 
@@ -2141,7 +2142,6 @@ export default function Editor() {
 
   return (
     <>
-      {isAdminEditor && <AdminProjectBanner projectId={projectId} onBack={() => setLocation('/admin/users')} />}
       {useFlexibleLayout ? (
         renderFlexibleLayoutContent()
       ) : (
@@ -2178,6 +2178,7 @@ export default function Editor() {
               isCurrentProjectArchived={isCurrentProjectArchived}
               onUnarchiveCurrentProject={handleUnarchiveCurrentProject}
               isUnarchivePending={isUnarchivePending}
+              adminModeContent={isAdminEditor ? <AdminProjectBanner embedded projectId={projectId} onBack={() => setLocation('/admin/users')} /> : undefined}
             />
           }
           sidebar={

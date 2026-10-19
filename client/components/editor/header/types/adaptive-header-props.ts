@@ -4,6 +4,7 @@
  */
 
 import type { LayoutConfig } from '@/components/layout';
+import type { ReactNode } from 'react';
 import { BotInfo } from './bot-info';
 import { HeaderTab } from './header-tab';
 
@@ -71,4 +72,6 @@ export interface AdaptiveHeaderProps {
   onUnarchiveCurrentProject?: () => void;
   /** Блокировка кнопки возврата из архива */
   isUnarchivePending?: boolean;
+  /** Дополнительный блок рядом с аккаунтом в шапке */
+  adminModeContent?: ReactNode;
 }
