@@ -50,7 +50,7 @@ export function PaletteComponentCard({
         'component-item group/item flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3',
         'bg-gradient-to-br from-muted/40 to-muted/20 dark:from-slate-800/50 dark:to-slate-900/30',
         'hover:from-muted/70 hover:to-muted/40 dark:hover:from-slate-700/60 dark:hover:to-slate-800/40',
-        'rounded-lg sm:rounded-xl cursor-move transition-all duration-200 touch-action-none no-select',
+        'relative rounded-lg sm:rounded-xl cursor-move transition-all duration-200 touch-action-none no-select',
         'border border-border/30 hover:border-primary/30',
         isTouchDragging ? 'opacity-50 scale-95' : '',
       )}
@@ -65,12 +65,12 @@ export function PaletteComponentCard({
       >
         <i className={`${component.icon} text-xs sm:text-sm`} />
       </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-xs sm:text-sm font-semibold text-foreground break-words whitespace-normal">
+      <div className={cn('flex-1 min-w-0', onComponentAdd && 'pr-2')}>
+        <p className="text-xs sm:text-sm font-semibold text-foreground break-normal whitespace-normal overflow-hidden [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
           {component.name}
         </p>
         {component.description ? (
-          <p className="text-xs text-muted-foreground leading-snug break-words whitespace-normal mt-0.5">
+          <p className="mt-0.5 text-xs leading-snug text-muted-foreground break-normal whitespace-normal overflow-hidden [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:3]">
             {component.description}
           </p>
         ) : null}
@@ -82,11 +82,11 @@ export function PaletteComponentCard({
             onComponentAdd(component);
           }}
           className={cn(
-            'ml-1 flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-lg',
+            'absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 sm:w-8 sm:h-8 rounded-lg',
             'bg-primary/10 hover:bg-primary/20 text-primary',
             'dark:bg-primary/15 dark:hover:bg-primary/25',
-            'hidden group-hover/item:flex items-center justify-center',
-            'transition-all duration-200 hover:shadow-md hover:shadow-primary/20',
+            'flex items-center justify-center opacity-0 pointer-events-none group-hover/item:opacity-100 group-hover/item:pointer-events-auto',
+            'transition-opacity duration-200 hover:shadow-md hover:shadow-primary/20',
           )}
           title={`Добавить ${component.name} на холст`}
           data-testid={`button-add-${component.id}`}
