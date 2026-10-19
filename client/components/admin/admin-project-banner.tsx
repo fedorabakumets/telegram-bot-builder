@@ -37,6 +37,7 @@ interface AdminProjectBannerProps {
 
 /** Показывает административный режим и последние действия */
 export function AdminProjectBanner({ projectId, onBack }: AdminProjectBannerProps) {
+  const [isOpen, setIsOpen] = useState(false);
   const [showAudit, setShowAudit] = useState(false);
   const { data: projectInfo } = useQuery<AdminProjectInfo>({
     queryKey: ['/admin/api/projects', projectId],
@@ -49,24 +50,46 @@ export function AdminProjectBanner({ projectId, onBack }: AdminProjectBannerProp
     enabled: showAudit && projectId != null,
   });
 
+  const projectName = projectInfo?.project?.name || `Проект №${projectId}`;
+  const ownerName = projectInfo?.owner?.username || projectInfo?.owner?.firstName || 'без имени';
+
   return (
-    <div className="fixed left-1/2 top-2 z-[100] -translate-x-1/2 rounded-md border border-amber-500/40 bg-amber-500/15 px-4 py-2 text-sm text-amber-100 shadow-lg">
-      <span>
-        Административный режим · {projectInfo?.project?.name || `проект №${projectId}`}
-        {projectInfo?.owner && ` · владелец @${projectInfo.owner.username || projectInfo.owner.firstName || 'без имени'}`}
-      </span>
-      <button className="ml-3 underline" onClick={() => setShowAudit((value) => !value)}>
-        {showAudit ? 'Скрыть журнал' : 'Журнал действий'}
-      </button>
-      <button className="ml-3 underline" onClick={onBack}>Вернуться в админку</button>
-      {showAudit && (
-        <div className="absolute left-0 top-full mt-2 max-h-64 w-96 overflow-auto rounded-md border border-border bg-background p-3 text-xs text-foreground shadow-xl">
-          {(data?.items ?? []).length === 0 ? <p>Записей пока нет.</p> : data?.items.map((entry, index) => (
-            <div key={`${entry.createdAt}-${index}`} className="border-b border-border/60 py-2 last:border-0">
-              <div className="font-medium">{entry.action}</div>
-              <div className="text-muted-foreground">{new Date(entry.createdAt).toLocaleString('ru-RU')} · {entry.ip || 'IP неизвестен'} · {entry.statusCode}</div>
+    <div className="fixed right-4 top-16 z-[100] w-[min(420px,calc(100vw-2rem))] text-sm">
+      {!isOpen ? (
+        <button
+          className="ml-auto flex max-w-full items-center gap-2 rounded-full border border-amber-500/50 bg-amber-950/90 px-3 py-2 text-amber-100 shadow-lg backdrop-blur"
+          onClick={() => setIsOpen(true)}
+          title="Открыть панель административного режима"
+        >
+          <span className="h-2 w-2 rounded-full bg-amber-400" />
+          <span className="truncate">Админ-режим · {projectName}</span>
+        </button>
+      ) : (
+        <div className="rounded-lg border border-amber-500/50 bg-background/95 p-3 text-foreground shadow-xl backdrop-blur">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="font-medium text-amber-200">Административный режим</div>
+              <div className="truncate text-muted-foreground">{projectName}</div>
+              <div className="truncate text-xs text-muted-foreground">Владелец: @{ownerName}</div>
             </div>
-          ))}
+            <button className="text-muted-foreground hover:text-foreground" onClick={() => setIsOpen(false)} aria-label="Свернуть панель">×</button>
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button className="rounded border border-border px-2 py-1 hover:bg-muted" onClick={() => setShowAudit((value) => !value)}>
+              {showAudit ? 'Скрыть журнал' : 'Журнал действий'}
+            </button>
+            <button className="rounded border border-amber-500/60 px-2 py-1 text-amber-200 hover:bg-amber-500/10" onClick={onBack}>Вернуться в админку</button>
+          </div>
+          {showAudit && (
+            <div className="mt-3 max-h-64 overflow-auto rounded border border-border bg-background p-3 text-xs">
+              {(data?.items ?? []).length === 0 ? <p>Записей пока нет.</p> : data?.items.map((entry, index) => (
+                <div key={`${entry.createdAt}-${index}`} className="border-b border-border/60 py-2 last:border-0">
+                  <div className="font-medium">{entry.action}</div>
+                  <div className="text-muted-foreground">{new Date(entry.createdAt).toLocaleString('ru-RU')} · {entry.ip || 'IP неизвестен'} · {entry.statusCode}</div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
