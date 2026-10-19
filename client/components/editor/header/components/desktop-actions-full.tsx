@@ -113,13 +113,15 @@ export function DesktopActionsFull({
         <Separator className="w-full" />
       )}
 
-      <UserAuth
-        user={user || null}
-        isLoading={isLoading}
-        onLogout={onLogout}
-        onLogin={onLogin}
-        isVertical={isVertical}
-      />
+      {!adminModeContent && (
+        <UserAuth
+          user={user || null}
+          isLoading={isLoading}
+          onLogout={onLogout}
+          onLogin={onLogin}
+          isVertical={isVertical}
+        />
+      )}
 
       {adminModeContent}
 
