@@ -17,5 +17,8 @@ export function usePlatformUser(userId: number | null) {
     queryKey: ['/admin/api/users', userId],
     queryFn: () => apiRequest('GET', `/admin/api/users/${userId}`),
     enabled: userId != null && userId > 0,
+    refetchInterval: 15000,
+    refetchOnWindowFocus: true,
+    staleTime: 5000,
   });
 }

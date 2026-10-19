@@ -49,6 +49,9 @@ export function ActiveSessionsCard() {
   const { data, isLoading, isError } = useQuery<{ sessions: ActiveSession[] }>({
     queryKey: SESSIONS_QUERY_KEY,
     queryFn: () => apiRequest('GET', '/api/profile/sessions'),
+    refetchInterval: 15000,
+    refetchOnWindowFocus: true,
+    staleTime: 5000,
   });
   const revokeMutation = useMutation({
     mutationFn: (id?: string) => apiRequest('DELETE', id ? `/api/profile/sessions/${id}` : '/api/profile/sessions'),
