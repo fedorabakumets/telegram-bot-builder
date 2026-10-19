@@ -147,7 +147,6 @@ export function AdaptiveHeader({
             currentTab={currentTab}
             onTabChange={onTabChange}
             isVertical={isVertical}
-            adminModeContent={adminModeContent}
             isCompact={isCompact}
           />
 
@@ -177,6 +176,7 @@ export function AdaptiveHeader({
             onLogout={logout}
             onLogin={handleTelegramLogin}
             isVertical={isVertical}
+            adminModeContent={adminModeContent}
           />
         </div>
         </div>
