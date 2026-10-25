@@ -38,6 +38,7 @@ export * from './needs-message-defaults.ts';
 export * from './create-node.ts';
 export * from './mcp-allowed-types.ts';
 export * from './mcp-disabled-types.ts';
+export * from './mcp-tool-docs.ts';
 export * from './minimize-node-data.ts';
 export * from './project-mutate.ts';
 export * from './hierarchical-layout.ts';

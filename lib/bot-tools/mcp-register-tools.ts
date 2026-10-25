@@ -22,6 +22,7 @@ import { registerDialogTools } from './mcp-register-dialog-tools.ts';
 import { registerTableChartTools } from './mcp-register-table-chart-tools.ts';
 import { registerTableTools } from './mcp-register-table-tools.ts';
 import { registerUserbotTools } from './mcp-register-userbot-tools.ts';
+import { registerToolDocsTools } from './mcp-tool-docs.ts';
 import {
   addNodeInDb,
   addNodeToProject,
@@ -134,6 +135,7 @@ function textResult(data: unknown) {
 export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOptions = {}): void {
   /** Настройка юзербота доступна в обоих транспортах */
   registerUserbotTools(server);
+  registerToolDocsTools(server);
   const enableFileTools = options.enableFileTools === true;
   const disabledSet = new Set(options.disabledNodeTypes ?? []);
 

@@ -2,7 +2,7 @@
 
 # MCP-конструктор ботов — обзор
 
-> Краткое введение. Полное руководство: [[mcp/bot-builder]]. Пример: [[mcp/example-simple-bot]].
+> Краткое введение. Полное руководство: [[mcp/bot-builder]]. Практический playbook для агента: [[mcp/agent-playbook]]. Пример: [[mcp/example-simple-bot]].
 
 ---
 
@@ -83,6 +83,7 @@
 ## Дальше
 
 - [[mcp/bot-builder]] — полная документация (установка, все тулы, workflow)
+- [[mcp/agent-playbook]] — обязательный порядок работы агента с MCP
 - [[mcp/example-simple-bot]] — разбор примера `/start` + `/help`
 - [[futures/mcp/mcp-live-editing]] — live-редактирование и runtime
 - [[bot-json-prompt]] — формат JSON

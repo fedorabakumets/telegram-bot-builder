@@ -41,6 +41,7 @@ MCP **не заменяет** визуальный редактор. Он доп
 Связанные документы:
 
 - [[mcp/overview]] — краткий обзор
+- [[mcp/agent-playbook]] — практический playbook для ИИ-агента с MCP-доступом
 - [[mcp/example-simple-bot]] — пример `/start` + `/help`
 - [[futures/features/ai-agent-tab-vision]] — дорожная карта (MCP = «внешнее лицо» слоя инструментов)
 - [[bot-json-prompt]] — полный формат `project.json` для ИИ

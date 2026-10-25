@@ -67,7 +67,7 @@ export function ActiveSessionsCard() {
 
   return (
     <Card className="border-border/70">
-      <CardHeader className="flex flex-row items-center justify-between gap-3">
+      <CardHeader className="flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center sm:gap-3">
         <CardTitle>Активные сессии</CardTitle>
         <span className="text-xs text-muted-foreground">{sessions.length} активных</span>
       </CardHeader>
@@ -79,7 +79,7 @@ export function ActiveSessionsCard() {
           {!isLoading && !isError && sessions.map((session) => {
             const DeviceIcon = session.kind === 'mobile' ? Smartphone : Monitor;
             return (
-              <div key={session.id} className="flex items-center gap-3 py-4 first:pt-0 last:pb-0">
+              <div key={session.id} className="flex flex-col items-stretch gap-3 py-4 first:pt-0 last:pb-0 sm:flex-row sm:items-center">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
                   <DeviceIcon className="h-5 w-5" />
                 </div>
@@ -94,7 +94,7 @@ export function ActiveSessionsCard() {
                     <span className="inline-flex items-center gap-1"><Clock3 className="h-3.5 w-3.5" />{formatLastActive(session.lastActive)}</span>
                   </div>
                 </div>
-                {!session.isCurrent && <Button variant="ghost" size="sm" disabled={revokeMutation.isPending} onClick={() => revokeMutation.mutate(session.id)}><LogOut className="mr-2 h-4 w-4" />Завершить</Button>}
+                {!session.isCurrent && <Button variant="ghost" size="sm" className="w-full shrink-0 sm:w-auto" disabled={revokeMutation.isPending} onClick={() => revokeMutation.mutate(session.id)}><LogOut className="mr-2 h-4 w-4" />Завершить</Button>}
               </div>
             );
           })}
