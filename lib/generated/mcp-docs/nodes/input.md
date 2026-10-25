@@ -1,52 +1,51 @@
 # Input-нода
 
-## Простыми словами
+## Назначение
 
-`input` не задаёт вопрос сама: предыдущая `message` показывает вопрос, а `input` ждёт следующий ответ пользователя и сохраняет его в переменную.
+`input` сама вопрос не отправляет: предыдущая `message` показывает его, а `input` ожидает следующее событие Telegram и сохраняет полезную нагрузку в переменную.
 
-## Формат
+## Поля
+
+| Поле | Тип | Значение/ограничение |
+|---|---|---|
+| `inputVariable` | string | имя без скобок |
+| `inputType` | enum | `text`, `photo`, `video`, `audio`, `document`, `location`, `contact`, `any`, `callback` |
+| `inputTargetNodeId` | string | ID цели или пусто |
+| `validationType` | enum | `none`, `email`, `phone`, `number` для текста |
+| `retryMessage` | string | повторный запрос при ошибке |
+| `inputRequired` | boolean | запрет пустого значения |
+| `minLength`, `maxLength` | number | ограничения длины текста |
+| `inputTimeout` | number | секунды ожидания |
 
 ```json
-{
-  "type": "input",
-  "data": {
-    "inputVariable": "first_number",
-    "inputType": "text",
-    "inputTargetNodeId": "next_node",
-    "validationType": "number",
-    "retryMessage": "Введите число"
-  }
-}
+{"type":"input","data":{"inputVariable":"email","inputType":"text","validationType":"email","retryMessage":"Введите корректный email","inputTargetNodeId":"save"}}
 ```
 
-`inputVariable` — имя переменной без скобок. В следующих нодах значение доступно как `{first_number}`. `inputType` поддерживает `text`, `photo`, `video`, `audio`, `document`, `location`, `contact`, `any` и `callback`.
+## Поведение
 
-## Валидация и ошибки
+`text` сохраняет текст; `photo`, `video`, `audio`, `document`, `location` и `contact` — соответствующую Telegram-полезную нагрузку; `any` принимает допустимое сообщение; `callback` ожидает нажатие inline-кнопки. После успеха значение доступно как `{email}`. При невалидном вводе ожидание остаётся активным и отправляется `retryMessage`. После timeout FSM сбрасывается и отправляется `inputTimeoutMessage`; `/cancel` сбрасывает ожидание.
 
-Для текста доступны `validationType: "none" | "email" | "phone" | "number"`. При ошибке проверки пользователь получает `retryMessage`, а FSM продолжает ждать тот же ввод. Для собственной проверки используй `condition` или `code` после сохранения значения.
+Для бизнес-правил, которых нет среди встроенных `validationType`, используй `condition` или `code` после сохранения. На одной ветке должен быть один ожидающий input: несколько конкурирующих узлов могут перехватить событие непредсказуемо.
 
-`inputRequired`, `minLength`, `maxLength` и `appendVariable` задают обязательность, длину и способ записи. Не добавляй поля, которых нет в схеме ноды.
+## Примеры
 
-## Таймаут, отмена и кнопки
+Число: `inputType: "text"`, `validationType: "number"`. Callback: `keyboard` с callback-кнопкой → `input` с `inputType: "callback"`. Файл: `inputType: "document"`, затем `code` или `convert_file`.
 
-`inputTimeout` задаётся в секундах. После таймаута FSM сбрасывается и отправляется `inputTimeoutMessage`. При активном ожидании автоматически доступна команда `/cancel`, которая сбрасывает форму.
+## Частые ошибки
 
-Для кнопок используй `keyboard` → `input` с `inputType: "callback"`; текст нажатой кнопки сохраняется в `inputVariable`.
+- В `inputVariable` указаны `{скобки}` — нужны только имя и допустимые символы.
+- Вопрос пытаются задать самим input — добавь предыдущую `message`.
+- Callback направлен в обычный text-input — поставь `inputType: "callback"`.
+- Не указан `retryMessage` при обязательной проверке.
 
-## Полный сценарий калькулятора
+## Связанные ноды
 
-```text
-command_trigger(/start)
-→ message «Введите первое число»
-→ input(first_number, validationType=number)
-→ message «Введите второе число»
-→ input(second_number, validationType=number)
-→ message с keyboard «+ − × ÷»
-→ input(operation, inputType=callback)
-→ code вычисляет answer
-→ message «Результат: {answer}»
-```
+`message`, `keyboard`, `callback_trigger`, `condition`, `code`, `set_variable`, `convert_file`.
 
-## Важно
+## Как проверить результат
 
-В одной ветке не создавай несколько конкурирующих `input`: FSM ожидает один следующий ответ. После изменения проверь `inputTargetNodeId` и весь проект валидатором.
+Проверь `get_node_schema(input)`, `get_node_example(input)`, `validate_node`, затем отправь валидный и невалидный ответ. Просмотр runtime-контекста отдельным MCP-инструментом не реализован; используй логи.
+
+## Следующий шаг
+
+Соедини успешный input с `message`, `condition` или `code` и не создавай второй активный input на той же ветке.

@@ -1,51 +1,52 @@
 # Code-нода
 
-## Простыми словами
+## Что делает
 
-`code` выполняет пользовательский Python как тело уже созданной async-функции. Не пиши собственный `async def` вокруг кода.
+`code` выполняет `data.code` как тело уже созданной async-функции. Собственный `async def` добавлять нельзя. Для простого присваивания выбирай `set_variable`, для SQL — `psql_query`, для HTTP — `http_request`.
 
-## Пример
+## Формат и поля
 
 ```json
-{
-  "type": "code",
-  "data": {
-    "code": "answer = float(first_number) + float(second_number)",
-    "autoTransitionTo": "result_message",
-    "enableAutoTransition": true
-  }
-}
+{"type":"code","data":{"code":"answer = float(num1) + float(num2)","autoTransitionTo":"result_message"}}
 ```
 
-Переменная, присвоенная на верхнем уровне (`answer = ...`), автоматически становится пользовательской переменной следующей ноды и доступна как `{answer}`.
+| Поле | Тип | Значение | Поведение |
+|---|---|---|---|
+| `code` | string | `""` | тело Python-кода |
+| `autoTransitionTo` | string | `""` | ID следующей ноды |
 
-## Доступные имена
+Присваивание на верхнем уровне сохраняется в пользовательском контексте и доступно как `{answer}`. Внутри функции оно локально; для явной записи используй `_ns['answer'] = value`.
 
-Доступны переменные текущего пользователя по имени, `user_data`, `all_user_data`, `set_user_var`, `user_id`, `client`, `userbot_client`, `bot`, `dp`, `callback_query`, `state`, `asyncio`, `json`, `re`, `math`, `datetime`, `logging`, `Button` и `events`.
+## Контекст выполнения
 
-`client` и `userbot_client` требуют настроенного Telethon Userbot. `callback_query` и `state` могут быть `None`.
-
-## Передача результата
+Доступны переменные пользователя по имени, `user_data`, `all_user_data`, `set_user_var`, `user_id`, `client`, `userbot_client`, `bot`, `dp`, `callback_query`, `state`, `asyncio`, `json`, `re`, `math`, `datetime`, `logging`, `Button` и `events`. `num1`, `num2`, `last_input` появляются только после явного сохранения предыдущей нодой. `callback_query` и `state` могут быть `None`.
 
 ```python
-answer = 0
 try:
-    left = float(first_number)
-    right = float(second_number)
-    if operation == '+': answer = left + right
-    elif operation == '-': answer = left - right
-    elif operation == '*': answer = left * right
-    elif operation == '/': answer = left / right
-except (ValueError, ZeroDivisionError):
-    answer = 'Некорректное вычисление'
+    total = float(num1) + float(num2)
+    ok = True
+except (TypeError, ValueError):
+    total = None
+    ok = False
 ```
 
-Во вложенной функции локальное присваивание не попадёт в пользовательские переменные. Для этого используй `_ns['answer'] = value`; имена, начинающиеся с `_`, не сохраняются как пользовательские переменные.
+Несколько результатов передаются несколькими присваиваниями верхнего уровня. `None`, строки, числа и JSON-совместимые списки/словари сохраняются как значения.
 
-## Ограничения
+## Ограничения и ошибки
 
-Таймаут одного code-узла — 180 секунд. На self-hosted RestrictedPython не используется: код исполняется с доступными правами среды, поэтому не добавляй опасные операции без явной необходимости. Ошибки и таймауты проверяй по логам.
+Таймаут одного code-узла — 180 секунд. RestrictedPython не используется: не удаляй данные, не раскрывай токены и не запускай опасные процессы. При исключении обработка завершается ошибкой; причину ищи в логах code/runtime. Внешние API допустимы только через реально доступные клиенты.
+
+## Связка и проверка
+
+`input` подаёт значения, `message` показывает `{total}`, `condition` выбирает ветку. Вызови `get_node_schema(code)`, `get_node_example(code)`, затем `validate_node`; после запуска проверь логи. Отдельный MCP-просмотр переменных пользователя не реализован.
+
+## Частые ошибки
+
+- написан собственный `async def`;
+- используется имя, которое предыдущая нода не сохраняла;
+- результат присвоен только внутри функции;
+- не обработаны деление на ноль или неверный тип.
 
 ## Следующий шаг
 
-После code-ноды направь переход на `message` с `{answer}` или на `condition`, затем проверь схему и проект. Не добавляй `generate_bot_code` в обычный workflow без отдельной просьбы.
+Направь переход на `message` или `condition` и проверь сценарий тестовым пользователем.
