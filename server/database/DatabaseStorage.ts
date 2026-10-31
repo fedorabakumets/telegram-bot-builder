@@ -7,6 +7,7 @@ import { and, asc, desc, eq, gte, ilike, lt, inArray, isNull, notInArray, or, sq
 import { IStorage } from "../storages/storage";
 import type { StorageBotGroupInput, StorageBotGroupUpdate, StorageBotInstanceInput, StorageBotInstanceUpdate, StorageBotLaunchHistoryInput, StorageBotLaunchHistoryUpdate, StorageBotLogInput, StorageBotMessageInput, StorageBotMessageMediaInput, StorageBotProjectInput, StorageBotProjectUpdate, StorageBotTemplateInput, StorageBotTemplateUpdate, StorageBotTokenInput, StorageBotTokenUpdate, StorageGroupMemberInput, StorageGroupMemberUpdate, StorageMediaFileInput, StorageMediaFileUpdate, StorageTelegramUserInput, StorageBroadcastInput, StorageBroadcastUpdate, StorageBroadcastResultInput, StorageBroadcastCampaignInput, StorageBroadcastCampaignUpdate, StorageBotEnvVariableInput, StorageBotEnvVariableUpdate, StorageBotTableInput, StorageBotTableColumnInput, StorageBotTableRowInput, StorageWorkerProcessInput } from "../storages/storageTypes";
 import { db } from "./db";
+import { revokeOwnedAgentToken } from "../auth/agent/repository";
 import { generateAgentToken, hashAgentToken } from "../utils/agent-token-crypto";
 import { incrementMessageActivityDaily } from "./incrementMessageActivityDaily";
 import { markUserActivityDaily } from "../routes/users/mark-user-activity-daily";
@@ -743,10 +744,7 @@ export class DatabaseStorage implements IStorage {
    * @returns true, если токен был отозван, иначе false
    */
   async revokeAgentToken(id: number, ownerId: number): Promise<boolean> {
-    const result = await this.db.update(agentTokens)
-      .set({ revokedAt: new Date() })
-      .where(and(eq(agentTokens.id, id), eq(agentTokens.ownerId, ownerId), isNull(agentTokens.revokedAt)));
-    return result.rowCount ? result.rowCount > 0 : false;
+    return revokeOwnedAgentToken(id, ownerId);
   }
 
   /**

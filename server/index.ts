@@ -3,6 +3,7 @@
  * @module server/index
  */
 
+import { captureAgentBody } from "./auth/agent/signature";
 import dotenv from "dotenv";
 import express, { NextFunction, type Request, Response } from "express";
 import { createServer } from "http";
@@ -63,7 +64,7 @@ const app = express();
 // Railway и другие reverse proxy передают X-Forwarded-Proto
 // Без этого Express не знает что запрос пришёл через HTTPS и не ставит secure куки
 app.set('trust proxy', 1);
-app.use(express.json({ limit: '50mb' }));
+app.use(express.json({ limit: '50mb', verify: captureAgentBody }));
 app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 /** Парсер для тела запроса с Content-Type: text/plain — используется при импорте проекта через Telegram-бота */
 app.use(express.text({ limit: '50mb', type: 'text/plain' }));
@@ -100,7 +101,7 @@ app.use((req, res, next) => {
       }
 
       let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
+      if (capturedJsonResponse && !path.startsWith("/api/auth/agent/")) {
         logLine += ` :: ${redactSecrets(JSON.stringify(capturedJsonResponse))}`;
       }
 

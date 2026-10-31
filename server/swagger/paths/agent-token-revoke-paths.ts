@@ -32,7 +32,7 @@ export function registerAgentTokenRevokePaths(
     tags: ["agent-tokens"],
     summary: "Отозвать токен агента",
     description:
-      "Отзывает только токен **текущего** пользователя (`ownerId`). Чужой / несуществующий → 404.\n\n" +
+      "Для автоматического PAT также отключает подключение и отзывает все связанные PAT. Отзывает только токен **текущего** пользователя (`ownerId`). Чужой / несуществующий → 404.\n\n" +
       "**Path:** `id` — числовой ID записи в `agent_tokens` (из списка GET).\n\n" +
       "```bash\n" +
       "curl -s -X DELETE http://localhost:5000/api/agent-tokens/1 -b cookies.txt\n" +

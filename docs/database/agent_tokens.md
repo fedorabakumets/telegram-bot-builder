@@ -11,6 +11,7 @@
 | Name | Type | Default | Nullable | Children | Parents | Comment |
 |------|------|---------|----------|----------|---------|---------|
 | **id** | serial | - | NO | - | - | Уникальный идентификатор токена |
+| connection_id | integer | - | YES | - | [agent_connections.id](./agent_connections.md) | Автоматическое подключение, если токен выдан доверенному агенту |
 | owner_id | bigint | - | NO | - | [telegram_users.id](./telegram_users.md) | Идентификатор владельца токена (ссылка на telegram_users.id) |
 | label | text | - | NO | - | - | Пользовательское имя токена для отображения |
 | token_hash | text | - | NO | - | - | Хеш токена (sha-256 hex) — уникальный индекс, сам токен не хранится |
@@ -25,6 +26,7 @@
 
 | Name | Type | Definition |
 |------|------|------------|
+| fk_connection_id_agent_connections | FOREIGN KEY | (connection_id) → agent_connections(id) |
 | fk_owner_id_telegram_users | FOREIGN KEY | (owner_id) → telegram_users(id) |
 
 ### Indexes
@@ -37,4 +39,5 @@
 
 | Parent | Child | Type |
 |--------|-------|------|
+| [agent_connections.id](./agent_connections.md) | **[agent_tokens.connection_id](./agent_tokens.md)** | Many to One |
 | [telegram_users.id](./telegram_users.md) | **[agent_tokens.owner_id](./agent_tokens.md)** | Many to One |

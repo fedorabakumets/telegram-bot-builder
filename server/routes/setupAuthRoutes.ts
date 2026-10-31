@@ -7,6 +7,7 @@
  * @module setupAuthRoutes
  */
 
+import { setupAgentAutoAuthRoutes } from "../auth/agent/routes";
 import type { Express, RequestHandler } from "express";
 import { handleLogin } from "./auth/handlers/loginHandler";
 import { handleTelegramAuth } from "./auth/handlers/telegramAuthHandler";
@@ -37,6 +38,7 @@ function withAuthLimit(...handlers: RequestHandler[]): RequestHandler[] {
  * @param app - Экземпляр приложения Express
  */
 export function setupAuthRoutes(app: Express): void {
+    setupAgentAutoAuthRoutes(app);
     app.get("/api/auth/login", handleLogin);
     app.get("/api/auth/me", handleMe);
     app.post("/api/auth/logout", ...withAuthLimit(handleLogout));

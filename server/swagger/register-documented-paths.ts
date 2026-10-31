@@ -5,6 +5,7 @@
 
 import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import "./schemas/common";
+import { registerAgentAutoAuthPaths } from "./paths/agent-auto-auth-paths";
 import { registerAgentTokenPaths } from "./paths/agent-token-paths";
 import { registerAuthPaths } from "./paths/auth-paths";
 import { registerBotUsersPaths } from "./paths/bot-users-paths";
@@ -166,6 +167,7 @@ registerProjectsVersionsPrunePaths(documentedRegistry, cookieSecurity);
 registerProjectsUserDialogPaths(documentedRegistry, cookieSecurity);
 
 registerAgentTokenPaths(documentedRegistry, cookieSecurity);
+registerAgentAutoAuthPaths(documentedRegistry);
 registerBotUsersPaths(documentedRegistry, cookieSecurity);
 registerBotUsersStatsTrafficPaths(documentedRegistry, cookieSecurity);
 registerUnavailableUsersPaths(documentedRegistry, cookieSecurity);

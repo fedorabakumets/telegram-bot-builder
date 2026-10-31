@@ -45,6 +45,7 @@ export function useRevokeAgentToken() {
     mutationFn: (id) => apiRequest("DELETE", `${AGENT_TOKENS_KEY}/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [AGENT_TOKENS_KEY] });
+      queryClient.invalidateQueries({ queryKey: ["/api/agent-connections"] });
     },
   });
 }

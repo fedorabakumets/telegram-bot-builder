@@ -11,6 +11,10 @@
       "description": "Платформенная админка (`/admin/*`): вход по `ADMIN_API_KEY` → cookie `admin_auth` (Path=/admin, 7 дней). Настройки Studio, аккаунты платформы, проверка версии, seed/featured сценариев, cleanup `bots/`. User cookie / Bearer PAT **не** работают. Не путать с `projects` …/admin-ids (админы бота) и с `/api/bot/*`."
     },
     {
+      "name": "agent-connections",
+      "description": "Эндпоинты /api/agent-connections"
+    },
+    {
       "name": "agent-tokens",
       "description": "Персональные токены агента (PAT) для MCP/CLI: список, создание, отзыв. Секрет `mcp_…` отдаётся один раз при POST. Авторизация: session cookie или Bearer PAT."
     },
@@ -132,6 +136,262 @@
     }
   ],
   "paths": {
+    "/api/agent-connections": {
+      "get": {
+        "tags": [
+          "agent-connections"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "summary": "Подключения владельца браузерной сессии",
+        "description": "PAT не заменяет браузерную сессию.",
+        "responses": {
+          "200": {
+            "description": "Подключения без секретов",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "integer"
+                      },
+                      "agentId": {
+                        "type": "string"
+                      },
+                      "enabled": {
+                        "type": "boolean"
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "updatedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "agentId",
+                      "enabled",
+                      "createdAt",
+                      "updatedAt"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "SESSION_REQUIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "AUTO_AUTH_UNAVAILABLE: ключ, Redis или БД недоступны",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/agent-connections/{id}": {
+      "patch": {
+        "tags": [
+          "agent-connections"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "summary": "Отключить или явно восстановить своё подключение",
+        "description": "Только браузерная сессия владельца и совпадающий Origin. Отключение отзывает все PAT. Включение не восстанавливает старые PAT.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uri"
+            },
+            "required": true,
+            "name": "Origin",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "enabled": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "enabled"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Состояние сохранено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "INVALID_REQUEST",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "SESSION_REQUIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ORIGIN_MISMATCH",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: чужое или отсутствующее подключение",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "AUTO_AUTH_UNAVAILABLE: ключ, Redis или БД недоступны",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/agent-tokens": {
       "get": {
         "tags": [
@@ -335,7 +595,7 @@
           "agent-tokens"
         ],
         "summary": "Отозвать токен агента",
-        "description": "Отзывает только токен **текущего** пользователя (`ownerId`). Чужой / несуществующий → 404.\n\n**Path:** `id` — числовой ID записи в `agent_tokens` (из списка GET).\n\n```bash\ncurl -s -X DELETE http://localhost:5000/api/agent-tokens/1 -b cookies.txt\n```",
+        "description": "Для автоматического PAT также отключает подключение и отзывает все связанные PAT. Отзывает только токен **текущего** пользователя (`ownerId`). Чужой / несуществующий → 404.\n\n**Path:** `id` — числовой ID записи в `agent_tokens` (из списка GET).\n\n```bash\ncurl -s -X DELETE http://localhost:5000/api/agent-tokens/1 -b cookies.txt\n```",
         "security": [
           {
             "cookieAuth": []
@@ -419,6 +679,466 @@
                 },
                 "example": {
                   "error": "Не удалось отозвать токен агента"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/agent/disconnect": {
+      "post": {
+        "tags": [
+          "agent-auto-auth"
+        ],
+        "summary": "Отключить доступ доверенного агента",
+        "description": "Только сервер агента. Конструктор доверяет удостоверению отправителя этим сервером. HMAC-SHA256 подписывает METHOD + LF + PATH + LF + TIMESTAMP + LF + NONCE + LF + SHA256(raw body). Лимиты: 10/мин на пользователя, 300/мин на агента, 20 неверных подписей/мин на IP. PAT: read,write, без bot_manager, 24 часа, обновление за 5 минут; старый PAT доживает свой срок. Отключение отзывает все связанные PAT. Восстановление только браузерной сессией владельца. Не является инструментом MCP. Ответ Cache-Control: no-store.",
+        "security": [],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Идентификатор доверенного агента"
+            },
+            "required": true,
+            "description": "Идентификатор доверенного агента",
+            "name": "X-Agent-Id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{10}$",
+              "description": "Unix timestamp, допуск 60 секунд"
+            },
+            "required": true,
+            "description": "Unix timestamp, допуск 60 секунд",
+            "name": "X-Agent-Timestamp",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{32}$",
+              "description": "16 случайных байт hex; хранится в Redis 120 секунд"
+            },
+            "required": true,
+            "description": "16 случайных байт hex; хранится в Redis 120 секунд",
+            "name": "X-Agent-Nonce",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$",
+              "description": "HMAC-SHA256, lowercase hex"
+            },
+            "required": true,
+            "description": "HMAC-SHA256, lowercase hex",
+            "name": "X-Agent-Signature",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "exclusiveMinimum": true,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "id"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Успех",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "INVALID_REQUEST",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED: подпись или время",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "CONNECTION_REVOKED или AUTO_AUTH_NOT_ALLOWED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "REPLAY_DETECTED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "AUTO_AUTH_UNAVAILABLE: ключ, Redis или БД недоступны",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/agent/telegram": {
+      "post": {
+        "tags": [
+          "agent-auto-auth"
+        ],
+        "summary": "Доверенный обмен Telegram ID на PAT",
+        "description": "Только сервер агента. Конструктор доверяет удостоверению отправителя этим сервером. HMAC-SHA256 подписывает METHOD + LF + PATH + LF + TIMESTAMP + LF + NONCE + LF + SHA256(raw body). Лимиты: 10/мин на пользователя, 300/мин на агента, 20 неверных подписей/мин на IP. PAT: read,write, без bot_manager, 24 часа, обновление за 5 минут; старый PAT доживает свой срок. Отключение отзывает все связанные PAT. Восстановление только браузерной сессией владельца. Не является инструментом MCP. Ответ Cache-Control: no-store.",
+        "security": [],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Идентификатор доверенного агента"
+            },
+            "required": true,
+            "description": "Идентификатор доверенного агента",
+            "name": "X-Agent-Id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{10}$",
+              "description": "Unix timestamp, допуск 60 секунд"
+            },
+            "required": true,
+            "description": "Unix timestamp, допуск 60 секунд",
+            "name": "X-Agent-Timestamp",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{32}$",
+              "description": "16 случайных байт hex; хранится в Redis 120 секунд"
+            },
+            "required": true,
+            "description": "16 случайных байт hex; хранится в Redis 120 секунд",
+            "name": "X-Agent-Nonce",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$",
+              "description": "HMAC-SHA256, lowercase hex"
+            },
+            "required": true,
+            "description": "HMAC-SHA256, lowercase hex",
+            "name": "X-Agent-Signature",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "exclusiveMinimum": true,
+                    "maximum": 9007199254740991
+                  },
+                  "firstName": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 256
+                  },
+                  "lastName": {
+                    "type": "string",
+                    "maxLength": 256
+                  },
+                  "username": {
+                    "type": "string",
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "id",
+                  "firstName"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Успех",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string"
+                    },
+                    "expiresAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "connectionId": {
+                      "type": "integer"
+                    },
+                    "ownerId": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "token",
+                    "expiresAt",
+                    "connectionId",
+                    "ownerId"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "INVALID_REQUEST",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED: подпись или время",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "CONNECTION_REVOKED или AUTO_AUTH_NOT_ALLOWED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "REPLAY_DETECTED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "AUTO_AUTH_UNAVAILABLE: ключ, Redis или БД недоступны",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
                 }
               }
             }

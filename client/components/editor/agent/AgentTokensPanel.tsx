@@ -6,6 +6,7 @@
  * @module editor/agent/AgentTokensPanel
  */
 
+import { AgentConnections } from "./AgentConnections";
 import { useState } from "react";
 import { Bot, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -35,8 +36,8 @@ export function AgentTokensPanel() {
             <h2 className="text-lg font-semibold">Агент</h2>
           </div>
           <p className="max-w-xl text-sm text-muted-foreground">
-            Подключи ИИ-агента (Kiro / Cursor) к своим проектам. Агент сможет создавать и
-            редактировать ботов в реальном времени прямо на холсте через MCP.
+            Напишите Bot Builder Agent в личные сообщения — он подключится автоматически.
+            Для других клиентов MCP можно создать отдельный токен.
           </p>
         </div>
         <Button onClick={() => setCreateOpen(true)}>
@@ -44,6 +45,8 @@ export function AgentTokensPanel() {
           Создать токен
         </Button>
       </div>
+
+      <AgentConnections />
 
       {isLoading && <p className="text-sm text-muted-foreground">Загрузка токенов…</p>}
       {isError && <p className="text-sm text-destructive">Не удалось загрузить токены.</p>}

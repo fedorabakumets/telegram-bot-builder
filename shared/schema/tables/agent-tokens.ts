@@ -3,9 +3,10 @@
  * @module shared/schema/tables/agent-tokens
  */
 
-import { pgTable, text, serial, timestamp, bigint, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, bigint, integer, uniqueIndex } from "drizzle-orm/pg-core";
 import { z } from "zod";
 
+import { agentConnections } from "./agent-connections";
 import { telegramUsers } from "./telegram-users";
 
 /**
@@ -16,6 +17,8 @@ import { telegramUsers } from "./telegram-users";
 export const agentTokens = pgTable("agent_tokens", {
   /** Уникальный идентификатор токена */
   id: serial("id").primaryKey(),
+  /** Автоматическое подключение, если токен выдан доверенному агенту */
+  connectionId: integer("connection_id").references(() => agentConnections.id, { onDelete: "cascade" }),
   /** Идентификатор владельца токена (ссылка на telegram_users.id) */
   ownerId: bigint("owner_id", { mode: "number" }).references(() => telegramUsers.id, { onDelete: "cascade" }).notNull(),
   /** Пользовательское имя токена для отображения */

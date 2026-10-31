@@ -91,3 +91,6 @@ export type { MediaFileToken, InsertMediaFileToken } from "./media-file-tokens";
 
 export { supportThreads, supportMessages, supportAttachments } from "./support-chat";
 export type { SupportThread, SupportMessage, InsertSupportMessage, SupportAttachment } from "./support-chat";
+
+/** Подключения доверенного Telegram-агента. */
+export { agentConnections } from "./agent-connections";
