@@ -19,6 +19,9 @@ const SECRET_JSON_FIELDS = [
   "userbotApiHash",
   "USERBOT_API_HASH",
   "password",
+  "AGENT_AUTO_AUTH_SECRET",
+  "X-Agent-Signature",
+  "x-agent-signature",
   "webhookSecretToken",
 ];
 
@@ -40,7 +43,11 @@ const BOT_TOKEN_RE = /\b(\d{6,12}):[A-Za-z0-9_-]{30,}/g;
  * @returns строка без session string, токенов и значений секретных полей
  */
 export function redactSecrets(text: string): string {
-  return text
+  /** Межсервисный ключ скрывается также вне JSON. */
+  const secret = process.env.AGENT_AUTO_AUTH_SECRET;
+  const safe = secret ? text.split(secret).join(REDACTED) : text;
+  return safe
+    .replace(/\bmcp_[A-Za-z0-9_-]+\b/g, REDACTED)
     .replace(SECRET_FIELD_RE, (_m, field: string) => `"${field}":"${REDACTED}"`)
     .replace(SECRET_ENV_RE, (_m, field: string) => `${field}=${REDACTED}`)
     .replace(TELETHON_SESSION_RE, REDACTED)
