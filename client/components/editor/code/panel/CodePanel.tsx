@@ -4,6 +4,7 @@
  */
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { BotData, BotProject } from '@shared/schema';
 import { useQuery } from '@tanstack/react-query';
 import { useState, useRef, useEffect } from 'react';
@@ -15,6 +16,8 @@ import { CodeActions } from './CodeActions';
 import { CodeStats } from './CodeStats';
 import { JsonApplyBar } from './JsonApplyBar';
 import { CodeFormat } from '../hooks/use-code-generator';
+import './code-panel.css';
+import { useOpenCodeView } from '@/components/layout/flexible/components/code-view-navigation';
 
 /**
  * Свойства компонента панели кода
@@ -69,6 +72,7 @@ export function CodePanel({
   codeContent, isLoading, displayContent,
   onApplyJson, editedContent, onResetEditor,
 }: CodePanelProps) {
+  const openCodeView = useOpenCodeView();
   const [localSelectedFormat, setLocalSelectedFormat] = useState<CodeFormat>('python');
   const [localAreAllCollapsed, setLocalAreAllCollapsed] = useState(true);
   const [projectNames, setProjectNames] = useState<string[]>(() =>
@@ -100,9 +104,11 @@ export function CodePanel({
     }
   }, [editedContent, selectedFormat]);
 
+  /** Выбирает файл и открывает его содержимое в мобильном просмотре кода. */
   const handleFormatChange = (format: CodeFormat) => {
     onFormatChange ? onFormatChange(format) : setLocalSelectedFormat(format);
     setJsonError(null);
+    openCodeView?.();
   };
 
   const handleCollapseChange = (collapsed: boolean) => {
@@ -191,10 +197,10 @@ export function CodePanel({
   }[format]);
 
   return (
-    <div className="h-full bg-background overflow-auto">
-      <div className="p-1.5 xs:p-2 sm:p-3">
-        <div className="space-y-3 xs:space-y-4 sm:space-y-5 md:space-y-6">
-          <CodePanelHeader onClose={onClose} />
+    <div className="code-panel code-panel-scroll h-full overflow-auto bg-background">
+      <div className="code-panel-padding p-4 sm:p-6">
+        <div className="code-panel-stack mx-auto max-w-3xl space-y-6">
+          <CodePanelHeader />
 
           {botDataArray.map((_botData, index) => {
             const content = getCurrentContent(index);
@@ -203,8 +209,8 @@ export function CodePanel({
             const safeFileName = currentProjectName.replace(/[^a-zA-Z0-9_-]/g, '_');
 
             return (
-              <Card key={index} className="border border-border/50 shadow-sm">
-                <CardHeader className="pb-3 xs:pb-4 sm:pb-5">
+              <Card key={index} className="code-surface rounded-2xl border shadow-none">
+                <CardHeader className="code-project-header space-y-2 p-4 sm:p-6">
                   <div className="flex items-start gap-2 xs:gap-2.5 justify-between min-w-0">
                     <div className="flex items-center gap-1.5 xs:gap-2 min-w-0">
                       <div className="w-6 xs:w-7 h-6 xs:h-7 rounded-md flex items-center justify-center flex-shrink-0 bg-muted/50">
@@ -225,22 +231,26 @@ export function CodePanel({
                           />
                         ) : (
                           <CardTitle
-                            className="text-sm xs:text-base font-semibold truncate cursor-pointer"
+                            className="code-project-title cursor-pointer break-words text-base font-semibold"
                             onDoubleClick={() => startEditing(index)}
-                            title="Двойной клик для переименования"
+                            title={`${currentProjectName}. Двойной клик для переименования`}
                           >
-                            {currentProjectName}{projectIdSuffix}: {getFormatLabel(selectedFormat)}
+                            {currentProjectName}
                           </CardTitle>
                         )}
-                        <CardDescription className="text-xs xs:text-sm mt-0.5">
-                          Файлы проекта {currentProjectName}{projectIdSuffix}
+                        <CardDescription className="mt-1 text-xs">
+                          {getFormatLabel(selectedFormat)}{projectIdSuffix ? ` · Проект ${projectIds?.[index]}` : ''}
                         </CardDescription>
                       </div>
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-3 xs:space-y-3.5 sm:space-y-4">
+                <CardContent className="code-project-content space-y-4 p-4 pt-0 sm:p-6 sm:pt-0">
                   <BotValidation botData={botDataArray[index]} />
+                  {openCodeView && <Button onClick={openCodeView} className="code-action w-full px-3 text-base font-semibold">
+                    Открыть код <span aria-hidden="true">→</span>
+                  </Button>}
+                  <CodeActions content={content} selectedFormat={selectedFormat} fileName={safeFileName} isLoading={isLoading} />
                   <CodeFormatTabs selectedFormat={selectedFormat} projectName={currentProjectName} onFormatChange={handleFormatChange} />
                   {selectedFormat === 'json' && !editedContent && (
                     <div className="flex items-start gap-2 px-3 py-2 rounded-md bg-muted/40 border border-border/40">
@@ -258,7 +268,7 @@ export function CodePanel({
                       onApply={() => handleApplyJson(index)}
                       onReset={handleResetJson}
                     />
-                  )}                  <CodeActions content={content} selectedFormat={selectedFormat} fileName={safeFileName} />
+                  )}
                   <CodeStats
                     content={content}
                     selectedFormat={selectedFormat}

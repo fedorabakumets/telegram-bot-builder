@@ -1,0 +1,41 @@
+/**
+ * @fileoverview Оформление панели экспорта кода без изменения общей шапки редактора.
+ */
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap');
+.code-panel { font-family: 'Manrope', sans-serif; }
+/** Плотность панели зависит от её доступной высоты, в том числе при изменении масштаба. */
+.code-panel-scroll { container: code-panel / size; }
+.code-surface { background: #ffffff; }
+.code-inset { background: #f4f4f5; }
+.dark .code-surface { background: #181818; border-color: #313131; }
+.dark .code-inset { background: #272727; }
+.code-panel .code-file { background: transparent; border-color: transparent; color: inherit; box-shadow: none; }
+.code-panel .code-file:hover { background: #f4f4f5; }
+.dark .code-panel .code-file:hover { background: #272727; }
+.code-panel .code-file[data-state='active'] { border-color: #d4d4d8; background: #f4f4f5; }
+.dark .code-panel .code-file[data-state='active'] { border-color: #313131; background: #1f1f1f; }
+.code-file-marker { background: transparent; }
+.code-file[data-state='active'] .code-file-marker { background: #a1a1aa; }
+.code-file[data-state='active'] .code-file-tag { color: inherit; }
+.code-action { transition-duration: 300ms; transition-property: color, background-color, opacity, transform; transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1); }
+.code-action:active { transform: scale(0.98); }
+.code-panel .code-file:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .code-action:active { transform: none; } }
+
+/** Компактный список сохраняет размеры текста и доступность всех имён файлов. */
+@container code-panel (max-height: 800px) {
+  .code-panel-padding { padding: 12px; }
+  .code-panel-stack > :not([hidden]) ~ :not([hidden]),
+  .code-panel-header > :not([hidden]) ~ :not([hidden]),
+  .code-project-content > :not([hidden]) ~ :not([hidden]) { margin-top: 12px; }
+  .code-project-header { padding: 12px; }
+  .code-project-content { padding: 0 12px 12px; }
+  .code-project-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .code-project-header > div > div { width: 100%; }
+  .code-shortcuts { padding: 8px 12px; }
+  .code-file-list { gap: 4px; }
+  .code-panel .code-file { padding: 8px; gap: 8px; border-radius: 8px; }
+  .code-file-tag { height: 24px; width: 40px; border-radius: 4px; }
+  .code-file-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .code-file-description { display: none; }
+}

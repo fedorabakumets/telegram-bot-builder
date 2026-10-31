@@ -43,13 +43,8 @@ export async function setupVite(app: Express, server: Server): Promise<void> {
     configFile: path.resolve(import.meta.dirname, "..", "..", "..", "..", "vite.config.ts"),
     server: serverOptions,
     appType: "custom",
-    customLogger: {
-      ...viteLogger,
-      error: (msg, options) => {
-        viteLogger.error(msg, options);
-        process.exit(1);
-      },
-    },
+    /** Ошибки преобразования выводятся в терминал и оверлей без остановки сервера. */
+    customLogger: viteLogger,
   });
 
   // Обработка WebSocket upgrade для Vite HMR

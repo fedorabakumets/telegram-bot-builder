@@ -554,12 +554,12 @@ export default function Editor() {
     return () => observer.disconnect();
   }, []);
 
-  // Загрузка контента только при открытии панели кода или смене формата внутри открытой панели
+  /** Загружает выбранный файл и при прямом открытии вкладки кода после получения проекта. */
   useEffect(() => {
-    if (codePanelVisible || codeEditorVisible) {
+    if (activeProject?.id && (currentTab === 'export' || codePanelVisible || codeEditorVisible)) {
       loadContent(selectedFormat);
     }
-  }, [codePanelVisible, codeEditorVisible, selectedFormat]);
+  }, [currentTab, activeProject?.id, codePanelVisible, codeEditorVisible, selectedFormat]);
 
   // Получение текущего содержимого кода для выбранного формата
   const getCurrentContent = () => generatedCodeContent[selectedFormat] || '';
