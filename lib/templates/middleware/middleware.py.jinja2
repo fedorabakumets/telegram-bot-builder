@@ -1,4 +1,5 @@
 {#
+  @fileoverview Регистрация и журналирование сообщений со скрытием кодов входа.
   Middleware для логирования сообщений
 
   @param {boolean} userDatabaseEnabled - Включена ли база данных
@@ -59,6 +60,9 @@ async def message_logging_middleware(handler, event: types.Message, data: dict):
         # Сохраняем входящее сообщение от пользователя
         user_id = str(event.from_user.id)
         message_text = event.text or event.caption or "[медиа]"
+        # Одноразовый код входа не попадает в историю сообщений или аналитику.
+        if re.match(r'^/start(?:@\w+)?\s+link_', message_text):
+            message_text = '/start link_[скрыто]'
         message_data = {"message_id": event.message_id}
 
         # Для групповых сообщений сохраняем данные отправителя

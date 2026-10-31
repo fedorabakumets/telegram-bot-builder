@@ -17,6 +17,10 @@ import { middlewareParamsSchema } from './middleware.schema';
 // ─── generateMiddleware() ─────────────────────────────────────────────────────
 
 describe('generateMiddleware()', () => {
+  it('скрывает одноразовую ссылку входа в истории сообщений', () => {
+    const r = generateMiddleware(validParamsEnabled);
+    expect(r).toContain("message_text = '/start link_[скрыто]'");
+  });
   it('генерирует register_user_middleware по умолчанию', () => {
     const r = generateMiddleware(validParamsEnabled);
     expect(r).toContain('async def register_user_middleware');

@@ -230,8 +230,21 @@ test('P04', 'deepLinkSaveToVar=true + deepLinkVarName → оба set_user_var: r
   ]);
   const code = gen(p, 'p04');
   // Кастомная переменная сохраняется дополнительно к utm_source, а не вместо него
-  ok(code.includes('set_user_var(user_id, "referrer_id", args)'), 'кастомная переменная должна быть');
+  ok(code.includes('set_user_var(user_id, "referrer_id", safe_args)'), 'кастомная переменная должна быть');
   ok(code.includes('"utm_source"'), 'utm_source тоже должен сохраняться');
+});
+
+test('P04a', 'одноразовый код не сохраняется в аналитике и журналах', () => {
+  const p = makeCleanProject([
+    makeTriggerNode('t1', '/start', 'msg1', { deepLinkParam: 'link_', deepLinkMatchMode: 'startsWith' }),
+    makeMessageNode('msg1'),
+  ]);
+  const code = gen(p, 'p04a');
+  const router = code.split('async def deep_link_router')[1].split('@dp.message(CommandStart(deep_link=False))')[0];
+  ok(router.includes('args.startswith("link_") else args'), 'должна быть маска секретного параметра');
+  ok(router.includes('new_utm = safe_args') && router.includes('_dlp_value = safe_args'), 'аналитика должна использовать маску');
+  ok(!router.includes("args='{args}'"), 'совпадение не должно раскрывать параметр');
+  ok(router.includes('args.startswith("link_")'), 'маршрутизация должна использовать исходный параметр');
 });
 
 test('P05', 'deepLinkSaveToVar=false → кастомная переменная НЕ сохраняется, utm_source сохраняется', () => {

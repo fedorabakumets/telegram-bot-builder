@@ -2,6 +2,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { apiRequest } from '@/queryClient';
+import { ExternalLink } from 'lucide-react';
+
+/** Публичная ссылка на официальный Telegram-бот агента без данных доступа. */
+const TELEGRAM_AGENT_URL = 'https://t.me/botcraftstudiobot';
 
 /** Метаданные подключения без персональных токенов. */
 interface Connection {
@@ -28,7 +32,14 @@ export function AgentConnections() {
     },
   });
   return <section className="space-y-4 border rounded-lg p-4">
-    <h3 className="text-base font-semibold">Telegram Agent</h3>
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <h3 className="text-base font-semibold">Telegram Agent</h3>
+      <Button asChild className="w-full sm:w-auto">
+        <a href={TELEGRAM_AGENT_URL} target="_blank" rel="noopener noreferrer">
+          Открыть в Telegram <ExternalLink className="h-4 w-4" aria-hidden="true" />
+        </a>
+      </Button>
+    </div>
     <p className="text-sm text-muted-foreground">
       Напишите агенту в личные сообщения. Он подключит ваш профиль автоматически.
       Для нового пользователя создаётся пустой профиль конструктора.
