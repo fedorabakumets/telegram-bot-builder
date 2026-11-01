@@ -24,7 +24,7 @@ export interface FileStoragePaginationProps {
 /**
  * Отображает размер страницы и переходы в обычном потоке под файлами.
  * @param props - Текущая выборка и обработчики
- * @returns Панель пагинации
+ * @returns Панель пагинации либо отсутствие элемента для пустой выборки
  */
 export function FileStoragePagination({ page, totalPages, total, onPageChange, pageSize, onPageSizeChange }: FileStoragePaginationProps) {
   const root = useRef<HTMLElement>(null);
@@ -34,6 +34,8 @@ export function FileStoragePagination({ page, totalPages, total, onPageChange, p
     const list = panel?.querySelector('[data-testid="files-table-slot"]');
     if (panel && list) panel.scrollTo({ top: panel.scrollTop + list.getBoundingClientRect().top - panel.getBoundingClientRect().top - 16, behavior: 'instant' });
   };
+  /** Пустая выборка не требует переходов и выбора размера страницы. */
+  if (total <= 0) return null;
   return <nav ref={root} aria-label="Навигация по файлам" className="files-list-navigation">
     <FilePageSize value={pageSize} onChange={size => { onPageSizeChange(size); toList(); }} />
     <span className="files-pagination-range text-sm text-muted-foreground">{total ? `${(page - 1) * pageSize + 1}–${Math.min(page * pageSize, total)} из ${total.toLocaleString('ru-RU')}` : '0 файлов'}</span>

@@ -11,8 +11,8 @@ import { Button } from '@/components/ui/button';
 import { StorageManagerButton } from './storage/storage-manager-button';
 import { FileUploadButton } from './file-upload-button';
 
-/** URL документации по интерфейсу файлового хранилища */
-const DOCS_URL = 'https://fedorabakumets.github.io/wikinest/interface/files';
+/** Адрес документации файлового хранилища на Docusaurus. */
+const DOCS_URL = 'https://fedorabakumets.github.io/telegram-bot-builder/docs/interface/files';
 
 /** Пропсы группы кнопок шапки файлового хранилища */
 export interface FileStorageHeaderActionsProps {

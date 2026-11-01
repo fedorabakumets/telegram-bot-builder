@@ -255,8 +255,8 @@ export const FILE_SELECT_COLUMN_WIDTH_CLASS = 'w-12 min-w-12 max-w-12';
  * Приоритетные классы перекрывают синий акцент общего компонента.
  */
 export const FILE_CHECKBOX_CLASS =
-  '!h-6 !w-6 !rounded-[4px] !border-2 !border-foreground !bg-muted !shadow-none !scale-100 ' +
-  'dark:!border-foreground dark:!bg-muted dark:!shadow-none dark:!scale-100 ' +
+  '!h-6 !w-6 !rounded-[4px] !border-2 !border-[#606067] !bg-[#141416] !shadow-none !scale-100 ' +
+  'dark:!border-[#606067] dark:!bg-[#141416] dark:!shadow-none dark:!scale-100 ' +
   'data-[state=checked]:!bg-zinc-800 data-[state=checked]:!border-zinc-500 data-[state=checked]:!text-zinc-300 ' +
   'dark:data-[state=checked]:!bg-zinc-800 dark:data-[state=checked]:!border-zinc-500 dark:data-[state=checked]:!text-zinc-300';
 

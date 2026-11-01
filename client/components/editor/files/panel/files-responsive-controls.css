@@ -80,17 +80,27 @@
   .files-header-actions [data-state='unlimited'] > span[aria-hidden] { display: none; }
 }
 .files-filter-actions > details { background: transparent; }
-.files-filter-actions > details > summary { padding: 8px 0; }
-.files-filter-actions > details[open] { order: 5; flex-basis: 100%; }
+/** Справка имеет внутренние отступы и ту же высоту, что соседние действия. */
+.files-filter-actions > details > summary { padding: 10px 12px; min-height: 40px; box-sizing: border-box; line-height: 20px; }
 /** На широкой панели три группы равномерно заполняют строку с общим вертикальным центром. */
+.files-wide-page-size { display: none; }
+/** Размер страницы делит готовую строку действий вместо отдельной пустой полосы над таблицей. */
+@container files-page (min-width: 1100px) {
+  .files-page .files-filter-actions { grid-template-columns: auto minmax(0, 1fr) auto auto; column-gap: 24px; }
+  .files-wide-page-size { display: block; grid-column: 4; grid-row: 1; padding-left: 20px; border-left: 1px solid var(--border); }
+  .files-page .files-table-size-control { display: none; }
+}
 @container files-page (min-width: 600px) {
   .files-filter-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: center; }
   .files-filter-actions > .files-attach-controls { justify-self: center; }
-  .files-filter-actions > details { justify-self: end; }
-  .files-filter-actions > details[open] { grid-column: 1 / -1; justify-self: stretch; }
-  /** При включённом прикреплении справка исчезает, поэтому третья колонка не резервируется. */
-  .files-filter-actions:has([data-testid='toggle-attach-mode'][data-state='checked']) { grid-template-columns: minmax(0, 1fr) auto; }
-  .files-filter-actions:has([data-testid='toggle-attach-mode'][data-state='checked']) > .files-attach-controls { justify-self: end; }
+  /** Заголовок справки сохраняет свою ячейку, пояснение раскрывается под всей панелью. */
+  .files-filter-actions > details { display: contents; }
+  .files-filter-actions > details > summary { grid-column: 3; grid-row: 1; justify-self: end; }
+  .files-filter-actions > details[open]::details-content { display: contents; }
+  .files-filter-actions > details:not([open])::details-content { display: none; }
+  .files-filter-actions > details > p { grid-column: 1 / -1; grid-row: 2; margin: 0; padding: 12px; border: 1px solid var(--border); border-radius: 8px; }
+  /** Переключатель сохраняет среднюю колонку независимо от появления формы прикрепления. */
+  .files-filter-actions > .files-attach-controls { grid-column: 2; grid-row: 1; }
 }
 /** Одинаковая высота и начертание устраняют оптический сдвиг между фильтрами и прикреплением. */
 .files-page .files-filter-actions .files-attach-toggle { min-height: 40px; line-height: 20px; font-weight: 600; }
@@ -98,9 +108,6 @@
   height: 24px;
   border-radius: 9999px;
 }
-/** Включённый режим выделяется положением бегунка и спокойным серым фоном. */
-.dark .files-page .files-filter-actions .files-attach-toggle [role='switch'][data-state='checked'] { background: #343438; }
-.dark .files-page .files-filter-actions .files-attach-toggle [role='switch'][data-state='checked'] > span { background: #d4d4d8; }
 /** В узкой панели фильтры и прикрепление занимают отдельные строки. */
 @container files-page (max-width: 440px) {
   .files-filter-actions { flex-direction: column; align-items: stretch; }

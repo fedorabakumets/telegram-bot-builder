@@ -1,0 +1,19 @@
+/** @fileoverview Подсветка собственной панели при переносе файлов с устройства. */
+.files-drop-overlay { position: fixed; z-index: 40; pointer-events: none; border: 2px dashed #71717a; border-radius: 16px; background: rgb(255 255 255 / 95%); display: grid; place-items: center; padding: 24px; }
+.files-drop-overlay > div { display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; font-family: 'Manrope', sans-serif; }
+.files-drop-overlay strong { font-size: 18px; line-height: 28px; font-weight: 600; text-wrap: balance; }
+.files-drop-overlay span { font-size: 14px; line-height: 20px; color: #71717a; }
+.dark .files-drop-overlay { background: rgb(9 9 11 / 95%); color: #d4d4d8; }
+.dark .files-drop-overlay span { color: #a1a1aa; }
+/** Постоянная зона подсказывает место сброса и открывает выбор файлов по нажатию. */
+.files-drop-prompt { display: none; }
+.files-page .files-header-actions > button.files-drop-prompt {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  flex: 1 1 240px; min-height: 40px; padding: 8px 12px;
+  border: 1px dashed #71717a; border-radius: 8px; background: transparent;
+  color: #71717a; font-size: 14px; line-height: 20px; font-weight: 400;
+}
+.dark .files-page .files-header-actions > button.files-drop-prompt { border-color: #52525b; color: #a1a1aa; background: transparent; }
+@media (max-width: 360px) {
+  .files-page .files-header-actions > button.files-drop-prompt { grid-column: 1 / -1; flex-direction: row; }
+}

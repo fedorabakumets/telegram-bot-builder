@@ -22,8 +22,8 @@
   transition: background-color 300ms cubic-bezier(0.22,1,0.36,1);
 }
 .dark .files-delete-dialog button { border-color: #3f3f46; }
-.files-delete-dialog [data-testid='confirm-delete-file'] { color: #b91c1c; border-color: #b91c1c; }
-.dark .files-delete-dialog [data-testid='confirm-delete-file'] { color: #fca5a5; border-color: #7f1d1d; }
+.files-delete-dialog :is([data-testid='confirm-delete-file'], [data-testid='confirm-delete']) { color: #b91c1c; border-color: #b91c1c; }
+.dark .files-delete-dialog :is([data-testid='confirm-delete-file'], [data-testid='confirm-delete']) { color: #fca5a5; border-color: #7f1d1d; }
 .files-delete-dialog button:hover { background: #f4f4f5; }
 .dark .files-delete-dialog button:hover { background: #18181b; }
 .files-delete-dialog button:focus-visible { outline: 2px solid #a1a1aa; outline-offset: 2px; box-shadow: none; }

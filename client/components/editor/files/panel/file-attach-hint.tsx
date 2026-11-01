@@ -53,12 +53,21 @@ export function FileAttachHint({
     </details>;
   }
 
+  /** Инструкция находится в раскрываемой справке; активная форма не повторяет её текст. */
+  if (mode === 'page') {
+    return <div className={ATTACH_HINT_CLASS} data-testid="file-attach-hint" data-kind="form">
+      <div className="min-w-0 flex-1 space-y-3">
+        {children}
+        {onChooseNode && <Button type="button" variant="outline" size="sm" onClick={onChooseNode}>Выбрать блок на холсте →</Button>}
+      </div>
+    </div>;
+  }
+
   return (
     <div className={ATTACH_HINT_CLASS} data-testid="file-attach-hint" data-kind={kind}>
       <Paperclip className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
       <div className="min-w-0 flex-1 space-y-3"><p>{hintContent}</p>
         {children}
-        {kind === 'page-need-node' && onChooseNode && <Button type="button" variant="outline" size="sm" onClick={onChooseNode}>Выбрать блок на холсте →</Button>}
       </div>
     </div>
   );

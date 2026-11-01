@@ -10,6 +10,7 @@ import { Paperclip, Trash2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import './selection-action-bar.css';
+import './table/file-delete-confirm.css';
 import { SELECTION_BAR_CLASS } from './panel-styles';
 import {
   AlertDialog,
@@ -90,7 +91,7 @@ export function SelectionActionBar({
                 Удалить ({selectedCount})
               </Button>
             </AlertDialogTrigger>
-            <AlertDialogContent>
+            <AlertDialogContent className="files-delete-dialog">
               <AlertDialogHeader>
                 <AlertDialogTitle>Удалить выбранные файлы?</AlertDialogTitle>
                 <AlertDialogDescription>

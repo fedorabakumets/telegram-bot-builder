@@ -21,7 +21,7 @@
   .files-card-details > dl { grid-column: 1 / -1; margin-top: 0; }
 }
 /** Список сохраняет одну колонку и одинаковые интервалы независимо от раскрытых карточек. */
-@container files-collection (min-width: 700px) {
+@container files-collection (700px <= width < 1100px) {
   .files-collection .files-card-list { display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: 12px; }
   .files-card-list > .files-list-controls { grid-column: 1 / -1; }
   .files-card-list > .files-file-card { margin-top: 0; }

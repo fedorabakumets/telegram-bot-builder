@@ -6,6 +6,7 @@ import { FileMessageLink } from './file-message-link';
 import { getFileOrigin } from './file-origin';
 import { ArrowUpRight } from 'lucide-react';
 import { FileCardIds } from './file-card-ids';
+import { FileAttachAction } from '../file-attach-action';
 import { useProjectTokenLabels } from '@/components/editor/properties/media/use-project-token-labels';
 import { useFileNodeUsages } from '../../hooks/use-file-node-usages';
 import type { FileRowProps } from './file-row';
@@ -30,13 +31,13 @@ export function FileCardDetails({ file, projectId, selectedTokenId, collaborator
           <div className="files-detail-row"><dt>ID файла</dt><dd className="font-mono">{file.id}</dd></div>
         </div>
         <div className="files-detail-row files-detail-author"><dt>{origin.authorLabel}</dt><dd className="flex flex-wrap items-center gap-x-4 gap-y-2"><span>{origin.author}</span><FileMessageLink file={file} projectId={projectId} /></dd></div>
-        <div className="files-detail-row files-detail-ids"><dt>Telegram ID</dt><dd>
+        <div className={`files-detail-row files-detail-ids${hasIds ? '' : ' files-detail-ids-empty'}`}><dt>Telegram ID</dt><dd>
           {hasIds ? <FileCardIds projectId={projectId} file={file} labels={labels} selectedTokenId={selectedTokenId} />
             : <span className="text-muted-foreground">Не присвоен</span>}
         </dd></div>
         <FileSourceNode file={file} allSheets={allSheets} onGoToNode={onGoToNode} />
         {allSheets && <div className="files-detail-row files-detail-usage"><dt>Использование</dt><dd>
-          {usages.length === 0 ? <span className="text-muted-foreground">Не используется в блоках</span> : <ul className="space-y-2">
+          {usages.length === 0 ? <div className="flex flex-wrap items-center gap-2"><span className="text-muted-foreground">Не найдено использование в блоках</span><FileAttachAction fileId={file.id} /></div> : <ul className="space-y-2">
             {usages.map((usage) => <li key={`${usage.sheetId}:${usage.nodeId}`}>
               {onGoToNode ? <button type="button" className="text-left inline-flex max-w-full items-start gap-2 hover:underline" onClick={() => onGoToNode(usage.nodeId, usage.sheetId)}>
                 <span className="min-w-0 break-words">{usage.nodeLabel}<span className="block text-xs text-muted-foreground">{usage.sheetName}</span></span><ArrowUpRight className="h-4 w-4 shrink-0" />

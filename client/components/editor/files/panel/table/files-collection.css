@@ -19,7 +19,8 @@
 .dark .files-file-card-selected { background: #101012; border-color: #343438; }
 @container files-collection (min-width: 1100px) {
   .files-data-table { display: block; }
-  .files-card-list { display: none; }
+  /** Скрытие карточек имеет тот же приоритет, что и их сетка, исключая двойной список. */
+  .files-collection > .files-card-list { display: none; }
   .files-data-table table { min-width: 1200px; }
   .files-data-table td.sticky { background: #fff; }
   .dark .files-data-table td.sticky { background: #09090b; }

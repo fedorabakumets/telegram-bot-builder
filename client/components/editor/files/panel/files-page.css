@@ -21,7 +21,8 @@
 .dark .files-page [data-testid='category-tabs'] [role='tablist'] { background: #09090b; border-color: #29292d; }
 .files-page [data-testid='category-tabs'] [role='tab'] { height: 40px; padding: 8px 12px; font-size: 14px; line-height: 20px; box-shadow: none; color: var(--muted-foreground); }
 .files-page [data-testid='category-tabs'] [role='tab'][data-state='active'] { background: #e4e4e7; color: var(--foreground); box-shadow: none; }
-.dark .files-page [data-testid='category-tabs'] [role='tab'][data-state='active'] { background: #141416; }
+/** Активная категория совпадает по яркости и начертанию с обычными действиями. */
+.dark .files-page [data-testid='category-tabs'] [role='tab'][data-state='active'] { background: #141416; color: #b4b4bc; font-weight: 600; }
 .files-page [data-testid='storage-quota-bar'] { align-self: flex-end; }
 .files-attach-help { background: #f4f4f5; }
 .dark .files-attach-help { background: #09090b; }
@@ -51,8 +52,15 @@
   background-color: #fff;
 }
 .dark .files-page :is(.files-header-actions, .files-filter-actions, .files-file-card) .border {
-  border-color: #29292d;
+  border-color: #3f3f46;
   background-color: #09090b;
+}
+/** Цвет обычных действий повторяет нейтральный образец кнопки сброса фильтров. */
+.dark .files-page :is(.files-header-actions > button, [data-testid='filters-button'], .file-node-picker button, [data-testid='selection-action-bar'] button, .files-list-navigation button) {
+  color: #b4b4bc; border-color: #3f3f46; background-color: transparent;
+}
+.dark .files-page :is(.files-header-actions > button, [data-testid='filters-button'], .file-node-picker button, [data-testid='selection-action-bar'] button, .files-list-navigation button):hover:not(:disabled) {
+  background-color: #27272a;
 }
 .files-page :is(.files-header-actions, .files-filter-actions, .files-file-card) .border:hover {
   background-color: #f4f4f5;
@@ -111,18 +119,20 @@
   color: #fff;
 }
 .files-page .files-header-actions > button.bg-primary:hover { background: #29292d; }
-.dark .files-page .files-header-actions > button {
+.dark .files-page .files-header-actions > button[data-workspace-action][type='button'] {
   background: #09090b;
-  border-color: #29292d;
-  color: #e4e4e7;
+  border-color: #3f3f46;
+  color: #b4b4bc;
 }
 .dark .files-page .files-header-actions > button:hover { background: #141416; }
 .dark .files-page .files-header-actions > button.bg-primary {
-  background: #e4e4e7;
-  border-color: #e4e4e7;
-  color: #09090b;
+  background: transparent;
+  border-color: #3f3f46;
+  color: #b4b4bc;
 }
-.dark .files-page .files-header-actions > button.bg-primary:hover { background: #fff; }
+.dark .files-page .files-header-actions > button.bg-primary:hover { background: #27272a; }
+/** Значения селекторов и подпись режима используют ту же яркость, что и обычные кнопки. */
+.dark .files-page :is(.files-scope-controls [role='combobox'], .files-page-size select, .files-attach-toggle > span) { color: #b4b4bc; }
 /** Нейтральный тумблер обозначает режим отдельно от действия прикрепления. */
 .files-page .files-attach-toggle [role='switch'] {
   width: 40px;
@@ -135,8 +145,18 @@
   background: #d4d4d8;
 }
 .files-page .files-attach-toggle [role='switch'][data-state='checked'] { background: #343438; }
-.dark .files-page .files-attach-toggle [role='switch'] { background: #29292d; }
-.dark .files-page .files-attach-toggle [role='switch'][data-state='checked'] { background: #e4e4e7; }
+.dark .files-page .files-attach-toggle [role='switch'] {
+  --switch-unchecked-bg: #09090b;
+  --switch-unchecked-border: #3f3f46;
+  --switch-unchecked-thumb: #71717a;
+  background: #09090b;
+  border-color: #3f3f46;
+}
+/** Локальное наведение перекрывает принудительную серую заливку общего переключателя. */
+.dark .files-page .files-attach-toggle [role='switch'][data-state='unchecked']:hover { background-color: #09090b !important; }
+.dark .files-page .files-attach-toggle [role='switch'][data-state='unchecked']:hover > span { background-color: #a1a1aa !important; }
+.dark .files-page .files-attach-toggle [role='switch'][data-state='checked'] { background: #09090b; border-color: #a1a1aa; }
 .files-page .files-attach-toggle [role='switch'] > span { width: 16px; height: 16px; background: #fff; }
 .files-page .files-attach-toggle [role='switch'][data-state='checked'] > span { transform: translateX(20px); }
-.dark .files-page .files-attach-toggle [role='switch'][data-state='checked'] > span { background: #09090b; }
+.dark .files-page .files-attach-toggle [role='switch'] > span { background: #71717a; }
+.dark .files-page .files-attach-toggle [role='switch'][data-state='checked'] > span { background: #d4d4d8; }

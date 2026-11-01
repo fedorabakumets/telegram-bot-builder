@@ -9,6 +9,7 @@
  * @module components/editor/files/panel/file-storage-panel
  */
 import { FilePageSize } from './file-page-size';
+import { FileAttachActionProvider } from './file-attach-action';
 import { FileNodePicker } from './file-node-picker';
 import { Switch } from '@/components/ui/switch';
 import { useFileStoragePanelState } from './use-file-storage-panel-state';
@@ -43,9 +44,10 @@ export function FileStoragePanel(props: FileStoragePanelProps) {
   const rootClassName =
     mode === 'modal'
       ? 'flex min-h-0 h-full flex-1 flex-col overflow-hidden bg-background'
-      : 'files-page flex min-h-0 h-full flex-col gap-3 overflow-auto bg-background p-4 sm:p-6';
+      : 'files-page flex min-h-0 h-full flex-col gap-3 overflow-auto bg-background px-4 pb-4 pt-2 sm:px-6 sm:pb-6 sm:pt-3';
   return (
-    <div className={rootClassName} data-testid="file-storage-panel" data-mode={mode}>
+    <FileAttachActionProvider enabled={mode === 'page' && !!props.onSelectAttachNode} selectedIds={s.selectedIds} onToggle={s.toggleSelect} onEnable={s.setAttachModeEnabled}>
+      <div className={rootClassName} data-testid="file-storage-panel" data-mode={mode}>
       <FileStorageHeader
         quota={mode === 'page' && <StorageQuotaBar usedBytes={s.quota.usedBytes} s3UsedBytes={s.quota.s3UsedBytes} limitBytes={s.quota.limitBytes} isLoading={s.quota.isLoading} compact />}
         mode={mode}
@@ -59,7 +61,6 @@ export function FileStoragePanel(props: FileStoragePanelProps) {
         onUploaded={s.handleUploaded}
         isRefreshing={s.isFetching}
       />
-
       <FileStorageToolbar
         hideQuota={mode === 'page'}
         category={s.category}
@@ -69,7 +70,6 @@ export function FileStoragePanel(props: FileStoragePanelProps) {
         limitBytes={s.quota.limitBytes}
         quotaLoading={s.quota.isLoading}
       />
-
       {/* Фильтры + режим прикрепления в одной строке */}
       <div className={mode === 'page' ? 'files-filter-actions flex shrink-0 flex-wrap items-center justify-between gap-3' : FILE_STORAGE_ACTIONS_ROW_CLASS}>
         <FiltersRow
@@ -95,14 +95,14 @@ export function FileStoragePanel(props: FileStoragePanelProps) {
             )}
           </div>
         )}
-        {mode === 'page' && !s.attachModeEnabled && <FileAttachHint mode={mode} attachModeEnabled={false} hasTarget={!!attachTarget} />}
+        {/* Справка доступна независимо от состояния переключателя прикрепления. */}
+        {mode === 'page' && <FileAttachHint mode={mode} attachModeEnabled={false} hasTarget={!!attachTarget} />}
+        {mode === 'page' && s.total > 0 && <div className="files-wide-page-size"><FilePageSize value={s.pageSize} onChange={s.setPageSize} /></div>}
       </div>
-
       {(mode !== 'page' || s.attachModeEnabled) && <FileAttachHint mode={mode} attachModeEnabled={s.attachModeEnabled} hasTarget={!!attachTarget} nodeLabel={attachTarget?.nodeLabel} onChooseNode={props.onChooseAttachNode}>
         {mode === 'page' && s.attachModeEnabled && props.onSelectAttachNode && <FileNodePicker
           projectId={projectId} tokenId={selectedTokenId} sheets={allSheets ?? []} target={attachTarget} onSelect={props.onSelectAttachNode} onGoToNode={onGoToNode} />}
       </FileAttachHint>}
-
       <FiltersModal
         open={s.filtersOpen}
         value={s.filters}
@@ -111,7 +111,6 @@ export function FileStoragePanel(props: FileStoragePanelProps) {
         onOpenChange={s.setFiltersOpen}
         collaborators={s.collaborators}
       />
-
       {/* Таблица файлов: каркас + множественный выбор + адаптивность (Req 3.1, 7.1, 7.8, 13.3) */}
       <div className={mode === 'page' ? `files-surface files-content ${!s.files.length ? 'min-h-64' : 'min-h-48'} flex-1 overflow-auto rounded-xl border` : 'min-h-0 flex-1 overflow-auto'} data-testid="files-table-slot">
         {mode === 'page' && (s.isLoading || s.isError || !s.files.length) ? <FilesListState
@@ -133,10 +132,8 @@ export function FileStoragePanel(props: FileStoragePanelProps) {
           isLoading={s.isLoading}
         />}
       </div>
-
       {/* Плашка: в модалке всегда, на странице — при выборе или режиме прикрепления */}
       {mode === 'modal' && selectionActions}
-
       <FileStoragePagination
         pageSize={s.pageSize}
         onPageSizeChange={s.setPageSize}
@@ -146,5 +143,6 @@ export function FileStoragePanel(props: FileStoragePanelProps) {
         onPageChange={(next) => s.setPage(next)}
       />
     </div>
+    </FileAttachActionProvider>
   );
 }
