@@ -44,7 +44,7 @@ export function FileStoragePanel(props: FileStoragePanelProps) {
   const rootClassName =
     mode === 'modal'
       ? 'flex min-h-0 h-full flex-1 flex-col overflow-hidden bg-background'
-      : 'files-page flex min-h-0 h-full flex-col gap-3 overflow-auto bg-background px-4 pb-4 pt-2 sm:px-6 sm:pb-6 sm:pt-3';
+      : 'files-page workspace-tab-frame flex min-h-0 h-full flex-col gap-3 overflow-auto bg-background';
   return (
     <FileAttachActionProvider enabled={mode === 'page' && !!props.onSelectAttachNode} selectedIds={s.selectedIds} onToggle={s.toggleSelect} onEnable={s.setAttachModeEnabled}>
       <div className={rootClassName} data-testid="file-storage-panel" data-mode={mode}>

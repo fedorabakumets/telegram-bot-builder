@@ -1,3 +1,4 @@
+/** @fileoverview Навигация публичной документации Docusaurus по вкладкам и возможностям конструктора. */
 import type {SidebarsConfig} from '@docusaurus/plugin-content-docs';
 
 /**
@@ -40,6 +41,8 @@ const sidebars: SidebarsConfig = {
         'interface/dialogs',
         'interface/files',
         'interface/code',
+        'interface/versions',
+        'interface/agent',
         'interface/terminal',
         'interface/analytics',
         {

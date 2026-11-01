@@ -1,0 +1,28 @@
+/** @fileoverview Общая ширина рабочих вкладок, внешние отступы и ритм заголовков. */
+.workspace-tab-frame { width: 100%; min-width: 0; padding: 8px 16px 16px; box-sizing: border-box; }
+.workspace-tab-content { width: 100%; min-width: 0; max-width: none; margin-inline: 0; }
+.workspace-agent-host { padding: 0; }
+/** Одинаковые размеры действий и проектного селектора во всех рабочих областях. */
+.workspace-tab-actions > :is(button, a) { gap: 8px; color: #71717a; }
+.dark .workspace-tab-actions > :is(button, a) { color: #b4b4bc; }
+.workspace-tab-actions > :is(button, a) > span { display: none; }
+.workspace-project-scope { min-width: 0; width: 100%; }
+.workspace-project-scope > div { width: 100%; }
+.workspace-project-scope [role='combobox'] { width: 100%; max-width: none; min-width: 0; height: 40px; font-size: 14px; }
+@container (min-width: 720px) {
+  .workspace-tab-actions > :is(button, a) { width: auto; padding-inline: 12px; }
+  .workspace-tab-actions > :is(button, a) > span { display: inline; }
+}
+.workspace-tab-heading.workspace-tab-heading { align-items: center; gap: 16px; }
+.workspace-tab-heading.workspace-tab-heading > div:first-child { min-width: 0; }
+.workspace-tab-heading.workspace-tab-heading > div:first-child > p { margin-top: 8px; font-size: 14px; line-height: 20px; }
+/** Широкая рабочая область использует общий компактный заголовок в одну строку. */
+@container (min-width: 720px) {
+  .workspace-tab-heading.workspace-tab-heading > div:first-child { display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 8px 24px; }
+  .workspace-tab-heading.workspace-tab-heading > div:first-child > p { margin: 0; }
+}
+/** В узкой панели описание переносится ниже названия без горизонтального переполнения. */
+@container (max-width: 719px) {
+  .workspace-tab-heading.workspace-tab-heading > div:first-child { display: block; }
+}
+@media (min-width: 640px) { .workspace-tab-frame { padding: 12px 24px 24px; } }

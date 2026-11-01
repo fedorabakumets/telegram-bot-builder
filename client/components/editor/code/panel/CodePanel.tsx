@@ -23,6 +23,12 @@ import { useOpenCodeView } from '@/components/layout/flexible/components/code-vi
  * Свойства компонента панели кода
  */
 interface CodePanelProps {
+  /** Доступные проекты для переключения без выхода из вкладки. */
+  projects?: Array<{ /** Идентификатор. */ id: number; /** Название. */ name: string }>;
+  /** Переключить текущий проект. */
+  onProjectChange?: (id: number) => void;
+  /** Повторно сгенерировать выбранный файл. */
+  onRefresh?: () => void;
   /** Массив данных ботов */
   botDataArray: BotData[];
   /** Массив ID проектов */
@@ -66,6 +72,7 @@ interface CodePanelProps {
  */
 export function CodePanel({
   botDataArray, projectIds, projectName, onClose,
+  projects, onProjectChange, onRefresh,
   selectedFormat: externalSelectedFormat, onFormatChange,
   areAllCollapsed, onCollapseChange,
   onShowFullCodeChange, onBotDataUpdate,
@@ -81,6 +88,11 @@ export function CodePanel({
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editingValue, setEditingValue] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  /** Смена проекта обновляет его подпись и закрывает редактирование прежнего имени. */
+  useEffect(() => {
+    setProjectNames(Array.from({ length: botDataArray.length }, (_, index) => projectName || `Проект ${index + 1}`));
+    setEditingIndex(null);
+  }, [projectName, projectIds?.[0], botDataArray.length]);
 
   /** Текст ошибки валидации JSON */
   const [jsonError, setJsonError] = useState<string | null>(null);
@@ -198,9 +210,9 @@ export function CodePanel({
 
   return (
     <div className="code-panel code-panel-scroll h-full overflow-auto bg-background">
-      <div className="code-panel-padding p-4 sm:p-6">
-        <div className="code-panel-stack mx-auto max-w-3xl space-y-6">
-          <CodePanelHeader />
+      <div className="workspace-tab-frame">
+        <div className="code-panel-stack workspace-tab-content space-y-6">
+          <CodePanelHeader projectId={projectIds?.[0] ?? 0} projects={projects} onProjectChange={onProjectChange} onRefresh={onRefresh} isRefreshing={isLoading} />
 
           {botDataArray.map((_botData, index) => {
             const content = getCurrentContent(index);

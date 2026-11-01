@@ -1593,6 +1593,9 @@ export default function Editor() {
         botDataArray={[activeProject.data as BotData]}
         projectIds={[activeProject.id]}
         projectName={activeProject.name}
+        projects={allProjects}
+        onProjectChange={(id) => { setSelectedDatabaseTokenId(null); setLocation(`/projects/${id}?tab=export`); }}
+        onRefresh={() => { void loadContent(selectedFormat, true); }}
         onClose={handleCloseCodePanel}
         selectedFormat={selectedFormat}
         onFormatChange={handleFormatChange}
@@ -1968,13 +1971,15 @@ export default function Editor() {
               <Suspense fallback={<LazyPanelFallback />}>
                 <VersionsPanel
                   projectId={activeProject.id}
+                  projects={allProjects}
+                  onProjectChange={(id) => { setSelectedDatabaseTokenId(null); setLocation(`/projects/${id}?tab=versions`); }}
                   onRestored={discardLocalChanges}
                 />
               </Suspense>
             </div>
           )}
           {currentTab === 'agent' && (
-            <div className="h-full p-4 sm:p-6 bg-background overflow-auto">
+            <div className="workspace-agent-host h-full bg-background overflow-auto">
               <Suspense fallback={<LazyPanelFallback />}>
                 <AgentTokensPanel />
               </Suspense>
@@ -1994,6 +1999,9 @@ export default function Editor() {
             botDataArray={[activeProject.data as BotData]}
             projectIds={[activeProject.id]}
             projectName={activeProject.name}
+            projects={allProjects}
+            onProjectChange={(id) => { setSelectedDatabaseTokenId(null); setLocation(`/projects/${id}?tab=export`); }}
+            onRefresh={() => { void loadContent(selectedFormat, true); }}
             onClose={handleToggleCodePanel}
             selectedFormat={selectedFormat}
             onFormatChange={handleFormatChange}
