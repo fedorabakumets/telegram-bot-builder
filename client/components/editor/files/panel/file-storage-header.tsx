@@ -131,6 +131,7 @@ export function FileStorageHeader(props: FileStorageHeaderProps): React.JSX.Elem
         actions={<div className="flex shrink-0 items-center gap-2"><FileStorageDocsLink /><Button variant="ghost" size="icon" className="files-action h-8 w-8" onClick={onRefresh}
           disabled={props.isRefreshing} aria-label="Обновить список файлов" title="Обновить список файлов" data-testid="file-storage-refresh">
           <RefreshCw className="h-4 w-4" aria-hidden="true" />
+          <span className="files-heading-action-label">Обновить</span>
         </Button></div>} />
       <HeaderSelectors {...props} />
       <div className="files-header-actions flex flex-wrap items-center gap-2">{actions}{props.quota}</div>

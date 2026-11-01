@@ -1,10 +1,10 @@
 /** @fileoverview Спокойные массовые действия с переносом по доступной ширине списка файлов. */
 .files-page [data-testid='selection-action-bar'] {
-  display: flex; flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 12px;
+  display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;
   padding: 12px; min-width: 0; container: file-selection-actions / inline-size;
 }
 .files-page [data-testid='selection-action-bar'] > div {
-  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 40px;
+  display: grid; grid-auto-flow: column; grid-auto-columns: minmax(144px, 1fr); grid-auto-rows: 40px;
   align-items: center; align-content: start; gap: 8px; min-width: 0; height: auto;
 }
 .files-page [data-testid='selection-action-bar'] button {
@@ -17,7 +17,7 @@
 .files-page [data-testid='selection-action-bar'] button svg { flex-shrink: 0; }
 /** Счётчик образует компактный заголовок, число визуально отделено от подписи. */
 .files-page [data-testid='selection-action-bar'] .files-selection-count {
-  display: inline-flex; align-items: center; align-self: flex-start; gap: 8px;
+  display: inline-flex; align-items: center; align-self: center; gap: 8px;
   font-size: 12px; line-height: 16px;
 }
 .files-selection-number {
@@ -29,6 +29,6 @@
 .files-page [data-testid='selection-action-bar'] > div > button { margin: 0; }
 /** На очень узкой панели действия занимают всю строку без горизонтальной прокрутки. */
 @container file-selection-actions (max-width: 360px) {
-  .files-page [data-testid='selection-action-bar'] > div { grid-template-columns: minmax(0, 1fr); }
+  .files-page [data-testid='selection-action-bar'] > div { width: 100%; grid-auto-flow: row; grid-template-columns: minmax(0, 1fr); grid-auto-columns: auto; }
   .files-page [data-testid='selection-action-bar'] > div > button { flex-basis: auto; width: 100%; }
 }

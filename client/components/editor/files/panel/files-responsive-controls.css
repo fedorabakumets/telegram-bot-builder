@@ -4,6 +4,16 @@
 .files-page [data-testid='file-attach-hint'] > svg { color: var(--muted-foreground); }
 .files-page [data-testid='file-attach-hint'] button { color: var(--foreground); }
 /** Описание использует всю ширину панели, отдельно от служебных действий шапки. */
+/** Подписи служебных действий появляются только при достаточной ширине панели. */
+.files-heading-action-label { display: none; }
+/** Служебные действия шапки используют спокойный нейтральный цвет во всех состояниях. */
+.dark .files-page-header > header .files-action { color: #b4b4bc; background: transparent; }
+.dark .files-page-header > header .files-action:hover { color: #d4d4d8; background: #18181b; }
+.dark .files-page-header > header .files-action:focus-visible { outline: 2px solid #71717a; outline-offset: 2px; box-shadow: none; }
+@container files-page (min-width: 720px) {
+  .files-page-header > header .files-action { width: auto; padding: 8px 12px; gap: 8px; font-size: 14px; line-height: 20px; }
+  .files-page-header > header .files-heading-action-label { display: inline; }
+}
 /** На широком экране описание продолжает заголовок, освобождая строку для списка. */
 @container files-page (min-width: 441px) {
   .files-page-header > header { align-items: center; }
@@ -54,7 +64,7 @@
   .files-page { padding: 8px; gap: 8px; }
 }
 /** Служебные действия занимают одну строку вместо отдельных разреженных полос. */
-.files-filter-actions { justify-content: flex-start; gap: 12px 16px; }
+.files-filter-actions { justify-content: space-between; gap: 12px 16px; }
 .files-filter-actions > [data-testid='filters-row'] { flex: 0 1 auto; }
 /** Квота использует свободную часть строки загрузки, не создавая отдельную полосу. */
 .files-page .files-header-actions > [data-testid='storage-quota-bar'] { margin-left: auto; align-self: center; }
@@ -72,6 +82,16 @@
 .files-filter-actions > details { background: transparent; }
 .files-filter-actions > details > summary { padding: 8px 0; }
 .files-filter-actions > details[open] { order: 5; flex-basis: 100%; }
+/** На широкой панели три группы равномерно заполняют строку с общим вертикальным центром. */
+@container files-page (min-width: 600px) {
+  .files-filter-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: center; }
+  .files-filter-actions > .files-attach-controls { justify-self: center; }
+  .files-filter-actions > details { justify-self: end; }
+  .files-filter-actions > details[open] { grid-column: 1 / -1; justify-self: stretch; }
+  /** При включённом прикреплении справка исчезает, поэтому третья колонка не резервируется. */
+  .files-filter-actions:has([data-testid='toggle-attach-mode'][data-state='checked']) { grid-template-columns: minmax(0, 1fr) auto; }
+  .files-filter-actions:has([data-testid='toggle-attach-mode'][data-state='checked']) > .files-attach-controls { justify-self: end; }
+}
 /** Одинаковая высота и начертание устраняют оптический сдвиг между фильтрами и прикреплением. */
 .files-page .files-filter-actions .files-attach-toggle { min-height: 40px; line-height: 20px; font-weight: 600; }
 .files-page .files-filter-actions .files-attach-toggle [role='switch'] {

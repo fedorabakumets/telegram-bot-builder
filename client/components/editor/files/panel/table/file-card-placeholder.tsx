@@ -12,6 +12,7 @@ import { MEDIA_TYPE_LABELS, formatDate, getPreviewUrl, shouldShowPreview } from 
 import { getDownloadHref } from './file-download';
 import { MediaThumbnail } from './media-thumbnail';
 import { FileCardDetails } from './file-card-details';
+import { FileDeleteConfirm } from './file-delete-confirm';
 
 
 /**
@@ -50,7 +51,7 @@ export function FileCardPlaceholder({
               <a href={downloadHref} download={name} aria-label={`Скачать ${name}`} title="Скачать файл"><Download className="h-4 w-4" /></a>
             </Button>
           ) : <Button variant="outline" size="sm" disabled>Скачивание недоступно</Button>}
-          {onDelete && <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => onDelete(file.id)} aria-label={`Удалить ${name}`} title="Удалить файл"><Trash2 className="h-4 w-4" /></Button>}
+          {onDelete && <FileDeleteConfirm id={file.id} name={name} onDelete={onDelete}><Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" aria-label={`Удалить ${name}`} title="Удалить файл"><Trash2 className="h-4 w-4" /></Button></FileDeleteConfirm>}
         </div>
       </div>
       <FileCardDetails file={file} projectId={projectId} selectedTokenId={selectedTokenId} collaborators={collaborators} allSheets={allSheets} onGoToNode={onGoToNode} selected={selected} onToggle={onToggle} onCopy={onCopy} />

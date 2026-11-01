@@ -1,24 +1,29 @@
-/** @fileoverview Компактные карточки файлов: основные действия справа без пустой верхней области. */
+/** @fileoverview Стабильная сетка карточки: раскрытие сведений не меняет положение верхней строки. */
 @container files-collection (min-width: 440px) {
+  /** Геометрия колонок одинакова в закрытом и раскрытом состоянии. */
   .files-card-list .files-file-card {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: start;
-    gap: 12px 16px;
+    display: grid; width: 100%; min-width: 0; max-width: 100%;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+    align-items: start; gap: 12px 16px;
   }
   .files-page .files-collection .files-card-list .files-file-card > * { margin-top: 0; }
-  .files-card-heading { grid-column: 1; grid-row: 1; }
+  .files-card-heading { grid-column: 1; grid-row: 1; min-width: 0; }
   .files-card-actions { display: contents; }
-  .files-card-actions > div { grid-column: 2; grid-row: 1; align-self: center; }
-  /** Сохраняем положение заголовка и плавно проявляем линию вместо скачка отступа. */
-  .files-file-card > .files-card-details {
-    grid-column: 1 / -1; grid-row: 2;
-    border-top: 1px solid transparent; padding-top: 8px;
-    transition: border-color 180ms ease;
+  .files-card-actions > div { grid-column: 3; grid-row: 1; align-self: center; justify-self: end; margin: 0; }
+  .files-file-card > .files-card-details { display: contents; }
+  .files-card-details[open]::details-content { display: contents; }
+  .files-card-details:not([open])::details-content { display: none; }
+  /** Для маркера раскрытия сохранено место, чтобы подпись не сдвигалась. */
+  .files-card-details > summary {
+    grid-column: 2; grid-row: 1; align-self: center; justify-self: center;
+    margin-top: 0; font-size: 14px; line-height: 20px; white-space: nowrap;
   }
-  .files-file-card > .files-card-details[open] { border-top-color: var(--border); }
+  .files-card-details > dl { grid-column: 1 / -1; margin-top: 0; }
 }
-/** Учитываем системную настройку уменьшения движения. */
-@media (prefers-reduced-motion: reduce) {
-  .files-file-card > .files-card-details { transition: none; }
+/** Список сохраняет одну колонку и одинаковые интервалы независимо от раскрытых карточек. */
+@container files-collection (min-width: 700px) {
+  .files-collection .files-card-list { display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: 12px; }
+  .files-card-list > .files-list-controls { grid-column: 1 / -1; }
+  .files-card-list > .files-file-card { margin-top: 0; }
+  .files-page .files-card-list .files-card-actions .files-card-buttons svg { width: 20px; height: 20px; }
 }

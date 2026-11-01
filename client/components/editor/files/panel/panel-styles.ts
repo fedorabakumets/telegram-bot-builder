@@ -251,14 +251,14 @@ export function getFileSizeTextClass(size: number | null | undefined): string {
 export const FILE_SELECT_COLUMN_WIDTH_CLASS = 'w-12 min-w-12 max-w-12';
 
 /**
- * Чекбокс в таблице файлов. `!` перебивает `dark:border-border/80` у общего
- * Checkbox — иначе пустая галочка почти не видна.
+ * Флажок выбора файлов с нейтральной заливкой и заметной рамкой.
+ * Приоритетные классы перекрывают синий акцент общего компонента.
  */
 export const FILE_CHECKBOX_CLASS =
   '!h-6 !w-6 !rounded-[4px] !border-2 !border-foreground !bg-muted !shadow-none !scale-100 ' +
   'dark:!border-foreground dark:!bg-muted dark:!shadow-none dark:!scale-100 ' +
-  'data-[state=checked]:!bg-primary data-[state=checked]:!border-primary data-[state=checked]:!text-primary-foreground ' +
-  'dark:data-[state=checked]:!bg-primary dark:data-[state=checked]:!border-primary dark:data-[state=checked]:!text-primary-foreground';
+  'data-[state=checked]:!bg-zinc-800 data-[state=checked]:!border-zinc-500 data-[state=checked]:!text-zinc-300 ' +
+  'dark:data-[state=checked]:!bg-zinc-800 dark:data-[state=checked]:!border-zinc-500 dark:data-[state=checked]:!text-zinc-300';
 
 /** Sticky-класс для колонки выбора (первая, ширина чекбокса) */
 export const STICKY_COLUMN_SELECT =
