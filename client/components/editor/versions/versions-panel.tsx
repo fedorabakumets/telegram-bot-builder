@@ -4,7 +4,9 @@
  */
 
 import { useCallback, useState, useRef, useEffect } from 'react';
-import { History, RefreshCw } from 'lucide-react';
+import { History } from 'lucide-react';
+import { WorkspaceTabActions } from '@/components/ui/workspace-tab-actions';
+import { WorkspaceProjectScope, type WorkspaceProjectScopeProps } from '@/components/ui/workspace-project-scope';
 import { Button } from '@/components/ui/button';
 import { WorkspaceTabHeading } from '@/components/ui/workspace-tab-heading';
 import { useToast } from '@/hooks/use-toast';
@@ -15,7 +17,7 @@ import { VersionsPagination } from './versions-pagination';
 import './versions-page.css';
 
 /** Пропсы панели версий */
-export interface VersionsPanelProps {
+export interface VersionsPanelProps extends WorkspaceProjectScopeProps {
   /** ID проекта */
   projectId: number;
   /** Колбэк после успешного восстановления версии */
@@ -27,7 +29,7 @@ export interface VersionsPanelProps {
  * @param props - Свойства компонента
  * @returns JSX элемент панели версий
  */
-export function VersionsPanel({ projectId, onRestored }: VersionsPanelProps) {
+export function VersionsPanel({ projectId, onRestored, projects, onProjectChange }: VersionsPanelProps) {
   const { toast } = useToast();
   const { data: versions = [], isLoading, isError, isFetching, refetch } = useProjectVersions(projectId);
   const restoreMutation = useRestoreProjectVersion(projectId);
@@ -76,17 +78,13 @@ export function VersionsPanel({ projectId, onRestored }: VersionsPanelProps) {
   }, [restoreMutation, onRestored, toast]);
 
   return (
-    <div ref={panel} className="versions-page h-full overflow-auto bg-background p-4 sm:p-6">
-      <div className="versions-content mx-auto max-w-5xl space-y-6 pb-4">
+    <div ref={panel} className="versions-page workspace-tab-frame h-full overflow-auto bg-background">
+      <div className="versions-content workspace-tab-content space-y-6 pb-4">
         <WorkspaceTabHeading title="История версий" icon={<History />}
           description="Сохраняйте важные этапы и возвращайтесь к предыдущим версиям проекта."
-          actions={
-          <Button variant="ghost" size="icon" disabled={isFetching} onClick={() => void refetch()} className="versions-action h-8 w-8"
-            aria-label={isFetching ? 'Обновление истории…' : 'Обновить историю версий'} title="Обновить историю версий">
-            <RefreshCw className="h-4 w-4" aria-hidden="true" />
-          </Button>
-          }
+          actions={<WorkspaceTabActions docsPath="interface/versions" section="История версий" onRefresh={() => void refetch()} isRefreshing={isFetching} />}
         />
+        <WorkspaceProjectScope projectId={projectId} projects={projects} onProjectChange={onProjectChange} />
         <CommitForm projectId={projectId} />
         <section className="space-y-3" aria-labelledby="saved-versions-heading" aria-busy={isFetching}>
           <div className="flex flex-wrap items-center justify-between gap-2">

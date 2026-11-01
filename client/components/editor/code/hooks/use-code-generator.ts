@@ -176,8 +176,9 @@ export function useCodeGenerator({
   /**
    * Загружает содержимое для выбранного формата с кэшированием
    * @param selectedFormat - Формат кода для загрузки
+   * @param force - Перегенерировать файл, даже если он уже находится в кэше
    */
-  const loadContent = useCallback(async (selectedFormat: CodeFormat) => {
+  const loadContent = useCallback(async (selectedFormat: CodeFormat, force = false) => {
     const prev = prevDataRef.current;
     const currentBotDataStr = JSON.stringify(botData);
     const currentTokenDataStr = JSON.stringify(tokenData);
@@ -202,7 +203,7 @@ export function useCodeGenerator({
 
     const isEnvChanged = dataChanged && selectedFormat === 'env';
     const isAlreadyLoaded = loadedFormatsRef.current.has(selectedFormat) && codeContentRef.current[selectedFormat] && !isEnvChanged;
-    if (isAlreadyLoaded) return;
+    if (isAlreadyLoaded && !force) return;
 
     setIsLoading(true);
     try {

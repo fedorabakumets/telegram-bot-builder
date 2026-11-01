@@ -7,6 +7,7 @@
  */
 
 import { AgentConnections } from "./AgentConnections";
+import { AgentHeaderActions } from './agent-header-actions';
 import { useState } from "react";
 import { Sparkles } from "lucide-react";
 import "./agent-page.css";
@@ -30,8 +31,8 @@ export function AgentTokensPanel() {
   const [revokeTarget, setRevokeTarget] = useState<AgentTokenDto | null>(null);
 
   return (
-    <div className="agent-page mx-auto w-full max-w-5xl space-y-6 pb-4">
-      <WorkspaceTabHeading title="Агент" icon={<Sparkles />}
+    <div className="agent-page workspace-tab-frame workspace-tab-content space-y-6">
+      <WorkspaceTabHeading title="Агент" icon={<Sparkles />} actions={<AgentHeaderActions />}
         description="Подключите Telegram Agent к своему профилю, чтобы работать с ботами в переписке." />
       <AgentConnections />
       <section aria-labelledby="agent-tokens-heading" className="space-y-4">
