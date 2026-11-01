@@ -1,5 +1,5 @@
 {#
-  Патчинг Message.answer / Message.answer_photo / Message.answer_video /
+  @fileoverview Патчинг Message.answer / Message.answer_photo / Message.answer_video /
   Message.answer_audio / Message.answer_document для логирования исходящих сообщений
   и вызова обработчиков outgoing_message_trigger.
   Вызывается один раз при старте через _wrap_message_answer(bot).
@@ -73,7 +73,7 @@ def _wrap_message_answer(bot_instance):
             message_data_obj = {"message_id": result.message_id if result else None}
             if result and hasattr(result, "photo") and result.photo:
                 largest = result.photo[-1]
-                message_data_obj["photo"] = {"file_id": largest.file_id, "width": largest.width, "height": largest.height}
+                message_data_obj["photo"] = {"file_id": largest.file_id, "width": largest.width, "height": largest.height, "file_size": getattr(largest, "file_size", None)}
             # Сохраняем исходящее фото бота асинхронно (fire-and-forget)
             _fire_save_message(
                 user_id=user_id,

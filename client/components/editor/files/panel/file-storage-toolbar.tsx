@@ -16,6 +16,8 @@ export interface FileStorageToolbarProps {
   onCategoryChange: (category: FileCategory) => void;
   /** Занято байт */
   usedBytes: number;
+  /** Объём файлов в S3 отдельно от локальной квоты */
+  s3UsedBytes?: number;
   /** Лимит байт (null = безлимитно) */
   limitBytes: number | null;
   /** Загрузка квоты */
@@ -31,6 +33,7 @@ export function FileStorageToolbar({
   category,
   onCategoryChange,
   usedBytes,
+  s3UsedBytes,
   limitBytes,
   quotaLoading,
 }: FileStorageToolbarProps): React.JSX.Element {
@@ -39,6 +42,7 @@ export function FileStorageToolbar({
       <CategoryTabs category={category} onCategoryChange={onCategoryChange} embedded />
       <StorageQuotaBar
         usedBytes={usedBytes}
+        s3UsedBytes={s3UsedBytes}
         limitBytes={limitBytes}
         isLoading={quotaLoading}
         compact

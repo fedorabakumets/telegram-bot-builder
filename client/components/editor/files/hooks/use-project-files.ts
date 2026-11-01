@@ -42,6 +42,8 @@ export interface ProjectFile {
   chatId?: string | null;
   /** Тип исходного чата Telegram. */
   chatType?: string | null;
+  /** Сохранённый блок отправки исходящего сообщения. */
+  nodeId?: string | null;
   /** ID токена бота */
   tokenId?: number | null;
   /** file_id обложки (thumbnail) */

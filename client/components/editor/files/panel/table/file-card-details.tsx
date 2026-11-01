@@ -1,6 +1,7 @@
 /**
  * @fileoverview Компактные сведения о файле и явные переходы к использующим его блокам.
  */
+import { FileSourceNode } from './file-source-node';
 import { FileMessageLink } from './file-message-link';
 import { getFileOrigin } from './file-origin';
 import { ArrowUpRight } from 'lucide-react';
@@ -31,8 +32,9 @@ export function FileCardDetails({ file, projectId, selectedTokenId, collaborator
           {hasIds ? <FileCardIds file={file} labels={labels} selectedTokenId={selectedTokenId} />
             : <span className="text-muted-foreground">Не присвоен</span>}
         </dd></div>
-        {allSheets && <div className="files-detail-row"><dt>Блоки бота</dt><dd>
-          {usages.length === 0 ? <span className="text-muted-foreground">Не используется</span> : <ul className="space-y-2">
+        <FileSourceNode file={file} allSheets={allSheets} onGoToNode={onGoToNode} />
+        {allSheets && <div className="files-detail-row"><dt>Используется в сценарии</dt><dd>
+          {usages.length === 0 ? <span className="text-muted-foreground">Ссылки на файл не найдены</span> : <ul className="space-y-2">
             {usages.map((usage) => <li key={`${usage.sheetId}:${usage.nodeId}`}>
               {onGoToNode ? <button type="button" className="text-left inline-flex max-w-full items-start gap-2 hover:underline" onClick={() => onGoToNode(usage.nodeId, usage.sheetId)}>
                 <span className="min-w-0 break-words">{usage.nodeLabel}<span className="block text-xs text-muted-foreground">{usage.sheetName}</span></span><ArrowUpRight className="h-4 w-4 shrink-0" />

@@ -1,5 +1,5 @@
 {#
-  Python-функции для работы с медиафайлами:
+  @fileoverview Python-функции для работы с медиафайлами:
   - save_media_to_db / link_media_to_message
   - get_upload_file_path / register_telegram_photo / send_photo_with_caption
 #}
@@ -118,7 +118,8 @@ async def send_photo_with_caption(chat_id: int, photo_source, caption: str = Non
                 "file_id": largest_photo.file_id,
                 "file_unique_id": largest_photo.file_unique_id,
                 "width": largest_photo.width,
-                "height": largest_photo.height
+                "height": largest_photo.height,
+                "file_size": getattr(largest_photo, "file_size", None),
             }
 
         await save_message_to_api(

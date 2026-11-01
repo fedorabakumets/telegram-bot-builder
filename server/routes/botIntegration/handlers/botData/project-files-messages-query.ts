@@ -39,6 +39,8 @@ export interface MessageFileDTO {
   tokenId: number | null;
   /** ID сообщения в Telegram */
   telegramMessageId: unknown;
+  /** Блок, из которого отправлено сообщение, если он сохранён. */
+  nodeId: string | null;
   /** Дата создания */
   createdAt: Date | null;
 }
@@ -131,6 +133,7 @@ export async function queryMessageFiles(
       chatType: row.chatType,
       tokenId: row.tokenId,
       telegramMessageId: row.telegramMessageId,
+      nodeId: row.nodeId,
       createdAt: row.createdAt,
     };
   });

@@ -26,6 +26,7 @@ import { FILE_STORAGE_ACTIONS_ROW_CLASS } from './panel-styles';
 import type { FileStoragePanelProps } from './panel-types';
 import { FilesListState } from './files-list-state';
 import './files-page.css';
+import './files-responsive-controls.css';
 
 /**
  * Панель файлового хранилища — общее ядро страницы и модалки.
@@ -61,6 +62,7 @@ export function FileStoragePanel(props: FileStoragePanelProps) {
         category={s.category}
         onCategoryChange={s.setCategory}
         usedBytes={s.quota.usedBytes}
+        s3UsedBytes={s.quota.s3UsedBytes}
         limitBytes={s.quota.limitBytes}
         quotaLoading={s.quota.isLoading}
       />

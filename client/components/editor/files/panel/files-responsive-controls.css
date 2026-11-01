@@ -1,0 +1,28 @@
+/** @fileoverview Адаптация фильтров, тумблера и нижней навигации к ширине файловой панели. */
+/** Инструкция остаётся второстепенной относительно файлов и кнопки выбора блока. */
+.files-page [data-testid='file-attach-hint']:not(details) { color: var(--muted-foreground); }
+.files-page [data-testid='file-attach-hint'] > svg { color: var(--muted-foreground); }
+.files-page [data-testid='file-attach-hint'] button { color: var(--foreground); }
+.files-filter-actions > [data-testid='filters-row'] { flex-basis: 160px; }
+.files-page .files-filter-actions .files-attach-toggle [role='switch'] {
+  height: 24px;
+  border-radius: 9999px;
+}
+/** Включённый режим выделяется положением бегунка и спокойным серым фоном. */
+.dark .files-page .files-filter-actions .files-attach-toggle [role='switch'][data-state='checked'] { background: #52525b; }
+.dark .files-page .files-filter-actions .files-attach-toggle [role='switch'][data-state='checked'] > span { background: #d4d4d8; }
+/** В узкой панели фильтры и прикрепление занимают отдельные строки. */
+@container files-page (max-width: 440px) {
+  .files-filter-actions { flex-direction: column; align-items: stretch; }
+  .files-filter-actions > [data-testid='filters-row'] { flex: 0 0 auto; width: 100%; }
+  .files-filter-actions > div:last-child { min-width: 0; width: 100%; flex-shrink: 1; }
+  .files-filter-actions .files-attach-toggle { width: 100%; justify-content: space-between; }
+  .files-filter-actions .files-attach-toggle > span { min-width: 0; overflow-wrap: anywhere; }
+}
+/** Селектор получает всю строку, страницы и диапазон остаются ниже без пересечений. */
+@container files-page (max-width: 360px) {
+  .files-list-navigation { grid-template-columns: auto minmax(0, 1fr); gap: 12px; padding-block: 12px; }
+  .files-page .files-list-navigation > .files-page-size { grid-column: 1 / -1; grid-row: 1; width: 100%; justify-content: space-between; }
+  .files-list-navigation .files-pagination-pages { grid-column: 1; grid-row: 2; justify-self: start; gap: 4px; }
+  .files-list-navigation .files-pagination-range { grid-column: 2; grid-row: 2; font-size: 12px; white-space: normal; text-align: right; }
+}

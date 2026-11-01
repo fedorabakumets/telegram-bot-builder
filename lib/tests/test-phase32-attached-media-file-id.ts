@@ -314,6 +314,13 @@ test('D05', 'URL + JSON file_id → медиагруппа, НЕ два отде
 // Итоги
 // ════════════════════════════════════════════════════════════════════════════
 
+test('D06', 'Исходящий file_id сохраняет ID блока при включённой истории', () => {
+  const project = makeProject([makeFileIdNode('origin_test', 'photo', { '1': 'photo_id' })]);
+  const code = generatePythonCode(project, { botName: 'Origin', userDatabaseEnabled: true });
+  ok(code.includes('node_id="origin_test"'), 'Отправка должна передавать ID блока');
+  syntax(code, 'node_origin');
+});
+
 const passed = results.filter(r => r.passed).length;
 const failed = results.filter(r => !r.passed).length;
 const total = results.length;

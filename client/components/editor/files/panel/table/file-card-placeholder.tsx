@@ -2,12 +2,13 @@
  * @fileoverview Адаптивная карточка файла с читаемым именем и раскрываемыми сведениями.
  * @module components/editor/files/panel/table/file-card-placeholder
  */
+import { FileSize } from './file-size';
 import { Download, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/utils/utils';
 import type { FileRowProps } from './file-row';
-import { MEDIA_TYPE_LABELS, formatSize, formatDate, getPreviewUrl, shouldShowPreview } from './files-table-utils';
+import { MEDIA_TYPE_LABELS, formatDate, getPreviewUrl, shouldShowPreview } from './files-table-utils';
 import { getDownloadHref } from './file-download';
 import { MediaThumbnail } from './media-thumbnail';
 import { FileCardDetails } from './file-card-details';
@@ -37,7 +38,7 @@ export function FileCardPlaceholder({
           <p className="text-sm font-semibold leading-5 [overflow-wrap:anywhere]">{name}</p>
           <p className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-muted-foreground">
             <span>{MEDIA_TYPE_LABELS[file.mediaType ?? ''] ?? 'Файл'}</span>
-            <span>{formatSize(file.fileSize)}</span>
+            <FileSize file={file} projectId={projectId} />
           </p>
         </div>
       </div>
