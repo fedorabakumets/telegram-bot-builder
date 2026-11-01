@@ -1,140 +1,94 @@
 /**
- * @fileoverview Строка одной версии проекта в списке истории
+ * @fileoverview Карточка сохранённой версии с метаданными, сравнением и восстановлением.
  * @module editor/versions/version-row
  */
-
 import { useState } from 'react';
 import { History, GitCommit, RotateCcw, GitCompare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { ProjectVersionMeta } from '@/hooks/use-project-versions';
 import { VersionDiffSummary } from './version-diff-summary';
 
-/** Пропсы строки версии */
+/** Свойства карточки сохранения. */
 export interface VersionRowProps {
-  /** Метаданные версии */
+  /** Метаданные сохранения. */
   version: ProjectVersionMeta;
-  /** ID проекта (нужен для сравнения с текущим состоянием) */
+  /** Проект для сравнения с текущим состоянием. */
   projectId?: number;
-  /** Номер версии для отображения (чем больше — тем новее) */
+  /** Порядковый номер версии в истории. */
   versionNumber?: number;
-  /** Является ли версия самой свежей (последнее сохранение) */
+  /** Последнее сохранение в списке. */
   isLatest?: boolean;
-  /** Идёт ли восстановление этой версии */
+  /** Выполняется ли восстановление этой версии. */
   isRestoring: boolean;
-  /** Компактный режим — кнопка только с иконкой (для узкого попапа тулбара) */
+  /** Запрет повторного восстановления, пока другой запрос выполняется. */
+  restoreDisabled?: boolean;
+  /** Компактное отображение во всплывающем списке. */
   compact?: boolean;
-  /** Обработчик восстановления версии */
+  /** Обработчик восстановления сохранения. */
   onRestore: (versionId: number) => void;
 }
 
 /**
- * Форматирует дату создания версии: «сегодня · ЧЧ:ММ», «вчера · ЧЧ:ММ»
- * или полную дату со временем для более старых версий.
- * @param value - Значение даты (строка или Date)
- * @returns Человекочитаемая строка времени
+ * Форматирует дату сохранения относительно текущего дня пользователя.
+ * @param value - Дата из метаданных сохранения.
+ * @returns Локализованное время либо полная дата.
  */
 function formatRelative(value: ProjectVersionMeta['createdAt']): string {
-  if (!value) return '—';
+  if (!value) return 'Дата не указана';
   const date = new Date(value);
-  const time = date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-
+  if (Number.isNaN(date.getTime())) return 'Дата не указана';
   const now = new Date();
-  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const startOfDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  const dayDiff = Math.round((startOfToday.getTime() - startOfDate.getTime()) / 86400000);
-
-  if (dayDiff === 0) return `сегодня · ${time}`;
-  if (dayDiff === 1) return `вчера · ${time}`;
-  return date.toLocaleString('ru-RU', {
-    day: '2-digit', month: '2-digit', year: 'numeric',
-    hour: '2-digit', minute: '2-digit',
-  });
+  const days = Math.round((new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
+    - new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime()) / 86400000);
+  const time = date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+  if (days === 0) return `Сегодня, ${time}`;
+  if (days === 1) return `Вчера, ${time}`;
+  return date.toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
 /**
- * Строка одной версии проекта
- * @param props - Свойства компонента
- * @returns JSX элемент строки версии
+ * Показывает сохранение с раскрываемым сравнением и действием восстановления.
+ * @param props - Данные версии и обработчик восстановления.
+ * @returns Карточка версии или её компактный вариант.
  */
-export function VersionRow({ version, projectId, versionNumber, isLatest, isRestoring, compact, onRestore }: VersionRowProps) {
+export function VersionRow({ version, projectId, versionNumber, isLatest, isRestoring, restoreDisabled, compact, onRestore }: VersionRowProps) {
   const [showDiff, setShowDiff] = useState(false);
-  const isManual = version.kind === 'manual';
-  const isNumbered = versionNumber != null && !isManual;
-  // Для ручного коммита заголовок — сообщение (label); для авто — «Версия N»
-  const title = isManual ? (version.label || 'Чекпоинт') : (isNumbered ? `Версия ${versionNumber}` : (version.label || 'Версия'));
-
+  const manual = version.kind === 'manual';
+  const createdAt = version.createdAt ? new Date(version.createdAt) : null;
+  const title = manual ? (version.label || 'Чекпоинт') : (versionNumber != null ? `Версия ${versionNumber}` : version.label || 'Версия');
   return (
-    <div className="border-b">
-      <div className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-muted/40 transition-colors">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className={`rounded-md p-2 shrink-0 ${isManual ? 'bg-amber-500/15' : 'bg-primary/10'}`}>
-            {isManual
-              ? <GitCommit className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-              : <History className="h-4 w-4 text-primary" />}
+    <article className={compact ? 'border-b border-border' : 'versions-surface version-entry rounded-xl border p-4'}>
+      <div className={compact ? 'flex items-center justify-between gap-3 px-4 py-3' : 'version-row grid items-start gap-3'}>
+        <div className="flex min-w-0 items-start gap-3">
+          <div className="versions-inset flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground">
+            {manual ? <GitCommit className="h-4 w-4" aria-hidden="true" /> : <History className="h-4 w-4" aria-hidden="true" />}
           </div>
-          <div className="min-w-0">
-            {/* Название занимает всю первую строку — бейджи перенесены ниже.
-                Длинное сообщение ручного чекпоинта переносится на 2 строки. */}
-            <div
-              className={`text-sm font-medium ${isNumbered ? 'whitespace-nowrap' : 'line-clamp-2 break-words'}`}
-              title={title}
-            >
-              {title}
+          <div className="min-w-0 flex-1 space-y-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <h4 className="min-w-0 break-words text-sm font-semibold" title={title}>{title}</h4>
+              {isLatest && <span className="versions-inset shrink-0 rounded-md px-2 py-1 text-xs text-muted-foreground">Последняя</span>}
             </div>
-            {/* Бейджи и время в одной строке с переносом — время не обрезается,
-                а уезжает на следующую строку, если не помещается рядом с бейджами */}
-            <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 mt-0.5">
-              {isManual && (
-                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 shrink-0 whitespace-nowrap">
-                  чекпоинт
-                </span>
-              )}
-              {isLatest && (
-                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 shrink-0 whitespace-nowrap">
-                  последняя
-                </span>
-              )}
-              <span className="text-xs text-muted-foreground whitespace-nowrap shrink-0">
-                {formatRelative(version.createdAt)}
-              </span>
-              {version.authorName && (
-                <span className="text-xs text-muted-foreground opacity-70 truncate">
-                  · {version.authorName}
-                </span>
-              )}
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+              <span>{manual ? 'Чекпоинт' : 'Автосохранение'}</span>
+              <time dateTime={createdAt && !Number.isNaN(createdAt.getTime()) ? createdAt.toISOString() : undefined}>{formatRelative(version.createdAt)}</time>
             </div>
+            {version.authorName && <p className="break-words text-xs text-muted-foreground" title={version.authorName}>{version.authorName}</p>}
           </div>
         </div>
-        <div className="flex items-center gap-1.5 shrink-0">
-          {projectId != null && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={() => setShowDiff((v) => !v)}
-              title="Сравнить с текущим"
-            >
-              <GitCompare className="h-3.5 w-3.5" />
-            </Button>
-          )}
-          <Button
-            variant="outline"
-            size={compact ? 'icon' : 'sm'}
-            className={compact ? 'h-8 w-8' : ''}
-            disabled={isRestoring}
-            onClick={() => onRestore(version.id)}
-            title={compact ? 'Восстановить' : undefined}
-          >
-            <RotateCcw className={compact ? 'h-3.5 w-3.5' : 'h-3.5 w-3.5 mr-1.5'} />
-            {!compact && (isRestoring ? 'Откат…' : 'Восстановить')}
+        <div className={`flex flex-wrap items-center gap-2 ${compact ? 'shrink-0' : 'version-actions'}`}>
+          {projectId != null && <Button variant="ghost" size={compact ? 'icon' : 'sm'} className="versions-action h-8 px-3 text-xs"
+            onClick={() => setShowDiff((value) => !value)} aria-expanded={showDiff} aria-label={`Сравнить: ${title}`} title="Сравнить с текущим состоянием">
+            <GitCompare className="h-4 w-4" aria-hidden="true" />{!compact && 'Сравнить'}
+          </Button>}
+          <Button variant="outline" size={compact ? 'icon' : 'sm'} className="versions-action h-8 px-3 text-xs"
+            disabled={isRestoring || restoreDisabled} onClick={() => onRestore(version.id)} aria-label={`Восстановить: ${title}`} title="Восстановить версию">
+            <RotateCcw className="h-4 w-4" aria-hidden="true" />{!compact && (isRestoring ? 'Восстановление…' : 'Восстановить')}
           </Button>
         </div>
       </div>
-      {showDiff && projectId != null && (
-        <div className="bg-muted/30">
-          <VersionDiffSummary projectId={projectId} versionId={version.id} />
-        </div>
-      )}
-    </div>
+      {showDiff && projectId != null && <div className="versions-inset version-diff mt-3 rounded-lg p-1" role="region" aria-label={`Сравнение: ${title}`}>
+        <VersionDiffSummary projectId={projectId} versionId={version.id} />
+      </div>}
+    </article>
   );
 }

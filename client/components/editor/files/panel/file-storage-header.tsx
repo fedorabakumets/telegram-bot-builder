@@ -1,19 +1,21 @@
 /**
  * @fileoverview Шапка панели файлового хранилища (`FileStorageHeader`).
- * На странице использует общий `TabHeader` (как «Пользователи» и «Рассылки»);
+ * На странице использует единый заголовок рабочих вкладок;
  * в модалке — компактный вариант без подзаголовка.
  * @module components/editor/files/panel/file-storage-header
  */
 
 import type { BotToken } from '@shared/schema';
-import { FolderOpen } from 'lucide-react';
+import { FileImage, FolderOpen, RefreshCw } from 'lucide-react';
 
-import { TabHeader } from '@/components/ui/tab-header';
+import { WorkspaceTabHeading } from '@/components/ui/workspace-tab-heading';
+import { Button } from '@/components/ui/button';
 import { ProjectSelector } from '@/components/editor/database/user-database/components/header/project-selector';
 import { BotTokenSelector } from '@/components/editor/database/user-database/components/header/bot-token-selector';
 
+import { FileStorageDocsLink } from './file-storage-docs-link';
 import { FileStorageHeaderActions } from './file-storage-header-actions';
-import { HEADER_CONTAINER_MODAL_CLASS, HEADER_SUBTITLE_CLASS } from './panel-styles';
+import { HEADER_CONTAINER_MODAL_CLASS } from './panel-styles';
 import type { PanelMode } from './panel-types';
 
 /** Пропсы шапки файлового хранилища */
@@ -36,6 +38,8 @@ export interface FileStorageHeaderProps {
   onRefresh: () => void;
   /** Колбэк после загрузки файлов с диска (id успешных записей) */
   onUploaded?: (uploadedIds: number[]) => void;
+  /** Обновляется ли список файлов. */
+  isRefreshing?: boolean;
 }
 
 /**
@@ -57,7 +61,7 @@ function HeaderSelectors({
   if (allProjects.length <= 1 && tokens.length === 0) return null;
 
   return (
-    <div className="flex min-w-0 flex-wrap items-center gap-2">
+    <div role="group" aria-label="Проект и бот" className="files-scope-controls flex min-w-0 flex-wrap items-center gap-3">
       {allProjects.length > 1 && (
         <ProjectSelector
           projects={allProjects}
@@ -90,6 +94,9 @@ export function FileStorageHeader(props: FileStorageHeaderProps): React.JSX.Elem
       projectId={projectId}
       onRefresh={onRefresh}
       onUploaded={onUploaded}
+      showRefresh={isModal}
+      showExtras={isModal}
+      isRefreshing={props.isRefreshing}
     />
   );
 
@@ -112,21 +119,18 @@ export function FileStorageHeader(props: FileStorageHeaderProps): React.JSX.Elem
 
   return (
     <div
-      className="shrink-0 border-b bg-gradient-to-r from-muted/40 via-muted/20 to-background"
+      className="files-page-header shrink-0 space-y-4"
       data-testid="file-storage-header"
       data-mode="page"
     >
-      <TabHeader
-        className="border-b-0 bg-transparent pb-1"
-        icon={<FolderOpen className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />}
-        title="Файлы"
-        actions={actions}
-      >
-        <HeaderSelectors {...props} />
-      </TabHeader>
-      <p className={HEADER_SUBTITLE_CLASS}>
-        Медиафайлы проекта — загрузка, фильтры по категориям и хранилищам, привязка к ботам и нодам.
-      </p>
+      <WorkspaceTabHeading title="Файлы" icon={<FileImage />}
+        description="Загружайте файлы проекта, находите медиа и прикрепляйте их к блокам бота."
+        actions={<div className="flex shrink-0 items-center gap-2"><FileStorageDocsLink /><Button variant="ghost" size="icon" className="files-action h-8 w-8" onClick={onRefresh}
+          disabled={props.isRefreshing} aria-label="Обновить список файлов" title="Обновить список файлов" data-testid="file-storage-refresh">
+          <RefreshCw className="h-4 w-4" aria-hidden="true" />
+        </Button></div>} />
+      <HeaderSelectors {...props} />
+      <div className="files-header-actions flex flex-wrap items-center gap-2">{actions}</div>
     </div>
   );
 }

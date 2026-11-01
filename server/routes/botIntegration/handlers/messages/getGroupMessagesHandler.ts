@@ -3,6 +3,7 @@
  * @module botIntegration/handlers/messages/getGroupMessagesHandler
  */
 
+import { getMessageContext } from './get-message-context';
 import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
 import { getRequestTokenId } from "../../../utils/resolve-request-token";
@@ -33,6 +34,13 @@ export async function getGroupMessagesHandler(req: Request, res: Response): Prom
 
     if (!(await assertProjectGroup(projectId, groupId, res))) return;
 
+    if (req.query.aroundMessageId !== undefined) {
+      const token = tokenId ? await storage.getBotToken(tokenId) : await storage.getDefaultBotToken(projectId);
+      if (!token || token.projectId !== projectId) { res.status(404).json({ message: "Бот проекта не найден" }); return; }
+      const context = await getMessageContext(projectId, token.id, groupId, Number(req.query.aroundMessageId), true);
+      if (!context) { res.status(404).json({ message: "Сообщение не найдено в этом чате" }); return; }
+      res.json(context); return;
+    }
     const messages = await storage.getGroupChatMessages(projectId, groupId, limit, tokenId);
     res.json(messages.reverse());
   } catch (error) {

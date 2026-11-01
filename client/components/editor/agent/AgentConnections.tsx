@@ -52,7 +52,7 @@ export function AgentConnections() {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="space-y-2">
           <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Быстрый старт</p>
-          <h3 id="telegram-agent-heading" className="text-2xl font-semibold">Telegram Agent</h3>
+          <h3 id="telegram-agent-heading" className="text-xl font-semibold">Telegram Agent</h3>
           <p className="text-pretty text-sm text-muted-foreground">Без ручной настройки токена.</p>
         </div>
         <Button asChild className="agent-action h-auto px-3 py-2 text-base font-semibold">

@@ -56,6 +56,8 @@ export interface FileStoragePanelProps {
   allSheets?: SheetInfo[];
   /** Переход к ноде на холсте (только mode='page') */
   onGoToNode?: (nodeId: string, sheetId: string) => void;
+  /** Открыть холст для выбора блока прикрепления. */
+  onChooseAttachNode?: () => void;
   /** Закрытие модалки (только mode='modal') */
   onClose?: () => void;
 }

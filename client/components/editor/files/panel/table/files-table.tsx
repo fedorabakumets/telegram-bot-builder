@@ -9,6 +9,9 @@
  * @module components/editor/files/panel/table/files-table
  */
 
+import './files-collection.css';
+import { useState, type ReactNode } from 'react';
+import { FilePreviewDialog } from './file-preview-dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import type { ProjectFile } from '../../hooks/use-project-files';
 import type { CollaboratorInfo } from '../../hooks/use-project-collaborators';
@@ -50,6 +53,8 @@ export interface FilesTableProps {
   onGoToNode?: (nodeId: string, sheetId: string) => void;
   /** Идёт ли загрузка списка файлов */
   isLoading?: boolean;
+  /** Выбор количества файлов над списком. */
+  pageSizeControl?: ReactNode;
 }
 
 /** Заголовок «выбрать все»: отмечен, когда выбраны все файлы страницы */
@@ -64,6 +69,7 @@ function isAllSelected(files: ProjectFile[], selectedIds: Set<number>): boolean 
  */
 export function FilesTable(props: FilesTableProps) {
   const { files, projectId, selectedIds, onToggleSelect, onSelectAll, onCopyFileId, onDelete, collaborators, selectedTokenId, allSheets, onGoToNode, isLoading } = props;
+  const [previewFile, setPreviewFile] = useState<ProjectFile | null>(null);
   const allSelected = isAllSelected(files, selectedIds);
 
   if (isLoading) {
@@ -77,13 +83,14 @@ export function FilesTable(props: FilesTableProps) {
   const rowProps = (file: ProjectFile) => ({
     file, projectId, selected: selectedIds.has(file.id), selectedTokenId,
     onToggle: () => onToggleSelect(file.id), onCopy: onCopyFileId, onDelete, collaborators,
-    allSheets, onGoToNode,
+    allSheets, onGoToNode, onPreviewClick: () => setPreviewFile(file),
   });
 
   return (
-    <div className="h-full" data-testid="files-table">
+    <div className="files-collection h-full" data-testid="files-table">
       {/* Десктоп: таблица с горизонтальным скроллом и закреплёнными столбцами (Req 7.8) */}
-      <div className="hidden sm:block h-full overflow-auto">
+      <div className="files-data-table h-full overflow-auto">
+        {props.pageSizeControl && <div className="flex justify-end border-b p-3">{props.pageSizeControl}</div>}
         <table className="min-w-full w-max text-xs border-collapse">
           <thead className={TABLE_HEAD_CLASS}>
             <tr>
@@ -98,7 +105,7 @@ export function FilesTable(props: FilesTableProps) {
                 >
                   {col.id === 'select' ? (
                     <Checkbox
-                      checked={allSelected}
+                      aria-label="Выбрать все файлы" checked={allSelected}
                       onCheckedChange={(checked) => onSelectAll(checked as boolean)}
                       className={FILE_CHECKBOX_CLASS}
                       data-testid="files-table-select-all"
@@ -117,21 +124,25 @@ export function FilesTable(props: FilesTableProps) {
       </div>
 
       {/* Узкий экран: карточный режим со скроллом (Req 7.8, 13.3) */}
-      <div className="sm:hidden h-full overflow-auto p-3 space-y-2">
+      <div className="files-card-list h-full overflow-auto p-3 space-y-3">
         {/* Выбор всех в карточном режиме */}
-        <label className="flex items-center gap-2 text-xs text-muted-foreground px-1">
+        <div className="files-list-controls flex flex-wrap items-center justify-between gap-3">
+        <label className="flex items-center gap-2 text-sm text-muted-foreground px-1">
           <Checkbox
-            checked={allSelected}
+            aria-label="Выбрать все файлы" checked={allSelected}
             onCheckedChange={(checked) => onSelectAll(checked as boolean)}
             className={FILE_CHECKBOX_CLASS}
           />
           Выбрать все ({files.length})
         </label>
+        {props.pageSizeControl}
+        </div>
         {files.map((file) => (
           <FileCardPlaceholder key={file.id} {...rowProps(file)} />
         ))}
       </div>
 
+      <FilePreviewDialog file={previewFile} projectId={projectId} onClose={() => setPreviewFile(null)} />
       {/* colSpan-резерв для будущих состояний строки-заглушки */}
       <span className="hidden" aria-hidden data-column-count={FILES_TABLE_COLUMN_COUNT} />
     </div>

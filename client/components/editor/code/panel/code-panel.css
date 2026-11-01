@@ -24,9 +24,8 @@
 
 /** Компактный список сохраняет размеры текста и доступность всех имён файлов. */
 @container code-panel (max-height: 800px) {
-  .code-panel-padding { padding: 12px; }
+  .code-panel-padding { padding: 16px; }
   .code-panel-stack > :not([hidden]) ~ :not([hidden]),
-  .code-panel-header > :not([hidden]) ~ :not([hidden]),
   .code-project-content > :not([hidden]) ~ :not([hidden]) { margin-top: 12px; }
   .code-project-header { padding: 12px; }
   .code-project-content { padding: 0 12px 12px; }

@@ -44,7 +44,7 @@ export function CodeFormatTabs({ selectedFormat, projectName, onFormatChange }: 
   return (
     <section className="code-files space-y-3" aria-label="Файлы проекта">
       <div className="flex items-center justify-between gap-3">
-        <h3 className="text-sm font-semibold">Файлы проекта</h3><span className="text-xs text-muted-foreground">6 файлов</span>
+        <h3 className="text-lg font-semibold">Файлы проекта</h3><span className="text-xs text-muted-foreground">6 файлов</span>
       </div>
       <Tabs value={selectedFormat} orientation="vertical" activationMode="manual" onValueChange={(value) => onFormatChange(value as CodeFormat)}>
         <TabsList aria-label="Выберите файл проекта" className="code-file-list flex h-auto w-full flex-col gap-2 bg-transparent p-0">

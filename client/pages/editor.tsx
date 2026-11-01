@@ -501,9 +501,14 @@ export default function Editor() {
     onOpenTerminalTab: openTerminalTab,
   });
 
-  /** Сброс выбранного токена при смене проекта */
+  /** Сохраняет бота из постоянной ссылки при первой загрузке проекта. */
+  const databaseScopeProject = useRef<number | undefined>(undefined);
   useEffect(() => {
-    setSelectedDatabaseTokenId(null);
+    if (!activeProject?.id) return;
+    if (databaseScopeProject.current !== undefined && databaseScopeProject.current !== activeProject.id) {
+      setSelectedDatabaseTokenId(null);
+    }
+    databaseScopeProject.current = activeProject.id;
   }, [activeProject?.id]);
 
   // Загрузка пользователей для вкладки "Пользователи"
@@ -1969,7 +1974,7 @@ export default function Editor() {
             </div>
           )}
           {currentTab === 'agent' && (
-            <div className="h-full p-6 bg-background overflow-auto">
+            <div className="h-full p-4 sm:p-6 bg-background overflow-auto">
               <Suspense fallback={<LazyPanelFallback />}>
                 <AgentTokensPanel />
               </Suspense>

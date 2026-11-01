@@ -1,0 +1,35 @@
+/** Размер списка измеряется по панели, включая режим диалога. */
+.files-collection { container: files-collection / inline-size; }
+.files-data-table { display: none; }
+.files-card-list { display: block; }
+.files-file-card { background: #fff; }
+.files-file-card-selected { background: #f4f4f5; border-color: #a1a1aa; }
+.dark .files-file-card { background: #181818; border-color: #313131; }
+.dark .files-file-card-selected { background: #1f1f1f; border-color: #52525b; }
+@container files-collection (min-width: 1100px) {
+  .files-data-table { display: block; }
+  .files-card-list { display: none; }
+  .files-data-table table { min-width: 1200px; }
+  .files-data-table td.sticky { background: #fff; }
+  .dark .files-data-table td.sticky { background: #181818; }
+}
+/** Подписи и значения сохраняют общий ритм без пустых ячеек таблицы. */
+.files-detail-row { display: grid; grid-template-columns: minmax(96px, 1fr) minmax(0, 2fr); gap: 16px; padding: 12px 0; }
+.files-detail-row dt { color: var(--muted-foreground); }
+.files-detail-row dd { min-width: 0; overflow-wrap: anywhere; }
+.files-card-details .files-detail-row button { height: auto; font-size: inherit; font-weight: inherit; }
+@container files-collection (max-width: 360px) {
+  .files-detail-row { grid-template-columns: 1fr; gap: 4px; }
+}
+/** Список ID занимает полную ширину, имя бота и значение не конкурируют за одну строку. */
+.files-detail-row.files-detail-ids { grid-template-columns: minmax(0,1fr); gap: 12px; }
+.files-card-details .files-detail-row .files-copy-id { height: 32px; width: 32px; }
+/** На узкой панели элементы выбора получают отдельную строку без сжатия подписей. */
+@container files-collection (max-width: 360px) {
+  .files-list-controls { align-items: stretch; }
+  .files-list-controls > label { width: 100%; }
+  .files-list-controls .files-page-size { justify-content: space-between; }
+}
+@container files-page (max-width: 360px) {
+  .files-list-navigation .files-page-size { width: 100%; justify-content: space-between; }
+}

@@ -11,6 +11,7 @@ import { useState } from "react";
 import { Sparkles } from "lucide-react";
 import "./agent-page.css";
 import { Button } from "@/components/ui/button";
+import { WorkspaceTabHeading } from "@/components/ui/workspace-tab-heading";
 import { useAgentTokens } from "./use-agent-tokens";
 import { AgentTokensTable } from "./AgentTokensTable";
 import { CreateTokenDialog } from "./CreateTokenDialog";
@@ -29,17 +30,9 @@ export function AgentTokensPanel() {
   const [revokeTarget, setRevokeTarget] = useState<AgentTokenDto | null>(null);
 
   return (
-    <div className="agent-page mx-auto w-full max-w-5xl space-y-8 pb-8">
-      <div className="flex items-center gap-2">
-        <Sparkles className="h-5 w-5 text-primary" aria-hidden="true" />
-        <h2 className="text-lg font-semibold">Агент</h2>
-      </div>
-      <header className="space-y-3">
-        <h3 className="agent-heading max-w-2xl text-balance text-3xl font-semibold">Управляйте ботами<br />через ИИ агента</h3>
-        <p className="max-w-2xl text-pretty text-base text-muted-foreground">
-          Подключите Telegram Agent к своему профилю, чтобы работать с ботами в переписке.
-        </p>
-      </header>
+    <div className="agent-page mx-auto w-full max-w-5xl space-y-6 pb-4">
+      <WorkspaceTabHeading title="Агент" icon={<Sparkles />}
+        description="Подключите Telegram Agent к своему профилю, чтобы работать с ботами в переписке." />
       <AgentConnections />
       <section aria-labelledby="agent-tokens-heading" className="space-y-4">
         <div className="flex flex-wrap items-start justify-between gap-4">

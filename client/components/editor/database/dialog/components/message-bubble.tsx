@@ -180,6 +180,7 @@ export function MessageBubble({
   return (
     <div
       className={`flex ${isBot ? 'justify-end' : 'justify-start'}`}
+      data-message-id={message.id}
       data-testid={`dialog-message-${message.messageType}-${index}`}
     >
       <div

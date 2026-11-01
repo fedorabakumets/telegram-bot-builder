@@ -18,13 +18,6 @@
 }
 .agent-dialog[data-state] { animation-duration: 300ms; animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1); }
 .agent-page p, .agent-page h2, .agent-page h3 { text-wrap: pretty; }
-.agent-page .agent-heading {
-  background: linear-gradient(to right, #000000, #666666);
-  background-clip: text;
-  color: transparent;
-  text-wrap: balance;
-}
-.dark .agent-page .agent-heading { background-image: linear-gradient(to right, #ffffff, #9b9b9b); }
 .agent-surface { background: #ffffff; }
 .agent-inset, .agent-step { background: #f4f4f5; }
 .agent-permission { background: #f4f4f5; color: #52525b; }
@@ -45,7 +38,6 @@
 }
 @container (max-width: 380px) {
   .agent-surface { padding: 16px; }
-  .agent-page .agent-heading { font-size: 24px; line-height: 32px; }
   .agent-token > div:first-child { flex-wrap: wrap; }
 }
 @media (prefers-reduced-motion: reduce) {

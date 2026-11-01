@@ -1,0 +1,37 @@
+/**
+ * @fileoverview Адаптивное оформление истории версий и формы чекпоинта.
+ */
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap');
+.versions-page { font-family: 'Manrope', sans-serif; container: versions / inline-size; }
+.versions-surface { background: #ffffff; }
+.versions-inset { background: #f4f4f5; }
+.dark .versions-surface { background: #181818; border-color: #313131; }
+.dark .versions-inset { background: #272727; }
+.versions-page .checkpoint-input { background: #ffffff; }
+.dark .versions-page .checkpoint-input { background: #1f1f1f; border-color: #313131; }
+/** Ошибка обязательного поля остаётся заметной при фокусе и в тёмной теме. */
+.versions-page .checkpoint-input[aria-invalid='true'],
+.dark .versions-page .checkpoint-input[aria-invalid='true'] {
+  border-color: var(--destructive); box-shadow: 0 0 0 2px var(--destructive);
+}
+.versions-action { transition: color 300ms cubic-bezier(0.22,1,0.36,1), background-color 300ms cubic-bezier(0.22,1,0.36,1), transform 300ms cubic-bezier(0.22,1,0.36,1); }
+.versions-action:active { transform: scale(0.98); }
+.version-actions { justify-content: flex-end; }
+.version-diff > div { flex-wrap: wrap; }
+@container versions (max-width: 479px) {
+  .checkpoint-fields { align-items: stretch; flex-direction: column; }
+  .checkpoint-fields > button { width: 100%; }
+}
+@container versions (min-width: 480px) and (max-width: 759px) {
+  .version-row { grid-template-columns: minmax(0, 1fr) auto; }
+  .version-actions { flex-direction: column; align-items: stretch; }
+}
+@container versions (min-width: 760px) {
+  .version-row { grid-template-columns: minmax(0, 1fr) auto; }
+}
+@media (max-height: 760px) {
+  .versions-page .version-entry { padding: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .versions-action:active { transform: none; }
+}

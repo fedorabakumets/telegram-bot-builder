@@ -114,6 +114,7 @@ export function FilesTabPage({
       onAttach={handleAttach}
       allSheets={allSheets}
       onGoToNode={handleGoToNode}
+      onChooseAttachNode={onSwitchToCanvas}
     />
   );
 }

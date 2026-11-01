@@ -5,6 +5,7 @@
  * @module botIntegration/handlers/botData/getTelegramFileHandler
  */
 
+import { resolveDevMediaToken } from './dev-media-token';
 import { Readable } from "node:stream";
 import type { Request, Response } from "express";
 import { fetchWithProxy } from "../../../../utils/telegram-proxy";
@@ -37,9 +38,11 @@ export async function getTelegramFileHandler(req: Request, res: Response): Promi
       return;
     }
 
+    /** Локальный токен доступен только чтению медиа, отдельно от запуска ботов. */
+    const mediaToken = await resolveDevMediaToken(projectId, botToken.id) ?? botToken.token;
     // Запрашиваем у Telegram путь к файлу
     const getFileResp = await fetchWithProxy(
-      `https://api.telegram.org/bot${botToken.token}/getFile`,
+      `https://api.telegram.org/bot${mediaToken}/getFile`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -59,7 +62,7 @@ export async function getTelegramFileHandler(req: Request, res: Response): Promi
     }
 
     // Пробрасываем Range-заголовок напрямую в Telegram CDN
-    const fileUrl = `https://api.telegram.org/file/bot${botToken.token}/${fileData.result.file_path}`;
+    const fileUrl = `https://api.telegram.org/file/bot${mediaToken}/${fileData.result.file_path}`;
     const upstreamHeaders: Record<string, string> = {};
     if (req.headers["range"]) {
       upstreamHeaders["Range"] = req.headers["range"] as string;
