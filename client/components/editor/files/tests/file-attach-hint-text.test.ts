@@ -29,10 +29,14 @@ describe('getAttachHintText', () => {
     const text = getAttachHintText('ready', 'Приветствие');
     expect(text).toContain('Приветствие');
     expect(text).toContain('Прикрепить');
-    expect(text).toContain('галочкой');
+    expect(text).toContain('отметьте файлы');
   });
 
   it('отличает загрузку от прикрепления', () => {
-    expect(getAttachHintText('ready', 'Нода')).toContain('сама по себе файл к ноде не добавляет');
+    expect(getAttachHintText('ready', 'Нода')).toContain('Загрузка сама по себе не добавляет файл к блоку');
+  });
+
+  it('позволяет выбрать блок по списку или ID без перехода на холст', () => {
+    expect(getAttachHintText('page-need-node')).toContain('из списка или вставьте его ID');
   });
 });

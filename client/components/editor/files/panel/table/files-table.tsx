@@ -55,6 +55,8 @@ export interface FilesTableProps {
   isLoading?: boolean;
   /** Выбор количества файлов над списком. */
   pageSizeControl?: ReactNode;
+  /** Действия над выбранными файлами рядом с верхним счётчиком. */
+  selectionActions?: ReactNode;
 }
 
 /** Заголовок «выбрать все»: отмечен, когда выбраны все файлы страницы */
@@ -91,6 +93,7 @@ export function FilesTable(props: FilesTableProps) {
       {/* Десктоп: таблица с горизонтальным скроллом и закреплёнными столбцами (Req 7.8) */}
       <div className="files-data-table h-full overflow-auto">
         {props.pageSizeControl && <div className="flex justify-end border-b p-3">{props.pageSizeControl}</div>}
+        {props.selectionActions && <div className="p-3">{props.selectionActions}</div>}
         <table className="min-w-full w-max text-xs border-collapse">
           <thead className={TABLE_HEAD_CLASS}>
             <tr>
@@ -137,6 +140,7 @@ export function FilesTable(props: FilesTableProps) {
         </label>
         {props.pageSizeControl}
         </div>
+        {props.selectionActions}
         {files.map((file) => (
           <FileCardPlaceholder key={file.id} {...rowProps(file)} />
         ))}

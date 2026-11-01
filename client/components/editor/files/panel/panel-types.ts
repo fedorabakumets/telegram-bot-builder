@@ -58,6 +58,8 @@ export interface FileStoragePanelProps {
   onGoToNode?: (nodeId: string, sheetId: string) => void;
   /** Открыть холст для выбора блока прикрепления. */
   onChooseAttachNode?: () => void;
+  /** Выбрать существующий блок назначения прямо во вкладке файлов. */
+  onSelectAttachNode?: (nodeId: string | null) => void;
   /** Закрытие модалки (только mode='modal') */
   onClose?: () => void;
 }

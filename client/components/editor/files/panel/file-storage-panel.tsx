@@ -8,11 +8,9 @@
  * (Req 1.1, 1.2, 1.6, 3.7).
  * @module components/editor/files/panel/file-storage-panel
  */
-
-
 import { FilePageSize } from './file-page-size';
+import { FileNodePicker } from './file-node-picker';
 import { Switch } from '@/components/ui/switch';
-
 import { useFileStoragePanelState } from './use-file-storage-panel-state';
 import { FileStorageHeader } from './file-storage-header';
 import { FileStorageToolbar } from './file-storage-toolbar';
@@ -36,6 +34,11 @@ import './files-responsive-controls.css';
 export function FileStoragePanel(props: FileStoragePanelProps) {
   const { mode, attachTarget, projectId, selectedTokenId, onSelectToken, allProjects, onProjectChange, allSheets, onGoToNode } = props;
   const s = useFileStoragePanelState(props);
+  /** Общие действия выбора размещаются рядом со списком на странице и снизу в модалке. */
+  const selectionActions = (s.canAttach || s.selectedIds.size > 0) ? <SelectionActionBar
+    selectedCount={s.selectedIds.size} canAttach={s.canAttach}
+    onAttach={s.attachSelected} onDelete={s.deleteSelected}
+    onClearSelection={s.clearSelection} isDeleting={s.isDeleting} /> : null;
 
   /** В модалке min-h-0, чтобы таблица скроллилась внутри фиксированной высоты */
   const rootClassName =
@@ -94,7 +97,10 @@ export function FileStoragePanel(props: FileStoragePanelProps) {
         )}
       </div>
 
-      <FileAttachHint mode={mode} attachModeEnabled={s.attachModeEnabled} hasTarget={!!attachTarget} nodeLabel={attachTarget?.nodeLabel} onChooseNode={props.onChooseAttachNode} />
+      <FileAttachHint mode={mode} attachModeEnabled={s.attachModeEnabled} hasTarget={!!attachTarget} nodeLabel={attachTarget?.nodeLabel} onChooseNode={props.onChooseAttachNode}>
+        {mode === 'page' && s.attachModeEnabled && props.onSelectAttachNode && <FileNodePicker
+          sheets={allSheets ?? []} target={attachTarget} onSelect={props.onSelectAttachNode} />}
+      </FileAttachHint>
 
       <FiltersModal
         open={s.filtersOpen}
@@ -122,21 +128,13 @@ export function FileStoragePanel(props: FileStoragePanelProps) {
           allSheets={allSheets}
           onGoToNode={onGoToNode}
           pageSizeControl={<FilePageSize value={s.pageSize} onChange={s.setPageSize} />}
+          selectionActions={mode === 'page' ? selectionActions : null}
           isLoading={s.isLoading}
         />}
       </div>
 
       {/* Плашка: в модалке всегда, на странице — при выборе или режиме прикрепления */}
-      {(s.canAttach || s.selectedIds.size > 0) && (
-        <SelectionActionBar
-          selectedCount={s.selectedIds.size}
-          canAttach={s.canAttach}
-          onAttach={s.attachSelected}
-          onDelete={s.deleteSelected}
-          onClearSelection={s.clearSelection}
-          isDeleting={s.isDeleting}
-        />
-      )}
+      {mode === 'modal' && selectionActions}
 
       <FileStoragePagination
         pageSize={s.pageSize}

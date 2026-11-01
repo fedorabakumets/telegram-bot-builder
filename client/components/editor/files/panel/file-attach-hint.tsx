@@ -5,6 +5,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Paperclip } from 'lucide-react';
+import type { ReactNode } from 'react';
 
 import { ATTACH_HINT_CLASS } from './panel-styles';
 import { getAttachHintKind, getAttachHintText, type AttachHintMode } from './file-attach-hint-text';
@@ -21,6 +22,8 @@ export interface FileAttachHintProps {
   nodeLabel?: string;
   /** Открыть холст для выбора блока. */
   onChooseNode?: () => void;
+  /** Выбор блока непосредственно внутри подсказки. */
+  children?: ReactNode;
 }
 
 /**
@@ -34,9 +37,10 @@ export function FileAttachHint({
   hasTarget,
   nodeLabel,
   onChooseNode,
+  children,
 }: FileAttachHintProps): React.JSX.Element {
   const kind = getAttachHintKind({ mode, attachModeEnabled, hasTarget });
-  const text = getAttachHintText(kind, nodeLabel);
+  const text = getAttachHintText(kind, nodeLabel, mode);
 
   if (mode === 'page' && !attachModeEnabled) {
     return <details className="files-attach-help shrink-0 rounded-lg text-sm text-muted-foreground" data-testid="file-attach-hint" data-kind={kind}>
@@ -48,7 +52,8 @@ export function FileAttachHint({
   return (
     <div className={ATTACH_HINT_CLASS} data-testid="file-attach-hint" data-kind={kind}>
       <Paperclip className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
-      <div className="min-w-0 space-y-3"><p>{text}</p>
+      <div className="min-w-0 flex-1 space-y-3"><p>{text}</p>
+        {children}
         {kind === 'page-need-node' && onChooseNode && <Button type="button" variant="outline" size="sm" onClick={onChooseNode}>Выбрать блок на холсте →</Button>}
       </div>
     </div>

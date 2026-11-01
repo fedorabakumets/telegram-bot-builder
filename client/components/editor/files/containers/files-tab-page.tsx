@@ -10,7 +10,7 @@
  * @module components/editor/files/containers/files-tab-page
  */
 
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { FileStoragePanel } from '../panel/file-storage-panel';
 import { mergeAttachedMedia } from '../panel/attach-node-refs';
@@ -57,13 +57,20 @@ export function FilesTabPage({
   onProjectChange,
   onNodeUpdate,
   allSheets,
-  attachTarget = null,
+  attachTarget: canvasTarget = null,
   onSwitchToCanvas,
   onFocusNode,
   onSetActiveSheet,
   onSelectNode,
 }: FilesTabPageProps) {
   const { toast } = useToast();
+  /** Явно выбранная цель из списка действует только в своём проекте. */
+  const [chosen, setChosen] = useState<{ projectId: number; nodeId: string | null } | null>(null);
+  const chosenNode = chosen?.projectId === projectId ? allSheets?.flatMap(sheet => sheet.nodes).find(node => node.id === chosen.nodeId) : null;
+  const attachTarget: AttachTarget | null = chosenNode ? {
+    nodeId: chosenNode.id, nodeLabel: String(chosenNode.data.messageText || chosenNode.id).replace(/<[^>]*>/g, '').slice(0, 80),
+    field: 'attachedMedia', multi: true,
+  } : chosen?.projectId === projectId && chosen.nodeId === null ? null : canvasTarget;
 
   /**
    * Переход к ноде на холсте: фокус на ноде (камера + выбор + открытие свойств)
@@ -115,6 +122,7 @@ export function FilesTabPage({
       allSheets={allSheets}
       onGoToNode={handleGoToNode}
       onChooseAttachNode={onSwitchToCanvas}
+      onSelectAttachNode={onNodeUpdate ? nodeId => setChosen({ projectId, nodeId }) : undefined}
     />
   );
 }

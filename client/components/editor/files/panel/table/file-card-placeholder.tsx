@@ -29,7 +29,7 @@ export function FileCardPlaceholder({
   const name = file.fileName ?? `Файл ${file.id}`;
   return (
     <article className={cn('files-file-card rounded-xl border p-4 space-y-4', selected && 'files-file-card-selected')} aria-label={name}>
-      <div className="flex items-start gap-3">
+      <div className="files-card-heading flex items-start gap-3">
         <Checkbox checked={selected} onCheckedChange={onToggle} className="mt-1 h-5 w-5 shrink-0" aria-label={`Выбрать ${name}`} />
         <button type="button" onClick={onPreviewClick} disabled={!shouldShowPreview(file) || !previewUrl} aria-label={`Открыть превью ${name}`} title="Открыть на весь экран" className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-muted flex items-center justify-center hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary">
           <MediaThumbnail file={file} projectId={projectId} />
@@ -42,7 +42,7 @@ export function FileCardPlaceholder({
           </p>
         </div>
       </div>
-      <div className="flex flex-wrap items-center justify-between gap-2 border-t pt-3">
+      <div className="files-card-actions flex flex-wrap items-center justify-between gap-2 border-t pt-3">
         <span className="text-xs text-muted-foreground">{formatDate(file.createdAt)}</span>
         <div className="flex items-center gap-2">
           {downloadHref ? (

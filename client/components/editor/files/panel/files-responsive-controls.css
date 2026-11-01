@@ -3,6 +3,28 @@
 .files-page [data-testid='file-attach-hint']:not(details) { color: var(--muted-foreground); }
 .files-page [data-testid='file-attach-hint'] > svg { color: var(--muted-foreground); }
 .files-page [data-testid='file-attach-hint'] button { color: var(--foreground); }
+/** Описание использует всю ширину панели, отдельно от служебных действий шапки. */
+@container files-page (max-width: 440px) {
+  .files-page-header > header { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+  .files-page-header > header > div:first-child { display: contents; }
+  .files-page-header > header > div:first-child > div { grid-column: 1; grid-row: 1; }
+  .files-page-header > header > div:first-child > p { grid-column: 1 / -1; grid-row: 2; margin: 0; }
+  .files-page-header > header > div:last-child { grid-column: 2; grid-row: 1; }
+}
+/** В минимальной панели действия переносятся ниже текста, освобождая место заголовку. */
+@container files-page (max-width: 240px) {
+  .files-page-header > header { grid-template-columns: minmax(0, 1fr); }
+  .files-page-header > header > div:last-child { grid-column: 1; grid-row: 3; justify-self: start; }
+  .files-page-header > header > div:first-child > p { font-size: 14px; line-height: 20px; }
+  .files-page [data-testid='category-tabs'] [role='tablist'] { grid-template-columns: minmax(0, 1fr); }
+  .files-page [data-testid='category-tabs'] [role='tab'] { min-width: 0; width: 100%; }
+  /** Выбор количества остаётся над списком, нижняя строка содержит только страницы. */
+  .files-page .files-list-navigation { grid-template-columns: minmax(0, 1fr); padding-inline: 4px; }
+  .files-page .files-list-navigation > .files-page-size { display: none; }
+  .files-page .files-list-navigation .files-pagination-pages { grid-column: 1; justify-self: center; }
+  .files-page .files-list-navigation .files-pagination-pages > span { white-space: nowrap; }
+  .files-page .files-list-navigation button { width: 32px; height: 32px; }
+}
 .files-filter-actions > [data-testid='filters-row'] { flex-basis: 160px; }
 .files-page .files-filter-actions .files-attach-toggle [role='switch'] {
   height: 24px;
@@ -19,10 +41,10 @@
   .files-filter-actions .files-attach-toggle { width: 100%; justify-content: space-between; }
   .files-filter-actions .files-attach-toggle > span { min-width: 0; overflow-wrap: anywhere; }
 }
-/** Селектор получает всю строку, страницы и диапазон остаются ниже без пересечений. */
+/** На самом узком экране остаются размер страницы и кнопки с номером страницы. */
 @container files-page (max-width: 360px) {
-  .files-list-navigation { grid-template-columns: auto minmax(0, 1fr); gap: 12px; padding-block: 12px; }
-  .files-page .files-list-navigation > .files-page-size { grid-column: 1 / -1; grid-row: 1; width: 100%; justify-content: space-between; }
-  .files-list-navigation .files-pagination-pages { grid-column: 1; grid-row: 2; justify-self: start; gap: 4px; }
-  .files-list-navigation .files-pagination-range { grid-column: 2; grid-row: 2; font-size: 12px; white-space: normal; text-align: right; }
+  .files-list-navigation { grid-template-columns: auto minmax(0, 1fr); padding-block: 8px; }
+  .files-page .files-list-navigation > .files-page-size { grid-column: 1; grid-row: 1; width: auto; }
+  .files-list-navigation .files-pagination-pages { grid-column: 2; grid-row: 1; justify-self: end; gap: 4px; }
+  .files-list-navigation .files-pagination-range { display: none; }
 }

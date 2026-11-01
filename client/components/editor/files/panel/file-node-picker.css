@@ -1,0 +1,26 @@
+/** @fileoverview Адаптивная форма выбора блока и её выпадающий список, отображаемый через портал. */
+/** Форма занимает всю ширину подсказки; отступ под скрепку нужен только вводному тексту. */
+.files-page [data-testid='file-attach-hint']:has(.file-node-picker) { position: relative; }
+.files-page [data-testid='file-attach-hint']:has(.file-node-picker) > svg { position: absolute; left: 12px; top: 12px; }
+.files-page [data-testid='file-attach-hint']:has(.file-node-picker) > div { width: 100%; }
+.files-page [data-testid='file-attach-hint']:has(.file-node-picker) > div > p:first-child { padding-left: 24px; }
+.file-node-picker-menu { width: var(--radix-select-trigger-width); min-width: 0; max-width: calc(100vw - 24px); }
+.file-node-picker-menu [data-radix-select-viewport] { min-width: 0; }
+.file-node-picker-menu [role='option'] { white-space: normal; overflow-wrap: anywhere; }
+.file-node-picker-menu [role='option'] > span:last-child { min-width: 0; width: 100%; }
+.file-node-picker [role='combobox'] > span { text-align: left; }
+.file-node-picker { container: file-node-picker / inline-size; }
+.file-node-picker-search { align-items: stretch; }
+.file-node-picker-search input { flex-basis: 160px; height: 40px; }
+/** Подпись, ввод и выбранный блок используют единый размер текста и межстрочный интервал. */
+.file-node-picker label,
+.file-node-picker-search input,
+.file-node-picker [role='combobox'],
+.file-node-picker-search button { font-size: 14px; line-height: 20px; }
+.file-node-picker-search button { flex: 0 1 auto; height: 40px; white-space: normal; }
+/** При нехватке ширины поле и действие сохраняют одинаковые размеры в отдельных строках. */
+@container file-node-picker (max-width: 320px) {
+  .file-node-picker-search { flex-direction: column; }
+  .file-node-picker-search input { flex: 0 0 auto; width: 100%; }
+  .file-node-picker-search button { width: 100%; }
+}

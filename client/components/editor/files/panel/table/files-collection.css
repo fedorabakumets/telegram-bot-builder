@@ -1,4 +1,5 @@
-/** Размер списка измеряется по панели, включая режим диалога. */
+/** @fileoverview Адаптивное представление коллекции файлов и её элементов управления. */
+@import './files-narrow-cards.css';
 .files-collection { container: files-collection / inline-size; }
 .files-data-table { display: none; }
 .files-card-list { display: block; }
@@ -32,4 +33,10 @@
 }
 @container files-page (max-width: 360px) {
   .files-list-navigation .files-page-size { width: 100%; justify-content: space-between; }
+}
+/** Подпись и селектор располагаются вертикально, когда строка уже их суммарной ширины. */
+@container files-collection (max-width: 240px) {
+  .files-list-controls .files-page-size { flex-direction: column; align-items: stretch; gap: 8px; }
+  .files-list-controls .files-page-size > span:first-child { white-space: normal; }
+  .files-list-controls .files-page-size > span:last-child { justify-content: space-between; width: 100%; }
 }
