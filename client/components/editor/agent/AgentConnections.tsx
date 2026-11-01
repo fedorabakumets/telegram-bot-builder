@@ -3,6 +3,7 @@
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
+import { WorkspaceActionButton } from '@/components/ui/workspace-action-button';
 import { apiRequest } from '@/queryClient';
 
 /** Публичная ссылка на официальный Telegram Agent. */
@@ -55,11 +56,11 @@ export function AgentConnections() {
           <h3 id="telegram-agent-heading" className="text-xl font-semibold">Telegram Agent</h3>
           <p className="text-pretty text-sm text-muted-foreground">Без ручной настройки токена.</p>
         </div>
-        <Button asChild className="agent-action h-auto px-3 py-2 text-base font-semibold">
+        <WorkspaceActionButton asChild className="agent-action h-auto px-3 py-2 text-base font-semibold">
           <a href={TELEGRAM_AGENT_URL} target="_blank" rel="noopener noreferrer">
             Открыть в Telegram <span aria-hidden="true">↗</span>
           </a>
-        </Button>
+        </WorkspaceActionButton>
       </div>
       <ol className="agent-steps grid gap-6">
         {CONNECTION_STEPS.map((step, index) => (

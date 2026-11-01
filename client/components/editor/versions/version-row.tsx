@@ -80,7 +80,7 @@ export function VersionRow({ version, projectId, versionNumber, isLatest, isRest
             onClick={() => setShowDiff((value) => !value)} aria-expanded={showDiff} aria-label={`Сравнить: ${title}`} title="Сравнить с текущим состоянием">
             <GitCompare className="h-4 w-4" aria-hidden="true" />{!compact && 'Сравнить'}
           </Button>}
-          <Button variant="outline" size={compact ? 'icon' : 'sm'} className="versions-action h-8 px-3 text-xs"
+          <Button variant="ghost" size={compact ? 'icon' : 'sm'} className="versions-action h-8 px-3 text-xs text-muted-foreground hover:text-foreground"
             disabled={isRestoring || restoreDisabled} onClick={() => onRestore(version.id)} aria-label={`Восстановить: ${title}`} title="Восстановить версию">
             <RotateCcw className="h-4 w-4" aria-hidden="true" />{!compact && (isRestoring ? 'Восстановление…' : 'Восстановить')}
           </Button>

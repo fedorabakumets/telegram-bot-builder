@@ -6,7 +6,7 @@ import { useId, useRef, useState, type FormEvent } from 'react';
 import { GitCommit } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
+import { WorkspaceActionButton as Button } from '@/components/ui/workspace-action-button';
 import { useToast } from '@/hooks/use-toast';
 import { useCreateProjectCommit } from '@/hooks/use-project-versions';
 

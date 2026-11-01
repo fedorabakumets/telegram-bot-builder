@@ -5,26 +5,26 @@
 .files-page { font-family: 'Manrope', sans-serif; container: files-page / inline-size; }
 .files-surface { background: #ffffff; }
 .files-inset { background: #f4f4f5; }
-.dark .files-surface { background: #181818; border-color: #313131; }
-.dark .files-inset { background: #272727; }
+.dark .files-surface { background: #09090b; border-color: #29292d; }
+.dark .files-inset { background: #141416; }
 .files-page-header { padding-bottom: 4px; }
 .files-header-actions > button, .files-header-actions > a { height: 40px; padding: 8px 12px; font-size: 14px; line-height: 20px; font-weight: 600; }
 .files-header-actions button > span, .files-header-actions a > span { display: inline; }
 .files-header-actions button > svg, .files-header-actions a > svg { margin-right: 0; }
 .files-page .files-scope-controls > div { flex: 1 1 240px; }
 .files-page .files-scope-controls [role='combobox'] { width: 100%; max-width: none; min-width: 0; height: 40px; font-size: 14px; line-height: 20px; background: #ffffff; }
-.dark .files-page .files-scope-controls [role='combobox'] { background: #181818; border-color: #313131; }
+.dark .files-page .files-scope-controls [role='combobox'] { background: #09090b; border-color: #29292d; }
 .files-page .files-scope-controls [role='combobox'] > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .files-page [data-testid='file-storage-toolbar'] { flex-direction: column; align-items: stretch; border: 0; padding: 0; gap: 8px; background: transparent; }
 .files-page [data-testid='category-tabs'] { flex: none; }
 .files-page [data-testid='category-tabs'] [role='tablist'] { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); width: 100%; padding: 4px; gap: 4px; background: #f4f4f5; box-shadow: none; }
-.dark .files-page [data-testid='category-tabs'] [role='tablist'] { background: #181818; border-color: #313131; }
+.dark .files-page [data-testid='category-tabs'] [role='tablist'] { background: #09090b; border-color: #29292d; }
 .files-page [data-testid='category-tabs'] [role='tab'] { height: 40px; padding: 8px 12px; font-size: 14px; line-height: 20px; box-shadow: none; color: var(--muted-foreground); }
 .files-page [data-testid='category-tabs'] [role='tab'][data-state='active'] { background: #e4e4e7; color: var(--foreground); box-shadow: none; }
-.dark .files-page [data-testid='category-tabs'] [role='tab'][data-state='active'] { background: #272727; }
+.dark .files-page [data-testid='category-tabs'] [role='tab'][data-state='active'] { background: #141416; }
 .files-page [data-testid='storage-quota-bar'] { align-self: flex-end; }
 .files-attach-help { background: #f4f4f5; }
-.dark .files-attach-help { background: #181818; }
+.dark .files-attach-help { background: #09090b; }
 .files-page [data-testid='file-attach-hint']:not(details) { border: 1px solid var(--border); border-radius: 8px; background: transparent; padding: 12px; font-size: 14px; line-height: 20px; }
 .files-filter-actions button { font-size: 14px; line-height: 20px; }
 .files-action, .files-page button { transition-duration: 300ms; transition-property: color, background-color, opacity, transform; transition-timing-function: cubic-bezier(0.22,1,0.36,1); }
@@ -51,14 +51,14 @@
   background-color: #fff;
 }
 .dark .files-page :is(.files-header-actions, .files-filter-actions, .files-file-card) .border {
-  border-color: #313131;
-  background-color: #181818;
+  border-color: #29292d;
+  background-color: #09090b;
 }
 .files-page :is(.files-header-actions, .files-filter-actions, .files-file-card) .border:hover {
   background-color: #f4f4f5;
 }
 .dark .files-page :is(.files-header-actions, .files-filter-actions, .files-file-card) .border:hover {
-  background-color: #272727;
+  background-color: #141416;
 }
 .files-page :is(.files-header-actions, .files-filter-actions, .files-file-card) svg { margin-right: 0; }
 /** Общая прокрутка страницы оставляет карточки и массовые действия в одном потоке. */
@@ -85,8 +85,8 @@
   box-shadow: none;
 }
 .dark .files-page [data-testid='selection-action-bar'] {
-  background: #181818;
-  border-color: #313131;
+  background: #09090b;
+  border-color: #29292d;
 }
 .files-page [data-testid='selection-action-bar'] button {
   height: 40px;
@@ -102,25 +102,25 @@
 .files-page .files-header-actions > button {
   border: 1px solid #d4d4d8;
   background: #fff;
-  color: #272727;
+  color: #141416;
 }
 .files-page .files-header-actions > button:hover { background: #f4f4f5; }
 .files-page .files-header-actions > button.bg-primary {
-  background: #272727;
-  border-color: #272727;
+  background: #141416;
+  border-color: #141416;
   color: #fff;
 }
-.files-page .files-header-actions > button.bg-primary:hover { background: #313131; }
+.files-page .files-header-actions > button.bg-primary:hover { background: #29292d; }
 .dark .files-page .files-header-actions > button {
-  background: #181818;
-  border-color: #313131;
+  background: #09090b;
+  border-color: #29292d;
   color: #e4e4e7;
 }
-.dark .files-page .files-header-actions > button:hover { background: #272727; }
+.dark .files-page .files-header-actions > button:hover { background: #141416; }
 .dark .files-page .files-header-actions > button.bg-primary {
   background: #e4e4e7;
   border-color: #e4e4e7;
-  color: #181818;
+  color: #09090b;
 }
 .dark .files-page .files-header-actions > button.bg-primary:hover { background: #fff; }
 /** Нейтральный тумблер обозначает режим отдельно от действия прикрепления. */
@@ -134,9 +134,9 @@
   border: 2px solid transparent;
   background: #d4d4d8;
 }
-.files-page .files-attach-toggle [role='switch'][data-state='checked'] { background: #52525b; }
-.dark .files-page .files-attach-toggle [role='switch'] { background: #313131; }
+.files-page .files-attach-toggle [role='switch'][data-state='checked'] { background: #343438; }
+.dark .files-page .files-attach-toggle [role='switch'] { background: #29292d; }
 .dark .files-page .files-attach-toggle [role='switch'][data-state='checked'] { background: #e4e4e7; }
 .files-page .files-attach-toggle [role='switch'] > span { width: 16px; height: 16px; background: #fff; }
 .files-page .files-attach-toggle [role='switch'][data-state='checked'] > span { transform: translateX(20px); }
-.dark .files-page .files-attach-toggle [role='switch'][data-state='checked'] > span { background: #181818; }
+.dark .files-page .files-attach-toggle [role='switch'][data-state='checked'] > span { background: #09090b; }

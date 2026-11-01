@@ -1,18 +1,25 @@
 /** @fileoverview Адаптивное представление коллекции файлов и её элементов управления. */
 @import './files-narrow-cards.css';
+@import './file-selection.css';
+@import './files-compact-cards.css';
+@import './file-card-buttons.css';
 .files-collection { container: files-collection / inline-size; }
 .files-data-table { display: none; }
 .files-card-list { display: block; }
+/** Общая вертикаль флажков учитывает рамку и внутренний отступ карточки. */
+.files-card-list > .files-list-controls { padding-left: 16px; border-left: 1px solid transparent; }
+/** Убираем дополнительный отступ общей подписи, смещавший только верхний флажок. */
+.files-card-list > .files-list-controls > label:first-child { padding-left: 0; }
 .files-file-card { background: #fff; }
 .files-file-card-selected { background: #f4f4f5; border-color: #a1a1aa; }
-.dark .files-file-card { background: #181818; border-color: #313131; }
-.dark .files-file-card-selected { background: #1f1f1f; border-color: #52525b; }
+.dark .files-file-card { background: #09090b; border-color: #29292d; }
+.dark .files-file-card-selected { background: #101012; border-color: #343438; }
 @container files-collection (min-width: 1100px) {
   .files-data-table { display: block; }
   .files-card-list { display: none; }
   .files-data-table table { min-width: 1200px; }
   .files-data-table td.sticky { background: #fff; }
-  .dark .files-data-table td.sticky { background: #181818; }
+  .dark .files-data-table td.sticky { background: #09090b; }
 }
 /** Подписи и значения сохраняют общий ритм без пустых ячеек таблицы. */
 .files-detail-row { display: grid; grid-template-columns: minmax(96px, 1fr) minmax(0, 2fr); gap: 16px; padding: 12px 0; }
@@ -25,6 +32,11 @@
 /** Список ID занимает полную ширину, имя бота и значение не конкурируют за одну строку. */
 .files-detail-row.files-detail-ids { grid-template-columns: minmax(0,1fr); gap: 12px; }
 .files-card-details .files-detail-row .files-copy-id { height: 32px; width: 32px; }
+/** Ссылка на сообщение остаётся текстовой и не растягивает строку отправителя. */
+.files-page .files-file-card .files-card-details a.files-message-link { height: auto; min-height: 0; line-height: 20px; font-weight: 400; }
+.files-detail-row:has(.files-message-link) { align-items: center; }
+/** Значение использования выравнивается по центру многострочной подписи. */
+.files-detail-row.files-detail-usage { align-items: center; }
 /** На узкой панели элементы выбора получают отдельную строку без сжатия подписей. */
 @container files-collection (max-width: 360px) {
   .files-list-controls { align-items: stretch; }
@@ -36,6 +48,8 @@
 }
 /** Подпись и селектор располагаются вертикально, когда строка уже их суммарной ширины. */
 @container files-collection (max-width: 240px) {
+  /** Компактная карточка использует отступ 8px и рамку 1px. */
+  .files-card-list > .files-list-controls { padding-left: 8px; }
   .files-list-controls .files-page-size { flex-direction: column; align-items: stretch; gap: 8px; }
   .files-list-controls .files-page-size > span:first-child { white-space: normal; }
   .files-list-controls .files-page-size > span:last-child { justify-content: space-between; width: 100%; }

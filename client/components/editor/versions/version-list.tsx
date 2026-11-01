@@ -9,6 +9,10 @@ import type { ProjectVersionMeta } from '@/hooks/use-project-versions';
 export interface VersionListProps {
   /** Сохранённые версии. */
   versions: ProjectVersionMeta[];
+  /** Общее число версий до разбивки на страницы. */
+  totalVersions?: number;
+  /** Смещение текущей страницы от начала истории. */
+  offset?: number;
   /** Идентификатор проекта для сравнения. */
   projectId?: number;
   /** Выполняется ли загрузка истории. */
@@ -24,7 +28,7 @@ export interface VersionListProps {
  * @param props - Версии, состояния загрузки и обработчик восстановления.
  * @returns Список версий либо пояснение отсутствия сохранений.
  */
-export function VersionList({ versions, projectId, isLoading, restoringId, onRestore }: VersionListProps) {
+export function VersionList({ versions, totalVersions = versions.length, offset = 0, projectId, isLoading, restoringId, onRestore }: VersionListProps) {
   if (isLoading) return <div role="status" className="space-y-3">
     <span className="sr-only">Загрузка истории версий…</span>
     {[0, 1, 2].map((index) => <div key={index} className="versions-surface space-y-3 rounded-xl border p-4" aria-hidden="true">
@@ -37,7 +41,7 @@ export function VersionList({ versions, projectId, isLoading, restoringId, onRes
   </div>;
   return <div role="list" aria-label="Сохранённые версии" className="space-y-3">
     {versions.map((version, index) => <div key={version.id} role="listitem">
-      <VersionRow version={version} projectId={projectId} versionNumber={versions.length - index} isLatest={index === 0}
+      <VersionRow version={version} projectId={projectId} versionNumber={totalVersions - offset - index} isLatest={offset + index === 0}
         isRestoring={restoringId === version.id} restoreDisabled={restoringId !== null} onRestore={onRestore} />
     </div>)}
   </div>;

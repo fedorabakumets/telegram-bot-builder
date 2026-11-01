@@ -8,7 +8,7 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { Loader2, Upload } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
+import { WorkspaceActionButton as Button } from '@/components/ui/workspace-action-button';
 import { useStorageConfigs } from '../hooks/use-storage-configs';
 import { listWritable, toStorageInfo } from './storage/storage-info';
 import { StorageTargetSelector } from './storage/storage-target-selector';

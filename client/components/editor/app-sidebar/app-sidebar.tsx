@@ -33,7 +33,8 @@ export function AppSidebar({
     <aside
       className={cn(
         'h-full flex flex-col z-40',
-        'bg-background dark:bg-slate-950',
+        /** Нейтральный фон совпадает с рабочей областью без синего оттенка. */
+        'bg-background',
         'border-r border-border/50',
         'transition-all duration-300',
         isCollapsed ? 'w-14' : 'w-fit'

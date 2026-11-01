@@ -7,13 +7,13 @@
 .code-panel-scroll { container: code-panel / size; }
 .code-surface { background: #ffffff; }
 .code-inset { background: #f4f4f5; }
-.dark .code-surface { background: #181818; border-color: #313131; }
-.dark .code-inset { background: #272727; }
+.dark .code-surface { background: #09090b; border-color: #29292d; }
+.dark .code-inset { background: #141416; }
 .code-panel .code-file { background: transparent; border-color: transparent; color: inherit; box-shadow: none; }
 .code-panel .code-file:hover { background: #f4f4f5; }
-.dark .code-panel .code-file:hover { background: #272727; }
+.dark .code-panel .code-file:hover { background: #141416; }
 .code-panel .code-file[data-state='active'] { border-color: #d4d4d8; background: #f4f4f5; }
-.dark .code-panel .code-file[data-state='active'] { border-color: #313131; background: #1f1f1f; }
+.dark .code-panel .code-file[data-state='active'] { border-color: #29292d; background: #101012; }
 .code-file-marker { background: transparent; }
 .code-file[data-state='active'] .code-file-marker { background: #a1a1aa; }
 .code-file[data-state='active'] .code-file-tag { color: inherit; }

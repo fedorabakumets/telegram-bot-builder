@@ -7,7 +7,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ClipboardPaste } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
+import { WorkspaceActionButton as Button } from '@/components/ui/workspace-action-button';
 import { useToast } from '@/hooks/use-toast';
 import {
   filesFromClipboardEvent,

@@ -4,6 +4,7 @@
  */
 import { useId, useRef, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
+import { WorkspaceActionButton } from '@/components/ui/workspace-action-button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -122,9 +123,9 @@ export function CreateTokenDialog({ open, onOpenChange, onCreated }: CreateToken
           <p className="text-pretty text-xs text-muted-foreground">Скопируйте токен после создания. Полностью он будет показан только один раз.</p>
           <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
             <Button type="button" variant="outline" disabled={createToken.isPending} onClick={() => handleOpenChange(false)} className="agent-action px-3 font-semibold">Отмена</Button>
-            <Button type="submit" disabled={createToken.isPending} className="agent-action px-3 text-base font-semibold">
+            <WorkspaceActionButton type="submit" disabled={createToken.isPending} className="agent-action px-3 text-base font-semibold">
               {createToken.isPending ? "Создание токена…" : "Создать токен"}
-            </Button>
+            </WorkspaceActionButton>
           </div>
         </form>
       </DialogContent>

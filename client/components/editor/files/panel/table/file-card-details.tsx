@@ -29,11 +29,11 @@ export function FileCardDetails({ file, projectId, selectedTokenId, collaborator
         <div className="files-detail-row"><dt>{origin.authorLabel}</dt><dd className="flex flex-wrap items-center gap-x-4 gap-y-2"><span>{origin.author}</span><FileMessageLink file={file} projectId={projectId} /></dd></div>
         <div className="files-detail-row"><dt>ID файла</dt><dd className="font-mono">{file.id}</dd></div>
         <div className="files-detail-row files-detail-ids"><dt>Telegram ID</dt><dd>
-          {hasIds ? <FileCardIds file={file} labels={labels} selectedTokenId={selectedTokenId} />
+          {hasIds ? <FileCardIds projectId={projectId} file={file} labels={labels} selectedTokenId={selectedTokenId} />
             : <span className="text-muted-foreground">Не присвоен</span>}
         </dd></div>
         <FileSourceNode file={file} allSheets={allSheets} onGoToNode={onGoToNode} />
-        {allSheets && <div className="files-detail-row"><dt>Используется в сценарии</dt><dd>
+        {allSheets && <div className="files-detail-row files-detail-usage"><dt>Используется в сценарии</dt><dd>
           {usages.length === 0 ? <span className="text-muted-foreground">Ссылки на файл не найдены</span> : <ul className="space-y-2">
             {usages.map((usage) => <li key={`${usage.sheetId}:${usage.nodeId}`}>
               {onGoToNode ? <button type="button" className="text-left inline-flex max-w-full items-start gap-2 hover:underline" onClick={() => onGoToNode(usage.nodeId, usage.sheetId)}>

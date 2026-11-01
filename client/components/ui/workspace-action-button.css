@@ -1,0 +1,23 @@
+/** @fileoverview Общий спокойный стиль действий вкладок, независимый от локальных оформлений. */
+@import './workspace-cool-theme.css';
+[data-workspace-action][data-workspace-action][data-workspace-action] {
+  height: 40px;
+  padding: 8px 12px;
+  gap: 8px;
+  border: 1px solid #d4d4d8;
+  border-radius: 8px;
+  background: #f4f4f5;
+  color: #141416;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+  box-shadow: none;
+}
+[data-workspace-action][data-workspace-action][data-workspace-action]:hover { background: #e4e4e7; }
+.dark [data-workspace-action][data-workspace-action][data-workspace-action] {
+  border-color: #303033;
+  background: transparent;
+  color: #e4e4e7;
+}
+.dark [data-workspace-action][data-workspace-action][data-workspace-action]:hover { background: #141416; }
+[data-workspace-action][data-workspace-action][data-workspace-action][data-workspace-size='icon'] { width: 32px; height: 32px; padding: 8px; }

@@ -10,7 +10,7 @@ import { AgentConnections } from "./AgentConnections";
 import { useState } from "react";
 import { Sparkles } from "lucide-react";
 import "./agent-page.css";
-import { Button } from "@/components/ui/button";
+import { WorkspaceActionButton } from '@/components/ui/workspace-action-button';
 import { WorkspaceTabHeading } from "@/components/ui/workspace-tab-heading";
 import { useAgentTokens } from "./use-agent-tokens";
 import { AgentTokensTable } from "./AgentTokensTable";
@@ -40,9 +40,9 @@ export function AgentTokensPanel() {
             <h3 id="agent-tokens-heading" className="text-xl font-semibold">Другие ИИ клиенты</h3>
             <p className="max-w-xl text-pretty text-sm text-muted-foreground">Создайте отдельный токен для подключения через MCP.</p>
           </div>
-          <Button className="agent-action px-3 text-sm font-semibold" onClick={() => setCreateOpen(true)}>
+          <WorkspaceActionButton className="agent-action px-3 text-sm font-semibold" onClick={() => setCreateOpen(true)}>
             <span aria-hidden="true">＋</span> Создать токен
-          </Button>
+          </WorkspaceActionButton>
         </div>
         {isLoading && <div role="status" className="agent-skeleton h-32 rounded-xl bg-muted"><span className="sr-only">Загрузка токенов…</span></div>}
         {isError && <p role="alert" className="rounded-lg border border-destructive/30 p-4 text-sm text-destructive">Не удалось загрузить токены. Обновите страницу, чтобы повторить попытку.</p>}

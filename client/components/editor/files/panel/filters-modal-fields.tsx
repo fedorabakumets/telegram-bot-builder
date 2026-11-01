@@ -1,10 +1,6 @@
 /**
  * @fileoverview Поля модалки фильтров `FiltersModalFields` (Req 6.2–6.7).
- * Композирует секции черновика фильтров: поиск по имени (внутри модалки),
- * диапазон дат, тип медиа Telegram + обложка, селектор «Сотрудник» с аватарами,
- * селектор «Хранилище» и фильтр размера. Date/Size реализованы выделенными
- * виджетами FiltersDateRange (filters-date-range.tsx) и FiltersSizeRange
- * (filters-size-range.tsx).
+ * Объединяет доступные по подписи поля и меню с единым оформлением порталов.
  * @module components/editor/files/panel/filters-modal-fields
  */
 
@@ -44,19 +40,13 @@ export function FiltersModalFields({ draft, onChange, collaborators, storages }:
         <Label className="text-xs font-medium">Название файла</Label>
         <Input
           value={draft.fileName ?? ''}
+          aria-label="Название файла"
           onChange={(e) => onChange({ fileName: e.target.value })}
           placeholder="Поиск по имени"
           className="h-8"
           data-testid="filters-file-name"
         />
       </div>
-
-      {/* Диапазон дат «от-до» (Req 6.3) */}
-      <FiltersDateRange
-        dateFrom={draft.dateFrom}
-        dateTo={draft.dateTo}
-        onChange={(dateFrom, dateTo) => onChange({ dateFrom, dateTo })}
-      />
 
       {/* Тип медиа Telegram + обложка (Req 6.4) */}
       <div className="space-y-1.5">
@@ -65,10 +55,10 @@ export function FiltersModalFields({ draft, onChange, collaborators, storages }:
           value={draft.mediaType ?? 'all'}
           onValueChange={(v) => onChange({ mediaType: v as FileFilters['mediaType'] })}
         >
-          <SelectTrigger className="h-8" data-testid="filters-media-type">
+          <SelectTrigger aria-label="Тип файла" className="h-8" data-testid="filters-media-type">
             <SelectValue placeholder="Все типы" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="files-filters-menu">
             {MEDIA_TYPE_OPTIONS.map((o) => (
               <SelectItem key={o.value} value={o.value}>
                 {o.label}
@@ -78,6 +68,13 @@ export function FiltersModalFields({ draft, onChange, collaborators, storages }:
         </Select>
       </div>
 
+      {/* Диапазон дат «от-до» (Req 6.3) */}
+      <FiltersDateRange
+        dateFrom={draft.dateFrom}
+        dateTo={draft.dateTo}
+        onChange={(dateFrom, dateTo) => onChange({ dateFrom, dateTo })}
+      />
+
       {/* Сотрудник: выпадающий список коллабораторов с аватарами (Req 6.5) */}
       <div className="space-y-1.5">
         <Label className="text-xs font-medium">Сотрудник</Label>
@@ -85,10 +82,10 @@ export function FiltersModalFields({ draft, onChange, collaborators, storages }:
           value={draft.uploadedBy !== undefined ? String(draft.uploadedBy) : 'all'}
           onValueChange={(v) => onChange({ uploadedBy: v === 'all' ? undefined : Number(v) })}
         >
-          <SelectTrigger className="h-8" data-testid="filters-uploaded-by">
+          <SelectTrigger aria-label="Сотрудник" className="h-8" data-testid="filters-uploaded-by">
             <SelectValue placeholder="Все сотрудники" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="files-filters-menu">
             <SelectItem value="all">Все сотрудники</SelectItem>
             {collaborators.map((c) => (
               <SelectItem key={c.userId} value={String(c.userId)}>
@@ -112,10 +109,10 @@ export function FiltersModalFields({ draft, onChange, collaborators, storages }:
           value={draft.storageConfigId ?? 'all'}
           onValueChange={(v) => onChange({ storageConfigId: v })}
         >
-          <SelectTrigger className="h-8" data-testid="filters-storage">
+          <SelectTrigger aria-label="Хранилище" className="h-8" data-testid="filters-storage">
             <SelectValue placeholder="Все хранилища" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="files-filters-menu">
             <SelectItem value="all">Все хранилища</SelectItem>
             {storages.map((st) => (
               <SelectItem key={st.id} value={st.id}>

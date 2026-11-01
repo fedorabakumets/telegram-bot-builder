@@ -39,18 +39,18 @@ export function FileCardPlaceholder({
           <p className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-muted-foreground">
             <span>{MEDIA_TYPE_LABELS[file.mediaType ?? ''] ?? 'Файл'}</span>
             <FileSize file={file} projectId={projectId} />
+            <span className="text-xs self-center">{formatDate(file.createdAt)}</span>
           </p>
         </div>
       </div>
       <div className="files-card-actions flex flex-wrap items-center justify-between gap-2 border-t pt-3">
-        <span className="text-xs text-muted-foreground">{formatDate(file.createdAt)}</span>
-        <div className="flex items-center gap-2">
+        <div className="files-card-buttons flex items-center gap-2">
           {downloadHref ? (
-            <Button variant="outline" size="sm" asChild>
-              <a href={downloadHref} download={name}><Download className="mr-2 h-4 w-4" />Скачать</a>
+            <Button variant="ghost" size="icon" asChild>
+              <a href={downloadHref} download={name} aria-label={`Скачать ${name}`} title="Скачать файл"><Download className="h-4 w-4" /></a>
             </Button>
           ) : <Button variant="outline" size="sm" disabled>Скачивание недоступно</Button>}
-          {onDelete && <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => onDelete(file.id)} aria-label={`Удалить ${name}`}><Trash2 className="h-4 w-4" /></Button>}
+          {onDelete && <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => onDelete(file.id)} aria-label={`Удалить ${name}`} title="Удалить файл"><Trash2 className="h-4 w-4" /></Button>}
         </div>
       </div>
       <FileCardDetails file={file} projectId={projectId} selectedTokenId={selectedTokenId} collaborators={collaborators} allSheets={allSheets} onGoToNode={onGoToNode} selected={selected} onToggle={onToggle} onCopy={onCopy} />

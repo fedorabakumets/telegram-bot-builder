@@ -14,6 +14,7 @@ import { Switch } from '@/components/ui/switch';
 import { useFileStoragePanelState } from './use-file-storage-panel-state';
 import { FileStorageHeader } from './file-storage-header';
 import { FileStorageToolbar } from './file-storage-toolbar';
+import { StorageQuotaBar } from './storage-quota-bar';
 import { FileAttachHint } from './file-attach-hint';
 import { FiltersRow } from './filters-row';
 import { FiltersModal } from './filters-modal';
@@ -25,7 +26,6 @@ import type { FileStoragePanelProps } from './panel-types';
 import { FilesListState } from './files-list-state';
 import './files-page.css';
 import './files-responsive-controls.css';
-
 /**
  * Панель файлового хранилища — общее ядро страницы и модалки.
  * @param props - Свойства панели (режим, проект, цель прикрепления, колбэки)
@@ -38,17 +38,16 @@ export function FileStoragePanel(props: FileStoragePanelProps) {
   const selectionActions = (s.canAttach || s.selectedIds.size > 0) ? <SelectionActionBar
     selectedCount={s.selectedIds.size} canAttach={s.canAttach}
     onAttach={s.attachSelected} onDelete={s.deleteSelected}
-    onClearSelection={s.clearSelection} isDeleting={s.isDeleting} /> : null;
-
+    isDeleting={s.isDeleting} /> : null;
   /** В модалке min-h-0, чтобы таблица скроллилась внутри фиксированной высоты */
   const rootClassName =
     mode === 'modal'
       ? 'flex min-h-0 h-full flex-1 flex-col overflow-hidden bg-background'
       : 'files-page flex min-h-0 h-full flex-col gap-3 overflow-auto bg-background p-4 sm:p-6';
-
   return (
     <div className={rootClassName} data-testid="file-storage-panel" data-mode={mode}>
       <FileStorageHeader
+        quota={mode === 'page' && <StorageQuotaBar usedBytes={s.quota.usedBytes} s3UsedBytes={s.quota.s3UsedBytes} limitBytes={s.quota.limitBytes} isLoading={s.quota.isLoading} compact />}
         mode={mode}
         projectId={projectId}
         tokens={s.tokens}
@@ -62,6 +61,7 @@ export function FileStoragePanel(props: FileStoragePanelProps) {
       />
 
       <FileStorageToolbar
+        hideQuota={mode === 'page'}
         category={s.category}
         onCategoryChange={s.setCategory}
         usedBytes={s.quota.usedBytes}
@@ -82,7 +82,7 @@ export function FileStoragePanel(props: FileStoragePanelProps) {
           collaborators={s.collaborators}
         />
         {mode === 'page' && (
-          <div className="flex shrink-0 flex-wrap items-center gap-2">
+          <div className="files-attach-controls flex shrink-0 flex-wrap items-center gap-2">
             <label className="files-attach-toggle inline-flex cursor-pointer items-center gap-3 text-sm font-medium">
               <span>Прикрепление к блоку</span>
               <Switch checked={s.attachModeEnabled} onCheckedChange={s.setAttachModeEnabled}
@@ -95,12 +95,13 @@ export function FileStoragePanel(props: FileStoragePanelProps) {
             )}
           </div>
         )}
+        {mode === 'page' && !s.attachModeEnabled && <FileAttachHint mode={mode} attachModeEnabled={false} hasTarget={!!attachTarget} />}
       </div>
 
-      <FileAttachHint mode={mode} attachModeEnabled={s.attachModeEnabled} hasTarget={!!attachTarget} nodeLabel={attachTarget?.nodeLabel} onChooseNode={props.onChooseAttachNode}>
+      {(mode !== 'page' || s.attachModeEnabled) && <FileAttachHint mode={mode} attachModeEnabled={s.attachModeEnabled} hasTarget={!!attachTarget} nodeLabel={attachTarget?.nodeLabel} onChooseNode={props.onChooseAttachNode}>
         {mode === 'page' && s.attachModeEnabled && props.onSelectAttachNode && <FileNodePicker
-          sheets={allSheets ?? []} target={attachTarget} onSelect={props.onSelectAttachNode} />}
-      </FileAttachHint>
+          projectId={projectId} tokenId={selectedTokenId} sheets={allSheets ?? []} target={attachTarget} onSelect={props.onSelectAttachNode} onGoToNode={onGoToNode} />}
+      </FileAttachHint>}
 
       <FiltersModal
         open={s.filtersOpen}

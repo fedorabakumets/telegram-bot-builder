@@ -8,7 +8,7 @@
 }
 .agent-page { container-type: inline-size; }
 .agent-dialog .agent-field { background: #ffffff; }
-.dark .agent-dialog .agent-field { background: #1f1f1f; border-color: #313131; }
+.dark .agent-dialog .agent-field { background: #101012; border-color: #29292d; }
 .agent-dialog .agent-field:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--ring); }
 /** Ошибочное поле сохраняет заметную рамку в обеих темах, включая состояние фокуса. */
 .agent-dialog .agent-field[aria-invalid="true"],
@@ -20,10 +20,10 @@
 .agent-page p, .agent-page h2, .agent-page h3 { text-wrap: pretty; }
 .agent-surface { background: #ffffff; }
 .agent-inset, .agent-step { background: #f4f4f5; }
-.agent-permission { background: #f4f4f5; color: #52525b; }
-.dark .agent-surface { background: #181818; border-color: #313131; }
-.dark .agent-inset, .dark .agent-step { background: #272727; }
-.dark .agent-permission { background: #272727; color: #d4d4d8; }
+.agent-permission { background: #f4f4f5; color: #343438; }
+.dark .agent-surface { background: #09090b; border-color: #29292d; }
+.dark .agent-inset, .dark .agent-step { background: #141416; }
+.dark .agent-permission { background: #141416; color: #d4d4d8; }
 .agent-page .agent-action, .agent-dialog .agent-action {
   transition-property: color, background-color, opacity, transform;
   transition-duration: 300ms;

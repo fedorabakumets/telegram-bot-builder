@@ -34,7 +34,9 @@ export function BotsCanvasWorkspace({ project, tokens }: BotsCanvasWorkspaceProp
   const { width: panelWidth, onResizePointerDown } = useBotDetailPanelWidth();
 
   useEffect(() => {
-    setSelectedTokenId(null);
+    /** Прямая ссылка из файлов открывает нужного бота и в режиме холста. */
+    const requested = Number(new URLSearchParams(window.location.search).get('bot'));
+    setSelectedTokenId(Number.isSafeInteger(requested) && requested > 0 ? requested : null);
   }, [project.id]);
 
   const runningByTokenId = useMemo(() => {

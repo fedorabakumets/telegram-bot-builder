@@ -5,10 +5,10 @@
 .versions-page { font-family: 'Manrope', sans-serif; container: versions / inline-size; }
 .versions-surface { background: #ffffff; }
 .versions-inset { background: #f4f4f5; }
-.dark .versions-surface { background: #181818; border-color: #313131; }
-.dark .versions-inset { background: #272727; }
+.dark .versions-surface { background: #09090b; border-color: #29292d; }
+.dark .versions-inset { background: #141416; }
 .versions-page .checkpoint-input { background: #ffffff; }
-.dark .versions-page .checkpoint-input { background: #1f1f1f; border-color: #313131; }
+.dark .versions-page .checkpoint-input { background: #101012; border-color: #29292d; }
 /** Ошибка обязательного поля остаётся заметной при фокусе и в тёмной теме. */
 .versions-page .checkpoint-input[aria-invalid='true'],
 .dark .versions-page .checkpoint-input[aria-invalid='true'] {

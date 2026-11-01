@@ -15,7 +15,14 @@ export interface SheetInfo {
   /** Имя листа */
   name: string;
   /** Массив нод листа */
-  nodes: Array<{ id: string; data: Record<string, any> }>;
+  nodes: Array<{
+    /** Идентификатор блока. */
+    id: string;
+    /** Тип обработчика блока для проверки поддержки вложений. */
+    type?: string;
+    /** Настройки блока. */
+    data: Record<string, any>;
+  }>;
 }
 
 /** Цель прикрепления файла к ноде */

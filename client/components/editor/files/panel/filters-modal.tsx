@@ -25,6 +25,7 @@ import { useStorageConfigs } from '../hooks/use-storage-configs';
 import type { StorageOption } from './active-filter-chips-labels';
 import { FiltersModalFields } from './filters-modal-fields';
 import { isFiltersValid } from './filters-modal-validation';
+import './filters-modal.css';
 
 /** Пропсы модалки фильтров */
 export interface FiltersModalProps {
@@ -83,12 +84,12 @@ export function FiltersModal({ open, value, onApply, onReset, onOpenChange, coll
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md" data-testid="filters-modal">
-        <DialogHeader>
-          <DialogTitle>Фильтры файлов</DialogTitle>
+      <DialogContent className="files-filters-modal" aria-describedby={undefined} data-testid="filters-modal">
+        <DialogHeader className="files-filters-header">
+          <DialogTitle className="text-xl leading-7">Фильтры файлов</DialogTitle>
         </DialogHeader>
 
-        <div className="max-h-[60vh] overflow-y-auto pr-1">
+        <div className="files-filters-body">
           <FiltersModalFields
             draft={draft}
             onChange={patchDraft}
@@ -97,26 +98,27 @@ export function FiltersModal({ open, value, onApply, onReset, onOpenChange, coll
           />
         </div>
 
-        <DialogFooter className="gap-2 sm:gap-2">
+        <DialogFooter className="files-filters-footer">
           <Button
             type="button"
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={handleReset}
             data-testid="filters-reset"
           >
             <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
-            Сбросить фильтр
+            Сбросить всё
           </Button>
           <Button
             type="button"
+            variant="outline"
             size="sm"
             onClick={handleApply}
             disabled={!valid}
             data-testid="filters-apply"
           >
             <Check className="mr-1.5 h-3.5 w-3.5" />
-            Применить
+            Применить фильтры
           </Button>
         </DialogFooter>
       </DialogContent>

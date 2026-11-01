@@ -6,6 +6,7 @@
  */
 
 import type { BotToken } from '@shared/schema';
+import type { ReactNode } from 'react';
 import { FileImage, FolderOpen, RefreshCw } from 'lucide-react';
 
 import { WorkspaceTabHeading } from '@/components/ui/workspace-tab-heading';
@@ -20,6 +21,8 @@ import type { PanelMode } from './panel-types';
 
 /** Пропсы шапки файлового хранилища */
 export interface FileStorageHeaderProps {
+  /** Индикатор занятого места рядом с загрузкой. */
+  quota?: ReactNode;
   /** Режим панели: страница или модалка */
   mode: PanelMode;
   /** ID текущего проекта */
@@ -124,13 +127,13 @@ export function FileStorageHeader(props: FileStorageHeaderProps): React.JSX.Elem
       data-mode="page"
     >
       <WorkspaceTabHeading title="Файлы" icon={<FileImage />}
-        description="Загружайте медиа и добавляйте их в блоки бота."
+        description="Медиа для блоков бота."
         actions={<div className="flex shrink-0 items-center gap-2"><FileStorageDocsLink /><Button variant="ghost" size="icon" className="files-action h-8 w-8" onClick={onRefresh}
           disabled={props.isRefreshing} aria-label="Обновить список файлов" title="Обновить список файлов" data-testid="file-storage-refresh">
           <RefreshCw className="h-4 w-4" aria-hidden="true" />
         </Button></div>} />
       <HeaderSelectors {...props} />
-      <div className="files-header-actions flex flex-wrap items-center gap-2">{actions}</div>
+      <div className="files-header-actions flex flex-wrap items-center gap-2">{actions}{props.quota}</div>
     </div>
   );
 }

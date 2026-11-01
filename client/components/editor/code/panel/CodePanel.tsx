@@ -4,7 +4,7 @@
  */
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { WorkspaceActionButton } from '@/components/ui/workspace-action-button';
 import { BotData, BotProject } from '@shared/schema';
 import { useQuery } from '@tanstack/react-query';
 import { useState, useRef, useEffect } from 'react';
@@ -247,9 +247,9 @@ export function CodePanel({
                 </CardHeader>
                 <CardContent className="code-project-content space-y-4 p-4 pt-0 sm:p-6 sm:pt-0">
                   <BotValidation botData={botDataArray[index]} />
-                  {openCodeView && <Button onClick={openCodeView} className="code-action w-full px-3 text-base font-semibold">
+                  {openCodeView && <WorkspaceActionButton onClick={openCodeView} className="code-action w-full px-3 text-base font-semibold">
                     Открыть код <span aria-hidden="true">→</span>
-                  </Button>}
+                  </WorkspaceActionButton>}
                   <CodeActions content={content} selectedFormat={selectedFormat} fileName={safeFileName} isLoading={isLoading} />
                   <CodeFormatTabs selectedFormat={selectedFormat} projectName={currentProjectName} onFormatChange={handleFormatChange} />
                   {selectedFormat === 'json' && !editedContent && (
