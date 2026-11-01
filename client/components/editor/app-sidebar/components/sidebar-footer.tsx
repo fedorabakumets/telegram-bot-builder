@@ -1,7 +1,8 @@
 /**
- * @fileoverview Футер сайдбара: профиль пользователя и кнопка шапки
+ * @fileoverview Футер сайдбара: профиль пользователя, полноэкранный режим и кнопка шапки
  */
 
+import { FullscreenButton } from './fullscreen-button';
 import * as React from 'react';
 import { CreditCard, LogOut, MessageCircle, PanelTop, RefreshCw, UserRound, Users, Workflow } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
@@ -70,6 +71,7 @@ export function SidebarFooter({ isCollapsed, headerVisible, onToggleHeader }: Si
         </Button>
       )}
 
+      <FullscreenButton isCollapsed={isCollapsed} />
       <Link
         href="/profile"
         title="Мой профиль"

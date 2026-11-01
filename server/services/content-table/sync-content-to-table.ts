@@ -8,9 +8,6 @@ import type { BotTableRow } from "@shared/schema";
 import { ensureContentTable } from "./create-content-table";
 import { extractContentFromNodes, type ContentEntry } from "./content-key-parser";
 
-/** Максимальное количество записей контента на проект */
-const MAX_ENTRIES = 1000;
-
 /**
  * Строит маппинг имя колонки → ID колонки для таблицы
  * @param tableId - ID таблицы
@@ -52,7 +49,7 @@ function getField(data: Record<string, string>, colMap: Record<string, string>, 
 }
 
 /**
- * Синхронизирует контент из JSON сценария в таблицу _content
+ * Синхронизирует весь контент сценария без молчаливого усечения больших проектов
  * @param projectId - ID проекта
  * @param scenarioData - JSON данные сценария (объект с sheets[])
  */
@@ -62,10 +59,9 @@ export async function syncContentToTable(projectId: number, scenarioData: any): 
 
   const sheets = scenarioData?.sheets || [];
   const entries = extractContentFromNodes(sheets);
-  const limitedEntries = entries.slice(0, MAX_ENTRIES);
 
   const existingRows = await storage.getBotTableRows(tableId);
-  const newKeys = new Set(limitedEntries.map((e) => e.key));
+  const newKeys = new Set(entries.map((e) => e.key));
 
   // Индекс существующих строк по ключу
   const rowsByKey = new Map<string, BotTableRow>();
@@ -80,7 +76,7 @@ export async function syncContentToTable(projectId: number, scenarioData: any): 
   // Строки для создания
   const toCreate: ContentEntry[] = [];
 
-  for (const entry of limitedEntries) {
+  for (const entry of entries) {
     const existing = rowsByKey.get(entry.key);
     if (existing) {
       const data = existing.data as Record<string, string>;

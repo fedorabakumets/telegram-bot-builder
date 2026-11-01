@@ -1,11 +1,9 @@
 /**
- * @fileoverview Фильтры для таблицы _content — чипсы по type и sheet
+ * @fileoverview Компактные фильтры контента по типу и листу сценария
  * @module editor/tables/components/content-table-filters
  */
 
 import { useMemo } from 'react';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/utils/utils';
 import type { TableRow, TableColumn } from '../types';
 
 /** Пропсы компонента фильтров контент-таблицы */
@@ -25,7 +23,7 @@ interface ContentTableFiltersProps {
 }
 
 /**
- * Горизонтальная полоска чипсов для фильтрации по type и sheet
+ * Компактная строка выбора типа и листа без роста от количества значений
  * @param props - Пропсы компонента
  * @returns JSX элемент фильтров
  */
@@ -72,56 +70,25 @@ export function ContentTableFilters({
   }, [rows, sheetColId]);
 
   return (
-    <div className="px-4 py-2 border-b border-border/50 flex flex-col gap-1.5">
-      {/* Фильтр по type */}
-      <div className="flex items-center gap-1 flex-wrap">
-        <span className="text-[10px] text-muted-foreground mr-1">type:</span>
-        <Chip active={!selectedType} onClick={() => onTypeChange(null)}>Все</Chip>
-        {types.map((t) => (
-          <Chip key={t} active={selectedType === t} onClick={() => onTypeChange(t)}>
-            {t}
-          </Chip>
-        ))}
-      </div>
-      {/* Фильтр по sheet */}
+    <div className="content-table-filters shrink-0 flex flex-wrap items-center gap-3 px-4 py-3" aria-label="Фильтры контента">
+      <label className="flex min-w-0 flex-1 items-center gap-2 text-xs font-medium text-muted-foreground">
+        <span className="shrink-0">Тип</span>
+        <select aria-label="Тип контента" className="content-filter-select min-w-0 flex-1 rounded-md border px-3 py-2 text-sm"
+          value={selectedType ?? ''} onChange={(event) => onTypeChange(event.target.value || null)}>
+          <option value="">Все типы</option>
+          {types.map((type) => <option key={type} value={type}>{type === 'command' ? 'Команды' : type === 'message' ? 'Сообщения' : type}</option>)}
+        </select>
+      </label>
       {sheets.length > 0 && (
-        <div className="flex items-center gap-1 flex-wrap">
-          <span className="text-[10px] text-muted-foreground mr-1">sheet:</span>
-          <Chip active={!selectedSheet} onClick={() => onSheetChange(null)}>Все</Chip>
-          {sheets.map((s) => (
-            <Chip key={s} active={selectedSheet === s} onClick={() => onSheetChange(s)}>
-              {s}
-            </Chip>
-          ))}
-        </div>
+        <label className="flex min-w-0 flex-1 items-center gap-2 text-xs font-medium text-muted-foreground">
+          <span className="shrink-0">Лист</span>
+          <select aria-label="Лист сценария" title={selectedSheet ?? 'Все листы'} className="content-filter-select min-w-0 flex-1 rounded-md border px-3 py-2 text-sm"
+            value={selectedSheet ?? ''} onChange={(event) => onSheetChange(event.target.value || null)}>
+            <option value="">Все листы</option>
+            {sheets.map((sheet) => <option key={sheet} value={sheet}>{sheet}</option>)}
+          </select>
+        </label>
       )}
     </div>
-  );
-}
-
-/** Пропсы чипса-кнопки */
-interface ChipProps {
-  /** Активен ли чипс */
-  active: boolean;
-  /** Обработчик клика */
-  onClick: () => void;
-  /** Содержимое */
-  children: React.ReactNode;
-}
-
-/** Чипс-кнопка фильтра */
-function Chip({ active, onClick, children }: ChipProps) {
-  return (
-    <Button
-      size="sm"
-      variant="ghost"
-      className={cn(
-        'h-5 px-2 text-[10px] rounded-full',
-        active && 'bg-primary/10 text-primary font-medium',
-      )}
-      onClick={onClick}
-    >
-      {children}
-    </Button>
   );
 }

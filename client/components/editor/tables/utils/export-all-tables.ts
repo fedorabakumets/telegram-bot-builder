@@ -3,6 +3,7 @@
  * @module editor/tables/utils/export-all-tables
  */
 
+import { columnSettings } from '@shared/table-column-settings';
 import { buildAllTablesExport, type ExportedTable } from '@shared/tables/io';
 import * as api from '../api/tables-api';
 import { downloadFile } from './download-file';
@@ -26,6 +27,7 @@ export async function exportAllTables(projectId: number, projectName?: string): 
       return {
         name: table.name,
         columns: sortedCols.map((c) => c.name),
+        columnSettings: sortedCols.map((column) => columnSettings(column.settings)),
         rows: rows.map((r) =>
           sortedCols.map((col) => (r.data as Record<string, string>)?.[String(col.id)] ?? ''),
         ),

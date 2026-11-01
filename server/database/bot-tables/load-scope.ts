@@ -39,7 +39,7 @@ export async function loadColumnsInProject(
   tableId: number,
 ): Promise<ColumnRecord[]> {
   const result = await db.query(
-    `SELECT c.id, c.table_id, c.name, c.position
+    `SELECT c.id, c.table_id, c.name, c.position, c.settings
      FROM bot_table_columns c
      JOIN bot_tables t ON t.id = c.table_id
      WHERE c.table_id = $1 AND t.project_id = $2
@@ -64,7 +64,7 @@ export async function loadColumnInProject(
   columnId: number,
 ): Promise<ColumnRecord | undefined> {
   const result = await db.query(
-    `SELECT c.id, c.table_id, c.name, c.position
+    `SELECT c.id, c.table_id, c.name, c.position, c.settings
      FROM bot_table_columns c
      JOIN bot_tables t ON t.id = c.table_id
      WHERE c.id = $1 AND c.table_id = $2 AND t.project_id = $3`,

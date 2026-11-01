@@ -3,6 +3,7 @@
  * @module shared/tables/io/all-tables
  */
 
+import { tableColumnSettingsSchema } from '../../table-column-settings';
 import type { AllTablesExport, ExportedTable } from "./types";
 
 /**
@@ -56,5 +57,7 @@ function parseOne(item: unknown, index: number): ExportedTable {
     }
     return row.map((cell) => String(cell));
   });
-  return { name: table.name, columns: table.columns as string[], rows };
+  const settings = table.columnSettings === undefined ? undefined : tableColumnSettingsSchema.array().safeParse(table.columnSettings);
+  if (settings && (!settings.success || settings.data.length !== table.columns.length)) throw new Error(`Таблица "${table.name}": некорректные настройки столбцов`);
+  return { name: table.name, columns: table.columns as string[], rows, ...(settings?.success ? { columnSettings: settings.data } : {}) };
 }

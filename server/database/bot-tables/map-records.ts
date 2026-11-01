@@ -3,6 +3,8 @@
  * @module server/database/bot-tables/map-records
  */
 
+import { columnSettings, type TableColumnSettings } from '../../../shared/table-column-settings';
+
 /** Таблица в ответе API */
 export interface TableRecord {
   /** Идентификатор */
@@ -17,6 +19,8 @@ export interface TableRecord {
 
 /** Столбец в ответе API */
 export interface ColumnRecord {
+  /** Подпись, тип и ограничения значения. */
+  settings?: TableColumnSettings;
   /** Идентификатор */
   id: number;
   /** Таблица */
@@ -53,6 +57,8 @@ interface RawTable {
 
 /** Сырой столбец */
 interface RawColumn {
+  /** Настройки столбца из JSONB. */
+  settings?: unknown;
   /** Идентификатор */
   id: number;
   /** Таблица */
@@ -104,7 +110,7 @@ export function mapTable(row: RawTable): TableRecord {
  * @returns Запись API
  */
 export function mapColumn(row: RawColumn): ColumnRecord {
-  return { id: row.id, tableId: row.table_id, name: row.name, position: row.position };
+  return { id: row.id, tableId: row.table_id, name: row.name, position: row.position, settings: columnSettings(row.settings) };
 }
 
 /**

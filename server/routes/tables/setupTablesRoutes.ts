@@ -30,6 +30,8 @@ import { renameColumnHandler } from "./handlers/renameColumnHandler";
 import { renameTableHandler } from "./handlers/renameTableHandler";
 import { reorderColumnsHandler } from "./handlers/reorderColumnsHandler";
 import { summaryHandler } from "./handlers/summaryHandler";
+import { columnSettingsHandler } from './handlers/columnSettingsHandler';
+import { editCellsHandler } from './handlers/editCellsHandler';
 import { updateRowHandler } from "./handlers/updateRowHandler";
 
 /**
@@ -51,11 +53,13 @@ export function setupTablesRoutes(
   app.get(`${base}/:tableId`, ...guard, getTableHandler);
   app.put(`${base}/:tableId`, ...guard, renameTableHandler);
   app.delete(`${base}/:tableId`, ...guard, deleteTableHandler);
+  app.post(`${base}/:tableId/cells/edit`, ...guard, editCellsHandler);
   app.post(`${base}/:tableId/apply-ops`, ...guard, applyOpsHandler);
   app.get(`${base}/:tableId/summary`, ...guard, summaryHandler);
   app.get(`${base}/:tableId/columns`, ...guard, getColumnsHandler);
   app.put(`${base}/:tableId/columns/reorder`, ...guard, reorderColumnsHandler);
   app.post(`${base}/:tableId/columns`, ...guard, createColumnHandler);
+  app.put(`${base}/:tableId/columns/:columnId/settings`, ...guard, columnSettingsHandler);
   app.put(`${base}/:tableId/columns/:columnId`, ...guard, renameColumnHandler);
   app.delete(`${base}/:tableId/columns/:columnId`, ...guard, deleteColumnHandler);
   app.get(`${base}/:tableId/rows`, ...guard, getRowsHandler);

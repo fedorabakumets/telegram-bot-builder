@@ -1,0 +1,30 @@
+/** @fileoverview Закрепление заголовков, основного столбца и состояния сетки данных. */
+.table-data-grid { table-layout: fixed; border-collapse: separate; border-spacing: 0; font-size: 14px; line-height: 20px; }
+.table-data-grid th, .table-data-grid td { border-right: 1px solid #27272a; border-bottom: 1px solid #27272a; padding: 0; vertical-align: top; background: #09090b; }
+.table-data-grid th { position: sticky; top: 0; z-index: 3; background: #181818; text-align: left; font-weight: 600; }
+.table-data-grid .table-number { width: 56px; min-width: 56px; padding: 8px; color: #a1a1aa; font-size: 12px; }
+.table-data-grid .table-primary { position: sticky; left: 0; z-index: 2; box-shadow: 1px 0 #3f3f46; }
+.table-data-grid th.table-primary { z-index: 4; }
+.table-data-grid tr:hover td { background: #181818; }
+.table-column-filter { width: calc(100% - 16px); }
+.table-column-resizer { position: absolute; top: 0; right: -4px; bottom: 0; z-index: 5; width: 8px; cursor: col-resize; touch-action: none; }
+.table-column-resizer:hover, .table-column-resizer:focus-visible { background: #71717a; outline: none; }
+.table-wrap .table-static-cell, .table-wrap .content-record > a { white-space: pre-wrap; overflow-wrap: anywhere; }
+.table-wrap td > div { white-space: pre-wrap; overflow-wrap: anywhere; }
+.table-data-grid button:focus-visible, .table-data-grid a:focus-visible, .table-data-grid input:focus-visible { outline: 2px solid #a1a1aa; outline-offset: -2px; }
+
+/** Черновики и полноразмерный редактор используют те же поверхности, что и сетка. */
+.table-wrap .table-cell-value { white-space: pre-wrap; overflow-wrap: anywhere; }
+.table-cell-dialog { font-family: 'Manrope', sans-serif; background: #09090b; color: #fafafa; border-color: #27272a; }
+.table-cell-dialog button:focus-visible { outline: 2px solid #a1a1aa; outline-offset: 2px; }
+
+/** Строки-заполнители сохраняют геометрию невидимой части большой таблицы. */
+.table-data-grid .table-spacer td { padding: 0; border: 0; background: transparent; }
+.table-editable-cell:has([aria-invalid="true"]), .table-editable-cell:has([role="alert"]) { box-shadow: inset 0 0 0 1px #dc2626; }
+
+/** Выпадающие действия сохраняют нейтральную поверхность вне контейнера таблицы. */
+.table-actions-menu { font-family: 'Manrope', sans-serif; background: #09090b; color: #fafafa; border-color: #27272a; }
+.table-actions-menu [data-highlighted] { background: #181818; color: #fafafa; }
+
+/** Локальные флажки остаются видимыми при глобальном сбросе нативного оформления. */
+.table-number input[type="checkbox"], .table-cell-dialog input[type="checkbox"] { appearance: auto; width: 16px; height: 16px; accent-color: #a1a1aa; vertical-align: middle; }

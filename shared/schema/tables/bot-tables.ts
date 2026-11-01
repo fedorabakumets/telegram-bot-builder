@@ -32,6 +32,8 @@ export const botTableColumns = pgTable("bot_table_columns", {
   tableId: integer("table_id").references(() => botTables.id, { onDelete: "cascade" }).notNull(),
   /** Название колонки */
   name: varchar("name", { length: 255 }).notNull(),
+  /** Пользовательские подписи, тип значения и ограничения столбца. */
+  settings: jsonb("settings").notNull().default({}),
   /** Позиция колонки (для сортировки) */
   position: integer("position").notNull().default(0),
 });

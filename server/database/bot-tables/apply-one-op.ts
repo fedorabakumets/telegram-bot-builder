@@ -12,6 +12,7 @@ import {
   reindexRowsInProject,
   replaceRowInProject,
 } from "./mutate-row";
+import type { ColumnRecord } from './map-records';
 import { loadColumnsInProject } from "./load-scope";
 import { parseEntityName, validateCells } from "./validate-cells";
 import type { Queryable } from "./queryable";
@@ -41,8 +42,8 @@ export async function runTableOp(db: Queryable, projectId: number, tableId: numb
   if (op.op === "delete_column") return deleteColumnInProject(db, projectId, tableId, op.columnId);
   if (op.op === "reindex") return reindexRowsInProject(db, projectId, tableId);
   if (op.op === "delete_row") return deleteRowInProject(db, projectId, tableId, op.rowId);
-  if (op.op === "update_row" || op.op === "patch_row") return writeRow(db, projectId, tableId, op, ids);
-  return addRows(db, projectId, tableId, op.rows, ids);
+  if (op.op === "update_row" || op.op === "patch_row") return writeRow(db, projectId, tableId, op, ids, columns);
+  return addRows(db, projectId, tableId, op.rows, ids, columns);
 }
 
 /**
@@ -52,6 +53,7 @@ export async function runTableOp(db: Queryable, projectId: number, tableId: numb
  * @param tableId - Таблица
  * @param op - Операция строки
  * @param ids - Допустимые столбцы
+ * @param columns - Настройки проверки значений
  * @returns Строка или отказ
  */
 async function writeRow(
@@ -60,8 +62,9 @@ async function writeRow(
   tableId: number,
   op: Extract<TableOp, { op: "update_row" | "patch_row" }>,
   ids: Set<string>,
+  columns: ColumnRecord[],
 ) {
-  const cells = validateCells(op.data, ids);
+  const cells = validateCells(op.data, ids, columns, op.op === "update_row");
   if (!cells.ok) return { ok: false as const, status: 400, message: cells.message };
   return op.op === "update_row"
     ? replaceRowInProject(db, projectId, tableId, op.rowId, cells.data)
@@ -75,6 +78,7 @@ async function writeRow(
  * @param tableId - Таблица
  * @param source - Строки
  * @param ids - Допустимые столбцы
+ * @param columns - Настройки проверки значений
  * @returns Строки или отказ
  */
 async function addRows(
@@ -83,10 +87,11 @@ async function addRows(
   tableId: number,
   source: Array<{ data: Record<string, unknown>; rowIndex?: number }>,
   ids: Set<string>,
+  columns: ColumnRecord[],
 ) {
   const next = await nextRowIndex(db, tableId);
   const rows = source.map((row, index) => {
-    const cells = validateCells(row.data, ids);
+    const cells = validateCells(row.data, ids, columns, true);
     if (!cells.ok) return cells;
     return { rowIndex: row.rowIndex ?? next + index, data: cells.data };
   });

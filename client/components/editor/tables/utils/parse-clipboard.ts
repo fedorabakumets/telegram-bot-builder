@@ -1,52 +1,31 @@
-/**
- * @fileoverview Парсер Tab-separated данных из буфера обмена (Excel/Google Sheets)
- * @module editor/tables/utils/parse-clipboard
- */
-
-/** Результат парсинга TSV из буфера */
+/** @fileoverview Разбор диапазона из Excel и Google Таблиц без угадывания строки заголовков. */
+/** Результат разбора диапазона. */
 interface ParseClipboardResult {
-  /** Имена колонок (null если первая строка — данные, не заголовки) */
-  columns: string[] | null;
-  /** Строки данных */
+  /** Диапазон не содержит автоматически определяемых заголовков. */
+  columns: null;
+  /** Все строки, включая первую и пустые ячейки. */
   rows: string[][];
 }
-
 /**
- * Парсит Tab-separated текст из буфера обмена
- * @param text - Текст из clipboard (Tab-separated)
- * @returns Объект с колонками (или null) и строками
+ * Разбирает TSV с кавычками, переносами внутри ячейки и завершающими пустыми столбцами.
+ * @param text - Содержимое буфера обмена.
+ * @returns Исходный прямоугольный диапазон без потери первой строки.
  */
 export function parseClipboardTsv(text: string): ParseClipboardResult {
-  const normalized = text.replace(/\r\n/g, '\n').trimEnd();
-  if (!normalized) {
-    return { columns: null, rows: [] };
+  if (!text) return { columns: null, rows: [] };
+  const rows: string[][] = [];
+  let row: string[] = [], value = '', quoted = false;
+  for (let index = 0; index < text.length; index++) {
+    const character = text[index];
+    if (character === '"' && (quoted || value === '')) {
+      if (quoted && text[index + 1] === '"') { value += '"'; index++; } else quoted = !quoted;
+    } else if (!quoted && character === '\t') { row.push(value); value = ''; }
+    else if (!quoted && (character === '\n' || character === '\r')) {
+      if (character === '\r' && text[index + 1] === '\n') index++;
+      row.push(value); rows.push(row); row = []; value = '';
+    } else value += character;
   }
-
-  const lines = normalized.split('\n');
-  const allRows = lines.map((line) => line.split('\t'));
-
-  if (allRows.length === 0) {
-    return { columns: null, rows: [] };
-  }
-
-  const firstRow = allRows[0];
-  const isHeader = detectHeader(firstRow);
-
-  if (isHeader && allRows.length > 1) {
-    return { columns: firstRow, rows: allRows.slice(1) };
-  }
-
-  return { columns: null, rows: allRows };
-}
-
-/**
- * Определяет, является ли первая строка заголовком (не числа)
- * @param row - Первая строка данных
- * @returns true если строка выглядит как заголовки
- */
-function detectHeader(row: string[]): boolean {
-  if (row.length === 0) return false;
-  /** Если все значения — числа, это данные, не заголовки */
-  const allNumeric = row.every((cell) => /^\d+([.,]\d+)?$/.test(cell.trim()));
-  return !allNumeric;
+  if (value !== '' || row.length || !/[\r\n]$/.test(text)) { row.push(value); rows.push(row); }
+  if (quoted) throw new Error('Не закрыты кавычки в диапазоне');
+  return { columns: null, rows };
 }

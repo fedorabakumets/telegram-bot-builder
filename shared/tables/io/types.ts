@@ -3,6 +3,8 @@
  * @module shared/tables/io/types
  */
 
+import type { TableColumnSettings } from '../../table-column-settings';
+
 /** Колонка для сериализации: идентификатор и имя */
 export interface IoColumn {
   /** Идентификатор столбца (строка, как ключ ячейки) */
@@ -19,6 +21,8 @@ export interface IoRow {
 
 /** Одна таблица в общем JSON версии 1 */
 export interface ExportedTable {
+  /** Подписи и типы столбцов в исходном порядке, если они были выгружены. */
+  columnSettings?: TableColumnSettings[];
   /** Имя таблицы */
   name: string;
   /** Имена столбцов по порядку */

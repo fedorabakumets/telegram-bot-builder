@@ -3,8 +3,13 @@
  * @module editor/tables/types
  */
 
+import type { TableColumnSettings } from '@shared/table-column-settings';
+import type { CanvasSheet } from '@shared/schema';
+
 /** Колонка таблицы */
 export interface TableColumn {
+  /** Подпись, тип и ограничения; внутреннее имя хранится отдельно. */
+  settings?: TableColumnSettings;
   /** Уникальный идентификатор колонки (строковый для совместимости с UI) */
   id: string;
   /** Имя колонки (отображается в шапке) */
@@ -35,6 +40,8 @@ export interface BotTable {
 
 /** Пропсы компонента TablesPanel */
 export interface TablesPanelProps {
+  /** Текущие листы сценария для названий нод в контенте. */
+  sheets?: CanvasSheet[];
   /** Идентификатор проекта */
   projectId: number;
   /** Список всех проектов для переключателя */

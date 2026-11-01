@@ -19,6 +19,8 @@ import type { BotTable } from '../types';
 
 /** Пропсы компонента ExportMenu */
 interface ExportMenuProps {
+  /** Подпись действия и области экспорта. */
+  label?: string;
   /** Текущая выбранная таблица */
   table: BotTable;
 }
@@ -28,7 +30,7 @@ interface ExportMenuProps {
  * @param props - Пропсы компонента
  * @returns JSX элемент меню экспорта
  */
-export function ExportMenu({ table }: ExportMenuProps) {
+export function ExportMenu({ table, label = 'Экспорт' }: ExportMenuProps) {
   /** Скачать таблицу как CSV */
   const handleCsv = () => {
     const csv = tableToCsv(table.columns, table.rows);
@@ -51,7 +53,7 @@ export function ExportMenu({ table }: ExportMenuProps) {
       <DropdownMenuTrigger asChild>
         <Button size="sm" variant="ghost" className="h-7 text-xs gap-1.5">
           <Download className="h-3.5 w-3.5" />
-          Экспорт
+          {label}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start">

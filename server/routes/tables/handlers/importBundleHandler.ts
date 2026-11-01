@@ -64,6 +64,7 @@ function parseBundle(input: unknown): BundleTable[] | { message: string } {
     if (!Array.isArray(table.columns) || !Array.isArray(table.rows)) return { message: "У таблицы нужны columns и rows" };
     tables.push({
       name: String(table.name ?? ""),
+      columnSettings: table.columnSettings,
       columns: table.columns.map(String),
       rows: table.rows.map((row) => (Array.isArray(row) ? row.map(String) : [])),
     });

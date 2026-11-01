@@ -27,7 +27,7 @@ export async function addColumnInProject(
   const inserted = await db.query(
     `INSERT INTO bot_table_columns (table_id, name, position)
      SELECT t.id, $3, $4 FROM bot_tables t WHERE t.id = $1 AND t.project_id = $2
-     RETURNING id, table_id, name, position`,
+     RETURNING id, table_id, name, position, settings`,
     [tableId, projectId, name, position],
   );
   if (!inserted.rows[0]) return { ok: false, status: 404, message: "Таблица не найдена" };
@@ -54,7 +54,7 @@ export async function renameColumnInProject(
     `UPDATE bot_table_columns c SET name = $4
      FROM bot_tables t
      WHERE c.id = $1 AND c.table_id = $2 AND t.id = c.table_id AND t.project_id = $3
-     RETURNING c.id, c.table_id, c.name, c.position`,
+     RETURNING c.id, c.table_id, c.name, c.position, c.settings`,
     [columnId, tableId, projectId, name],
   );
   if (!updated.rows[0]) return { ok: false, status: 404, message: "Столбец не найден" };

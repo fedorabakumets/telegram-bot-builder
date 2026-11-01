@@ -30,7 +30,7 @@ export async function createRowsHandler(req: Request, res: Response): Promise<vo
     const prepared = [];
     for (let index = 0; index < rows.length; index++) {
       const row = rows[index] as { rowIndex?: number; data?: unknown };
-      const cells = validateCells(row.data ?? {}, ids);
+      const cells = validateCells(row.data ?? {}, ids, owned.columns);
       if (!cells.ok) {
         fail(res, 400, cells.message);
         return;

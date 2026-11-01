@@ -3,6 +3,7 @@
  * @module routes/tables/notify-table-change
  */
 
+import { cachedOps } from '../../database/db-cache';
 import { syncTableToScenario } from "../../services/content-table";
 import { CONTENT_TABLE_NAME } from "../../database/bot-tables/limits";
 
@@ -20,6 +21,8 @@ export async function notifyTableChange(
   rowDatas: Record<string, string>[] = [],
 ): Promise<void> {
   if (tableName === CONTENT_TABLE_NAME) {
+    /** После атомарного обновления JSON серверный кеш проекта также должен стать свежим. */
+    cachedOps.invalidateProject(projectId);
     for (const rowData of rowDatas) {
       try {
         await syncTableToScenario(projectId, tableId, rowData);

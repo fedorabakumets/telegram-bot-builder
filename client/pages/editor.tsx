@@ -1929,6 +1929,7 @@ export default function Editor() {
             <div className="h-full overflow-hidden">
               <Suspense fallback={<LazyPanelFallback />}>
                 <TablesPanel
+                  sheets={botDataWithSheets?.sheets}
                   projectId={activeProject.id}
                   selectedTokenId={selectedDatabaseTokenId}
                   onSelectToken={setSelectedDatabaseTokenId}
@@ -2334,6 +2335,7 @@ export default function Editor() {
                 <div className="h-full overflow-hidden">
                   <Suspense fallback={<LazyPanelFallback />}>
                     <TablesPanel
+                  sheets={botDataWithSheets?.sheets}
                       projectId={activeProject.id}
                       selectedTokenId={selectedDatabaseTokenId}
                       onSelectToken={setSelectedDatabaseTokenId}

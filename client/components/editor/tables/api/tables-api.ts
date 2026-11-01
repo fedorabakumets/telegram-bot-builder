@@ -3,43 +3,8 @@
  * @module editor/tables/api/tables-api
  */
 
+import type { ServerTable, ServerColumn, ServerRow } from './server-models';
 import { apiRequest } from '@/queryClient';
-
-/** Серверная модель таблицы */
-interface ServerTable {
-  /** ID таблицы */
-  id: number;
-  /** ID проекта */
-  projectId: number;
-  /** Имя таблицы */
-  name: string;
-  /** Дата создания */
-  createdAt: string;
-}
-
-/** Серверная модель колонки */
-interface ServerColumn {
-  /** ID колонки */
-  id: number;
-  /** ID таблицы */
-  tableId: number;
-  /** Имя колонки */
-  name: string;
-  /** Позиция */
-  position: number;
-}
-
-/** Серверная модель строки */
-interface ServerRow {
-  /** ID строки */
-  id: number;
-  /** ID таблицы */
-  tableId: number;
-  /** Индекс строки */
-  rowIndex: number;
-  /** Данные ячеек */
-  data: Record<string, string>;
-}
 
 /** Базовый URL для таблиц проекта */
 const baseUrl = (projectId: number) => `/api/projects/${projectId}/tables`;

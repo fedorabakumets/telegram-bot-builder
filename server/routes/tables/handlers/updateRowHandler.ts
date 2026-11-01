@@ -25,7 +25,7 @@ export async function updateRowHandler(req: Request, res: Response): Promise<voi
       fail(res, 400, "Некорректный ID строки");
       return;
     }
-    const cells = validateCells(req.body?.data, new Set(owned.columns.map((column) => String(column.id))));
+    const cells = validateCells(req.body?.data, new Set(owned.columns.map((column) => String(column.id))), owned.columns, true);
     if (!cells.ok) {
       fail(res, 400, cells.message);
       return;

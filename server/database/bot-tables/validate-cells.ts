@@ -3,6 +3,8 @@
  * @module server/database/bot-tables/validate-cells
  */
 
+import { validateColumnValue } from '../../../shared/table-column-settings';
+import type { ColumnRecord } from './map-records';
 import { CONTENT_TABLE_NAME, MAX_CELL_LENGTH, MAX_NAME_LENGTH } from "./limits";
 
 /** Успешная проверка ячеек */
@@ -43,9 +45,11 @@ export function parseEntityName(name: unknown, reservedContent: boolean): string
  * Проверяет объект ячеек: пустая строка допустима, чужой столбец — нет
  * @param input - Тело data
  * @param columnIds - Допустимые идентификаторы столбцов
+ * @param columns - Настройки типов столбцов при наличии.
+ * @param requireAll - Проверять обязательность отсутствующих столбцов при импорте.
  * @returns Ячейки или ошибка
  */
-export function validateCells(input: unknown, columnIds: ReadonlySet<string>): CellsOk | CellsFail {
+export function validateCells(input: unknown, columnIds: ReadonlySet<string>, columns: ColumnRecord[] = [], requireAll = false): CellsOk | CellsFail {
   if (!input || typeof input !== "object" || Array.isArray(input)) {
     return { ok: false, message: "Поле data обязательно и должно быть объектом" };
   }
@@ -55,6 +59,12 @@ export function validateCells(input: unknown, columnIds: ReadonlySet<string>): C
     if (typeof value !== "string") return { ok: false, message: `Значение столбца ${key} должно быть строкой` };
     if (value.length > MAX_CELL_LENGTH) return { ok: false, message: "Слишком длинное значение ячейки" };
     data[key] = value;
+  }
+  for (const column of columns) {
+    const id = String(column.id);
+    if (!requireAll && !(id in data)) continue;
+    const error = validateColumnValue(data[id] ?? '', column.settings);
+    if (error) return { ok: false, message: `${column.settings?.displayName || column.name}: ${error}` };
   }
   return { ok: true, data };
 }

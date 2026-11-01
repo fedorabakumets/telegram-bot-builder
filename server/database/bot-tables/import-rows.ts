@@ -43,13 +43,15 @@ export async function importRowsInProject(
   const ids = new Set(columns.map((column) => String(column.id)));
   const ready: ReadyRow[] = [];
   for (const [index, row] of rows.entries()) {
-    const cells = validateCells(row, ids);
+    const cells = validateCells(row, ids, columns, true);
     if (!cells.ok) return { ok: false, status: 400, message: cells.message };
     ready.push({ rowIndex: index, data: cells.data });
   }
   await db.query("BEGIN");
   try {
     await db.query(`SET LOCAL statement_timeout = '${SQL_TIMEOUT}'`);
+    /** Блокировка таблицы исключает одинаковые индексы при одновременном добавлении строк. */
+    await db.query("SELECT id FROM bot_tables WHERE id = $1 AND project_id = $2 FOR UPDATE", [tableId, projectId]);
     if (mode === "replace") {
       const cleared = await clearRowsInProject(db, projectId, tableId);
       if ("status" in cleared) {

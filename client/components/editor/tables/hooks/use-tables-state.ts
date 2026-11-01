@@ -3,26 +3,15 @@
  * @module editor/tables/hooks/use-tables-state
  */
 
+import { saveCellEdits } from '../api/cell-edits-api';
+import type { TableCellEdit } from '@shared/table-cell-edit';
 import { useState, useCallback, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTablesQuery, useColumnsQuery, useRowsQuery, tableKeys } from './use-tables-query';
-import {
-  useCreateTable,
-  useDeleteTable,
-  useCreateColumn,
-  useDeleteColumn,
-  useRenameColumn,
-  useCreateRows,
-  useUpdateRow,
-  useDeleteRow,
-  useReindexRows,
-} from './use-tables-mutations';
+import { useTableStructure } from './use-table-structure';
+import { useTableImports } from './use-table-imports';
 import { useSystemTables } from './use-system-tables';
-import * as api from '../api/tables-api';
 import type { BotTable, TableColumn, TableRow } from '../types';
-
-/** Количество пустых строк при создании таблицы */
-const INITIAL_ROWS = 10;
 
 /**
  * Хук управления состоянием таблиц проекта (react-query)
@@ -44,23 +33,12 @@ export function useTablesState(projectId: number, selectedTokenId?: number | nul
 
   /** Запросы данных */
   const { data: serverTables = [] } = useTablesQuery(projectId);
-  const { data: serverColumns = [] } = useColumnsQuery(projectId, numericTableId);
-  const { data: serverRows = [] } = useRowsQuery(projectId, numericTableId);
-
-  /** Мутации */
-  const createTableMut = useCreateTable(projectId);
-  const deleteTableMut = useDeleteTable(projectId);
-  const createColumnMut = useCreateColumn(projectId);
-  const deleteColumnMut = useDeleteColumn(projectId);
-  const renameColumnMut = useRenameColumn(projectId);
-  const createRowsMut = useCreateRows(projectId);
-  const updateRowMut = useUpdateRow(projectId);
-  const deleteRowMut = useDeleteRow(projectId);
-  const reindexRowsMut = useReindexRows(projectId);
+  const { data: serverColumns = [], isLoading: columnsLoading, error: columnsError, refetch: reloadColumns } = useColumnsQuery(projectId, numericTableId);
+  const { data: serverRows = [], isLoading: rowsLoading, error: rowsError, refetch: reloadRows } = useRowsQuery(projectId, numericTableId);
 
   /** Колонки в клиентском формате */
   const columns: TableColumn[] = useMemo(
-    () => serverColumns.map((c) => ({ id: String(c.id), name: c.name })),
+    () => serverColumns.map((c) => ({ id: String(c.id), name: c.name, settings: c.settings })),
     [serverColumns],
   );
 
@@ -87,150 +65,20 @@ export function useTablesState(projectId: number, selectedTokenId?: number | nul
   /** Выбранная таблица */
   const selectedTable = tables.find((t) => t.id === selectedTableId) ?? null;
 
-  /** Создать таблицу с 10 пустыми строками */
-  const createTable = useCallback(async (name: string) => {
-    const created = await createTableMut.mutateAsync(name);
-    setSelectedTableId(String(created.id));
-    const emptyRows = Array.from({ length: INITIAL_ROWS }, (_, i) => ({
-      rowIndex: i + 1,
-      data: {},
-    }));
-    await createRowsMut.mutateAsync({ tableId: created.id, rows: emptyRows });
-  }, [createTableMut, createRowsMut]);
+  const structure = useTableStructure(projectId, serverTables, serverColumns, serverRows, selectedTableId, setSelectedTableId);
 
-  /** Удалить таблицу (кроме _content) */
-  const deleteTable = useCallback((tableId: string) => {
-    const table = serverTables.find((t) => String(t.id) === tableId);
-    if (table?.name === '_content') return;
-    deleteTableMut.mutate(Number(tableId));
-    if (selectedTableId === tableId) setSelectedTableId(null);
-  }, [deleteTableMut, selectedTableId, serverTables]);
+  /** Сохраняет все ячейки одной операцией с проверкой исходных значений. */
+  const updateCells = useCallback(async (tableId: string, edits: TableCellEdit[]) => {
+    await saveCellEdits(projectId, tableId, edits);
+    await queryClient.invalidateQueries({ queryKey: tableKeys.rows(projectId, Number(tableId)) });
+    await queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}`] });
+  }, [projectId, queryClient]);
+  /** Сохраняет одну ячейку через тот же атомарный механизм. */
+  const updateCell = useCallback(async (tableId: string, rowId: number, columnId: string, after: string, before?: string) => {
+    const row = serverRows.find((item) => item.id === rowId);
+    await updateCells(tableId, [{ rowId, columnId, after, before: before ?? row?.data?.[columnId] ?? '' }]);
+  }, [updateCells, serverRows]);
 
-  /** Добавить именованную колонку */
-  const addColumn = useCallback((tableId: string, name: string) => {
-    const position = serverColumns.length;
-    createColumnMut.mutate({ tableId: Number(tableId), name, position });
-  }, [createColumnMut, serverColumns.length]);
-
-  /** Добавить 26 буквенных колонок (A-Z) */
-  const addAlphabetColumns = useCallback(async (tableId: string) => {
-    const tid = Number(tableId);
-    const startPos = serverColumns.length;
-    const letters = Array.from({ length: 26 }, (_, i) => String.fromCharCode(65 + i));
-    await Promise.all(
-      letters.map((l, i) => api.createColumn(projectId, tid, l, startPos + i)),
-    );
-    queryClient.invalidateQueries({ queryKey: tableKeys.columns(projectId, tid) });
-  }, [projectId, serverColumns.length, queryClient]);
-
-  /** Переименовать колонку */
-  const renameColumn = useCallback((tableId: string, columnId: string, name: string) => {
-    renameColumnMut.mutate({ tableId: Number(tableId), columnId: Number(columnId), name });
-  }, [renameColumnMut]);
-
-  /** Удалить колонку */
-  const deleteColumn = useCallback((tableId: string, columnId: string) => {
-    deleteColumnMut.mutate({ tableId: Number(tableId), columnId: Number(columnId) });
-  }, [deleteColumnMut]);
-
-  /** Добавить N строк */
-  const addRows = useCallback((tableId: string, count = 1) => {
-    const maxIndex = serverRows.reduce((max, r) => Math.max(max, r.rowIndex), 0);
-    const newRows = Array.from({ length: count }, (_, i) => ({
-      rowIndex: maxIndex + i + 1,
-      data: {},
-    }));
-    createRowsMut.mutate({ tableId: Number(tableId), rows: newRows });
-  }, [createRowsMut, serverRows]);
-
-  /** Удалить строку */
-  const deleteRow = useCallback((tableId: string, rowId: number) => {
-    deleteRowMut.mutate({ tableId: Number(tableId), rowId });
-  }, [deleteRowMut]);
-
-  /** Перенумеровать строки */
-  const reindexRows = useCallback((tableId: string) => {
-    reindexRowsMut.mutate(Number(tableId));
-  }, [reindexRowsMut]);
-
-  /** Обновить значение ячейки */
-  const updateCell = useCallback(
-    (tableId: string, rowId: number, columnId: string, value: string) => {
-      const row = serverRows.find((r) => r.id === rowId);
-      const allowed = new Set(serverColumns.map((column) => String(column.id)));
-      const newData: Record<string, string> = {};
-      for (const [key, cell] of Object.entries({ ...(row?.data ?? {}), [columnId]: value })) {
-        if (allowed.has(key)) newData[key] = cell;
-      }
-      updateRowMut.mutate({ tableId: Number(tableId), rowId, data: newData });
-    },
-    [updateRowMut, serverRows, serverColumns],
-  );
-
-  /** Импортировать новую таблицу с колонками и данными */
-  const importNewTable = useCallback(async (name: string, columns: string[], rows: string[][]) => {
-    const created = await createTableMut.mutateAsync(name);
-    const tableId = created.id;
-
-    /** Создаём колонки последовательно (нужен ID каждой) */
-    const createdCols = await Promise.all(
-      columns.map((colName, i) => api.createColumn(projectId, tableId, colName, i)),
-    );
-
-    /** Маппим строки: columns[i] → columnId */
-    const mappedRows = rows.map((row, rowIdx) => {
-      const data: Record<string, string> = {};
-      createdCols.forEach((col, ci) => {
-        if (row[ci] !== undefined && row[ci] !== '') {
-          data[String(col.id)] = row[ci];
-        }
-      });
-      return { rowIndex: rowIdx + 1, data };
-    });
-
-    await createRowsMut.mutateAsync({ tableId, rows: mappedRows });
-    setSelectedTableId(String(tableId));
-    queryClient.invalidateQueries({ queryKey: tableKeys.columns(projectId, tableId) });
-    queryClient.invalidateQueries({ queryKey: tableKeys.rows(projectId, tableId) });
-  }, [createTableMut, createRowsMut, projectId, queryClient]);
-
-  /** Импортировать строки в существующую таблицу */
-  const importRows = useCallback(async (tableId: string, rows: string[][]) => {
-    const tid = Number(tableId);
-    /** Берём текущие колонки по порядку position */
-    const sortedCols = [...serverColumns].sort((a, b) => a.position - b.position);
-    const maxIndex = serverRows.reduce((max, r) => Math.max(max, r.rowIndex), 0);
-
-    const mappedRows = rows.map((row, rowIdx) => {
-      const data: Record<string, string> = {};
-      sortedCols.forEach((col, ci) => {
-        if (row[ci] !== undefined && row[ci] !== '') {
-          data[String(col.id)] = row[ci];
-        }
-      });
-      return { rowIndex: maxIndex + rowIdx + 1, data };
-    });
-
-    await createRowsMut.mutateAsync({ tableId: tid, rows: mappedRows });
-    queryClient.invalidateQueries({ queryKey: tableKeys.rows(projectId, tid) });
-  }, [createRowsMut, serverColumns, serverRows, projectId, queryClient]);
-
-  return {
-    tables,
-    selectedTable,
-    selectedTableId,
-    setSelectedTableId,
-    createTable,
-    deleteTable,
-    addColumn,
-    addAlphabetColumns,
-    renameColumn,
-    deleteColumn,
-    addRows,
-    deleteRow,
-    reindexRows,
-    updateCell,
-    importNewTable,
-    importRows,
-  };
+  const { importNewTable, importRows } = useTableImports(projectId, serverColumns, setSelectedTableId);
+  return { loading: columnsLoading || rowsLoading, loadError: columnsError || rowsError ? 'Не удалось обновить данные таблицы' : '', retryLoad: () => { void reloadColumns(); void reloadRows(); }, ...structure, tables, selectedTable, selectedTableId, setSelectedTableId, updateCell, updateCells, importNewTable, importRows };
 }
