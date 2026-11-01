@@ -1,0 +1,12 @@
+/** @fileoverview Ограничение выпадающего списка проектов экраном и перенос длинных названий. */
+.project-selector-menu {
+  width: max(220px, var(--radix-select-trigger-width));
+  min-width: 0;
+  max-width: min(384px, calc(100vw - 24px), var(--radix-select-content-available-width));
+}
+.project-selector-menu [data-radix-select-viewport] { min-width: 0; width: 100%; }
+.project-selector-menu [role='option'] { min-width: 0; white-space: normal; }
+.project-selector-menu [role='option'] > span:last-child { min-width: 0; width: 100%; }
+.project-selector-menu .project-selector-option { align-items: start; gap: 8px; }
+.project-selector-option > span:first-child { white-space: normal; overflow-wrap: anywhere; line-height: 20px; }
+.project-selector-option > span:last-child { margin-top: 4px; }

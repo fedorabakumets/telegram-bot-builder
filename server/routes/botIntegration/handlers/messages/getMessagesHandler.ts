@@ -7,6 +7,7 @@
  * @module botIntegration/handlers/messages/getMessagesHandler
  */
 
+import { getMessageContext } from './get-message-context';
 import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
 import { getRequestTokenId } from "../../../utils/resolve-request-token";
@@ -46,6 +47,11 @@ export async function getMessagesHandler(req: Request, res: Response): Promise<v
         if (!Number.isInteger(limit) || limit < 1 || limit > 1000) {
             res.status(400).json({ message: 'Неверное ограничение сообщений' });
             return;
+        }
+        if (req.query.aroundMessageId !== undefined) {
+            const context = await getMessageContext(projectId, token.id, userId, Number(req.query.aroundMessageId));
+            if (!context) { res.status(404).json({ message: "Сообщение не найдено в этом диалоге" }); return; }
+            res.json(context); return;
         }
         /** Общую историю включает только панель диалогов; остальные потребители сохраняют личную выборку. */
         if (req.query.includeGroupContext === 'true') {

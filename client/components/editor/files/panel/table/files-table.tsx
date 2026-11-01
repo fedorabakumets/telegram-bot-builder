@@ -8,7 +8,9 @@
  * (задача 7.3). Узкий экран — `FileCardPlaceholder`. Файл — оркестрация/скелет.
  * @module components/editor/files/panel/table/files-table
  */
-
+import './files-collection.css';
+import { useState, type ReactNode } from 'react';
+import { FilePreviewDialog } from './file-preview-dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import type { ProjectFile } from '../../hooks/use-project-files';
 import type { CollaboratorInfo } from '../../hooks/use-project-collaborators';
@@ -23,7 +25,7 @@ import {
 import { FILES_TABLE_COLUMNS, FILES_TABLE_COLUMN_COUNT } from './files-table-columns';
 import { FileRow } from './file-row';
 import { FileCardPlaceholder } from './file-card-placeholder';
-
+import { useFileColumnSort } from './file-column-sort';
 /** Пропсы каркаса таблицы файлов */
 export interface FilesTableProps {
   /** Массив файлов для отображения */
@@ -50,46 +52,51 @@ export interface FilesTableProps {
   onGoToNode?: (nodeId: string, sheetId: string) => void;
   /** Идёт ли загрузка списка файлов */
   isLoading?: boolean;
+  /** Выбор количества файлов над списком. */
+  pageSizeControl?: ReactNode;
+  /** Действия над выбранными файлами рядом с верхним счётчиком. */
+  selectionActions?: ReactNode;
 }
-
 /** Заголовок «выбрать все»: отмечен, когда выбраны все файлы страницы */
 function isAllSelected(files: ProjectFile[], selectedIds: Set<number>): boolean {
   return files.length > 0 && files.every((f) => selectedIds.has(f.id));
 }
-
 /**
  * Каркас таблицы файлов с адаптивным отображением.
  * @param props - Свойства таблицы
  * @returns JSX элемент таблицы (десктоп) и карточек (узкий экран)
  */
 export function FilesTable(props: FilesTableProps) {
-  const { files, projectId, selectedIds, onToggleSelect, onSelectAll, onCopyFileId, onDelete, collaborators, selectedTokenId, allSheets, onGoToNode, isLoading } = props;
+  const { projectId, selectedIds, onToggleSelect, onSelectAll, onCopyFileId, onDelete, collaborators, selectedTokenId, allSheets, onGoToNode, isLoading } = props;
+  const sorting = useFileColumnSort(props.files);
+  const { files } = sorting;
+  const [previewFile, setPreviewFile] = useState<ProjectFile | null>(null);
   const allSelected = isAllSelected(files, selectedIds);
-
   if (isLoading) {
     return <div className={EMPTY_STATE_CLASS} data-testid="files-table-loading">Загрузка…</div>;
   }
   if (files.length === 0) {
     return <div className={EMPTY_STATE_CLASS} data-testid="files-table-empty">Файлы не найдены</div>;
   }
-
   /** Общие пропсы строки/карточки для каждого файла */
   const rowProps = (file: ProjectFile) => ({
     file, projectId, selected: selectedIds.has(file.id), selectedTokenId,
     onToggle: () => onToggleSelect(file.id), onCopy: onCopyFileId, onDelete, collaborators,
-    allSheets, onGoToNode,
+    allSheets, onGoToNode, onPreviewClick: () => setPreviewFile(file),
   });
-
   return (
-    <div className="h-full" data-testid="files-table">
+    <div className="files-collection h-full" data-testid="files-table">
       {/* Десктоп: таблица с горизонтальным скроллом и закреплёнными столбцами (Req 7.8) */}
-      <div className="hidden sm:block h-full overflow-auto">
-        <table className="min-w-full w-max text-xs border-collapse">
+      <div className="files-data-table h-full overflow-auto">
+        {props.pageSizeControl && <div className="files-table-size-control flex justify-end border-b p-3">{props.pageSizeControl}</div>}
+        {props.selectionActions && <div className="p-3">{props.selectionActions}</div>}
+        <table className="w-full text-xs border-collapse">
           <thead className={TABLE_HEAD_CLASS}>
             <tr>
               {FILES_TABLE_COLUMNS.map((col) => (
                 <th
                   key={col.id}
+                  aria-sort={sorting.sort?.column === col.id ? (sorting.sort.direction === 1 ? 'ascending' : 'descending') : undefined}
                   className={[
                     'p-2 font-medium whitespace-nowrap', col.className ?? '',
                     col.id === 'select' ? STICKY_COLUMN_SELECT_HEADER : '',
@@ -98,12 +105,12 @@ export function FilesTable(props: FilesTableProps) {
                 >
                   {col.id === 'select' ? (
                     <Checkbox
-                      checked={allSelected}
+                      aria-label="Выбрать все файлы" checked={allSelected}
                       onCheckedChange={(checked) => onSelectAll(checked as boolean)}
                       className={FILE_CHECKBOX_CLASS}
                       data-testid="files-table-select-all"
                     />
-                  ) : col.label}
+                  ) : sorting.header(col.id, col.label)}
                 </th>
               ))}
             </tr>
@@ -115,23 +122,26 @@ export function FilesTable(props: FilesTableProps) {
           </tbody>
         </table>
       </div>
-
       {/* Узкий экран: карточный режим со скроллом (Req 7.8, 13.3) */}
-      <div className="sm:hidden h-full overflow-auto p-3 space-y-2">
+      <div className="files-card-list h-full overflow-auto p-3 space-y-3">
         {/* Выбор всех в карточном режиме */}
-        <label className="flex items-center gap-2 text-xs text-muted-foreground px-1">
+        <div className="files-list-controls flex flex-wrap items-center justify-between gap-3">
+        <label className="flex items-center gap-2 text-sm text-muted-foreground px-1">
           <Checkbox
-            checked={allSelected}
+            aria-label="Выбрать все файлы" checked={allSelected}
             onCheckedChange={(checked) => onSelectAll(checked as boolean)}
             className={FILE_CHECKBOX_CLASS}
           />
           Выбрать все ({files.length})
         </label>
+        {props.pageSizeControl}
+        </div>
+        {props.selectionActions}
         {files.map((file) => (
           <FileCardPlaceholder key={file.id} {...rowProps(file)} />
         ))}
       </div>
-
+      <FilePreviewDialog file={previewFile} projectId={projectId} onClose={() => setPreviewFile(null)} />
       {/* colSpan-резерв для будущих состояний строки-заглушки */}
       <span className="hidden" aria-hidden data-column-count={FILES_TABLE_COLUMN_COUNT} />
     </div>

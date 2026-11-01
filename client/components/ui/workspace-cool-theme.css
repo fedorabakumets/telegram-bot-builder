@@ -1,0 +1,24 @@
+/** @fileoverview Общая холодная палитра рабочих вкладок, согласованная с тёмно-синим сайдбаром. */
+.dark :is(.files-page, .versions-page, .agent-page, .agent-dialog, .code-panel, .file-node-picker-menu) {
+  --background: #09090b;
+  --card: #09090b;
+  --popover: #09090b;
+  --muted: #141416;
+  --accent: #19191c;
+  --border: #29292d;
+  --input: #29292d;
+  --muted-foreground: #a1a1aa;
+  background-color: var(--background);
+}
+/** Поля и второстепенные поверхности используют те же уровни контраста. */
+.dark :is(.files-page, .versions-page, .agent-page, .code-panel) :is(.bg-card, .bg-muted, .bg-secondary) { background-color: var(--card); }
+.dark .file-node-picker-menu { background-color: var(--popover); border-color: var(--border); }
+/** Нейтральные действия не получают синий оттенок поверх холодного фона вкладки. */
+.dark :is(.files-page, .versions-page, .agent-page, .agent-dialog, .code-panel) button[type='button']:not([role='checkbox']):not([role='switch']):not([role='tab']):not([role='combobox']) {
+  background-color: transparent;
+  border-color: #29292d;
+}
+.dark :is(.files-page, .versions-page, .agent-page, .agent-dialog, .code-panel) button[type='button']:not([role='checkbox']):not([role='switch']):not([role='tab']):not([role='combobox']):hover:not(:disabled) {
+  background-color: #141416;
+  border-color: #343438;
+}

@@ -8,13 +8,14 @@
  * (Req 1.1, 1.2, 1.6, 3.7).
  * @module components/editor/files/panel/file-storage-panel
  */
-
-import { Paperclip } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-
+import { FilePageSize } from './file-page-size';
+import { FileAttachActionProvider } from './file-attach-action';
+import { FileNodePicker } from './file-node-picker';
+import { Switch } from '@/components/ui/switch';
 import { useFileStoragePanelState } from './use-file-storage-panel-state';
 import { FileStorageHeader } from './file-storage-header';
 import { FileStorageToolbar } from './file-storage-toolbar';
+import { StorageQuotaBar } from './storage-quota-bar';
 import { FileAttachHint } from './file-attach-hint';
 import { FiltersRow } from './filters-row';
 import { FiltersModal } from './filters-modal';
@@ -23,7 +24,9 @@ import { FilesTable } from './table/files-table';
 import { FileStoragePagination } from './file-storage-pagination';
 import { FILE_STORAGE_ACTIONS_ROW_CLASS } from './panel-styles';
 import type { FileStoragePanelProps } from './panel-types';
-
+import { FilesListState } from './files-list-state';
+import './files-page.css';
+import './files-responsive-controls.css';
 /**
  * Панель файлового хранилища — общее ядро страницы и модалки.
  * @param props - Свойства панели (режим, проект, цель прикрепления, колбэки)
@@ -32,16 +35,21 @@ import type { FileStoragePanelProps } from './panel-types';
 export function FileStoragePanel(props: FileStoragePanelProps) {
   const { mode, attachTarget, projectId, selectedTokenId, onSelectToken, allProjects, onProjectChange, allSheets, onGoToNode } = props;
   const s = useFileStoragePanelState(props);
-
+  /** Общие действия выбора размещаются рядом со списком на странице и снизу в модалке. */
+  const selectionActions = (s.canAttach || s.selectedIds.size > 0) ? <SelectionActionBar
+    selectedCount={s.selectedIds.size} canAttach={s.canAttach}
+    onAttach={s.attachSelected} onDelete={s.deleteSelected}
+    isDeleting={s.isDeleting} /> : null;
   /** В модалке min-h-0, чтобы таблица скроллилась внутри фиксированной высоты */
   const rootClassName =
     mode === 'modal'
       ? 'flex min-h-0 h-full flex-1 flex-col overflow-hidden bg-background'
-      : 'flex h-full flex-col bg-background';
-
+      : 'files-page flex min-h-0 h-full flex-col gap-3 overflow-auto bg-background px-4 pb-4 pt-2 sm:px-6 sm:pb-6 sm:pt-3';
   return (
-    <div className={rootClassName} data-testid="file-storage-panel" data-mode={mode}>
+    <FileAttachActionProvider enabled={mode === 'page' && !!props.onSelectAttachNode} selectedIds={s.selectedIds} onToggle={s.toggleSelect} onEnable={s.setAttachModeEnabled}>
+      <div className={rootClassName} data-testid="file-storage-panel" data-mode={mode}>
       <FileStorageHeader
+        quota={mode === 'page' && <StorageQuotaBar usedBytes={s.quota.usedBytes} s3UsedBytes={s.quota.s3UsedBytes} limitBytes={s.quota.limitBytes} isLoading={s.quota.isLoading} compact />}
         mode={mode}
         projectId={projectId}
         tokens={s.tokens}
@@ -51,25 +59,19 @@ export function FileStoragePanel(props: FileStoragePanelProps) {
         onProjectChange={onProjectChange}
         onRefresh={s.refresh}
         onUploaded={s.handleUploaded}
+        isRefreshing={s.isFetching}
       />
-
-      <FileAttachHint
-        mode={mode}
-        attachModeEnabled={s.attachModeEnabled}
-        hasTarget={!!attachTarget}
-        nodeLabel={attachTarget?.nodeLabel}
-      />
-
       <FileStorageToolbar
+        hideQuota={mode === 'page'}
         category={s.category}
         onCategoryChange={s.setCategory}
         usedBytes={s.quota.usedBytes}
+        s3UsedBytes={s.quota.s3UsedBytes}
         limitBytes={s.quota.limitBytes}
         quotaLoading={s.quota.isLoading}
       />
-
       {/* Фильтры + режим прикрепления в одной строке */}
-      <div className={FILE_STORAGE_ACTIONS_ROW_CLASS}>
+      <div className={mode === 'page' ? 'files-filter-actions flex shrink-0 flex-wrap items-center justify-between gap-3' : FILE_STORAGE_ACTIONS_ROW_CLASS}>
         <FiltersRow
           embedded
           filters={s.filters}
@@ -80,18 +82,12 @@ export function FileStoragePanel(props: FileStoragePanelProps) {
           collaborators={s.collaborators}
         />
         {mode === 'page' && (
-          <div className="flex shrink-0 flex-wrap items-center gap-2">
-            <Button
-              type="button"
-              variant={s.attachModeEnabled ? 'default' : 'outline'}
-              size="sm"
-              className="h-8"
-              onClick={() => s.setAttachModeEnabled((v) => !v)}
-              data-testid="toggle-attach-mode"
-            >
-              <Paperclip className="mr-1.5 h-3.5 w-3.5" />
-              {s.attachModeEnabled ? 'Прикрепление вкл.' : 'Режим прикрепления'}
-            </Button>
+          <div className="files-attach-controls flex shrink-0 flex-wrap items-center gap-2">
+            <label className="files-attach-toggle inline-flex cursor-pointer items-center gap-3 text-sm font-medium">
+              <span>Прикрепление к блоку</span>
+              <Switch checked={s.attachModeEnabled} onCheckedChange={s.setAttachModeEnabled}
+                aria-label="Прикрепление к блоку" data-testid="toggle-attach-mode" />
+            </label>
             {s.attachModeEnabled && attachTarget && (
               <span className="max-w-[12rem] truncate text-xs text-muted-foreground sm:max-w-xs">
                 Цель: <strong className="text-foreground">{attachTarget.nodeLabel}</strong>
@@ -99,8 +95,14 @@ export function FileStoragePanel(props: FileStoragePanelProps) {
             )}
           </div>
         )}
+        {/* Справка доступна независимо от состояния переключателя прикрепления. */}
+        {mode === 'page' && <FileAttachHint mode={mode} attachModeEnabled={false} hasTarget={!!attachTarget} />}
+        {mode === 'page' && s.total > 0 && <div className="files-wide-page-size"><FilePageSize value={s.pageSize} onChange={s.setPageSize} /></div>}
       </div>
-
+      {(mode !== 'page' || s.attachModeEnabled) && <FileAttachHint mode={mode} attachModeEnabled={s.attachModeEnabled} hasTarget={!!attachTarget} nodeLabel={attachTarget?.nodeLabel} onChooseNode={props.onChooseAttachNode}>
+        {mode === 'page' && s.attachModeEnabled && props.onSelectAttachNode && <FileNodePicker
+          projectId={projectId} tokenId={selectedTokenId} sheets={allSheets ?? []} target={attachTarget} onSelect={props.onSelectAttachNode} onGoToNode={onGoToNode} />}
+      </FileAttachHint>}
       <FiltersModal
         open={s.filtersOpen}
         value={s.filters}
@@ -109,10 +111,11 @@ export function FileStoragePanel(props: FileStoragePanelProps) {
         onOpenChange={s.setFiltersOpen}
         collaborators={s.collaborators}
       />
-
       {/* Таблица файлов: каркас + множественный выбор + адаптивность (Req 3.1, 7.1, 7.8, 13.3) */}
-      <div className="min-h-0 flex-1 overflow-auto" data-testid="files-table-slot">
-        <FilesTable
+      <div className={mode === 'page' ? `files-surface files-content ${!s.files.length ? 'min-h-64' : 'min-h-48'} flex-1 overflow-auto rounded-xl border` : 'min-h-0 flex-1 overflow-auto'} data-testid="files-table-slot">
+        {mode === 'page' && (s.isLoading || s.isError || !s.files.length) ? <FilesListState
+          loading={s.isLoading} error={s.isError} filtered={s.category !== 'all' || s.activeFilterCount > 0 || selectedTokenId != null}
+          canReset={s.activeFilterCount > 0} onRetry={s.refresh} onReset={s.resetFilters} /> : <FilesTable
           files={s.files}
           projectId={projectId}
           selectedTokenId={selectedTokenId}
@@ -124,28 +127,22 @@ export function FileStoragePanel(props: FileStoragePanelProps) {
           collaborators={s.collaborators}
           allSheets={allSheets}
           onGoToNode={onGoToNode}
+          pageSizeControl={<FilePageSize value={s.pageSize} onChange={s.setPageSize} />}
+          selectionActions={mode === 'page' ? selectionActions : null}
           isLoading={s.isLoading}
-        />
+        />}
       </div>
-
       {/* Плашка: в модалке всегда, на странице — при выборе или режиме прикрепления */}
-      {(s.canAttach || s.selectedIds.size > 0) && (
-        <SelectionActionBar
-          selectedCount={s.selectedIds.size}
-          canAttach={s.canAttach}
-          onAttach={s.attachSelected}
-          onDelete={s.deleteSelected}
-          onClearSelection={s.clearSelection}
-          isDeleting={s.isDeleting}
-        />
-      )}
-
+      {mode === 'modal' && selectionActions}
       <FileStoragePagination
+        pageSize={s.pageSize}
+        onPageSizeChange={s.setPageSize}
         page={s.page}
         totalPages={s.totalPages}
         total={s.total}
         onPageChange={(next) => s.setPage(next)}
       />
     </div>
+    </FileAttachActionProvider>
   );
 }

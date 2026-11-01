@@ -3,6 +3,7 @@
  * @module setupBotIntegrationRoutes
  */
 
+import { getMessageFileSize } from './botIntegration/handlers/botData/get-message-file-size';
 import type { Express } from "express";
 import { requireProjectAccess } from "../middleware/requireProjectAccess";
 import { requireMediaFileOwnership } from "../middleware/requireMediaFileOwnership";
@@ -66,6 +67,8 @@ export function setupBotIntegrationRoutes(app: Express) {
     requireProjectAccess,
     getTelegramFileHandler,
   );
+  /** Уточнение метаданных старых сообщений требует доступа к исходному проекту. */
+  app.get("/api/projects/:projectId/messages/:messageId/file-size", requireProjectAccess, getMessageFileSize);
   app.get("/api/projects/:projectId/files", requireProjectAccess, getProjectFilesHandler);
   app.post("/api/media/:id/file-id", requireMediaFileOwnership, updateMediaFileIdHandler);
   app.delete(

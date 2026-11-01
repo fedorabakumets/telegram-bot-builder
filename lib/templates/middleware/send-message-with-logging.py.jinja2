@@ -1,4 +1,5 @@
 {#
+  @fileoverview Обёртки отправки с сохранением сообщений и ID блока сценария.
   Обёртка для bot.send_message с автоматическим логированием
   Использует closure вместо глобального monkey-patching
 #}
@@ -132,6 +133,19 @@ def _wrap_bot_send_media_group(bot_instance):
     async def send_media_group_with_logging(chat_id, media, *args, node_id=None, **kwargs):
         """Обёртка для bot.send_media_group с поддержкой outgoing_message_trigger"""
         result = await original_send_media_group(chat_id, media, *args, **kwargs)
+        # Каждый элемент альбома сохраняет ID блока и собственные данные медиа.
+        for _message in result or []:
+            _data = {"message_id": _message.message_id}
+            for _kind in ("photo", "video", "audio", "document"):
+                _value = getattr(_message, _kind, None)
+                if not _value:
+                    continue
+                if _kind == "photo":
+                    _value = _value[-1]
+                _data[_kind] = {"file_id": _value.file_id, "file_size": getattr(_value, "file_size", None)}
+            _fire_save_message(user_id=str(chat_id), message_type="bot",
+                message_text=getattr(_message, "caption", None) or "[Медиагруппа]",
+                node_id=node_id, message_data=_data)
         # Вызываем обработчики триггеров исходящих сообщений
         # result — список сообщений, берём message_id первого
         try:

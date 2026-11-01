@@ -1,0 +1,43 @@
+/** @fileoverview Адаптивная форма выбора блока и её выпадающий список, отображаемый через портал. */
+/** Форма занимает всю ширину подсказки; отступ под скрепку нужен только вводному тексту. */
+.files-page [data-testid='file-attach-hint']:has(.file-node-picker) { position: relative; }
+.files-page [data-testid='file-attach-hint']:has(.file-node-picker) > svg { position: absolute; left: 12px; top: 12px; }
+.files-page [data-testid='file-attach-hint']:has(.file-node-picker) > div { width: 100%; }
+.files-page [data-testid='file-attach-hint']:has(.file-node-picker) > div > p:first-child { padding-left: 24px; }
+.file-node-picker-menu { width: var(--radix-select-trigger-width); min-width: 0; max-width: calc(100vw - 24px); }
+/** Результаты занимают собственное место в форме, не накладываясь на файлы. */
+.file-node-search-results { width: 100%; max-height: 240px; overflow-y: auto; padding: 4px; border: 1px solid #d4d4d8; border-radius: 8px; }
+.file-node-search-result { display: block; width: 100%; padding: 8px 12px; text-align: left; border-radius: 8px; }
+.file-node-search-result:hover, .file-node-search-result:focus-visible { background: #f4f4f5; outline: 2px solid #71717a; outline-offset: -2px; }
+.dark .file-node-search-results { background: #09090b; border-color: #29292d; }
+.dark .file-node-search-result:hover, .dark .file-node-search-result:focus-visible { background: #18181b; }
+.file-node-picker-menu [data-radix-select-viewport] { min-width: 0; }
+.file-node-picker-menu [role='option'] { white-space: normal; overflow-wrap: anywhere; }
+.file-node-picker-menu [role='option'] > span:last-child { min-width: 0; width: 100%; }
+.file-node-picker [role='combobox'] > span { text-align: left; }
+.file-node-picker { container: file-node-picker / inline-size; }
+.file-node-picker-search { align-items: stretch; }
+/** Внутренние поля и закрытый список сохраняют ровные отступы без переноса превью из меню. */
+.file-node-picker-search input { flex-basis: 160px; height: 40px; padding-inline: 12px; }
+.file-node-picker [role='combobox'] { height: 40px; gap: 12px; padding: 8px 12px; }
+.file-node-picker [role='combobox'] > span { min-width: 0; flex: 1; overflow: hidden; }
+.file-node-picker [role='combobox'] > svg { flex-shrink: 0; }
+.file-node-picker > [role='combobox'] { margin-top: 16px; }
+/** Подпись, ввод и выбранный блок используют единый размер текста и межстрочный интервал. */
+.file-node-picker label,
+.file-node-picker-search input,
+.file-node-picker [role='combobox'],
+.file-node-picker-search button { font-size: 14px; line-height: 20px; }
+.file-node-picker-search button { flex: 0 1 auto; height: 40px; white-space: normal; }
+/** Второстепенные действия выбранного блока не конкурируют с его описанием. */
+.file-node-picker > .flex button {
+  color: var(--muted-foreground); font-weight: 400; font-size: 13px;
+  background: transparent; border-color: var(--border); box-shadow: none;
+}
+.file-node-picker > .flex button:hover { color: var(--foreground); background: var(--muted); }
+/** При нехватке ширины поле и действие сохраняют одинаковые размеры в отдельных строках. */
+@container file-node-picker (max-width: 320px) {
+  .file-node-picker-search { flex-direction: column; }
+  .file-node-picker-search input { flex: 0 0 auto; width: 100%; }
+  .file-node-picker-search button { width: 100%; }
+}

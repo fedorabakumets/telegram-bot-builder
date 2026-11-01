@@ -1,5 +1,5 @@
 {#
-  Обёртка для bot.send_photo с автоматическим логированием, регистрацией медиа
+  @fileoverview Обёртка для bot.send_photo с автоматическим логированием, регистрацией медиа
   и вызовом обработчиков outgoing_message_trigger.
   Использует closure вместо глобального monkey-patching.
 #}
@@ -15,7 +15,7 @@ def _wrap_bot_send_photo(bot_instance):
             if not os.path.exists(file_path):
                 logging.error(f"❌ Медиафайл не найден: {file_path}")
                 if caption:
-                    return await original_send_photo.__self__.send_message(chat_id, caption, *args, **kwargs)
+                    return await original_send_photo.__self__.send_message(chat_id, caption, *args, node_id=node_id, **kwargs)
                 return None
             result = await original_send_photo(chat_id, FSInputFile(file_path), *args, caption=caption, **kwargs)
         else:
@@ -29,6 +29,7 @@ def _wrap_bot_send_photo(bot_instance):
                 "file_unique_id": largest_photo.file_unique_id,
                 "width": largest_photo.width,
                 "height": largest_photo.height,
+                "file_size": getattr(largest_photo, "file_size", None),
             }
         elif isinstance(photo, str):
             message_data_obj["photo_url"] = photo

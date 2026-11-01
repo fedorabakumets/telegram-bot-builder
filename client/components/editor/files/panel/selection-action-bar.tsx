@@ -2,13 +2,15 @@
  * @fileoverview Нижняя плашка массовых действий над выбранными файлами
  * `SelectionActionBar`: показывает количество выбранных и действия
  * «Прикрепить» (при canAttach, даже если файлы ещё не отмечены — кнопка
- * тогда неактивна), «Удалить» и «Снять выбор» (Req 3.2–3.5).
+ * тогда неактивна) и «Удалить». Выделение снимается флажками списка.
  * @module components/editor/files/panel/selection-action-bar
  */
 
-import { Paperclip, Trash2, X } from 'lucide-react';
+import { Paperclip, Trash2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import './selection-action-bar.css';
+import './table/file-delete-confirm.css';
 import { SELECTION_BAR_CLASS } from './panel-styles';
 import {
   AlertDialog,
@@ -32,8 +34,6 @@ export interface SelectionActionBarProps {
   onAttach: () => void;
   /** Массовое удаление выбранных файлов */
   onDelete: () => void;
-  /** Снять выделение со всех файлов */
-  onClearSelection: () => void;
   /** Идёт удаление (дизейблит кнопку «Удалить») */
   isDeleting?: boolean;
 }
@@ -48,7 +48,6 @@ export function SelectionActionBar({
   canAttach,
   onAttach,
   onDelete,
-  onClearSelection,
   isDeleting = false,
 }: SelectionActionBarProps) {
   return (
@@ -56,30 +55,17 @@ export function SelectionActionBar({
       className={SELECTION_BAR_CLASS}
       data-testid="selection-action-bar"
     >
-      <span className="text-sm text-muted-foreground tabular-nums" data-testid="selection-count">
+      <span className="files-selection-count text-sm text-muted-foreground tabular-nums" data-testid="selection-count">
         {selectedCount > 0
-          ? `Выбрано: ${selectedCount}`
+          ? <>Выбрано файлов <span className="files-selection-number">{selectedCount}</span></>
           : 'Отметь файлы галочкой слева'}
       </span>
 
       <div className="flex flex-wrap items-center gap-2">
-        {selectedCount > 0 && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={onClearSelection}
-            data-testid="clear-selection"
-          >
-            <X className="mr-1.5 h-3.5 w-3.5" />
-            Снять выбор
-          </Button>
-        )}
-
         {canAttach && (
           <Button
             type="button"
-            variant="default"
+            variant="outline"
             size="sm"
             disabled={selectedCount === 0}
             onClick={onAttach}
@@ -96,7 +82,7 @@ export function SelectionActionBar({
             <AlertDialogTrigger asChild>
               <Button
                 type="button"
-                variant="destructive"
+                variant="outline"
                 size="sm"
                 disabled={isDeleting}
                 data-testid="delete-selected"
@@ -105,7 +91,7 @@ export function SelectionActionBar({
                 Удалить ({selectedCount})
               </Button>
             </AlertDialogTrigger>
-            <AlertDialogContent>
+            <AlertDialogContent className="files-delete-dialog">
               <AlertDialogHeader>
                 <AlertDialogTitle>Удалить выбранные файлы?</AlertDialogTitle>
                 <AlertDialogDescription>

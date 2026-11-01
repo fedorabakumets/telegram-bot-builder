@@ -1,0 +1,42 @@
+/** @fileoverview Плотный поток сведений файла: пары по содержимому без пустых табличных колонок. */
+/** Свободное место распределяется между группами каждой строки, а не остаётся справа. */
+.files-card-details > dl { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; min-width: 0; width: 100%; }
+.files-card-details .files-detail-overview { display: contents; }
+/** Каждая пара занимает только нужную ширину и переносится целиком при нехватке места. */
+.files-card-details .files-detail-row {
+  display: flex; flex: 0 1 auto; flex-wrap: wrap; align-items: center;
+  gap: 4px 8px; min-width: 0; max-width: 100%; padding: 0; border: 0;
+}
+.files-card-details .files-detail-row > dt { flex: none; }
+.files-card-details .files-detail-row > dd { min-width: 0; max-width: 100%; }
+.files-card-details .files-detail-row dd > .files-message-link { margin-left: 0; }
+.files-card-details .files-detail-author { order: 1; }
+.files-card-details .files-detail-source { order: 2; }
+.files-card-details .files-detail-source-disclosure { order: 5; flex-basis: 100%; grid-column: 1 / -1; min-width: 0; }
+.files-card-details .files-detail-usage { order: 3; }
+/** Идентификаторы используют остаток ширины без отдельной строки для каждой подписи. */
+.files-card-details .files-detail-row.files-detail-ids {
+  display: grid; flex: 1 1 100%; grid-template-columns: max-content minmax(0, 1fr);
+  align-items: start; gap: 8px 12px; order: 4;
+}
+/** Подпись совпадает по центру с первой строкой бота и кнопкой копирования. */
+.files-card-details .files-detail-ids > dt { display: flex; align-items: center; min-height: 20px; padding-top: 0; }
+@container files-collection (min-width: 600px) {
+  /** Единая сетка выравнивает подписи и значения соседних групп по вертикали. */
+  .files-card-details > dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 24px; }
+  .files-card-details .files-detail-row { display: grid; grid-template-columns: 112px minmax(0, 1fr); align-items: center; gap: 8px; }
+  .files-card-details .files-detail-row.files-detail-ids { grid-column: 1 / -1; grid-template-columns: 112px minmax(0, 1fr); gap: 8px; }
+  .files-card-details .files-detail-ids > dt { min-height: 40px; }
+  /** Пустое значение занимает обычную строку без высоты кнопки копирования. */
+  .files-card-details .files-detail-ids-empty > dt { min-height: 20px; }
+  /** Имя бота занимает ширину текста, оставшееся место отдано самому идентификатору. */
+  .files-card-details .files-detail-ids li { grid-template-columns: fit-content(40%) minmax(0, 1fr) 32px; gap: 8px; }
+  .files-card-details .files-detail-ids li p { grid-column: 1; grid-row: 1; }
+  .files-card-details .files-detail-ids li .files-id-value { grid-column: 2; grid-row: 1; }
+  .files-card-details .files-detail-ids li .files-copy-id { grid-column: 3; grid-row: 1; }
+}
+/** На минимальной ширине длинные идентификаторы получают всю строку. */
+@container files-collection (max-width: 360px) {
+  .files-card-details .files-detail-row.files-detail-ids { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .files-card-details .files-detail-ids > dt { min-height: 20px; }
+}

@@ -65,6 +65,7 @@ export function CategoryTabs({
       data-testid="category-tabs"
     >
       <TabsList
+        aria-label="Источник файлов"
         className={
           embedded
             ? CATEGORY_TABS_EMBEDDED_LIST_CLASS

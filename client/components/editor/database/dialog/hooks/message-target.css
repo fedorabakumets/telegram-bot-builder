@@ -1,0 +1,12 @@
+/** @fileoverview Мягкий временный акцент исходного сообщения без постоянной рамки. */
+.dialog-message-target {
+  border-radius: 12px;
+  animation: dialog-message-reveal 3s ease-out forwards;
+}
+@keyframes dialog-message-reveal {
+  0%, 45% { background-color: color-mix(in srgb, var(--foreground) 8%, transparent); }
+  100% { background-color: transparent; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dialog-message-target { animation: none; background-color: color-mix(in srgb, var(--foreground) 8%, transparent); }
+}

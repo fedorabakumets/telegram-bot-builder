@@ -9,6 +9,7 @@
  */
 
 import { BotCard } from '../card/BotCard';
+import { BotCardAnchor, isBotCardTarget } from './BotCardAnchor';
 import { useBotControl } from '../bot-control-context';
 import type { BotProject, BotToken } from '@shared/schema';
 import type { BotInfo } from '../bot-types';
@@ -54,15 +55,14 @@ export function ProjectBotsList({
           : defaultCollapsedFallback;
 
         return (
-          <BotCard
-            key={token.id}
+          <BotCardAnchor key={token.id} projectId={project.id} tokenId={token.id}><BotCard
             token={token}
             project={project}
             projectBotInfo={projectBotInfo}
             isThisTokenRunning={isThisTokenRunning}
-            defaultCollapsed={defaultCollapsed}
+            defaultCollapsed={isBotCardTarget(project.id, token.id) ? false : defaultCollapsed}
             onCollapseChange={(collapsed) => onCollapseChange?.(token.id, collapsed)}
-          />
+          /></BotCardAnchor>
         );
       })}
     </div>

@@ -18,11 +18,16 @@
 
 import { computeLocalUsedBytes } from "../routes/media/upload-storage-helper";
 import { readStorageLimitBytes } from "./storage-config";
+import { computeS3UsedBytes } from './compute-s3-used-bytes';
 
 /** Результат расчёта квоты хранилища проекта */
 export interface StorageQuota {
   /** Использовано байт (сумма локальных файлов проекта) */
   usedBytes: number;
+  /** Объём файлов проекта в S3, не расходующий локальную квоту */
+  s3UsedBytes: number;
+  /** Общий объём файлов проекта: локальное хранилище и S3 */
+  totalUsedBytes: number;
   /** Лимит в байтах либо null для безлимитного режима */
   limitBytes: number | null;
   /** Превышена ли мягкая квота (false при безлимите) */
@@ -54,15 +59,19 @@ export function isQuotaExceeded(
  * Считает занятое место по локальным бэкендам проекта (Req 4.4), читает лимит
  * из ENV (Req 4.5) и поднимает флаг превышения по мягкой квоте (Req 4.1, 4.7).
  * @param projectId - Идентификатор проекта
- * @returns Объект `{ usedBytes, limitBytes, quotaExceeded }`
+ * @returns Локальная квота и отдельные объёмы S3 и всех хранилищ
  */
 export async function computeStorageQuota(
   projectId: number,
 ): Promise<StorageQuota> {
-  const usedBytes = await computeLocalUsedBytes(projectId);
+  const [usedBytes, s3UsedBytes] = await Promise.all([
+    computeLocalUsedBytes(projectId), computeS3UsedBytes(projectId),
+  ]);
   const limitBytes = readStorageLimitBytes();
   return {
     usedBytes,
+    s3UsedBytes,
+    totalUsedBytes: usedBytes + s3UsedBytes,
     limitBytes,
     quotaExceeded: isQuotaExceeded(usedBytes, limitBytes),
   };

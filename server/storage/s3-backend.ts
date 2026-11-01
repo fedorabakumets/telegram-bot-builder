@@ -136,6 +136,7 @@ export class S3Backend implements StorageBackend {
    * @returns Метаданные сохранённого объекта
    */
   async put(key: string, data: Buffer, mime: string): Promise<StoredObject> {
+    if (this.readOnly) throw new Error("Хранилище доступно только для чтения");
     const normKey = this.normalizeKey(key);
     await this.client.send(
       new PutObjectCommand({
@@ -195,6 +196,7 @@ export class S3Backend implements StorageBackend {
    * @param key - Относительный ключ объекта в бакете
    */
   async delete(key: string): Promise<void> {
+    if (this.readOnly) throw new Error("Хранилище доступно только для чтения");
     const normKey = this.normalizeKey(key);
     await this.client.send(
       new DeleteObjectCommand({ Bucket: this.bucket, Key: normKey }),

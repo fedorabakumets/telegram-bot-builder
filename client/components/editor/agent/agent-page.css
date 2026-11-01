@@ -1,0 +1,47 @@
+/**
+ * @fileoverview Изолированное оформление страницы агента и адаптация к ширине панели.
+ */
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap');
+
+.agent-page, .agent-dialog {
+  font-family: 'Manrope', sans-serif;
+}
+.agent-page { container-type: inline-size; }
+.agent-dialog .agent-field { background: #ffffff; }
+.dark .agent-dialog .agent-field { background: #101012; border-color: #29292d; }
+.agent-dialog .agent-field:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--ring); }
+/** Ошибочное поле сохраняет заметную рамку в обеих темах, включая состояние фокуса. */
+.agent-dialog .agent-field[aria-invalid="true"],
+.dark .agent-dialog .agent-field[aria-invalid="true"] {
+  border-color: var(--destructive);
+  box-shadow: 0 0 0 2px var(--destructive);
+}
+.agent-dialog[data-state] { animation-duration: 300ms; animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1); }
+.agent-page p, .agent-page h2, .agent-page h3 { text-wrap: pretty; }
+.agent-surface { background: #ffffff; }
+.agent-inset, .agent-step { background: #f4f4f5; }
+.agent-permission { background: #f4f4f5; color: #343438; }
+.dark .agent-surface { background: #09090b; border-color: #29292d; }
+.dark .agent-inset, .dark .agent-step { background: #141416; }
+.dark .agent-permission { background: #141416; color: #d4d4d8; }
+.agent-page .agent-action, .agent-dialog .agent-action {
+  transition-property: color, background-color, opacity, transform;
+  transition-duration: 300ms;
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+.agent-page .agent-action:active, .agent-dialog .agent-action:active { transform: scale(0.98); }
+.agent-skeleton { animation: agent-loading 1.5s cubic-bezier(0.22, 1, 0.36, 1) infinite alternate; }
+@keyframes agent-loading { from { opacity: 0.4; } to { opacity: 1; } }
+@container (min-width: 720px) {
+  .agent-steps { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .agent-token { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; }
+}
+@container (max-width: 380px) {
+  .agent-surface { padding: 16px; }
+  .agent-token > div:first-child { flex-wrap: wrap; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .agent-page .agent-action:active, .agent-dialog .agent-action:active { transform: none; }
+  .agent-dialog[data-state] { animation: none; }
+  .agent-skeleton { animation: none; }
+}

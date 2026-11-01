@@ -31,10 +31,16 @@ export interface MessageFileDTO {
   thumbnailFileId: string | null;
   /** ID пользователя-отправителя */
   userId: unknown;
+  /** ID исходного чата. */
+  chatId: string | null;
+  /** Тип исходного чата. */
+  chatType: string | null;
   /** ID токена бота */
   tokenId: number | null;
   /** ID сообщения в Telegram */
   telegramMessageId: unknown;
+  /** Блок, из которого отправлено сообщение, если он сохранён. */
+  nodeId: string | null;
   /** Дата создания */
   createdAt: Date | null;
 }
@@ -123,8 +129,11 @@ export async function queryMessageFiles(
       duration: media?.data?.duration ?? null,
       thumbnailFileId: media?.thumbnailFileId ?? null,
       userId: row.userId,
+      chatId: row.chatId,
+      chatType: row.chatType,
       tokenId: row.tokenId,
       telegramMessageId: row.telegramMessageId,
+      nodeId: row.nodeId,
       createdAt: row.createdAt,
     };
   });

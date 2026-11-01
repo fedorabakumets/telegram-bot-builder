@@ -1,0 +1,66 @@
+/** @fileoverview Адаптивное представление коллекции файлов и её элементов управления. */
+@import './files-narrow-cards.css';
+@import './file-selection.css';
+@import './files-compact-cards.css';
+@import './file-card-buttons.css';
+@import './files-dense-details.css';
+.files-collection { container: files-collection / inline-size; }
+.files-data-table { display: none; }
+.files-card-list { display: block; }
+/** Общая вертикаль флажков учитывает рамку и внутренний отступ карточки. */
+.files-card-list > .files-list-controls { padding-left: 16px; border-left: 1px solid transparent; }
+/** Убираем дополнительный отступ общей подписи, смещавший только верхний флажок. */
+.files-card-list > .files-list-controls > label:first-child { padding-left: 0; }
+/** Выбор и размер страницы заполняют оба края строки с одинаковым вертикальным центром. */
+.files-card-list > .files-list-controls { justify-content: space-between; align-items: center; gap: 16px; }
+.files-file-card { background: #fff; }
+.files-file-card-selected { background: #f4f4f5; border-color: #a1a1aa; }
+.dark .files-file-card { background: #09090b; border-color: #29292d; }
+.dark .files-file-card-selected { background: #101012; border-color: #343438; }
+@container files-collection (min-width: 1100px) {
+  .files-data-table { display: block; }
+  /** Скрытие карточек имеет тот же приоритет, что и их сетка, исключая двойной список. */
+  .files-collection > .files-card-list { display: none; }
+  .files-data-table table { min-width: 1200px; }
+  .files-data-table td.sticky { background: #fff; }
+  .dark .files-data-table td.sticky { background: #09090b; }
+}
+/** Подписи и значения сохраняют общий ритм без пустых ячеек таблицы. */
+.files-detail-row { display: grid; grid-template-columns: 176px minmax(0, 1fr); gap: 16px; padding: 12px 0; }
+.files-detail-row dt { color: var(--muted-foreground); }
+.files-detail-row dd { min-width: 0; overflow-wrap: anywhere; }
+.files-card-details .files-detail-row button { height: auto; font-size: inherit; font-weight: inherit; }
+@container files-collection (max-width: 360px) {
+  .files-detail-row { grid-template-columns: 1fr; gap: 4px; }
+}
+/** Список ID занимает полную ширину, имя бота и значение не конкурируют за одну строку. */
+.files-detail-row.files-detail-ids { grid-template-columns: minmax(0,1fr); gap: 12px; }
+.files-card-details .files-detail-row .files-copy-id { height: 32px; width: 32px; }
+/** Ссылка на сообщение остаётся текстовой и не растягивает строку отправителя. */
+/** Ссылка на сообщение оформлена явным действием с нейтральной рамкой и фокусом. */
+.files-page .files-file-card .files-card-details a.files-message-link { height: auto; min-height: 32px; padding: 4px 8px; border: 1px solid #d4d4d8; border-radius: 8px; line-height: 20px; font-weight: 500; color: #3f3f46; text-decoration: none; }
+.dark .files-page .files-file-card .files-card-details a.files-message-link { border-color: #3f3f46; color: #d4d4d8; }
+.files-page .files-file-card .files-card-details a.files-message-link:hover { background: #f4f4f5; }
+.dark .files-page .files-file-card .files-card-details a.files-message-link:hover { background: #18181b; }
+.files-detail-row:has(.files-message-link) { align-items: center; }
+/** Ссылка завершает строку отправителя, а значение остаётся рядом с подписью. */
+.files-detail-row dd > .files-message-link { margin-left: auto; }
+/** Значение использования выравнивается по центру многострочной подписи. */
+.files-detail-row.files-detail-usage { align-items: center; }
+/** На узкой панели элементы выбора получают отдельную строку без сжатия подписей. */
+@container files-collection (max-width: 360px) {
+  .files-list-controls { align-items: stretch; }
+  .files-list-controls > label { width: 100%; }
+  .files-list-controls .files-page-size { justify-content: space-between; }
+}
+@container files-page (max-width: 360px) {
+  .files-list-navigation .files-page-size { width: 100%; justify-content: space-between; }
+}
+/** Подпись и селектор располагаются вертикально, когда строка уже их суммарной ширины. */
+@container files-collection (max-width: 240px) {
+  /** Компактная карточка использует отступ 8px и рамку 1px. */
+  .files-card-list > .files-list-controls { padding-left: 8px; }
+  .files-list-controls .files-page-size { flex-direction: column; align-items: stretch; gap: 8px; }
+  .files-list-controls .files-page-size > span:first-child { white-space: normal; }
+  .files-list-controls .files-page-size > span:last-child { justify-content: space-between; width: 100%; }
+}

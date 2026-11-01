@@ -41,8 +41,8 @@ function createBaseConfig(isMobile: boolean, currentTab: string): SimpleLayoutCo
 
   return {
     elements: [
-      /** Шапка видима только на вкладках редактора и кода */
-      { id: 'header', type: 'header', name: 'Шапка', position: 'top', size: headerSize, visible: currentTab === 'editor' || currentTab === 'export' },
+      /** Шапка проекта видима только на вкладке редактора. */
+      { id: 'header', type: 'header', name: 'Шапка', position: 'top', size: headerSize, visible: currentTab === 'editor' },
       { id: 'sidebar', type: 'sidebar', name: 'Боковая панель', position: 'left', size: 20, visible: showPanels },
       { id: 'canvas', type: 'canvas', name: 'Холст', position: 'center', size: 30, visible: showCanvas },
       { id: 'properties', type: 'properties', name: 'Свойства', position: 'right', size: 25, visible: false },
@@ -84,9 +84,9 @@ export function useLayoutManager(
           return el;
         }
 
-        // Для header применяем ручные изменения только на вкладках editor и export
+        /** Ручная настройка шапки применяется только к редактору. */
         if (el.id === 'header') {
-          if (currentTab !== 'editor' && currentTab !== 'export') return el;
+          if (currentTab !== 'editor') return el;
           const manual = manualVisibility.get(el.id);
           if (manual !== undefined) {
             return { ...el, visible: manual };
@@ -133,8 +133,8 @@ export function useLayoutManager(
       
       const tab = currentTabRef.current;
       config.elements.forEach(el => {
-        // Не сохраняем header в manualVisibility если вкладка не editor/export
-        if (el.id === 'header' && tab !== 'editor' && tab !== 'export') return;
+        /** Не переносим настройку скрытой шапки из других вкладок в редактор. */
+        if (el.id === 'header' && tab !== 'editor') return;
         // Сохраняем только ручные изменения видимости
         if (el.id !== 'dialog' && el.id !== 'userDetails') {
           newMap.set(el.id, el.visible);

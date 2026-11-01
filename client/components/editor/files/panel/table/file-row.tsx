@@ -9,6 +9,8 @@
  * @module components/editor/files/panel/table/file-row
  */
 
+import { FileSize } from './file-size';
+import { FileDeleteConfirm } from './file-delete-confirm';
 import { Trash2, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -16,7 +18,7 @@ import { cn } from '@/utils/utils';
 import type { ProjectFile } from '../../hooks/use-project-files';
 import type { CollaboratorInfo } from '../../hooks/use-project-collaborators';
 import type { SheetInfo } from '../panel-types';
-import { getSizeColor, formatSize, getExtension, formatDate } from './files-table-utils';
+import { getSizeColor, getExtension, formatDate } from './files-table-utils';
 import { getDownloadHref } from './file-download';
 import {
   STICKY_COLUMN_NAME,
@@ -98,7 +100,7 @@ export function FileRow({
       {/* 5. file_id по ботам (приоритет выбранного токена) */}
       <CellFileIds file={file} projectId={projectId} selectedTokenId={selectedTokenId} onCopy={onCopy} />
       {/* 6. Размер */}
-      <td className={cn('p-2 text-right font-mono', getSizeColor(file.fileSize))}>{formatSize(file.fileSize)}</td>
+      <td className={cn('p-2 text-right font-mono', getSizeColor(file.fileSize))}>{<FileSize file={file} projectId={projectId} />}</td>
       {/* 7. Сотрудник (аватар коллаборатора) */}
       <CellUploader file={file} collaborators={collaborators} />
       {/* 8. Хранилище (бейдж local/S3) */}
@@ -108,9 +110,9 @@ export function FileRow({
       {/* 10. Удалить */}
       <td className="p-2 text-center">
         {onDelete && (
-          <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => onDelete(file.id)} title="Удалить">
+          <FileDeleteConfirm id={file.id} name={file.fileName ?? `Файл ${file.id}`} onDelete={onDelete}><Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" title="Удалить">
             <Trash2 className="h-3 w-3" />
-          </Button>
+          </Button></FileDeleteConfirm>
         )}
       </td>
       {/* 11. Скачать: прямая/прокси-ссылка; для file_id-only без резолва — без битой ссылки (Req 15.4) */}

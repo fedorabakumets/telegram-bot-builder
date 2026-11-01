@@ -4,6 +4,8 @@
  * Поддерживает как личные диалоги, так и групповые чаты.
  */
 
+import { useMessageTarget } from './hooks/use-message-target';
+import { readFileMessageId } from './utils/file-message-target';
 import { useEffect, useLayoutEffect, useRef, useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Users, Radio } from 'lucide-react';
@@ -107,23 +109,27 @@ export function DialogPanel({
     [project?.data],
   );
 
+  const targetMessageId = readFileMessageId(user?.userId);
   // URL для загрузки сообщений: группа или личный диалог
-  const requestUrl = isGroup
+  const baseRequestUrl = isGroup
     ? buildUsersApiUrl(`/api/projects/${projectId}/groups/${encodeURIComponent(groupChatId ?? '')}/messages`, selectedTokenId)
     : buildUsersApiUrl(
         `/api/projects/${projectId}/users/${user?.userId}/messages?includeGroupContext=true`,
         selectedTokenId
       );
 
+  const requestUrl = targetMessageId ? `${baseRequestUrl}${baseRequestUrl.includes('?' ) ? '&' : '?'}aroundMessageId=${targetMessageId}` : baseRequestUrl;
   const {
     data: httpMessages = [],
     isLoading: messagesLoading,
+    isError: messagesError,
     refetch: refetchMessages,
   } = useQuery<BotMessageWithMedia[]>({
     queryKey: [requestUrl, selectedTokenId, user?.userId],
     enabled: !!user?.userId,
     queryFn: async () => {
       const response = await fetch(requestUrl, { credentials: 'include' });
+      if (!response.ok) throw new Error('Не удалось загрузить сообщения');
       return response.json();
     },
     staleTime: 0,
@@ -176,6 +182,7 @@ export function DialogPanel({
     }
   }, [messagesLoading, messages.length]);
 
+  useMessageTarget(messagesScrollRef, targetMessageId, messagesLoading, messages.length);
   // Мутация отправки для личного диалога
   const sendMessageMutation = useSendMessage({
     projectId,
@@ -286,6 +293,8 @@ export function DialogPanel({
       >
         {messagesLoading ? (
           <LoadingMessages />
+        ) : messagesError ? (
+          <p role="alert" className="p-4 text-sm text-muted-foreground">Не удалось открыть сообщение. Возможно, оно удалено или доступ к диалогу изменился.</p>
         ) : messages.length === 0 ? (
           <EmptyDialog />
         ) : (

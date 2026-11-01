@@ -10,10 +10,11 @@
  * @module components/editor/files/containers/files-tab-page
  */
 
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { FileStoragePanel } from '../panel/file-storage-panel';
 import { mergeAttachedMedia } from '../panel/attach-node-refs';
+import { canAttachNodeMedia } from '../panel/can-attach-node-media';
 import type { AttachTarget, SheetInfo } from '../panel/panel-types';
 
 /** Пропсы контейнера полноэкранной вкладки «Файлы» */
@@ -57,13 +58,22 @@ export function FilesTabPage({
   onProjectChange,
   onNodeUpdate,
   allSheets,
-  attachTarget = null,
+  attachTarget: canvasTarget = null,
   onSwitchToCanvas,
   onFocusNode,
   onSetActiveSheet,
   onSelectNode,
 }: FilesTabPageProps) {
   const { toast } = useToast();
+  /** Явно выбранная цель из списка действует только в своём проекте. */
+  const [chosen, setChosen] = useState<{ projectId: number; nodeId: string | null } | null>(null);
+  /** Недоступные для вложений блоки не становятся целью даже при выборе на холсте. */
+  const mediaNodes = allSheets?.flatMap(sheet => sheet.nodes).filter(canAttachNodeMedia) ?? [];
+  const chosenNode = chosen?.projectId === projectId ? mediaNodes.find(node => node.id === chosen.nodeId) : null;
+  const attachTarget: AttachTarget | null = chosenNode ? {
+    nodeId: chosenNode.id, nodeLabel: String(chosenNode.data.messageText || chosenNode.id).replace(/<[^>]*>/g, '').slice(0, 80),
+    field: 'attachedMedia', multi: true,
+  } : chosen?.projectId === projectId ? null : mediaNodes.some(node => node.id === canvasTarget?.nodeId) ? canvasTarget : null;
 
   /**
    * Переход к ноде на холсте: фокус на ноде (камера + выбор + открытие свойств)
@@ -93,7 +103,7 @@ export function FilesTabPage({
     (fileRefs: string[]) => {
       if (!onNodeUpdate || !allSheets || !attachTarget || fileRefs.length === 0) return;
       const node = allSheets.flatMap((s) => s.nodes).find((n) => n.id === attachTarget.nodeId);
-      if (!node) return;
+      if (!node || !canAttachNodeMedia(node)) return;
       const current: string[] = Array.isArray(node.data.attachedMedia) ? node.data.attachedMedia : [];
       const merged = mergeAttachedMedia(current, fileRefs, attachTarget.multi);
       onNodeUpdate(attachTarget.nodeId, { attachedMedia: merged });
@@ -114,6 +124,8 @@ export function FilesTabPage({
       onAttach={handleAttach}
       allSheets={allSheets}
       onGoToNode={handleGoToNode}
+      onChooseAttachNode={onSwitchToCanvas}
+      onSelectAttachNode={onNodeUpdate ? nodeId => setChosen({ projectId, nodeId }) : undefined}
     />
   );
 }

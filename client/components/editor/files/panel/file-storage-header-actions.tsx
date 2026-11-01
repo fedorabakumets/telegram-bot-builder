@@ -11,8 +11,8 @@ import { Button } from '@/components/ui/button';
 import { StorageManagerButton } from './storage/storage-manager-button';
 import { FileUploadButton } from './file-upload-button';
 
-/** URL документации по интерфейсу файлового хранилища */
-const DOCS_URL = 'https://fedorabakumets.github.io/wikinest/interface/files';
+/** Адрес документации файлового хранилища на Docusaurus. */
+const DOCS_URL = 'https://fedorabakumets.github.io/telegram-bot-builder/docs/interface/files';
 
 /** Пропсы группы кнопок шапки файлового хранилища */
 export interface FileStorageHeaderActionsProps {
@@ -22,6 +22,12 @@ export interface FileStorageHeaderActionsProps {
   onRefresh: () => void;
   /** Колбэк после успешной загрузки файлов (id записей) */
   onUploaded?: (uploadedIds: number[]) => void;
+  /** Показывать ли обновление внутри группы действий. */
+  showRefresh?: boolean;
+  /** Показывать дополнительные действия компактного диалога. */
+  showExtras?: boolean;
+  /** Выполняется ли обновление списка. */
+  isRefreshing?: boolean;
 }
 
 /**
@@ -33,12 +39,15 @@ export function FileStorageHeaderActions({
   projectId,
   onRefresh,
   onUploaded,
+  showRefresh = true,
+  showExtras = true,
+  isRefreshing = false,
 }: FileStorageHeaderActionsProps): React.JSX.Element {
   return (
     <>
       <FileUploadButton projectId={projectId} onUploaded={onUploaded ?? onRefresh} />
-      <StorageManagerButton />
-      <Button type="button" variant="outline" size="sm" className="h-8" asChild>
+      {showExtras && <StorageManagerButton />}
+      {showExtras && <Button type="button" variant="outline" size="sm" className="h-8" asChild>
         <a
           href={DOCS_URL}
           target="_blank"
@@ -49,18 +58,20 @@ export function FileStorageHeaderActions({
           <BookOpen className="h-3.5 w-3.5 sm:mr-1.5" />
           <span className="hidden sm:inline">Документация</span>
         </a>
-      </Button>
-      <Button
+      </Button>}
+      {showRefresh && <Button
         type="button"
         variant="ghost"
         size="icon"
         className="h-8 w-8 text-muted-foreground hover:text-foreground"
         onClick={onRefresh}
+        disabled={isRefreshing}
+        aria-label="Обновить список файлов"
         title="Обновить список файлов"
         data-testid="file-storage-refresh"
       >
         <RefreshCw className="h-4 w-4" />
-      </Button>
+      </Button>}
     </>
   );
 }

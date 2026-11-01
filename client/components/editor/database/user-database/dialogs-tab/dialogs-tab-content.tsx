@@ -4,6 +4,7 @@
  * На мобайле — переключение между списком и открытым диалогом.
  */
 
+import { readFileMessageUser } from '../../dialog/utils/file-message-target';
 import { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, MessageSquare, Megaphone, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -65,7 +66,7 @@ export function DialogsTabContent({
   onProjectChange,
   initialUser,
 }: DialogsTabContentProps): React.JSX.Element {
-  const [selectedUser, setSelectedUser] = useState<UserBotData | null>(initialUser ?? null);
+  const [selectedUser, setSelectedUser] = useState<UserBotData | null>(() => initialUser ?? readFileMessageUser());
   /** Флаг открытия виртуального диалога рассылок */
   const [isBroadcastDialogOpen, setIsBroadcastDialogOpen] = useState(false);
   /** Флаг открытия модалки создания рассылки */

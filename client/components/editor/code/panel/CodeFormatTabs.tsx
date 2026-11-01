@@ -1,61 +1,66 @@
 /**
- * @fileoverview Компонент вкладок форматов кода
- * Отображает список доступных форматов файлов для выбора
+ * @fileoverview Выбор экспортируемого файла с пояснением его назначения.
  */
-
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { EnvFileTab } from '../types/env-file-tab';
-import { CodeFormat } from '../hooks/use-code-generator';
+import type { CodeFormat } from '../hooks/use-code-generator';
 import { normalizeProjectNameToFile } from '@/utils/normalize-file-name';
 
-/**
- * Свойства компонента вкладок форматов
- */
+/** Свойства списка файлов проекта. */
 interface CodeFormatTabsProps {
-  /** Выбранный формат */
+  /** Выбранный формат. */
   selectedFormat: CodeFormat;
-  /** Название проекта для отображения имени файла */
+  /** Название проекта для имени файла Python. */
   projectName: string;
-  /** Колбэк при смене формата */
+  /** Обработчик выбора файла. */
   onFormatChange: (format: CodeFormat) => void;
 }
 
+/** Описание экспортируемого файла. */
+interface FileOption {
+  /** Формат генератора. */
+  format: CodeFormat;
+  /** Имя файла. */
+  name: string;
+  /** Короткая метка типа. */
+  tag: string;
+  /** Назначение файла. */
+  description: string;
+}
+
 /**
- * Компонент вкладок выбора формата кода
- * @param props - Свойства компонента
- * @returns JSX элемент с вкладками форматов
+ * Показывает файлы в виде доступного с клавиатуры вертикального списка.
+ * @param props - Текущий формат, имя проекта и обработчик выбора.
+ * @returns Список вкладок файлов.
  */
 export function CodeFormatTabs({ selectedFormat, projectName, onFormatChange }: CodeFormatTabsProps) {
-  const tabClass = 'w-full data-[state=active]:bg-accent data-[state=active]:text-accent-foreground hover:bg-muted flex items-center gap-2 px-3 py-2 text-sm font-normal rounded-none border-b border-border/50 data-[state=inactive]:hover:bg-accent/20 justify-start min-w-0';
-
+  const files: FileOption[] = [
+    { format: 'python', name: `${normalizeProjectNameToFile(projectName)}.py`, tag: 'PY', description: 'Код Telegram бота' },
+    { format: 'json', name: 'project.json', tag: '{}', description: 'Структура сценария для редактирования' },
+    { format: 'requirements', name: 'requirements.txt', tag: 'TXT', description: 'Зависимости Python для запуска' },
+    { format: 'readme', name: 'README.md', tag: 'MD', description: 'Инструкция по настройке и запуску' },
+    { format: 'dockerfile', name: 'Dockerfile', tag: 'Docker', description: 'Сборка контейнера для размещения бота' },
+    { format: 'env', name: '.env', tag: 'ENV', description: 'Переменные окружения и настройки' },
+  ];
   return (
-    <div className="space-y-1.5 xs:space-y-2">
-      <label className="text-xs xs:text-sm font-semibold text-foreground block">Форматы:</label>
-      <Tabs value={selectedFormat} onValueChange={(v) => onFormatChange(v as CodeFormat)} className="w-full">
-        <TabsList className="flex flex-col h-auto p-0 bg-transparent border-none justify-start">
-          <TabsTrigger value="python" className={tabClass}>
-            <i className="fas fa-file-code text-blue-500 text-xs flex-shrink-0"></i>
-            <span className="text-xs truncate min-w-0">{normalizeProjectNameToFile(projectName)}.py</span>
-          </TabsTrigger>
-          <TabsTrigger value="json" className={tabClass}>
-            <i className="fas fa-file-code text-green-500 text-xs flex-shrink-0"></i>
-            <span className="text-xs truncate min-w-0">project.json</span>
-          </TabsTrigger>
-          <TabsTrigger value="requirements" className={tabClass}>
-            <i className="fas fa-file-alt text-orange-500 text-xs flex-shrink-0"></i>
-            <span className="text-xs truncate min-w-0">requirements.txt</span>
-          </TabsTrigger>
-          <TabsTrigger value="readme" className={tabClass}>
-            <i className="fas fa-file-alt text-purple-500 text-xs"></i>
-            <span className="text-xs truncate min-w-0">README.md</span>
-          </TabsTrigger>
-          <TabsTrigger value="dockerfile" className={tabClass}>
-            <i className="fab fa-docker text-cyan-500 text-xs flex-shrink-0"></i>
-            <span className="text-xs truncate min-w-0">Dockerfile</span>
-          </TabsTrigger>
-          <EnvFileTab />
+    <section className="code-files space-y-3" aria-label="Файлы проекта">
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="text-lg font-semibold">Файлы проекта</h3><span className="text-xs text-muted-foreground">6 файлов</span>
+      </div>
+      <Tabs value={selectedFormat} orientation="vertical" activationMode="manual" onValueChange={(value) => onFormatChange(value as CodeFormat)}>
+        <TabsList aria-label="Выберите файл проекта" className="code-file-list flex h-auto w-full flex-col gap-2 bg-transparent p-0">
+          {files.map((file) => <TabsTrigger key={file.format} value={file.format}
+            title={`${file.name} · ${file.description}`} aria-label={`${file.name} ${file.description}`}
+            onClick={() => { if (selectedFormat === file.format) onFormatChange(file.format); }}
+            className="code-file code-action flex w-full min-w-0 justify-start gap-3 whitespace-normal rounded-xl border p-3 text-left font-normal shadow-none">
+            <span aria-hidden="true" className="code-file-tag code-inset flex h-10 w-12 shrink-0 items-center justify-center rounded-lg text-xs font-semibold">{file.tag}</span>
+            <span className="code-file-text min-w-0 flex-1 space-y-1">
+              <span className="code-file-name block break-all text-sm font-medium">{file.name}</span>
+              <span className="code-file-description block text-pretty text-xs text-muted-foreground">{file.description}</span>
+            </span>
+            <span className="code-file-marker h-2 w-2 shrink-0 rounded-full" aria-hidden="true" />
+          </TabsTrigger>)}
         </TabsList>
       </Tabs>
-    </div>
+    </section>
   );
 }

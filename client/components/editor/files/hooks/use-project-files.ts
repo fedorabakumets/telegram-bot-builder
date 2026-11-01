@@ -37,7 +37,13 @@ export interface ProjectFile {
   /** URL/JSON-метаданные доступа к файлу (для загруженных) */
   url?: string | null;
   /** ID пользователя (для incoming) */
-  userId?: number | null;
+  userId?: number | string | null;
+  /** ID исходного чата Telegram. */
+  chatId?: string | null;
+  /** Тип исходного чата Telegram. */
+  chatType?: string | null;
+  /** Сохранённый блок отправки исходящего сообщения. */
+  nodeId?: string | null;
   /** ID токена бота */
   tokenId?: number | null;
   /** file_id обложки (thumbnail) */
@@ -86,6 +92,8 @@ interface UseProjectFilesParams {
   tokenId?: number | null;
   /** Номер страницы */
   page?: number;
+  /** Количество файлов на странице. */
+  limit?: number;
 }
 
 /**
@@ -93,7 +101,7 @@ interface UseProjectFilesParams {
  * @param params - Параметры запроса
  * @returns Данные файлов, состояние загрузки и ошибка
  */
-export function useProjectFiles({ projectId, category, source, type, filters, tokenId, page = 1 }: UseProjectFilesParams) {
+export function useProjectFiles({ projectId, category, source, type, filters, tokenId, page = 1, limit = 50 }: UseProjectFilesParams) {
   const effectiveCategory: FileCategory = category ?? source ?? 'uploaded';
   const effectiveFilters: FileFilters = { ...filters };
   if (type && effectiveFilters.mediaType === undefined) {
@@ -105,6 +113,7 @@ export function useProjectFiles({ projectId, category, source, type, filters, to
     filters: effectiveFilters,
     tokenId,
     page,
+    limit,
   }).toString();
 
   return useQuery<FilesResponse>({

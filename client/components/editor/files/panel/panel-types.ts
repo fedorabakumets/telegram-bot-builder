@@ -15,7 +15,14 @@ export interface SheetInfo {
   /** Имя листа */
   name: string;
   /** Массив нод листа */
-  nodes: Array<{ id: string; data: Record<string, any> }>;
+  nodes: Array<{
+    /** Идентификатор блока. */
+    id: string;
+    /** Тип обработчика блока для проверки поддержки вложений. */
+    type?: string;
+    /** Настройки блока. */
+    data: Record<string, any>;
+  }>;
 }
 
 /** Цель прикрепления файла к ноде */
@@ -56,6 +63,10 @@ export interface FileStoragePanelProps {
   allSheets?: SheetInfo[];
   /** Переход к ноде на холсте (только mode='page') */
   onGoToNode?: (nodeId: string, sheetId: string) => void;
+  /** Открыть холст для выбора блока прикрепления. */
+  onChooseAttachNode?: () => void;
+  /** Выбрать существующий блок назначения прямо во вкладке файлов. */
+  onSelectAttachNode?: (nodeId: string | null) => void;
   /** Закрытие модалки (только mode='modal') */
   onClose?: () => void;
 }

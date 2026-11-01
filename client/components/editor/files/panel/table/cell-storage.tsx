@@ -8,12 +8,10 @@
  * @module components/editor/files/panel/table/cell-storage
  */
 
-import { Badge } from '@/components/ui/badge';
 import { cn } from '@/utils/utils';
 import type { ProjectFile } from '../../hooks/use-project-files';
 import {
   getStorageBadgeStyle,
-  STORAGE_BADGE_LABEL_TABLE,
 } from '../panel-styles';
 
 /** Пропсы ячейки хранилища */
@@ -36,11 +34,12 @@ export function CellStorage({ file, className }: CellStorageProps) {
   const Icon = style.icon;
 
   return (
-    <td className={cn('p-2', className)}>
-      <Badge variant={style.variant} className={style.className} title={label}>
-        <Icon className={style.iconClassName} />
-        <span className={STORAGE_BADGE_LABEL_TABLE}>{label}</span>
-      </Badge>
+    <td className={cn('p-2 align-middle', className)}>
+      {/* Подпись без внутренних отступов бейджа совпадает с началом заголовка и не обрезается. */}
+      <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-muted-foreground" title={label}>
+        <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+        <span>{label}</span>
+      </span>
     </td>
   );
 }

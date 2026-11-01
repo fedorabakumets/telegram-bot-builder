@@ -3,7 +3,7 @@
  * Содержит кнопки "Копировать" и "Скачать"
  */
 
-import { Button } from '@/components/ui/button';
+import { WorkspaceActionButton as Button } from '@/components/ui/workspace-action-button';
 import { useToast } from '@/hooks/use-toast';
 import { CodeFormat } from '../hooks/use-code-generator';
 
@@ -17,6 +17,8 @@ interface CodeActionsProps {
   selectedFormat: CodeFormat;
   /** Название файла для скачивания (без расширения) */
   fileName: string;
+  /** Выполняется ли генерация файла. */
+  isLoading?: boolean;
 }
 
 /**
@@ -24,15 +26,20 @@ interface CodeActionsProps {
  * @param props - Свойства компонента
  * @returns JSX элемент с кнопками
  */
-export function CodeActions({ content, selectedFormat, fileName }: CodeActionsProps) {
+export function CodeActions({ content, selectedFormat, fileName, isLoading }: CodeActionsProps) {
   const { toast } = useToast();
+  const unavailable = !!isLoading || !content.trim() || content.startsWith('# Ошибка');
 
   /**
    * Копирует код в буфер обмена
    */
-  const handleCopy = () => {
-    navigator.clipboard.writeText(content);
-    toast({ title: 'Скопировано!', description: 'Код скопирован в буфер обмена' });
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(content);
+      toast({ title: 'Код скопирован', description: 'Можно вставить его в редактор.' });
+    } catch {
+      toast({ title: 'Не удалось скопировать', description: 'Разрешите доступ к буферу обмена или скачайте файл.', variant: 'destructive' });
+    }
   };
 
   /**
@@ -60,14 +67,12 @@ export function CodeActions({ content, selectedFormat, fileName }: CodeActionsPr
   };
 
   return (
-    <div className="grid grid-cols-2 gap-2 xs:gap-2.5">
-      <Button onClick={handleCopy} variant="outline" size="sm" className="w-full h-9 xs:h-10 text-xs xs:text-sm" data-testid="button-copy-code">
-        <i className="fas fa-copy text-xs xs:text-sm"></i>
-        <span className="hidden xs:inline ml-1.5">Копировать</span>
+    <div className="grid grid-cols-2 gap-3">
+      <Button onClick={handleCopy} disabled={unavailable} variant="outline" className="code-action w-full px-3 text-sm font-semibold" data-testid="button-copy-code">
+        Копировать
       </Button>
-      <Button onClick={handleDownload} size="sm" className="w-full h-9 xs:h-10 text-xs xs:text-sm" data-testid="button-download-code">
-        <i className="fas fa-download text-xs xs:text-sm"></i>
-        <span className="hidden xs:inline ml-1.5">Скачать</span>
+      <Button onClick={handleDownload} disabled={unavailable} className="code-action w-full px-3 text-sm font-semibold" data-testid="button-download-code">
+        Скачать файл
       </Button>
     </div>
   );

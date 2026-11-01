@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ProjectOptionLabel } from './project-name-label';
+import './project-selector.css';
 
 /**
  * Пропсы селектора проекта
@@ -47,7 +48,7 @@ export function ProjectSelector({
         <SelectTrigger className="h-8 text-xs border-border/60 bg-background min-w-[120px] w-auto max-w-[280px]">
           <SelectValue placeholder="Проект">{selectedProject?.name}</SelectValue>
         </SelectTrigger>
-        <SelectContent className="min-w-[220px]">
+        <SelectContent className="project-selector-menu" align="start" collisionPadding={12}>
           {projects.map((project) => (
             <SelectItem
               key={project.id}
@@ -55,7 +56,7 @@ export function ProjectSelector({
               className="py-2 pr-3"
               textValue={project.name}
             >
-              <ProjectOptionLabel name={project.name} id={project.id} />
+              <ProjectOptionLabel name={project.name} id={project.id} className="project-selector-option" />
             </SelectItem>
           ))}
         </SelectContent>

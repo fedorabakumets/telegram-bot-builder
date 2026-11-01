@@ -1,0 +1,22 @@
+/** @fileoverview Спокойная пара одинаковых иконок действий без визуально тяжёлых рамок. */
+.files-page .files-file-card .files-card-actions > .files-card-buttons {
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  gap: 4px;
+}
+.files-page .files-file-card .files-card-buttons :is(a.inline-flex, button) {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  padding: 8px;
+  border: 0;
+  background: transparent;
+  color: var(--muted-foreground);
+}
+.files-page .files-file-card .files-card-buttons :is(a.inline-flex, button):hover {
+  background: var(--muted);
+  color: var(--foreground);
+}
+.files-page .files-file-card .files-card-buttons button:hover { color: var(--destructive); }

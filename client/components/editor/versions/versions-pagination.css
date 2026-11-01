@@ -1,0 +1,33 @@
+/** @fileoverview Компактная нижняя навигация версий без перекрытия последней записи. */
+.versions-page.versions-page { padding-bottom: 0; }
+.versions-page > .versions-content { padding-bottom: 0; }
+.versions-pagination {
+  position: sticky;
+  bottom: 0;
+  z-index: 30;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-top: 1px solid var(--border);
+  background: var(--background);
+}
+.versions-pagination > .files-page-size { justify-self: start; }
+.versions-pagination-controls { justify-self: center; }
+.versions-pagination-range { justify-self: end; white-space: nowrap; }
+@container versions (max-width: 560px) {
+  .versions-pagination { grid-template-columns: auto minmax(0, 1fr) auto; }
+  .versions-pagination > .files-page-size > span:first-child { display: none; }
+}
+@container versions (max-width: 360px) {
+  .versions-pagination { grid-template-columns: auto minmax(0, 1fr); padding-inline: 12px; }
+  .versions-pagination-controls { justify-self: end; }
+  .versions-pagination-range { display: none; }
+}
+@container versions (max-width: 240px) {
+  .versions-pagination { grid-template-columns: minmax(0, 1fr); padding-inline: 4px; }
+  .versions-pagination > .files-page-size { display: none; }
+  .versions-pagination-controls { justify-self: center; }
+  .versions-pagination-controls button { width: 32px; height: 32px; }
+}

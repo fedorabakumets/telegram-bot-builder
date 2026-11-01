@@ -1,0 +1,31 @@
+/** @fileoverview Закреплённая нижняя строка пагинации: размер слева, страницы по центру, диапазон справа. */
+.files-list-navigation {
+  position: sticky;
+  bottom: 0;
+  z-index: 30;
+  background: var(--background);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  flex-shrink: 0;
+  align-items: center;
+  gap: 12px 16px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+}
+.files-list-navigation > .files-page-size { grid-column: 1; grid-row: 1; justify-self: start; }
+.files-pagination-pages { grid-column: 2; grid-row: 1; justify-self: center; }
+.files-pagination-range { grid-column: 3; grid-row: 1; justify-self: end; white-space: nowrap; }
+.files-list-navigation button { border-radius: 8px; }
+@container files-page (max-width: 560px) {
+  .files-list-navigation { grid-template-columns: auto minmax(0,1fr) auto; gap: 8px; padding-block: 8px; }
+  .files-list-navigation > .files-page-size { width: auto; gap: 8px; }
+  .files-list-navigation > .files-page-size > span:first-child { display: none; }
+  .files-pagination-range { grid-column: 3; grid-row: 1; font-size: 12px; }
+  .files-pagination-pages { grid-column: 2; grid-row: 1; gap: 4px; }
+}
+/** На небольшом экране внутренние края навигации совпадают с отступами списка. */
+@container files-page (max-width: 360px) {
+  .files-list-navigation { padding-inline: 12px; }
+}
+/** Компенсирует нижний отступ страницы, чтобы закреплённая строка доходила до края вкладки. */
+.files-page:has(> .files-list-navigation) { padding-bottom: 0; }

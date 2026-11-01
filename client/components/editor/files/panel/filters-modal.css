@@ -1,0 +1,97 @@
+/**
+ * @fileoverview Адаптивная форма фильтров с закреплёнными действиями и нейтральными поверхностями.
+ */
+.files-filters-modal {
+  display: flex; flex-direction: column; gap: 0;
+  width: calc(100% - 32px); max-width: 560px;
+  max-height: calc(100dvh - 32px); padding: 0; overflow: hidden;
+  border-radius: 16px; font-family: 'Manrope', sans-serif;
+  background: #fff; border-color: #d4d4d8;
+}
+.dark .files-filters-modal { background: #09090b; border-color: #29292d; }
+/** Мягкая иерархия текста без ярких белых надписей на тёмной поверхности. */
+.dark .files-filters-modal { color: #b4b4bc; }
+.dark .files-filters-header h2 { color: #d4d4d8; font-weight: 500; }
+.dark .files-filters-header p { color: #92929c; }
+.dark .files-filters-body :is(label, legend) { color: #a1a1aa; font-weight: 400; }
+.dark .files-filters-body :is(input, button) { color: #b4b4bc; }
+.dark .files-filters-body input::placeholder { color: #85858f; }
+.dark .files-filters-footer > button { color: #b4b4bc; font-weight: 500; }
+/** Портальные списки используют те же поверхности и шрифт, что и диалог. */
+.files-filters-menu { font-family: 'Manrope', sans-serif; background: #fff; border-color: #d4d4d8; }
+.dark .files-filters-menu { background: #09090b; border-color: #29292d; }
+.dark .files-filters-menu { color: #b4b4bc; }
+.files-filters-menu [role='option']:focus { background: #e4e4e7; }
+.dark .files-filters-menu [role='option']:focus { background: #27272a; }
+/** Компактная шапка оставляет только заголовок и выровненное действие закрытия. */
+.files-filters-header { flex: none; padding: 16px 48px 16px 24px; text-align: left; }
+.files-filters-modal > button:last-child { top: 22px; }
+.files-filters-header p { margin-top: 8px; font-size: 14px; line-height: 20px; text-wrap: pretty; }
+.files-filters-body { min-height: 0; overflow-y: auto; padding: 0 24px 24px; scrollbar-width: thin; }
+/** Плотная сетка распределяет поля без незаполненной половины строки. */
+.files-filters-body > div { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px; }
+.files-filters-body > div > * { min-width: 0; margin-top: 0 !important; }
+.files-filters-body > div > :first-child { grid-column: 1; grid-row: 1; }
+.files-filters-body > div > :nth-child(2) { grid-column: 2; grid-row: 1; }
+.files-filters-body > div > :last-child { grid-column: 1 / -1; }
+/** Период занимает полную строку, чтобы обе даты оставались читаемыми. */
+.files-filters-body > div > .files-filters-dates { grid-column: 1 / -1; }
+.files-filters-dates { min-inline-size: 0; }
+/** Широкие диапазоны используют подпись слева вместо отдельной пустой строки. */
+@media (min-width: 480px) {
+  .files-filters-dates > legend { float: left; width: 112px; padding-top: 12px; }
+  .files-filters-dates > .files-filters-period { margin-top: 0; margin-left: 128px; }
+  .files-filters-dates > p { clear: both; padding-top: 8px; }
+  .files-filters-body > div > :last-child { display: grid; grid-template-columns: 112px minmax(0, 1fr); align-items: center; gap: 16px; }
+  .files-filters-body > div > :last-child > div { margin-top: 0; }
+}
+/** Подписи границ стоят рядом с датами и образуют единую строку периода. */
+.files-filters-period { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.files-filters-date-boundary { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.files-filters-date-boundary label { flex: none; color: #71717a; }
+.dark .files-filters-date-boundary label { color: #a1a1aa; }
+.files-filters-date-boundary input { flex: 1; width: 100%; }
+@media (max-width: 379px) {
+  .files-filters-period { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .files-filters-date-boundary label { width: 24px; }
+}
+.dark .files-filters-dates input { color-scheme: dark; }
+.files-filters-dates input[aria-invalid='true'] { border-color: hsl(var(--destructive)); }
+.files-filters-body label { display: block; font-size: 14px; line-height: 20px; font-weight: 500; }
+.files-filters-body :is(input, [role='combobox'], button) {
+  min-width: 0; height: 40px; border-radius: 8px; font-size: 14px; line-height: 20px;
+  background: transparent; border-color: #d4d4d8; box-shadow: none;
+}
+.files-filters-body [role='combobox'] > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dark .files-filters-body :is(input, [role='combobox'], button) { border-color: #29292d; }
+/** Выбранная единица отмечена рамкой без заметной заливки. */
+.files-filters-body [data-state='on'] { background: transparent; border-color: #71717a; color: #27272a; }
+.dark .files-filters-body button[data-state='on'] { background: transparent; border-color: #71717a; color: #d4d4d8; }
+.files-filters-footer {
+  flex: none; display: flex; flex-direction: row; justify-content: flex-end;
+  gap: 12px; padding: 0 24px 24px; background: transparent;
+}
+/** Действия равномерно занимают ширину формы без пустой области слева. */
+.dark .files-filters-footer { background: transparent; }
+.files-filters-footer > button { flex: 1 1 0; min-width: 0; height: 40px; margin: 0; padding: 8px 12px; font-size: 14px; line-height: 20px; font-weight: 600; }
+/** Обе кнопки имеют видимые границы, чтобы область сброса не выглядела пустой. */
+.files-filters-footer > button { border-color: #d4d4d8; background: transparent; }
+.dark .files-filters-footer > button { border-color: #3f3f46; }
+.files-filters-modal button:hover { background: #e4e4e7; }
+.dark .files-filters-modal button:hover { background: #27272a; }
+.files-filters-modal :is(button, input):focus-visible { outline: 2px solid #a1a1aa; outline-offset: 2px; box-shadow: none; }
+.files-filters-modal button { transition: background-color 300ms cubic-bezier(0.22,1,0.36,1); }
+.files-filters-modal button:active { transform: translateY(1px); }
+@media (max-width: 479px) {
+  .files-filters-header { padding: 16px 48px 16px 16px; }
+  .files-filters-body { padding: 0 16px 16px; }
+  .files-filters-body > div { grid-template-columns: minmax(0, 1fr); }
+  .files-filters-body > div > :is(:first-child, :nth-child(2)) { grid-column: auto; grid-row: auto; }
+  .files-filters-footer { flex-direction: row; flex-wrap: wrap; padding: 0 16px 16px; gap: 8px; }
+  .files-filters-footer > button { flex: 1 1 auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .files-filters-modal { animation: none !important; }
+  .files-filters-modal button { transition: none; }
+  .files-filters-modal button:active { transform: none; }
+}

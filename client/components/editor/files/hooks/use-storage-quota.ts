@@ -12,6 +12,10 @@ import { useQuery } from '@tanstack/react-query';
 interface StorageQuotaResponse {
   /** Занято байт (сумма по локальным бэкендам проекта) */
   usedBytes: number;
+  /** Объём S3 без применения локального лимита */
+  s3UsedBytes: number;
+  /** Общий объём локальных файлов и S3 */
+  totalUsedBytes: number;
   /** Лимит в байтах либо null для безлимитного режима */
   limitBytes: number | null;
   /** Превышена ли мягкая квота (false при безлимите) */
@@ -20,6 +24,10 @@ interface StorageQuotaResponse {
 
 /** Результат хука квоты хранилища */
 export interface UseStorageQuotaResult {
+  /** Объём файлов в S3 */
+  s3UsedBytes: number;
+  /** Общий объём локальных файлов и S3 */
+  totalUsedBytes: number;
   /** Занято байт */
   usedBytes: number;
   /** Лимит в байтах либо null для безлимитного режима */
@@ -48,6 +56,8 @@ export function useStorageQuota(projectId: number): UseStorageQuotaResult {
   });
 
   return {
+    s3UsedBytes: data?.s3UsedBytes ?? 0,
+    totalUsedBytes: data?.totalUsedBytes ?? data?.usedBytes ?? 0,
     usedBytes: data?.usedBytes ?? 0,
     limitBytes: data?.limitBytes ?? null,
     quotaExceeded: data?.quotaExceeded ?? false,

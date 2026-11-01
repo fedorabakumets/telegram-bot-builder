@@ -1,0 +1,17 @@
+/** @fileoverview Вертикальная компоновка карточек файлов в минимальной рабочей области. */
+@container files-collection (max-width: 240px) {
+  .files-page .files-collection .files-card-list { padding: 8px; }
+  .files-card-list .files-file-card { padding: 8px; min-width: 0; }
+  .files-card-heading { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; position: relative; }
+  .files-card-heading > button:first-child { position: absolute; top: 0; left: 0; margin-top: 0; }
+  .files-card-heading > button:nth-child(2) { justify-self: center; width: 40px; height: 40px; }
+  .files-card-heading > div:last-child { grid-column: 1 / -1; width: 100%; }
+  .files-card-heading > div:last-child > p:first-child { overflow-wrap: anywhere; }
+  .files-card-heading > div:last-child > p:last-child { flex-direction: column; gap: 4px; }
+  .files-card-heading > div:last-child > p:last-child > span { align-self: start; }
+  .files-card-actions { flex-direction: column; align-items: stretch; }
+  .files-card-actions > div { flex-direction: column; align-items: stretch; width: 100%; }
+  .files-page .files-card-actions a.inline-flex { width: 100%; min-width: 0; padding-inline: 8px; gap: 4px; }
+  .files-card-actions > div > button[aria-label] { align-self: center; }
+  .files-list-controls > label:first-child { min-width: 0; align-items: start; overflow-wrap: anywhere; }
+}

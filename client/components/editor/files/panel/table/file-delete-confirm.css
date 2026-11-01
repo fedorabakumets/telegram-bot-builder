@@ -1,0 +1,37 @@
+/** @fileoverview Нейтральное подтверждение удаления в визуальной системе вкладки файлов. */
+.files-delete-dialog {
+  width: calc(100% - 32px); max-width: 448px; padding: 24px; gap: 24px;
+  border-radius: 16px; border-color: #d4d4d8; background: #fff;
+  color: #3f3f46; font-family: 'Manrope', sans-serif;
+}
+.dark .files-delete-dialog { background: #09090b; border-color: #29292d; color: #b4b4bc; }
+.files-delete-dialog > div:first-of-type { text-align: left; gap: 8px; }
+.files-delete-dialog h2 { font-weight: 500; text-wrap: balance; }
+.dark .files-delete-dialog h2 { color: #d4d4d8; }
+.files-delete-dialog p { margin: 0; font-size: 14px; line-height: 20px; text-wrap: pretty; }
+.dark .files-delete-dialog p { color: #a1a1aa; }
+/** Имя удаляемого файла выделено отдельной спокойной поверхностью. */
+.files-delete-target { display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid #d4d4d8; border-radius: 8px; font-size: 14px; line-height: 20px; }
+.files-delete-target span { min-width: 0; overflow-wrap: anywhere; }
+.dark .files-delete-target { background: #141416; border-color: #29292d; }
+.files-delete-dialog > div:last-child { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.files-delete-dialog button {
+  height: 40px; margin: 0; padding: 8px 12px; gap: 8px; border-radius: 8px;
+  font-size: 14px; line-height: 20px; font-weight: 500;
+  background: transparent; border: 1px solid #d4d4d8; color: inherit;
+  transition: background-color 300ms cubic-bezier(0.22,1,0.36,1);
+}
+.dark .files-delete-dialog button { border-color: #3f3f46; }
+.files-delete-dialog :is([data-testid='confirm-delete-file'], [data-testid='confirm-delete']) { color: #b91c1c; border-color: #b91c1c; }
+.dark .files-delete-dialog :is([data-testid='confirm-delete-file'], [data-testid='confirm-delete']) { color: #fca5a5; border-color: #7f1d1d; }
+.files-delete-dialog button:hover { background: #f4f4f5; }
+.dark .files-delete-dialog button:hover { background: #18181b; }
+.files-delete-dialog button:focus-visible { outline: 2px solid #a1a1aa; outline-offset: 2px; box-shadow: none; }
+/** Крестик отменяет действие и не конкурирует с основными кнопками. */
+.files-delete-dialog button.files-delete-close { position: absolute; top: 16px; right: 16px; width: 32px; height: 32px; min-height: 0; padding: 8px; border: 0; color: #a1a1aa; }
+.files-delete-dialog h2 { padding-right: 32px; }
+@media (max-width: 379px) {
+  .files-delete-dialog { padding: 16px; gap: 16px; }
+  .files-delete-dialog > div:last-child { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+}
+@media (prefers-reduced-motion: reduce) { .files-delete-dialog { animation: none !important; } .files-delete-dialog button { transition: none; } }

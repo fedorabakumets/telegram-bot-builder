@@ -1,0 +1,128 @@
+/** @fileoverview Адаптация фильтров, тумблера и нижней навигации к ширине файловой панели. */
+/** Инструкция остаётся второстепенной относительно файлов и кнопки выбора блока. */
+.files-page [data-testid='file-attach-hint']:not(details) { color: var(--muted-foreground); }
+.files-page [data-testid='file-attach-hint'] > svg { color: var(--muted-foreground); }
+.files-page [data-testid='file-attach-hint'] button { color: var(--foreground); }
+/** Описание использует всю ширину панели, отдельно от служебных действий шапки. */
+/** Подписи служебных действий появляются только при достаточной ширине панели. */
+.files-heading-action-label { display: none; }
+/** Служебные действия шапки используют спокойный нейтральный цвет во всех состояниях. */
+.dark .files-page-header > header .files-action { color: #b4b4bc; background: transparent; }
+.dark .files-page-header > header .files-action:hover { color: #d4d4d8; background: #18181b; }
+.dark .files-page-header > header .files-action:focus-visible { outline: 2px solid #71717a; outline-offset: 2px; box-shadow: none; }
+@container files-page (min-width: 720px) {
+  .files-page-header > header .files-action { width: auto; padding: 8px 12px; gap: 8px; font-size: 14px; line-height: 20px; }
+  .files-page-header > header .files-heading-action-label { display: inline; }
+}
+/** На широком экране описание продолжает заголовок, освобождая строку для списка. */
+@container files-page (min-width: 441px) {
+  .files-page-header > header { align-items: center; }
+  .files-page-header > header > div:first-child { display: flex; flex-direction: row; align-items: center; gap: 24px; }
+  .files-page-header > header > div:first-child > p { margin: 0; font-size: 14px; line-height: 20px; }
+}
+@container files-page (max-width: 440px) {
+  .files-page-header > header { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+  .files-page-header > header > div:first-child { display: contents; }
+  .files-page-header > header > div:first-child > div { grid-column: 1; grid-row: 1; }
+  .files-page-header > header > div:first-child > p { grid-column: 1 / -1; grid-row: 2; margin: 0; }
+  .files-page-header > header > div:last-child { grid-column: 2; grid-row: 1; }
+}
+/** В минимальной панели оставляем одну строку заголовка без повторного пояснения. */
+@container files-page (max-width: 240px) {
+  .files-page-header > header { grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; }
+  .files-page-header > header > div:first-child > div { grid-column: 1; }
+  .files-page-header > header > div:last-child { grid-column: 2; grid-row: 1; justify-self: end; }
+  .files-page-header > header > div:last-child > div { flex-direction: row; gap: 0; }
+  .files-page-header > header > div:last-child button,
+  .files-page-header > header > div:last-child a { width: 24px; height: 32px; }
+  .files-page-header > header > div:first-child > p { display: none; }
+  .files-page-header > :not(:first-child) { margin-top: 8px; }
+  .files-page-header .files-scope-controls { gap: 8px; }
+  /** Две равные колонки уплотняют селекторы и загрузку без горизонтального переполнения. */
+  .files-page .files-scope-controls,
+  .files-page .files-header-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .files-page .files-scope-controls > div { min-width: 0; width: 100%; }
+  .files-page .files-scope-controls > div > svg { display: none; }
+  .files-page .files-scope-controls [role='combobox'] { padding: 8px; gap: 4px; }
+  .files-page .files-scope-controls [role='combobox'] > svg { width: 12px; flex-shrink: 0; }
+  .files-page .files-header-actions > button,
+  .files-page .files-header-actions > a { min-width: 0; width: 100%; height: auto; min-height: 48px; padding: 8px 4px; flex-direction: column; gap: 4px; font-size: 12px; line-height: 16px; }
+  .files-page .files-header-actions > [data-testid='storage-quota-bar'] { grid-column: 1 / -1; }
+  /** Длинное действие выбора блока переносит подпись внутри доступной ширины. */
+  .files-page [data-testid='file-attach-hint'] button { max-width: 100%; height: auto; min-height: 40px; white-space: normal; }
+  .files-page [data-testid='category-tabs'] [role='tablist'] { grid-template-columns: minmax(0, 1fr); }
+  .files-page [data-testid='category-tabs'] [role='tab'] { min-width: 0; width: 100%; }
+  /** Выбор количества остаётся над списком, нижняя строка содержит только страницы. */
+  .files-page .files-list-navigation { grid-template-columns: minmax(0, 1fr); padding-inline: 4px; }
+  .files-page .files-list-navigation > .files-page-size { display: none; }
+  .files-page .files-list-navigation .files-pagination-pages { grid-column: 1; justify-self: center; }
+  .files-page .files-list-navigation .files-pagination-pages > span { white-space: nowrap; }
+  .files-page .files-list-navigation button { width: 32px; height: 32px; }
+}
+/** Минимальные боковые поля освобождают ширину содержимого на узком экране. */
+@media (max-width: 360px) {
+  .files-page { padding: 8px; gap: 8px; }
+}
+/** Служебные действия занимают одну строку вместо отдельных разреженных полос. */
+.files-filter-actions { justify-content: space-between; gap: 12px 16px; }
+.files-filter-actions > [data-testid='filters-row'] { flex: 0 1 auto; }
+/** Квота использует свободную часть строки загрузки, не создавая отдельную полосу. */
+.files-page .files-header-actions > [data-testid='storage-quota-bar'] { margin-left: auto; align-self: center; }
+/** В узкой панели квота складывается в две строки с общим началом текста. */
+@container files-page (max-width: 440px) {
+  .files-page .files-header-actions > [data-testid='storage-quota-bar'] { margin-left: 0; width: 100%; }
+  .files-page .files-header-actions > [data-testid='storage-quota-bar'][data-state='unlimited'] {
+    display: grid; grid-template-columns: 16px minmax(0, 1fr); column-gap: 8px; row-gap: 4px;
+    font-size: 12px; line-height: 16px;
+  }
+  .files-header-actions [data-state='unlimited'] > svg { grid-column: 1; grid-row: 1; }
+  .files-header-actions [data-state='unlimited'] > span { grid-column: 2; }
+  .files-header-actions [data-state='unlimited'] > span[aria-hidden] { display: none; }
+}
+.files-filter-actions > details { background: transparent; }
+/** Справка имеет внутренние отступы и ту же высоту, что соседние действия. */
+.files-filter-actions > details > summary { padding: 10px 12px; min-height: 40px; box-sizing: border-box; line-height: 20px; }
+/** На широкой панели три группы равномерно заполняют строку с общим вертикальным центром. */
+.files-wide-page-size { display: none; }
+/** Размер страницы делит готовую строку действий вместо отдельной пустой полосы над таблицей. */
+@container files-page (min-width: 1100px) {
+  .files-page .files-filter-actions { grid-template-columns: auto minmax(0, 1fr) auto auto; column-gap: 24px; }
+  .files-wide-page-size { display: block; grid-column: 4; grid-row: 1; padding-left: 20px; border-left: 1px solid var(--border); }
+  .files-page .files-table-size-control { display: none; }
+}
+@container files-page (min-width: 600px) {
+  .files-filter-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: center; }
+  .files-filter-actions > .files-attach-controls { justify-self: center; }
+  /** Заголовок справки сохраняет свою ячейку, пояснение раскрывается под всей панелью. */
+  .files-filter-actions > details { display: contents; }
+  .files-filter-actions > details > summary { grid-column: 3; grid-row: 1; justify-self: end; }
+  .files-filter-actions > details[open]::details-content { display: contents; }
+  .files-filter-actions > details:not([open])::details-content { display: none; }
+  .files-filter-actions > details > p { grid-column: 1 / -1; grid-row: 2; margin: 0; padding: 12px; border: 1px solid var(--border); border-radius: 8px; }
+  /** Переключатель сохраняет среднюю колонку независимо от появления формы прикрепления. */
+  .files-filter-actions > .files-attach-controls { grid-column: 2; grid-row: 1; }
+}
+/** Одинаковая высота и начертание устраняют оптический сдвиг между фильтрами и прикреплением. */
+.files-page .files-filter-actions .files-attach-toggle { min-height: 40px; line-height: 20px; font-weight: 600; }
+.files-page .files-filter-actions .files-attach-toggle [role='switch'] {
+  height: 24px;
+  border-radius: 9999px;
+}
+/** В узкой панели фильтры и прикрепление занимают отдельные строки. */
+@container files-page (max-width: 440px) {
+  .files-filter-actions { flex-direction: column; align-items: stretch; }
+  .files-filter-actions > [data-testid='filters-row'] { flex: 0 0 auto; width: 100%; }
+  /** Кнопка заполняет строку на узкой панели, а выбранные фильтры переносятся ниже. */
+  .files-filter-actions [data-testid='filters-button'] { width: 100%; }
+  .files-filter-actions > .files-attach-controls { min-width: 0; width: 100%; flex-shrink: 1; }
+  .files-filter-actions > [data-testid='storage-quota-bar'] { margin-left: 0; align-self: flex-start; }
+  .files-filter-actions .files-attach-toggle { width: 100%; justify-content: space-between; }
+  .files-filter-actions .files-attach-toggle > span { min-width: 0; overflow-wrap: anywhere; }
+}
+/** На самом узком экране остаются размер страницы и кнопки с номером страницы. */
+@container files-page (max-width: 360px) {
+  .files-list-navigation { grid-template-columns: auto minmax(0, 1fr); padding-block: 8px; }
+  .files-page .files-list-navigation > .files-page-size { grid-column: 1; grid-row: 1; width: auto; }
+  .files-list-navigation .files-pagination-pages { grid-column: 2; grid-row: 1; justify-self: end; gap: 4px; }
+  .files-list-navigation .files-pagination-range { display: none; }
+}

@@ -27,6 +27,8 @@ import {
 export interface StorageQuotaBarProps {
   /** Занято байт */
   usedBytes: number;
+  /** Объём S3, который добавляется к общему объёму, но не к локальной квоте */
+  s3UsedBytes?: number;
   /** Лимит байт (null = безлимитно) */
   limitBytes: number | null;
   /** Состояние загрузки квоты */
@@ -55,6 +57,7 @@ function levelLabel(level: QuotaLevel, exceeded: boolean): string {
  */
 function CompactQuotaBar({
   usedBytes,
+  s3UsedBytes = 0,
   limitBytes,
   isLoading,
 }: StorageQuotaBarProps): React.JSX.Element {
@@ -68,19 +71,14 @@ function CompactQuotaBar({
 
   if (limitBytes === null) {
     return (
-      <div className={QUOTA_COMPACT_CARD_CLASS} data-testid="storage-quota-bar" data-state="unlimited">
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <span className="inline-flex items-center gap-1 font-medium text-foreground">
-            <InfinityIcon className="h-3.5 w-3.5 shrink-0" aria-hidden />
-            Безлимитно
-          </span>
-          <span className="text-border/60">·</span>
-          <span className={QUOTA_CAPTION_MUTED_CLASS}>{formatBytes(usedBytes)}</span>
-        </div>
+      <div className="flex flex-wrap items-center gap-2 py-1 text-sm text-muted-foreground" data-testid="storage-quota-bar" data-state="unlimited" title={`Локально: ${formatBytes(usedBytes)} · S3: ${formatBytes(s3UsedBytes)}`}>
+        <HardDrive className="h-4 w-4 shrink-0" aria-hidden />
+        <span>Занято {formatBytes(usedBytes + s3UsedBytes)}</span>
+        <span aria-hidden>·</span>
+        <span>Без лимита</span>
       </div>
     );
   }
-
   const exceeded = usedBytes > limitBytes;
   const percent = limitBytes > 0 ? (usedBytes / limitBytes) * 100 : 0;
   const level = resolveQuotaLevel(percent);
@@ -92,6 +90,7 @@ function CompactQuotaBar({
       data-testid="storage-quota-bar"
       data-state={exceeded ? 'exceeded' : level}
     >
+      <p className="text-xs text-muted-foreground">Всего {formatBytes(usedBytes + s3UsedBytes)} · S3: {formatBytes(s3UsedBytes)}</p>
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
         <div className="flex min-w-0 items-center gap-1.5">
           {exceeded ? (
@@ -104,7 +103,7 @@ function CompactQuotaBar({
         </div>
         <span className="text-border/60 hidden sm:inline">·</span>
         <span className={cn(QUOTA_CAPTION_MUTED_CLASS, 'shrink-0 tabular-nums')}>
-          {formatBytes(usedBytes)} / {formatBytes(limitBytes)}
+          Локально: {formatBytes(usedBytes)} / {formatBytes(limitBytes)}
         </span>
       </div>
       <div className={cn('h-1', QUOTA_TRACK_CLASS)}>

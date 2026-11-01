@@ -1,111 +1,75 @@
 /**
- * @fileoverview Выделенный виджет выбора диапазона дат «от-до» `FiltersDateRange`
- * (Req 6.3). Полированная замена временного `filters-modal-date-field`: shadcn
- * Calendar (mode="range") в Popover с подписью выбранного диапазона и кнопкой
- * быстрой очистки. Контракт пропсов совместим с прежним полем, чтобы подмена в
- * `filters-modal-fields` была минимальной. Иконки lucide-react, без эмодзи (Req 13.2).
- * @module components/editor/files/panel/filters-date-range
+ * @fileoverview Явные границы периода загрузки с выбором даты и проверкой порядка.
+ * Даты передаются как начало и конец локального дня, включая весь выбранный период.
  */
-
-import { CalendarDays, X } from 'lucide-react';
-import type { DateRange } from 'react-day-picker';
-
-import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
+import { useId } from 'react';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
-/** Пропсы виджета диапазона дат */
+/** Свойства периода загрузки файлов. */
 export interface FiltersDateRangeProps {
-  /** Начало диапазона (ISO-строка) */
+  /** Начало периода в формате ISO. */
   dateFrom?: string;
-  /** Конец диапазона (ISO-строка) */
+  /** Конец периода в формате ISO. */
   dateTo?: string;
-  /** Изменение диапазона (ISO-строки либо undefined для сброса) */
+  /** Передать изменённые границы периода. */
   onChange: (from?: string, to?: string) => void;
 }
 
 /**
- * Преобразует ISO-строку в Date либо undefined.
- * @param iso - ISO-строка даты
- * @returns Объект Date или undefined
+ * Представляет сохранённую дату в локальном формате поля календаря.
+ * @param iso - Сохранённая дата
+ * @returns Дата для поля или пустая строка
  */
-function toDate(iso?: string): Date | undefined {
-  if (!iso) return undefined;
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? undefined : d;
+function inputDate(iso?: string): string {
+  if (!iso) return '';
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 
 /**
- * Форматирует диапазон дат в подпись кнопки-триггера.
- * @param from - Начало диапазона
- * @param to - Конец диапазона
- * @returns Подпись с выбранными датами или приглашение
+ * Преобразует выбранную дату в границу локального дня.
+ * @param value - Дата из поля календаря
+ * @param end - Использовать конец дня
+ * @returns Граница периода в формате ISO либо отсутствие ограничения
  */
-function rangeLabel(from?: Date, to?: Date): string {
-  const fmt = (d: Date) => d.toLocaleDateString('ru-RU');
-  if (from && to) return `${fmt(from)} – ${fmt(to)}`;
-  if (from) return `с ${fmt(from)}`;
-  if (to) return `по ${fmt(to)}`;
-  return 'Выбрать дату вручную';
+function dayBoundary(value: string, end: boolean): string | undefined {
+  if (!value) return undefined;
+  const date = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return undefined;
+  if (end) date.setHours(23, 59, 59, 999);
+  return date.toISOString();
 }
 
 /**
- * Виджет выбора диапазона дат загрузки файлов (Req 6.3).
- * @param props - Текущий диапазон и обработчик изменения
- * @returns JSX элемент поля диапазона дат
+ * Позволяет независимо выбрать начало и конец периода загрузки.
+ * @param props - Границы периода и обработчик изменения
+ * @returns Поля календаря с сообщением об ошибке
  */
 export function FiltersDateRange({ dateFrom, dateTo, onChange }: FiltersDateRangeProps) {
-  const from = toDate(dateFrom);
-  const to = toDate(dateTo);
-  const hasValue = Boolean(from || to);
-
-  /** Обработка выбора диапазона в календаре */
-  const handleSelect = (range: DateRange | undefined) => {
-    onChange(range?.from?.toISOString(), range?.to?.toISOString());
-  };
-
-  /** Сброс выбранного диапазона */
-  const handleClear = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onChange(undefined, undefined);
-  };
-
+  const id = useId();
+  const invalid = Boolean(dateFrom && dateTo && new Date(dateFrom) > new Date(dateTo));
   return (
-    <div className="space-y-1.5">
-      <Label className="text-xs font-medium">Дата загрузки</Label>
-      <div className="flex items-center gap-2">
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="w-full justify-start font-normal"
-              data-testid="filters-date-trigger"
-            >
-              <CalendarDays className="mr-2 h-3.5 w-3.5 shrink-0" />
-              <span className="truncate">{rangeLabel(from, to)}</span>
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar mode="range" selected={{ from, to }} onSelect={handleSelect} numberOfMonths={1} />
-          </PopoverContent>
-        </Popover>
-        {hasValue ? (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 shrink-0"
-            onClick={handleClear}
-            aria-label="Очистить даты"
-            data-testid="filters-date-clear"
-          >
-            <X className="h-3.5 w-3.5" />
-          </Button>
-        ) : null}
+    <fieldset className="files-filters-dates space-y-2">
+      <legend className="text-sm font-medium">Дата загрузки</legend>
+      <div className="files-filters-period">
+        <div className="files-filters-date-boundary">
+          <Label htmlFor={`${id}-from`}>С</Label>
+          <Input id={`${id}-from`} type="date" aria-label="Дата загрузки с"
+            value={inputDate(dateFrom)} onChange={(e) => onChange(dayBoundary(e.target.value, false), dateTo)}
+            aria-invalid={invalid} aria-describedby={invalid ? `${id}-error` : undefined}
+            data-testid="filters-date-from" />
+        </div>
+        <div className="files-filters-date-boundary">
+          <Label htmlFor={`${id}-to`}>По</Label>
+          <Input id={`${id}-to`} type="date" aria-label="Дата загрузки по"
+            value={inputDate(dateTo)} onChange={(e) => onChange(dateFrom, dayBoundary(e.target.value, true))}
+            aria-invalid={invalid} aria-describedby={invalid ? `${id}-error` : undefined}
+            data-testid="filters-date-to" />
+        </div>
       </div>
-    </div>
+      {invalid && <p id={`${id}-error`} role="alert" className="text-sm text-destructive">Дата «По» должна быть не раньше даты «С».</p>}
+    </fieldset>
   );
 }

@@ -22,7 +22,7 @@ import { buildSelectedRefs } from './attach-node-refs';
 import type { FileStoragePanelProps } from './panel-types';
 
 /** Размер страницы списка файлов */
-const PAGE_SIZE = 50;
+const PAGE_SIZE = 25;
 
 /**
  * Хук состояния и оркестрации панели хранилища.
@@ -36,19 +36,26 @@ export function useFileStoragePanelState({ mode, projectId, selectedTokenId, att
   const [filters, setFilters] = useState<FileFilters>({});
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSizeRaw] = useState(PAGE_SIZE);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [attachModeEnabled, setAttachModeEnabled] = useState(false);
+
+  /** Смена размера возвращает к первой странице и снимает прежний выбор. */
+  const setPageSize = useCallback((size: number) => {
+    if (![5, 10, 25, 50, 100].includes(size)) return;
+    setPageSizeRaw(size); setPage(1); setSelectedIds(new Set());
+  }, []);
 
   // --- Данные ---
   const projectTokensInfo = useProjectTokens([projectId]);
   const tokens = projectTokensInfo[0]?.tokens ?? [];
-  const { data: filesData, isLoading } = useProjectFiles({ projectId, category, filters, tokenId: selectedTokenId, page });
+  const { data: filesData, isLoading, isError, isFetching } = useProjectFiles({ projectId, category, filters, tokenId: selectedTokenId, page, limit: pageSize });
   const quota = useStorageQuota(projectId);
   const { collaborators } = useProjectCollaborators(projectId);
 
   const files = filesData?.files ?? [];
   const total = filesData?.total ?? 0;
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   /** Можно ли прикреплять: в модалке — при наличии цели, на странице — при включённом режиме */
   const canAttach = mode === 'modal' ? !!attachTarget : attachModeEnabled && !!attachTarget;
@@ -158,14 +165,14 @@ export function useFileStoragePanelState({ mode, projectId, selectedTokenId, att
 
   return useMemo(
     () => ({
-      category, filters, filtersOpen, page, totalPages, selectedIds, attachModeEnabled, canAttach, activeFilterCount,
-      tokens, files, total, isLoading, quota, collaborators,
+      category, filters, filtersOpen, page, pageSize, setPageSize, totalPages, selectedIds, attachModeEnabled, canAttach, activeFilterCount,
+      tokens, files, total, isLoading, isError, isFetching, quota, collaborators,
       setCategory, setFiltersOpen, applyFilters, resetFilters, removeFilter,
       toggleSelect, selectAll, clearSelection, setAttachModeEnabled, setPage,
       refresh, handleUploaded, copyFileId, deleteSelected, deleteOne, isDeleting, attachSelected,
     }),
-    [category, filters, filtersOpen, page, totalPages, selectedIds, attachModeEnabled, canAttach, activeFilterCount,
-      tokens, files, total, isLoading, quota, collaborators,
+    [category, filters, filtersOpen, page, pageSize, setPageSize, totalPages, selectedIds, attachModeEnabled, canAttach, activeFilterCount,
+      tokens, files, total, isLoading, isError, isFetching, quota, collaborators,
       setCategory, applyFilters, resetFilters, removeFilter, toggleSelect, selectAll, clearSelection,
       refresh, handleUploaded, copyFileId, deleteSelected, deleteOne, isDeleting, attachSelected],
   );

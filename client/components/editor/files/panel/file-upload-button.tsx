@@ -8,12 +8,13 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { Loader2, Upload } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
+import { WorkspaceActionButton as Button } from '@/components/ui/workspace-action-button';
 import { useStorageConfigs } from '../hooks/use-storage-configs';
 import { listWritable, toStorageInfo } from './storage/storage-info';
 import { StorageTargetSelector } from './storage/storage-target-selector';
 import { FileClipboardButton } from './file-clipboard-button';
 import { useFileUpload } from './use-file-upload';
+import { FileDropUpload } from './file-drop-upload';
 
 /** Пропсы кнопки загрузки файлов в шапке панели */
 export interface FileUploadButtonProps {
@@ -71,6 +72,7 @@ export function FileUploadButton({
 
   return (
     <>
+      <FileDropUpload inputRef={inputRef} onFiles={handleClipboardFiles} disabled={isUploading} />
       {writable.length > 1 && (
         <StorageTargetSelector
           storages={storages}
@@ -105,6 +107,11 @@ export function FileUploadButton({
         <span className="hidden sm:inline">{isUploading ? 'Загрузка…' : 'Загрузить'}</span>
       </Button>
       <FileClipboardButton disabled={isUploading} onFiles={handleClipboardFiles} />
+      {/* Постоянная подсказка обозначает место загрузки до начала перетаскивания. */}
+      <button type="button" className="files-drop-prompt" disabled={isUploading} onClick={openPicker} aria-label="Перетащите файлы сюда или выберите на устройстве">
+        <Upload className="h-4 w-4 shrink-0" aria-hidden="true" />
+        <span>{isUploading ? 'Идёт загрузка файлов…' : 'Перетащите файлы сюда'}</span>
+      </button>
     </>
   );
 }
