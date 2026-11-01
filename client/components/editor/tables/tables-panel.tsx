@@ -5,7 +5,7 @@
 
 import { useState, useRef } from 'react';
 import { useTablePreference } from './hooks/use-table-preference';
-import { Table2 } from 'lucide-react';
+import { ArrowLeft, Table2 } from 'lucide-react';
 import { TablesHeader } from './components/tables-header';
 import './tables-panel.css';
 import { TableList } from './components/table-list';
@@ -50,6 +50,7 @@ export function TablesPanel({ sheets, projectId, allProjects, onProjectChange, s
   /** Общий редактор сохраняет одинаковые действия во всех размерах панели. */
   const editor = selectedTable ? (
     <TableEditor
+            navigation={<button ref={backRef} type="button" onClick={() => setMobileList(true)} aria-label="К списку таблиц" title="К списку таблиц" className="table-view-back tables-control flex shrink-0 items-center gap-1 rounded-md border border-border px-3 py-2 text-sm sm:hidden"><ArrowLeft className="h-4 w-4 shrink-0" /><span>К списку таблиц</span></button>}
             key={`${projectId}:${selectedTable.id}`} sheets={sheets}
             loading={loading} loadError={loadError} onRetryLoad={retryLoad}
             projectId={projectId}
@@ -86,7 +87,6 @@ export function TablesPanel({ sheets, projectId, allProjects, onProjectChange, s
             onCreate={createTable} onDelete={deleteTable} />
         </div>
         <div className="tables-editor flex min-h-0 min-w-0 flex-1 flex-col">
-          {selectedTable && <div className="shrink-0 px-3 py-2 sm:hidden"><button ref={backRef} type="button" onClick={() => setMobileList(true)} className="tables-control rounded-md border border-border px-3 py-2 text-sm">← К списку таблиц</button></div>}
           {editor ?? <div className="flex min-w-0 flex-1 items-center justify-center p-6">
             <div className="max-w-sm space-y-4 text-center">
               <Table2 className="mx-auto h-8 w-8 text-muted-foreground" />

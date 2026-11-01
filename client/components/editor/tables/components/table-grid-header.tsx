@@ -39,7 +39,8 @@ export function TableGridHeader({ editor, view }: TableGridHeaderProps) {
                 {view.sort?.column === column.id ? view.sort.direction === 1 ? '↑' : '↓' : '↕'}
               </button>
             </div>
-            <input aria-label={`Фильтр: ${getColumnTitle(column)}`} placeholder="Фильтр" value={view.columnFilters[column.id] ?? ''}
+            <input aria-label={isContentTable && column.name === 'key' ? 'Поиск по ID ноды' : `Поиск по столбцу: ${getColumnTitle(column)}`} placeholder={isContentTable && column.name === 'key' ? 'Поиск по ID ноды' : `Поиск: ${getColumnTitle(column)}`}
+              title={isContentTable && column.name === 'key' ? 'Оставляет строки, в ID которых есть введённый текст' : `Оставляет строки, где «${getColumnTitle(column)}» содержит введённый текст`} value={view.columnFilters[column.id] ?? ''}
               onChange={(event) => view.setColumnFilters((previous) => ({ ...previous, [column.id]: event.target.value }))} className="table-column-filter mx-2 mb-2 rounded border border-border bg-transparent px-2 py-1 text-xs font-normal" />
             <div role="separator" aria-label={`Ширина столбца: ${getColumnTitle(column)}`} aria-orientation="vertical" tabIndex={0}
               aria-valuemin={120} aria-valuemax={1200} aria-valuenow={view.widths[column.id] ?? defaultColumnWidth(column)} className="table-column-resizer"

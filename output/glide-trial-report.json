@@ -1,0 +1,54 @@
+{
+  "baseline": "ad2c52066",
+  "branch": "codex/tables-glide-trial",
+  "prototypeCommitted": false,
+  "version": "6.0.3",
+  "checks": {
+    "specificFiles": 6,
+    "diagnostics": 0,
+    "rangeTests": 4,
+    "diffCheck": true
+  },
+  "bundle": {
+    "javascriptMinBytes": 316723,
+    "javascriptGzipBytes": 107780,
+    "cssMinBytes": 12728,
+    "cssGzipBytes": 2259,
+    "reactExcluded": true,
+    "method": "esbuild, browser ESM, minify, NODE_ENV=production, target es2020; all non-React dependencies included"
+  },
+  "verified": [
+    "5003 rows, last row5003 rendered",
+    "global search found Товар5000, 1/5003",
+    "native range paste2x2, staged4 cells, persisted atomically",
+    "undo and redo",
+    "long multiline text editor and persistence",
+    "readonly key/type/sheet reject entire paste",
+    "node link opens source node in a new tab",
+    "content value persists to scenario JSON",
+    "invalid calendar date rejected and draft retained",
+    "concurrent DB change rejected and draft retained",
+    "column resize +80px, widths shared with original grid",
+    "switch back to original grid"
+  ],
+  "limitations": [
+    "Glide cells currently use text editors; number/date/boolean/link validated on save, specialized inputs not ported",
+    "No local grid zoom/pinch in trial",
+    "No port of column menus, per-column filters/sort/settings UI; original grid remains available",
+    "Fixed row height40 or80 with wrap; no automatic multiline row measurement",
+    "Copying node URI returns link, not raw node ID",
+    "Drafts are in memory; switching table or reloading discards them; switching engine blocked while dirty",
+    "Conflict draft retained but no merge/rebase dialog",
+    "No mobile, assistive technology, keyboard URI activation audit or production Vite chunk delta measurement"
+  ],
+  "qa": {
+    "projectId": 37,
+    "cleaned": true,
+    "userDataChanged": false
+  },
+  "screenshots": [
+    "output/playwright/glide-conflict.png",
+    "output/playwright/glide-5003-rows.png"
+  ],
+  "url": "http://localhost:5000/projects/9?tab=tables&sheet=sheet-compare-rates&grid=glide"
+}

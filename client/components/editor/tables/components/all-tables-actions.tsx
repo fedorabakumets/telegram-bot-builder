@@ -23,7 +23,7 @@ export function AllTablesActions({ projectId }: AllTablesActionsProps) {
     finally { setPending(false); }
   }
   return <>
-    <div className="flex items-center gap-1">
+    <div className="tables-transfer-actions flex flex-wrap items-center gap-2">
       <button type="button" title="Экспорт всех таблиц" aria-label="Экспорт всех таблиц" disabled={pending} className="tables-control flex items-center gap-2 disabled:opacity-40" onClick={() => { void download(); }}><Download className="h-4 w-4" /><span>{pending ? 'Экспорт…' : 'Экспорт всех'}</span></button>
       <button type="button" title="Импорт таблиц из файла" aria-label="Импорт таблиц из файла" className="tables-control flex items-center gap-2" onClick={() => setOpen(true)}><Upload className="h-4 w-4" /><span>Импорт всех</span></button>
     </div>

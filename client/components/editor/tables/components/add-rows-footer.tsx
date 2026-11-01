@@ -15,7 +15,7 @@ interface AddRowsFooterProps {
 }
 
 /**
- * Футер с кнопкой добавления строк и инпутом количества
+ * Выравнивает кнопку добавления и количество строк в одной адаптивной строке.
  * @param props - Пропсы компонента
  * @returns JSX элемент футера
  */
@@ -30,23 +30,25 @@ export function AddRowsFooter({ onAddRows }: AddRowsFooterProps) {
   };
 
   return (
-    <div className="flex items-center gap-2 px-3 py-2 border-t border-border/50 bg-muted/10">
+    <div className="tables-add-rows flex shrink-0 items-center gap-2 px-3 py-2 border-t border-border/50 bg-muted/10">
       <Button
         size="sm"
         variant="outline"
-        className="h-7 text-xs gap-1.5"
+        className="h-10 min-w-0 text-xs gap-1.5"
+        aria-label="Добавить строки"
         onClick={handleAdd}
       >
         <Plus className="h-3 w-3" />
-        Добавить строк
+        <span>Добавить<span className="tables-add-rows-label"> строк</span></span>
       </Button>
       <Input
         type="number"
+        aria-label="Количество добавляемых строк"
         min={1}
         value={count}
         onChange={(e) => setCount(e.target.value)}
         onKeyDown={(e) => { if (e.key === 'Enter') handleAdd(); }}
-        className="h-7 w-16 text-xs"
+        className="h-10 w-16 shrink-0 text-xs"
       />
     </div>
   );

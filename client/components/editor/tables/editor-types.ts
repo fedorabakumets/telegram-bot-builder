@@ -2,9 +2,12 @@
 import type { TableCellEdit } from '@shared/table-cell-edit';
 import type { CanvasSheet } from '@shared/schema';
 import type { BotTable } from './types';
+import type { ReactNode } from 'react';
 
 /** Параметры редактора таблицы. */
 export interface TableEditorProps {
+  /** Возврат к списку в общей строке действий на узком экране. */
+  navigation?: ReactNode;
   /** Идёт первая загрузка столбцов или строк. */
   loading?: boolean;
   /** Ошибка загрузки данных. */

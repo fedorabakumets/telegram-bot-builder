@@ -1,10 +1,8 @@
-/** @fileoverview Закрепление заголовков, основного столбца и состояния сетки данных. */
+/** @fileoverview Вертикальное закрепление заголовков и состояния прокручиваемой сетки данных. */
 .table-data-grid { table-layout: fixed; border-collapse: separate; border-spacing: 0; font-size: 14px; line-height: 20px; }
 .table-data-grid th, .table-data-grid td { border-right: 1px solid #27272a; border-bottom: 1px solid #27272a; padding: 0; vertical-align: top; background: #09090b; }
 .table-data-grid th { position: sticky; top: 0; z-index: 3; background: #181818; text-align: left; font-weight: 600; }
 .table-data-grid .table-number { width: 56px; min-width: 56px; padding: 8px; color: #a1a1aa; font-size: 12px; }
-.table-data-grid .table-primary { position: sticky; left: 0; z-index: 2; box-shadow: 1px 0 #3f3f46; }
-.table-data-grid th.table-primary { z-index: 4; }
 .table-data-grid tr:hover td { background: #181818; }
 .table-column-filter { width: calc(100% - 16px); }
 .table-column-resizer { position: absolute; top: 0; right: -4px; bottom: 0; z-index: 5; width: 8px; cursor: col-resize; touch-action: none; }

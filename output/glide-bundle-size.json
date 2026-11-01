@@ -1,0 +1,17 @@
+{
+  "version": "6.0.3",
+  "reactExcluded": true,
+  "files": [
+    {
+      "name": "stdin.js",
+      "bytes": 316723,
+      "gzipBytes": 107780
+    },
+    {
+      "name": "stdin.css",
+      "bytes": 12728,
+      "gzipBytes": 2259
+    }
+  ],
+  "dependencyFiles": 271
+}

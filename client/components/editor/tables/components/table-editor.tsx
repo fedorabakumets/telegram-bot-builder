@@ -29,22 +29,22 @@ export function TableEditor(props: TableEditorProps) {
   const selectedRows = table.rows.filter((row) => view.selected.has(row.id));
   const history = useTableHistory(props.onUpdateCells);
   return (
-    <CellDraftContext.Provider value={draftStore}><section aria-label="Редактор таблицы" className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
+    <CellDraftContext.Provider value={draftStore}><section aria-label="Редактор таблицы" className="tables-editor-scroll flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto"
       onPaste={readOnly ? undefined : (event) => {
         if ((event.target as HTMLElement).closest('textarea, input')) return;
         const text = event.clipboardData.getData('text/plain');
         if (!text.includes('\t') && !text.includes('\n')) return;
         event.preventDefault(); setOperation({ mode: 'paste', text });
       }}>
-      {isContentTable && <ContentTableFilters rows={table.rows} columns={table.columns} selectedType={view.selectedType} selectedSheet={view.selectedSheet} onTypeChange={view.setSelectedType} onSheetChange={view.setSelectedSheet} />}
-      <TableViewToolbar view={view} total={table.rows.length} loading={props.loading}>
+      <TableViewToolbar view={view} navigation={props.navigation}
+        filters={isContentTable && <ContentTableFilters rows={table.rows} columns={table.columns} selectedType={view.selectedType} selectedSheet={view.selectedSheet} onTypeChange={view.setSelectedType} onSheetChange={view.setSelectedSheet} />}>
         {!readOnly && !isContentTable && <SpreadsheetToolbar table={table} onAddAlphabet={onAddAlphabetColumns} onAdd100Rows={() => onAddRows(100)} onReindex={onReindex} onImportNew={onImportNew} onImportRows={onImportRows} hasSelectedTable />}
         <TableBulkActions table={table} view={view} disabled={!!readOnly || history.pending} onOpen={(mode) => setOperation({ mode })} />
       </TableViewToolbar>
       {operation && <TableBulkDialog mode={operation.mode} initialText={operation.text} table={table} rows={operation.mode === 'replace' && selectedRows.length ? selectedRows : view.rows}
         rowId={view.activeCell?.rowId} columnId={view.activeCell?.columnId} onApply={history.commitBatch} onClose={() => setOperation(null)} />}
       {props.loadError && <div role="alert" className="flex shrink-0 items-center gap-3 px-4 py-2 text-sm text-destructive">{props.loadError}<button type="button" onClick={props.onRetryLoad} className="tables-control rounded-md border border-border px-3 py-1">Повторить загрузку</button></div>}
-      <TableZoom controls={!readOnly && <TableHistoryToolbar history={history} />} storageKey={`tables:${projectId}:${table.id}:scale`}>{props.loading ? <div role="status" aria-label="Загрузка строк" className="space-y-3 p-4">{[0, 1, 2, 3, 4].map((index) => <div key={index} className="h-8 rounded bg-muted/40 motion-safe:animate-pulse" />)}</div> : <TableGrid editor={{ ...props, onUpdateCell: history.commit }} view={view} />}</TableZoom>
+      <TableZoom rowHeight={isContentTable ? 80 : 40} controls={!readOnly && <TableHistoryToolbar history={history} />} storageKey={`tables:${projectId}:${table.id}:scale`}>{props.loading ? <div role="status" aria-label="Загрузка строк" className="space-y-3 p-4">{[0, 1, 2, 3, 4].map((index) => <div key={index} className="h-8 rounded bg-muted/40 motion-safe:animate-pulse" />)}</div> : <TableGrid editor={{ ...props, onUpdateCell: history.commit }} view={view} />}</TableZoom>
       {!readOnly && !isContentTable && <TableAddColumn onAdd={onAddColumn} />}
       {!readOnly && <AddRowsFooter onAddRows={onAddRows} />}
     </section></CellDraftContext.Provider>

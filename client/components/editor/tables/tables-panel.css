@@ -8,28 +8,30 @@
 .tables-workspace .tables-control:active { background: #27272a; }
 .tables-workspace .tables-control:focus-visible { outline: 2px solid #a1a1aa; outline-offset: 2px; }
 .tables-row.is-selected { background: #18181b; box-shadow: inset 0 0 0 1px #3f3f46; color: #fafafa; }
-.tables-context > div { max-width: 100%; min-width: 0; }
-.tables-context button[role="combobox"] { max-width: 100%; background: #09090b; }
-@container (max-width: 640px) {
-  .tables-header { padding: 12px; }
-  .tables-context { gap: 8px; }
-  .tables-context > div:first-child { width: 100%; }
-  .tables-context > div:first-child button { flex: 1; }
-}
+/** Проект и бот повторяют геометрию селекторов вкладки файлов. */
+.tables-context > div { flex: 1 1 240px; max-width: 100%; min-width: 0; }
+.tables-context button[role="combobox"] { width: 100%; max-width: none; min-width: 0; height: 40px; font-size: 14px; line-height: 20px; background: #09090b; border-color: #29292d; }
+.tables-context button[role="combobox"] > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 @media (prefers-reduced-motion: reduce) {
   .tables-workspace .tables-control { transition: none; }
 }
 
-/** Действия шапки остаются различимыми при любой ширине панели. */
-.tables-header button[title="Экспорт всех таблиц"],
-.tables-header button[title="Импорт таблиц из файла"] {
-  height: auto; padding: 8px 12px; font-size: 14px; line-height: 20px;
-  border: 1px solid #27272a; border-radius: 6px; background: transparent;
+/** Прикладные действия используют те же размеры и нейтральные контуры, что файлы. */
+.tables-header-tools .tables-control { height: 40px; padding: 8px 12px; gap: 8px; font-size: 14px; line-height: 20px; font-weight: 600; border: 1px solid #3f3f46; border-radius: 8px; color: #b4b4bc; background: transparent; }
+.tables-header-tools .tables-control:hover:not(:disabled) { background: #27272a; }
+.tables-header-tools > [role="alert"] { flex-basis: 100%; }
+@container (max-width: 440px) {
+  /** Две равные колонки сохраняют проект и бота рядом, как во вкладке файлов. */
+  .tables-context { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .tables-context > div { min-width: 0; width: 100%; }
+  .tables-context > div:only-child { grid-column: 1 / -1; }
+  .tables-context > div > svg { display: none; }
+  .tables-context button[role="combobox"] { padding: 8px; gap: 4px; }
+  .tables-context button[role="combobox"] > svg { width: 12px; flex-shrink: 0; }
+  /** Экспорт и импорт повторяют двухколоночные действия файлов с иконкой над подписью. */
+  .tables-header .tables-transfer-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); flex: 1; gap: 8px; min-width: 0; }
+  .tables-header .tables-transfer-actions > .tables-control { min-width: 0; width: 100%; height: auto; min-height: 48px; padding: 8px 4px; flex-direction: column; justify-content: center; gap: 4px; font-size: 12px; line-height: 16px; text-align: center; }
 }
-.tables-header button[title="Экспорт всех таблиц"]:hover,
-.tables-header button[title="Импорт таблиц из файла"]:hover { background: #18181b; }
-.tables-header button[title="Экспорт всех таблиц"] span,
-.tables-header button[title="Импорт таблиц из файла"] span { display: inline; }
 
 /** Количество листов не увеличивает высоту панели фильтров. */
 .content-table-filters { background: #09090b; box-shadow: inset 0 -1px #27272a; }
@@ -37,15 +39,33 @@
 .content-filter-select { background: #09090b; color: #fafafa; border-color: #27272a; color-scheme: dark; text-overflow: ellipsis; }
 .content-filter-select:hover { border-color: #52525b; }
 .content-filter-select:focus-visible { outline: 2px solid #a1a1aa; outline-offset: 2px; }
-
-/** В общей строке шапки подписи второстепенных действий скрываются при нехватке места. */
-@container (min-width: 641px) and (max-width: 1000px) {
-  .tables-header-actions button[title="Экспорт всех таблиц"] span,
-  .tables-header-actions button[title="Импорт таблиц из файла"] span { display: none; }
-  .tables-context { flex: 1; min-width: 0; }
-  .tables-context > div:first-child { flex: 1; }
-  .tables-context > div:first-child button { min-width: 0; }
+/** В узкой панели фильтры остаются рядом, полные варианты доступны в списках. */
+@container (max-width: 440px) {
+  .content-table-filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .content-table-filters > label { flex-direction: column; align-items: stretch; gap: 4px; }
+  .content-table-filters > label:only-child { grid-column: 1 / -1; }
+  .content-filter-select { width: 100%; padding: 8px; }
 }
+/** При недостатке высоты прокручивается редактор, а сетка сохраняет рабочую область. */
+.tables-grid-area { flex-shrink: 0; }
+.tables-add-rows > button { max-width: 100%; }
+/** Кнопка и количество сохраняют общий уровень и высоту даже в самой узкой панели. */
+@container (max-width: 360px) {
+  .tables-add-rows > button { flex: 1; padding-inline: 8px; gap: 4px; }
+  .tables-add-rows > input { width: 52px; padding-inline: 8px; }
+  .tables-add-rows-label { display: none; }
+}
+/** Компактный возврат оставляет место для действий в одной узкой строке. */
+@container (max-width: 360px) {
+  .table-view-actions { gap: 4px; padding-inline: 8px; }
+  .table-view-back { width: 40px; height: 40px; justify-content: center; padding: 8px; }
+  .table-view-back > span { display: none; }
+  .table-view-actions > div button { min-height: 40px; padding: 8px; font-size: 12px; white-space: nowrap; }
+}
+/** Кнопки масштаба образуют одну группу; на компактной панели длинная подпись скрыта. */
+.table-zoom-controls .tables-control { min-height: 40px; min-width: 40px; }
+.table-zoom-controls .table-zoom-reset { min-width: 64px; }
+@container (max-width: 440px) { .table-zoom-label { display: none; } }
 
 /** Одна сетка сохраняет состояние при смене режима и не дублирует тяжёлые строки. */
 @media (max-width: 639px) {
