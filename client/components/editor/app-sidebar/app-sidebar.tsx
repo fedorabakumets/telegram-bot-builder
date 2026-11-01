@@ -7,6 +7,7 @@ import { cn } from '@/utils/utils';
 import { SidebarBrand } from './components/sidebar-brand';
 import { SidebarNav } from './components/sidebar-nav';
 import { SidebarActions } from './components/sidebar-actions';
+import { SidebarAgentLink } from './components/sidebar-agent-link';
 import { SidebarAdminLink } from './components/sidebar-admin-link';
 import { SidebarFooter } from './components/sidebar-footer';
 import { SidebarSeparator } from './components/sidebar-separator';
@@ -80,6 +81,7 @@ export function AppSidebar({
           isCollapsed={isCollapsed}
         />
         <SidebarSeparator />
+        <SidebarAgentLink active={currentTab === 'agent'} isCollapsed={isCollapsed} onOpen={() => onTabChange('agent')} />
         <SidebarActions
           onLoadTemplate={onLoadTemplate}
           onSaveAsTemplate={onSaveAsTemplate}
