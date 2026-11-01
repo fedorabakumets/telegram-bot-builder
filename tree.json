@@ -2864,8 +2864,8 @@
   },
   {
     "path": "interface/agent",
-    "title": "Агент",
-    "excerpt": "Для Bot Builder Agent достаточно написать задачу в личном чате или обратиться к нему в группе. Если профиля ещё нет,",
+    "title": "Вкладка «Агент»",
+    "excerpt": "<!-- @fileoverview Руководство по вкладке «Агент»: подключения Telegram Agent и токены ИИ клиентов. -->",
     "parts": [
       "interface",
       "agent"
@@ -2873,7 +2873,7 @@
     "folder_titles": {
       "interface": "🖥️ Интерфейс"
     },
-    "updated_at": "2026-10-31T23:22:05+03:00",
+    "updated_at": "2026-11-01T16:02:18+03:00",
     "tags": [],
     "author": ""
   },
@@ -2993,7 +2993,7 @@
     "folder_titles": {
       "interface": "🖥️ Интерфейс"
     },
-    "updated_at": "2026-11-01T15:38:40+03:00",
+    "updated_at": "2026-11-01T16:02:18+03:00",
     "tags": [],
     "author": ""
   },
@@ -3024,6 +3024,21 @@
       "interface": "🖥️ Интерфейс"
     },
     "updated_at": "2026-06-15T01:26:00+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "interface/versions",
+    "title": "Вкладка «История версий»",
+    "excerpt": "<!-- @fileoverview Руководство по вкладке «История версий»: выбор проекта, чекпоинты, сравнение и восстановление. -->",
+    "parts": [
+      "interface",
+      "versions"
+    ],
+    "folder_titles": {
+      "interface": "🖥️ Интерфейс"
+    },
+    "updated_at": "2026-11-01T16:02:18+03:00",
     "tags": [],
     "author": ""
   },
