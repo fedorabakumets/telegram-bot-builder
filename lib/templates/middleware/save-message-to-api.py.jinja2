@@ -34,8 +34,12 @@ async def _save_message_once(user_id: str, message_type: str, message_text: str 
                     # Повтор обёртки возвращает прежнюю запись для привязки медиа к сообщению.
                     existing = await conn.fetchrow("SELECT id,user_id,message_type,created_at FROM bot_messages WHERE project_id=$1 AND token_id=$2 AND user_id=$3 AND message_type=$4 AND telegram_message_id=$5 AND chat_type=$6 AND chat_id IS NOT DISTINCT FROM $7 ORDER BY id LIMIT 1",
                         PROJECT_ID, TOKEN_ID, str(user_id), message_type, message_data.get('message_id'), chat_type, chat_id)
-                    if existing and node_id:
-                        await conn.execute('UPDATE bot_messages SET node_id=COALESCE(node_id,$1) WHERE id=$2 AND project_id=$3 AND token_id=$4', node_id, existing['id'], PROJECT_ID, TOKEN_ID)
+                    if existing:
+                        # Обёртка дополняет запись клавиатурой и нодой, не затирая уже сохранённые данные Telegram.
+                        await conn.execute("""UPDATE bot_messages SET node_id=COALESCE(node_id,$1),
+                            message_data=jsonb_strip_nulls($2::jsonb) || jsonb_strip_nulls(COALESCE(message_data,'{}'::jsonb))
+                            WHERE id=$3 AND project_id=$4 AND token_id=$5""",
+                            node_id, json.dumps(message_data,ensure_ascii=False), existing['id'], PROJECT_ID, TOKEN_ID)
                     return existing
                 # Старые ноды дополнительно логируют отправку без Telegram ID: это не второе сообщение.
                 if message_type == 'bot' and not analytics_event:

@@ -20,8 +20,8 @@ async def _analytics_outgoing_chat(method, bot):
         return None
 
 
-def _analytics_outgoing_details(message):
-    """Извлекает необязательные данные медиа, сохраняя идентичность при ошибке сериализации."""
+def _analytics_outgoing_details(message, method=None):
+    """Извлекает медиа и клавиатуру; reply-клавиатура доступна только в запросе Telegram."""
     details = {'message_id': message.message_id}
     try:
         for kind in ('photo', 'video', 'audio', 'document', 'sticker', 'voice', 'animation', 'video_note'):
@@ -33,6 +33,12 @@ def _analytics_outgoing_details(message):
         if keyboard:
             details['buttons'] = [button.model_dump(mode='json', exclude_none=True) for row in keyboard for button in row]
             details['keyboard_type'] = 'inline'
+        else:
+            markup = getattr(method, 'reply_markup', None)
+            keyboard = getattr(markup, 'keyboard', None) or getattr(markup, 'inline_keyboard', None)
+            if keyboard:
+                details['buttons'] = [button.model_dump(mode='json', exclude_none=True) for row in keyboard for button in row]
+                details['keyboard_type'] = 'reply' if getattr(markup, 'keyboard', None) else 'inline'
     except Exception as error:
         logging.warning('Аналитика отправки: сохранена идентичность без части данных медиа, тип %s', type(error).__name__)
     return details
@@ -61,7 +67,7 @@ async def _analytics_outgoing_request(make_request, bot, method):
                 chat = resolved_chat
             if chat is None:
                 continue
-            details = _analytics_outgoing_details(message)
+            details = _analytics_outgoing_details(message, method)
             chat_id = str(chat.id) if chat.type != 'private' else None
             _analytics_last_outgoing.set({'user_id': str(chat.id), 'message_data': details,
                 'chat_type': chat.type, 'chat_id': chat_id})

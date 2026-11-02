@@ -15,6 +15,8 @@ try {
   const middleware = join(directory, 'middleware.py');
   writeFileSync(middleware, generateMessageLoggingCode(true, true, 12, true), 'utf8');
   execFileSync('python', [resolve('lib/tests/analytics-events-runtime.py'), middleware], { stdio: 'inherit' });
+  // Последовательность middleware → обёртка сохраняет reply/inline и не удваивает сообщения.
+  execFileSync('python', [resolve('lib/tests/analytics-reply-history-runtime.py'), middleware], { stdio: 'inherit' });
   // Настоящий локальный Dispatcher проверяет фильтры и middleware без сети Telegram.
   execFileSync('python', [resolve('lib/tests/analytics-dispatcher-runtime.py'), middleware], { stdio: 'inherit' });
   const project = { nodes: [{ id: 'start', type: 'command_trigger', position: { x: 0, y: 0 }, data: { command: '/start', buttons: [], messageText: '' } }], connections: [] };
