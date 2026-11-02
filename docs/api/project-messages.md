@@ -1,6 +1,6 @@
 # project-messages
 
-Эндпоинтов: **4**
+Эндпоинтов: **5**
 
 ### `GET` /api/projects/{id}/messages/activity
 
@@ -242,3 +242,17 @@ curl -s -X PATCH 'http://localhost:5000/api/projects/42/messages/501?tokenId=7' 
   "editedInTelegram": true
 }
 ```
+
+### `GET` /api/projects/{projectId}/messages/{messageId}/file-size
+
+GET /api/projects/{projectId}/messages/{messageId}/file-size
+
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Успешный ответ |
+| 401 | Требуется авторизация (сессия или Bearer PAT) |
+| 503 | Приложение не настроено — настройка в /admin |

@@ -1,7 +1,3 @@
-<!--
-@fileoverview Каталог API приложения и новой подтверждённой аналитики.
--->
-
 # Telegram Bot Builder API — API Reference
 
 REST API визуального конструктора Telegram-ботов. Авторизация: сессионная cookie или Bearer PAT. Документация: /admin (вход по ADMIN_API_KEY) → /admin/docs.
@@ -14,11 +10,11 @@ REST API визуального конструктора Telegram-ботов. А
 
 | Тег | Эндпоинтов |
 |-----|------------|
-| [analytics-v2](./analytics-v2.md) | 19 |
 | [admin](./admin.md) | 27 |
 | [agent-auto-auth](./agent-auto-auth.md) | 2 |
 | [agent-connections](./agent-connections.md) | 2 |
 | [agent-tokens](./agent-tokens.md) | 3 |
+| [analytics-v2](./analytics-v2.md) | 21 |
 | [auth](./auth.md) | 11 |
 | [bot](./bot.md) | 24 |
 | [bot-logs](./bot-logs.md) | 1 |
@@ -34,12 +30,12 @@ REST API визуального конструктора Telegram-ботов. А
 | [project-dialogs](./project-dialogs.md) | 5 |
 | [project-files](./project-files.md) | 4 |
 | [project-groups](./project-groups.md) | 6 |
-| [project-messages](./project-messages.md) | 4 |
-| [project-tables](./project-tables.md) | 27 |
+| [project-messages](./project-messages.md) | 5 |
+| [project-tables](./project-tables.md) | 29 |
 | [project-tokens](./project-tokens.md) | 30 |
 | [project-users](./project-users.md) | 12 |
 | [project-versions](./project-versions.md) | 6 |
-| [projects](./projects.md) | 23 |
+| [projects](./projects.md) | 24 |
 | [server](./server.md) | 1 |
 | [setup](./setup.md) | 2 |
 | [storage-configs](./storage-configs.md) | 5 |
