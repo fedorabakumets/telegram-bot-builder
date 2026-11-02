@@ -26,3 +26,30 @@
   .workspace-tab-heading.workspace-tab-heading > div:first-child { display: block; }
 }
 @media (min-width: 640px) { .workspace-tab-frame { padding: 12px 24px 24px; } }
+
+/** Компактные шапки выбранных рабочих вкладок повторяют аналитику на узких панелях. */
+@container (max-width: 479px) {
+  :is(.tables-header, .versions-content, .code-workspace-heading) .workspace-tab-heading.workspace-tab-heading { align-items: center; gap: 8px; }
+  :is(.tables-header, .versions-content, .code-workspace-heading) .workspace-tab-heading > div:first-child > p { display: none; }
+  :is(.tables-header, .versions-content, .code-workspace-heading) .workspace-tab-actions { align-items: center; }
+}
+
+/** Узкая рабочая вкладка позволяет свернуть шапку, сохраняя доступ к ней. */
+.workspace-header-toggle { display: none; }
+@container (max-width: 479px) {
+  .workspace-header-toggle { display: block; padding: 0 0 6px; color: var(--muted-foreground); font-size: 12px; line-height: 20px; }
+  .workspace-header-toggle:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+}
+
+/** Состояние узкой панели не скрывает шапку после расширения области. */
+.workspace-header-content[hidden] { display: block; }
+@container (max-width: 479px) { .workspace-header-content[hidden] { display: none; } }
+
+/** Шапка кода может находиться в отдельной мобильной области за пределами панели. */
+.code-workspace-heading { container: code-workspace-heading / inline-size; }
+@container code-workspace-heading (max-width: 479px) {
+  .workspace-header-toggle { display: block; padding: 0 0 6px; color: var(--muted-foreground); font-size: 12px; line-height: 20px; }
+  .workspace-header-content[hidden] { display: none; }
+  .workspace-tab-heading.workspace-tab-heading { align-items: center; gap: 8px; }
+  .workspace-tab-heading > div:first-child > p { display: none; }
+}

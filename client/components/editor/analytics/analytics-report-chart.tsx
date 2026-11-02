@@ -7,6 +7,7 @@ import {AnalyticsChoosePeriod, AnalyticsOpenPeriodContext} from './analytics-cho
 import { AnalyticsChartState } from './analytics-chart-state';
 import { AnalyticsReportPeriod } from './analytics-report-period';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { X } from 'lucide-react';
 import { AnalyticsChartActions } from './analytics-chart-actions';
 import { AnalyticsCompactTooltip } from './analytics-compact-tooltip';
 /** Ряд с подписью и цветом. */
@@ -142,16 +143,17 @@ export function AnalyticsReportChart({ title, compact = false, expandedHeader, e
     </ResponsiveContainer>}</div></div>
     <div data-analytics-chart-preview className="relative z-10" aria-hidden="true" hidden={!chosen || !!selected || expanded}>{chosen && !selected && !expanded && <div className="pointer-events-none"><AnalyticsCompactTooltip active label={chosen.date} payload={series.map(item => ({ name: item.label, color: item.color, value: Number(chosen[item.key] ?? 0) }))} formatInterval={formatTooltipInterval} /></div>}</div>
     <figcaption className="analytics-chart-legend flex flex-wrap gap-4 text-xs text-muted-foreground">{series.map(item => <span key={item.key}><span aria-hidden="true" style={{ color: item.color }}>● </span>{item.label}</span>)}</figcaption>
-    {chosen && selected && <div ref={detailsRef} className="analytics-report-details space-y-2" aria-live="polite"><p className="text-xs text-muted-foreground">{cumulative && allowCumulative ? 'Накопительно за этот промежуток' : 'За этот промежуток'}</p><div className="analytics-interval-heading"><strong>{formatInterval(chosen.date)}</strong><button type="button" className="text-muted-foreground" onClick={() => {setSelected(null);setHovered(null);}}>Закрыть</button></div>
-      {selected && applyRange && <button type="button" className="rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-ring" onClick={()=>{applyRange(intervalBounds(chosen.date));setSelected(null);setHovered(null);}}>Выбрать этот период</button>}
-      <dl className="flex flex-wrap gap-4">{series.map(item => <div key={item.key}><dt className="text-muted-foreground"><span aria-hidden="true" style={{color:item.color}}>● </span>{item.label}{cumulative ? ' · накопительно' : ''}</dt><dd className="font-semibold tabular-nums">{Number(chosen[item.key] ?? 0).toLocaleString('ru-RU')}</dd></div>)}</dl></div>}
+    {chosen && selected && <div ref={detailsRef} className="analytics-report-details analytics-selected-interval" aria-live="polite"><div className="analytics-selected-interval-header"><p>{cumulative && allowCumulative ? 'Накопительно за промежуток' : 'За этот промежуток'}</p><button type="button" onClick={() => {setSelected(null);setHovered(null);}}>Закрыть</button></div>
+      <strong className="analytics-selected-interval-date">{formatInterval(chosen.date)}</strong>
+      <dl className="analytics-selected-interval-values">{series.map(item => <div key={item.key}><dt><span aria-hidden="true" style={{color:item.color}}>● </span>{item.label}{cumulative ? ' · накопительно' : ''}</dt><dd>{Number(chosen[item.key] ?? 0).toLocaleString('ru-RU')}</dd></div>)}</dl>
+      {applyRange && <button type="button" className="analytics-selected-interval-apply" onClick={()=>{applyRange(intervalBounds(chosen.date));setSelected(null);setHovered(null);}}>Выбрать этот период</button>}</div>}
     {rows.length > 0 && <details><summary className="text-sm text-muted-foreground cursor-pointer py-2">Все значения графика</summary><div className="analytics-chart-value-list" role="list">{rows.map(row => <button key={row.date} type="button" aria-pressed={selected === row.date} onClick={() => setSelected(row.date)}><span>{formatInterval(row.date)}</span><span>{series.map(item => `${item.label}: ${Number(row[item.key] ?? 0).toLocaleString('ru-RU')}`).join(' · ')}</span></button>)}</div></details>}
   </figure>;
   return <div className="min-w-0 space-y-2"><AnalyticsChartActions title={title} open={() => setExpanded(true)} triggerRef={expandRef} />
     {!expanded && chart}<Dialog open={expanded} onOpenChange={setExpanded}><DialogContent hideClose aria-describedby={undefined}
-      onCloseAutoFocus={event => { if (movingToPeriod.current) { movingToPeriod.current = false; return; } event.preventDefault(); expandRef.current?.focus(); }} className="w-[calc(100%-1rem)] max-w-none sm:max-w-[min(1100px,96vw)] max-h-[94dvh] overflow-y-auto">
-      <div className="flex flex-wrap items-center justify-between gap-3" data-analytics-chart-control><DialogTitle>{title ?? 'График аналитики'}</DialogTitle><div className="flex items-center gap-2">
+      onCloseAutoFocus={event => { if (movingToPeriod.current) { movingToPeriod.current = false; return; } event.preventDefault(); expandRef.current?.focus(); }} className="analytics-chart-dialog w-[calc(100%-1rem)] max-w-none sm:max-w-[min(1100px,96vw)] max-h-[94dvh] overflow-y-auto">
+      <div className="analytics-distribution-dialog-header flex min-w-0 items-center justify-between gap-3" data-analytics-chart-control><DialogTitle className="min-w-0 flex-1 text-left text-base font-semibold leading-6">{title ?? 'График аналитики'}</DialogTitle><div className="flex shrink-0 items-center gap-2">
         <AnalyticsChartActions expanded open={() => setExpanded(true)} triggerRef={expandRef} />
-        <button type="button" onClick={() => setExpanded(false)} className="rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-ring">Закрыть график</button></div></div>
+        <button type="button" onClick={() => setExpanded(false)} aria-label="Закрыть график" title="Закрыть график" className="inline-flex h-9 w-9 items-center justify-center rounded-md border text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"><X className="h-4 w-4" aria-hidden="true" /></button></div></div>
       {expandedHeader}<AnalyticsOpenPeriodContext.Provider value={openPeriod ? () => { movingToPeriod.current = true; setExpanded(false); openPeriod(); } : null}>{chart}</AnalyticsOpenPeriodContext.Provider>{expandedFooter}</DialogContent></Dialog></div>;
 }

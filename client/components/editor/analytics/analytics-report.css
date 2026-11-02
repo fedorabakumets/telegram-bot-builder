@@ -329,3 +329,33 @@
 .analytics-collapsible-section:not([open]) .analytics-collapsible-description { display: none; }
 .analytics-collapsible-description { margin-top: 4px; font-size: 14px; line-height: 20px; color: var(--muted-foreground); }
 .analytics-collapsible-content { display: flex; flex-direction: column; gap: 16px; margin-top: 16px; }
+
+/** Закреплённый промежуток: дата, значения и действия читаются отдельными группами. */
+.analytics-selected-interval { display: grid; gap: 12px; min-width: 0; }
+.analytics-selected-interval-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: var(--muted-foreground); font-size: 12px; }
+.analytics-selected-interval-header button { flex: none; min-height: 32px; padding: 4px 8px; border-radius: 6px; }
+.analytics-selected-interval-header button:hover { background: var(--muted); color: var(--foreground); }
+.analytics-selected-interval-date { min-width: 0; font-size: 13px; line-height: 20px; overflow-wrap: anywhere; }
+.analytics-selected-interval-values { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 120px), 1fr)); gap: 10px 16px; }
+.analytics-selected-interval-values > div { min-width: 0; }
+.analytics-selected-interval-values dt { color: var(--muted-foreground); font-size: 12px; line-height: 16px; overflow-wrap: anywhere; }
+.analytics-selected-interval-values dd { margin-top: 2px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.analytics-selected-interval-apply { justify-self: start; min-height: 40px; max-width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; text-align: center; }
+.analytics-selected-interval button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+@container analytics (max-width: 400px) { .analytics-selected-interval { padding: 12px; } .analytics-selected-interval-values { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; } }
+
+/** Флажок развёрнутого графика контрастен независимо от стилей страницы. */
+.analytics-chart-dialog .analytics-chart-view-controls input[type="checkbox"] { appearance: none; display: inline-grid; place-content: center; flex: none; width: 16px; height: 16px; border: 1px solid var(--muted-foreground); border-radius: 4px; background: var(--background); }
+.analytics-chart-dialog .analytics-chart-view-controls input[type="checkbox"]::before { content: ""; width: 8px; height: 5px; border-left: 2px solid var(--primary-foreground); border-bottom: 2px solid var(--primary-foreground); transform: translateY(-1px) rotate(-45deg); opacity: 0; }
+.analytics-chart-dialog .analytics-chart-view-controls input[type="checkbox"]:checked { background: var(--primary); border-color: var(--primary); }
+.analytics-chart-dialog .analytics-chart-view-controls input[type="checkbox"]:checked::before { opacity: 1; }
+.analytics-chart-dialog .analytics-chart-view-controls input[type="checkbox"]:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+/** Переключатели развёрнутого графика помещаются в одну строку на узком экране. */
+@media (max-width: 400px) {
+  .analytics-chart-dialog .analytics-chart-view-controls { display: grid; grid-template-columns: minmax(96px, 1fr) auto; gap: 4px; align-items: center; }
+  .analytics-chart-dialog .analytics-chart-view-controls > label:first-child { min-width: 0; gap: 4px; }
+  .analytics-chart-dialog .analytics-chart-view-controls select { min-width: 0; width: 100%; padding-inline: 4px; }
+  .analytics-chart-dialog .analytics-chart-view-controls > label:nth-child(2) { gap: 3px; font-size: 11px; white-space: nowrap; }
+  .analytics-chart-dialog .analytics-label-full { display: none; }
+  .analytics-chart-dialog .analytics-label-short { display: inline; }
+}

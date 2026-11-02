@@ -44,12 +44,13 @@ export function FiltersSizeRange({ sizeMin, sizeMax, sizeUnit = 'KB', onChange }
   return (
     <div className="space-y-1.5">
       <Label className="text-xs font-medium">Размер файла</Label>
-      <div className="flex items-center gap-2">
+      <div className="files-size-controls flex items-center gap-2">
         <Input
           type="number"
           inputMode="numeric"
           min={0}
           placeholder="Мин"
+          aria-label="Минимальный размер файла"
           value={sizeMin ?? ''}
           onChange={(e) => onChange({ sizeMin: parseSize(e.target.value) })}
           className="h-8"
@@ -61,6 +62,7 @@ export function FiltersSizeRange({ sizeMin, sizeMax, sizeUnit = 'KB', onChange }
           inputMode="numeric"
           min={0}
           placeholder="Макс"
+          aria-label="Максимальный размер файла"
           value={sizeMax ?? ''}
           onChange={(e) => onChange({ sizeMax: parseSize(e.target.value) })}
           className="h-8"

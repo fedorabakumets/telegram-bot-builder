@@ -4,6 +4,7 @@
 import { Code2 } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { useCodeHeaderTarget } from '@/components/layout/flexible/components/code-view-navigation';
+import { WorkspaceCollapsibleHeader } from '@/components/ui/workspace-collapsible-header';
 import { WorkspaceTabHeading } from '@/components/ui/workspace-tab-heading';
 import { WorkspaceTabActions } from '@/components/ui/workspace-tab-actions';
 import { WorkspaceProjectScope, type WorkspaceProjectScopeProps } from '@/components/ui/workspace-project-scope';
@@ -34,13 +35,12 @@ const SHORTCUTS = [
 export function CodePanelHeader({ projectId, projects, onProjectChange, onRefresh, isRefreshing }: CodePanelHeaderProps) {
   const headerTarget = useCodeHeaderTarget();
   /** Заголовок раздела отображается в обоих режимах просмотра. */
-  const heading = <WorkspaceTabHeading title="Код проекта" icon={<Code2 />}
+  const heading = <div className="code-workspace-heading"><WorkspaceCollapsibleHeader><div className="space-y-4"><WorkspaceTabHeading title="Код проекта" icon={<Code2 />}
     actions={onRefresh && <WorkspaceTabActions docsPath="interface/code" section="Код проекта" onRefresh={onRefresh} isRefreshing={isRefreshing} />}
-    description="Выберите файл, чтобы посмотреть код или скачать его." />;
+    description="Выберите файл, чтобы посмотреть код или скачать его." /><WorkspaceProjectScope projectId={projectId} projects={projects} onProjectChange={onProjectChange} /></div></WorkspaceCollapsibleHeader></div>;
   return (
     <div className="code-panel-header space-y-6">
       {headerTarget ? createPortal(heading, headerTarget) : heading}
-      <WorkspaceProjectScope projectId={projectId} projects={projects} onProjectChange={onProjectChange} />
       <details className="code-shortcuts code-surface rounded-xl border p-3">
         <summary className="cursor-pointer text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary">Горячие клавиши</summary>
         <dl className="mt-4 grid gap-3 text-xs">

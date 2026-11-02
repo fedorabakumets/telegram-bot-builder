@@ -8,6 +8,7 @@ import { History } from 'lucide-react';
 import { WorkspaceTabActions } from '@/components/ui/workspace-tab-actions';
 import { WorkspaceProjectScope, type WorkspaceProjectScopeProps } from '@/components/ui/workspace-project-scope';
 import { Button } from '@/components/ui/button';
+import { WorkspaceCollapsibleHeader } from '@/components/ui/workspace-collapsible-header';
 import { WorkspaceTabHeading } from '@/components/ui/workspace-tab-heading';
 import { useToast } from '@/hooks/use-toast';
 import { useProjectVersions, useRestoreProjectVersion } from '@/hooks/use-project-versions';
@@ -80,11 +81,11 @@ export function VersionsPanel({ projectId, onRestored, projects, onProjectChange
   return (
     <div ref={panel} className="versions-page workspace-tab-frame h-full overflow-auto bg-background">
       <div className="versions-content workspace-tab-content space-y-6 pb-4">
-        <WorkspaceTabHeading title="История версий" icon={<History />}
+        <WorkspaceCollapsibleHeader><div className="space-y-4"><WorkspaceTabHeading title="История версий" icon={<History />}
           description="Сохраняйте важные этапы и возвращайтесь к предыдущим версиям проекта."
           actions={<WorkspaceTabActions docsPath="interface/versions" section="История версий" onRefresh={() => void refetch()} isRefreshing={isFetching} />}
         />
-        <WorkspaceProjectScope projectId={projectId} projects={projects} onProjectChange={onProjectChange} />
+        <WorkspaceProjectScope projectId={projectId} projects={projects} onProjectChange={onProjectChange} /></div></WorkspaceCollapsibleHeader>
         <CommitForm projectId={projectId} />
         <section className="space-y-3" aria-labelledby="saved-versions-heading" aria-busy={isFetching}>
           <div className="flex flex-wrap items-center justify-between gap-2">

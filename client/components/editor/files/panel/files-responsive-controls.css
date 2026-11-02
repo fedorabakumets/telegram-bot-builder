@@ -7,36 +7,36 @@
 /** Подписи служебных действий появляются только при достаточной ширине панели. */
 .files-heading-action-label { display: none; }
 /** Служебные действия шапки используют спокойный нейтральный цвет во всех состояниях. */
-.dark .files-page-header > header .files-action { color: #b4b4bc; background: transparent; }
-.dark .files-page-header > header .files-action:hover { color: #d4d4d8; background: #18181b; }
-.dark .files-page-header > header .files-action:focus-visible { outline: 2px solid #71717a; outline-offset: 2px; box-shadow: none; }
+.dark .files-page-header .workspace-tab-heading .files-action { color: #b4b4bc; background: transparent; }
+.dark .files-page-header .workspace-tab-heading .files-action:hover { color: #d4d4d8; background: #18181b; }
+.dark .files-page-header .workspace-tab-heading .files-action:focus-visible { outline: 2px solid #71717a; outline-offset: 2px; box-shadow: none; }
 @container files-page (min-width: 720px) {
-  .files-page-header > header .files-action { width: auto; padding: 8px 12px; gap: 8px; font-size: 14px; line-height: 20px; }
-  .files-page-header > header .files-heading-action-label { display: inline; }
+  .files-page-header .workspace-tab-heading .files-action { width: auto; padding: 8px 12px; gap: 8px; font-size: 14px; line-height: 20px; }
+  .files-page-header .workspace-tab-heading .files-heading-action-label { display: inline; }
 }
 /** На широком экране описание продолжает заголовок, освобождая строку для списка. */
 @container files-page (min-width: 441px) {
-  .files-page-header > header { align-items: center; }
-  .files-page-header > header > div:first-child { display: flex; flex-direction: row; align-items: center; gap: 24px; }
-  .files-page-header > header > div:first-child > p { margin: 0; font-size: 14px; line-height: 20px; }
+  .files-page-header .workspace-tab-heading { align-items: center; }
+  .files-page-header .workspace-tab-heading > div:first-child { display: flex; flex-direction: row; align-items: center; gap: 24px; }
+  .files-page-header .workspace-tab-heading > div:first-child > p { margin: 0; font-size: 14px; line-height: 20px; }
 }
 @container files-page (max-width: 440px) {
-  .files-page-header > header { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
-  .files-page-header > header > div:first-child { display: contents; }
-  .files-page-header > header > div:first-child > div { grid-column: 1; grid-row: 1; }
-  .files-page-header > header > div:first-child > p { grid-column: 1 / -1; grid-row: 2; margin: 0; }
-  .files-page-header > header > div:last-child { grid-column: 2; grid-row: 1; }
+  .files-page-header .workspace-tab-heading { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+  .files-page-header .workspace-tab-heading > div:first-child { display: contents; }
+  .files-page-header .workspace-tab-heading > div:first-child > div { grid-column: 1; grid-row: 1; }
+  .files-page-header .workspace-tab-heading > div:first-child > p { grid-column: 1 / -1; grid-row: 2; margin: 0; }
+  .files-page-header .workspace-tab-heading > div:last-child { grid-column: 2; grid-row: 1; }
 }
 /** В минимальной панели оставляем одну строку заголовка без повторного пояснения. */
 @container files-page (max-width: 240px) {
-  .files-page-header > header { grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; }
-  .files-page-header > header > div:first-child > div { grid-column: 1; }
-  .files-page-header > header > div:last-child { grid-column: 2; grid-row: 1; justify-self: end; }
-  .files-page-header > header > div:last-child > div { flex-direction: row; gap: 0; }
-  .files-page-header > header > div:last-child button,
-  .files-page-header > header > div:last-child a { width: 24px; height: 32px; }
-  .files-page-header > header > div:first-child > p { display: none; }
-  .files-page-header > :not(:first-child) { margin-top: 8px; }
+  .files-page-header .workspace-tab-heading { grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; }
+  .files-page-header .workspace-tab-heading > div:first-child > div { grid-column: 1; }
+  .files-page-header .workspace-tab-heading > div:last-child { grid-column: 2; grid-row: 1; justify-self: end; }
+  .files-page-header .workspace-tab-heading > div:last-child > div { flex-direction: row; gap: 0; }
+  .files-page-header .workspace-tab-heading > div:last-child button,
+  .files-page-header .workspace-tab-heading > div:last-child a { width: 24px; height: 32px; }
+  .files-page-header .workspace-tab-heading > div:first-child > p { display: none; }
+  .files-page-header .workspace-header-content > div > :not(:first-child) { margin-top: 8px; }
   .files-page-header .files-scope-controls { gap: 8px; }
   /** Две равные колонки уплотняют селекторы и загрузку без горизонтального переполнения. */
   .files-page .files-scope-controls,
@@ -50,7 +50,7 @@
   .files-page .files-header-actions > [data-testid='storage-quota-bar'] { grid-column: 1 / -1; }
   /** Длинное действие выбора блока переносит подпись внутри доступной ширины. */
   .files-page [data-testid='file-attach-hint'] button { max-width: 100%; height: auto; min-height: 40px; white-space: normal; }
-  .files-page [data-testid='category-tabs'] [role='tablist'] { grid-template-columns: minmax(0, 1fr); }
+  .files-page [data-testid='category-tabs'] [role='tablist'] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .files-page [data-testid='category-tabs'] [role='tab'] { min-width: 0; width: 100%; }
   /** Выбор количества остаётся над списком, нижняя строка содержит только страницы. */
   .files-page .files-list-navigation { grid-template-columns: minmax(0, 1fr); padding-inline: 4px; }
@@ -125,4 +125,11 @@
   .files-page .files-list-navigation > .files-page-size { grid-column: 1; grid-row: 1; width: auto; }
   .files-list-navigation .files-pagination-pages { grid-column: 2; grid-row: 1; justify-self: end; gap: 4px; }
   .files-list-navigation .files-pagination-range { display: none; }
+}
+
+/** В узкой шапке файлов описание скрыто, действия выровнены с названием. */
+@container files-page (max-width: 479px) {
+  .files-page-header .workspace-tab-heading { align-items: center; }
+  .files-page-header .workspace-tab-heading > div:first-child > p { display: none; }
+  .files-page-header .workspace-tab-heading > div:last-child { grid-row: 1; align-self: center; }
 }

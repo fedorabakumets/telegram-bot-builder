@@ -9,6 +9,7 @@ import type { BotToken } from '@shared/schema';
 import type { ReactNode } from 'react';
 import { FileImage, FolderOpen, RefreshCw } from 'lucide-react';
 
+import { WorkspaceCollapsibleHeader } from '@/components/ui/workspace-collapsible-header';
 import { WorkspaceTabHeading } from '@/components/ui/workspace-tab-heading';
 import { Button } from '@/components/ui/button';
 import { ProjectSelector } from '@/components/editor/database/user-database/components/header/project-selector';
@@ -126,7 +127,7 @@ export function FileStorageHeader(props: FileStorageHeaderProps): React.JSX.Elem
       data-testid="file-storage-header"
       data-mode="page"
     >
-      <WorkspaceTabHeading title="Файлы" icon={<FileImage />}
+      <WorkspaceCollapsibleHeader><div className="space-y-4"><WorkspaceTabHeading title="Файлы" icon={<FileImage />}
         description="Медиа для блоков бота."
         actions={<div className="flex shrink-0 items-center gap-2"><FileStorageDocsLink /><Button variant="ghost" size="icon" className="files-action h-8 w-8" onClick={onRefresh}
           disabled={props.isRefreshing} aria-label="Обновить список файлов" title="Обновить список файлов" data-testid="file-storage-refresh">
@@ -134,7 +135,7 @@ export function FileStorageHeader(props: FileStorageHeaderProps): React.JSX.Elem
           <span className="files-heading-action-label">Обновить</span>
         </Button></div>} />
       <HeaderSelectors {...props} />
-      <div className="files-header-actions flex flex-wrap items-center gap-2">{actions}{props.quota}</div>
+      <div className="files-header-actions flex flex-wrap items-center gap-2">{actions}{props.quota}</div></div></WorkspaceCollapsibleHeader>
     </div>
   );
 }

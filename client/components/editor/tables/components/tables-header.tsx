@@ -1,6 +1,7 @@
 /** @fileoverview Заголовок и контекст рабочей области таблиц. */
 import { Table2, PanelLeftOpen, PanelLeftClose } from 'lucide-react';
 import { useIsFetching, useQueryClient } from '@tanstack/react-query';
+import { WorkspaceCollapsibleHeader } from '@/components/ui/workspace-collapsible-header';
 import { WorkspaceTabHeading } from '@/components/ui/workspace-tab-heading';
 import { WorkspaceTabActions } from '@/components/ui/workspace-tab-actions';
 import { ProjectSelector } from '@/components/editor/database/user-database/components/header/project-selector';
@@ -30,7 +31,7 @@ export function TablesHeader({ projectId, allProjects, onProjectChange, selected
   const hasTokens = tokens.length > 0 && !!onSelectToken;
   return (
     <div className="tables-header workspace-tab-frame shrink-0 space-y-4">
-      <WorkspaceTabHeading title="Таблицы" icon={<Table2 />}
+      <WorkspaceCollapsibleHeader><div className="space-y-4"><WorkspaceTabHeading title="Таблицы" icon={<Table2 />}
         description="Данные ботов и таблицы проекта."
         actions={<WorkspaceTabActions docsPath="interface/tables/overview" section="Таблицы"
           onRefresh={() => void queryClient.invalidateQueries({ queryKey: ['bot-tables', projectId] })}
@@ -61,7 +62,7 @@ export function TablesHeader({ projectId, allProjects, onProjectChange, selected
           <span>Список таблиц</span>
         </button>
         <AllTablesActions projectId={projectId} />
-      </div>
+      </div></div></WorkspaceCollapsibleHeader>
     </div>
   );
 }

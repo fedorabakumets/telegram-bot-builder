@@ -52,8 +52,10 @@
 .dark .files-filters-date-boundary label { color: #a1a1aa; }
 .files-filters-date-boundary input { flex: 1; width: 100%; }
 @media (max-width: 379px) {
-  .files-filters-period { grid-template-columns: minmax(0, 1fr); gap: 8px; }
-  .files-filters-date-boundary label { width: 24px; }
+  .files-filters-period { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .files-filters-date-boundary { flex-direction: column; align-items: stretch; gap: 4px; }
+  .files-filters-date-boundary label { width: auto; }
+  .files-filters-date-boundary input[type="date"] { width: 100%; padding-inline: 6px; font-size: 12px; }
 }
 .dark .files-filters-dates input { color-scheme: dark; }
 .files-filters-dates input[aria-invalid='true'] { border-color: hsl(var(--destructive)); }
@@ -85,8 +87,11 @@
 @media (max-width: 479px) {
   .files-filters-header { padding: 16px 48px 16px 16px; }
   .files-filters-body { padding: 0 16px 16px; }
-  .files-filters-body > div { grid-template-columns: minmax(0, 1fr); }
-  .files-filters-body > div > :is(:first-child, :nth-child(2)) { grid-column: auto; grid-row: auto; }
+  .files-filters-body > div { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 8px; }
+  .files-filters-body > div > :first-child { grid-column: 1 / -1; grid-row: auto; }
+  .files-filters-body > div > :nth-child(2) { grid-column: 1 / -1; grid-row: auto; }
+  .files-filters-body > div > .files-filters-dates { grid-column: 1 / -1; }
+  .files-filters-body [role="combobox"] { padding-inline: 8px; gap: 4px; }
   .files-filters-footer { flex-direction: row; flex-wrap: wrap; padding: 0 16px 16px; gap: 8px; }
   .files-filters-footer > button { flex: 1 1 auto; }
 }
@@ -95,3 +100,19 @@
   .files-filters-modal button { transition: none; }
   .files-filters-modal button:active { transform: none; }
 }
+
+/** Поля размера и единицы не сжимаются на узком экране. */
+@media (max-width: 379px) {
+  .files-size-controls { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .files-size-controls > span { display: none; }
+  .files-size-controls > [data-testid="filters-size-unit"] { grid-column: 1 / -1; display: flex; width: 100%; }
+  .files-size-controls > [data-testid="filters-size-unit"] > button { flex: 1 1 0; }
+}
+
+/** Значок календаря выровнен по правому краю обоих полей даты. */
+.files-filters-date-boundary input[type="date"] { min-width: 0; padding-inline: 10px; }
+.files-filters-date-boundary input[type="date"]::-webkit-calendar-picker-indicator { margin-left: auto; flex: none; }
+
+/** В Chromium область ввода даты занимает свободное место перед календарём. */
+.files-filters-date-boundary input[type="date"]::-webkit-datetime-edit { flex: 1 1 auto; min-width: 0; }
+.files-filters-date-boundary input[type="date"]::-webkit-calendar-picker-indicator { margin: 0 0 0 auto; }

@@ -2,10 +2,10 @@
 @container files-collection (max-width: 240px) {
   .files-page .files-collection .files-card-list { padding: 8px; }
   .files-card-list .files-file-card { padding: 8px; min-width: 0; }
-  .files-card-heading { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; position: relative; }
-  .files-card-heading > button:first-child { position: absolute; top: 0; left: 0; margin-top: 0; }
-  .files-card-heading > button:nth-child(2) { justify-self: center; width: 40px; height: 40px; }
-  .files-card-heading > div:last-child { grid-column: 1 / -1; width: 100%; }
+  .files-card-heading { display: grid; grid-template-columns: minmax(0, 1fr) 72px; gap: 8px; align-items: start; }
+  .files-card-heading > button:first-child { grid-column: 1; grid-row: 1; margin-top: 0; }
+  .files-card-heading > button:nth-child(2) { grid-column: 2; grid-row: 1 / span 2; justify-self: end; align-self: stretch; width: 72px; height: auto; min-height: 112px; }
+  .files-card-heading > div:last-child { grid-column: 1; grid-row: 2; width: 100%; min-width: 0; }
   .files-card-heading > div:last-child > p:first-child { overflow-wrap: anywhere; }
   .files-card-heading > div:last-child > p:last-child { flex-direction: column; gap: 4px; }
   .files-card-heading > div:last-child > p:last-child > span { align-self: start; }

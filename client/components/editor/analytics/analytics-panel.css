@@ -43,3 +43,16 @@
   .analytics-scope-project [role=combobox], .analytics-scope-bot [role=combobox] { min-width: 0; width: 100%; }
   .analytics-scope-period { grid-column: 1 / -1; min-width: 0; }
 }
+
+/** На узком экране действия аналитики находятся в строке заголовка. */
+@container (max-width: 479px) {
+  .analytics-header-content .workspace-tab-heading { align-items: center; gap: 8px; }
+  .analytics-header-content .workspace-tab-heading > div:first-child > p { display: none; }
+  .analytics-header-content .workspace-tab-actions { align-items: center; }
+}
+
+/** Узкие селекторы сохраняют больше места для названий проекта и бота. */
+@container (max-width: 479px) {
+  .analytics-scope :is(.analytics-scope-project, .analytics-scope-bot) [role="combobox"] { font-size: 12px; padding-inline: 6px; gap: 4px; }
+  .analytics-scope :is(.analytics-scope-project, .analytics-scope-bot) [role="combobox"] > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}

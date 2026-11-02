@@ -13,6 +13,7 @@ import { getDownloadHref } from './file-download';
 import { MediaThumbnail } from './media-thumbnail';
 import { FileCardDetails } from './file-card-details';
 import { FileDeleteConfirm } from './file-delete-confirm';
+import { FileCopyButton } from './file-copy-button';
 
 
 /**
@@ -45,12 +46,13 @@ export function FileCardPlaceholder({
         </div>
       </div>
       <div className="files-card-actions flex flex-wrap items-center justify-between gap-2 border-t pt-3">
-        <div className="files-card-buttons flex items-center gap-2">
+        <div className="files-card-buttons flex flex-wrap items-center gap-2">
           {downloadHref ? (
             <Button variant="ghost" size="icon" asChild>
               <a href={downloadHref} download={name} aria-label={`Скачать ${name}`} title="Скачать файл"><Download className="h-4 w-4" /></a>
             </Button>
           ) : <Button variant="outline" size="sm" disabled>Скачивание недоступно</Button>}
+          {downloadHref && <FileCopyButton href={downloadHref} name={name} image={file.mediaType === 'photo' || /\.(png|jpe?g|webp|bmp)$/i.test(name)} />}
           {onDelete && <FileDeleteConfirm id={file.id} name={name} onDelete={onDelete}><Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" aria-label={`Удалить ${name}`} title="Удалить файл"><Trash2 className="h-4 w-4" /></Button></FileDeleteConfirm>}
         </div>
       </div>

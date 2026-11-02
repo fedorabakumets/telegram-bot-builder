@@ -74,3 +74,9 @@
   .tables-body .tables-nav { width: 100%; }
   .tables-body .tables-list { display: flex; width: 100%; }
 }
+
+/** Свёрнутая шапка таблиц занимает только высоту кнопки раскрытия. */
+@container (max-width: 479px) {
+  .tables-header:has(.workspace-header-content[hidden]) { padding-block: 6px; }
+  .tables-header .workspace-header-toggle[aria-expanded="false"] { padding: 0; min-height: 20px; text-align: left; }
+}
