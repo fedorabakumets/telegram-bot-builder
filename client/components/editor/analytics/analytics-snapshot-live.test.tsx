@@ -34,6 +34,21 @@ it('меняет область и период одним запросом бе
   expect(client.getQueryCache().getAll().every(query => !('refetchInterval' in query.options))).toBe(true);
   hook.unmount(); client.clear();
 });
+it('сохраняет предыдущий период при загрузке, но не переносит данные между ботами', async () => {
+  const { client, wrapper } = context();
+  let finish: ((value: unknown) => void) | undefined;
+  vi.stubGlobal('fetch', vi.fn((url: string) => url.includes('period=7d') ? new Promise(resolve => { finish = resolve; }) : Promise.resolve({ ok: true, json: async () => ({ schema_version: 2, revision: 'old', next_recompute_at: null }) })));
+  const filter = initialReportFilter(12);
+  const hook = renderHook(({ period, tokenId }: { /** Период. */ period: '7d' | '30d'; /** Бот. */ tokenId: number }) => useAnalyticsSnapshot(12, tokenId, { ...filter, period }), { initialProps: { period: '30d' as '7d' | '30d', tokenId: 7 }, wrapper });
+  await waitFor(() => expect(hook.result.current.data?.revision).toBe('old'));
+  hook.rerender({ period: '7d', tokenId: 7 });
+  expect(hook.result.current.isPlaceholderData).toBe(true);
+  expect(hook.result.current.data?.revision).toBe('old');
+  hook.rerender({ period: '7d', tokenId: 8 });
+  expect(hook.result.current.data).toBeUndefined();
+  await act(async () => finish?.({ ok: true, json: async () => ({ schema_version: 2, revision: 'new', next_recompute_at: null }) }));
+  hook.unmount(); client.clear();
+});
 it('принимает события своего проекта и восстанавливает снимок при reconnect', async () => {
   const { client, requests, wrapper } = context();
   const hook = renderHook(() => useAnalyticsSnapshot(12, 7, initialReportFilter(12)), { wrapper });

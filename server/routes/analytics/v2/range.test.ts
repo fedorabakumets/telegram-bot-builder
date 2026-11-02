@@ -22,6 +22,11 @@ describe('Диапазоны аналитики v2', () => {
     expect(v2BucketCount(from, to, range.step_ms)).toBeLessThanOrEqual(500);
     expect(() => resolveV2Range({ period: 'all', step: '1m' }, to, new Date(from).toISOString())).toThrow();
   });
+  it('выбирает минуты для часа и уважает заданный шаг', () => {
+    const query = { from: '2026-10-16T01:00:00Z', to: '2026-10-16T02:00:00Z' };
+    expect(resolveV2Range(query, now, null).step_ms).toBe(60000);
+    expect(resolveV2Range({ ...query, step: '5m' }, now, null).step_ms).toBe(300000);
+  });
   it('отклоняет ложный пояс, лишние даты и слишком мелкий шаг', () => {
     expect(() => resolveV2Range({ timezone: 'Unknown/Zone' }, now, null)).toThrow();
     expect(() => resolveV2Range({ period: 'all', from: '2026-01-01' }, now, null)).toThrow();

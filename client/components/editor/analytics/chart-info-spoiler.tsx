@@ -29,7 +29,7 @@ export function ChartInfoSpoiler({
   const [open, setOpen] = useState(false);
 
   return (
-    <Collapsible open={open} onOpenChange={setOpen} className="rounded-lg border border-border">
+    <Collapsible open={open} onOpenChange={setOpen} className="analytics-chart-info rounded-lg border border-border">
       <CollapsibleTrigger
         className="flex min-h-10 w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-muted-foreground hover:bg-muted/40 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:opacity-80 transition-colors duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
       >

@@ -13,9 +13,10 @@ const SOURCE_LABELS: Record<string, string> = { no_marker: 'Без метки и
  * @param project - Проект.
  * @param token - Бот или весь проект.
  * @param range - Общий период.
+ * @param timeline - Включить точки графика; для предыдущего периода они не нужны.
  * @returns Источники и точки с раздельными точным привлечением и первыми сохранёнными контактами.
  */
-export async function queryV2Sources(client: PoolClient, project: number, token: number | null, range: AnalyticsV2Range): Promise<Pick<AnalyticsV2Snapshot, 'sources' | 'source_points'>> {
+export async function queryV2Sources(client: PoolClient, project: number, token: number | null, range: AnalyticsV2Range, timeline = true): Promise<Pick<AnalyticsV2Snapshot, 'sources' | 'source_points'>> {
   const { rows: [row] } = await client.query(`${v2ScopeSql(true)}, ${v2SlotsSql()}, ${v2SourceOriginsSql()}, acquired AS (
     SELECT source_key key,COUNT(*) FILTER(WHERE known) new_users,COUNT(*) FILTER(WHERE NOT known) restored_users FROM source_firsts
     WHERE first_interaction_at >= $3::timestamptz AND first_interaction_at<$4::timestamptz GROUP BY key
@@ -40,7 +41,7 @@ export async function queryV2Sources(client: PoolClient, project: number, token:
   ), timeline AS (
     SELECT c.*,s.end_date FROM timeline_counts c JOIN slots s USING(date)
   ) SELECT COALESCE((SELECT jsonb_agg(d ORDER BY (new_users+restored_users) DESC,id) FROM distribution d),'[]') sources,
-    COALESCE((SELECT jsonb_agg(t ORDER BY date,id) FROM timeline t),'[]') source_points`,
+    ${timeline ? "COALESCE((SELECT jsonb_agg(t ORDER BY date,id) FROM timeline t),'[]')" : "'[]'::jsonb"} source_points`,
   [project, token, range.from, range.to, range.step_ms, range.timezone]);
   /** Подставляет понятное название статуса без раскрытия исходного параметра. */
   const label = (item: { id: string; label?: string }) => item.label || (item.id.startsWith('observed:') ? item.id.slice(9) : undefined) || SOURCE_LABELS[item.id] || `Источник ${item.id}`;

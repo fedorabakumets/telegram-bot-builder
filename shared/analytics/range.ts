@@ -41,7 +41,7 @@ export function resolveAnalyticsRange(options: AnalyticsRangeOptions, now = Date
   const duration = to - from;
   if (!Number.isFinite(duration) || duration <= 0 || duration > ANALYTICS_PERIOD_MS['12m'] || to > now) throw new Error('Диапазон должен быть положительным, до 365 дней и без будущих дат');
   const defaults = { '1h': '1m', '3h': '5m', '24h': '1h', '7d': '1d', '30d': '1d', '12w': '7d', '12m': '30d' } as const;
-  const step = options.step ?? (period ? defaults[period] : duration <= 86400000 ? '1h' : '1d');
+  const step = options.step ?? (period ? defaults[period] : duration <= 3600000 ? '1m' : duration <= 10800000 ? '5m' : duration <= 86400000 ? '1h' : '1d');
   if (!Object.hasOwn(ANALYTICS_STEPS, step) || Math.ceil(duration / ANALYTICS_STEPS[step]) > 500) throw new Error('Некорректный шаг или более 500 точек');
   return { from: new Date(from).toISOString(), to: new Date(to).toISOString(), step, period, duration_ms: duration, timezone: 'UTC', boundary: '[from,to)' };
 }

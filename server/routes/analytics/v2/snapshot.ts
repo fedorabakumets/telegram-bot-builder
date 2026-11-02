@@ -33,6 +33,7 @@ export async function readAnalyticsV2Snapshot(client: PoolClient, project: numbe
   const points = await queryV2Points(client, project, token, range);
   const leaders = await queryV2Leaders(client, project, token, range);
   const sources = await queryV2Sources(client, project, token, range);
+  const previousSources = previousRange ? (await queryV2Sources(client, project, token, previousRange, false)).sources : null;
   const composition = await queryV2Composition(client, project, token, range);
   /** Счётчики всех ботов проекта для селектора используют ту же подтверждённую аудиторию. */
   const { rows: tokenAudiences } = await client.query(`SELECT t.id token_id,COUNT(a.user_id)::integer total_users
@@ -40,5 +41,5 @@ export async function readAnalyticsV2Snapshot(client: PoolClient, project: numbe
       AND a.first_interaction_at<=CURRENT_TIMESTAMP WHERE t.project_id=$1 GROUP BY t.id`, [project]);
   const next = await queryV2NextChange(client, project, token, range, compare);
   return { schema_version: 2, project_id: project, token_id: token, as_of: new Date(now).toISOString(), revision: initial.revision,
-    range, current, previous, points, leaders, token_audiences: tokenAudiences, ...sources, ...composition, coverage, next_recompute_at: next };
+    range, current, previous, previous_sources: previousSources, points, leaders, token_audiences: tokenAudiences, ...sources, ...composition, coverage, next_recompute_at: next };
 }

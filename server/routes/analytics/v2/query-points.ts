@@ -31,17 +31,18 @@ export async function queryV2Points(client: PoolClient, project: number, token: 
       SELECT ${v2BucketDateSql('observed_at')} date,COUNT(*) missing_addressed FROM addressed_only GROUP BY date
     ), contact_counts AS (
       SELECT ${v2BucketDateSql('c.occurred_at')} date,
-        COUNT(DISTINCT c.user_id) active_users,COUNT(DISTINCT c.user_id) FILTER(WHERE f.first_interaction_at<$3::timestamptz) returning_users
+        COUNT(DISTINCT c.user_id) active_users,COUNT(DISTINCT c.user_id) FILTER(WHERE f.first_interaction_at<$3::timestamptz) returning_users,
+        COUNT(DISTINCT c.user_id) FILTER(WHERE f.known AND f.first_interaction_at >= $3::timestamptz AND f.first_interaction_at < $4::timestamptz) active_new_users
       FROM contacts c LEFT JOIN firsts f ON f.user_id=c.user_id GROUP BY date
     ), newcomers AS (
       SELECT ${v2BucketDateSql('f.first_interaction_at')} date,
         COUNT(*) FILTER(WHERE known) new_users,COUNT(*) FILTER(WHERE NOT known) restored_users
       FROM firsts f WHERE f.first_interaction_at >= $3::timestamptz AND f.first_interaction_at<$4::timestamptz GROUP BY date
-    ) SELECT s.date,s.end_date,a.active_users,a.returning_users,c.incoming,c.incoming_to_bot,c.outgoing,c.callbacks,h.historical_callbacks,${scopeColumnsSql()},x.missing_addressed,c.system,n.new_users,n.restored_users,c.groups_active,c.group_participants,c.group_directed_actions
+    ) SELECT s.date,s.end_date,a.active_users,a.returning_users,a.active_new_users,c.incoming,c.incoming_to_bot,c.outgoing,c.callbacks,h.historical_callbacks,${scopeColumnsSql()},x.missing_addressed,c.system,n.new_users,n.restored_users,c.groups_active,c.group_participants,c.group_directed_actions
       FROM slots s LEFT JOIN counts c USING(date) LEFT JOIN historical h USING(date) LEFT JOIN addressed_counts x USING(date) LEFT JOIN contact_counts a USING(date) LEFT JOIN newcomers n USING(date) ORDER BY s.date`,
   [project, token, range.from, range.to, range.step_ms, range.timezone]);
   return rows.map(row => ({ date: new Date(row.date).toISOString(), end_date: new Date(row.end_date).toISOString(), new_users: v2Count(row.new_users), restored_users: v2Count(row.restored_users), active_users: v2Count(row.active_users),
-    returning_users: v2Count(row.returning_users), incoming: v2Count(row.incoming), incoming_to_bot: v2Count(row.incoming_to_bot) + v2Count(row.missing_addressed), outgoing: v2Count(row.outgoing), callbacks: v2Count(row.callbacks), historical_callbacks: v2Count(row.historical_callbacks), system: v2Count(row.system),
+    returning_users: v2Count(row.returning_users), active_new_users: v2Count(row.active_new_users), incoming: v2Count(row.incoming), incoming_to_bot: v2Count(row.incoming_to_bot) + v2Count(row.missing_addressed), outgoing: v2Count(row.outgoing), callbacks: v2Count(row.callbacks), historical_callbacks: v2Count(row.historical_callbacks), system: v2Count(row.system),
     chat_scopes: { private: messageScope(row, 'private'), group: { ...messageScope(row, 'group'), incoming_to_bot: v2Count(row.group_incoming_to_bot) + v2Count(row.missing_addressed) } },
     groups_active: v2Count(row.groups_active), group_participants: v2Count(row.group_participants), group_directed_actions: v2Count(row.group_directed_actions) }));
 }

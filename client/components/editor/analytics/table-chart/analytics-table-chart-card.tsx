@@ -10,7 +10,7 @@ import { TableAggregation, TableChartType } from './chart-types';
 import { TableChartControls } from './table-chart-controls';
 import { getColumnTitle } from '@/components/editor/tables/utils/display-labels';
 import { getTableChartValueLabel } from './table-chart-labels';
-import { TableChartRender } from './table-chart-render';
+import { TableChartExpansion } from './table-chart-expansion';
 import { TableChartInfo } from './table-chart-info';
 import { useTableChartQuery } from './use-table-chart-query';
 import { TableChartDateControl } from './table-chart-date-control';
@@ -91,9 +91,11 @@ export function AnalyticsTableChartCard({ projectId, range }: AnalyticsTableChar
           <TableChartDateControl columns={columns} value={dateColumnId} onChange={setDateColumnId} enabled={!!range} />
           {dateColumnId && range && <div className="flex flex-wrap items-center justify-between gap-2"><AnalyticsReportPeriod range={range} timezone={range.timezone ?? 'Europe/Moscow'} /><AnalyticsChoosePeriod/></div>}
           {dateColumnId && !range ? <AnalyticsChartState title="Ожидаем общий период" description="График появится после успешной загрузки периода отчёта." />
-            : chartQuery.isError ? <AnalyticsChartState title="Не удалось построить график" description="Повторите загрузку или выберите другую таблицу." onRetry={() => void chartQuery.refetch()} />
+            : chartQuery.isError && !matches ? <AnalyticsChartState title="Не удалось построить график" description="Повторите загрузку или выберите другую таблицу." onRetry={() => void chartQuery.refetch()} />
             : chartQuery.isFetching && !matches ? <AnalyticsChartState loading />
-            : <TableChartRender data={points} chartType={chartType} valueLabel={valueLabel} categoryLabel={categoryLabel} />}
+            : <TableChartExpansion key={JSON.stringify([selectedTableId, xColumnId, yColumnId, aggregation, dateColumnId, dateColumnId ? range : null])}
+              data={points} chartType={chartType} valueLabel={valueLabel} categoryLabel={categoryLabel} busy={chartQuery.isFetching}
+              refresh={() => chartQuery.refetch({ throwOnError: true })} />}
           {matches && chart && chart.warnings.length > 0 && <div className="analytics-table-warning space-y-2">{chart.warnings.map(warning => <p key={warning}>{warning}</p>)}</div>}
         </>
       )}

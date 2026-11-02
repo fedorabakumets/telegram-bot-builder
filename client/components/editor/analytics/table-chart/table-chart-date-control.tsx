@@ -6,6 +6,6 @@ export function TableChartDateControl({ columns, value, onChange, enabled }: {
   /** Столбцы таблицы. */ columns: ServerColumn[]; /** Выбранная дата. */ value: number | null;
   /** Выбор столбца. */ onChange: (value: number | null) => void; /** Загружен общий диапазон. */ enabled: boolean;
 }) {
-  return <div className="space-y-2"><label className="analytics-control-field text-sm"><span>Ограничить общим периодом</span><select className="analytics-native-field" value={value ?? ''} disabled={!enabled} onChange={event => onChange(event.target.value ? Number(event.target.value) : null)}><option value="">Текущие данные · все строки</option>{columns.map(column => <option key={column.id} value={column.id}>Дата: {getColumnTitle(column)}</option>)}</select></label>
+  return <div className="space-y-2"><label className="analytics-control-field text-sm"><span>Фильтр по периоду</span><select className="analytics-native-field" aria-label="Фильтр таблицы по периоду" value={value ?? ''} disabled={!enabled} onChange={event => onChange(event.target.value ? Number(event.target.value) : null)}><option value="">Все строки</option>{columns.map(column => <option key={column.id} value={column.id}>Дата: {getColumnTitle(column)}</option>)}</select></label>
     <p className="text-xs text-muted-foreground">{value ? 'Используется общий период. Строки без корректной даты не попадают в график.' : 'Период не применяется. Выберите столбец с датами, чтобы отфильтровать строки.'}</p></div>;
 }

@@ -71,6 +71,8 @@ export interface AnalyticsV2Point {
   active_users: number;
   /** Люди, уже использовавшие бота до текущего окна. */
   returning_users: number;
+  /** Активные люди с первым сохранённым взаимодействием в выбранном периоде. */
+  active_new_users?: number;
   /** Входящие сообщения. */
   incoming: number;
   /** Личные и подтверждённые направленные боту групповые сообщения. */
@@ -168,6 +170,8 @@ export interface AnalyticsV2Snapshot {
   };
   /** Первые источники и повторные входы. */
   sources: AnalyticsV2Source[];
+  /** Источники предыдущего равного окна; null, когда сравнение выключено. */
+  previous_sources: AnalyticsV2Source[] | null;
   /** Ряд новых пользователей по источникам. */
   source_points: {
     /** Стабильное начало того же UTC-интервала, что и в points. */ date: string;

@@ -73,6 +73,6 @@ export function AcquisitionExpenseForm({ projectId, catalog, timezone, expense, 
       <p className="text-sm text-muted-foreground">Оценочное распределение. Общая сумма сохраняется до копейки.</p><div className="max-h-48 overflow-auto space-y-1">{parts.map(part => <div key={part.day} className="flex justify-between gap-4 text-sm tabular-nums"><span>{part.day}</span><span>{acquisitionMoney(part.amount, currency)}</span></div>)}</div>
       <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={confirmed} disabled={!parts.length} onChange={event => setConfirmed(event.target.checked)} />Подтверждаю распределение {acquisitionMoney(normalized || '0', currency)} на {parts.length} дней</label></div>}
     {(error || mutation.isError) && <p role="alert" className="text-sm text-destructive">{error || mutation.error?.message}</p>}
-    <Button variant="outline" type="submit" disabled={mutation.isPending}>{mutation.isPending ? 'Сохраняем…' : 'Сохранить рекламный бюджет'}</Button>
+    <Button className="h-auto min-h-10 max-w-full whitespace-normal py-2 text-center" variant="outline" type="submit" disabled={mutation.isPending}>{mutation.isPending ? 'Сохраняем…' : 'Сохранить рекламный бюджет'}</Button>
   </form>;
 }

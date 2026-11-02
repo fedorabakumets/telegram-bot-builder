@@ -9,7 +9,7 @@ export { AnalyticsReportSummary } from './analytics-report-metrics';
  * @returns Карточки аудитории и сообщений.
  */
 export function AnalyticsReportOverview({ snapshot }: { /** Общий снимок. */ snapshot: AnalyticsV2Snapshot }) {
-  return <div className="analytics-report-grid">
+  return <div className="analytics-report-grid analytics-overview-report-grid">
     <AnalyticsArrivalCard snapshot={snapshot} />
     <AnalyticsMessageCard snapshot={snapshot} />
   </div>;

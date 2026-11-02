@@ -16,19 +16,22 @@ export function AnalyticsArrivalCard({ snapshot }: { /** Общий снимок
   /** Сравнивает количество сохранённых первых взаимодействий за одинаковые периоды. */
   const previousTotal = previous ? previous.audience.new_users + (previous.audience.restored_users ?? 0) : undefined;
   const series = [{ key: 'first_interactions', label: 'Новые пользователи', color: '#3b82f6' }];
-  return <section className="analytics-card analytics-report-card border rounded-2xl">
-    <header><h3 className="text-lg font-semibold">Новые пользователи</h3>
-      {previous && <AnalyticsReportComparison current={total} previous={previousTotal} />}</header>
-    <div><p className="analytics-report-value" aria-label={unknown ? 'Количество первых взаимодействий не установлено' : `Первые взаимодействия за период: ${total.toLocaleString('ru-RU')}`}>{unknown ? '—' : total.toLocaleString('ru-RU')}</p>
-      <p className="text-sm text-muted-foreground">{unknown ? 'данных о первых взаимодействиях за период недостаточно' : historical ? 'человек с первым сохранённым взаимодействием за период' : 'подтверждённых новых пользователей за период'}</p></div>
-    <AnalyticsReportChart points={snapshot.points.map(point => ({ ...point, first_interactions: point.new_users + (point.restored_users ?? 0) }))} series={series} timezone={range.timezone} stepMs={range.step_ms} range={range}
-      emptyTitle={unknown ? 'Первая дата старых пользователей неизвестна' : 'Нет подтверждённых новых пользователей за период'}
-      emptyDescription={unknown ? 'В выбранном периоде первые взаимодействия не установлены. Ранняя история неполная, поэтому реальный приход неизвестен. Для точного учёта новых событий обновите и перезапустите бота.' : 'Первые взаимодействия не зафиксированы в выбранном периоде. Сообщения и возвращения существующих пользователей учитываются отдельно.'} />
-    <AnalyticsReportSummary items={[[ 'Пользователи бота за всё время', audience.total_users ], [ 'Взаимодействовали за период', audience.active_users ], [ 'Вернулись за период', audience.returning_users ]]} />
-    <p className="text-xs text-muted-foreground">Итог за всё время не зависит от выбранного периода. Учитывается каждый человек с подтверждённым использованием бота.</p>
-    <ChartInfoSpoiler><p>Первые взаимодействия показывают людей по дате первого сохранённого обращения. В старых данных эта дата может быть позже настоящего начала использования. Подтверждением служат личные сообщения, адресные команды и нажатия кнопок.</p>
+  /** Показатель и пояснения доступны также в развёрнутом графике. */
+  const expandedHeader = <div><p className="analytics-report-value" aria-label={unknown ? 'Количество первых взаимодействий не установлено' : `Первые взаимодействия за период: ${total.toLocaleString('ru-RU')}`}>{unknown ? '—' : total.toLocaleString('ru-RU')}</p>
+      <p className="analytics-arrival-description text-sm text-muted-foreground"><span className="analytics-label-full">{unknown ? 'данных о первых взаимодействиях за период недостаточно' : historical ? 'человек с первым сохранённым взаимодействием за период' : 'подтверждённых новых пользователей за период'}</span><span className="analytics-label-short">{unknown ? 'Недостаточно данных' : historical ? 'Первые сохранённые обращения' : 'Новые за период'}</span></p></div>;
+  const expandedFooter = <div className="space-y-4"><AnalyticsReportSummary items={[[ 'Пользователи бота за всё время', audience.total_users ], [ 'Взаимодействовали за период', audience.active_users ], [ 'Вернулись за период', audience.returning_users ]]} />
+    <p className="analytics-arrival-note text-xs text-muted-foreground"><span className="analytics-label-full">Итог за всё время не зависит от выбранного периода. Учитывается каждый человек с подтверждённым использованием бота.</span><span className="analytics-label-short">За всё время — независимо от периода.</span></p>
+    <div className="analytics-arrival-info"><ChartInfoSpoiler><p>Первые взаимодействия показывают людей по дате первого сохранённого обращения. В старых данных эта дата может быть позже настоящего начала использования. Подтверждением служат личные сообщения, адресные команды и нажатия кнопок.</p>
       <p>Обычная переписка группы сама по себе не увеличивает аудиторию. Её автор может одновременно быть пользователем бота, если есть свидетельство направленного взаимодействия. В проекте один человек у нескольких ботов учитывается один раз.</p>
       <p>Взаимодействовали — разные люди с подтверждённым использованием бота в периоде. Вернулись — из них те, кто использовал бота до начала этого периода. Эти показатели не нужно складывать.</p>
-      {historical && <><p>Сохранённые свидетельства взаимодействия подтверждают использование бота, но человек мог прийти раньше. Эти значения не включаются в цену привлечения.</p><p>При уточнении старых данных прошлые значения могут измениться. Это не означает, что эти люди пришли сейчас.</p><p>Сравнение основано на сохранённых данных и может измениться при уточнении истории. Исторические свидетельства не добавляют вымышленные сообщения или нажатия в счётчики действий.</p></>}</ChartInfoSpoiler>
+      {historical && <><p>Сохранённые свидетельства взаимодействия подтверждают использование бота, но человек мог прийти раньше. Эти значения не включаются в цену привлечения.</p><p>При уточнении старых данных прошлые значения могут измениться. Это не означает, что эти люди пришли сейчас.</p><p>Сравнение основано на сохранённых данных и может измениться при уточнении истории. Исторические свидетельства не добавляют вымышленные сообщения или нажатия в счётчики действий.</p></>}</ChartInfoSpoiler></div></div>;
+  return <section className="analytics-card analytics-report-card analytics-arrival-card border rounded-2xl">
+    <header><h3 className="text-lg font-semibold">Новые пользователи</h3>
+      {previous && <AnalyticsReportComparison current={total} previous={previousTotal} />}</header>
+    {expandedHeader}
+    <AnalyticsReportChart compact expandedHeader={expandedHeader} expandedFooter={expandedFooter} title="Новые пользователи" points={snapshot.points.map(point => ({ date: point.date, end_date: point.end_date, first_interactions: point.new_users + (point.restored_users ?? 0) }))} series={series} timezone={range.timezone} stepMs={range.step_ms} range={range}
+      emptyTitle={unknown ? 'Первая дата старых пользователей неизвестна' : 'Нет подтверждённых новых пользователей за период'}
+      emptyDescription={unknown ? 'В выбранном периоде первые взаимодействия не установлены. Ранняя история неполная, поэтому реальный приход неизвестен. Для точного учёта новых событий обновите и перезапустите бота.' : 'Первые взаимодействия не зафиксированы в выбранном периоде. Сообщения и возвращения существующих пользователей учитываются отдельно.'} />
+    {expandedFooter}
   </section>;
 }

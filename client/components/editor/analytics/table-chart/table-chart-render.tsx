@@ -34,6 +34,12 @@ export interface TableChartRenderProps {
   valueLabel: string;
   /** Название столбца на горизонтальной оси. */
   categoryLabel: string;
+  /** Выбранная категория при управлении извне. */
+  selectedLabel?: string | null;
+  /** Изменяет выбранную категорию. */
+  onSelectedLabelChange?: (label: string | null) => void;
+  /** Высота увеличенного графика. */
+  expanded?: boolean;
 }
 
 /**
@@ -41,12 +47,12 @@ export interface TableChartRenderProps {
  * @param props - Свойства компонента
  * @returns JSX элемент графика или пустое состояние
  */
-export function TableChartRender({ data, chartType, valueLabel, categoryLabel }: TableChartRenderProps): React.JSX.Element {
+export function TableChartRender({ data, chartType, valueLabel, categoryLabel, selectedLabel, onSelectedLabelChange, expanded = false }: TableChartRenderProps): React.JSX.Element {
   /** Выбор хранится вместе с исходным массивом, чтобы не показывать устаревшие данные после смены настроек. */
   const [selection, setSelection] = useState<{ /** Набор данных в момент выбора. */ data: TableChartPoint[]; /** Выбранная категория. */ point: TableChartPoint } | null>(null);
-  const selected = selection?.data === data ? selection.point : null;
+  const selected = onSelectedLabelChange ? data.find(point => point.label === selectedLabel) ?? null : selection?.data === data ? selection.point : null;
   /** Раскрывает полное значение выбранной категории. */
-  const selectPoint = (point: TableChartPoint) => setSelection({ data, point });
+  const selectPoint = (point: TableChartPoint) => onSelectedLabelChange ? onSelectedLabelChange(point.label) : setSelection({ data, point });
   /** Извлекает категорию при нажатии в области столбца или линии. */
   const selectFromChart = (state: { /** Данные активной точки графика. */ activePayload?: Array<{ /** Исходная категория. */ payload?: TableChartPoint }> } | null) => {
     const point = state?.activePayload?.[0]?.payload;
@@ -55,7 +61,7 @@ export function TableChartRender({ data, chartType, valueLabel, categoryLabel }:
   /** Подробности и список остаются доступны как мышью, так и с клавиатуры. */
   const details = <div className="space-y-3">
     <p className="text-xs text-muted-foreground">Нажмите на столбец, точку или сектор, чтобы раскрыть полное название и точное значение.</p>
-    {selected && <TableChartDetails point={selected} categoryLabel={categoryLabel} valueLabel={valueLabel} onClose={() => setSelection(null)} />}
+    {selected && <TableChartDetails point={selected} categoryLabel={categoryLabel} valueLabel={valueLabel} onClose={() => onSelectedLabelChange ? onSelectedLabelChange(null) : setSelection(null)} />}
     <TableChartValues data={data} selected={selected?.label} onSelect={selectPoint} />
   </div>;
   if (data.length === 0) {
@@ -70,9 +76,9 @@ export function TableChartRender({ data, chartType, valueLabel, categoryLabel }:
   if (chartType === 'pie') {
     return (
       <TableChartAxes chartType={chartType} categoryLabel={categoryLabel} valueLabel={valueLabel} details={details}>
-      <ResponsiveContainer width="100%" height={260}>
+      <ResponsiveContainer width="100%" height={expanded ? 420 : 260}>
         <PieChart>
-          <Pie data={data} dataKey="value" nameKey="label" outerRadius={90} isAnimationActive={false} onClick={point => selectPoint(point)} label>
+          <Pie data={data} dataKey="value" nameKey="label" outerRadius={expanded ? 140 : 90} isAnimationActive={false} onClick={point => selectPoint(point)} label>
             {data.map((_, i) => (
               <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} opacity={selected && selected.label !== data[i].label ? 0.4 : 1} />
             ))}
@@ -87,10 +93,10 @@ export function TableChartRender({ data, chartType, valueLabel, categoryLabel }:
   if (chartType === 'line') {
     return (
       <TableChartAxes chartType={chartType} categoryLabel={categoryLabel} valueLabel={valueLabel} details={details}>
-      <ResponsiveContainer width="100%" height={260}>
+      <ResponsiveContainer width="100%" height={expanded ? 420 : 260}>
         <LineChart data={data} onClick={selectFromChart}>
           <CartesianGrid vertical={false} stroke="var(--border)" strokeDasharray="4 4" />
-          <XAxis dataKey="label" tick={{ fontSize: 12, fill: 'var(--muted-foreground)' }} tickLine={false} axisLine={false} minTickGap={32} interval={data.length <= 8 ? 0 : 'preserveStartEnd'} tickFormatter={value => String(value).length > 12 ? `${String(value).slice(0, 12)}…` : String(value)} />
+          <XAxis dataKey="label" tick={{ fontSize: 12, fill: 'var(--muted-foreground)' }} tickLine={false} axisLine={false} minTickGap={32} interval="preserveStartEnd" tickFormatter={value => String(value).length > 12 ? `${String(value).slice(0, 12)}…` : String(value)} />
           <YAxis domain={scale.domain} ticks={scale.ticks} allowDecimals={!data.every(point => Number.isInteger(point.value))} tickFormatter={value => Number(value).toLocaleString('ru-RU')} tick={{ fontSize: 12, fill: 'var(--muted-foreground)' }} tickLine={false} axisLine={false} width={48} />
           <Tooltip {...ANALYTICS_TOOLTIP_THEME} formatter={(value: number) => [value, valueLabel]} />
           <Line type="monotone" dataKey="value" stroke="#10b981" strokeWidth={2} dot={data.length <= 12} activeDot={{ r: 6 }} isAnimationActive={false} />
@@ -102,10 +108,10 @@ export function TableChartRender({ data, chartType, valueLabel, categoryLabel }:
 
   return (
     <TableChartAxes chartType={chartType} categoryLabel={categoryLabel} valueLabel={valueLabel} details={details}>
-      <ResponsiveContainer width="100%" height={260}>
+      <ResponsiveContainer width="100%" height={expanded ? 420 : 260}>
       <BarChart data={data} onClick={selectFromChart} margin={{ top: 24, right: 12, left: 0, bottom: 0 }}>
         <CartesianGrid vertical={false} stroke="var(--border)" strokeDasharray="4 4" />
-          <XAxis dataKey="label" tick={{ fontSize: 12, fill: 'var(--muted-foreground)' }} tickLine={false} axisLine={false} minTickGap={32} interval={data.length <= 8 ? 0 : 'preserveStartEnd'} tickFormatter={value => String(value).length > 12 ? `${String(value).slice(0, 12)}…` : String(value)} />
+          <XAxis dataKey="label" tick={{ fontSize: 12, fill: 'var(--muted-foreground)' }} tickLine={false} axisLine={false} minTickGap={32} interval="preserveStartEnd" tickFormatter={value => String(value).length > 12 ? `${String(value).slice(0, 12)}…` : String(value)} />
         <YAxis domain={scale.domain} ticks={scale.ticks} allowDecimals={!data.every(point => Number.isInteger(point.value))} tickFormatter={value => Number(value).toLocaleString('ru-RU')} tick={{ fontSize: 12, fill: 'var(--muted-foreground)' }} tickLine={false} axisLine={false} width={48} />
         <Tooltip {...ANALYTICS_TOOLTIP_THEME} formatter={(value: number) => [value, valueLabel]} />
         <Bar dataKey="value" fill="#10b981" radius={[4, 4, 0, 0]} isAnimationActive={false}>

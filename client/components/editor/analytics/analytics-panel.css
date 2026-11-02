@@ -26,3 +26,20 @@
 @container (max-width: 479px) {
   .analytics-audience-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+/** На узком экране шапку можно свернуть, освобождая место для карточек. */
+.analytics-header-toggle { display: none; }
+@container (max-width: 479px) {
+  .analytics-header-toggle { display: block; color: var(--muted-foreground); font-size: 12px; line-height: 20px; }
+  .analytics-responsive-header.is-collapsed .analytics-header-content { display: none; }
+  .analytics-responsive-header.is-collapsed { padding-block: 6px; }
+}
+
+/** Проект и бот на узком экране располагаются рядом, период — отдельной строкой. */
+@container (max-width: 479px) {
+  .analytics-scope { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .analytics-scope-project, .analytics-scope-bot { min-width: 0; }
+  .analytics-scope-project > div, .analytics-scope-bot > div { width: 100%; min-width: 0; }
+  .analytics-scope-project [role=combobox], .analytics-scope-bot [role=combobox] { min-width: 0; width: 100%; }
+  .analytics-scope-period { grid-column: 1 / -1; min-width: 0; }
+}

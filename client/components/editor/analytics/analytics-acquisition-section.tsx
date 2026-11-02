@@ -5,6 +5,7 @@ import type { AnalyticsV2Snapshot } from '@shared/analytics/v2';
 import { Button } from '@/components/ui/button';
 import { useAcquisition } from './use-acquisition';
 import { AnalyticsChartState } from './analytics-chart-state';
+import { AnalyticsCollapsibleSection } from './analytics-collapsible-section';
 import { AcquisitionLinkForm } from './acquisition-link-form';
 import { AcquisitionExpenseForm } from './acquisition-expense-form';
 import { AcquisitionReportTable } from './acquisition-report-table';
@@ -26,9 +27,9 @@ export function AnalyticsAcquisitionSection({ projectId, tokenId, tokens, timezo
   const [expense, setExpense] = useState<AcquisitionExpense | undefined>();
   const [target,setTarget]=useState<BudgetTarget|undefined>();
   const [saved, setSaved] = useState(false);
-  return <section className="analytics-card analytics-report-card border rounded-2xl">
-    <header><div><h3 className="text-lg font-semibold">Источники и реклама</h3><p className="text-sm text-muted-foreground">Свяжите рекламную публикацию, новых пользователей и рекламный бюджет.</p></div></header>
-    <div className="flex flex-wrap gap-2" role="group" aria-label="Работа с рекламой">{[['report', 'Результаты'], ['link', 'Создать ссылку'], ['expense', 'Добавить рекламный бюджет'], ['catalog', 'Ссылки и бюджеты']].map(([key, label]) => <Button key={key} variant="outline" aria-pressed={view === key} onClick={() => { setView(key as typeof view); setSaved(false); if (key === 'expense') {setExpense(undefined);setTarget(undefined);} }}>{label}</Button>)}</div>
+  return <AnalyticsCollapsibleSection title="Источники и реклама" description="Свяжите рекламную публикацию, новых пользователей и рекламный бюджет.">
+    <section className="analytics-card analytics-report-card border rounded-2xl">
+    <div className="analytics-acquisition-tabs flex flex-wrap gap-2" role="group" aria-label="Работа с рекламой">{[['report', 'Результаты'], ['link', 'Создать ссылку'], ['expense', 'Добавить рекламный бюджет'], ['catalog', 'Ссылки и бюджеты']].map(([key, label]) => <Button key={key} variant="outline" aria-pressed={view === key} onClick={() => { setView(key as typeof view); setSaved(false); if (key === 'expense') {setExpense(undefined);setTarget(undefined);} }}>{label}</Button>)}</div>
     {saved && <p role="status" className="text-sm">Рекламный бюджет сохранён. Отчёт обновлён.</p>}
     {catalog.isError ? <AnalyticsChartState title="Не удалось загрузить источники" description={catalog.error.message} onRetry={() => void catalog.refetch()} /> : !catalog.data ? <AnalyticsChartState loading /> : <>
       {view === 'report' && <AcquisitionReportTable tokens={tokens} projectId={projectId} tokenId={tokenId} snapshot={snapshot} onAddBudget={(row,currency)=>{setExpense(undefined);setTarget({placementId:row.placementId,tokenId:row.tokenId,marker:budgetMarker(row.sourceKey),currency});setView('expense');setSaved(false);}} />}
@@ -37,5 +38,6 @@ export function AnalyticsAcquisitionSection({ projectId, tokenId, tokens, timezo
       {view === 'expense' && <AcquisitionExpenseForm key={expense?.id ?? `${tokenId ?? 'all'}:${JSON.stringify(target) ?? 'new'}`} tokens={tokens} tokenId={tokenId} target={target} projectId={projectId} catalog={catalog.data} timezone={timezone} expense={expense} onSaved={() => { setView('report'); setExpense(undefined); setSaved(true); }} />}
       {view === 'catalog' && <AcquisitionCatalog projectId={projectId} catalog={catalog.data} onEditExpense={item => { setTarget(undefined);setExpense(item); setView('expense'); }} />}
     </>}
-  </section>;
+    </section>
+  </AnalyticsCollapsibleSection>;
 }

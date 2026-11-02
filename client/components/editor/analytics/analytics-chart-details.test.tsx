@@ -5,10 +5,17 @@ import { expect, it, vi } from 'vitest';
 import {AnalyticsChartRangeContext,chartRangeFilter} from './analytics-chart-range-selection';
 import {reportParams} from './analytics-report-filter';
 import { AnalyticsReportChart } from './analytics-report-chart';
+import { AnalyticsCompactTooltip } from './analytics-compact-tooltip';
 import { AnalyticsReportOverview } from './analytics-report-overview';
+import { AnalyticsSnapshotRefreshContext } from './analytics-chart-actions';
 import type { AnalyticsV2Snapshot } from '@shared/analytics/v2';
 /** Рендер SVG не нужен для проверки доступных контролов и состояния выбора. */
 vi.mock('recharts', () => ({ ResponsiveContainer: ({children}:any) => <div>{children}</div>, ComposedChart: ({data,onMouseMove,onMouseLeave,onClick,children}:any) => <div data-testid="chart" onMouseMove={()=>onMouseMove?.({activeLabel:data[data.length-1].date})} onMouseLeave={()=>onMouseLeave?.()} onClick={()=>onClick?.({activeLabel:data[0].date})}>{children}</div>, Area: () => null, Bar: () => null, XAxis: () => null, YAxis: () => null, CartesianGrid: () => null, Tooltip: () => null, ReferenceLine: ({x}:any) => <i data-testid="pinned-line" data-date={x} />, ReferenceDot: ({x}:any) => <i data-testid="pinned-dot" data-date={x} /> }));
+it('показывает в подсказке все ряды, включая нулевые и пятый показатель', () => {
+  render(<AnalyticsCompactTooltip active label="2026-11-01" formatInterval={() => 'Период'} payload={[{name:'Первый',value:0},{name:'Второй',value:2},{name:'Третий',value:3},{name:'Четвёртый',value:4},{name:'Пятый',value:5}]} />);
+  expect(screen.getByText('Первый').parentElement).toHaveTextContent('0');
+  expect(screen.getByText('Пятый').parentElement).toHaveTextContent('5');
+});
 it('закрывает выбранный промежуток только при нажатии вне графика и карточки', () => {
   render(<AnalyticsReportChart points={[{date:'2026-11-01T00:00:00Z',incoming:7}]} series={[{key:'incoming',label:'Входящие',color:'#10b981'}]} timezone="UTC" stepMs={86400000} />);
   fireEvent.click(screen.getByTestId('chart'));
@@ -30,6 +37,29 @@ it('сохраняет выделение точки и её значения п
   expect(screen.getByText('7')).toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', {name:'Закрыть'}));
   expect(screen.queryByTestId('pinned-line')).not.toBeInTheDocument();
+});
+it('сохраняет тип и выбранную точку при увеличении и закрытии графика', () => {
+  render(<AnalyticsReportChart title="Сообщения" points={[{ date: '2026-11-01T00:00:00Z', incoming: 7 }]} series={[{ key: 'incoming', label: 'Входящие', color: '#10b981' }]} timezone="UTC" stepMs={86400000} />);
+  fireEvent.change(screen.getByRole('combobox', { name: 'Вид графика' }), { target: { value: 'bar' } });
+  fireEvent.click(screen.getByTestId('chart'));
+  const open = screen.getByRole('button', { name: 'Развернуть график: Сообщения' });
+  fireEvent.pointerDown(open); fireEvent.click(open);
+  expect(screen.getByRole('dialog', { name: 'Сообщения' })).toBeInTheDocument();
+  expect(screen.getByRole('combobox', { name: 'Вид графика' })).toHaveValue('bar');
+  expect(screen.getByTestId('pinned-line')).toBeInTheDocument();
+  const close = screen.getByRole('button', { name: 'Закрыть график' });
+  fireEvent.pointerDown(close); fireEvent.click(close);
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  expect(screen.getByRole('combobox', { name: 'Вид графика' })).toHaveValue('bar');
+  expect(screen.getByTestId('pinned-line')).toBeInTheDocument();
+});
+it('предлагает повторить обновление общего снимка и показывает ошибку', () => {
+  const refresh = vi.fn();
+  render(<AnalyticsSnapshotRefreshContext.Provider value={{ refresh, busy: false, error: 'Не удалось обновить данные. Попробуйте ещё раз.' }}>
+    <AnalyticsReportChart points={[]} series={[]} timezone="UTC" stepMs={86400000} /></AnalyticsSnapshotRefreshContext.Provider>);
+  fireEvent.click(screen.getByRole('button', { name: 'Обновить данные аналитики' }));
+  expect(refresh).toHaveBeenCalledOnce();
+  expect(screen.getByRole('alert')).toHaveTextContent('Попробуйте ещё раз');
 });
 it('закрепляет полное значение и обновляет его без сброса выбора', () => {
   const props = { series: [{ key: 'incoming', label: 'Входящие', color: '#10b981' }], timezone: 'Europe/Moscow', stepMs: 86400000 };
@@ -82,12 +112,18 @@ it('объясняет неизвестную первую дату, не объ
 it('показывает промежуток при наведении, закрепляет нажатием и применяет точные границы',()=>{
   const apply=vi.fn();
   render(<AnalyticsChartRangeContext.Provider value={apply}><AnalyticsReportChart points={[{date:'2026-11-01T00:00:00Z',end_date:'2026-11-02T00:00:00Z',incoming:7}]} series={[{key:'incoming',label:'Входящие',color:'#10b981'}]} timezone="UTC" stepMs={86400000} range={{from:'2026-11-01T01:00:00Z',to:'2026-11-01T02:30:00Z'}}/></AnalyticsChartRangeContext.Provider>);
-  fireEvent.mouseMove(screen.getByTestId('chart'));expect(screen.getByText('Нажмите на график, чтобы закрепить значения.')).toBeInTheDocument();
-  fireEvent.mouseLeave(screen.getByTestId('chart'));expect(screen.queryByText('Нажмите на график, чтобы закрепить значения.')).not.toBeInTheDocument();
+  const preview = document.querySelector('[data-analytics-chart-preview]')!;
+  fireEvent.mouseMove(screen.getByTestId('chart'));expect(preview).toHaveTextContent('Входящие'); expect(preview).toHaveTextContent('7');
+  fireEvent.mouseLeave(screen.getByTestId('chart'));expect(preview).not.toHaveTextContent('Входящие');
   fireEvent.click(screen.getByTestId('chart'));fireEvent.mouseLeave(screen.getByTestId('chart'));
   fireEvent.click(screen.getByRole('button',{name:'Выбрать этот период'}));
   const range={from:'2026-11-01T01:00:00.000Z',to:'2026-11-01T02:30:00.000Z'};
   expect(apply).toHaveBeenCalledWith(range);
   const filter=chartRangeFilter({period:'30d',from:'2026-10-03',to:'2026-11-02',timezone:'UTC',compare:false},range);
   const params=reportParams(filter);expect(params.get('from')).toBe(range.from);expect(params.get('to')).toBe(range.to);
+});
+it('показывает полные сутки русской датой в подсказке', () => {
+  render(<AnalyticsReportChart points={[{date:'2026-09-28T00:00:00Z',incoming:7}]} series={[{key:'incoming',label:'Входящие',color:'#10b981'}]} timezone="UTC" stepMs={86400000} />);
+  fireEvent.mouseMove(screen.getByTestId('chart'));
+  expect(document.querySelector('[data-analytics-chart-preview]')).toHaveTextContent('Понедельник, 28 сентября 2026 г.');
 });

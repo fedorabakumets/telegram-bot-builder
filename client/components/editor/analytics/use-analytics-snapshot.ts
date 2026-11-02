@@ -32,7 +32,9 @@ export function useAnalyticsSnapshot(projectId: number, tokenId: number | null |
   const query = useQuery<AnalyticsV2Snapshot>({
     queryKey: ['analytics-v2', projectId, tokenId ?? null, serialized],
     queryFn: ({ signal }) => analyticsJson(`/api/projects/${projectId}/analytics/v2/snapshot?${reportParams(filter, tokenId)}`, { signal }),
-    enabled: projectId > 0, retry: 1, staleTime: 0, refetchOnWindowFocus: false,
+    enabled: projectId > 0, retry: 1, staleTime: 0, gcTime: 10 * 60 * 1000, refetchOnWindowFocus: false,
+    /** Старый период показывается только для того же проекта и бота, пока загружается новый. */
+    placeholderData: (previous, previousQuery) => previousQuery?.queryKey[1] === projectId && previousQuery.queryKey[2] === (tokenId ?? null) ? previous : undefined,
   });
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -58,10 +60,10 @@ export function useAnalyticsSnapshot(projectId: number, tokenId: number | null |
     return () => { unsubscribe(); reconnect(); clearTimeout(timer); document.removeEventListener('visibilitychange', visible); };
   }, [client, projectId, tokenId]);
   useEffect(() => {
-    const boundary = query.data?.next_recompute_at;
+    const boundary = query.isPlaceholderData ? null : query.data?.next_recompute_at;
     if (!boundary || !Number.isFinite(Date.parse(boundary))) return;
     const timeout = setTimeout(() => { void query.refetch(); }, Math.min(2147483647, Math.max(1000, Date.parse(boundary) - Date.now())));
     return () => clearTimeout(timeout);
-  }, [query.data?.next_recompute_at, query.dataUpdatedAt, serialized]);
+  }, [query.data?.next_recompute_at, query.dataUpdatedAt, query.isPlaceholderData, serialized]);
   return { ...query, connection, bridgeConnected };
 }

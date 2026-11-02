@@ -52,6 +52,7 @@ export const AnalyticsV2SnapshotSchema = z.object({
     /** Независимый рейтинг групп по сообщениям. */ groups_messages: z.array(AnalyticsV2LeaderSchema).optional(),
   }),
   /** Источники. */ sources: z.array(AnalyticsV2SourceSchema),
+  /** Источники предыдущего окна при включённом сравнении. */ previous_sources: z.array(AnalyticsV2SourceSchema).nullable(),
   /** Приход по источникам. */ source_points: z.array(z.object({
     /** Слот. */ date: z.string(), /** Источник. */ id: z.string(),
     /** Исключённый конец календарного слота UTC. */ end_date: z.string().datetime().optional(),

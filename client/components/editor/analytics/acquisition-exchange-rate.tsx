@@ -27,7 +27,7 @@ export function AcquisitionExchangeRate({ projectId,day,onApply }: Props) {
     }catch(error){if(!controller.signal.aborted)setError(error instanceof Error ? error.message : 'Не удалось получить курс');}
     finally{if(!controller.signal.aborted)setLoading(false);}
   }
-  return <div className="space-y-2"><Button type="button" variant="outline" disabled={loading||!day} onClick={()=>void load()}>{loading?'Получаем курс…':'Курс ЦБ на дату рекламного бюджета'}</Button>
+  return <div className="space-y-2"><Button type="button" variant="outline" className="h-auto min-h-10 max-w-full whitespace-normal py-2 text-center" disabled={loading||!day} onClick={()=>void load()}>{loading?'Получаем курс…':'Курс ЦБ на дату рекламного бюджета'}</Button>
     <p className="text-xs text-muted-foreground">Рублей за 1 доллар. {effective ? `Курс действует с ${effective}. ` : ''}После получения можно изменить вручную. <a className="underline underline-offset-4" href="https://www.cbr.ru/development/sxml/" target="_blank" rel="noreferrer">Банк России</a></p>
     {error&&<p role="alert" className="text-sm text-destructive">{error}</p>}
   </div>;

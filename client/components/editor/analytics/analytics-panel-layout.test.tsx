@@ -27,7 +27,7 @@ function snapshot(projectId = 1, revision = '1'): AnalyticsV2Snapshot {
     coverage: { status: 'complete', from: '2026-10-01T00:00:00Z', legacy_unknown_users: 0, bots: [], description: '' },
     current: { audience: { new_users: 0, restored_users: 0, first_history_status: 'complete', total_users: 0, active_users: 0, returning_users: 0, unknown_first_users: 0 },
       messages: { incoming: 0, incoming_to_bot: 0, outgoing: 0, callbacks: 0, historical_callbacks: 0, system: 0, total: 0, chat_scopes: { private: { incoming: 0, incoming_to_bot: 0, outgoing: 0, callbacks: 0, historical_callbacks: 0 }, group: { incoming: 0, incoming_to_bot: 0, outgoing: 0, callbacks: 0, historical_callbacks: 0 } } }, groups: { active_groups: 0, participants: 0, directed_actions: 0 } },
-    previous: null, points: [], leaders: { users: [], groups: [], groups_observed: [] }, sources: [], source_points: [], buttons: [],
+    previous: null, points: [], leaders: { users: [], groups: [], groups_observed: [] }, sources: [], previous_sources: null, source_points: [], buttons: [],
     availability: { available: 0, blocked: 0, deleted: 0, checked_at: null }, composition: { premium: 0, regular: 0, unknown: 0, languages: [] }, next_recompute_at: null };
 }
 afterEach(() => { state.data = undefined; vi.restoreAllMocks(); sessionStorage.clear(); localStorage.clear(); });

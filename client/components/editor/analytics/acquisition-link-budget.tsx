@@ -24,7 +24,7 @@ export function AcquisitionLinkBudget({projectId,tokenId,marker,timezone}: {
       <label>Валюта<select className="analytics-native-field" value={currency} onChange={e=>setCurrency(e.target.value)}><option value="RUB">Рубли · RUB</option><option value="USD">Доллары · USD</option></select></label>
       <label>Дата рекламного бюджета<Input required type="date" value={day} onChange={e=>setDay(e.target.value)} /></label></div>
       <p className="text-xs text-muted-foreground">Приход учитывается с этой даты в поясе {timezone}. Одинаковая метка объединяет публикации; для отдельной рекламы используйте новую метку.</p>
-      <Button type="submit" variant="outline" disabled={mutation.isPending || saved}>{mutation.isPending ? 'Сохраняем…' : saved ? 'Рекламный бюджет сохранён' : 'Сохранить рекламный бюджет'}</Button>
+      <Button className="h-auto min-h-10 max-w-full whitespace-normal py-2 text-center" type="submit" variant="outline" disabled={mutation.isPending || saved}>{mutation.isPending ? 'Сохраняем…' : saved ? 'Рекламный бюджет сохранён' : 'Сохранить рекламный бюджет'}</Button>
       {saved && <p role="status">Рекламный бюджет сохранён. Результаты доступны в рекламном отчёте; новые переходы появятся автоматически.</p>}
       {mutation.isError && <p role="alert" className="text-sm text-destructive">{mutation.error.message}</p>}
     </form></details>;

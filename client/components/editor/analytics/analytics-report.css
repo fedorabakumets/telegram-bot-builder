@@ -15,8 +15,18 @@
 .analytics-report-card { display: flex; flex-direction: column; gap: 16px; }
 .analytics-report-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: stretch; }
 .analytics-report-card > header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; }
+/** Действия графика располагаются в шапке, не создавая отдельную строку в карточке. */
+.analytics-card:has(.analytics-chart-actions:not(.is-expanded)) { position: relative; }
+.analytics-card:has(.analytics-chart-actions:not(.is-expanded)) > :is(header, h4) { padding-right: 88px; }
+.analytics-card .analytics-chart-actions:not(.is-expanded) { position: absolute; top: 24px; right: 24px; z-index: 3; }
+.analytics-card .analytics-chart-actions:not(.is-expanded) > [role='alert'] { position: absolute; top: 40px; right: 0; width: 200px; padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--card); }
+@container (max-width: 479px) { .analytics-card .analytics-chart-actions:not(.is-expanded) { top: 16px; right: 16px; } }
 .analytics-report-value { font-size: 36px; line-height: 40px; font-weight: 600; font-variant-numeric: tabular-nums; }
 .analytics-report-details { padding: 16px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; line-height: 20px; }
+/** При смене периода старые графики остаются на месте с видимым статусом обновления. */
+.analytics-period-updating .analytics-report-card :is(.analytics-chart-plot, .analytics-donut-content) { position: relative; }
+.analytics-period-updating .analytics-report-card :is(.analytics-chart-plot, .analytics-donut-content)::after { content: 'Обновляем данные…'; position: absolute; top: 8px; right: 8px; z-index: 2; padding: 4px 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--card); color: var(--foreground); font-size: 12px; line-height: 16px; }
+.analytics-period-updating .recharts-responsive-container { opacity: 0.45; }
 /** Поля одной строки выравниваются по нижней границе даже при переносе длинной подписи. */
 .analytics-form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 16px; align-items: end; }
 .analytics-form-grid label { display: flex; flex-direction: column; gap: 8px; font-size: 14px; line-height: 20px; min-width: 0; }
@@ -37,14 +47,14 @@
 /** Парные карточки резервируют две строки описания и прижимают справку к общему нижнему краю. */
 .analytics-page { container-name: analytics; }
 @container analytics (min-width: 960px) {
-  .analytics-report-grid > .analytics-report-card { height: 100%; }
-  .analytics-report-grid > .analytics-report-card > div:nth-child(2) { min-height: 80px; }
-  .analytics-report-grid > .analytics-report-card > p:nth-child(5) { min-height: 32px; }
-  .analytics-report-grid > .analytics-report-card > :last-child { margin-top: auto; }
+  .analytics-overview-report-grid > .analytics-report-card { height: 100%; }
+  .analytics-overview-report-grid > .analytics-report-card > div:nth-child(2) { min-height: 60px; }
+  .analytics-overview-report-grid > .analytics-report-card > p:nth-child(5) { min-height: 32px; }
+  .analytics-overview-report-grid > .analytics-report-card > :last-child { margin-top: auto; }
   /** Раскрытая справка не растягивает соседнюю карточку и не отодвигает её кнопку вниз. */
-  .analytics-report-grid:has(> .analytics-report-card > [data-state='open']:last-child) { align-items: start; }
-  .analytics-report-grid:has(> .analytics-report-card > [data-state='open']:last-child) > .analytics-report-card { height: auto; }
-  .analytics-report-grid:has(> .analytics-report-card > [data-state='open']:last-child) > .analytics-report-card > :last-child { margin-top: 0; }
+  .analytics-overview-report-grid:has(> .analytics-report-card > [data-state='open']:last-child) { align-items: start; }
+  .analytics-overview-report-grid:has(> .analytics-report-card > [data-state='open']:last-child) > .analytics-report-card { height: auto; }
+  .analytics-overview-report-grid:has(> .analytics-report-card > [data-state='open']:last-child) > .analytics-report-card > :last-child { margin-top: 0; }
 }
 
 /** Бюджет использует читаемые строки полей вместо длинной полосы из шести колонок. */
@@ -52,7 +62,270 @@
 @container (min-width: 480px) { .analytics-budget-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @container (min-width: 720px) { .analytics-budget-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 /** Компактная тёмная подсказка переносит длинные подписи и не разрастается из-за нулевых рядов. */
-.analytics-compact-tooltip { width: max-content; max-width: min(260px, calc(100cqw - 32px)); padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; background: #09090b; color: #fafafa; font-size: 11px; line-height: 16px; display: grid; gap: 4px; overflow-wrap: anywhere; }
+.analytics-compact-tooltip { width: max-content; max-width: min(260px, 100%); padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; background: #09090b; color: #fafafa; font-size: 11px; line-height: 16px; display: grid; gap: 4px; overflow-wrap: anywhere; }
 .analytics-compact-tooltip-period { font-weight: 600; }
 .analytics-compact-tooltip-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
 .analytics-compact-tooltip-row strong { flex-shrink: 0; font-variant-numeric: tabular-nums; }
+
+/** Компактные обзорные карточки оставляют место данным, а не пустым отступам. */
+.analytics-page .analytics-overview-report-grid > .analytics-report-card { gap: 8px; padding: 14px 16px; }
+.analytics-overview-report-grid .analytics-report-summary { gap: 8px 16px; }
+.analytics-overview-report-grid .analytics-report-summary dt { min-height: 0; }
+.analytics-overview-report-grid .analytics-report-card > :last-child { display: grid; gap: 10px; }
+.analytics-overview-report-grid .analytics-chart-actions:not(.is-expanded) { top: 16px; right: 16px; }
+
+/** Сокращаем вертикальные промежутки в обзорных графиках без уменьшения текста. */
+.analytics-overview-report-grid .analytics-report-card figure.space-y-3 > :not([hidden]) ~ :not([hidden]) { margin-top: 6px; }
+.analytics-overview-report-grid .analytics-report-card summary { padding-block: 4px; }
+.analytics-overview-report-grid .analytics-report-card > :last-child { gap: 8px; }
+
+/** В обзоре сводка использует всю ширину карточки и занимает меньше строк. */
+@container (min-width: 360px) { .analytics-overview-report-grid .analytics-report-summary { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+/** Компактные карточки источников сохраняют полный список в прокручиваемой легенде. */
+.analytics-page .analytics-sources-compact > .analytics-report-card { gap: 8px; padding: 14px 16px; }
+.analytics-sources-compact .analytics-chart-actions:not(.is-expanded) { top: 16px; right: 16px; }
+.analytics-sources-compact figure.space-y-3 > :not([hidden]) ~ :not([hidden]) { margin-top: 6px; }
+.analytics-sources-compact .analytics-donut-legend button { padding-block: 4px; }
+.analytics-sources-compact .analytics-donut-legend { gap: 4px; }
+
+/** Групповой отчёт умещает график и показатели в компактной карточке. */
+.analytics-page .analytics-groups-compact { gap: 8px; padding: 14px 16px; }
+.analytics-groups-compact .analytics-report-summary dt { min-height: 0; }
+.analytics-groups-compact figure.space-y-3 > :not([hidden]) ~ :not([hidden]) { margin-top: 6px; }
+.analytics-groups-compact figure summary { padding-block: 4px; }
+.analytics-groups-compact .analytics-chart-actions:not(.is-expanded) { top: 16px; right: 16px; }
+
+/** Рейтинг остаётся компактным, а все строки доступны прокруткой и в развёрнутом виде. */
+.analytics-page .analytics-leaders-compact { gap: 8px; padding: 14px 16px; }
+.analytics-leaders-compact .analytics-chart-actions:not(.is-expanded) { top: 16px; right: 16px; }
+.analytics-leaders-list { max-height: 300px; overflow-y: auto; }
+.analytics-leaders-list > li > button { padding: 6px 12px; }
+
+/** У распределений компактный список остаётся доступным с прокруткой. */
+.analytics-page .analytics-distribution-compact { gap: 8px; padding: 14px 16px; }
+.analytics-distribution-compact .analytics-chart-actions:not(.is-expanded) { top: 16px; right: 16px; }
+.analytics-distribution-compact .analytics-donut-legend { gap: 4px; }
+.analytics-distribution-compact .analytics-donut-legend button { padding-block: 4px; }
+
+/** Кнопка периода и переключатель вида выровнены по центру одной строки. */
+.analytics-chart-view-controls > button { align-self: center; min-height: 40px; }
+
+/** Заголовок и показатели активности ровно выравниваются и не перекрывают действия. */
+.analytics-active-card > header { align-items: center; justify-content: flex-start; gap: 8px 16px; min-height: 36px; }
+.analytics-active-card > header > span:last-child { margin-left: auto; }
+
+/** На узком экране действия и показатели не перекрывают заголовки и соседние колонки. */
+@container analytics (max-width: 400px) {
+  .analytics-page .analytics-overview-report-grid .analytics-card:has(.analytics-chart-actions:not(.is-expanded)) > header { padding-right: 0; }
+  .analytics-page .analytics-overview-report-grid .analytics-chart-actions:not(.is-expanded) { position: static; justify-content: flex-start; }
+  .analytics-overview-report-grid .analytics-report-summary { grid-template-columns: minmax(0, 1fr); }
+  .analytics-overview-report-grid .analytics-report-summary dt { overflow-wrap: anywhere; }
+}
+
+/** На узком экране действия рекламы выровнены и допускают перенос подписи. */
+.analytics-acquisition-tabs button { max-width: 100%; height: auto; min-height: 40px; white-space: normal; text-align: center; padding-block: 8px; }
+@container analytics (max-width: 400px) { .analytics-acquisition-tabs { display: grid; grid-template-columns: minmax(0, 1fr); } .analytics-acquisition-tabs button { width: 100%; } }
+
+/** Шапка увеличенного распределения: единые действия и заметный клавиатурный фокус. */
+.analytics-distribution-dialog-header button { width: 40px; height: 40px; border-color: transparent; color: var(--muted-foreground); transition: background-color 150ms ease, color 150ms ease; }
+.analytics-distribution-dialog-header button:hover { background: var(--muted); color: var(--foreground); }
+.analytics-distribution-dialog-header button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .analytics-distribution-dialog-header button { transition: none; } }
+
+/** В узкой карточке подпись использует всю ширину, а легенда остаётся доступной прокруткой. */
+@container analytics (max-width: 400px) {
+  .analytics-page .analytics-distribution-compact:has(.analytics-chart-actions:not(.is-expanded)) > header { padding-right: 0; }
+  .analytics-distribution-compact > header h3 { padding-right: 80px; }
+  .analytics-distribution-compact .analytics-donut-content { gap: 4px; }
+  .analytics-distribution-compact .analytics-donut-legend { max-height: 96px; }
+}
+
+/** Узкие карточки и подробности сохраняют читаемость длинных названий и действий. */
+@container analytics (max-width: 400px) {
+  .analytics-page .analytics-report-card:not(.analytics-distribution-compact):has(.analytics-chart-actions:not(.is-expanded)) > header { padding-right: 0; }
+  .analytics-page .analytics-report-card:not(.analytics-distribution-compact) .analytics-chart-actions:not(.is-expanded) { position: static; justify-content: flex-start; }
+  .analytics-report-summary { grid-template-columns: minmax(0, 1fr); }
+  .analytics-report-summary dt, .analytics-report-summary dd { overflow-wrap: anywhere; }
+  .analytics-chart-value-list button { flex-direction: column; gap: 4px; overflow-wrap: anywhere; }
+  .analytics-donut-row { grid-template-columns: 8px minmax(0, 1fr) auto auto; gap: 6px; padding-inline: 2px; }
+  .analytics-leaders-list > li > button { flex-basis: 100%; }
+}
+
+/** Показатели подсказки распределяются по двум компактным колонкам. */
+.analytics-compact-tooltip-values { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 12px; }
+.analytics-compact-tooltip-row { min-width: 0; gap: 6px; }
+.analytics-compact-tooltip-row > span { min-width: 0; overflow-wrap: normal; word-break: normal; }
+
+/** Длинным названиям источников на узком экране предоставляется вся ширина. */
+@container analytics (max-width: 400px) { .analytics-compact-tooltip-values { grid-template-columns: minmax(0, 1fr); } }
+
+/** Границы периода и закрытие не сжимают друг друга в узкой карточке. */
+.analytics-interval-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.analytics-interval-heading strong { min-width: 0; flex: 1 1 180px; overflow-wrap: anywhere; }
+.analytics-interval-heading button { flex: none; min-height: 32px; }
+
+
+/** Полные подписи сохраняются на широком экране; краткие экономят место на узком. */
+.analytics-label-short { display: none; }
+@container analytics (max-width: 400px) {
+  .analytics-label-full { display: none; }
+  .analytics-label-short { display: inline; }
+  .analytics-overview-report-grid .analytics-report-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/** Краткие подписи сводки сохраняют полное доступное название. */
+@container analytics (max-width: 400px) {
+  .analytics-report-summary dt[data-short-label] { font-size: 0; }
+  .analytics-report-summary dt[data-short-label]::after { content: attr(data-short-label); font-size: 12px; }
+}
+
+/** На узком экране вид и накопление занимают одну строку, период переносится ниже. */
+@container analytics (max-width: 400px) {
+  .analytics-chart-view-controls { column-gap: 6px; row-gap: 6px; }
+  .analytics-chart-view-controls > label { gap: 4px; }
+  .analytics-chart-view-controls select { width: 76px; padding-inline: 6px; }
+  .analytics-chart-view-controls > label:nth-child(2) { font-size: 12px; white-space: nowrap; }
+  .analytics-chart-view-controls > button { flex-basis: 100%; width: fit-content; }
+}
+
+/** Компактный ряд не переносит переключатель и флажок по отдельности. */
+@container analytics (max-width: 400px) {
+  .analytics-chart-view-controls { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+  .analytics-chart-view-controls > label:first-child { min-width: 0; }
+  .analytics-chart-view-controls > label:first-child select { min-width: 0; width: 100%; padding-inline: 4px; }
+  .analytics-chart-view-controls > label:nth-child(2) { min-width: 0; gap: 3px; font-size: 11px; }
+  .analytics-chart-view-controls > button { grid-column: 1 / -1; justify-self: start; }
+}
+
+/** Выбор вида остаётся читаемым рядом с компактным флажком. */
+@container analytics (max-width: 400px) {
+  .analytics-chart-view-controls { grid-template-columns: minmax(96px, 1fr) auto; column-gap: 4px; }
+  .analytics-chart-view-controls > label:first-child select { width: 100%; }
+}
+
+/** Пояснение об общем итоге скрыто только в узкой карточке. */
+@container analytics (max-width: 400px) { .analytics-arrival-note { display: none; } }
+
+/** Справка остаётся в развёрнутом графике, но не увеличивает узкую карточку. */
+@container analytics (max-width: 400px) { .analytics-overview-report-grid .analytics-arrival-info { display: none; } }
+
+/** Уточнение первого обращения остаётся в развёрнутом виде и на широком экране. */
+@container analytics (max-width: 400px) { .analytics-overview-report-grid .analytics-arrival-description { display: none; } }
+
+/** Действия первых взаимодействий расположены рядом с заголовком даже в узкой панели. */
+@container analytics (max-width: 400px) {
+  .analytics-page .analytics-overview-report-grid .analytics-arrival-card:has(.analytics-chart-actions:not(.is-expanded)) > header { padding-right: 84px; }
+  .analytics-page .analytics-overview-report-grid .analytics-arrival-card .analytics-chart-actions:not(.is-expanded) { position: absolute; top: 14px; right: 16px; }
+}
+
+/** На узком экране действия всех аналитических карточек находятся справа от заголовка. */
+@container analytics (max-width: 400px) {
+  .analytics-page .analytics-report-card:has(.analytics-chart-actions:not(.is-expanded)) { position: relative; }
+  .analytics-page .analytics-report-card:has(.analytics-chart-actions:not(.is-expanded)) > header { padding-right: 0; }
+  .analytics-page .analytics-report-card:has(.analytics-chart-actions:not(.is-expanded)) > header h3 { padding-right: 84px; min-height: 36px; }
+  .analytics-page .analytics-report-grid .analytics-report-card .analytics-chart-actions:not(.is-expanded),
+  .analytics-page .analytics-report-card .analytics-chart-actions:not(.is-expanded) { position: absolute; top: 14px; right: 16px; justify-content: flex-end; }
+  .analytics-page .analytics-report-card > header { align-items: flex-start; }
+}
+
+/** График по таблице использует тот же порядок заголовка и действий. */
+@container analytics (max-width: 400px) {
+  .analytics-page .analytics-card:has(> h4):has(.analytics-chart-actions:not(.is-expanded)) > h4 { padding-right: 84px; min-height: 36px; }
+  .analytics-page .analytics-card:has(> h4) .analytics-chart-actions:not(.is-expanded) { position: absolute; top: 14px; right: 16px; }
+}
+
+/** Шапки пользователей: только заголовку резервируется место для кнопок. */
+@container analytics (max-width: 400px) {
+  .analytics-page .analytics-overview-report-grid .analytics-arrival-card:has(.analytics-chart-actions:not(.is-expanded)) > header { padding-right: 0; }
+  .analytics-page .analytics-overview-report-grid .analytics-arrival-card > header h3,
+  .analytics-page .analytics-active-card > header h3 { width: 100%; padding-right: 84px; min-height: 36px; }
+  .analytics-page .analytics-active-card .analytics-chart-actions:not(.is-expanded) { position: absolute; top: 14px; right: 16px; justify-content: flex-end; }
+  .analytics-page .analytics-active-card > header > span:last-child { margin-left: 0; }
+}
+
+/** Во всех узких карточках место под действия резервирует только заголовок. */
+@container analytics (max-width: 400px) {
+  .analytics-page .analytics-report-card:has(.analytics-chart-actions:not(.is-expanded)) > header { padding-right: 0; }
+  .analytics-page .analytics-report-card:has(.analytics-chart-actions:not(.is-expanded)) > header h3 { display: block; width: 100%; padding-right: 84px; min-height: 36px; overflow-wrap: anywhere; }
+  .analytics-page .analytics-report-card:has(.analytics-chart-actions:not(.is-expanded)) > header > div { width: 100%; min-width: 0; }
+  .analytics-page .analytics-report-card:has(.analytics-chart-actions:not(.is-expanded)) > header > span { margin-left: 0; }
+  .analytics-page .analytics-report-card:not(.analytics-distribution-compact) .analytics-chart-actions:not(.is-expanded),
+  .analytics-page .analytics-report-grid .analytics-report-card .analytics-chart-actions:not(.is-expanded) { position: absolute; top: 14px; right: 16px; justify-content: flex-end; }
+}
+
+/** Пояснения сообщений остаются доступны в развёрнутом отчёте. */
+@container analytics (max-width: 400px) {
+  .analytics-overview-report-grid .analytics-message-description,
+  .analytics-overview-report-grid .analytics-message-note,
+  .analytics-overview-report-grid .analytics-message-info { display: none; }
+}
+
+/** На узком экране скрываем справку и соседнее пояснение в обычных карточках. */
+@container analytics (max-width: 400px) {
+  .analytics-page .analytics-card .analytics-chart-info,
+  .analytics-page .analytics-card p:has(+ .analytics-chart-info) { display: none; }
+}
+
+/** Дополнительные описания отчётов не увеличивают карточки на узком экране. */
+@container analytics (max-width: 400px) {
+  .analytics-page .analytics-sources-compact > section:first-child > p,
+  .analytics-page .analytics-distribution-compact > header p,
+  .analytics-page .analytics-distribution-compact > .analytics-distribution-footnote,
+  .analytics-page .analytics-groups-compact > p,
+  .analytics-page .analytics-groups-compact > div.space-y-2.text-sm,
+  .analytics-page .analytics-leaders-compact > p.text-sm { display: none; }
+}
+
+/** Компактные показатели занимают две колонки, сохраняя полные доступные подписи. */
+@container analytics (max-width: 400px) {
+  .analytics-page .analytics-report-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .analytics-report-summary > div { min-width: 0; }
+  .analytics-report-summary dt { overflow-wrap: anywhere; }
+}
+
+/** Легенда и закреплённые показатели компактно используют две колонки. */
+@container analytics (max-width: 400px) {
+  .analytics-chart-legend { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 8px; }
+  .analytics-chart-legend > span { min-width: 0; overflow-wrap: anywhere; }
+  .analytics-report-details dl.flex { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .analytics-report-details dl > div { min-width: 0; overflow-wrap: anywhere; }
+}
+
+/** Заголовки узких карточек не разрывают слова из-за расположенных рядом действий. */
+@container analytics (max-width: 400px) {
+  .analytics-page .analytics-report-card:has(.analytics-chart-actions:not(.is-expanded)) > header h3 { padding-right: 68px; font-size: 16px; line-height: 22px; overflow-wrap: normal; word-break: normal; }
+  .analytics-page .analytics-report-card .analytics-chart-actions:not(.is-expanded) { gap: 4px; right: 12px; }
+  .analytics-page .analytics-report-card .analytics-chart-actions:not(.is-expanded) > button { width: 32px; height: 32px; }
+}
+
+/** В обзорной карточке действует тот же отступ, что и в остальных заголовках. */
+@container analytics (max-width: 400px) { .analytics-page .analytics-overview-report-grid .analytics-arrival-card > header h3 { padding-right: 68px; } }
+
+/** Заголовки и действия компактных карточек выровнены по общей высоте. */
+@container analytics (max-width: 400px) {
+  .analytics-page .analytics-report-card:has(.analytics-chart-actions:not(.is-expanded)) > header h3 { min-height: 32px; font-size: 16px; line-height: 20px; }
+  .analytics-page .analytics-report-card .analytics-chart-actions:not(.is-expanded) { top: 14px; right: 16px; gap: 4px; }
+  .analytics-page .analytics-report-card .analytics-chart-actions:not(.is-expanded) > button { width: 32px; height: 32px; }
+}
+
+/** Одна строка заголовка центрируется по высоте кнопок; длинные названия остаются читаемыми. */
+@container analytics (max-width: 400px) {
+  .analytics-page .analytics-report-card:has(.analytics-chart-actions:not(.is-expanded)) > header h3 { display: flex; align-items: center; }
+}
+
+/** Заголовки компактных карточек остаются читаемыми и занимают меньше места. */
+@container analytics (max-width: 400px) { .analytics-page .analytics-report-card:has(.analytics-chart-actions:not(.is-expanded)) > header h3 { font-size: 14px; line-height: 19px; } }
+
+/** Заголовок раздела раскрывает и сворачивает связанные карточки. */
+.analytics-collapsible-section { min-width: 0; padding-top: 16px; }
+.analytics-collapsible-section:first-child { padding-top: 0; }
+.analytics-collapsible-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; list-style: none; }
+.analytics-collapsible-heading::-webkit-details-marker { display: none; }
+.analytics-collapsible-heading:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
+.analytics-collapsible-title { font-size: 18px; line-height: 28px; font-weight: 600; }
+.analytics-collapsible-chevron { font-size: 20px; color: var(--muted-foreground); }
+.analytics-collapsible-section:not([open]) .analytics-collapsible-chevron { transform: rotate(-90deg); }
+.analytics-collapsible-section:not([open]) .analytics-collapsible-description { display: none; }
+.analytics-collapsible-description { margin-top: 4px; font-size: 14px; line-height: 20px; color: var(--muted-foreground); }
+.analytics-collapsible-content { display: flex; flex-direction: column; gap: 16px; margin-top: 16px; }

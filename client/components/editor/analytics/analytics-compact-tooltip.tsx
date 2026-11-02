@@ -5,7 +5,7 @@ interface TooltipItem {
   /** Число событий. */ value?:string|number;
   /** Цвет ряда. */ color?:string;
 }
-/** Показывает значимые ряды; остальные доступны в закрепляемых подробностях. */
+/** Показывает все ряды, включая нулевые значения, как в карточке промежутка. */
 export function AnalyticsCompactTooltip({active,label,payload,formatInterval}: {
   /** Указатель находится в графике. */ active?:boolean;
   /** Дата выбранной точки. */ label?:string|number;
@@ -13,12 +13,9 @@ export function AnalyticsCompactTooltip({active,label,payload,formatInterval}: {
   /** Точные границы выбранного интервала. */ formatInterval:(date:string)=>string;
 }) {
   if(!active || label==null || !payload?.length)return null;
-  const nonzero=payload.filter(item=>Number(item.value)!==0);
-  const visible=nonzero.slice(0,4);
   return <div className="analytics-compact-tooltip">
     <p className="analytics-compact-tooltip-period">{formatInterval(String(label))}</p>
-    {!nonzero.length ? <p>В этом промежутке нет событий</p> : visible.map((item,index)=><p className="analytics-compact-tooltip-row" key={`${item.name}:${index}`}><span style={{color:item.color}}>{item.name}</span><strong>{Number(item.value).toLocaleString('ru-RU')}</strong></p>)}
-    {nonzero.length>visible.length && <p className="text-muted-foreground">Ещё рядов: {nonzero.length-visible.length}</p>}
+    <div className="analytics-compact-tooltip-values">{payload.map((item,index)=><p className="analytics-compact-tooltip-row" key={`${item.name}:${index}`}><span style={{color:item.color}}>{item.name}</span><strong>{Number(item.value ?? 0).toLocaleString('ru-RU')}</strong></p>)}</div>
     <p className="text-muted-foreground">Нажмите, чтобы закрепить все значения</p>
   </div>;
 }

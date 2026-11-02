@@ -25,7 +25,7 @@ function snapshot(options: {
     current: { audience: { new_users: confirmed, restored_users: restored, first_history_status: status, total_users: total, active_users: 260 + confirmed, returning_users: 0, unknown_first_users: status === 'complete' ? 0 : 260 },
       messages: { total: 81000, incoming: 81000, incoming_to_bot: 0, outgoing: 0, callbacks: 0, historical_callbacks: 0, chat_scopes, system: 0 }, groups: { active_groups: 0, participants: 0, directed_actions: 0 } },
     previous: null, points: events ? [{ date: '2026-10-20T00:00:00Z', new_users: confirmed, restored_users: restored, active_users: 260 + confirmed, returning_users: 0, incoming: 81000, incoming_to_bot: 0, outgoing: 0, callbacks: 0, historical_callbacks: 0, chat_scopes, system: 0, groups_active: 0, group_participants: 0, group_directed_actions: 0 }] : [],
-    leaders: { users: [], groups: [], groups_observed: [] }, sources: [], source_points: [], buttons: [], availability: { available: 0, blocked: 0, deleted: 0, checked_at: null },
+    leaders: { users: [], groups: [], groups_observed: [] }, sources: [], previous_sources: null, source_points: [], buttons: [], availability: { available: 0, blocked: 0, deleted: 0, checked_at: null },
     composition: { premium: 0, regular: 0, unknown: 260, languages: [] }, next_recompute_at: null };
 }
 it('возвращает на график 260 восстановленных людей при нуле точных новых', () => {
