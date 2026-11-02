@@ -4,6 +4,7 @@
  */
 
 import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
+import { registerAnalyticsV2Paths } from './paths/analytics-v2-paths';
 import "./schemas/common";
 import { registerAgentAutoAuthPaths } from "./paths/agent-auto-auth-paths";
 import { registerAgentTokenPaths } from "./paths/agent-token-paths";
@@ -246,3 +247,4 @@ registerProjectBroadcastCampaignsMutatePaths(documentedRegistry, cookieSecurity)
 
 /** Буквальный поиск сохранённых сообщений диалогов. */
 registerDialogMessageSearchPaths(documentedRegistry, cookieSecurity);
+registerAnalyticsV2Paths(documentedRegistry, cookieSecurity);

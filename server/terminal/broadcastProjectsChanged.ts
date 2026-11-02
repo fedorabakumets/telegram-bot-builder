@@ -9,7 +9,7 @@
  * @module server/terminal/broadcastProjectsChanged
  */
 
-import { WebSocket } from 'ws';
+import { sendAuthorizedTerminal } from './terminal-access';
 import { activeConnections } from './activeConnections';
 import type {
   ProjectsChangedMessage,
@@ -33,9 +33,7 @@ function sendToUser(userId: number, reason?: ProjectsChangedReason): void {
   };
   const payload = JSON.stringify(message);
   for (const ws of connections) {
-    if (ws.readyState === WebSocket.OPEN) {
-      ws.send(payload);
-    }
+    void sendAuthorizedTerminal(ws, payload);
   }
 }
 

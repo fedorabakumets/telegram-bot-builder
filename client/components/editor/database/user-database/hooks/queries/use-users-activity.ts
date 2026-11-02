@@ -46,6 +46,8 @@ export interface UseUsersActivityParams {
   selectedTokenId?: number | null;
   /** Гранулярность графика */
   granularity?: UsersActivityGranularity;
+  /** Получать обновления через сокет без опроса и подстановки прошлого периода. */
+  liveOnly?: boolean;
 }
 
 /**
@@ -54,12 +56,12 @@ export interface UseUsersActivityParams {
  * @returns Точки, итоги окна и состояние загрузки
  */
 export function useUsersActivity(params: UseUsersActivityParams) {
-  const { projectId, selectedTokenId, granularity = '1d' } = params;
+  const { projectId, selectedTokenId, granularity = '1d', liveOnly = false } = params;
 
   const baseUrl = `/api/projects/${projectId}/users/activity?granularity=${granularity}`;
   const requestUrl = buildUsersApiUrl(baseUrl, selectedTokenId);
 
-  const { data, isLoading } = useQuery<UsersActivityResponse>({
+  const { data, isLoading, isError } = useQuery<UsersActivityResponse>({
     queryKey: ['users-activity', projectId, selectedTokenId, granularity],
     queryFn: async () => {
       const response = await fetch(requestUrl, {
@@ -76,8 +78,8 @@ export function useUsersActivity(params: UseUsersActivityParams) {
     retry: false,
     refetchOnMount: 'always',
     refetchOnWindowFocus: false,
-    refetchInterval: getChartGranularityRefetchInterval(granularity),
-    placeholderData: keepPreviousData,
+    refetchInterval: liveOnly ? false : getChartGranularityRefetchInterval(granularity),
+    placeholderData: liveOnly ? undefined : keepPreviousData,
   });
 
   const rawPoints = data?.points ?? [];
@@ -105,5 +107,6 @@ export function useUsersActivity(params: UseUsersActivityParams) {
     newInWindow: data?.newInWindow ?? 0,
     granularity,
     isLoading,
+    isError,
   };
 }

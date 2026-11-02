@@ -9,10 +9,12 @@ import type { StorageBotGroupInput, StorageBotGroupUpdate, StorageBotInstanceInp
 import { db } from "./db";
 import { revokeOwnedAgentToken } from "../auth/agent/repository";
 import { generateAgentToken, hashAgentToken } from "../utils/agent-token-crypto";
-import { incrementMessageActivityDaily } from "./incrementMessageActivityDaily";
-import { markUserActivityDaily } from "../routes/users/mark-user-activity-daily";
+import { createMessageWithAnalytics } from './analytics-v2/create-message';
+import { safeAuthPayloads } from '../utils/safe-auth-payloads';
+import { safeBotLog } from '../utils/safe-bot-log';
 import { resolveLaunchIdsForLogs, mergeLogsByTimestampAsc } from "../bots/selectLatestLaunchLogs";
 import { selectBotLogsInPeriod } from './selectBotLogsInPeriod';
+import { deleteAnalyticsSpool } from '../analytics/spool-cleanup';
 
 /**
  * Реализация хранилища данных с использованием базы данных
@@ -92,6 +94,8 @@ export class DatabaseStorage implements IStorage {
    */
   async deleteBotProject(id: number): Promise<boolean> {
     const result = await this.db.delete(botProjects).where(eq(botProjects.id, id));
+    // PostgreSQL уже удалил область: очередь больше не должна хранить отложенные факты.
+    if (result.rowCount) await deleteAnalyticsSpool(id);
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
@@ -499,8 +503,9 @@ export class DatabaseStorage implements IStorage {
    * @returns true, если токен был удален, иначе false
    */
   async deleteBotToken(id: number): Promise<boolean> {
-    const result = await this.db.delete(botTokens).where(eq(botTokens.id, id));
-    return result.rowCount ? result.rowCount > 0 : false;
+    const rows = await this.db.delete(botTokens).where(eq(botTokens.id, id)).returning({ projectId: botTokens.projectId });
+    if (rows[0]) await deleteAnalyticsSpool(rows[0].projectId, id);
+    return rows.length > 0;
   }
 
   /**
@@ -1175,57 +1180,7 @@ export class DatabaseStorage implements IStorage {
    * @returns Созданное сообщение бота
    */
   async createBotMessage(insertMessage: StorageBotMessageInput): Promise<BotMessage> {
-    const [message] = await this.db
-      .insert(botMessages)
-      .values(insertMessage)
-      .returning();
-
-    // Обновляем interaction_count и last_interaction в bot_users при каждом сохранении сообщения.
-    // Это необходимо чтобы /users/stats корректно считал totalInteractions через SUM(interaction_count).
-    // Обновляем только если запись пользователя существует (игнорируем ошибки — не блокируем сохранение).
-    try {
-      await this.db
-        .update(botUsers)
-        .set({
-          interactionCount: sql`${botUsers.interactionCount} + 1`,
-          lastInteraction: new Date(),
-        })
-        .where(
-          and(
-            eq(botUsers.projectId, insertMessage.projectId),
-            eq(botUsers.userId, Number(insertMessage.userId)),
-            ...(insertMessage.tokenId ? [eq(botUsers.tokenId, insertMessage.tokenId)] : []),
-          ),
-        );
-    } catch (err) {
-      console.warn('[createBotMessage] не удалось обновить interaction_count:', err);
-    }
-
-    // Дневной агрегат активности: +1, удаление сообщения его не уменьшает
-    try {
-      await incrementMessageActivityDaily({
-        projectId: insertMessage.projectId,
-        tokenId: insertMessage.tokenId,
-        messageType: insertMessage.messageType,
-      });
-    } catch (err) {
-      console.warn('[createBotMessage] не удалось обновить message_activity_daily:', err);
-    }
-
-    // Отметка «человек был активен сегодня» — только для входящих от пользователя
-    if (insertMessage.messageType === "user") {
-      try {
-        await markUserActivityDaily({
-          projectId: insertMessage.projectId,
-          tokenId: insertMessage.tokenId,
-          userId: insertMessage.userId,
-        });
-      } catch (err) {
-        console.warn('[createBotMessage] не удалось обновить user_activity_daily:', err);
-      }
-    }
-
-    return message;
+    return createMessageWithAnalytics(this.db, insertMessage);
   }
 
   /**
@@ -1250,12 +1205,12 @@ export class DatabaseStorage implements IStorage {
       conditions.push(eq(botMessages.tokenId, tokenId));
     }
 
-    return await this.db
+    return safeAuthPayloads(await this.db
       .select()
       .from(botMessages)
       .where(and(...conditions))
       .orderBy(asc(botMessages.createdAt))
-      .limit(limit);
+      .limit(limit));
   }
 
   /**
@@ -1394,7 +1349,7 @@ export class DatabaseStorage implements IStorage {
       })
     );
 
-    return messagesWithMedia;
+    return safeAuthPayloads(messagesWithMedia);
   }
 
   /**
@@ -1437,7 +1392,7 @@ export class DatabaseStorage implements IStorage {
       })
     );
 
-    return messagesWithMedia;
+    return safeAuthPayloads(messagesWithMedia);
   }
 
   /**
@@ -1447,7 +1402,7 @@ export class DatabaseStorage implements IStorage {
    */
   async saveBotLogs(logs: StorageBotLogInput[]): Promise<void> {
     if (logs.length === 0) return;
-    await this.db.insert(botLogs).values(logs);
+    await this.db.insert(botLogs).values(logs.map(safeBotLog));
   }
 
   /**
@@ -1461,7 +1416,7 @@ export class DatabaseStorage implements IStorage {
       .from(botLogs)
       .where(eq(botLogs.id, id))
       .limit(1);
-    return row;
+    return row ? safeBotLog(row) : undefined;
   }
 
   /**
@@ -1478,7 +1433,7 @@ export class DatabaseStorage implements IStorage {
       .where(and(eq(botLogs.projectId, projectId), eq(botLogs.tokenId, tokenId)))
       .orderBy(desc(botLogs.timestamp))
       .limit(limit);
-    return rows.reverse();
+    return rows.reverse().map(safeBotLog);
   }
 
   /**
@@ -1492,7 +1447,7 @@ export class DatabaseStorage implements IStorage {
    * @returns Сохранённые строки по времени
    */
   async getBotLogsInPeriod(projectId: number, tokenId: number, from: Date, to: Date, limit: number, beforeId?: number): Promise<BotLog[]> {
-    return selectBotLogsInPeriod(this.db, projectId, tokenId, from, to, limit, beforeId);
+    return (await selectBotLogsInPeriod(this.db, projectId, tokenId, from, to, limit, beforeId)).map(safeBotLog);
   }
 
   /**
@@ -1536,7 +1491,7 @@ export class DatabaseStorage implements IStorage {
         )
         .orderBy(desc(botLogs.timestamp))
         .limit(limit);
-      return rows.reverse();
+      return rows.reverse().map(safeBotLog);
     };
 
     if (launchIds.length === 1) {

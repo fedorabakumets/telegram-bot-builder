@@ -2,12 +2,13 @@
  * @fileoverview Карточка «Группы» на аналитике и в статистике пользователей.
  * @module client/components/editor/analytics/analytics-groups-card
  */
+import { AnalyticsChartToolbar } from './analytics-chart-toolbar';
+import { AnalyticsPeriodControl, AnalyticsModeControl, AnalyticsTypeControl } from './analytics-chart-controls';
 import React, { useState } from 'react';
 import { useProjectTokens } from '@/hooks/use-project-tokens';
 import { StatMetricCard } from '@/components/editor/database/user-database/components/stats';
-import { GrowthGranularitySelector } from '@/components/editor/database/user-database/components/stats/growth-granularity-selector';
-import { ChartModeToggle, ChartMode } from '@/components/editor/database/user-database/components/stats/chart-mode-toggle';
-import { ChartTypeToggle, ChartType } from '@/components/editor/database/user-database/components/stats/chart-type-toggle';
+import { ChartMode } from '@/components/editor/database/user-database/components/stats/chart-mode-toggle';
+import { ChartType } from '@/components/editor/database/user-database/components/stats/chart-type-toggle';
 import { ChartGranularity } from '@/components/editor/database/user-database/hooks/queries/chart-granularity';
 import { AnalyticsGroupsReachNote } from './analytics-groups-reach-note';
 import { GroupsChartInfo } from './analytics-chart-info-texts';
@@ -25,7 +26,7 @@ export interface AnalyticsGroupsCardProps {
 }
 
 /**
- * График групп выбранного бота. При нескольких ботах без выбора просит выбрать бота.
+ * Показывает уникальные группы проекта или группы выбранного бота.
  * @param props - Проект и бот
  * @returns Карточка
  */
@@ -38,13 +39,6 @@ export function AnalyticsGroupsCard({ projectId, selectedTokenId, stackHeader }:
   const { stats, points } = useGroupsAnalytics(projectId, tokenId, granularity);
   const period = periodGrowthLabel(points);
 
-  if (!tokenId) {
-    return (
-      <div className="bg-background border rounded-xl p-3 text-sm text-muted-foreground">
-        Группы: выберите бота
-      </div>
-    );
-  }
 
   return (
     <StatMetricCard
@@ -56,7 +50,7 @@ export function AnalyticsGroupsCard({ projectId, selectedTokenId, stackHeader }:
       cumulative={mode === 'cumulative'}
       cumulativeTotal={stats?.totalGroups}
       chartGranularity={granularity}
-      chartHeight={160}
+      chartHeight={224}
       chartType={chartType}
       stackHeader={stackHeader}
       lineColor="#8b5cf6"
@@ -66,11 +60,11 @@ export function AnalyticsGroupsCard({ projectId, selectedTokenId, stackHeader }:
         <AnalyticsGroupsReachNote availableGroups={stats?.availableGroups} kickedGroups={stats?.kickedGroups} />
       }
       headerExtra={
-        <div className="flex flex-wrap items-center gap-1">
-          <GrowthGranularitySelector value={granularity} onChange={setGranularity} />
-          <ChartModeToggle value={mode} onChange={setMode} />
-          <ChartTypeToggle value={chartType} onChange={setChartType} />
-        </div>
+        <AnalyticsChartToolbar>
+          <AnalyticsPeriodControl value={granularity} onChange={setGranularity} />
+          <AnalyticsModeControl value={mode} onChange={setMode} />
+          <AnalyticsTypeControl value={chartType} onChange={setChartType} />
+        </AnalyticsChartToolbar>
       }
     />
   );

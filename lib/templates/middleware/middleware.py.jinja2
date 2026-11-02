@@ -56,8 +56,15 @@ async def register_user_middleware(handler, event: types.Message, data: dict):
 # Middleware для сохранения входящих сообщений
 async def message_logging_middleware(handler, event: types.Message, data: dict):
     """Middleware для автоматического сохранения входящих сообщений от пользователей"""
+    _observation = _analytics_observation.get()
+    if _observation is not None:
+        _observation['recorded'] = True
     try:
         # Сохраняем входящее сообщение от пользователя
+        if not event.from_user:
+            return await handler(event, data)
+        analytics_event = await _analytics_classify_message(event, data)
+        start_payload = _analytics_start_payload(event) if analytics_event and analytics_event['directed'] else None
         user_id = str(event.from_user.id)
         message_text = event.text or event.caption or "[медиа]"
         # Одноразовый код входа не попадает в историю сообщений или аналитику.
@@ -214,13 +221,15 @@ async def message_logging_middleware(handler, event: types.Message, data: dict):
         _evt_chat_id = str(event.chat.id) if hasattr(event, 'chat') and event.chat and event.chat.type in ['group', 'supergroup', 'channel'] else None
 
         # Сохраняем сообщение в базу данных асинхронно (fire-and-forget)
-        _fire_save_message(
+        await save_message_to_api(
             user_id=user_id,
             message_type="user",
             message_text=message_text,
             message_data=message_data,
             chat_type=_evt_chat_type,
             chat_id=_evt_chat_id,
+            analytics_event=analytics_event,
+            start_payload=start_payload,
         )
 
 {% if saveIncomingMedia %}
@@ -233,7 +242,19 @@ async def message_logging_middleware(handler, event: types.Message, data: dict):
         logging.error(f"Ошибка в middleware сохранения сообщений: {e}")
 
     # Сначала handler (/start, deep link) — потом профиль в БД с актуальным источником
-    result = await handler(event, data)
+    _context_token = _analytics_incoming_context.set({
+        'event': locals().get('analytics_event'), 'start_payload': locals().get('start_payload'),
+        'chat_type': getattr(event.chat, 'type', 'private'),
+        'chat_id': str(event.chat.id) if event.chat.type != 'private' else None,
+        'message_id': event.message_id,
+    })
+    try:
+        result = await handler(event, data)
+    finally:
+        _current_context = _analytics_incoming_context.get() or {}
+        for _auth_user_id, _auth_key in _current_context.get('auth_variables', []):
+            user_data.get(_auth_user_id, {}).pop(_auth_key, None)
+        _analytics_incoming_context.reset(_context_token)
 
     try:
         if event.from_user:
@@ -250,6 +271,7 @@ async def message_logging_middleware(handler, event: types.Message, data: dict):
                 # После handler: метка из /start или "direct" если источник не задан
                 deep_link_param=_ud.get("deep_link_param") or "direct",
                 referrer_id=_ud.get("referrer_id"),
+                private_interaction=event.chat.type == "private",
             ))
     except Exception as e:
         logging.error(f"Ошибка обновления профиля пользователя в middleware: {e}")
@@ -258,12 +280,15 @@ async def message_logging_middleware(handler, event: types.Message, data: dict):
 
 {% endif %}
 
-{% if userDatabaseEnabled and hasInlineButtons %}
+{% if userDatabaseEnabled %}
 # Middleware для сохранения нажатий на кнопки
 async def callback_query_logging_middleware(handler, event: types.CallbackQuery, data: dict):
     """Middleware для автоматического сохранения нажатий на кнопки"""
     try:
         user_id = str(event.from_user.id)
+        analytics_event = _analytics_classify_callback(event)
+        if not analytics_event:
+            return await handler(event, data)
         callback_data = event.data or ""
 
         # Пытаемся найти текст кнопки из сообщения
@@ -281,16 +306,19 @@ async def callback_query_logging_middleware(handler, event: types.CallbackQuery,
 
         message_text_to_save = f"[Нажата кнопка: {button_text}]" if button_text else "[Нажата кнопка]"
         # Сохраняем нажатие кнопки асинхронно (fire-and-forget)
-        _fire_save_message(
+        analytics_event["metadata"] = {"button_label": _analytics_safe_value(button_text)}
+        await save_message_to_api(
             user_id=user_id,
             message_type="user",
             message_text=message_text_to_save,
             message_data={
                 "button_clicked": True,
+                "callback_query_id": event.id,
                 "button_text": button_text,
                 "callback_data": callback_data
             },
-            chat_type=event.message.chat.type if event.message and event.message.chat else 'private',
+            analytics_event=analytics_event,
+            chat_type=event.message.chat.type if event.message and event.message.chat else 'unknown',
             chat_id=str(event.message.chat.id) if event.message and event.message.chat and event.message.chat.type in ['group', 'supergroup', 'channel'] else None,
         )
     except Exception as e:

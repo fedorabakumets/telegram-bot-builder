@@ -10,6 +10,7 @@
 import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
 import { getRequestTokenId } from "../../../utils/resolve-request-token";
+import { broadcastProjectEvent } from "../../../../terminal/broadcastProjectEvent";
 
 /**
  * Обрабатывает запрос на удаление сообщений
@@ -31,6 +32,11 @@ export async function deleteMessagesHandler(req: Request, res: Response): Promis
         }
 
         const success = await storage.deleteBotMessages(projectId, userId, tokenId);
+        /** Очистка истории обновляет серверные показатели у всех наблюдателей проекта. */
+        if (success) await broadcastProjectEvent(projectId, {
+            type: 'messages-cleared', projectId, tokenId: tokenId ?? undefined,
+            data: { userId }, timestamp: new Date().toISOString(),
+        });
         res.json({ message: "Сообщения успешно удалены", deleted: success });
     } catch (error) {
         console.error("Ошибка удаления сообщений:", error);

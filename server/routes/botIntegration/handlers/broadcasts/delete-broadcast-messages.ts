@@ -7,6 +7,7 @@
 import { eq, and, sql, isNotNull } from "drizzle-orm";
 import { db } from "../../../../database/db";
 import { broadcastResults, botMessages, botTokens } from "@shared/schema";
+import { broadcastProjectEvent } from "../../../../terminal/broadcastProjectEvent";
 import {
   deleteTelegramBroadcastMessage,
   throttleBroadcastTelegramOps,
@@ -51,5 +52,10 @@ export async function deleteBroadcastMessages(
       ),
     );
 
+  /** Удаление истории рассылки обновляет графики открытого проекта. */
+  await broadcastProjectEvent(projectId, {
+    type: 'messages-cleared', projectId, tokenId,
+    data: { broadcastId }, timestamp: new Date().toISOString(),
+  });
   return results.length;
 }

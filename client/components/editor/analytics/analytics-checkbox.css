@@ -1,0 +1,40 @@
+/** @fileoverview Контрастные флажки аналитики с цветами темы без повторного оборачивания токенов в hsl(). */
+.analytics-page .analytics-content input[type="checkbox"] {
+  appearance: none;
+  display: inline-grid;
+  place-content: center;
+  position: relative;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  border: 1px solid var(--muted-foreground);
+  border-radius: 4px;
+  background: var(--background);
+  box-shadow: none;
+  transform: none;
+  cursor: pointer;
+}
+/** Галочка рисуется границами и не зависит от начертания символа в шрифте. */
+.analytics-page .analytics-content input[type="checkbox"]::before {
+  content: "";
+  display: block;
+  position: static;
+  width: 8px;
+  height: 5px;
+  border-left: 2px solid var(--primary-foreground);
+  border-bottom: 2px solid var(--primary-foreground);
+  transform: translateY(-1px) rotate(-45deg);
+  opacity: 0;
+  text-shadow: none;
+}
+.analytics-page .analytics-content input[type="checkbox"]:checked {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+.analytics-page .analytics-content input[type="checkbox"]:checked::before { opacity: 1; }
+.analytics-page .analytics-content input[type="checkbox"]:hover { border-color: var(--primary); }
+.analytics-page .analytics-content input[type="checkbox"]:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+}
+.analytics-page .analytics-content input[type="checkbox"]:disabled { opacity: 0.4; cursor: not-allowed; }

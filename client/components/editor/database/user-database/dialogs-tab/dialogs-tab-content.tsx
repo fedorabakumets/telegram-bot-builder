@@ -5,6 +5,7 @@
  */
 
 import { readFileMessageUser } from '../../dialog/utils/file-message-target';
+import { AnalyticsDialogReturn } from '@/components/editor/analytics/analytics-dialog-return';
 import { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, MessageSquare, Megaphone, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -144,6 +145,7 @@ export function DialogsTabContent({
 
   return (
     <div className="flex flex-col h-full min-h-0 overflow-hidden">
+      <AnalyticsDialogReturn />
       {/* Десктопный хедер — 2 строки */}
       <div className="hidden md:flex flex-col border-b border-border/50 bg-card flex-shrink-0">
         {/* Строка 1: навигация — проект + токен */}

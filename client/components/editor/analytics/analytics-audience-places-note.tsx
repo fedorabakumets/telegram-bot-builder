@@ -3,6 +3,8 @@
  * @module client/components/editor/analytics/analytics-audience-places-note
  */
 
+import { AnalyticsAudienceSummary, type AudienceSummaryItem } from './analytics-audience-summary';
+
 /**
  * Пропсы строки мест общения.
  */
@@ -49,7 +51,8 @@ export function AnalyticsAudiencePlacesNote({
   const channelCount = Math.max(0, channelUsers);
   if (privateCount <= 0 && groupCount <= 0 && channelCount <= 0) return null;
 
-  const parts: { className: string; label: string; value: number }[] = [
+  /** Места общения без цветного текста и разделительных точек. */
+  const parts: AudienceSummaryItem[] = [
     { className: 'text-sky-600 dark:text-sky-400', label: 'Писали лично', value: privateCount },
     { className: 'text-indigo-600 dark:text-indigo-400', label: 'Писали в группах', value: groupCount },
   ];
@@ -60,19 +63,10 @@ export function AnalyticsAudiencePlacesNote({
   const overlap = Math.max(0, Math.trunc(usersInSeveralPlaces));
 
   return (
-    <div className="space-y-0.5 text-[11px] leading-snug">
-      <p>
-        {parts.map((part, index) => (
-          <span key={part.label}>
-            {index > 0 && ' · '}
-            <span className={`${part.className} tabular-nums`}>
-              {part.label}: {part.value}
-            </span>
-          </span>
-        ))}
-      </p>
+    <div className="space-y-2 text-sm">
+      <AnalyticsAudienceSummary title="Где общались пользователи" items={parts} />
       {overlap > 0 && channelCount <= 0 && (
-        <p className="text-muted-foreground">{overlapPhrase(overlap)}</p>
+        <p className="text-xs text-muted-foreground">{overlapPhrase(overlap)}</p>
       )}
     </div>
   );

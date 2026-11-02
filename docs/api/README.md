@@ -1,3 +1,7 @@
+<!--
+@fileoverview Каталог API приложения и новой подтверждённой аналитики.
+-->
+
 # Telegram Bot Builder API — API Reference
 
 REST API визуального конструктора Telegram-ботов. Авторизация: сессионная cookie или Bearer PAT. Документация: /admin (вход по ADMIN_API_KEY) → /admin/docs.
@@ -10,6 +14,7 @@ REST API визуального конструктора Telegram-ботов. А
 
 | Тег | Эндпоинтов |
 |-----|------------|
+| [analytics-v2](./analytics-v2.md) | 19 |
 | [admin](./admin.md) | 27 |
 | [agent-auto-auth](./agent-auto-auth.md) | 2 |
 | [agent-connections](./agent-connections.md) | 2 |

@@ -67,6 +67,10 @@ export interface TokenUpdatedEventData {
 
 /** Типы событий проекта на terminal/project WS */
 export type ProjectEventType =
+  /** Новая подтверждённая версия аналитики; полезная нагрузка не содержит персональных данных. */
+  | 'analytics-changed'
+  /** Доступность канала уведомлений аналитики. */
+  | 'analytics-status'
   | 'token-created'
   | 'token-deleted'
   | 'token-updated'
@@ -77,6 +81,8 @@ export type ProjectEventType =
   | 'bot-error'
   | 'new-message'
   | 'message-deleted'
+  /** Очистка нескольких сообщений без передачи содержимого истории. */
+  | 'messages-cleared'
   | 'message-edited'
   | 'new-user'
   | 'broadcast-progress'

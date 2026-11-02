@@ -106,12 +106,12 @@ describe('check_auth()', () => {
 describe('set_user_var()', () => {
   it('с БД синхронизирует deep_link_param в колонку bot_users', () => {
     const r = generateUtils(validParamsEnabled);
-    expect(r).toContain('sync_user_attribution_to_db(user_id, deep_link_param=value)');
+    expect(r).toContain('sync_user_attribution_to_db(user_id, deep_link_param=_safe_value)');
   });
 
   it('с БД синхронизирует referrer_id в колонку bot_users', () => {
     const r = generateUtils(validParamsEnabled);
-    expect(r).toContain('sync_user_attribution_to_db(user_id, referrer_id=value)');
+    expect(r).toContain('sync_user_attribution_to_db(user_id, referrer_id=_safe_value)');
   });
 
   it('без БД не вызывает sync_user_attribution_to_db', () => {

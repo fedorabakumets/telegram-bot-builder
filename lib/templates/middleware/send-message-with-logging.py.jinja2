@@ -46,6 +46,11 @@ def _wrap_bot_send_message(bot_instance):
         _out_chat_id_int = int(str(chat_id)) if str(chat_id).lstrip('-').isdigit() else 0
         _out_chat_type = 'supergroup' if _out_chat_id_int < 0 else 'private'
         _out_chat_id_str = str(chat_id) if _out_chat_id_int < 0 else None
+        # Ответ Telegram содержит точный тип канала, группы или личного диалога.
+        _actual_chat = getattr(result, 'chat', None)
+        if _actual_chat:
+            _out_chat_type = _actual_chat.type
+            _out_chat_id_str = str(_actual_chat.id) if _actual_chat.type != 'private' else None
         # Сохраняем исходящее сообщение бота асинхронно (fire-and-forget)
         _fire_save_message(
             user_id=str(chat_id),
@@ -145,7 +150,9 @@ def _wrap_bot_send_media_group(bot_instance):
                 _data[_kind] = {"file_id": _value.file_id, "file_size": getattr(_value, "file_size", None)}
             _fire_save_message(user_id=str(chat_id), message_type="bot",
                 message_text=getattr(_message, "caption", None) or "[Медиагруппа]",
-                node_id=node_id, message_data=_data)
+                node_id=node_id, message_data=_data,
+                chat_type=_message.chat.type,
+                chat_id=str(_message.chat.id) if _message.chat.type != 'private' else None)
         # Вызываем обработчики триггеров исходящих сообщений
         # result — список сообщений, берём message_id первого
         try:
@@ -201,6 +208,11 @@ def _wrap_bot_send_video(bot_instance):
             _vid_chat_id_int = int(str(chat_id)) if str(chat_id).lstrip('-').isdigit() else 0
             _vid_chat_type = 'supergroup' if _vid_chat_id_int < 0 else 'private'
             _vid_chat_id_str = str(chat_id) if _vid_chat_id_int < 0 else None
+            # Ответ Telegram содержит точный тип канала, группы или личного диалога.
+            _actual_chat = getattr(result, 'chat', None)
+            if _actual_chat:
+                _vid_chat_type = _actual_chat.type
+                _vid_chat_id_str = str(_actual_chat.id) if _actual_chat.type != 'private' else None
             # Сохраняем исходящее видео бота асинхронно (fire-and-forget)
             _fire_save_message(
                 user_id=str(chat_id),
@@ -248,6 +260,11 @@ def _wrap_bot_send_audio(bot_instance):
             _aud_chat_id_int = int(str(chat_id)) if str(chat_id).lstrip('-').isdigit() else 0
             _aud_chat_type = 'supergroup' if _aud_chat_id_int < 0 else 'private'
             _aud_chat_id_str = str(chat_id) if _aud_chat_id_int < 0 else None
+            # Ответ Telegram содержит точный тип канала, группы или личного диалога.
+            _actual_chat = getattr(result, 'chat', None)
+            if _actual_chat:
+                _aud_chat_type = _actual_chat.type
+                _aud_chat_id_str = str(_actual_chat.id) if _actual_chat.type != 'private' else None
             # Сохраняем исходящее аудио бота асинхронно (fire-and-forget)
             _fire_save_message(
                 user_id=str(chat_id),
@@ -293,6 +310,11 @@ def _wrap_bot_send_document(bot_instance):
             _doc_chat_id_int = int(str(chat_id)) if str(chat_id).lstrip('-').isdigit() else 0
             _doc_chat_type = 'supergroup' if _doc_chat_id_int < 0 else 'private'
             _doc_chat_id_str = str(chat_id) if _doc_chat_id_int < 0 else None
+            # Ответ Telegram содержит точный тип канала, группы или личного диалога.
+            _actual_chat = getattr(result, 'chat', None)
+            if _actual_chat:
+                _doc_chat_type = _actual_chat.type
+                _doc_chat_id_str = str(_actual_chat.id) if _actual_chat.type != 'private' else None
             # Сохраняем исходящий документ бота асинхронно (fire-and-forget)
             _fire_save_message(
                 user_id=str(chat_id),

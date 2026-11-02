@@ -1,0 +1,25 @@
+/** @fileoverview Выравнивание дат, денежных сумм и действий в истории рекламных расходов. */
+.analytics-expense-table { min-width: 680px; }
+.analytics-expense-table td:first-child,
+.analytics-expense-table td:nth-child(3),
+.analytics-expense-table td:nth-child(4) { white-space: nowrap; }
+.analytics-expense-table td:nth-child(2) { width: 100%; min-width: 200px; overflow-wrap: anywhere; }
+.analytics-expense-table td:last-child { min-width: 152px; }
+.analytics-expense-actions { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.analytics-expense-actions button { justify-content: flex-start; height: auto; min-height: 32px; padding: 4px 8px; white-space: nowrap; }
+
+/** Компактные строки размещений сохраняют доступность действий на узких экранах. */
+.analytics-placement-list { display: grid; gap: 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.analytics-placement-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 16px; padding: 8px 12px; }
+.analytics-placement-row + .analytics-placement-row { border-top: 1px solid var(--border); }
+.analytics-placement-row > div:first-child { flex: 1 1 160px; overflow-wrap: anywhere; }
+.analytics-placement-row > div:last-child { flex: 0 1 auto; }
+.analytics-placement-row button { min-height: 32px; }
+
+/** Источники раскрываются с клавиатуры и не повторяют размещения в основном списке. */
+.analytics-source-tree { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.analytics-source-branch + .analytics-source-branch { border-top: 1px solid var(--border); }
+.analytics-source-branch summary { cursor: pointer; padding: 12px; overflow-wrap: anywhere; }
+.analytics-source-branch summary > span + span { margin-left: 12px; white-space: nowrap; }
+.analytics-source-branch summary:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
+.analytics-source-body { display: grid; gap: 8px; padding: 0 12px 12px; }

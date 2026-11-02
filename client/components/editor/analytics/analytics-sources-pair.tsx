@@ -3,12 +3,14 @@
  * @module client/components/editor/analytics/analytics-sources-pair
  */
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
+import { useSourcesCardAlignment } from './use-sources-card-alignment';
+import './analytics-sources-layout.css';
 import { useGrowthBySource } from '@/components/editor/database/user-database/hooks/queries/use-growth-by-source';
 import { useTraffic } from '@/components/editor/database/user-database/hooks/queries/use-traffic';
 import { StatDonutCard } from '@/components/editor/database/user-database/components/stats';
 import { AnalyticsSourcesChart } from './analytics-sources-chart';
-import { SourcesPeriodSelector } from './sources-period-selector';
+import { AnalyticsSourcesPeriodControl } from './analytics-chart-controls';
 import { SourcesPeriod, SOURCES_PERIOD_CAPTIONS, isSourcesWindow } from './sources-period';
 import { growthPointsToSourceItems, trafficSourcesToItems } from './sources-donut-items';
 
@@ -29,7 +31,7 @@ export interface AnalyticsSourcesPairProps {
 }
 
 /**
- * Столбцы и кольцо с одним переключателем срока
+ * Показывает согласованные карточки источников с подписанными периодами
  * @param props - Пропсы компонента
  * @returns JSX элемент пары
  */
@@ -41,13 +43,14 @@ export function AnalyticsSourcesPair({
   gridClassName = 'grid-cols-1 lg:grid-cols-2',
 }: AnalyticsSourcesPairProps): React.JSX.Element {
   const [period, setPeriod] = useState<SourcesPeriod>('1d');
+  const pairRef = useRef<HTMLDivElement>(null);
+  useSourcesCardAlignment(pairRef);
   const windowed = isSourcesWindow(period);
 
   const { points } = useGrowthBySource({
     projectId,
     selectedTokenId,
-    granularity: windowed ? period : '1d',
-    enabled: windowed,
+    granularity: period,
   });
   const { sources } = useTraffic({ projectId, selectedTokenId });
 
@@ -55,25 +58,26 @@ export function AnalyticsSourcesPair({
   const allItems = useMemo(() => trafficSourcesToItems(sources), [sources]);
 
   return (
-    <div className={`grid gap-3 ${gridClassName}`}>
+    <div ref={pairRef} className={`analytics-sources-pair grid gap-4 ${gridClassName}`}>
       <AnalyticsSourcesChart
         projectId={projectId}
         selectedTokenId={selectedTokenId}
-        granularity={windowed ? period : '1d'}
-        showSeries={windowed}
+        granularity={period}
+        showSeries
         period={period}
         onPeriodChange={setPeriod}
       />
       <StatDonutCard
-        title="Источники трафика"
+        title="Распределение по источникам"
         subtitle={SOURCES_PERIOD_CAPTIONS[period]}
         items={windowed ? periodItems : allItems}
         maxItems={null}
-        className="h-full"
+        className="analytics-source-distribution h-full"
+        legendHeader={<div className="analytics-sources-list-heading text-xs text-muted-foreground">Источники · {(windowed ? periodItems : allItems).length}<span>Пользователи и доля</span></div>}
         info={donutInfo}
         onItemClick={onSourceClick}
         headerExtra={
-          <SourcesPeriodSelector value={period} onChange={setPeriod} />
+          <AnalyticsSourcesPeriodControl value={period} onChange={setPeriod} />
         }
       />
     </div>

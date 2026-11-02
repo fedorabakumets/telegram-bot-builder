@@ -46,9 +46,9 @@ export const GrowthPointListSchema = z
 /** Query GET /users/growth-by-source (granularity обязателен) */
 export const BotUsersGrowthBySourceQuerySchema = BotUsersTokenQuerySchema.extend({
   /** Гранулярность — обязательна (иначе 400) */
-  granularity: BotUsersGranularityEnum.openapi({
+  granularity: z.union([BotUsersGranularityEnum, z.literal("all")]).openapi({
     example: "1d",
-    description: `Обязательный: ${BOT_USERS_GRANULARITY_OPENAPI}`,
+    description: `Обязательный: ${BOT_USERS_GRANULARITY_OPENAPI}; all — вся история по месяцам или годам.`,
   }),
 });
 

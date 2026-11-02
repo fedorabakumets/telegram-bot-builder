@@ -1,0 +1,28 @@
+/** @fileoverview Адаптивная сетка аналитики и спокойная иерархия показателей. */
+.analytics-page { container-type: inline-size; }
+
+
+.analytics-content .whitespace-nowrap { white-space: normal; }
+.analytics-content .truncate { white-space: normal; overflow: visible; text-wrap: balance; }
+.analytics-content p { text-wrap: pretty; }
+/** Две группы показателей заменяют мелкий разноцветный текст в одну строку. */
+.analytics-audience-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 16px; }
+.analytics-audience-summary > div { display: flex; min-width: 0; flex-direction: column; gap: 4px; }
+.analytics-audience-summary dt { position: relative; display: block; padding-left: 16px; min-height: 32px; font-size: 12px; line-height: 16px; }
+.analytics-audience-summary dt > span { position: absolute; left: 0; top: 0; font-size: 8px; }
+.analytics-audience-summary dd { margin: 0; padding-left: 16px; color: var(--foreground); font-size: 18px; line-height: 28px; font-weight: 600; font-variant-numeric: tabular-nums; }
+/** Размер сетки зависит от рабочей панели, включая режим с открытым редактором. */
+@container (min-width: 960px) {
+  .analytics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+/** На телефоне селекторы занимают доступную ширину и сохраняют удобную высоту. */
+@container (max-width: 479px) {
+  .analytics-scope > div { flex: 1 1 100%; min-width: 0; }
+  .analytics-scope [role='combobox'] { width: 100%; min-width: 0; height: 40px; }
+
+}
+
+/** На телефоне обе группы используют общие две колонки и одинаковую высоту подписей. */
+@container (max-width: 479px) {
+  .analytics-audience-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

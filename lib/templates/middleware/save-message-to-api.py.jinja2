@@ -1,141 +1,139 @@
-{#
-  Функция сохранения сообщений в базу данных напрямую через asyncpg.
-  После успешного сохранения публикует событие в Redis для мгновенного уведомления UI.
-#}
+{# @fileoverview Атомарное сохранение переписки, идемпотентной аналитики и уведомлений после commit. #}
 
-# Функция для сохранения сообщений в базу данных напрямую (без API)
-async def save_message_to_api(user_id: str, message_type: str, message_text: str = None, node_id: str = None, message_data: dict = None, chat_type: str = 'private', chat_id: str = None):
-    """Сохраняет сообщение в базу данных напрямую через asyncpg.
-    После успешного сохранения публикует событие в Redis канал bot:message:{PROJECT_ID}:{TOKEN_ID}.
-
-    @param chat_type - Тип чата: 'private', 'group', 'supergroup', 'channel'
-    @param chat_id - Идентификатор группового чата (None для личных сообщений)
-    """
+async def _save_message_once(user_id: str, message_type: str, message_text: str = None, node_id: str = None, message_data: dict = None, chat_type: str = 'private', chat_id: str = None, analytics_event: dict = None, start_payload: str = None):
+    """Сохраняет переписку и аналитический факт в одной транзакции; повтор не увеличивает счётчики."""
     if not db_pool:
-        return None
+        raise ConnectionError('Пул аналитики ещё недоступен')
     try:
+        message_data = dict(message_data or {})
+        if message_type == 'bot' and not message_data.get('message_id') and node_id:
+            # Уточнение ноды после send_* относится к той же отправке в текущей задаче.
+            sent = _analytics_last_outgoing.get()
+            if sent:
+                user_id, chat_type, chat_id = sent['user_id'], sent['chat_type'], sent['chat_id']
+                message_data = {**message_data, **sent['message_data']}
+        context = _analytics_incoming_context.get() if message_type == 'user' else None
+        if context and not analytics_event:
+            analytics_event = context.get('event')
+            start_payload = context.get('start_payload')
+            chat_type, chat_id = context['chat_type'], context['chat_id']
+            if context.get('message_id'):
+                message_data.setdefault('message_id', context['message_id'])
+        if message_type == 'bot' and analytics_event is None:
+            analytics_event = _analytics_outgoing_event(user_id, message_data, chat_type, chat_id)
+        message_text = _analytics_safe_value(message_text)
+        message_data = _analytics_safe_value(message_data)
         async with db_pool.acquire() as conn:
-            message_data_json = json.dumps(message_data or {}, ensure_ascii=False)
-            tg_message_id = (message_data or {}).get("message_id")
-            result = await conn.fetchrow(
-                """
-                INSERT INTO bot_messages (project_id, token_id, user_id, message_type, message_text, node_id, message_data, telegram_message_id, chat_type, chat_id, created_at)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())
-                RETURNING id, user_id, message_type, created_at
-                """,
-                PROJECT_ID,
-                TOKEN_ID,
-                str(user_id),
-                message_type,
-                message_text,
-                node_id,
-                message_data_json,
-                tg_message_id,
-                chat_type,
-                chat_id,
-            )
-            tg_mid_str = f", tg_message_id={tg_message_id}" if tg_message_id else ""
-            chat_str = f", chat_type={chat_type}" + (f", chat_id={chat_id}" if chat_id else "")
-            logging.info(f"✅ Сообщение сохранено в БД: {message_type} от {user_id} (id={result['id']}{tg_mid_str}{chat_str})")
-
-            # Дневной агрегат активности (immutable): удаление сообщения счётчик не уменьшает
+            async with conn.transaction():
+                outcome = await _analytics_write_event(conn, analytics_event, start_payload)
+                if outcome and outcome.get('discarded'):
+                    if outcome.get('reason') == 'resource_deleted':
+                        _analytics_discard_deleted_scope()
+                    return None
+                if outcome and not outcome.get('inserted', False):
+                    # Повтор обёртки возвращает прежнюю запись для привязки медиа к сообщению.
+                    existing = await conn.fetchrow("SELECT id,user_id,message_type,created_at FROM bot_messages WHERE project_id=$1 AND token_id=$2 AND user_id=$3 AND message_type=$4 AND telegram_message_id=$5 AND chat_type=$6 AND chat_id IS NOT DISTINCT FROM $7 ORDER BY id LIMIT 1",
+                        PROJECT_ID, TOKEN_ID, str(user_id), message_type, message_data.get('message_id'), chat_type, chat_id)
+                    if existing and node_id:
+                        await conn.execute('UPDATE bot_messages SET node_id=COALESCE(node_id,$1) WHERE id=$2 AND project_id=$3 AND token_id=$4', node_id, existing['id'], PROJECT_ID, TOKEN_ID)
+                    return existing
+                # Старые ноды дополнительно логируют отправку без Telegram ID: это не второе сообщение.
+                if message_type == 'bot' and not analytics_event:
+                    return None
+                result = await conn.fetchrow("""
+                    INSERT INTO bot_messages (project_id,token_id,user_id,message_type,message_text,node_id,message_data,telegram_message_id,chat_type,chat_id,created_at)
+                    VALUES ($1,$2,$3,$4,$5,$6,$7::jsonb,$8,$9,$10,NOW())
+                    RETURNING id,user_id,message_type,created_at
+                """, PROJECT_ID,TOKEN_ID,str(user_id),message_type,message_text,node_id,
+                    json.dumps(message_data,ensure_ascii=False),message_data.get('message_id'),chat_type,chat_id)
+                # Старые контракты сохраняют прежнюю методику; новая аналитика читает отдельные факты.
+                async with conn.transaction():
+                    await conn.execute("""
+                        INSERT INTO message_activity_daily(project_id,token_id,day,incoming_count,outgoing_count)
+                        VALUES($1,$2,CURRENT_DATE,$3,$4)
+                        ON CONFLICT(project_id,token_id,day) DO UPDATE SET
+                        incoming_count=message_activity_daily.incoming_count+EXCLUDED.incoming_count,
+                        outgoing_count=message_activity_daily.outgoing_count+EXCLUDED.outgoing_count
+                    """, PROJECT_ID,TOKEN_ID,1 if message_type=='user' else 0,0 if message_type=='user' else 1)
+                if message_type == 'user':
+                    await conn.execute("""
+                        INSERT INTO user_activity_daily(project_id,token_id,day,user_id,first_seen_at)
+                        VALUES($1,$2,CURRENT_DATE,$3,COALESCE((SELECT registered_at FROM bot_users
+                          WHERE project_id=$1 AND token_id=$2 AND user_id=$3),NOW()))
+                        ON CONFLICT(project_id,token_id,day,user_id) DO NOTHING
+                    """, PROJECT_ID,TOKEN_ID,int(user_id))
+        # Redis обслуживает старую ленту; аналитический outbox уже зафиксирован в PostgreSQL.
+        if _redis_client:
             try:
-                _incoming = 1 if message_type == "user" else 0
-                _outgoing = 0 if message_type == "user" else 1
-                await conn.execute(
-                    """
-                    INSERT INTO message_activity_daily (project_id, token_id, day, incoming_count, outgoing_count)
-                    VALUES ($1, $2, CURRENT_DATE, $3, $4)
-                    ON CONFLICT (project_id, token_id, day) DO UPDATE SET
-                      incoming_count = message_activity_daily.incoming_count + EXCLUDED.incoming_count,
-                      outgoing_count = message_activity_daily.outgoing_count + EXCLUDED.outgoing_count
-                    """,
-                    PROJECT_ID,
-                    TOKEN_ID,
-                    _incoming,
-                    _outgoing,
-                )
-            except Exception as _agg_err:
-                logging.warning(f"⚠️ Не удалось обновить message_activity_daily: {_agg_err}")
+                await _redis_client.publish(f'bot:message:{PROJECT_ID}:{TOKEN_ID}',json.dumps({
+                    'userId':str(user_id),'messageType':message_type,'messageText':message_text,
+                    'messageData':message_data,'nodeId':node_id,'id':result['id'],
+                    'createdAt':result['created_at'].isoformat(),'chatId':chat_id,'chatType':chat_type,
+                },ensure_ascii=False))
+            except Exception:
+                logging.warning('Redis: переписка записана; уведомление восстановится после подключения')
+        return dict(result)
+    except Exception as error:
+        raise
 
-            # Отметка «человек был активен сегодня» — только входящие (график «Активные пользователи»)
-            if message_type == "user":
-                try:
-                    await conn.execute(
-                        """
-                        INSERT INTO user_activity_daily (project_id, token_id, day, user_id, first_seen_at)
-                        VALUES (
-                          $1, $2, CURRENT_DATE, $3,
-                          COALESCE(
-                            (SELECT registered_at FROM bot_users
-                              WHERE project_id = $1 AND token_id = $2 AND user_id = $3),
-                            NOW()
-                          )
-                        )
-                        ON CONFLICT (project_id, token_id, day, user_id) DO NOTHING
-                        """,
-                        PROJECT_ID,
-                        TOKEN_ID,
-                        int(user_id),
-                    )
-                except Exception as _uact_err:
-                    logging.warning(f"⚠️ Не удалось обновить user_activity_daily: {_uact_err}")
 
-            # Публикуем событие в Redis для мгновенного уведомления UI (fire-and-forget)
-            if _redis_client:
-                try:
-                    _redis_payload = json.dumps({
-                        "userId": str(user_id),
-                        "messageType": message_type,
-                        "messageText": message_text,
-                        "messageData": message_data or {},
-                        "nodeId": node_id,
-                        "id": result['id'],
-                        "createdAt": result['created_at'].isoformat() if result['created_at'] else None,
-                        "chatId": chat_id,
-                        "chatType": chat_type,
-                    }, ensure_ascii=False)
-                    await _redis_client.publish(
-                        f"bot:message:{PROJECT_ID}:{TOKEN_ID}",
-                        _redis_payload
-                    )
-                    logging.info(f"📡 Redis publish: bot:message:{PROJECT_ID}:{TOKEN_ID} | type={message_type} user={user_id} msg_id={result['id']}")
-                except Exception as _re:
-                    logging.warning(f"⚠️ Redis publish bot:message не удался: {_re}")
+_analytics_persistence_tasks = set()
+
+
+async def save_message_to_api(user_id: str, message_type: str, message_text: str = None, node_id: str = None, message_data: dict = None, chat_type: str = 'private', chat_id: str = None, analytics_event: dict = None, start_payload: str = None):
+    """Фиксирует минимальный факт на диске, затем пишет переписку; сбой продолжит фоновая очередь."""
+    if _analytics_scope_deleted:
+        return None
+    message_data = dict(message_data or {})
+    if message_type == 'bot' and not message_data.get('message_id') and node_id:
+        sent = _analytics_last_outgoing.get()
+        if sent:
+            user_id, chat_type, chat_id = sent['user_id'], sent['chat_type'], sent['chat_id']
+            message_data.update(sent['message_data'])
+    context = _analytics_incoming_context.get() if message_type == 'user' else None
+    if context and not analytics_event:
+        analytics_event, start_payload = context.get('event'), context.get('start_payload')
+        chat_type, chat_id = context['chat_type'], context['chat_id']
+        if context.get('message_id'):
+            message_data.setdefault('message_id', context['message_id'])
+    if message_type == 'bot' and analytics_event is None:
+        analytics_event = _analytics_outgoing_event(user_id, message_data, chat_type, chat_id)
+    key = None
+    try:
+        key = _analytics_spool_store(analytics_event, start_payload)
+    except Exception as error:
+        logging.critical('Локальная очередь аналитики недоступна, тип %s', type(error).__name__)
+    async with _analytics_delivery_lock:
+        try:
+            result = await asyncio.wait_for(_save_message_once(user_id,message_type,message_text,node_id,message_data,chat_type,chat_id,analytics_event,start_payload), timeout=10)
+            _analytics_spool_ack(key)
+            return result
+        except Exception as error:
+            if analytics_event and not key:
+                logging.critical('Аналитический факт не сохранён: одновременно недоступны БД и локальная очередь, тип %s', type(error).__name__)
             else:
-                logging.warning(f"⚠️ Redis недоступен — событие bot:message не опубликовано (msg_id={result['id']}, user={user_id})")
-
-            return {"id": result['id'], "user_id": result['user_id'], "message_type": result['message_type'], "created_at": result['created_at']}
-    except Exception as e:
-        logging.error(f"❌ Ошибка сохранения сообщения в БД: {e}")
+                logging.warning('Запись аналитики отложена до восстановления БД, тип %s', type(error).__name__)
     return None
 
 
-def _fire_save_message(user_id: str, message_type: str, message_text: str = None, node_id: str = None, message_data: dict = None, chat_type: str = 'private', chat_id: str = None):
-    """Запускает save_message_to_api в фоне (fire-and-forget).
-    Не блокирует выполнение — сообщение сохраняется асинхронно.
-    После сохранения в БД автоматически публикует событие в Redis.
-
-    @param user_id - Идентификатор пользователя
-    @param message_type - Тип сообщения: "user" или "bot"
-    @param message_text - Текст сообщения (опционально)
-    @param node_id - Идентификатор узла сценария (опционально)
-    @param message_data - Дополнительные данные сообщения (опционально)
-    @param chat_type - Тип чата: 'private', 'group', 'supergroup', 'channel'
-    @param chat_id - Идентификатор группового чата (None для личных сообщений)
-    """
+async def _analytics_drain_pending():
+    """Ограничивает остановку десятью секундами; оставшиеся факты восстанавливаются с диска."""
+    async def drain():
+        """Завершает уже запущенные операции и пробует оставшуюся очередь."""
+        if _analytics_persistence_tasks:
+            await asyncio.gather(*tuple(_analytics_persistence_tasks), return_exceptions=True)
+        await _analytics_spool_flush(force=True)
     try:
-        asyncio.create_task(save_message_to_api(
-            user_id=user_id,
-            message_type=message_type,
-            message_text=message_text,
-            node_id=node_id,
-            message_data=message_data,
-            chat_type=chat_type,
-            chat_id=chat_id,
-        ))
-    except Exception as e:
-        logging.warning(f"⚠️ _fire_save_message: не удалось создать задачу: {e}")
+        await asyncio.wait_for(drain(), timeout=10)
+    except asyncio.TimeoutError:
+        logging.warning('Остановка аналитики: оставшиеся факты сохранены для следующего запуска')
+
+
+def _fire_save_message(user_id: str, message_type: str, message_text: str = None, node_id: str = None, message_data: dict = None, chat_type: str = 'private', chat_id: str = None, analytics_event: dict = None, start_payload: str = None):
+    """Запускает безопасную запись после успешного ответа Telegram; контекст сохраняется задачей."""
+    task = asyncio.create_task(save_message_to_api(user_id,message_type,message_text,node_id,message_data,chat_type,chat_id,analytics_event,start_payload))
+    _analytics_persistence_tasks.add(task)
+    task.add_done_callback(_analytics_persistence_tasks.discard)
 
 {% if saveIncomingMedia %}
 async def _save_incoming_photo_to_db(file_id: str, photo_meta: dict):

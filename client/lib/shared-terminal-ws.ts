@@ -3,6 +3,9 @@
  * @module client/lib/shared-terminal-ws
  */
 
+import { setSharedTerminalWsState, setSharedAnalyticsBridgeState } from './shared-terminal-ws-state';
+export { getSharedTerminalWsState, getSharedAnalyticsBridgeState, subscribeSharedTerminalWsState } from './shared-terminal-ws-state';
+
 /** Обработчик входящего сообщения Terminal WS */
 type TerminalMessageListener = (data: unknown) => void;
 
@@ -49,18 +52,24 @@ function ensureConnected(): void {
 
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
   const url = `${protocol}//${window.location.host}/api/terminal?projectId=0&tokenId=0`;
-  ws = new WebSocket(url);
+  setSharedTerminalWsState('connecting');
+  const connection = new WebSocket(url);
+  ws = connection;
 
-  ws.onmessage = (event) => {
+  connection.onmessage = (event) => {
+    if (ws !== connection) return;
     try {
       const msg = JSON.parse(event.data as string);
+      if (msg?.type === 'analytics-status' && typeof msg.data?.connected === 'boolean') setSharedAnalyticsBridgeState(msg.data.connected);
       listeners.forEach((listener) => listener(msg));
     } catch {
       // Игнорируем некорректные сообщения
     }
   };
 
-  ws.onopen = () => {
+  connection.onopen = () => {
+    if (ws !== connection) return;
+    setSharedTerminalWsState('connected');
     if (hasConnectedOnce) {
       reconnectListeners.forEach((listener) => listener());
     }
@@ -73,7 +82,9 @@ function ensureConnected(): void {
     }, 20_000);
   };
 
-  ws.onclose = () => {
+  connection.onclose = () => {
+    if (ws !== connection) return;
+    setSharedTerminalWsState('disconnected');
     ws = null;
     if (pingTimer) {
       clearInterval(pingTimer);
@@ -85,9 +96,10 @@ function ensureConnected(): void {
     }
   };
 
-  ws.onerror = (event) => {
+  connection.onerror = (event) => {
+    if (ws !== connection) return;
     console.error(`${LOG_PREFIX} Ошибка WebSocket-соединения:`, event);
-    ws?.close();
+    connection.close();
   };
 }
 
@@ -106,6 +118,7 @@ function closeConnectionNow(): void {
   }
   const closing = ws;
   ws = null;
+  setSharedTerminalWsState('disconnected');
   closing?.close();
 }
 

@@ -22,18 +22,20 @@ export interface GroupsAnalyticsStats {
 }
 
 /**
- * Грузит числа и ряд групп. Без бота запросы не идут.
+ * Грузит группы проекта или выбранного бота, не смешивая ключи кэша.
  * @param projectId - Проект
  * @param tokenId - Выбранный бот
  * @param granularity - Период графика
  * @returns Сводка и точки графика
  */
 export function useGroupsAnalytics(projectId: number, tokenId: number | null, granularity: ChartGranularity) {
-  const enabled = !!projectId && !!tokenId;
+  const enabled = !!projectId;
+  /** Без выбранного бота сервер считает уникальные группы проекта. */
+  const scope = tokenId == null ? '' : `&tokenId=${tokenId}`;
   const stats = useQuery<GroupsAnalyticsStats>({
     queryKey: ['groups-analytics-stats', projectId, tokenId],
     queryFn: async () => {
-      const response = await fetch(`/api/projects/${projectId}/groups/analytics/stats?tokenId=${tokenId}`, { credentials: 'include' });
+      const response = await fetch(`/api/projects/${projectId}/groups/analytics/stats?${scope.slice(1)}`, { credentials: 'include' });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return response.json();
     },
@@ -45,7 +47,7 @@ export function useGroupsAnalytics(projectId: number, tokenId: number | null, gr
     queryKey: ['groups-analytics-growth', projectId, tokenId, granularity],
     queryFn: async () => {
       const response = await fetch(
-        `/api/projects/${projectId}/groups/analytics/growth?tokenId=${tokenId}&granularity=${granularity}`,
+        `/api/projects/${projectId}/groups/analytics/growth?granularity=${granularity}${scope}`,
         { credentials: 'include' },
       );
       if (!response.ok) throw new Error(`HTTP ${response.status}`);

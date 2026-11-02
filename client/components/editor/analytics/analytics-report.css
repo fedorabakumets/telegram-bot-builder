@@ -1,0 +1,29 @@
+/** @fileoverview Общие фильтры, сводки и формы аналитики с ровной адаптивной сеткой. */
+.analytics-native-field { min-width: 0; width: 100%; min-height: 40px; padding: 8px 12px; background: var(--background); color: var(--foreground); border: 1px solid var(--border); border-radius: 8px; font-size: 14px; line-height: 20px; }
+.analytics-native-field:focus-visible, .analytics-page input:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.analytics-report-filters { padding: 16px; border: 1px solid var(--border); border-radius: 16px; }
+.analytics-report-filters .analytics-segments button[aria-pressed='true'] { background: var(--muted); color: var(--foreground); box-shadow: inset 0 0 0 1px var(--border); font-weight: 600; }
+.analytics-report-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.analytics-report-summary dt { min-height: 40px; font-size: 12px; line-height: 16px; color: var(--muted-foreground); }
+.analytics-report-summary dd { font-size: 20px; line-height: 28px; font-weight: 600; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.analytics-report-card { display: flex; flex-direction: column; gap: 16px; }
+.analytics-report-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
+.analytics-report-card > header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; }
+.analytics-report-value { font-size: 36px; line-height: 40px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.analytics-report-details { padding: 16px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; line-height: 20px; }
+/** Поля одной строки выравниваются по нижней границе даже при переносе длинной подписи. */
+.analytics-form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 16px; align-items: end; }
+.analytics-form-grid label { display: flex; flex-direction: column; gap: 8px; font-size: 14px; line-height: 20px; min-width: 0; }
+.analytics-table-scroll { overflow-x: auto; max-width: 100%; }
+.analytics-report-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; line-height: 20px; }
+.analytics-report-table th, .analytics-report-table td { padding: 12px; vertical-align: top; }
+.analytics-report-table th { color: var(--muted-foreground); font-weight: 500; }
+.analytics-report-table td { font-variant-numeric: tabular-nums; }
+.analytics-report-table tbody tr:nth-child(odd) { background: var(--muted); }
+.analytics-report-table button { text-align: left; text-decoration: underline; text-underline-offset: 4px; }
+.analytics-chart-value-list { max-height: 240px; overflow: auto; display: grid; gap: 4px; }
+.analytics-chart-value-list button { display: flex; justify-content: space-between; gap: 16px; padding: 8px 12px; border-radius: 8px; text-align: left; font-size: 14px; }
+.analytics-chart-value-list button:hover, .analytics-chart-value-list button[aria-pressed='true'] { background: var(--muted); }
+.analytics-report-coverage { border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; font-size: 14px; line-height: 20px; color: var(--muted-foreground); }
+@container (min-width: 960px) { .analytics-report-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@container (max-width: 479px) { .analytics-report-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } .analytics-report-value { font-size: 30px; line-height: 36px; } }

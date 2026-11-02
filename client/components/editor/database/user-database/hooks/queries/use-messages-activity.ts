@@ -42,6 +42,8 @@ export interface UseMessagesActivityParams {
   period?: '7d' | '30d' | '90d';
   /** Режим разбивки: true — вернуть входящие/исходящие отдельно */
   split?: boolean;
+  /** Обновлять по сокету без периодического опроса и старых данных другого периода. */
+  liveOnly?: boolean;
 }
 
 /**
@@ -84,12 +86,12 @@ function buildActivityUrl(
  * @returns Точки активности, недельное количество сообщений, текущая гранулярность и состояние загрузки
  */
 export function useMessagesActivity(params: UseMessagesActivityParams) {
-  const { projectId, selectedTokenId, granularity, period = '30d', split = false } = params;
+  const { projectId, selectedTokenId, granularity, period = '30d', split = false, liveOnly = false } = params;
 
   const baseUrl = buildActivityUrl(projectId, granularity, period, split);
   const requestUrl = buildUsersApiUrl(baseUrl, selectedTokenId);
 
-  const { data, isLoading } = useQuery<GrowthPoint[] | ActivitySplitPoint[]>({
+  const { data, isLoading, isError } = useQuery<GrowthPoint[] | ActivitySplitPoint[]>({
     queryKey: ['messages-activity', projectId, selectedTokenId, granularity ?? period, split],
     queryFn: async () => {
       const response = await fetch(requestUrl, {
@@ -106,8 +108,8 @@ export function useMessagesActivity(params: UseMessagesActivityParams) {
     retry: false,
     refetchOnMount: 'always',
     refetchOnWindowFocus: false,
-    refetchInterval: getChartGranularityRefetchInterval(granularity),
-    placeholderData: keepPreviousData,
+    refetchInterval: liveOnly ? false : getChartGranularityRefetchInterval(granularity),
+    placeholderData: liveOnly ? undefined : keepPreviousData,
   });
 
   if (split) {
@@ -129,6 +131,7 @@ export function useMessagesActivity(params: UseMessagesActivityParams) {
       weeklyOutgoing,
       granularity,
       isLoading,
+      isError,
     };
   }
 
@@ -148,5 +151,6 @@ export function useMessagesActivity(params: UseMessagesActivityParams) {
     granularity,
     /** Флаг загрузки данных */
     isLoading,
+    isError,
   };
 }

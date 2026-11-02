@@ -1,0 +1,12 @@
+/** @fileoverview Равная высота основных карточек и общий уровень области графиков и пояснений. */
+@container analytics (min-width: 960px) {
+  .analytics-page .analytics-overview-pair { align-items: stretch; }
+  .analytics-page .analytics-overview-pair > .analytics-card {
+    display: grid;
+    align-items: start;
+    grid-template-rows: var(--overview-heading-height, auto) var(--overview-number-height, auto) var(--overview-controls-height, auto) 224px minmax(0, 1fr) auto;
+  }
+  .analytics-overview-pair .metric-number { align-self: start; }
+  .analytics-overview-pair .metric-bottom-info { align-self: end; }
+  .analytics-overview-pair .metric-controls { width: 100%; }
+}

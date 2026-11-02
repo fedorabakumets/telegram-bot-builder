@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import { AnalyticsChartState } from '@/components/editor/analytics/analytics-chart-state';
 import { PieChart, Pie, Cell, Tooltip } from 'recharts';
 import { StatBarItem } from './stat-bar-card';
 
@@ -52,6 +53,8 @@ export interface StatDonutCardProps {
   info?: React.ReactNode;
   /** Кнопки справа от заголовка, например срок */
   headerExtra?: React.ReactNode;
+  /** Заголовок легенды для согласования парных списков источников. */
+  legendHeader?: React.ReactNode;
 }
 
 /**
@@ -75,47 +78,46 @@ function DonutTooltip({ active, payload }: DonutTooltipProps): React.JSX.Element
   return (
     <div className="bg-popover border rounded-md px-2 py-1 text-xs shadow-md">
       <span className="font-medium">{item.label}</span>
-      <span className="ml-2 tabular-nums">{item.count}</span>
-      <span className="ml-1 opacity-60 tabular-nums">{item.percentage}%</span>
+      <span className="ml-2 tabular-nums">{Number(item.count).toLocaleString('ru-RU')}</span>
+      <span className="ml-1 opacity-60 tabular-nums">{Number(item.percentage).toLocaleString('ru-RU', { maximumFractionDigits: 1 })}%</span>
     </div>
   );
 }
 
 /**
- * Карточка статистики с Donut-диаграммой: donut сверху, легенда снизу
+ * Показывает кольцо, выровненную легенду и пояснение после данных.
  * @param props - Пропсы компонента
  * @returns JSX элемент карточки
  */
 export function StatDonutCard(props: StatDonutCardProps): React.JSX.Element {
-  const { title, subtitle, items, maxItems = 8, onItemClick, className, info, headerExtra } = props;
+  const { title, subtitle, items, maxItems = 8, onItemClick, className, info, headerExtra, legendHeader } = props;
 
   const allItems = items ?? [];
   const visible = maxItems == null ? allItems : allItems.slice(0, maxItems);
-  const isEmpty = visible.length === 0;
+  const isEmpty = visible.length === 0 || visible.every(item => Number(item.count) === 0);
   const legendScrollable = visible.length > 8;
 
   /** Общая сумма всех count для отображения в центре дырки (приводим к числу) */
   const total = visible.reduce((sum, item) => sum + Number(item.count), 0);
 
   return (
-    <div className={`bg-background border rounded-xl p-3 flex flex-col gap-2 min-w-0 ${className ?? ''}`}>
+    <div className={`analytics-card bg-background border rounded-xl p-3 flex flex-col gap-2 min-w-0 ${className ?? ''}`}>
       <div className="flex items-start justify-between gap-2 flex-wrap">
         <div className="min-w-0">
-          <p className="text-sm font-medium text-foreground">{title}</p>
+          <h4 className="text-base font-semibold text-foreground">{title}</h4>
           {subtitle ? (
-            <p className="text-[11px] text-muted-foreground">{subtitle}</p>
+            <p className="text-xs text-muted-foreground">{subtitle}</p>
           ) : null}
         </div>
         {headerExtra}
       </div>
-      {info}
 
       {isEmpty ? (
         /* Пустое состояние */
-        <p className="text-xs text-muted-foreground/50 italic">Нет данных</p>
+        <AnalyticsChartState description="Распределение появится, когда у бота будет аудитория." />
       ) : (
         /* Основной контент: donut сверху + легенда снизу */
-        <div className="flex flex-col items-center gap-3 flex-1 min-h-0">
+        <div className="analytics-donut-content flex-1 min-h-0">
           {/* Donut-диаграмма с центральным числом */}
           <div className="relative flex-shrink-0" style={{ width: 200, height: 200 }}>
             <PieChart width={200} height={200}>
@@ -141,26 +143,28 @@ export function StatDonutCard(props: StatDonutCardProps): React.JSX.Element {
             </PieChart>
             {/* Центральное число поверх дырки */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <span className="text-lg font-bold tabular-nums">{total}</span>
+              <span className="text-lg font-bold tabular-nums">{total.toLocaleString('ru-RU')}</span>
             </div>
           </div>
 
           {/* Легенда: цветная точка, метка, count, percentage; скролл при большом списке */}
           <div
             className={[
-              'flex flex-col gap-1 min-w-0 w-full',
-              legendScrollable ? 'max-h-[220px] overflow-y-auto pr-1' : '',
+              'analytics-donut-legend',
+              legendHeader ? 'analytics-donut-legend-headed' : '',
             ].join(' ')}
           >
+            {legendHeader}
+            <div className={`analytics-donut-rows flex flex-col gap-1 ${legendScrollable ? 'max-h-64 overflow-y-auto pr-1' : ''}`}>
             {visible.map((item, index) => (
               <div
                 key={item.label}
-                className={`flex items-center gap-1.5 min-w-0 ${onItemClick ? 'cursor-pointer' : ''}`}
+                className={`analytics-donut-row min-w-0 ${onItemClick ? 'cursor-pointer' : ''}`}
                 onClick={() => onItemClick?.(item.label)}
                 role={onItemClick ? 'button' : undefined}
                 tabIndex={onItemClick ? 0 : undefined}
                 onKeyDown={onItemClick
-                  ? (e) => e.key === 'Enter' && onItemClick(item.label)
+                  ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onItemClick(item.label); } }
                   : undefined}
               >
                 {/* Цветная точка */}
@@ -174,16 +178,18 @@ export function StatDonutCard(props: StatDonutCardProps): React.JSX.Element {
                 </span>
                 {/* Количество и процент */}
                 <span className="text-xs text-muted-foreground tabular-nums flex-shrink-0">
-                  {item.count}
+                  {Number(item.count).toLocaleString('ru-RU')}
                 </span>
                 <span className="text-xs text-muted-foreground/60 tabular-nums flex-shrink-0">
-                  {item.percentage}%
+                  {Number(item.percentage).toLocaleString('ru-RU', { maximumFractionDigits: 1 })}%
                 </span>
               </div>
             ))}
+            </div>
           </div>
         </div>
       )}
+      {info}
     </div>
   );
 }

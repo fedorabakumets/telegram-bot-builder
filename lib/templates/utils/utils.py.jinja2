@@ -413,13 +413,20 @@ async def set_user_var(user_id: int, key: str, value) -> None:
         user_data[user_id] = {}
     user_data[user_id][key] = value
 {%- if userDatabaseEnabled %}
+    # Обработчик авторизации получает исходное значение в памяти; стандартное хранение скрывает код.
+    _safe_value = globals().get('_analytics_safe_value', lambda item: item)(value)
+    if _safe_value != value:
+        _context = globals().get('_analytics_incoming_context')
+        _current = _context.get() if _context else None
+        if _current is not None:
+            _current.setdefault('auth_variables', []).append((user_id, key))
     # Источник трафика — в отдельные колонки bot_users (для аналитики)
     if key == "deep_link_param":
-        asyncio.create_task(sync_user_attribution_to_db(user_id, deep_link_param=value))
+        asyncio.create_task(sync_user_attribution_to_db(user_id, deep_link_param=_safe_value))
     elif key == "referrer_id":
-        asyncio.create_task(sync_user_attribution_to_db(user_id, referrer_id=value))
+        asyncio.create_task(sync_user_attribution_to_db(user_id, referrer_id=_safe_value))
     # Fire-and-forget: user_data JSON в фоне, не блокируя ответ пользователю
-    asyncio.create_task(_persist_user_var(user_id, key, value))
+    asyncio.create_task(_persist_user_var(user_id, key, _safe_value))
 {%- endif %}
 
 

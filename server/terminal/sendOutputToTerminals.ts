@@ -3,8 +3,8 @@
  * @module server/terminal/sendOutputToTerminals
  */
 
-import { WebSocket } from "ws";
-import { activeConnections } from "./activeConnections";
+import { authorizedFanout } from "./authorized-fanout";
+import { redactSecrets } from "../utils/redactSecrets";
 import { TerminalMessage } from "./TerminalMessage";
 import { persistLogLine } from "./botLogsBuffer";
 
@@ -25,29 +25,6 @@ function parseLogTimestamp(content: string): string {
 }
 
 /**
- * Рассылает сообщение всем подписчикам WebSocket
- * @param message - Сообщение терминала
- * @param connectionKey - Ключ прямого подключения projectId_tokenId
- */
-function broadcastMessage(message: TerminalMessage, connectionKey: string): void {
-  const payload = JSON.stringify(message);
-  const connections = activeConnections.get(connectionKey);
-
-  if (connections) {
-    for (const ws of connections) {
-      if (ws.readyState === WebSocket.OPEN) ws.send(payload);
-    }
-  }
-
-  for (const [key, conns] of activeConnections.entries()) {
-    if (!key.startsWith("user_")) continue;
-    for (const ws of conns) {
-      if (ws.readyState === WebSocket.OPEN) ws.send(payload);
-    }
-  }
-}
-
-/**
  * Сохраняет лог в bot_logs и отправляет вывод в активные терминалы
  * @param content - Содержимое вывода
  * @param type - Тип вывода: stdout, stderr или status
@@ -62,7 +39,7 @@ export async function sendOutputToTerminals(
   tokenId: number,
   launchId?: number
 ): Promise<void> {
-  const connectionKey = `${projectId}_${tokenId}`;
+  content = redactSecrets(content);
   const timestamp = type === "stdout" || type === "stderr"
     ? parseLogTimestamp(content)
     : new Date().toISOString();
@@ -78,5 +55,5 @@ export async function sendOutputToTerminals(
     ...(logId !== undefined ? { logId } : {}),
   };
 
-  broadcastMessage(message, connectionKey);
+  await authorizedFanout(JSON.stringify(message), projectId, tokenId);
 }

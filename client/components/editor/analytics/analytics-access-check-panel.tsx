@@ -17,6 +17,8 @@ import { mergeJob } from './analytics-access-check-merge';
  * Пропсы блока проверки.
  */
 interface AnalyticsAccessCheckPanelProps {
+  /** Показывать старую сводку; новый отчёт рисует точные показатели отдельно. */
+  showSummary?: boolean;
   /** Проект. */
   projectId: number;
   /** Выбранный бот; без него блок скрыт. */
@@ -49,18 +51,22 @@ function readDismissedJobId(key: string | null): number | null {
 }
 
 /**
- * Кнопка, живой прогресс и итог проверки выбранного бота.
+ * Показывает читаемые показатели аудитории, кнопку и живой прогресс проверки.
  * @param props - Свойства компонента
  * @returns JSX элемент или null
  */
 export function AnalyticsAccessCheckPanel({
-  projectId, tokenId, totalUsers, blockedBotUsers = 0, deletedUsers = 0,
+  projectId, tokenId, totalUsers, blockedBotUsers = 0, deletedUsers = 0, showSummary = true,
   privateUsers = 0, groupUsers = 0, channelUsers = 0, usersInSeveralPlaces = 0,
 }: AnalyticsAccessCheckPanelProps) {
   const queryClient = useQueryClient();
   const tokens = useProjectTokens([projectId])[0]?.tokens ?? [];
+  /** Локальный выбор для проверки при общей аналитике проекта. */
+  const [checkTokenId, setCheckTokenId] = useState<number | null>(null);
   /** «Все боты» при одном токене — это и есть выбранный бот. */
-  const selected = tokenId ?? (tokens.length === 1 ? tokens[0].id : null);
+  const selected = tokens.some(token => token.id === checkTokenId) ? checkTokenId : tokenId ?? (tokens.length === 1 ? tokens[0].id : null);
+  /** При смене общей области сбрасывает локальный выбор проверки. */
+  useEffect(() => { setCheckTokenId(null); }, [projectId, tokenId]);
   const dismissKey = selected ? `chat-access-dismissed:${projectId}:${selected}` : null;
   const [dismissedJobId, setDismissedJobId] = useState<number | null>(() => readDismissedJobId(dismissKey));
   const { job, start, cancel, isStarting, isCancelling } = useChatAccessCheckJob(projectId, selected);
@@ -90,7 +96,7 @@ export function AnalyticsAccessCheckPanel({
     return () => window.clearTimeout(timer);
   }, [view?.processedCount, view?.status, view?.kickedCount, view?.deletedCount, view, projectId, queryClient]);
 
-  const note = (
+  const note = showSummary ? (
     <AnalyticsAudienceReachNote
       totalUsers={totalUsers}
       blockedBotUsers={blockedBotUsers}
@@ -100,19 +106,20 @@ export function AnalyticsAccessCheckPanel({
       channelUsers={channelUsers}
       usersInSeveralPlaces={usersInSeveralPlaces}
     />
-  );
+  ) : null;
   const canCheck = totalUsers > 0 || active;
   if (!canCheck) return note;
 
   return (
     <div className="space-y-2">
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0 flex-1">{note}</div>
+      <div className="analytics-access-summary flex flex-wrap items-start justify-between gap-4">
+        <div className="min-w-0 basis-full">{note}</div>
         {!active && (
           <AnalyticsAccessCheckButton
+            tokens={tokens} selectedTokenId={selected} onSelectToken={setCheckTokenId}
             totalUsers={totalUsers}
             pending={isStarting}
-            disabled={selected == null}
+            disabled={tokens.length === 0}
             onConfirm={start}
           />
         )}

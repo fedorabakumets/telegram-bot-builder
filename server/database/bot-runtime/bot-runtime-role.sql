@@ -1,3 +1,4 @@
+/** @fileoverview Идемпотентные права runtime, политики RLS и узкие операции аналитики. */
 -- Идемпотентные права роли bot_runtime и политики RLS.
 -- Это не миграция drizzle и не шаг npm run migrate: файл выполняет
 -- только ensure-bot-runtime-role, когда включён BOT_RUNTIME_ENABLED
@@ -204,3 +205,16 @@ BEGIN
   END LOOP;
 END
 $bot_runtime$;
+
+/** Runtime вызывает узкие операции аналитики без прямой записи в её справочники. */
+DO $analytics_v2$
+DECLARE signature text;
+BEGIN
+  FOREACH signature IN ARRAY ARRAY['mark_analytics_runtime_v2(integer,integer)','record_analytics_event_v2(jsonb)',
+    'analytics_resolve_link_v2(integer,integer,text)'] LOOP
+    IF to_regprocedure(signature) IS NOT NULL THEN
+      EXECUTE format('GRANT EXECUTE ON FUNCTION %s TO bot_runtime',signature);
+    END IF;
+  END LOOP;
+END
+$analytics_v2$;

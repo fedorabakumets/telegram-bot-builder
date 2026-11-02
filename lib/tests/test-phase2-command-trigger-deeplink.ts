@@ -8,8 +8,8 @@
  *   P03: режим startsWith → if args and args.startswith("ref_"): внутри deep_link_router
  *   P04: deepLinkSaveToVar=true + deepLinkVarName → оба set_user_var: referrer_id и utm_source
  *   P05: deepLinkSaveToVar=false → нет set_user_var в роутере
- *   P06: deepLinkParam пустой → нет deep_link_router
- *   P07: deepLinkParam не задан → нет deep_link_router
+ *   P06: deepLinkParam пустой → общий роутер сохраняет произвольную метку
+ *   P07: deepLinkParam не задан → общий роутер сохраняет произвольную метку
  *   P08: синтаксис Python OK с deep link
  *   P09: два узла /start с разными deepLinkParam → один deep_link_router с двумя ветками
  *   P10: CommandObject импортируется когда есть deep link триггер
@@ -230,7 +230,7 @@ test('P04', 'deepLinkSaveToVar=true + deepLinkVarName → оба set_user_var: r
   ]);
   const code = gen(p, 'p04');
   // Кастомная переменная сохраняется дополнительно к utm_source, а не вместо него
-  ok(code.includes('set_user_var(user_id, "referrer_id", safe_args)'), 'кастомная переменная должна быть');
+  ok(code.includes('set_user_var(user_id, "referrer_id", args if args.startswith("link_") else safe_args)'), 'кастомная переменная должна быть');
   ok(code.includes('"utm_source"'), 'utm_source тоже должен сохраняться');
 });
 
@@ -271,24 +271,24 @@ test('P05', 'deepLinkSaveToVar=false → кастомная переменная
   ok(!refBranchCode.includes('set_user_var(user_id, "referrer_id"'), 'кастомная переменная referrer_id НЕ должна вызываться внутри ветки deepLinkParam');
 });
 
-test('P06', 'deepLinkParam пустой → нет deep_link_router', () => {
+test('P06', 'deepLinkParam пустой → общий роутер сохраняет произвольную метку', () => {
   const p = makeCleanProject([
     makeTriggerNode('t1', '/start', 'msg1', { deepLinkParam: '' }),
     makeMessageNode('msg1'),
   ]);
   const code = gen(p, 'p06');
-  ok(!code.includes('deep_link_router'), 'deep_link_router НЕ должен быть при пустом deepLinkParam');
-  ok(!code.includes('CommandStart(deep_link=True)'), 'CommandStart(deep_link=True) НЕ должен быть при пустом deepLinkParam');
+  ok(code.includes('deep_link_router'), 'общий роутер должен учитывать зарегистрированные рекламные метки');
+  ok(code.includes('CommandStart(deep_link=True)'), 'общий /start принимает метки реестра без пользовательской ветки');
 });
 
-test('P07', 'deepLinkParam не задан → нет deep_link_router', () => {
+test('P07', 'deepLinkParam не задан → общий роутер сохраняет произвольную метку', () => {
   const p = makeCleanProject([
     makeTriggerNode('t1', '/start', 'msg1'),
     makeMessageNode('msg1'),
   ]);
   const code = gen(p, 'p07');
-  ok(!code.includes('deep_link_router'), 'deep_link_router НЕ должен быть без deepLinkParam');
-  ok(!code.includes('CommandStart(deep_link=True)'), 'CommandStart(deep_link=True) НЕ должен быть без deepLinkParam');
+  ok(code.includes('deep_link_router'), 'общий роутер должен учитывать зарегистрированные рекламные метки');
+  ok(code.includes('CommandStart(deep_link=True)'), 'общий /start принимает метки реестра без пользовательской ветки');
 });
 
 test('P08', 'синтаксис Python OK с deep link', () => {

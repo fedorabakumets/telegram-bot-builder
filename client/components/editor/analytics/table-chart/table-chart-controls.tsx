@@ -4,19 +4,12 @@
  */
 
 import React from 'react';
+import { getTableLabel, getColumnTitle } from '@/components/editor/tables/utils/display-labels';
+import { TABLE_AGGREGATION_LABELS } from './table-chart-labels';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { TableAggregation, TableChartType } from './chart-types';
-
-/** Подписи видов агрегации */
-const AGGREGATION_LABELS: Record<TableAggregation, string> = {
-  count: 'Количество',
-  sum: 'Сумма',
-  avg: 'Среднее',
-  min: 'Минимум',
-  max: 'Максимум',
-};
 
 /** Подписи типов графика */
 const CHART_TYPE_LABELS: Record<TableChartType, string> = {
@@ -36,7 +29,7 @@ export interface TableChartControlsProps {
   /** Обработчик смены таблицы */
   onTableChange: (id: number) => void;
   /** Колонки выбранной таблицы */
-  columns: Array<{ id: number; name: string }>;
+  columns: Array<{ /** Идентификатор столбца. */ id: number; /** Внутреннее имя. */ name: string; /** Пользовательская подпись столбца. */ settings?: { /** Название для интерфейса. */ displayName: string } }>;
   /** ID колонки-категории (ось X) */
   xColumnId: number | null;
   /** Обработчик смены колонки X */
@@ -57,13 +50,17 @@ export interface TableChartControlsProps {
   yIsNumeric: boolean;
 }
 
-/** Подпись над компактным селектом */
+/**
+ * Показывает читаемую подпись поля настройки.
+ * @param props - Текст подписи.
+ * @returns Подпись поля.
+ */
 function FieldLabel({ text }: { text: string }): React.JSX.Element {
-  return <span className="text-[10px] text-muted-foreground mb-0.5">{text}</span>;
+  return <span className="text-xs text-muted-foreground">{text}</span>;
 }
 
 /**
- * Компактный ряд из 5 селектов конфигурации графика
+ * Показывает русские названия таблиц, столбцов и понятные настройки расчёта.
  * @param props - Свойства компонента
  * @returns JSX элемент панели управления
  */
@@ -78,51 +75,51 @@ export function TableChartControls(props: TableChartControlsProps): React.JSX.El
   const aggOptions: TableAggregation[] = ['count', 'sum', 'avg', 'min', 'max'];
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="analytics-table-controls">
       <div className="flex flex-col min-w-[130px]">
         <FieldLabel text="Таблица" />
         <Select value={selectedTableId != null ? String(selectedTableId) : ''} onValueChange={(v) => onTableChange(Number(v))}>
-          <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Таблица" /></SelectTrigger>
+          <SelectTrigger aria-label="Таблица" className="h-10 text-sm"><SelectValue placeholder="Таблица" /></SelectTrigger>
           <SelectContent>
             {tables.map((t) => (
-              <SelectItem key={t.id} value={String(t.id)}>{t.name}</SelectItem>
+              <SelectItem key={t.id} value={String(t.id)}>{getTableLabel(t.name)}</SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
 
       <div className="flex flex-col min-w-[120px]">
-        <FieldLabel text="Категория (X)" />
+        <FieldLabel text="Группировать по (X)" />
         <Select value={xColumnId != null ? String(xColumnId) : ''} onValueChange={(v) => onXChange(Number(v))}>
-          <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Колонка" /></SelectTrigger>
+          <SelectTrigger aria-label="Группировать по (X)" className="h-10 text-sm"><SelectValue placeholder="Колонка" /></SelectTrigger>
           <SelectContent>
             {columns.map((c) => (
-              <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
+              <SelectItem key={c.id} value={String(c.id)}>{getColumnTitle(c)}</SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
 
       <div className="flex flex-col min-w-[120px]">
-        <FieldLabel text="Значение (Y)" />
+        <FieldLabel text="Значения (Y)" />
         <Select value={yColumnId != null ? String(yColumnId) : ''} onValueChange={(v) => onYChange(Number(v))}>
-          <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Колонка" /></SelectTrigger>
+          <SelectTrigger aria-label="Значения (Y)" className="h-10 text-sm"><SelectValue placeholder="Колонка" /></SelectTrigger>
           <SelectContent>
             {columns.map((c) => (
-              <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
+              <SelectItem key={c.id} value={String(c.id)}>{getColumnTitle(c)}</SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
 
       <div className="flex flex-col min-w-[120px]">
-        <FieldLabel text="Агрегация" />
+        <FieldLabel text="Способ подсчёта" />
         <Select value={aggregation} onValueChange={(v) => onAggregationChange(v as TableAggregation)}>
-          <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+          <SelectTrigger aria-label="Способ подсчёта" className="h-10 text-sm"><SelectValue /></SelectTrigger>
           <SelectContent>
             {aggOptions.map((a) => (
               <SelectItem key={a} value={a} disabled={a !== 'count' && !yIsNumeric}>
-                {AGGREGATION_LABELS[a]}
+                {TABLE_AGGREGATION_LABELS[a]}
               </SelectItem>
             ))}
           </SelectContent>
@@ -132,7 +129,7 @@ export function TableChartControls(props: TableChartControlsProps): React.JSX.El
       <div className="flex flex-col min-w-[110px]">
         <FieldLabel text="Тип графика" />
         <Select value={chartType} onValueChange={(v) => onChartTypeChange(v as TableChartType)}>
-          <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+          <SelectTrigger aria-label="Тип графика" className="h-10 text-sm"><SelectValue /></SelectTrigger>
           <SelectContent>
             {(Object.keys(CHART_TYPE_LABELS) as TableChartType[]).map((t) => (
               <SelectItem key={t} value={t}>{CHART_TYPE_LABELS[t]}</SelectItem>

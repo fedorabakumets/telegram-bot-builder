@@ -24,6 +24,7 @@ export const WORKER_TECH_ENV_PREFIXES: readonly string[] = ["LC_", "PYTHON"];
 export const WORKER_TUNING_ENV: readonly string[] = [
   "BOT_CODE_CACHE", "AIOGRAM_LAZY_MODELS", "WORKER_REPORT_MEMORY",
   "MAX_UPDATE_AGE_SECONDS", "DISABLE_ASYNC_LOG", "LOG_LEVEL",
+  "ANALYTICS_SPOOL_DIR",
 ];
 
 /** Системные адреса панели, которые бот получает и так (слой 2) */

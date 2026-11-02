@@ -1,0 +1,27 @@
+/** @fileoverview Общие строки парных графиков источников: заголовки, управление, графики, легенды и пояснения. */
+.analytics-page { container-name: analytics; }
+/** На широком экране обе карточки используют одни и те же линии сетки. */
+@container analytics (min-width: 960px) {
+  .analytics-page .analytics-sources-pair { align-items: stretch; }
+  .analytics-page .analytics-sources-pair > .analytics-card { display: grid; grid-template-rows: var(--sources-heading-height, auto) var(--sources-controls-height, auto) 224px var(--sources-legend-height, auto) minmax(40px, auto); align-items: start; }
+  .analytics-sources-pair .analytics-card-heading { display: contents; }
+  .analytics-sources-pair .analytics-source-distribution > div:first-child { display: contents; }
+  .analytics-sources-pair .analytics-donut-content { display: contents; }
+  .analytics-sources-pair .analytics-donut-content > div:first-child { justify-self: center; align-self: center; }
+  .analytics-sources-pair .analytics-donut-legend { gap: 12px; align-self: start; }
+  .analytics-sources-pair .analytics-source-legend { min-height: 0; align-self: start; }
+  .analytics-sources-pair > .analytics-card > :last-child { align-self: end; }
+  .analytics-sources-pair .analytics-chart-toolbar { display: flex; flex-direction: column; align-items: stretch; gap: 12px; }
+  .analytics-sources-pair .analytics-control-field { width: 100%; }
+  .analytics-sources-pair .analytics-segments { min-height: 48px; }
+}
+/** Обе легенды используют одну строку заголовка и одинаковые числовые колонки. */
+.analytics-sources-pair .analytics-source-legend > div:first-child,
+.analytics-sources-list-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; min-height: 48px; gap: 8px; }
+.analytics-sources-pair .analytics-source-legend > .grid { grid-template-columns: minmax(0, 1fr); }
+.analytics-sources-pair .analytics-source-legend > .grid > button,
+.analytics-sources-pair .analytics-donut-row { display: grid; grid-template-columns: 8px minmax(0, 1fr) 64px 48px; min-height: 40px; padding: 8px 12px; gap: 12px; border: 1px solid transparent; font-size: 12px; line-height: 16px; }
+.analytics-sources-pair .analytics-source-legend > .grid > button > span:nth-last-child(-n+2) { text-align: right; font-variant-numeric: tabular-nums; }
+.analytics-sources-pair .analytics-source-legend > .grid > button > span:first-child { width: 8px; height: 8px; border-radius: 50%; }
+.analytics-sources-pair .analytics-donut-row .truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.analytics-sources-pair .analytics-donut-legend { gap: 12px; }

@@ -3,7 +3,7 @@
  * @module client/components/editor/analytics/use-chat-access-check-job
  */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { isActiveChatAccessCheckStatus, type ChatAccessCheckJobView } from '@shared/project-sync/project-event';
+import { type ChatAccessCheckJobView } from '@shared/project-sync/project-event';
 import { apiRequest } from '@/queryClient';
 import { useToast } from '@/hooks/use-toast';
 
@@ -35,9 +35,8 @@ export function useChatAccessCheckJob(projectId: number, tokenId: number | null)
       const data = await apiRequest('GET', `/api/projects/${projectId}/chat-access-checks/active?tokenId=${tokenId}`);
       return data.job ?? null;
     },
-    refetchInterval: (current) => (
-      current.state.data && isActiveChatAccessCheckStatus(current.state.data.status) ? 2000 : false
-    ),
+    /** Прогресс приходит по общему сокету, после reconnect задача перечитывается. */
+    refetchInterval: false,
   });
 
   const start = useMutation({

@@ -97,7 +97,7 @@ async def update_user_variable_in_db(user_id: int, variable_name: str, variable_
             else:
                 user_data = {}
             
-            user_data[variable_name] = variable_value
+            user_data[variable_name] = globals().get("_analytics_safe_value", lambda item: item)(variable_value)
             
             await conn.execute(
                 "UPDATE bot_users SET user_data = $1 WHERE user_id = $2 AND project_id = $3 AND token_id = $4",
@@ -133,7 +133,7 @@ async def init_database():
                 str(TOKEN_ID),
             )
         db_pool = await asyncpg.create_pool(
-            DATABASE_URL, min_size=1, max_size=10, init=_set_bot_runtime_scope
+            DATABASE_URL, min_size=1, max_size=10, init=_set_bot_runtime_scope, setup=_set_bot_runtime_scope
         )
 {%- else %}
         db_pool = await asyncpg.create_pool(DATABASE_URL, min_size=1, max_size=10)
@@ -184,7 +184,10 @@ async def init_database():
             logging.info("✅ Таблица user_telegram_settings создана")
 {%- endif %}
 {%- endif %}
-        logging.info("✅ База данных инициализирована")
+        # Покрытие новой методики начинается до обработки первого события.
+        async with db_pool.acquire() as conn:
+            await conn.execute('SELECT public.mark_analytics_runtime_v2($1, $2)', PROJECT_ID, TOKEN_ID)
+        logging.info("✅ База данных инициализирована; аналитика v2")
     except Exception as e:
         logging.warning(f"⚠️ Не удалось подключиться к БД: {e}. Используем локальное хранилище.")
         db_pool = None
@@ -194,12 +197,12 @@ async def save_user_to_db(user_id: int, username: str = None, first_name: str = 
                           last_name: str = None, avatar_url: str = None,
                           is_premium: bool = False, is_bot: bool = False,
                           language_code: str = None, deep_link_param: str = None,
-                          referrer_id: str = None):
+                          referrer_id: str = None, private_interaction: bool = False):
     """Сохраняет пользователя в БД и публикует событие new-user в Redis при первом визите.
 
     deep_link_param и referrer_id не перезаписываются при повторных визитах —
     сохраняется только значение первого касания (COALESCE).
-    При любом обновлении снимается только is_blocked (разблокировал и снова написал);
+    При подтверждённом личном сообщении снимается только is_blocked;
     is_deleted не трогаем.
     """
     from datetime import datetime, timezone
@@ -224,13 +227,13 @@ async def save_user_to_db(user_id: int, username: str = None, first_name: str = 
                     language_code = COALESCE(EXCLUDED.language_code, bot_users.language_code),
                     deep_link_param = COALESCE(bot_users.deep_link_param, EXCLUDED.deep_link_param),
                     referrer_id = COALESCE(bot_users.referrer_id, EXCLUDED.referrer_id),
-                    is_blocked = 0,
+                    is_blocked = CASE WHEN $13 THEN 0 ELSE bot_users.is_blocked END,
                     last_interaction = NOW(),
                     interaction_count = bot_users.interaction_count + 1
                 RETURNING xmax
             """, user_id, PROJECT_ID, TOKEN_ID, username, first_name, last_name,
                 avatar_url, 1 if is_premium else 0, 1 if is_bot else 0,
-                language_code, deep_link_param, referrer_id)
+                language_code, deep_link_param, referrer_id, private_interaction)
 
         # xmax = 0 означает INSERT (новый пользователь), >0 — UPDATE (существующий)
         is_new_user = result is not None and result['xmax'] == 0
@@ -337,6 +340,7 @@ async def update_user_data_in_db(user_id: int, data_key: str, data_value):
     if not db_pool:
         logging.error("Операция update_user_data_in_db: пул БД недоступен; попытка 0/3")
         return False
+    data_value = globals().get("_analytics_safe_value", lambda item: item)(data_value)
     for attempt in range(1, 4):
         try:
             # Новый acquire позволяет пулу заменить разорванное соединение.

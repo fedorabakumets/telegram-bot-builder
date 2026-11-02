@@ -1,0 +1,144 @@
+{# @fileoverview Долговечная локальная очередь минимальных фактов аналитики с повтором после перезапуска. #}
+
+import sqlite3 as _AnalyticsSqlite
+import time as _AnalyticsTime
+from pathlib import Path as _AnalyticsPath
+from functools import wraps as _analytics_wraps
+
+_analytics_delivery_lock = asyncio.Lock()
+_analytics_system_keys = _AnalyticsContextVar('analytics_system_keys', default=None)
+_analytics_scope_deleted = False
+
+
+def _analytics_spool_directory():
+    """Вычисляет стабильный путь только по числовым ID, без Telegram-токена."""
+    root = _AnalyticsPath(os.environ.get('ANALYTICS_SPOOL_DIR') or (_AnalyticsPath.home() / '.botcraft' / 'analytics-spool')).resolve()
+    directory = root / str(PROJECT_ID) / str(TOKEN_ID)
+    if not directory.resolve().is_relative_to(root) or directory.is_symlink():
+        raise PermissionError('Каталог очереди выходит за настроенную область')
+    return directory
+
+
+def _analytics_spool_connection():
+    """Открывает приватную очередь вне каталога сборки; production требует постоянного тома."""
+    directory = _analytics_spool_directory()
+    directory.mkdir(parents=True, exist_ok=True, mode=0o700)
+    path = directory / 'pending.sqlite3'
+    connection = _AnalyticsSqlite.connect(str(path), timeout=5)
+    try:
+        directory.chmod(0o700)
+        path.chmod(0o600)
+    except OSError:
+        pass
+    connection.execute('PRAGMA journal_mode=WAL')
+    connection.execute('PRAGMA synchronous=FULL')
+    connection.execute('CREATE TABLE IF NOT EXISTS pending (event_key TEXT PRIMARY KEY, payload TEXT NOT NULL, start_tag TEXT, attempts INTEGER NOT NULL DEFAULT 0, retry_at REAL NOT NULL DEFAULT 0)')
+    return connection
+
+
+def _analytics_spool_store(event, start_payload=None):
+    """Синхронно фиксирует безопасный факт до первой попытки PostgreSQL; повторы сохраняют оригинал."""
+    if not event or _analytics_scope_deleted:
+        return None
+    payload, start_tag = _analytics_prepare_event(event, start_payload)
+    with _analytics_spool_connection() as connection:
+        connection.execute('INSERT INTO pending(event_key,payload,start_tag) VALUES(?,?,?) ON CONFLICT(event_key) DO NOTHING',
+            (payload['event_key'], json.dumps(payload, ensure_ascii=False), start_tag))
+    connection.close()
+    keys = _analytics_system_keys.get()
+    if keys is not None:
+        keys.add(payload['event_key'])
+    return payload['event_key']
+
+
+def _analytics_spool_ack(key):
+    """Удаляет запись только после подтверждённого commit в PostgreSQL."""
+    if key and not _analytics_scope_deleted:
+        with _analytics_spool_connection() as connection:
+            connection.execute('DELETE FROM pending WHERE event_key=?', (key,))
+        connection.close()
+
+
+def _analytics_discard_deleted_scope():
+    """Очищает локальные факты окончательно удалённого проекта/бота и останавливает его обработку."""
+    global _analytics_scope_deleted
+    _analytics_scope_deleted = True
+    try:
+        directory = _analytics_spool_directory()
+        for name in ('pending.sqlite3', 'pending.sqlite3-wal', 'pending.sqlite3-shm'):
+            (directory / name).unlink(missing_ok=True)
+        if directory.exists():
+            directory.rmdir()
+    except OSError as error:
+        logging.critical('Не удалось очистить очередь удалённого бота, тип %s', type(error).__name__)
+    stop = globals().get('request_bot_stop')
+    if stop:
+        stop()
+
+
+async def _analytics_spool_flush(force=False):
+    """Повторяет ограниченную пачку; каждая ошибка оставляет факт на диске с задержкой до пяти минут."""
+    if _analytics_scope_deleted:
+        _analytics_discard_deleted_scope()
+        return 0
+    with _analytics_spool_connection() as connection:
+        rows = connection.execute('SELECT event_key,payload,start_tag,attempts FROM pending WHERE retry_at<=? ORDER BY rowid LIMIT 100',
+            (float('inf') if force else _AnalyticsTime.time(),)).fetchall()
+    connection.close()
+    for key, encoded, start_tag, attempts in rows:
+        try:
+            async with _analytics_delivery_lock:
+                if not db_pool:
+                    raise ConnectionError('Пул аналитики ещё недоступен')
+                async with db_pool.acquire() as conn:
+                    async with conn.transaction():
+                        outcome = await _analytics_write_event(conn, json.loads(encoded), start_tag)
+                if outcome and outcome.get('discarded') and outcome.get('reason') == 'resource_deleted':
+                    _analytics_discard_deleted_scope()
+                    return len(rows)
+                _analytics_spool_ack(key)
+        except Exception as error:
+            delay = min(300, 2 ** min(attempts + 1, 9))
+            with _analytics_spool_connection() as connection:
+                connection.execute('UPDATE pending SET attempts=attempts+1,retry_at=? WHERE event_key=?', (_AnalyticsTime.time() + delay, key))
+            connection.close()
+            logging.warning('Очередь аналитики: повтор через %s с, тип %s', delay, type(error).__name__)
+    return len(rows)
+
+
+async def _analytics_spool_worker():
+    """Возобновляет очередь при запуске и доставляет новые факты независимо от Redis."""
+    first = True
+    retry_connection_at = 0
+    while True:
+        try:
+            if not db_pool and _AnalyticsTime.time() >= retry_connection_at:
+                retry_connection_at = _AnalyticsTime.time() + 30
+                await asyncio.wait_for(init_database(), timeout=10)
+            await asyncio.wait_for(_analytics_spool_flush(force=first), timeout=20)
+        except asyncio.TimeoutError:
+            logging.warning('Очередь аналитики: доставка продолжится после тайм-аута')
+        except Exception as error:
+            logging.error('Очередь аналитики недоступна, тип %s', type(error).__name__)
+        first = False
+        await asyncio.sleep(2)
+
+
+def _analytics_guard_system(handler):
+    """Защищает служебный обработчик общей блокировкой и сохраняет очередь при откате транзакции."""
+    @_analytics_wraps(handler)
+    async def wrapped(*args, **kwargs):
+        """Подтверждает служебные факты только после успешного завершения обработчика."""
+        keys = set()
+        async with _analytics_delivery_lock:
+            token = _analytics_system_keys.set(keys)
+            try:
+                result = await asyncio.wait_for(handler(*args, **kwargs), timeout=10)
+                for key in keys:
+                    _analytics_spool_ack(key)
+                return result
+            except Exception as error:
+                logging.warning('Служебное событие остаётся в очереди, тип %s', type(error).__name__)
+            finally:
+                _analytics_system_keys.reset(token)
+    return wrapped

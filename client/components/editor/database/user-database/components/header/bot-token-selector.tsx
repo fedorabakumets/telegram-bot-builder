@@ -1,6 +1,6 @@
 /**
- * @fileoverview Компактный inline-селектор токена бота
- * @description Сортирует ботов по убыванию числа пользователей (как терминал)
+ * @fileoverview Компактный селектор бота с профилями либо переданной подтверждённой аудиторией
+ * @description Число профилей включает наблюдавшихся групповых авторов и не означает подтверждённую аудиторию бота.
  */
 
 import { useMemo } from 'react';
@@ -22,7 +22,7 @@ import {
  * Пропсы селектора токена бота
  */
 interface BotTokenSelectorProps {
-  /** ID проекта — нужен для статистики пользователей */
+  /** ID проекта — нужен для количества сохранённых профилей */
   projectId: number;
   /** Список токенов проекта */
   tokens: BotToken[];
@@ -35,6 +35,8 @@ interface BotTokenSelectorProps {
    * В Диалогах выключать — там нужен конкретный бот для отправки/аватаров.
    */
   allowAll?: boolean;
+  /** Подтверждённая аудитория; при передаче старые счётчики профилей не используются. */
+  audienceCounts?: Map<number, number>;
 }
 
 /**
@@ -52,7 +54,7 @@ function getTokenLabel(token: BotToken): string {
 }
 
 /**
- * Компактный inline-селектор бота: порядок по числу пользователей ↓
+ * Показывает ботов по убыванию числа сохранённых профилей, явно подписывая смысл счётчика.
  * @param props - Пропсы компонента
  * @returns JSX элемент селектора или заглушка при отсутствии ботов
  */
@@ -62,9 +64,11 @@ export function BotTokenSelector({
   selectedTokenId,
   onSelect,
   allowAll = true,
+  audienceCounts,
 }: BotTokenSelectorProps): React.JSX.Element {
   const tokenIds = useMemo(() => tokens.map((t) => t.id), [tokens]);
-  const userCounts = useTokenUserCounts(projectId, tokenIds);
+  const profileCounts = useTokenUserCounts(projectId, audienceCounts ? [] : tokenIds);
+  const userCounts = audienceCounts ?? profileCounts;
   const sortedTokens = useMemo(
     () => sortTokensByUserCountDesc(tokens, userCounts),
     [tokens, userCounts],
@@ -112,7 +116,7 @@ export function BotTokenSelector({
             const count = userCounts.get(token.id);
             const label =
               count !== undefined
-                ? `${getTokenLabel(token)} · ${count}`
+                ? `${getTokenLabel(token)} · ${audienceCounts ? '' : 'профилей: '}${count.toLocaleString('ru-RU')}`
                 : getTokenLabel(token);
             return (
               <SelectItem key={token.id} value={String(token.id)}>

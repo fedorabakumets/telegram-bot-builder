@@ -3,13 +3,13 @@
  * @module client/components/editor/analytics/analytics-users-activity-card
  */
 
+import { AnalyticsChartToolbar } from './analytics-chart-toolbar';
+import { AnalyticsPeriodControl, AnalyticsTypeControl, AnalyticsUsersControl } from './analytics-chart-controls';
 import React, { useState } from 'react';
 import { useUsersActivity, UsersActivityGranularity } from '@/components/editor/database/user-database/hooks/queries/use-users-activity';
 import { StatMetricCard } from '@/components/editor/database/user-database/components/stats';
-import { ActivityGranularitySelector } from '@/components/editor/database/user-database/components/stats/activity-granularity-selector';
-import { ChartTypeToggle, ChartType } from '@/components/editor/database/user-database/components/stats/chart-type-toggle';
+import { ChartType } from '@/components/editor/database/user-database/components/stats/chart-type-toggle';
 import {
-  UserActivitySplitToggle,
   UserActivitySplitMode,
 } from '@/components/editor/database/user-database/components/stats/user-activity-split-toggle';
 import { UsersActivityChartInfo } from './analytics-chart-info-texts';
@@ -76,15 +76,15 @@ export function AnalyticsUsersActivityCard({
       subtitle={newInWindow > 0 ? `${newInWindow} новичков` : undefined}
       trend={activeInWindow > 0 ? 'up' : 'neutral'}
       chartGranularity={granularity}
-      chartHeight={160}
+      chartHeight={224}
       chartType={chartType}
       info={<UsersActivityChartInfo />}
       headerExtra={
-        <div className="flex flex-wrap items-center gap-1">
-          <ActivityGranularitySelector value={granularity} onChange={setGranularity} />
-          <ChartTypeToggle value={chartType} onChange={setChartType} />
-          <UserActivitySplitToggle value={splitMode} onChange={setSplitMode} />
-        </div>
+        <AnalyticsChartToolbar>
+          <AnalyticsPeriodControl value={granularity} onChange={setGranularity} />
+          <AnalyticsTypeControl value={chartType} onChange={setChartType} />
+          <AnalyticsUsersControl value={splitMode} onChange={setSplitMode} />
+        </AnalyticsChartToolbar>
       }
     />
   );

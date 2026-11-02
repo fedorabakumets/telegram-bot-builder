@@ -47,6 +47,7 @@ export function redactSecrets(text: string): string {
   const secret = process.env.AGENT_AUTO_AUTH_SECRET;
   const safe = secret ? text.split(secret).join(REDACTED) : text;
   return safe
+    .replace(/\blink_[A-Za-z0-9_-]+\b/g, 'link_[скрыто]')
     .replace(/\bmcp_[A-Za-z0-9_-]+\b/g, REDACTED)
     .replace(SECRET_FIELD_RE, (_m, field: string) => `"${field}":"${REDACTED}"`)
     .replace(SECRET_ENV_RE, (_m, field: string) => `${field}=${REDACTED}`)

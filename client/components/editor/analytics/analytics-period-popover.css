@@ -1,0 +1,11 @@
+/** @fileoverview Ровная сетка периодов и спокойная поверхность компактной панели отчёта. */
+.analytics-period-popover { background: var(--background); border-color: var(--border); border-radius: 12px; }
+.analytics-period-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.analytics-period-options button { min-height: 36px; padding: 8px; border: 1px solid var(--border); border-radius: 8px; background: transparent; color: var(--muted-foreground); font-size: 12px; line-height: 18px; text-align: center; white-space: nowrap; }
+.analytics-period-options button:hover { background: var(--muted); color: var(--foreground); }
+.analytics-period-options button[aria-pressed="true"] { background: var(--primary); border-color: var(--primary); color: var(--primary-foreground); font-weight: 600; }
+.analytics-period-options button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.analytics-period-settings { border-top: 1px solid var(--border); padding-top: 16px; }
+.analytics-period-settings summary { color: var(--muted-foreground); }
+.analytics-period-settings summary:hover, .analytics-period-settings[open] summary { color: var(--foreground); }
+@media (max-width: 360px) { .analytics-period-options { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

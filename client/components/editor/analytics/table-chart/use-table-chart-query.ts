@@ -3,7 +3,7 @@
  * @module editor/analytics/table-chart/use-table-chart-query
  */
 import { useQuery } from '@tanstack/react-query';
-import { fetchTableChart } from '@/components/editor/tables/api/table-chart-api';
+import { fetchTableChart, type TableChartDateFilter } from '@/components/editor/tables/api/table-chart-api';
 import type { TableAggregation } from './chart-types';
 
 /**
@@ -17,10 +17,12 @@ import type { TableAggregation } from './chart-types';
  */
 export function useTableChartQuery(
   projectId: number, tableId: number | null, xColumnId: number | null, yColumnId: number | null, aggregation: TableAggregation,
+  dateFilter?: TableChartDateFilter,
+  enabled = true,
 ) {
   return useQuery({
-    queryKey: ['bot-table-chart', projectId, tableId, xColumnId, yColumnId, aggregation],
-    queryFn: () => fetchTableChart(projectId, tableId!, xColumnId!, yColumnId!, aggregation),
-    enabled: !!projectId && !!tableId && !!xColumnId && !!yColumnId,
+    queryKey: ['bot-table-chart', projectId, tableId, xColumnId, yColumnId, aggregation, dateFilter],
+    queryFn: () => fetchTableChart(projectId, tableId!, xColumnId!, yColumnId!, aggregation, dateFilter),
+    enabled: enabled && !!projectId && !!tableId && !!xColumnId && !!yColumnId,
   });
 }

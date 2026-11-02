@@ -4,6 +4,8 @@ import type { Pool } from 'pg';
 import { analyticsChange, resolveAnalyticsRange, type AnalyticsRangeOptions } from '../../../shared/analytics/range';
 import { queryAnalyticsRange, supportsDailyRange } from './query-range';
 import { RANGE_METRICS } from './range-events';
+import { setupActivityLeaders } from './setup-activity-leaders';
+import { setupAnalyticsV2Routes } from './v2/setup-routes';
 /**
  * Регистрирует доступ только для чтения с проверкой доступа к проекту.
  * @param app - Приложение Express после авторизации API.
@@ -12,6 +14,9 @@ import { RANGE_METRICS } from './range-events';
  * @returns Ничего.
  */
 export function setupAnalyticsRangeRoutes(app: Express, pool: Pool, access: RequestHandler): void {
+  /** Подключаем рейтинги с той же проверкой доступа к проекту. */
+  setupActivityLeaders(app, pool, access);
+  setupAnalyticsV2Routes(app, pool, access);
   app.get('/api/projects/:id/analytics/range', access, async (req, res) => {
     const now = Date.now();
     const projectId = Number(req.params.id);

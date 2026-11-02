@@ -193,11 +193,11 @@ export function useLiveInvalidate({ projectId, selectedTokenId }: UseLiveInvalid
     const statsUrl = buildUsersApiUrl(`/api/projects/${projectId}/users/stats`, selectedTokenId);
     const statsKey = [statsUrl, selectedTokenId];
     const normalizedTokenId = selectedTokenId ?? null;
-    const usersActivity = createUsersActivityInvalidator(queryClient, projectId);
+    const usersActivity = createUsersActivityInvalidator(queryClient, projectId, selectedTokenId);
 
     const unsubscribe = liveContext.subscribe((event: LiveEvent) => {
       /** События другого бота не обновляют статистику и карточки выбранного бота. */
-      if (event.projectId !== projectId || (selectedTokenId && event.tokenId !== selectedTokenId)) return;
+      if (event.projectId !== projectId || (selectedTokenId && (!('tokenId' in event) || event.tokenId !== selectedTokenId))) return;
       if (event.type === 'new-message') {
         const msg = event as NewMessageLiveEvent;
         const userId = msg.data?.userId;
@@ -237,9 +237,11 @@ export function useLiveInvalidate({ projectId, selectedTokenId }: UseLiveInvalid
 
         // Инвалидируем кэш активности сообщений — новое сообщение влияет на график.
         // queryKey в useMessagesActivity: ['messages-activity', projectId, tokenId, granularity]
-        if (interaction) queryClient.invalidateQueries({
+        /** Служебные сообщения также входят в исходящие точки серверной аналитики. */
+        queryClient.invalidateQueries({
           predicate: (query) => {
-            return query.queryKey[0] === 'messages-activity' && query.queryKey[1] === projectId;
+            return query.queryKey[0] === 'messages-activity' && query.queryKey[1] === projectId
+              && (query.queryKey[2] ?? null) === normalizedTokenId;
           },
         });
 

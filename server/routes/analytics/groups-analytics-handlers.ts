@@ -1,5 +1,5 @@
 /**
- * @fileoverview Чтения карточки «Группы» для выбранного бота.
+ * @fileoverview Чтение групп проекта или выбранного бота с проверкой доступа к проекту.
  * @module server/routes/analytics/groups-analytics-handlers
  */
 import type { Express, Request, Response } from 'express';
@@ -9,29 +9,14 @@ import { getRequestTokenId } from '../utils/resolve-request-token';
 import { queryGroupsGrowth, queryGroupsStats } from './groups-analytics-query';
 
 /**
- * Требует выбранного бота, чтобы не смешивать группы разных ботов.
- * @param req - Запрос
- * @param res - Ответ
- * @returns Идентификатор бота или null, если ответ уже отправлен
- */
-function requiredTokenId(req: Request, res: Response): number | null {
-  const tokenId = getRequestTokenId(req);
-  if (!tokenId) {
-    res.status(400).json({ message: 'Выберите бота' });
-    return null;
-  }
-  return tokenId;
-}
-
-/**
  * Отдаёт текущие числа групп.
  * @param req - Проект и бот
  * @param res - Сводка
  * @returns Завершение
  */
 async function groupsStatsHandler(req: Request, res: Response): Promise<void> {
-  const tokenId = requiredTokenId(req, res);
-  if (!tokenId) return;
+  /** Отсутствие фильтра означает уникальные группы всего проекта. */
+  const tokenId = getRequestTokenId(req);
   const stats = await queryGroupsStats(pool, Number(req.params.projectId), tokenId);
   res.json(stats);
 }
@@ -43,8 +28,8 @@ async function groupsStatsHandler(req: Request, res: Response): Promise<void> {
  * @returns Завершение
  */
 async function groupsGrowthHandler(req: Request, res: Response): Promise<void> {
-  const tokenId = requiredTokenId(req, res);
-  if (!tokenId) return;
+  /** Отсутствие фильтра означает уникальные группы всего проекта. */
+  const tokenId = getRequestTokenId(req);
   const points = await queryGroupsGrowth(
     pool, Number(req.params.projectId), tokenId, req.query.granularity as string | undefined,
   );

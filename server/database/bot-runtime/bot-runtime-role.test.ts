@@ -14,6 +14,7 @@ import {
   BOT_RUNTIME_PROJECT_TABLES,
   BOT_RUNTIME_SEQUENCES,
   BOT_RUNTIME_TABLES,
+  BOT_RUNTIME_ANALYTICS_FUNCTIONS,
 } from "./bot-runtime-tables";
 
 const sql = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "bot-runtime-role.sql"), "utf8");
@@ -50,8 +51,13 @@ describe("bot-runtime-role.sql", () => {
       assert.ok(sql.includes(`'${sequence}'`), sequence);
     }
     for (const table of BOT_RUNTIME_DENIED_TABLES) {
-      assert.ok(!sql.includes(table), table);
+      assert.ok(!sql.includes(`'${table}'`) && !sql.includes(`ON TABLE ${table}`), table);
     }
+  });
+
+  it("выдаёт новой аналитике только EXECUTE узких операций", () => {
+    for (const signature of BOT_RUNTIME_ANALYTICS_FUNCTIONS) assert.ok(sql.includes(`'${signature}'`), signature);
+    assert.match(sql, /GRANT EXECUTE ON FUNCTION %s TO bot_runtime/);
   });
 
   it("ограничивает строки без колонок через родителя", () => {

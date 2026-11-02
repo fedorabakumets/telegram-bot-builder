@@ -3,6 +3,7 @@
  * @module client/components/editor/analytics/analytics-audience-reach-note
  */
 
+import { AnalyticsAudienceSummary, type AudienceSummaryItem } from './analytics-audience-summary';
 import { AnalyticsAudiencePlacesNote } from './analytics-audience-places-note';
 
 /**
@@ -43,32 +44,22 @@ export function AnalyticsAudienceReachNote({
   const available = Math.max(0, totalUsers - unavailable);
   const hasPlaces = privateUsers > 0 || groupUsers > 0 || channelUsers > 0;
 
-  const parts: { className: string; label: string; value: number }[] = [];
+  /** Статусы аудитории с отдельными подписями и значениями. */
+  const parts: AudienceSummaryItem[] = [];
   if (available > 0) {
     parts.push({ className: 'text-emerald-600 dark:text-emerald-400', label: 'Доступны', value: available });
   }
   if (blockedBotUsers > 0) {
-    parts.push({ className: 'text-amber-600 dark:text-amber-400', label: 'Заблокировали', value: blockedBotUsers });
+    parts.push({ className: 'text-amber-600 dark:text-amber-400', label: 'Заблокировали бота', value: blockedBotUsers });
   }
   if (deletedUsers > 0) {
-    parts.push({ className: 'text-orange-600 dark:text-orange-400', label: 'Аккаунт удалён', value: deletedUsers });
+    parts.push({ className: 'text-orange-600 dark:text-orange-400', label: 'Удалённые аккаунты', value: deletedUsers });
   }
   if (parts.length === 0 && !hasPlaces) return null;
 
   return (
-    <div className="space-y-0.5 text-[11px] leading-snug text-muted-foreground">
-      {parts.length > 0 && (
-        <p>
-          {parts.map((part, index) => (
-            <span key={part.label}>
-              {index > 0 && ' · '}
-              <span className={`${part.className} tabular-nums`}>
-                {part.label}: {part.value}
-              </span>
-            </span>
-          ))}
-        </p>
-      )}
+    <div className="space-y-4 text-sm text-muted-foreground">
+      {parts.length > 0 && <AnalyticsAudienceSummary title="Доступность аудитории" items={parts} />}
       <AnalyticsAudiencePlacesNote
         privateUsers={privateUsers}
         groupUsers={groupUsers}

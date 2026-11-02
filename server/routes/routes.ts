@@ -2,6 +2,7 @@
  * @fileoverview Основной роутер HTTP API для проектов, токенов, интеграций и базы пользователей
  */
 
+import { querySourcesAllTime } from './analytics/sources-all-time-query';
 import { insertBotTokenSchema } from "@shared/schema";
 import { ChildProcess } from "child_process";
 import PostgresStore from "connect-pg-simple";
@@ -100,6 +101,7 @@ import {
 import { queryActivityFromDailyPeriod } from "./messages/queryActivityFromDailyPeriod";
 import { handleUserActivity } from "./users/handle-user-activity";
 import { setupAnalyticsRangeRoutes } from './analytics/setup-range-routes';
+import { setupAcquisitionRoutes } from './analytics/acquisition/routes';
 import { updateMessagesRetentionHandler } from "./userProjectsTokens/handlers/tokens/updateMessagesRetentionHandler";
 import { getFirstProjectTokenHandler } from "./projectRoutes/handlers/getFirstProjectTokenHandler";
 
@@ -479,6 +481,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   app.use("/api", attachAdminAudit);
   /** Подключает точные временные диапазоны после общей авторизации. */
   setupAnalyticsRangeRoutes(app, dbPool, requireProjectAccess);
+  /** Источники и расходы используют те же права проекта, что и аналитика. */
+  setupAcquisitionRoutes(app, dbPool, requireProjectAccess);
 
   // Отключаем HTTP-кеширование для API — ответы зависят от сессии.
   // Успешные аватарки/telegram-file перезаписывают заголовки в setPrivateMediaCacheHeaders
@@ -2762,6 +2766,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
 
     try {
+      /** Полная история строится отдельно и не ограничивается окном в один год. */
+      if (granularity === 'all') return res.json(await querySourcesAllTime(dbPool, projectId, tokenId));
       const cfg = getChartSeriesGranularity(granularity);
 
       // Специальная обработка для 5-минутной гранулярности

@@ -147,9 +147,9 @@ describe('generateMessageLoggingCode()', () => {
     expect(r).not.toContain('callback_query_logging_middleware');
   });
 
-  it('без hasInlineButtons нет callback_query_logging_middleware', () => {
+  it('логирует реальные callback независимо от наличия статических inline-кнопок', () => {
     const r = generateMessageLoggingCode(true, false, null, false);
-    expect(r).not.toContain('callback_query_logging_middleware');
+    expect(r).toContain('callback_query_logging_middleware');
   });
 });
 

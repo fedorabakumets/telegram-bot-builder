@@ -18,6 +18,9 @@ import { registerRoutes } from "./routes/routes";
 import { log, serveStatic, setupVite } from "./routes/vite";
 import { storage } from "./storages/storage";
 import { initializeTerminalWebSocket } from './terminal/initializeTerminalWebSocket';
+import { startAnalyticsLiveBridge } from './analytics/live-bridge';
+import { attachAnalyticsHistoryBackfill } from './analytics/attach-history-backfill';
+import { pool } from './database/db';
 import { initializeCanvasWebSocket } from './canvas/initializeCanvasWebSocket';
 import { initializeSupportWebSocket } from './support/initialize-support-websocket';
 import { registerWebSocketUpgrade } from './websocket/registerWebSocketUpgrade';
@@ -162,6 +165,10 @@ app.use((req, res, next) => {
   // Маршрутизацию upgrade по пути выполняет единый registerWebSocketUpgrade —
   // это устраняет конфликт нескольких ws-серверов ("Invalid frame header").
   const terminalWss = initializeTerminalWebSocket();
+  const stopAnalyticsLive = startAnalyticsLiveBridge(pool);
+  httpServer.once('close', stopAnalyticsLive);
+  /** Переносит сохранённую историю всех проектов в фоне после готовности HTTP. */
+  attachAnalyticsHistoryBackfill(httpServer, pool);
   const canvasWss = initializeCanvasWebSocket();
   const supportWss = initializeSupportWebSocket();
   registerWebSocketUpgrade(httpServer, {

@@ -57,6 +57,23 @@ export const BOT_RUNTIME_SEQUENCES = [
 
 /** Служебные таблицы: роли bot_runtime права не выдаются */
 export const BOT_RUNTIME_DENIED_TABLES = [
+  "analytics_events_v2",
+  "analytics_audience_v2",
+  "analytics_legacy_people_v2",
+  "analytics_person_deletions_v2",
+  "analytics_audience_evidence_v2",
+  "analytics_evidence_backfill_v2",
+  "analytics_start_observations_v2",
+  "analytics_start_observation_backfill_v2",
+  "analytics_runtime_v2",
+  "analytics_daily_v2",
+  "analytics_versions_v2",
+  "analytics_outbox_v2",
+  "analytics_sources",
+  "analytics_placements",
+  "analytics_links",
+  "analytics_expenses",
+  "analytics_acquisition_audit",
   "telegram_users",
   "session",
   "app_settings",
@@ -79,4 +96,11 @@ export const BOT_RUNTIME_DENIED_TABLES = [
   "worker_processes",
   "user_project_archives",
   "user_telegram_settings",
+] as const;
+
+/** Узкие операции новой аналитики, доступные runtime без прямых прав на таблицы. */
+export const BOT_RUNTIME_ANALYTICS_FUNCTIONS = [
+  'mark_analytics_runtime_v2(integer,integer)',
+  'record_analytics_event_v2(jsonb)',
+  'analytics_resolve_link_v2(integer,integer,text)',
 ] as const;

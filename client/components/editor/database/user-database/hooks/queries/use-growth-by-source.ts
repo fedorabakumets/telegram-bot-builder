@@ -27,8 +27,8 @@ interface UseGrowthBySourceParams {
   /** Идентификатор выбранного токена бота */
   selectedTokenId?: number | null;
   /** Гранулярность графика, по умолчанию "1d" (30 дней) */
-  granularity?: GrowthGranularity;
-  /** false — не запрашивать (режим «Все» у источников) */
+  granularity?: GrowthGranularity | 'all';
+  /** Разрешает запрос истории, включая весь срок существования проекта */
   enabled?: boolean;
 }
 
@@ -60,7 +60,7 @@ export function useGrowthBySource(params: UseGrowthBySourceParams) {
     retry: false,
     refetchOnMount: 'always',
     refetchOnWindowFocus: false,
-    refetchInterval: getChartGranularityRefetchInterval(granularity),
+    refetchInterval: granularity === 'all' ? false : getChartGranularityRefetchInterval(granularity),
     placeholderData: keepPreviousData,
   });
 

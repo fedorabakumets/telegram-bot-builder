@@ -90,9 +90,9 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
    * @returns true, если проект был удален, иначе false
    */
   async deleteBotProject(id: number): Promise<boolean> {
-    const result = await this.db.delete(botProjects).where(eq(botProjects.id, id));
+    const deleted = await super.deleteBotProject(id);
     this.projectCache.delete(id);
-    return result.rowCount ? result.rowCount > 0 : false;
+    return deleted;
   }
 
   // Bot Instances (простая реализация)
@@ -443,8 +443,7 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
    * @returns true, если токен был удален, иначе false
    */
   async deleteBotToken(id: number): Promise<boolean> {
-    const result = await this.db.delete(botTokens).where(eq(botTokens.id, id));
-    return result.rowCount ? result.rowCount > 0 : false;
+    return super.deleteBotToken(id);
   }
 
   /**

@@ -6,6 +6,7 @@
  */
 
 import React from 'react';
+import { AnalyticsChartState } from '@/components/editor/analytics/analytics-chart-state';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 import { GrowthPoint } from '../../hooks/queries/use-growth';
 import { SparklineChart, MultiLineData } from './sparkline-chart';
@@ -60,22 +61,22 @@ export interface StatMetricCardProps {
   footerExtra?: React.ReactNode;
   /** Спойлер «Что это за график?» */
   info?: React.ReactNode;
+  /** Разделяет нижнюю область и пояснение для выравнивания парных карточек. */
+  alignRows?: boolean;
 }
 
 /**
- * Форматирует число компактно: 1.2K, 3.4M и т.д.
+ * Форматирует точные значения по русским правилам и сокращает миллионы.
  * @param v - Числовое значение
  * @returns Отформатированная строка
  */
 function defaultFormat(v: number): string {
-  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
-  if (v >= 1_000) return `${(v / 1_000).toFixed(1)}K`;
-  if (!Number.isInteger(v)) return v.toFixed(1);
-  return String(v);
+  return v.toLocaleString('ru-RU', { maximumFractionDigits: 1,
+    ...(v >= 1_000_000 ? { notation: 'compact' as const } : {}) });
 }
 
 /**
- * Бейдж тренда с иконкой и subtitle
+ * Подпись изменения за период с отдельным оформлением для аналитики.
  * @param trend - Направление тренда
  * @param subtitle - Текст подписи
  * @returns JSX или null
@@ -89,7 +90,7 @@ function TrendIcon({ trend, subtitle }: { trend?: 'up' | 'down' | 'neutral'; sub
       : null;
   const textColor = trend === 'up' ? 'text-emerald-500' : trend === 'down' ? 'text-rose-500' : 'text-muted-foreground';
   return (
-    <div className="flex items-center gap-1 shrink-0">
+    <div className="metric-trend flex items-center gap-1 shrink-0">
       {icon}
       <span className={`text-xs whitespace-nowrap ${textColor}`}>{subtitle}</span>
     </div>
@@ -97,7 +98,7 @@ function TrendIcon({ trend, subtitle }: { trend?: 'up' | 'down' | 'neutral'; sub
 }
 
 /**
- * Числовая карточка статистики с Railway-стилем sparkline
+ * Числовая карточка с графиком, состоянием загрузки и пояснением под данными.
  * @param props - Пропсы компонента
  * @returns JSX элемент карточки
  */
@@ -122,6 +123,7 @@ export function StatMetricCard(props: StatMetricCardProps): React.JSX.Element {
     secondarySubtitle,
     footerExtra,
     info,
+    alignRows,
   } = props;
   const fmt = formatValue ?? defaultFormat;
   const displayValue = value !== undefined ? fmt(value) : '—';
@@ -132,43 +134,40 @@ export function StatMetricCard(props: StatMetricCardProps): React.JSX.Element {
   const isMultiLine = !!multiLineData && multiLineData.length > 0;
 
   return (
-    <div className="bg-background border rounded-xl p-3 flex flex-col gap-3 min-w-0 overflow-hidden">
+    <div className="analytics-card bg-background border rounded-xl p-3 flex flex-col gap-3 min-w-0 overflow-hidden">
       {stackHeader ? (
         /* Стек-режим: заголовок + число сверху, переключатели снизу */
         <>
           <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 min-w-0">
-              <span className="text-sm font-medium text-foreground truncate">{title}</span>
+            <div className="metric-title-line flex items-center gap-2 min-w-0">
+              <h4 className="text-sm font-medium text-foreground truncate">{title}</h4>
               <TrendIcon trend={trend} subtitle={subtitle} />
             </div>
-            <span className="text-xl sm:text-2xl font-bold text-foreground tabular-nums leading-none shrink-0">
-              {displayValue}
+            <span className="metric-value text-xl sm:text-2xl font-bold text-foreground tabular-nums leading-none shrink-0">
+              {value === undefined ? <span className="analytics-value-skeleton inline-block h-8 w-24 rounded-lg bg-muted" aria-label="Загрузка показателя" /> : displayValue}
             </span>
           </div>
           {headerExtra && (
-            <div className="flex flex-wrap items-center gap-1">{headerExtra}</div>
+            <div className="metric-controls flex flex-wrap items-center gap-1">{headerExtra}</div>
           )}
         </>
       ) : (
         /* Обычный режим: заголовок сверху, переключатели переносятся при нехватке места */
         <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between gap-2 flex-wrap">
-            <div className="flex items-center gap-2 min-w-0">
-              <span className="text-sm font-medium text-foreground truncate">{title}</span>
+          <div className="metric-heading flex items-center justify-between gap-2 flex-wrap">
+            <div className="metric-title-line flex items-center gap-2 min-w-0">
+              <h4 className="text-sm font-medium text-foreground truncate">{title}</h4>
               <TrendIcon trend={trend} subtitle={subtitle} />
             </div>
-            {headerExtra && (
-              <div className="flex flex-wrap items-center gap-1">{headerExtra}</div>
-            )}
           </div>
         </div>
       )}
 
       {/* Большое числовое значение (только в обычном режиме) */}
       {!stackHeader && (
-        <div className="flex items-baseline gap-2">
-          <span className="text-xl sm:text-2xl font-bold text-foreground tabular-nums leading-none">
-            {displayValue}
+        <div className="metric-number flex flex-wrap items-baseline gap-2">
+          <span className="metric-value text-xl sm:text-2xl font-bold text-foreground tabular-nums leading-none">
+            {value === undefined ? <span className="analytics-value-skeleton inline-block h-8 w-24 rounded-lg bg-muted" aria-label="Загрузка показателя" /> : displayValue}
           </span>
           {secondarySubtitle && (
             <span className="text-xs text-muted-foreground whitespace-nowrap">{secondarySubtitle}</span>
@@ -176,10 +175,8 @@ export function StatMetricCard(props: StatMetricCardProps): React.JSX.Element {
         </div>
       )}
 
-      {info}
 
-      {footerExtra}
-
+      {!stackHeader && headerExtra && <div className="metric-controls flex flex-wrap items-center gap-1">{headerExtra}</div>}
       {/* График на всю ширину карточки */}
       {hasChart && (
         <SparklineChart
@@ -195,8 +192,12 @@ export function StatMetricCard(props: StatMetricCardProps): React.JSX.Element {
         />
       )}
 
-      {/* Легенда для multi-line графика */}
-      {isMultiLine && <SourceLegend items={multiLineData!} />}
+      {!hasChart && <AnalyticsChartState loading={value === undefined} description="Данные появятся после первых взаимодействий с ботом. Попробуйте выбрать другой период." />}
+      {alignRows ? <>
+        <div className="metric-bottom-content space-y-4">{footerExtra}{isMultiLine && <SourceLegend items={multiLineData!} />}</div>
+        <div className="metric-bottom-info">{info}</div>
+      </> : <>{footerExtra}{info}{isMultiLine && <SourceLegend items={multiLineData!} />}</>}
+
     </div>
   );
 }

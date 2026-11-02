@@ -60,6 +60,8 @@ def _wrap_bot_send_photo(bot_instance):
             message_text=caption or "[Фото]",
             node_id=node_id,
             message_data=message_data_obj,
+            chat_type=result.chat.type if result and result.chat else 'unknown',
+            chat_id=str(result.chat.id) if result and result.chat and result.chat.type != 'private' else None,
         )
 
         # Вызываем обработчики триггеров исходящих сообщений

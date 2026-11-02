@@ -26,6 +26,7 @@ const serverEnv: NodeJS.ProcessEnv = {
   REDIS_URL: "redis://r",
   API_BASE_URL: "https://studio",
   BOT_CODE_CACHE: "false",
+  ANALYTICS_SPOOL_DIR: "/data/analytics-spool",
   OPENAI_API_KEY: "sk-1",
   STRIPE_SECRET_KEY: "sk-live",
   WORKER_ENV_PASSTHROUGH: "OPENAI_API_KEY,SESSION_SECRET,STRIPE_SECRET_KEY,PGHOST,MISSING_VAR",
@@ -65,7 +66,7 @@ describe("botEnvPolicy", () => {
       assert.ok(!(key in env), key);
     }
     for (const key of ["PATH", "HOME", "LANG", "LC_ALL", "PYTHONUNBUFFERED",
-      "API_BASE_URL", "BOT_CODE_CACHE", "OPENAI_API_KEY"]) {
+      "API_BASE_URL", "BOT_CODE_CACHE", "ANALYTICS_SPOOL_DIR", "OPENAI_API_KEY"]) {
       assert.strictEqual(env[key], serverEnv[key], key);
     }
   });

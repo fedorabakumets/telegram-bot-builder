@@ -8,6 +8,7 @@
 import React from 'react';
 import {
   ResponsiveContainer,
+  CartesianGrid,
   AreaChart,
   BarChart,
   Area,
@@ -67,7 +68,7 @@ export interface SparklineChartProps {
 const MARGIN = { top: 4, right: 4, bottom: 0, left: 0 };
 
 /** Стиль тиков оси X */
-const TICK_STYLE = { fontSize: 9, fill: 'rgba(255,255,255,0.4)' };
+const TICK_STYLE = { fontSize: 12, fill: 'var(--muted-foreground)' };
 
 /**
  * Пропсы кастомного tooltip от recharts
@@ -76,7 +77,7 @@ interface TooltipProps {
   /** Флаг активности tooltip */
   active?: boolean;
   /** Данные точки */
-  payload?: Array<{ payload: any; dataKey: string; color: string; name?: string }>;
+  payload?: Array<{ /** Данные точки. */ payload?: any; /** Ключ серии. */ dataKey?: string | number; /** Цвет серии. */ color?: string; /** Название серии. */ name?: string }>;
   /** Гранулярность для форматирования */
   granularity?: string;
   /** Флаг multi-line режима */
@@ -111,7 +112,7 @@ function renderTooltip(granularity?: string, isMultiLine?: boolean) {
                 style={{ backgroundColor: entry.color }}
               />
               <span className="opacity-80">{entry.name}:</span>
-              <span className="font-bold">{entry.payload[entry.dataKey]}</span>
+              <span className="font-bold">{entry.payload?.[entry.dataKey ?? '']}</span>
             </div>
           ))}
         </div>
@@ -136,9 +137,10 @@ function renderTooltip(granularity?: string, isMultiLine?: boolean) {
  * @returns Функция-рендерер для prop `dot` компонента Area
  */
 function renderLastDot(color: string, dataLength: number) {
-  return function LastDot(props: any): React.JSX.Element | null {
+  /** Возвращает последнюю точку или пустую группу, совместимую с отрисовщиком графиков. */
+  return function LastDot(props: any): React.JSX.Element {
     const { cx, cy, index } = props;
-    if (index !== dataLength - 1) return null;
+    if (index !== dataLength - 1) return <g />;
     return <circle cx={cx} cy={cy} r={3} fill={color} stroke="none" />;
   };
 }
@@ -191,7 +193,8 @@ export function SparklineChart({
       return (
         <ResponsiveContainer width="100%" height={height}>
           <BarChart data={chartData} margin={MARGIN} barCategoryGap="8%">
-            <YAxis hide domain={[0, 'auto']} />
+            <CartesianGrid vertical={false} stroke="var(--border)" strokeDasharray="4 4" />
+            <YAxis width={40} tick={TICK_STYLE} axisLine={false} tickLine={false} allowDecimals={false} domain={[0, 'auto']} />
             <XAxis
               dataKey="date"
               ticks={tickValues}
@@ -232,7 +235,8 @@ export function SparklineChart({
             ))}
           </defs>
           {/* Скрытая ось Y для корректного масштабирования пиков */}
-          <YAxis hide domain={['auto', 'auto']} />
+          <CartesianGrid vertical={false} stroke="var(--border)" strokeDasharray="4 4" />
+          <YAxis width={40} tick={TICK_STYLE} axisLine={false} tickLine={false} allowDecimals={false} domain={[0, 'auto']} />
           <XAxis
             dataKey="date"
             ticks={tickValues}
@@ -252,7 +256,8 @@ export function SparklineChart({
               dataKey={line.name}
               stroke={line.color}
               strokeWidth={idx === 0 ? 2 : 1.5}
-              fill={`url(#${gradientId}-${line.name})`}
+              fill={line.color}
+              fillOpacity={0.08}
               dot={renderLastDot(line.color, chartData.length)}
               activeDot={{ r: idx === 0 ? 4 : 3, fill: line.color, strokeWidth: 0 }}
               isAnimationActive={false}
@@ -286,6 +291,8 @@ export function SparklineChart({
 
   const sharedChildren = (
     <>
+      <CartesianGrid vertical={false} stroke="var(--border)" strokeDasharray="4 4" />
+      <YAxis width={40} tick={TICK_STYLE} axisLine={false} tickLine={false} allowDecimals={false} />
       <XAxis
         dataKey="date"
         ticks={tickValues}
@@ -314,7 +321,8 @@ export function SparklineChart({
           {sharedChildren}
           <Bar
             dataKey="count"
-            fill={`url(#${gradientId})`}
+            fill={lineColor}
+            fillOpacity={isBar ? 0.85 : 0.08}
             radius={[2, 2, 0, 0]}
             isAnimationActive={false}
           />
@@ -338,7 +346,8 @@ export function SparklineChart({
           dataKey="count"
           stroke={lineColor}
           strokeWidth={2}
-          fill={`url(#${gradientId})`}
+          fill={lineColor}
+            fillOpacity={isBar ? 0.85 : 0.08}
           dot={showDots ? { r: 2, fill: lineColor, strokeWidth: 0 } : false}
           activeDot={{ r: 3, fill: lineColor, strokeWidth: 0 }}
           isAnimationActive={false}

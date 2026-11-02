@@ -98,6 +98,11 @@ const TOOL_DOCS: ToolDoc[] = [
 /** Рабочие процессы, которые агент может запросить по описанию задачи. */
 const WORKFLOWS = [
   {
+    id: 'analytics-acquisition',
+    keywords: ['аналитик', 'реклам', 'источник', 'расход', 'стоимость привлечения'],
+    steps: ['db_get_analytics_v2', 'db_list_analytics_sources', 'db_create_analytics_source', 'db_create_analytics_placement', 'db_create_analytics_link', 'db_create_analytics_expense', 'db_get_acquisition_report', 'db_get_analytics_history'],
+  },
+  {
     id: 'calculator',
     keywords: ['калькулятор', 'calculator', 'два числа'],
     steps: ['get_node_docs(input)', 'get_node_docs(code)', 'get_rule_docs(variables)', 'get_workflow_docs(calculator)', 'validate_bot_project'],

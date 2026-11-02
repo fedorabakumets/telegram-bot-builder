@@ -40,7 +40,7 @@ interface AnalyticsAccessCheckProgressProps {
 }
 
 /**
- * Полоса прогресса, живые счётчики и итог.
+ * Показывает читаемый прогресс проверки и доступные действия отмены и закрытия.
  * @param props - Свойства компонента
  * @returns JSX элемент
  */
@@ -81,26 +81,26 @@ export function AnalyticsAccessCheckProgress(props: AnalyticsAccessCheckProgress
   return (
     <div
       className={[
-        'space-y-1.5 rounded-lg border border-border/70 bg-muted/40 px-2.5 py-2',
-        'transition-[opacity,transform] duration-300 ease-out',
-        leaving ? 'pointer-events-none -translate-y-1 scale-[0.98] opacity-0' : 'translate-y-0 scale-100 opacity-100',
+        'space-y-3 rounded-lg border border-border bg-background p-4',
+        'transition-[opacity,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
+        leaving ? 'pointer-events-none motion-safe:-translate-y-1 opacity-0' : 'translate-y-0 scale-100 opacity-100',
       ].join(' ')}
     >
       <div className="flex items-center justify-between gap-2">
-        <p className="min-w-0 text-[11px] leading-snug text-foreground">{title}</p>
+        <p className="min-w-0 text-sm text-foreground">{title}</p>
         {active && onCancel && (
-          <Button type="button" size="sm" variant="ghost" className="h-6 shrink-0 px-2 text-[11px]" disabled={cancelling || status === 'cancelling'} onClick={onCancel}>
+          <Button type="button" size="sm" variant="ghost" className="h-8 shrink-0 px-3 text-sm" disabled={cancelling || status === 'cancelling'} onClick={onCancel}>
             Отменить
           </Button>
         )}
         {!active && onDismiss && (
-          <Button type="button" size="sm" variant="ghost" className="h-6 w-6 shrink-0 p-0 text-muted-foreground" aria-label="Закрыть итог" onClick={onDismiss}>
-            <X className="h-3.5 w-3.5" />
+          <Button type="button" size="sm" variant="ghost" className="h-8 w-8 shrink-0 p-0 text-muted-foreground" aria-label="Закрыть итог" onClick={onDismiss}>
+            <X className="h-4 w-4" />
           </Button>
         )}
       </div>
-      <Progress value={pct} className="h-1.5 bg-background" />
-      <p className="flex flex-wrap gap-x-2 gap-y-0.5 text-[11px] tabular-nums leading-snug">
+      <Progress value={pct} aria-label="Прогресс проверки доступов" className="h-2 bg-muted" />
+      <p className="flex flex-wrap gap-3 text-xs tabular-nums">
         <span className="text-emerald-600 dark:text-emerald-400">Доступны: {availableCount}</span>
         <span className="text-amber-600 dark:text-amber-400">Заблокировали: {kickedCount}</span>
         <span className="text-orange-600 dark:text-orange-400">Аккаунт удалён: {deletedCount}</span>

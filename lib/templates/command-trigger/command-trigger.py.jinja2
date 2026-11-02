@@ -66,7 +66,7 @@ async def deep_link_router(message: types.Message, command: CommandObject, state
         logging.info(f"🔗 [DeepLink] Совпадение (exact '{{ entry.deepLinkParam }}'): args='{safe_args}' → узел {{ entry.targetNodeId }}")
     {%- endif %}
         {%- if entry.deepLinkSaveToVar and entry.deepLinkVarName %}
-        await set_user_var(user_id, "{{ entry.deepLinkVarName }}", safe_args)
+        await set_user_var(user_id, "{{ entry.deepLinkVarName }}", args if args.startswith("link_") else safe_args)
         logging.info(f"🔗 [DeepLink] Переменная '{{ entry.deepLinkVarName }}' = '{safe_args}' сохранена для {user_id}")
         {%- endif %}
 

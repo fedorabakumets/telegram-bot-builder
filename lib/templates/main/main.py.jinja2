@@ -46,9 +46,10 @@ def request_bot_stop():
 
 {% if trackUserBlocks %}
 @dp.my_chat_member()
+@_analytics_guard_system
 async def track_private_bot_membership(update):
     """Сохраняет блокировку или разблокировку бота пользователем в личном чате."""
-    if update.chat.type != "private" or not db_pool:
+    if update.chat.type != "private":
         return
     _new_status = getattr(update.new_chat_member.status, "value", update.new_chat_member.status)
     if _new_status not in {"kicked", "member"}:
@@ -56,30 +57,38 @@ async def track_private_bot_membership(update):
     _user_id = int(update.chat.id)
     _blocked = _new_status == "kicked"
     _event_text = "Пользователь заблокировал бота" if _blocked else "Пользователь разблокировал бота"
+    _fact = _analytics_event('system', f'membership:{update.chat.id}:{int(update.date.timestamp())}:{_new_status}',
+        update.chat.id, update.chat, update.date)
+    _fact['metadata'] = {'system_kind': "bot_blocked" if _blocked else "bot_unblocked"}
+    _analytics_spool_store(_fact)
     async with db_pool.acquire() as _conn:
-        _old_value = await _conn.fetchval(
-            "SELECT is_blocked FROM bot_users WHERE project_id=$1 AND token_id=$2 AND user_id=$3",
-            PROJECT_ID, TOKEN_ID, _user_id,
-        )
-        await _conn.execute(
-            "UPDATE bot_users SET is_blocked=$4, last_interaction=NOW() WHERE project_id=$1 AND token_id=$2 AND user_id=$3",
-            PROJECT_ID, TOKEN_ID, _user_id, 1 if _blocked else 0,
-        )
-        await _conn.execute("""
-            INSERT INTO chat_access (project_id, token_id, chat_id, status, checked_at)
-            VALUES ($1, $2, $3, $4, NOW())
-            ON CONFLICT (project_id, token_id, chat_id) DO UPDATE
-            SET status=EXCLUDED.status, checked_at=EXCLUDED.checked_at
-        """, PROJECT_ID, TOKEN_ID, str(_user_id), "kicked" if _blocked else "available")
-        if _old_value is not None and bool(_old_value) == _blocked:
-            return
-        _row = await _conn.fetchrow("""
-            INSERT INTO bot_messages
-              (project_id, token_id, user_id, message_type, message_text, message_data, chat_type, created_at)
-            VALUES ($1, $2, $3, 'system', $4, $5::jsonb, 'private', NOW())
-            RETURNING id, created_at
-        """, PROJECT_ID, TOKEN_ID, str(_user_id), _event_text,
-             json.dumps({"event": "bot_blocked" if _blocked else "bot_unblocked"}))
+        async with _conn.transaction():
+            _outcome = await _analytics_write_event(_conn, _fact)
+            if _outcome and not _outcome.get('inserted'):
+                return
+            _old_value = await _conn.fetchval(
+                "SELECT is_blocked FROM bot_users WHERE project_id=$1 AND token_id=$2 AND user_id=$3",
+                PROJECT_ID, TOKEN_ID, _user_id,
+            )
+            await _conn.execute(
+                "UPDATE bot_users SET is_blocked=$4, last_interaction=NOW() WHERE project_id=$1 AND token_id=$2 AND user_id=$3",
+                PROJECT_ID, TOKEN_ID, _user_id, 1 if _blocked else 0,
+            )
+            await _conn.execute("""
+                INSERT INTO chat_access (project_id, token_id, chat_id, status, checked_at)
+                VALUES ($1, $2, $3, $4, NOW())
+                ON CONFLICT (project_id, token_id, chat_id) DO UPDATE
+                SET status=EXCLUDED.status, checked_at=EXCLUDED.checked_at
+            """, PROJECT_ID, TOKEN_ID, str(_user_id), "kicked" if _blocked else "available")
+            if _old_value is not None and bool(_old_value) == _blocked:
+                return
+            _row = await _conn.fetchrow("""
+                INSERT INTO bot_messages
+                  (project_id, token_id, user_id, message_type, message_text, message_data, chat_type, created_at)
+                VALUES ($1, $2, $3, 'system', $4, $5::jsonb, 'private', NOW())
+                RETURNING id, created_at
+            """, PROJECT_ID, TOKEN_ID, str(_user_id), _event_text,
+                 json.dumps({"event": "bot_blocked" if _blocked else "bot_unblocked"}))
     if _redis_client:
         await _redis_client.publish(f"bot:message:{PROJECT_ID}:{TOKEN_ID}", json.dumps({
             "id": _row["id"], "userId": str(_user_id), "messageType": "system",
@@ -90,9 +99,10 @@ async def track_private_bot_membership(update):
 {% endif %}
 {% if trackGroupMembership %}
 @dp.my_chat_member()
+@_analytics_guard_system
 async def track_group_bot_membership(update):
     """Сохраняет добавление или исключение бота в группе."""
-    if update.chat.type not in {"group", "supergroup"} or not db_pool:
+    if update.chat.type not in {"group", "supergroup"}:
         return
     _new_status = getattr(update.new_chat_member.status, "value", update.new_chat_member.status)
     if _new_status in {"member", "administrator", "creator"}:
@@ -103,31 +113,39 @@ async def track_group_bot_membership(update):
         return
     _chat_id = str(update.chat.id)
     _title = update.chat.title or _chat_id
+    _fact = _analytics_event('system', f'membership:{update.chat.id}:{int(update.date.timestamp())}:{_new_status}',
+        None, update.chat, update.date)
+    _fact['metadata'] = {'system_kind': _event}
+    _analytics_spool_store(_fact)
     async with db_pool.acquire() as _conn:
-        _old = await _conn.fetchval(
-            "SELECT status FROM chat_access WHERE project_id=$1 AND token_id=$2 AND chat_id=$3",
-            PROJECT_ID, TOKEN_ID, _chat_id,
-        )
-        await _conn.execute("""
-            INSERT INTO chat_access (project_id, token_id, chat_id, status, checked_at)
-            VALUES ($1, $2, $3, $4, NOW())
-            ON CONFLICT (project_id, token_id, chat_id) DO UPDATE
-            SET status=EXCLUDED.status, checked_at=EXCLUDED.checked_at
-        """, PROJECT_ID, TOKEN_ID, _chat_id, _access)
-        await _conn.execute("""
-            INSERT INTO bot_groups (project_id, token_id, group_id, name, url, chat_type, is_active, created_at, updated_at)
-            VALUES ($1, $2, $3, $4, '', $5, 1, NOW(), NOW())
-            ON CONFLICT (project_id, token_id, group_id) WHERE group_id IS NOT NULL AND token_id IS NOT NULL
-            DO UPDATE SET name=EXCLUDED.name, chat_type=EXCLUDED.chat_type, updated_at=NOW()
-        """, PROJECT_ID, TOKEN_ID, _chat_id, _title, update.chat.type)
-        if _old == _access:
-            return
-        _row = await _conn.fetchrow("""
-            INSERT INTO bot_messages
-              (project_id, token_id, user_id, message_type, message_text, message_data, chat_type, chat_id, created_at)
-            VALUES ($1, $2, $3, 'system', $4, $5::jsonb, $6, $3, NOW())
-            RETURNING id, created_at
-        """, PROJECT_ID, TOKEN_ID, _chat_id, _text, json.dumps({"event": _event}), update.chat.type)
+        async with _conn.transaction():
+            _outcome = await _analytics_write_event(_conn, _fact)
+            if _outcome and not _outcome.get('inserted'):
+                return
+            _old = await _conn.fetchval(
+                "SELECT status FROM chat_access WHERE project_id=$1 AND token_id=$2 AND chat_id=$3",
+                PROJECT_ID, TOKEN_ID, _chat_id,
+            )
+            await _conn.execute("""
+                INSERT INTO chat_access (project_id, token_id, chat_id, status, checked_at)
+                VALUES ($1, $2, $3, $4, NOW())
+                ON CONFLICT (project_id, token_id, chat_id) DO UPDATE
+                SET status=EXCLUDED.status, checked_at=EXCLUDED.checked_at
+            """, PROJECT_ID, TOKEN_ID, _chat_id, _access)
+            await _conn.execute("""
+                INSERT INTO bot_groups (project_id, token_id, group_id, name, url, chat_type, is_active, created_at, updated_at)
+                VALUES ($1, $2, $3, $4, '', $5, 1, NOW(), NOW())
+                ON CONFLICT (project_id, token_id, group_id) WHERE group_id IS NOT NULL AND token_id IS NOT NULL
+                DO UPDATE SET name=EXCLUDED.name, chat_type=EXCLUDED.chat_type, updated_at=NOW()
+            """, PROJECT_ID, TOKEN_ID, _chat_id, _title, update.chat.type)
+            if _old == _access:
+                return
+            _row = await _conn.fetchrow("""
+                INSERT INTO bot_messages
+                  (project_id, token_id, user_id, message_type, message_text, message_data, chat_type, chat_id, created_at)
+                VALUES ($1, $2, $3, 'system', $4, $5::jsonb, $6, $3, NOW())
+                RETURNING id, created_at
+            """, PROJECT_ID, TOKEN_ID, _chat_id, _text, json.dumps({"event": _event}), update.chat.type)
     if _redis_client and _row:
         await _redis_client.publish(f"bot:message:{PROJECT_ID}:{TOKEN_ID}", json.dumps({
             "id": _row["id"], "userId": _chat_id, "messageType": "system",
@@ -140,6 +158,9 @@ async def track_group_bot_membership(update):
 async def main():
     """Главная функция запуска бота"""
     global db_pool, dp, _redis_client, _redis_connected, _bot_stop_event
+    {%- if userDatabaseEnabled %}
+    _analytics_install_log_filter()
+    {%- endif %}
 
     _stop_event = asyncio.Event()
     _bot_stop_event = _stop_event
@@ -202,6 +223,8 @@ async def main():
 
         {%- if userDatabaseEnabled %}
         await init_database()
+        # Очередь восстанавливается с диска после каждого запуска, включая смену сборки.
+        _background_tasks.append(asyncio.create_task(_analytics_spool_worker()))
         {%- endif %}
 
         # Загружаем кэш Telegram file_id из media_file_tokens только для текущего TOKEN_ID
@@ -223,6 +246,8 @@ async def main():
 
         {%- if userDatabaseEnabled %}
         dp.message.middleware(message_logging_middleware)
+        dp.message.outer_middleware(_analytics_observe_message)
+        bot.session.middleware(_analytics_outgoing_request)
         dp.message.outer_middleware(BotOutgoingLoggingMiddleware())
         _wrap_bot_send_message(bot)
         _wrap_bot_send_photo(bot)
@@ -234,9 +259,7 @@ async def main():
         _wrap_bot_send_voice(bot)
         _wrap_bot_send_animation(bot)
         _wrap_bot_send_media_group(bot)
-        {%- if hasInlineButtons %}
-        dp.callback_query.middleware(callback_query_logging_middleware)
-        {%- endif %}
+        dp.callback_query.outer_middleware(callback_query_logging_middleware)
         {%- endif %}
 
         {%- if autoRegisterUsers %}
@@ -402,6 +425,7 @@ async def main():
         {%- endif %}
 
         {%- if userDatabaseEnabled %}
+        await _analytics_drain_pending()
         if db_pool:
             await db_pool.close()
         {%- endif %}

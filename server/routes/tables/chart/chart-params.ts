@@ -18,6 +18,12 @@ export interface ParsedChartRequest {
   aggregation: TableAggregation;
   /** Предел групп. */
   limit: number;
+  /** Необязательная колонка даты для общего периода. */
+  dateColumnId?: number;
+  /** Включённая ISO-граница с часовым поясом. */
+  from?: string;
+  /** Исключённая ISO-граница с часовым поясом. */
+  to?: string;
 }
 
 /**
@@ -46,7 +52,20 @@ export function parseChartRequest(req: Request): ParsedChartRequest | { message:
   if (typeof aggregation !== 'string' || !TABLE_AGGREGATIONS.includes(aggregation as TableAggregation)) return { message: 'Некорректный способ подсчёта' };
   const limit = req.query.limit === undefined ? TABLE_CHART_LIMIT : positiveInt(req.query.limit);
   if (!limit || limit > TABLE_CHART_LIMIT) return { message: 'Предел групп должен быть от 1 до 50' };
-  return { projectId, tableId, xColumnId, yColumnId, aggregation: aggregation as TableAggregation, limit };
+  const dateColumnId = req.query.dateColumnId === undefined ? undefined : positiveInt(req.query.dateColumnId);
+  const from = req.query.from;
+  const to = req.query.to;
+  if (dateColumnId === null || (!dateColumnId && (from !== undefined || to !== undefined))) return { message: 'Выберите колонку даты для фильтра периода' };
+  if (dateColumnId && (!validChartDate(from) || !validChartDate(to) || Date.parse(String(from)) >= Date.parse(String(to)))) return { message: 'Укажите корректные границы периода в ISO с часовым поясом' };
+  return { projectId, tableId, xColumnId, yColumnId, aggregation: aggregation as TableAggregation, limit,
+    ...(dateColumnId ? { dateColumnId, from: String(from), to: String(to) } : {}) };
+}
+
+/** Проверяет явную дату границы без неоднозначного локального времени. */
+function validChartDate(value: unknown): value is string {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?(?:Z|[+-]\d{2}:\d{2})$/.test(value) || !Number.isFinite(Date.parse(value))) return false;
+  const day = value.slice(0, 10);
+  return new Date(`${day}T00:00:00Z`).toISOString().slice(0, 10) === day && Number(value.slice(11, 13)) < 24 && Number(value.slice(14, 16)) < 60 && Number(value.slice(17, 19)) < 60;
 }
 
 /**

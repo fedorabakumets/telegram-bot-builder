@@ -1,0 +1,80 @@
+/** @fileoverview Общая визуальная система вкладки аналитики: поверхности, управление, графики и состояния. */
+@font-face { font-family: Manrope; src: url('../../../assets/fonts/manrope-variable.ttf') format('truetype'); font-style: normal; font-weight: 200 800; font-display: swap; }
+.analytics-page { font-family: Manrope, Geist, sans-serif; }
+.analytics-grid { align-items: start; }
+.analytics-section-heading { display: flex; flex-direction: column; gap: 4px; padding-top: 16px; }
+.analytics-section-heading:first-child { padding-top: 0; }
+.analytics-section-heading h3 { font-size: 18px; line-height: 28px; font-weight: 600; text-wrap: balance; }
+.analytics-section-heading p { font-size: 14px; line-height: 20px; color: var(--muted-foreground); text-wrap: pretty; }
+.analytics-page .analytics-card { min-width: 0; padding: 24px; border-radius: 16px; gap: 16px; background: var(--card); border-color: var(--border); container-type: inline-size; }
+.dark .analytics-page .analytics-card { background: #181818; }
+.analytics-page .analytics-card h4 { font-size: 16px; line-height: 24px; font-weight: 600; }
+.analytics-page .analytics-card-heading > div:first-child { flex-wrap: wrap; gap: 8px 16px; }
+.analytics-page .analytics-card-heading > div:last-child:not(:first-child) { display: flex; flex-wrap: wrap; gap: 12px 16px; }
+.analytics-refresh-error { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 16px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; line-height: 20px; }
+.analytics-refresh-error button { color: var(--primary); padding: 8px 12px; }
+.analytics-page .metric-heading { gap: 16px; }
+.analytics-page .metric-title-line { width: 100%; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 16px; }
+.analytics-page .metric-title-line > h4 { font-size: 16px; line-height: 24px; font-weight: 600; }
+.analytics-page .metric-trend { color: var(--muted-foreground); }
+.analytics-page .metric-trend > span { color: var(--muted-foreground); }
+.analytics-page .metric-value { font-size: 30px; line-height: 36px; font-weight: 600; letter-spacing: -0.025em; }
+/** Подписанные настройки сохраняют все режимы и переносятся целыми группами. */
+.analytics-page .metric-controls > div, .analytics-card-controls { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 16px; }
+.analytics-control-field { display: flex; flex-direction: column; gap: 8px; min-width: 0; max-width: 100%; }
+.analytics-control-field > span { font-size: 12px; line-height: 16px; color: var(--muted-foreground); }
+.analytics-page .metric-controls > .analytics-chart-toolbar { display: flex; flex-direction: column; align-items: stretch; gap: 12px; width: 100%; }
+.analytics-chart-settings > summary { width: fit-content; cursor: pointer; padding: 8px 0; color: var(--muted-foreground); font-size: 12px; line-height: 16px; }
+.analytics-chart-settings > summary:hover { color: var(--foreground); }
+.analytics-chart-settings > summary:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: 4px; }
+.analytics-chart-settings > div { display: flex; flex-wrap: wrap; gap: 16px; padding-top: 8px; }
+.analytics-segments { display: flex; flex-wrap: wrap; gap: 4px; max-width: 100%; padding: 4px; border-radius: 8px; background: var(--background); border: 1px solid var(--border); }
+.dark .analytics-segments { background: #1f1f1f; }
+.analytics-page .analytics-segments button { min-height: 32px; padding: 8px 12px; border-radius: 4px; font-size: 12px; line-height: 16px; font-weight: 500; color: var(--muted-foreground); transition: color 300ms cubic-bezier(0.22,1,0.36,1), background-color 300ms cubic-bezier(0.22,1,0.36,1); }
+.analytics-page .analytics-segments button[aria-pressed='true'] { background: var(--primary); color: var(--primary-foreground); }
+.analytics-page .analytics-segments button:hover:not([aria-pressed='true']) { background: var(--muted); color: var(--foreground); }
+.analytics-page button:focus-visible, .analytics-page [role='button']:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.analytics-page .analytics-segments button:active { transform: scale(0.98); }
+/** Легенды оформлены строками с одинаковым выравниванием чисел. */
+.analytics-source-legend > div:first-child { flex-wrap: wrap; font-size: 12px; line-height: 16px; gap: 8px; }
+.analytics-source-legend button { min-height: 40px; padding: 8px 12px; }
+.analytics-source-legend .truncate { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.analytics-donut-content { display: flex; flex-direction: column; align-items: center; gap: 24px; }
+.analytics-donut-legend { width: 100%; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.analytics-donut-row { display: grid; grid-template-columns: 8px minmax(0, 1fr) auto 48px; align-items: center; gap: 12px; padding: 8px; border-radius: 8px; font-size: 14px; line-height: 20px; }
+.analytics-donut-row > span:nth-last-child(-n+2) { font-variant-numeric: tabular-nums; text-align: right; }
+.analytics-donut-row > span:last-child { font-size: 12px; color: var(--muted-foreground); }
+.analytics-donut-row[role='button']:hover { background: var(--muted); }
+/** Чёткие оси и подсказки одинаково читаются в обеих темах. */
+.analytics-page .recharts-cartesian-axis-tick text { font-size: 12px; fill: var(--muted-foreground); }
+.analytics-page .recharts-tooltip-wrapper > div { padding: 12px; border-radius: 8px; font-size: 12px; line-height: 16px; background: var(--popover); color: var(--popover-foreground); border: 1px solid var(--border); }
+.analytics-page .recharts-responsive-container { min-width: 0; }
+.analytics-page .recharts-surface:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+/** Загрузка сохраняет высоту графика; пустые состояния объясняют следующий шаг. */
+.analytics-chart-state { min-height: 224px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 8px; padding: 24px; text-align: center; }
+.analytics-chart-state > p { font-size: 14px; line-height: 20px; font-weight: 600; }
+.analytics-chart-state > span { max-width: 28rem; font-size: 14px; line-height: 20px; color: var(--muted-foreground); text-wrap: pretty; }
+.analytics-chart-state > button { padding: 8px 12px; font-size: 14px; border: 1px solid var(--border); border-radius: 8px; }
+.analytics-chart-skeleton { display: flex; align-items: flex-end; gap: 12px; width: 100%; height: 160px; }
+.analytics-chart-skeleton > span { flex: 1; border-radius: 4px; background: var(--muted); }
+.analytics-value-skeleton { display: inline-block; width: 96px; height: 36px; background: var(--muted); border-radius: 8px; }
+/** Конструктор графика использует явные подписи и свободную ширину полей. */
+.analytics-table-controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(144px, 1fr)); gap: 16px; }
+.analytics-table-controls > div { min-width: 0; gap: 8px; }
+.analytics-table-controls [role='combobox'] { min-width: 0; width: 100%; height: 40px; font-size: 14px; }
+.analytics-table-warning { border: 1px solid var(--border); border-radius: 8px; padding: 12px; font-size: 12px; line-height: 16px; color: var(--muted-foreground); }
+@container (max-width: 479px) {
+  .analytics-page .analytics-card { padding: 16px; }
+  .analytics-page .metric-title-line { flex-direction: column; align-items: flex-start; }
+  .analytics-donut-row { gap: 8px; }
+  .analytics-source-legend > .grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .analytics-chart-skeleton, .analytics-value-skeleton { animation: analytics-loading 1.5s cubic-bezier(0.22,1,0.36,1) infinite alternate; }
+}
+@keyframes analytics-loading { from { opacity: 0.4; } to { opacity: 0.8; } }
+
+/** В широкой карточке кольцо и легенда используют свободное пространство рядом. */
+@container (min-width: 560px) {
+  .analytics-donut-content { display: grid; grid-template-columns: 200px minmax(0, 1fr); align-items: center; }
+}

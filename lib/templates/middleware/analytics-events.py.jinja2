@@ -1,0 +1,167 @@
+{# @fileoverview Подтверждённые события аналитики: классификация Telegram, безопасная атрибуция и дедупликация. #}
+
+from contextvars import ContextVar as _AnalyticsContextVar
+from datetime import datetime as _AnalyticsDateTime, timezone as _AnalyticsTimezone
+
+ANALYTICS_METHOD_VERSION = 2
+_analytics_incoming_context = _AnalyticsContextVar('analytics_incoming', default=None)
+_analytics_observation = _AnalyticsContextVar('analytics_observation', default=None)
+_analytics_last_outgoing = _AnalyticsContextVar('analytics_last_outgoing', default=None)
+
+
+async def _analytics_observe_message(handler, event, data):
+    """Сохраняет также сообщения без обработчика; внутренний middleware сообщает о принятой команде."""
+    marker = {'recorded': False}
+    token = _analytics_observation.set(marker)
+    try:
+        return await handler(event, data)
+    finally:
+        if not marker['recorded']:
+            async def _unhandled_message(message, context):
+                """Не запускает сценарий повторно после наблюдения необработанного сообщения."""
+                return None
+            await message_logging_middleware(_unhandled_message, event, data)
+        _analytics_observation.reset(token)
+
+
+def _analytics_safe_value(value):
+    """Скрывает одноразовые коды входа на стандартных границах хранения."""
+    import re as _analytics_re
+    if isinstance(value, str):
+        return _analytics_re.sub(r'(?<![A-Za-z0-9_])link_[A-Za-z0-9_-]+', 'link_[скрыто]', value)
+    if isinstance(value, dict):
+        return {_analytics_safe_value(key) if isinstance(key, str) else key: _analytics_safe_value(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_analytics_safe_value(item) for item in value]
+    return value
+
+
+class _AnalyticsSecretLogFilter(logging.Filter):
+    """Скрывает одноразовые ссылки в стандартных сообщениях журнала, включая пользовательские переменные."""
+    def filter(self, record):
+        """Подменяет отформатированный текст до отправки стандартным обработчикам."""
+        record.msg, record.args = _analytics_safe_value(record.getMessage()), ()
+        if record.exc_info:
+            record.exc_text = _analytics_safe_value(logging.Formatter().formatException(record.exc_info))
+        if record.stack_info:
+            record.stack_info = _analytics_safe_value(record.stack_info)
+        return True
+
+
+def _analytics_install_log_filter():
+    """Устанавливает маскирование на действующие стандартные обработчики журнала."""
+    for handler in logging.getLogger().handlers:
+        if not any(isinstance(item, _AnalyticsSecretLogFilter) for item in handler.filters):
+            handler.addFilter(_AnalyticsSecretLogFilter())
+
+
+def _analytics_event(kind, key, user_id, chat, occurred_at=None, directed=False):
+    """Создаёт минимальный аналитический факт без текста и параметров авторизации."""
+    return {
+        'project_id': PROJECT_ID, 'token_id': TOKEN_ID, 'event_key': key,
+        'kind': kind, 'user_id': str(user_id) if user_id is not None else None,
+        'chat_id': str(chat.id) if chat is not None else None,
+        'chat_type': getattr(chat, 'type', 'unknown'), 'directed': directed,
+        'occurred_at': (occurred_at or _AnalyticsDateTime.now(_AnalyticsTimezone.utc)).isoformat(),
+        'attribution_status': 'no_marker', 'provenance': 'live',
+    }
+
+
+async def _analytics_classify_message(event, data):
+    """Различает наблюдение в группе и направленное обращение реального человека."""
+    user, chat = getattr(event, 'from_user', None), getattr(event, 'chat', None)
+    if not user or user.is_bot or getattr(event, 'sender_chat', None) or not chat or getattr(event, '_is_fake', False):
+        return None
+    # Служебное сообщение Telegram не является сообщением человека.
+    content_type = getattr(event, 'content_type', 'text')
+    if content_type not in {'text', 'photo', 'video', 'animation', 'audio', 'voice', 'video_note', 'document', 'sticker', 'contact', 'location', 'venue', 'poll', 'dice', 'game', 'paid_media'}:
+        return None
+    directed = chat.type == 'private'
+    if chat.type in {'group', 'supergroup'}:
+        import re as _analytics_re
+        event_bot = data.get('bot') or globals().get('bot')
+        bot_id = getattr(event_bot, 'id', None)
+        reply_user = getattr(getattr(event, 'reply_to_message', None), 'from_user', None)
+        directed = bool(reply_user and reply_user.id == bot_id)
+        text = getattr(event, 'text', None) or getattr(event, 'caption', None) or ''
+        command = data.get('command')
+        if text.startswith('/'):
+            token = text.split(None, 1)[0]
+            if _analytics_re.fullmatch(r'/[A-Za-z0-9_]{1,32}@[A-Za-z0-9_]+', token) and event_bot:
+                me = await event_bot.me()
+                directed = token.split('@', 1)[1].lower() == (me.username or '').lower()
+            elif '@' not in token and command is not None:
+                # Aiogram передаёт CommandObject только после принятого Command-фильтра.
+                directed = True
+    payload = _analytics_event('message_in', f'msg:{chat.id}:{event.message_id}', user.id, chat, event.date, directed)
+    text = getattr(event, 'text', None) or ''
+    if directed and text.strip() and text.split(None, 1)[0].split('@', 1)[0] == '/start':
+        payload['metadata'] = {'entry': True}
+    return payload
+
+
+def _analytics_classify_callback(event):
+    """Учитывает только настоящий callback; переходы MockCallback не создают события."""
+    user = getattr(event, 'from_user', None)
+    if getattr(event, '_is_fake', False) or not getattr(event, 'id', None) or not user or user.is_bot:
+        return None
+    chat = getattr(getattr(event, 'message', None), 'chat', None)
+    return _analytics_event('callback', f'cb:{event.id}', user.id, chat, directed=True)
+
+
+def _analytics_start_payload(event):
+    """Извлекает текущую метку /start для реестра; код входа в реестр не передаёт."""
+    import re as _analytics_re
+    match = _analytics_re.match(r'^/start(?:@\w+)?(?:\s+(\S+))?\s*$', getattr(event, 'text', None) or '')
+    if not match or not match.group(1):
+        return None
+    return 'link_[скрыто]' if match.group(1).startswith('link_') else match.group(1)
+
+
+def _analytics_prepare_event(event, start_payload=None):
+    """Оставляет минимальные поля факта и публичную метку, исключая секрет входа ещё до очереди."""
+    import re as _analytics_re
+    allowed = ('project_id', 'token_id', 'event_key', 'kind', 'user_id', 'chat_id', 'chat_type', 'directed',
+        'occurred_at', 'attribution_status', 'provenance', 'first_known', 'source_id', 'link_id',
+        'placement_id', 'referrer_id', 'purpose', 'observed_tag')
+    payload = {key: event[key] for key in allowed if key in event}
+    payload['metadata'] = {key: _analytics_safe_value(value) for key, value in event.get('metadata', {}).items()
+        if key in {'entry', 'system_kind', 'button_label'}}
+    if payload['metadata'].get('entry') and not payload.get('purpose'):
+        payload['purpose'] = 'start'
+    tag = start_payload or payload.get('observed_tag')
+    if tag and tag.startswith('link_'):
+        payload.update(attribution_status='auth_candidate', purpose='auth')
+        payload.pop('observed_tag', None)
+        return payload, None
+    if tag and _analytics_re.fullmatch(r'[A-Za-z0-9_-]{1,64}', tag):
+        payload.update(observed_tag=tag, attribution_status='referral_unknown' if tag == 'ref' or tag.startswith('ref_') else 'unknown')
+        return payload, tag
+    payload.pop('observed_tag', None)
+    if tag:
+        payload['attribution_status'] = 'unknown'
+    return payload, None
+
+
+async def _analytics_write_event(conn, event, start_payload=None):
+    """Пишет безопасный факт в транзакции; сбой реестра оставляет событие в локальной очереди."""
+    if not event:
+        return None
+    payload, _ = _analytics_prepare_event(event, start_payload)
+    # Реестр, проверка удалённой области и факт обрабатываются одной SQL-операцией.
+    response = await conn.fetchval('SELECT public.record_analytics_event_v2($1::jsonb)', json.dumps(payload, ensure_ascii=False))
+    outcome = json.loads(response) if isinstance(response, str) else response
+    if outcome and outcome.get('discarded') and outcome.get('reason') == 'resource_deleted':
+        _analytics_discard_deleted_scope()
+    return outcome
+
+
+def _analytics_outgoing_event(user_id, message_data, chat_type, chat_id):
+    """Получает стабильную идентичность успешной отправки из ответа Telegram."""
+    message_id = (message_data or {}).get('message_id')
+    if not message_id:
+        return None
+    actual_chat_id = chat_id or user_id
+    payload = _analytics_event('message_out', f'msg_out:{actual_chat_id}:{message_id}', user_id if chat_type == 'private' else None, None)
+    payload.update(chat_id=str(actual_chat_id), chat_type=chat_type)
+    return payload

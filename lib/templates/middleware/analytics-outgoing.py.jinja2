@@ -1,0 +1,74 @@
+{# @fileoverview Учёт успешных отправок, пересылок и копий без влияния ошибок аналитики на доставку. #}
+
+async def _analytics_outgoing_chat(method, bot):
+    """Получает чат для ответа MessageId; числовой адрес не требует дополнительного запроса."""
+    from types import SimpleNamespace as _AnalyticsChat
+    target = getattr(method, 'chat_id', None)
+    if target is None:
+        return None
+    if str(target).lstrip('-').isdigit() and int(target) != 0:
+        target = int(target)
+        context = (_analytics_incoming_context.get() or {}).get('event') or {}
+        chat_type = context.get('chat_type') if str(context.get('chat_id')) == str(target) else None
+        # Отрицательный ID бывает и у канала: без доказательства тип не угадываем.
+        return _AnalyticsChat(id=target, type=chat_type or ('private' if target > 0 else 'unknown'))
+    try:
+        # Только копирование на @username требует lookup, уже после успешной отправки.
+        return await asyncio.wait_for(bot.get_chat(target), timeout=2)
+    except Exception as error:
+        logging.warning('Аналитика копирования: числовой ID адресата не установлен, тип %s', type(error).__name__)
+        return None
+
+
+def _analytics_outgoing_details(message):
+    """Извлекает необязательные данные медиа, сохраняя идентичность при ошибке сериализации."""
+    details = {'message_id': message.message_id}
+    try:
+        for kind in ('photo', 'video', 'audio', 'document', 'sticker', 'voice', 'animation', 'video_note'):
+            media = getattr(message, kind, None)
+            if media:
+                media = media[-1] if kind == 'photo' else media
+                details[kind] = media.model_dump(mode='json', exclude_none=True)
+        keyboard = getattr(getattr(message, 'reply_markup', None), 'inline_keyboard', None)
+        if keyboard:
+            details['buttons'] = [button.model_dump(mode='json', exclude_none=True) for row in keyboard for button in row]
+            details['keyboard_type'] = 'inline'
+    except Exception as error:
+        logging.warning('Аналитика отправки: сохранена идентичность без части данных медиа, тип %s', type(error).__name__)
+    return details
+
+
+async def _analytics_outgoing_request(make_request, bot, method):
+    """Записывает каждый успешный Message/MessageId; ошибка учёта не превращает отправку в неудачную."""
+    result = await make_request(bot, method)
+    if getattr(method, '__api_method__', '') not in {
+        'sendMessage', 'sendPhoto', 'sendVideo', 'sendAudio', 'sendDocument', 'sendSticker',
+        'sendVoice', 'sendAnimation', 'sendMediaGroup', 'sendVideoNote', 'sendLocation',
+        'sendVenue', 'sendContact', 'sendPoll', 'sendDice', 'sendGame', 'sendInvoice', 'sendPaidMedia', 'sendChecklist',
+        'forwardMessage', 'forwardMessages', 'copyMessage', 'copyMessages',
+    }:
+        return result
+    resolved_chat, lookup_attempted = None, False
+    for message in result if isinstance(result, list) else [result]:
+        if not getattr(message, 'message_id', None):
+            continue
+        try:
+            chat = getattr(message, 'chat', None)
+            if chat is None:
+                if not lookup_attempted:
+                    resolved_chat = await _analytics_outgoing_chat(method, bot)
+                    lookup_attempted = True
+                chat = resolved_chat
+            if chat is None:
+                continue
+            details = _analytics_outgoing_details(message)
+            chat_id = str(chat.id) if chat.type != 'private' else None
+            _analytics_last_outgoing.set({'user_id': str(chat.id), 'message_data': details,
+                'chat_type': chat.type, 'chat_id': chat_id})
+            event = _analytics_event('message_out', f'msg_out:{chat.id}:{message.message_id}',
+                chat.id if chat.type == 'private' else None, chat, getattr(message, 'date', None))
+            await save_message_to_api(str(chat.id), 'bot', getattr(message, 'text', None) or getattr(message, 'caption', None) or '[Медиа]',
+                message_data=details, chat_type=chat.type, chat_id=chat_id, analytics_event=event)
+        except Exception as error:
+            logging.critical('Успешная отправка не записана в аналитику, тип %s', type(error).__name__)
+    return result

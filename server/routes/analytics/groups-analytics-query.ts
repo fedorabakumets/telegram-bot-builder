@@ -1,5 +1,5 @@
 /**
- * @fileoverview Сводка и ряд графика групп выбранного бота.
+ * @fileoverview Уникальные группы проекта или одного бота и дата их первого сохранения.
  * @module server/routes/analytics/groups-analytics-query
  */
 import type { Pool } from 'pg';
@@ -25,26 +25,34 @@ export interface GroupsGrowthPoint {
   count: number;
 }
 
+/** Общая область групп: одна запись на чат, самая ранняя дата и доступ хотя бы одного бота. */
+const GROUPS_SCOPE_SQL = `
+  SELECT g.group_id, MIN(g.created_at) AS created_at,
+    BOOL_OR(a.status = 'available') AS available,
+    BOOL_AND(COALESCE(a.status = 'kicked', FALSE)) AS kicked
+  FROM bot_groups g
+  LEFT JOIN chat_access a
+    ON a.project_id = g.project_id AND a.token_id = g.token_id AND a.chat_id = g.group_id
+  WHERE g.project_id = $1 AND ($2::integer IS NULL OR g.token_id = $2)
+    AND g.group_id IS NOT NULL AND g.chat_type IN ('group', 'supergroup')
+  GROUP BY g.group_id
+`;
+
 /**
  * Считает группы, доступные и исключённые.
  * @param pool - Пул базы
  * @param projectId - Проект
- * @param tokenId - Бот
+ * @param tokenId - Бот или весь проект при отсутствии фильтра
  * @returns Сводка
  */
-export async function queryGroupsStats(pool: Pool, projectId: number, tokenId: number): Promise<GroupsAnalyticsStats> {
+export async function queryGroupsStats(pool: Pool, projectId: number, tokenId: number | null): Promise<GroupsAnalyticsStats> {
   const result = await pool.query(`
-    SELECT
-      COUNT(*)::int AS "totalGroups",
-      COUNT(*) FILTER (WHERE a.status = 'available')::int AS "availableGroups",
-      COUNT(*) FILTER (WHERE a.status = 'kicked')::int AS "kickedGroups",
-      COUNT(*) FILTER (WHERE g.created_at >= NOW() - INTERVAL '7 days')::int AS "addedLast7Days"
-    FROM bot_groups g
-    LEFT JOIN chat_access a
-      ON a.project_id = g.project_id AND a.token_id = g.token_id AND a.chat_id = g.group_id
-    WHERE g.project_id = $1 AND g.token_id = $2
-      AND g.group_id IS NOT NULL
-      AND g.chat_type IN ('group', 'supergroup')
+    WITH scoped AS (${GROUPS_SCOPE_SQL})
+    SELECT COUNT(*)::int AS "totalGroups",
+      COUNT(*) FILTER (WHERE available)::int AS "availableGroups",
+      COUNT(*) FILTER (WHERE kicked)::int AS "kickedGroups",
+      COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '7 days')::int AS "addedLast7Days"
+    FROM scoped
   `, [projectId, tokenId]);
   const row = result.rows[0] ?? {};
   return {
@@ -59,12 +67,12 @@ export async function queryGroupsStats(pool: Pool, projectId: number, tokenId: n
  * Строит ряд первого сохранения групп по тем же отрезкам, что у пользователей.
  * @param pool - Пул базы
  * @param projectId - Проект
- * @param tokenId - Бот
+ * @param tokenId - Бот или весь проект при отсутствии фильтра
  * @param granularity - Ключ периода
  * @returns Точки от старых к новым
  */
 export async function queryGroupsGrowth(
-  pool: Pool, projectId: number, tokenId: number, granularity: string | undefined,
+  pool: Pool, projectId: number, tokenId: number | null, granularity: string | undefined,
 ): Promise<GroupsGrowthPoint[]> {
   const cfg = getChartSeriesGranularity(granularity);
   const five = granularity === '5m';
@@ -76,7 +84,7 @@ export async function queryGroupsGrowth(
     ? "DATE_TRUNC('hour', NOW()) + INTERVAL '55 minutes'"
     : `DATE_TRUNC('${cfg.truncate}', NOW())`;
   const result = await pool.query(`
-    WITH series AS (
+    WITH scoped AS (${GROUPS_SCOPE_SQL}), series AS (
       SELECT generate_series(
         DATE_TRUNC('${seriesFrom}', NOW() - INTERVAL '${cfg.window}'),
         ${seriesTo},
@@ -85,11 +93,8 @@ export async function queryGroupsGrowth(
     ),
     groups AS (
       SELECT ${slot} AS slot, COUNT(*) AS cnt
-      FROM bot_groups g
-      WHERE g.project_id = $1 AND g.token_id = $2
-        AND g.group_id IS NOT NULL
-        AND g.chat_type IN ('group', 'supergroup')
-        AND g.created_at >= NOW() - INTERVAL '${cfg.window}'
+      FROM scoped g
+      WHERE g.created_at >= NOW() - INTERVAL '${cfg.window}'
       GROUP BY 1
     )
     SELECT s.slot AS date, COALESCE(u.cnt, 0) AS count

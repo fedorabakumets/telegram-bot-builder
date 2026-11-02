@@ -1,4 +1,7 @@
+/** @fileoverview Прямая доставка терминального сообщения с повторной проверкой прав. */
 import { WebSocket } from 'ws';
+import { sendAuthorizedTerminal } from './terminal-access';
+import { redactSecrets } from '../utils/redactSecrets';
 import { TerminalMessage } from './TerminalMessage';
 
 /**
@@ -14,13 +17,11 @@ import { TerminalMessage } from './TerminalMessage';
 export function sendMessage(ws: WebSocket, type: 'stdout' | 'stderr' | 'status', content: string, projectId: number, tokenId: number) {
     const message: TerminalMessage = {
         type,
-        content,
+        content: redactSecrets(content),
         projectId,
         tokenId,
         timestamp: new Date().toISOString()
     };
 
-    if (ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify(message));
-    }
+    void sendAuthorizedTerminal(ws, JSON.stringify(message), projectId, tokenId);
 }

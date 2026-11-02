@@ -12,11 +12,13 @@ const THROTTLE_MS = 5_000;
  * Создаёт функцию сброса кэша users-activity с ограничением частоты
  * @param queryClient - Клиент React Query
  * @param projectId - Идентификатор проекта
+ * @param tokenId - Выбранный бот или все боты проекта.
  * @returns Функция сброса и очистка таймера
  */
 export function createUsersActivityInvalidator(
   queryClient: QueryClient,
   projectId: number,
+  tokenId?: number | null,
 ): { invalidate: () => void; dispose: () => void } {
   let lastAt = 0;
   let timer: ReturnType<typeof setTimeout> | null = null;
@@ -25,7 +27,8 @@ export function createUsersActivityInvalidator(
     lastAt = Date.now();
     queryClient.invalidateQueries({
       predicate: (query) =>
-        query.queryKey[0] === 'users-activity' && query.queryKey[1] === projectId,
+        query.queryKey[0] === 'users-activity' && query.queryKey[1] === projectId
+        && (query.queryKey[2] ?? null) === (tokenId ?? null),
     });
   };
 

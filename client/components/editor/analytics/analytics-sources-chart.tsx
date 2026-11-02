@@ -3,6 +3,9 @@
  * @description Stacked bar / Area: топ-источники + «Остальные», обычный tooltip recharts.
  */
 
+import { AnalyticsTypeControl } from './analytics-chart-controls';
+import { AnalyticsChartState } from './analytics-chart-state';
+import { AnalyticsChartToolbar } from './analytics-chart-toolbar';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -16,9 +19,9 @@ import { useGrowthBySource } from '@/components/editor/database/user-database/ho
 import { aggregateTopSources } from '@/components/editor/database/user-database/components/stats/source-aggregation-utils';
 import { fmtTick, fmtTooltipDate, getTickIndices } from '@/components/editor/database/user-database/components/stats/sparkline-utils';
 import { useUserMessagesLiveContext } from '@/components/editor/database/user-database/contexts/user-messages-live-context';
-import { ChartTypeToggle, ChartType } from '@/components/editor/database/user-database/components/stats/chart-type-toggle';
+import { ChartType } from '@/components/editor/database/user-database/components/stats/chart-type-toggle';
 import { SourcesTrendChartInfo } from './analytics-chart-info-texts';
-import { SourcesPeriodSelector } from './sources-period-selector';
+import { AnalyticsSourcesPeriodControl } from './analytics-chart-controls';
 import { SourcesPeriod } from './sources-period';
 
 /**
@@ -30,7 +33,7 @@ export interface AnalyticsSourcesChartProps {
   /** Идентификатор выбранного токена бота */
   selectedTokenId?: number | null;
   /** Окно столбцов; задаёт родительская пара карточек */
-  granularity: GrowthGranularity;
+  granularity: GrowthGranularity | 'all';
   /** false — пояснение вместо графика, режим «Все» */
   showSeries: boolean;
   /** Выбранный срок пары карточек */
@@ -64,11 +67,11 @@ function SourcesTooltip({
       if (aOther !== bOther) return aOther - bOther;
       return Number(b.value) - Number(a.value);
     });
-  if (!nonZero.length) return null;
+  if (!nonZero.length || !date) return null;
 
   return (
     <div className="bg-popover border rounded-md px-2 py-1.5 text-xs shadow-md min-w-[120px] relative z-[60]">
-      <div className="opacity-60 mb-1.5 text-[10px]">{fmtTooltipDate(date, granularity)}</div>
+      <div className="opacity-60 mb-1.5 text-xs">{fmtTooltipDate(date, granularity === 'all' ? '30d' : granularity)}</div>
       {nonZero.map((entry) => (
         <div key={String(entry.dataKey)} className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-1.5 min-w-0">
@@ -214,8 +217,8 @@ export function AnalyticsSourcesChart({
         x={x + width / 2}
         y={y - 4}
         textAnchor="middle"
-        fill="rgba(255,255,255,0.55)"
-        fontSize={9}
+        fill="var(--muted-foreground)"
+        fontSize={12}
         fontWeight={600}
       >
         {total}
@@ -227,7 +230,7 @@ export function AnalyticsSourcesChart({
     <YAxis
       domain={chartType === 'line' ? ['auto', 'auto'] : [0, 'auto']}
       width={36}
-      tick={{ fontSize: 9, fill: 'rgba(255,255,255,0.45)' }}
+      tick={{ fontSize: 12, fill: 'var(--muted-foreground)' }}
       axisLine={false}
       tickLine={false}
       allowDecimals={false}
@@ -235,36 +238,29 @@ export function AnalyticsSourcesChart({
   );
 
   return (
-    <div className="bg-background border rounded-xl p-3 flex flex-col gap-3">
-      <div className="flex items-center justify-between gap-2 flex-wrap">
+    <div className="analytics-card bg-background border rounded-xl p-4 flex flex-col gap-4">
+      <div className="analytics-card-heading flex flex-col gap-3">
         <div className="flex items-center gap-2 min-w-0">
-          <span className="text-sm font-medium truncate">Источники трафика</span>
+          <h4 className="text-base font-semibold">Динамика прихода</h4>
           {showSeries && totalForPeriod > 0 && (
             <span className="text-xs text-muted-foreground whitespace-nowrap">
-              +{totalForPeriod} за период
+              +{totalForPeriod.toLocaleString('ru-RU')} {granularity === 'all' ? 'за всё время' : 'за период'}
             </span>
           )}
         </div>
-        <div className="flex items-center gap-1.5 flex-wrap">
-          {showSeries ? (
-            <ChartTypeToggle value={chartType} onChange={setChartType} />
-          ) : null}
-          <SourcesPeriodSelector value={period} onChange={onPeriodChange} />
-        </div>
+        <AnalyticsChartToolbar>
+          <AnalyticsSourcesPeriodControl value={period} onChange={onPeriodChange} />
+          {showSeries && <AnalyticsTypeControl value={chartType} onChange={setChartType} />}
+        </AnalyticsChartToolbar>
       </div>
 
-      <SourcesTrendChartInfo />
 
       {!showSeries ? (
-        <p className="text-xs text-muted-foreground/50 italic py-8 text-center">
-          График по времени есть только для выбранного срока.
-        </p>
-      ) : chartData.length < 2 ? (
-        <p className="text-xs text-muted-foreground/50 italic py-8 text-center">
-          {isLoading ? '' : 'Нет данных об источниках трафика'}
-        </p>
+        <AnalyticsChartState title="Выбрано всё время" description="Выберите период, чтобы увидеть динамику. Распределение всей аудитории доступно на круговой диаграмме." />
+      ) : chartData.length === 0 ? (
+        <AnalyticsChartState loading={isLoading} title="Пока нет источников" description="График появится, когда по выбранным ссылкам начнут приходить пользователи." />
       ) : chartType === 'line' ? (
-        <ResponsiveContainer width="100%" height={160}>
+        <ResponsiveContainer width="100%" height={224}>
           <AreaChart data={chartData} margin={{ top: 8, right: 4, bottom: 0, left: 0 }}>
             <defs>
               {stackData.map((line) => (
@@ -278,8 +274,8 @@ export function AnalyticsSourcesChart({
             <XAxis
               dataKey="date"
               ticks={tickValues}
-              tickFormatter={(val: string) => fmtTick(val, granularity)}
-              tick={{ fontSize: 9, fill: 'rgba(255,255,255,0.4)' }}
+              tickFormatter={(val: string) => fmtTick(val, granularity === 'all' ? '30d' : granularity)}
+              tick={{ fontSize: 12, fill: 'var(--muted-foreground)' }}
               axisLine={false}
               tickLine={false}
             />
@@ -301,8 +297,9 @@ export function AnalyticsSourcesChart({
                 dataKey={line.name}
                 stroke={line.color}
                 strokeWidth={idx === 0 ? 2 : 1.5}
-                fill={`url(#src-grad-${line.name})`}
-                dot={false}
+                fill={line.color}
+                fillOpacity={0.08}
+                dot={chartData.length === 1}
                 activeDot={{ r: 3, fill: line.color, strokeWidth: 0 }}
                 isAnimationActive={false}
               />
@@ -310,14 +307,14 @@ export function AnalyticsSourcesChart({
           </AreaChart>
         </ResponsiveContainer>
       ) : (
-        <ResponsiveContainer width="100%" height={160}>
+        <ResponsiveContainer width="100%" height={224}>
           <BarChart data={chartData} margin={{ top: 18, right: 4, bottom: 0, left: 0 }} barCategoryGap="8%">
             {yAxis}
             <XAxis
               dataKey="date"
               ticks={tickValues}
-              tickFormatter={(val: string) => fmtTick(val, granularity)}
-              tick={{ fontSize: 9, fill: 'rgba(255,255,255,0.4)' }}
+              tickFormatter={(val: string) => fmtTick(val, granularity === 'all' ? '30d' : granularity)}
+              tick={{ fontSize: 12, fill: 'var(--muted-foreground)' }}
               axisLine={false}
               tickLine={false}
             />
@@ -344,7 +341,7 @@ export function AnalyticsSourcesChart({
                   isAnimationActive={false}
                   radius={isTop ? [2, 2, 0, 0] : [0, 0, 0, 0]}
                 >
-                  {isTop && <LabelList dataKey="__total" content={renderTotalLabel} />}
+                  {isTop && chartData.length <= 12 && <LabelList dataKey="__total" content={renderTotalLabel} />}
                 </Bar>
               );
             })}
@@ -353,25 +350,25 @@ export function AnalyticsSourcesChart({
       )}
 
       {showSeries && allSourcesData.length > 0 && (
-        <div className="flex flex-col gap-2 border-t border-border/40 pt-2">
-          <div className="flex items-baseline justify-between gap-2 text-[11px] font-semibold text-muted-foreground">
+        <div className="analytics-source-legend flex flex-col gap-3">
+          <div className="flex items-baseline justify-between gap-2 text-xs font-semibold text-muted-foreground">
             <span>
-              Легенда · {allSourcesData.length}
+              Источники · {allSourcesData.length}
               {filtered ? ` · выбрано ${selectedSources!.size}` : ` · на графике топ-${TOP_SOURCES}`}
             </span>
             {filtered ? (
               <button
                 type="button"
                 onClick={clearSourceFilter}
-                className="text-[11px] font-medium text-primary hover:underline"
+                className="text-xs font-medium text-primary hover:underline"
               >
                 Все
               </button>
             ) : (
-              <span className="font-normal opacity-70">кликай источники — можно несколько</span>
+              <span className="font-normal opacity-70">Выберите один или несколько источников</span>
             )}
           </div>
-          <div className="grid grid-cols-2 gap-1 max-h-[168px] overflow-y-auto pr-1">
+          <div className="grid grid-cols-1 gap-1 max-h-64 overflow-y-auto pr-1">
             {allSourcesData.map((line) => {
               const count = line.data.reduce((s, p) => s + p.count, 0);
               const active = !filtered || selectedSources!.has(line.name);
@@ -381,6 +378,7 @@ export function AnalyticsSourcesChart({
                   key={line.name}
                   type="button"
                   onClick={() => toggleSource(line.name)}
+                  aria-pressed={active}
                   title={
                     active && filtered
                       ? `Убрать «${line.name}»`
@@ -388,30 +386,28 @@ export function AnalyticsSourcesChart({
                   }
                   className={[
                     'grid grid-cols-[10px_minmax(0,1fr)_auto] items-center gap-1.5 w-full min-w-0',
-                    'px-1.5 py-1 rounded-md border text-left text-xs transition-all',
+                    'px-1.5 py-1 rounded-md border text-left text-xs transition-colors',
                     active
                       ? 'border-transparent bg-muted/40 text-foreground'
                       : 'border-transparent bg-transparent text-muted-foreground/50 opacity-40',
                     solo ? 'ring-1 ring-primary/40' : '',
                   ].join(' ')}
-                  style={
-                    active
-                      ? { backgroundColor: `${line.color}18`, borderColor: `${line.color}40` }
-                      : undefined
-                  }
+
                 >
                   <span
                     className="w-2.5 h-2.5 rounded-sm shrink-0"
                     style={{ backgroundColor: line.color }}
                   />
-                  <code className="truncate text-[11px] font-medium">{line.name}</code>
-                  <span className="tabular-nums opacity-70 text-[11px]">{count}</span>
+                  <span className="truncate text-xs font-medium">{line.name}</span>
+                  <span className="tabular-nums opacity-70 text-xs">{count.toLocaleString('ru-RU')}</span>
+                  <span className="text-xs text-muted-foreground">{(totalForPeriod ? count / totalForPeriod * 100 : 0).toLocaleString('ru-RU', { maximumFractionDigits: 1 })}%</span>
                 </button>
               );
             })}
           </div>
         </div>
       )}
+      <SourcesTrendChartInfo />
     </div>
   );
 }

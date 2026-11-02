@@ -17,6 +17,7 @@ import { registerUsersAnalyticsTools } from './mcp-register-analytics-tools.ts';
 import { registerUnavailableUsersTools } from './mcp-register-unavailable-users-tools.ts';
 import { registerGroupsAnalyticsTools } from './mcp-register-groups-analytics-tools.ts';
 import { registerRangeAnalyticsTools } from './mcp-register-range-analytics-tools.ts';
+import { registerAnalyticsV2Tools } from './mcp-register-analytics-v2-tools.ts';
 import { registerMessagesAnalyticsTools } from './mcp-register-message-analytics-tools.ts';
 import { registerDialogTools } from './mcp-register-dialog-tools.ts';
 import { registerTableChartTools } from './mcp-register-table-chart-tools.ts';
@@ -1057,6 +1058,7 @@ export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOpt
   /** Подключает сводку и график групп выбранного бота. */
   registerGroupsAnalyticsTools(server);
   registerRangeAnalyticsTools(server);
+  registerAnalyticsV2Tools(server);
   /** Подключает сводку и график активности сообщений для обоих транспортов. */
   registerMessagesAnalyticsTools(server);
   registerDialogTools(server);

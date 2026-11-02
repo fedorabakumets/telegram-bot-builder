@@ -4,18 +4,19 @@
  *              периодов и WS real-time обновлениями.
  */
 
+import { AnalyticsPeriodControl } from './analytics-chart-controls';
+import { AnalyticsChartState } from './analytics-chart-state';
 import React, { useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   ResponsiveContainer,
   BarChart, Bar,
-  XAxis, YAxis, Tooltip,
+  XAxis, YAxis, Tooltip, LabelList,
 } from 'recharts';
 import { GrowthGranularity } from '@/components/editor/database/user-database/hooks/queries/use-growth';
 import { usePopularButtons } from '@/components/editor/database/user-database/hooks/queries/use-popular-buttons';
 import { useUserMessagesLiveContext } from '@/components/editor/database/user-database/contexts/user-messages-live-context';
 import { PopularButtonsTooltip } from './analytics-popular-buttons-tooltip';
-import { GrowthGranularitySelector } from '@/components/editor/database/user-database/components/stats/growth-granularity-selector';
 import { PopularButtonsChartInfo } from './analytics-chart-info-texts';
 
 /**
@@ -57,31 +58,28 @@ export function AnalyticsPopularButtonsChart({ projectId, selectedTokenId }: Ana
   const totalForPeriod = items.reduce((sum, item) => sum + item.count, 0);
 
   return (
-    <div className="bg-background border rounded-xl p-3 flex flex-col gap-3">
+    <div className="analytics-card bg-background border rounded-xl p-4 flex flex-col gap-4">
       {/* Заголовок + переключатель периодов */}
-      <div className="flex items-center justify-between gap-2 flex-wrap">
+      <div className="analytics-card-heading flex flex-col gap-3">
         <div className="flex items-center gap-2 min-w-0">
-          <span className="text-sm font-medium truncate">Топ кнопок</span>
+          <h4 className="text-base font-semibold">Топ кнопок</h4>
           {totalForPeriod > 0 && (
-            <span className="text-xs text-muted-foreground whitespace-nowrap">{totalForPeriod} нажатий за период</span>
+            <span className="text-xs text-muted-foreground whitespace-nowrap">{totalForPeriod.toLocaleString('ru-RU')} нажатий в топе</span>
           )}
         </div>
-        <GrowthGranularitySelector value={granularity} onChange={setGranularity} />
+        <AnalyticsPeriodControl value={granularity} onChange={setGranularity} />
       </div>
 
-      <PopularButtonsChartInfo />
 
       {/* Горизонтальный bar chart или пустое состояние */}
       {items.length === 0 ? (
-        <p className="text-xs text-muted-foreground/50 italic py-8 text-center">
-          {isLoading ? '' : 'Нет данных о нажатиях кнопок'}
-        </p>
+        <AnalyticsChartState loading={isLoading} title="Пока нет нажатий" description="Здесь появятся популярные кнопки, когда пользователи начнут их нажимать." />
       ) : (
-        <ResponsiveContainer width="100%" height={Math.max(160, items.length * 32)}>
-          <BarChart data={items} layout="vertical" margin={{ top: 4, right: 16, bottom: 0, left: 4 }}>
+        <ResponsiveContainer width="100%" height={Math.max(160, items.length * 40)}>
+          <BarChart data={items} layout="vertical" margin={{ top: 4, right: 48, bottom: 0, left: 4 }}>
             <XAxis type="number" hide />
-            <YAxis type="category" dataKey="label" width={120}
-              tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.6)' }}
+            <YAxis type="category" dataKey="label" width={144}
+              tick={{ fontSize: 12, fill: 'var(--muted-foreground)' }}
               axisLine={false} tickLine={false}
               tickFormatter={(v: string) => v.length > 18 ? v.slice(0, 17) + '…' : v} />
             <Tooltip
@@ -90,10 +88,13 @@ export function AnalyticsPopularButtonsChart({ projectId, selectedTokenId }: Ana
               )}
               cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
             <Bar dataKey="count" fill="#10b981" fillOpacity={0.85}
-              radius={[0, 4, 4, 0]} isAnimationActive={false} />
+              radius={[0, 4, 4, 0]} isAnimationActive={false}>
+              <LabelList dataKey="count" position="right" fill="var(--foreground)" fontSize={12} formatter={(value: number) => value.toLocaleString('ru-RU')} />
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
       )}
+      <PopularButtonsChartInfo />
     </div>
   );
 }
