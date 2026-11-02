@@ -3,7 +3,7 @@
  * @module components/editor/header/hooks/use-mini-app-auth
  */
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useTelegramAuth } from './use-telegram-auth';
 
 /**
@@ -31,6 +31,8 @@ function showDebug(msg: string) {
  */
 export function useMiniAppAuth(): void {
   const { acceptSession, isLoading } = useTelegramAuth();
+  /** Данные запуска, для которых запрос уже был отправлен в текущем сеансе экрана. */
+  const attempted = useRef<string | null>(null);
 
   useEffect(() => {
     /** Сообщает Telegram о готовности сразу или после загрузки его API. */
@@ -48,6 +50,8 @@ export function useMiniAppAuth(): void {
     const authenticate = () => {
     const tg = window.Telegram?.WebApp;
     if (!tg?.initDataUnsafe?.user || !tg.initData) return;
+    if (attempted.current === tg.initData) return;
+    attempted.current = tg.initData;
     fetch('/api/auth/telegram/miniapp', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

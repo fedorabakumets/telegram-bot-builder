@@ -27,3 +27,15 @@ it('авторизует после поздней загрузки Telegram API
   expect(ready).toHaveBeenCalled();
   expect(fetchMock).toHaveBeenCalledWith('/api/auth/telegram/miniapp', expect.objectContaining({ body: JSON.stringify({ initData: 'signed-data' }) }));
 });
+
+it('не отправляет повторные запросы при обновлении интерфейса и событии загрузки', async () => {
+  const fetchMock = vi.fn().mockResolvedValue({ status: 200, json: async () => ({ success: true, user: { id: 42 } }) });
+  vi.stubGlobal('fetch', fetchMock);
+  const script = document.createElement('script'); script.id = 'telegram-mini-app-api'; document.head.append(script);
+  window.Telegram = { WebApp: { initData: 'signed-data', initDataUnsafe: { user: { id: 42, first_name: 'Тест' } } } };
+  const { rerender } = renderHook(() => useMiniAppAuth());
+  rerender();
+  act(() => script.dispatchEvent(new Event('load')));
+  await waitFor(() => expect(acceptSession).toHaveBeenCalled());
+  expect(fetchMock).toHaveBeenCalledTimes(1);
+});

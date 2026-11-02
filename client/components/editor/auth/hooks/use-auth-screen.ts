@@ -5,7 +5,6 @@
 
 import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
 import { useTelegramLogin } from '@/components/editor/header/hooks/use-telegram-login';
-import { useMiniAppAuth } from '@/components/editor/header/hooks/use-mini-app-auth';
 import { isTelegramUser } from '@/types/telegram-user';
 
 /**
@@ -23,14 +22,11 @@ export interface UseAuthScreenResult {
 /**
  * Хук логики экрана авторизации.
  * Объединяет состояние авторизации и обработчик входа.
- * Монтирует useMiniAppAuth для автоматической авторизации в Telegram Mini App.
+ * Автоматический вход Mini App выполняет общий защитный компонент.
  *
  * @returns Объект с флагами авторизации и обработчиком входа
  */
 export function useAuthScreen(): UseAuthScreenResult {
-  // Автоматическая авторизация через Telegram Mini App
-  useMiniAppAuth();
-
   const { user, isLoading } = useTelegramAuth();
   const { handleTelegramLogin } = useTelegramLogin();
 
