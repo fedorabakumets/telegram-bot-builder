@@ -15,7 +15,7 @@ interface TableViewToolbarProps {
   view: TableView;
 }
 /**
- * Показывает возврат и действия отдельной строкой над поиском.
+ * Размещает поиск рядом с навигацией и действиями таблицы.
  * @param props - Представление и общее число записей.
  * @returns Панель поиска и управления отображением.
  */
@@ -25,13 +25,13 @@ export function TableViewToolbar({ view, children, navigation, filters }: TableV
     <div className="table-view-toolbar flex shrink-0 flex-col gap-2 py-2">
       <div className="table-view-actions flex min-w-0 flex-wrap items-center gap-2 px-3">
         {navigation}
+        <div className="table-view-search flex min-w-0 flex-1 items-center gap-2">
+          <Input aria-label="Поиск по записям" value={view.search} placeholder="Поиск по нодам и содержимому" className="min-w-0 flex-1 text-sm" onChange={(event) => view.setSearch(event.target.value)} />
+          {filtered && <button type="button" aria-label="Сбросить фильтры" title="Сбросить фильтры" onClick={view.reset} className="tables-control shrink-0 rounded-md border border-border p-2"><X className="h-4 w-4" /></button>}
+        </div>
         <div className="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-2">{children}</div>
       </div>
       {filters}
-      <div className="flex min-w-0 items-center gap-2 px-4">
-        <Input aria-label="Поиск по записям" value={view.search} placeholder="Поиск по нодам и содержимому" className="min-w-0 flex-1 text-sm" onChange={(event) => view.setSearch(event.target.value)} />
-        {filtered && <button type="button" aria-label="Сбросить фильтры" title="Сбросить фильтры" onClick={view.reset} className="tables-control shrink-0 rounded-md border border-border p-2"><X className="h-4 w-4" /></button>}
-      </div>
     </div>
   );
 }

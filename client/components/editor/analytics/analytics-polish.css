@@ -1,0 +1,103 @@
+/** @fileoverview Финальная иерархия метаданных, справки и сводок во всей вкладке аналитики. */
+/** Строка состояния не выглядит ещё одной карточкой перед данными. */
+/** Узкая панель показывает один график в строке, широкая оставляет каждому не менее 500 пикселей. */
+.analytics-page .analytics-overview-report-grid { grid-template-columns: minmax(0, 1fr); align-items: start; }
+@container analytics (min-width: 1100px) {
+  .analytics-page .analytics-overview-report-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+/** Сетка помогает сравнивать значения и остаётся тише самих рядов. */
+:is(.analytics-page, .analytics-chart-dialog) .recharts-cartesian-grid-horizontal line { stroke-opacity: .55; }
+.analytics-page .analytics-report-status { padding: 4px 0 12px; border: 0; border-bottom: 1px solid var(--border); border-radius: 0; }
+/** Пояснения графиков отделены линией вместо рамки внутри рамки. */
+:is(.analytics-page, .analytics-chart-dialog) .analytics-chart-info { border: 0; border-top: 1px solid var(--border); border-radius: 0; }
+:is(.analytics-page, .analytics-chart-dialog) .analytics-chart-info[data-state='open'] { background: transparent; }
+:is(.analytics-page, .analytics-chart-dialog) .analytics-chart-info > button { padding-inline: 0; border-radius: 0; }
+:is(.analytics-page, .analytics-chart-dialog) .analytics-chart-info > button:hover { background: transparent; }
+/** Сводка доступности не резервирует пустые строки для коротких подписей. */
+/** Полосы рейтингов используют тот же синий акцент, что и иконка аналитики. */
+:is(.analytics-page, .analytics-chart-dialog) .analytics-leader-bar { background-color: #3b82f6; }
+/** Полосы популярных действий сохраняют синий акцент и в увеличенном распределении. */
+:is(.analytics-page, .analytics-chart-dialog) .analytics-action-bar { background-color: #3b82f6; }
+.analytics-page .analytics-availability-card { padding: 16px; gap: 16px; }
+.analytics-page .analytics-availability-card .analytics-report-summary dt { min-height: 0; margin-bottom: 4px; }
+.analytics-page .analytics-availability-card .analytics-report-summary dd { font-size: 24px; line-height: 32px; }
+/** Контуры кнопок не дублируются кольцом от общей библиотеки компонентов. */
+:is(.analytics-page, .analytics-chart-dialog, .analytics-overlay) button:focus-visible { box-shadow: none; }
+@container analytics (max-width: 400px) {
+  /** Справка остаётся доступной и в узкой рабочей области. */
+  .analytics-page .analytics-card .analytics-chart-info,
+  .analytics-page .analytics-card p:has(+ .analytics-chart-info) { display: block; }
+  .analytics-page .analytics-availability-card .analytics-report-summary { grid-template-columns: minmax(0, 1fr); }
+  .analytics-page .analytics-availability-card .analytics-report-summary > div { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
+}
+
+/** Парная карточка лидеров показывает всю десятку и заполняет высоту графика полезными строками. */
+.analytics-page .analytics-active-leaders-grid { align-items: stretch; }
+.analytics-page .analytics-active-leaders-grid > .analytics-report-card { height: auto; }
+.analytics-page .analytics-active-leaders-grid .analytics-leaders-list {
+  display: flex; flex: 1; flex-direction: column; gap: 0; max-height: none; overflow: visible;
+}
+.analytics-page .analytics-active-leaders-grid .analytics-leaders-list > li { flex: 1; min-height: 40px; margin: 0; }
+.analytics-page .analytics-active-leaders-grid .analytics-leaders-list > li > button { padding: 4px 12px; }
+.analytics-page .analytics-active-leaders-grid .analytics-leader-bar { border-radius: 2px; }
+.analytics-page .analytics-active-leaders-grid .analytics-leaders-list .h-2 { height: 4px; margin-top: 4px; }
+
+/** Парные рейтинги действий сохраняют общую нижнюю границу при разной длине подписей. */
+.analytics-page .analytics-popular-actions-grid { align-items: stretch; }
+.analytics-page .analytics-popular-actions-grid > .analytics-report-card { height: auto; }
+
+/** Оба рейтинга действий имеют одинаковую область списка и одинаковый шаг строк. */
+.analytics-page .analytics-popular-actions-grid .analytics-donut-legend { height: 400px; max-height: 400px; }
+.analytics-page .analytics-popular-actions-grid .analytics-donut-legend > button { height: 56px; padding: 6px 8px; }
+.analytics-page .analytics-popular-actions-grid .analytics-donut-row { min-height: 28px; align-items: center; }
+.analytics-page .analytics-popular-actions-grid .analytics-donut-row > span:nth-child(2) {
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 14px;
+}
+
+/** Верхний и нижний ряды групп и действий используют общую высоту карточек на широкой панели. */
+@container analytics (min-width: 1100px) {
+  .analytics-page :is(.analytics-group-pair-grid, .analytics-popular-actions-grid) > .analytics-report-card { min-height: 560px; }
+  .analytics-page .analytics-popular-actions-grid .analytics-ranking-distribution > div:has(> .analytics-donut-legend) { flex: 1; display: flex; min-height: 0; }
+  .analytics-page .analytics-popular-actions-grid .analytics-donut-legend { flex: 1; height: 444px; max-height: 444px; }
+}
+
+/** Десятка популярных действий оформлена как соседние рейтинги групп: все строки видны сразу. */
+.analytics-page .analytics-popular-actions-grid .analytics-ranking-distribution > div:has(> .analytics-donut-legend) { flex: 1; display: flex; min-height: 0; }
+.analytics-page .analytics-popular-actions-grid .analytics-donut-legend {
+  display: flex; flex: 1; flex-direction: column; height: auto; max-height: none; overflow: visible;
+}
+.analytics-page .analytics-popular-actions-grid .analytics-donut-legend > button { flex: 1; height: auto; min-height: 40px; padding: 4px 8px; }
+.analytics-page .analytics-popular-actions-grid .analytics-donut-legend .h-2 { height: 4px; border-radius: 2px; }
+.analytics-page .analytics-popular-actions-grid .analytics-donut-legend .analytics-action-bar { border-radius: 2px; }
+
+/** Компактная подпись оставляет место тонкой полосе и сохраняет высоту соседних рейтингов. */
+.analytics-page .analytics-popular-actions-grid .analytics-donut-row { min-height: 24px; height: 24px; }
+.analytics-page .analytics-popular-actions-grid .analytics-donut-legend { gap: 0; }
+
+/** Номера до десяти имеют отдельную колонку; подпись и полоса не перекрываются внутренним отступом строки. */
+.analytics-page .analytics-popular-actions-grid .analytics-donut-legend > button { padding: 4px 12px; }
+.analytics-page .analytics-popular-actions-grid .analytics-donut-row {
+  grid-template-columns: 20px minmax(0, 1fr) auto 48px; gap: 8px; padding: 0; min-height: 28px; height: 28px;
+}
+.analytics-page .analytics-popular-actions-grid .analytics-donut-row > span:first-child { text-align: left; }
+.analytics-page .analytics-popular-actions-grid .analytics-donut-legend .h-2 { margin: 4px 0 0; }
+
+/** Источники продолжают высоту верхней пары; список использует свободное место рядом с кольцом. */
+@container analytics (min-width: 1100px) {
+  .analytics-page .analytics-sources-compact { align-items: stretch; }
+  .analytics-page .analytics-sources-compact > .analytics-report-card { min-height: 575px; }
+  .analytics-page .analytics-sources-compact .analytics-donut-content { flex: 1; min-height: 0; align-items: start; }
+  .analytics-page .analytics-sources-compact .analytics-donut-legend { height: 448px; max-height: 448px; }
+}
+
+/** Распределение источников показывает плотные строки, а кольцо центрируется рядом с полной областью списка. */
+@container analytics (min-width: 1100px) {
+  .analytics-page .analytics-sources-compact .analytics-donut-content { align-items: center; }
+  .analytics-page .analytics-sources-compact .analytics-donut-content > div:first-child { align-self: center; }
+}
+.analytics-page .analytics-sources-compact .analytics-donut-legend { gap: 0; }
+.analytics-page .analytics-sources-compact .analytics-donut-legend > button { padding: 4px 8px; min-height: 40px; flex-shrink: 0; }
+.analytics-page .analytics-sources-compact .analytics-donut-row { padding: 4px; min-height: 32px; }
+
+/** Повторяющиеся сравнения не раздувают строки; значение прошлого периода доступно в подробностях. */
+.analytics-page .analytics-sources-compact .analytics-donut-legend > button > span.block { display: none; }

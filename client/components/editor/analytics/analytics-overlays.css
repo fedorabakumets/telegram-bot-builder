@@ -1,0 +1,31 @@
+/** @fileoverview Оформление скрытых окон, меню и подсказок аналитики вне основного контейнера. */
+.analytics-chart-dialog, .analytics-overlay { background: var(--card); border-color: var(--border); border-radius: 12px; padding: 24px; gap: 20px; box-shadow: 0 16px 64px #0004; }
+:is(.analytics-chart-dialog, .analytics-overlay) h2 { font-size: 18px; line-height: 28px; font-weight: 500; letter-spacing: 0; }
+.analytics-chart-dialog .analytics-report-period { font-size: 12px; line-height: 20px; }
+.analytics-chart-dialog .analytics-chart-legend { font-size: 12px; line-height: 20px; gap: 8px 16px; }
+
+
+.analytics-chart-dialog .recharts-cartesian-axis-tick text { fill: var(--muted-foreground); font-size: 12px; }
+.analytics-chart-dialog .analytics-chart-view-controls { font-size: 13px; gap: 12px; }
+.analytics-chart-dialog .analytics-chart-view-controls > button { padding: 8px 12px; }
+.analytics-chart-dialog .analytics-chart-view-controls input[type='checkbox']:checked { background: var(--primary); }
+.analytics-chart-dialog .analytics-report-summary dd { font-weight: 500; }
+.analytics-chart-dialog .analytics-report-details { background: var(--background); }
+.analytics-period-popover.analytics-page { background: var(--card); }
+/** Меню общих селекторов получают оформление только при открытии из аналитики. */
+body:has(.analytics-page :is(.analytics-scope, .analytics-table-controls) [role='combobox'][data-state='open']) [role='listbox'] {
+  font-family: Manrope, Geist, sans-serif; background: #fff; color: #202024; border-color: #dddde2; border-radius: 8px; box-shadow: 0 8px 24px #0003;
+}
+.dark body:has(.analytics-page :is(.analytics-scope, .analytics-table-controls) [role='combobox'][data-state='open']) [role='listbox'] { background: #0d0d0f; color: #ededf0; border-color: #29292e; }
+body:has(.analytics-page :is(.analytics-scope, .analytics-table-controls) [role='combobox'][data-state='open']) [role='option'] { font-size: 13px; line-height: 20px; min-height: 36px; border-radius: 4px; }
+body:has(.analytics-page :is(.analytics-scope, .analytics-table-controls) [role='combobox'][data-state='open']) [role='option'][data-highlighted] { background: var(--muted); color: var(--foreground); }
+/** Точные значения и подсказки используют читаемый текст даже вне карточки. */
+:is(.analytics-page, .analytics-chart-dialog) .analytics-compact-tooltip { background: var(--background); color: var(--foreground); border-color: var(--border); font-size: 12px; line-height: 20px; }
+:is(.analytics-page, .analytics-chart-dialog) .analytics-compact-tooltip-period { font-weight: 500; }
+.analytics-overlay :is(select, input:not([type='checkbox'])) { min-height: 40px; }
+.analytics-overlay [role='alert'] { font-size: 13px; line-height: 20px; }
+@media (max-width: 479px) {
+  .analytics-chart-dialog, .analytics-overlay { padding: 16px; gap: 16px; }
+  .analytics-chart-dialog .analytics-chart-value-list button { flex-wrap: wrap; gap: 4px 12px; }
+  .analytics-chart-dialog .analytics-chart-value-list button > span:last-child { text-align: left; }
+}

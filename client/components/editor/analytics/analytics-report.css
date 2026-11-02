@@ -51,8 +51,6 @@
 @container analytics (min-width: 960px) {
   .analytics-overview-report-grid { align-items: start; }
   .analytics-overview-report-grid > .analytics-report-card { height: auto; }
-  .analytics-overview-report-grid > .analytics-report-card > div:nth-child(2) { min-height: 60px; }
-  .analytics-overview-report-grid > .analytics-report-card > p:nth-child(5) { min-height: 32px; }
   /** Раскрытая справка не растягивает соседнюю карточку и не отодвигает её кнопку вниз. */
   .analytics-overview-report-grid:has(> .analytics-report-card > [data-state='open']:last-child) { align-items: start; }
   .analytics-overview-report-grid:has(> .analytics-report-card > [data-state='open']:last-child) > .analytics-report-card { height: auto; }
@@ -79,6 +77,23 @@
 .analytics-overview-report-grid .analytics-report-card figure.space-y-3 > :not([hidden]) ~ :not([hidden]) { margin-top: 6px; }
 .analytics-overview-report-grid .analytics-report-card summary { padding-block: 4px; }
 .analytics-overview-report-grid .analytics-report-card > :last-child { gap: 8px; }
+
+/** Обзор аудитории: спокойная поверхность, единая иерархия и акцент на данных. */
+.analytics-page :is(.analytics-overview-report-grid > .analytics-report-card, .analytics-active-card) { background: #0d0d0f; border-color: #29292d; border-radius: 12px; }
+.analytics-page .analytics-overview-report-grid > .analytics-report-card { padding: 16px; }
+.analytics-overview-report-grid .analytics-report-value { font-size: 32px; line-height: 36px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.analytics-overview-report-grid .analytics-chart-legend { gap: 8px 16px; }
+.analytics-overview-report-grid .analytics-report-summary { padding-top: 8px; border-top: 1px solid #29292d; }
+.analytics-overview-report-grid .analytics-report-summary dd { font-size: 18px; line-height: 24px; }
+.analytics-overview-report-grid .analytics-chart-actions button { color: #a1a1aa; }
+.analytics-overview-report-grid .analytics-chart-actions button:hover { color: #e4e4e7; }
+@container analytics (min-width: 401px) {
+  .analytics-overview-report-grid > .analytics-report-card > header { gap: 4px 8px; }
+  .analytics-overview-report-grid > .analytics-report-card > header > span { flex-basis: 100%; }
+}
+@container analytics (max-width: 400px) {
+  .analytics-overview-report-grid .analytics-report-value { font-size: 30px; line-height: 36px; }
+}
 
 /** В обзоре сводка использует всю ширину карточки и занимает меньше строк. */
 @container (min-width: 360px) { .analytics-overview-report-grid .analytics-report-summary { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
@@ -151,6 +166,15 @@
 .analytics-chart-view-controls > label:nth-child(2) { cursor: pointer; }
 .analytics-chart-view-controls > label:nth-child(2):hover { color: var(--foreground); }
 @media (prefers-reduced-motion: reduce) { .analytics-chart-view-controls select, .analytics-chart-view-controls > button { transition: none; } }
+
+/** В обзорных графиках настройки выровнены, а выбор периода находится у правого края. */
+@container analytics (min-width: 801px) {
+  .analytics-overview-report-grid .analytics-chart-view-controls { align-items: center; gap: 8px; }
+  .analytics-overview-report-grid .analytics-chart-view-controls > label { gap: 4px; color: #a1a1aa; font-size: 12px; }
+  .analytics-overview-report-grid .analytics-chart-view-controls select { min-height: 36px; height: 36px; padding-block: 4px; font-size: 13px; }
+  .analytics-overview-report-grid .analytics-chart-view-controls > label:nth-child(2) { min-height: 36px; }
+  .analytics-overview-report-grid .analytics-chart-view-controls > button { min-height: 36px; margin-left: auto; padding: 4px 12px; font-size: 12px; }
+}
 
 
 /** Заголовок и показатели активности ровно выравниваются и не перекрывают действия. */

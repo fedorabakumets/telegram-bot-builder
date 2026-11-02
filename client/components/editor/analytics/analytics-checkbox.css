@@ -1,5 +1,5 @@
 /** @fileoverview Контрастные флажки аналитики с цветами темы без повторного оборачивания токенов в hsl(). */
-.analytics-page .analytics-content input[type="checkbox"] {
+.analytics-page input[type="checkbox"] {
   appearance: none;
   display: inline-grid;
   place-content: center;
@@ -15,7 +15,7 @@
   cursor: pointer;
 }
 /** Галочка рисуется границами и не зависит от начертания символа в шрифте. */
-.analytics-page .analytics-content input[type="checkbox"]::before {
+.analytics-page input[type="checkbox"]::before {
   content: "";
   display: block;
   position: static;
@@ -27,14 +27,14 @@
   opacity: 0;
   text-shadow: none;
 }
-.analytics-page .analytics-content input[type="checkbox"]:checked {
+.analytics-page input[type="checkbox"]:checked {
   background: var(--primary);
   border-color: var(--primary);
 }
-.analytics-page .analytics-content input[type="checkbox"]:checked::before { opacity: 1; }
-.analytics-page .analytics-content input[type="checkbox"]:hover { border-color: var(--primary); }
-.analytics-page .analytics-content input[type="checkbox"]:focus-visible {
+.analytics-page input[type="checkbox"]:checked::before { opacity: 1; }
+.analytics-page input[type="checkbox"]:hover { border-color: var(--primary); }
+.analytics-page input[type="checkbox"]:focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 3px;
 }
-.analytics-page .analytics-content input[type="checkbox"]:disabled { opacity: 0.4; cursor: not-allowed; }
+.analytics-page input[type="checkbox"]:disabled { opacity: 0.4; cursor: not-allowed; }

@@ -1,0 +1,62 @@
+/** @fileoverview Общая нейтральная палитра аналитики, включая вынесенные в портал окна. */
+:is(.analytics-page, .analytics-chart-dialog, .analytics-overlay) {
+  --analytics-surface: #ffffff;
+  --background: #fafafa;
+  --foreground: #202024;
+  --card: var(--analytics-surface);
+  --muted: #f0f0f2;
+  --muted-foreground: #62626b;
+  --border: #dddde2;
+  --primary: #27272b;
+  --primary-foreground: #fafafa;
+  --popover: var(--analytics-surface);
+  --popover-foreground: var(--foreground);
+  --input: var(--border);
+  --ring: #71717a;
+  font-family: Manrope, Geist, sans-serif;
+  color: var(--foreground);
+  font-variant-numeric: tabular-nums;
+}
+.dark :is(.analytics-page, .analytics-chart-dialog, .analytics-overlay) {
+  --analytics-surface: #0d0d0f;
+  --background: #09090b;
+  --foreground: #ededf0;
+  --muted: #1b1b1f;
+  --muted-foreground: #a1a1aa;
+  --border: #29292e;
+  --primary: #e4e4e7;
+  --primary-foreground: #18181b;
+  color-scheme: dark;
+}
+/** Все карточки имеют одну поверхность, включая формы и раскрытые разделы. */
+/** Иконка заголовка сохраняет синий акцент аналитики независимо от нейтральных кнопок. */
+.analytics-responsive-header .workspace-tab-heading .lucide-chart-no-axes-column { color: #3b82f6; }
+.analytics-page .analytics-card,
+.dark .analytics-page .analytics-card { background: var(--card); border-color: var(--border); border-radius: 12px; }
+.analytics-page :is(.analytics-sources-compact > .analytics-report-card, .analytics-groups-compact, .analytics-leaders-compact, .analytics-distribution-compact) { padding: 16px; gap: 12px; }
+.analytics-page :is(.analytics-card h3, .analytics-card h4) { font-size: 16px; line-height: 24px; font-weight: 500; }
+.analytics-page .analytics-collapsible-title { font-size: 18px; font-weight: 500; }
+.analytics-page :is(.analytics-report-value, .metric-value) { font-weight: 500; letter-spacing: 0; }
+.analytics-page .analytics-report-summary dd { font-weight: 500; }
+.analytics-page .analytics-overview-report-grid .analytics-report-summary { border-color: var(--border); }
+.analytics-content { padding-bottom: 32px; }
+.analytics-page .analytics-collapsible-section { padding-top: 24px; }
+.analytics-page .analytics-collapsible-heading { min-height: 36px; }
+.analytics-page .analytics-collapsible-description { max-width: 88ch; line-height: 22px; }
+.analytics-page .analytics-collapsible-content { margin-top: 16px; }
+/** Метаинформация читается отдельной строкой, а не конкурирует с показателями. */
+.analytics-report-status { padding: 12px 16px; border: 1px solid var(--border); border-radius: 8px; font-size: 12px; line-height: 20px; }
+.analytics-report-status > div { gap: 4px 24px; }
+.analytics-report-status > p { margin-top: 4px; }
+.analytics-page .analytics-chart-legend { gap: 8px 16px; line-height: 20px; }
+.analytics-page .analytics-report-summary { gap: 12px 16px; }
+.analytics-page .analytics-report-summary dt { line-height: 18px; }
+.analytics-page .analytics-report-card > p { line-height: 20px; }
+/** Пустые состояния сохраняют место графика и спокойную типографику. */
+:is(.analytics-page, .analytics-chart-dialog) .analytics-chart-state > p { font-weight: 500; }
+:is(.analytics-page, .analytics-chart-dialog) .analytics-chart-state { min-height: 200px; }
+@container analytics (max-width: 479px) {
+  .analytics-page .analytics-collapsible-section { padding-top: 16px; }
+  .analytics-report-status { padding: 12px; }
+  .analytics-page .analytics-report-summary { gap: 12px; }
+}

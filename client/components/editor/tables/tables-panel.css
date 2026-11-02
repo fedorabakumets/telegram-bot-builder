@@ -48,6 +48,8 @@
 .content-filter-select { background: #09090b; color: #fafafa; border-color: #27272a; color-scheme: dark; text-overflow: ellipsis; }
 .content-filter-select:hover { border-color: #52525b; }
 .content-filter-select:focus-visible { outline: 2px solid #a1a1aa; outline-offset: 2px; }
+/** Поиск использует свободное место рядом с действиями и переносится при нехватке ширины. */
+.table-view-search { flex: 1 1 180px; }
 /** В узкой панели фильтры остаются рядом, полные варианты доступны в списках. */
 @container (max-width: 440px) {
   .content-table-filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }

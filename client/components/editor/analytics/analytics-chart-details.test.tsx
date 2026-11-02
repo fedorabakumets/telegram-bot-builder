@@ -9,8 +9,10 @@ import { AnalyticsCompactTooltip } from './analytics-compact-tooltip';
 import { AnalyticsReportOverview } from './analytics-report-overview';
 import { AnalyticsSnapshotRefreshContext } from './analytics-chart-actions';
 import type { AnalyticsV2Snapshot } from '@shared/analytics/v2';
+/** Перехватывает настройки плавающей подсказки для проверки формата даты. */
+const tooltipMock = vi.hoisted(() => vi.fn((_props: any) => null));
 /** Рендер SVG не нужен для проверки доступных контролов и состояния выбора. */
-vi.mock('recharts', () => ({ ResponsiveContainer: ({children}:any) => <div>{children}</div>, ComposedChart: ({data,onMouseMove,onMouseLeave,onClick,children}:any) => <div data-testid="chart" onMouseMove={()=>onMouseMove?.({activeLabel:data[data.length-1].date})} onMouseLeave={()=>onMouseLeave?.()} onClick={()=>onClick?.({activeLabel:data[0].date})}>{children}</div>, Area: () => null, Bar: () => null, XAxis: () => null, YAxis: () => null, CartesianGrid: () => null, Tooltip: () => null, ReferenceLine: ({x}:any) => <i data-testid="pinned-line" data-date={x} />, ReferenceDot: ({x}:any) => <i data-testid="pinned-dot" data-date={x} /> }));
+vi.mock('recharts', () => ({ ResponsiveContainer: ({children}:any) => <div>{children}</div>, ComposedChart: ({data,onMouseMove,onMouseLeave,onClick,children}:any) => <div data-testid="chart" onMouseMove={()=>onMouseMove?.({activeLabel:data[data.length-1].date})} onMouseLeave={()=>onMouseLeave?.()} onClick={()=>onClick?.({activeLabel:data[0].date})}>{children}</div>, Line: () => null, Area: () => null, Bar: () => null, XAxis: () => null, YAxis: () => null, CartesianGrid: () => null, Tooltip: tooltipMock, ReferenceLine: ({x}:any) => <i data-testid="pinned-line" data-date={x} />, ReferenceDot: ({x}:any) => <i data-testid="pinned-dot" data-date={x} /> }));
 it('показывает в подсказке все ряды, включая нулевые и пятый показатель', () => {
   render(<AnalyticsCompactTooltip active label="2026-11-01" formatInterval={() => 'Период'} payload={[{name:'Первый',value:0},{name:'Второй',value:2},{name:'Третий',value:3},{name:'Четвёртый',value:4},{name:'Пятый',value:5}]} />);
   expect(screen.getByText('Первый').parentElement).toHaveTextContent('0');
@@ -34,29 +36,31 @@ it('сохраняет выделение точки и её значения п
   fireEvent.mouseLeave(screen.getByTestId('chart'));
   expect(screen.getByTestId('pinned-line')).toHaveAttribute('data-date', first);
   expect(screen.getByTestId('pinned-dot')).toHaveAttribute('data-date', first);
-  expect(screen.getByText('7')).toBeInTheDocument();
+  expect(document.querySelector('.analytics-selected-interval-values')).toHaveTextContent('7');
   fireEvent.click(screen.getByRole('button', {name:'Закрыть'}));
   expect(screen.queryByTestId('pinned-line')).not.toBeInTheDocument();
 });
 it('сохраняет тип и выбранную точку при увеличении и закрытии графика', () => {
   render(<AnalyticsReportChart title="Сообщения" points={[{ date: '2026-11-01T00:00:00Z', incoming: 7 }]} series={[{ key: 'incoming', label: 'Входящие', color: '#10b981' }]} timezone="UTC" stepMs={86400000} />);
-  fireEvent.change(screen.getByRole('combobox', { name: 'Вид графика' }), { target: { value: 'bar' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Столбцы', exact: true }));
   fireEvent.click(screen.getByTestId('chart'));
   const open = screen.getByRole('button', { name: 'Развернуть график: Сообщения' });
   fireEvent.pointerDown(open); fireEvent.click(open);
   expect(screen.getByRole('dialog', { name: 'Сообщения' })).toBeInTheDocument();
-  expect(screen.getByRole('combobox', { name: 'Вид графика' })).toHaveValue('bar');
+  expect(screen.getByRole('button', { name: 'Столбцы', exact: true })).toHaveAttribute('aria-pressed', 'true');
   expect(screen.getByTestId('pinned-line')).toBeInTheDocument();
   const close = screen.getByRole('button', { name: 'Закрыть график' });
   fireEvent.pointerDown(close); fireEvent.click(close);
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-  expect(screen.getByRole('combobox', { name: 'Вид графика' })).toHaveValue('bar');
+  expect(screen.getByRole('button', { name: 'Столбцы', exact: true })).toHaveAttribute('aria-pressed', 'true');
   expect(screen.getByTestId('pinned-line')).toBeInTheDocument();
 });
-it('предлагает повторить обновление общего снимка и показывает ошибку', () => {
+it('обновляет общий снимок в увеличенном окне и не дублирует кнопку в карточке', () => {
   const refresh = vi.fn();
   render(<AnalyticsSnapshotRefreshContext.Provider value={{ refresh, busy: false, error: 'Не удалось обновить данные. Попробуйте ещё раз.' }}>
     <AnalyticsReportChart points={[]} series={[]} timezone="UTC" stepMs={86400000} /></AnalyticsSnapshotRefreshContext.Provider>);
+  expect(screen.queryByRole('button', { name: 'Обновить данные аналитики' })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Развернуть график' }));
   fireEvent.click(screen.getByRole('button', { name: 'Обновить данные аналитики' }));
   expect(refresh).toHaveBeenCalledOnce();
   expect(screen.getByRole('alert')).toHaveTextContent('Попробуйте ещё раз');
@@ -71,7 +75,7 @@ it('закрепляет полное значение и обновляет е�
   expect(screen.getByRole('button', { name: /Входящие: 12/ })).toHaveAttribute('aria-pressed', 'true');
   view.rerender(<AnalyticsReportChart {...props} points={[{ ...point, incoming: 13 }]} />);
   expect(screen.getByRole('button', { name: /Входящие: 13/ })).toHaveAttribute('aria-pressed', 'true');
-  expect(screen.getByText('13')).toBeInTheDocument();
+  expect(document.querySelector('.analytics-selected-interval-values')).toHaveTextContent('13');
 });
 it('показывает точные обрезанные границы выбранного интервала и пояс', () => {
   render(<AnalyticsReportChart points={[{ date: '2026-11-01T00:00:00Z', incoming: 2 }]}
@@ -79,7 +83,8 @@ it('показывает точные обрезанные границы выб
     range={{ from: '2026-11-01T01:00:00Z', to: '2026-11-01T02:30:00Z' }} />);
   fireEvent.click(screen.getByText('Все значения графика'));
   const value = screen.getByRole('button', { name: /Входящие: 2/ });
-  expect(value).toHaveTextContent('04:00:00'); expect(value).toHaveTextContent('05:30:00'); expect(value).toHaveTextContent('Europe/Moscow');
+  expect(value).toHaveAttribute('title', expect.stringContaining('04:00:00')); expect(value).toHaveAttribute('title', expect.stringContaining('05:30:00')); expect(value).toHaveAttribute('title', expect.stringContaining('Europe/Moscow'));
+  expect(value).toHaveTextContent('1 нояб.');
   fireEvent.click(value);
 });
 it.each([
@@ -89,7 +94,7 @@ it.each([
   render(<AnalyticsReportChart points={[{ date, end_date, incoming: 7 }]}
     series={[{ key: 'incoming', label: 'Входящие', color: '#10b981' }]} timezone="Europe/Berlin" stepMs={86400000} />);
   fireEvent.click(screen.getByText('Все значения графика'));
-  const label = screen.getByRole('button', { name: /Входящие: 7/ }).textContent!;
+  const label = screen.getByRole('button', { name: /Входящие: 7/ }).getAttribute('title')!;
   expect(label.match(/00:00:00/g)).toHaveLength(2);
   expect(label).not.toMatch(/01:00:00|23:00:00/);
 });
@@ -109,12 +114,9 @@ it('объясняет неизвестную первую дату, не объ
   expect(screen.queryByText('В выбранном периоде нет событий')).not.toBeInTheDocument();
 });
 
-it('показывает промежуток при наведении, закрепляет нажатием и применяет точные границы',()=>{
+it('закрепляет промежуток нажатием и применяет точные границы',()=>{
   const apply=vi.fn();
   render(<AnalyticsChartRangeContext.Provider value={apply}><AnalyticsReportChart points={[{date:'2026-11-01T00:00:00Z',end_date:'2026-11-02T00:00:00Z',incoming:7}]} series={[{key:'incoming',label:'Входящие',color:'#10b981'}]} timezone="UTC" stepMs={86400000} range={{from:'2026-11-01T01:00:00Z',to:'2026-11-01T02:30:00Z'}}/></AnalyticsChartRangeContext.Provider>);
-  const preview = document.querySelector('[data-analytics-chart-preview]')!;
-  fireEvent.mouseMove(screen.getByTestId('chart'));expect(preview).toHaveTextContent('Входящие'); expect(preview).toHaveTextContent('7');
-  fireEvent.mouseLeave(screen.getByTestId('chart'));expect(preview).not.toHaveTextContent('Входящие');
   fireEvent.click(screen.getByTestId('chart'));fireEvent.mouseLeave(screen.getByTestId('chart'));
   fireEvent.click(screen.getByRole('button',{name:'Выбрать этот период'}));
   const range={from:'2026-11-01T01:00:00.000Z',to:'2026-11-01T02:30:00.000Z'};
@@ -125,5 +127,16 @@ it('показывает промежуток при наведении, зак�
 it('показывает полные сутки русской датой в подсказке', () => {
   render(<AnalyticsReportChart points={[{date:'2026-09-28T00:00:00Z',incoming:7}]} series={[{key:'incoming',label:'Входящие',color:'#10b981'}]} timezone="UTC" stepMs={86400000} />);
   fireEvent.mouseMove(screen.getByTestId('chart'));
-  expect(document.querySelector('[data-analytics-chart-preview]')).toHaveTextContent('Понедельник, 28 сентября 2026 г.');
+  expect(tooltipMock.mock.calls.at(-1)?.[0].content.props.formatInterval('2026-09-28T00:00:00Z')).toBe('Понедельник, 28 сентября 2026 г.');
+});
+
+/** Переключатель меняет реальные значения и сохраняет режим в увеличенном окне. */
+it('складывает значения при включении накопления и сохраняет переключатель в окне', () => {
+  render(<AnalyticsReportChart title="Накопление" points={[{ date: '2026-11-01T00:00:00Z', incoming: 7 }, { date: '2026-11-02T00:00:00Z', incoming: 12 }]} series={[{ key: 'incoming', label: 'Входящие', color: '#10b981' }]} timezone="UTC" stepMs={86400000} />);
+  fireEvent.click(screen.getByRole('switch', { name: 'Накопительно внутри периода' }));
+  expect(screen.getByRole('switch', { name: 'Накопительно внутри периода' })).toBeChecked();
+  fireEvent.mouseMove(screen.getByTestId('chart'));
+  expect(screen.getByRole('button', { name: /Входящие: 19/ })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Развернуть график: Накопление' }));
+  expect(screen.getByRole('switch', { name: 'Накопительно внутри периода' })).toBeChecked();
 });

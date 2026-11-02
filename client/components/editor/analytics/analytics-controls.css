@@ -1,0 +1,61 @@
+/** @fileoverview Единые состояния настроек, форм, справки и табличных данных аналитики. */
+/** Выбранный период сохраняет нейтральную поверхность внутри календаря. */
+.analytics-page .analytics-period-options button[aria-pressed='true'] {
+  background: var(--muted); color: var(--foreground); border-color: var(--border);
+  box-shadow: inset 0 0 0 1px var(--border); font-weight: 500;
+}
+:is(.analytics-page, .analytics-chart-dialog, .analytics-overlay) :is(input:not([type='checkbox']), select, textarea, [role='combobox']) {
+  background-color: var(--background); color: var(--foreground); border-color: var(--border); border-radius: 8px;
+  box-shadow: none; min-width: 0;
+}
+:is(.analytics-page, .analytics-chart-dialog, .analytics-overlay) :is(input, select, textarea, button, summary, [role='combobox']):focus-visible {
+  outline: 2px solid var(--ring); outline-offset: 3px;
+}
+:is(.analytics-page, .analytics-chart-dialog, .analytics-overlay) [aria-invalid='true'] { border-color: var(--destructive); }
+:is(.analytics-page, .analytics-chart-dialog, .analytics-overlay) :is(input, select, textarea, button):disabled { opacity: .45; cursor: not-allowed; }
+.analytics-page .analytics-form-grid { gap: 20px 16px; }
+.analytics-page .analytics-form-grid label { font-size: 13px; color: var(--muted-foreground); }
+.analytics-page .analytics-form-grid :is(input, select) { min-height: 40px; font-size: 14px; }
+/** Навигация рекламы читается строкой разделов; выбор обозначен нижней линией без заливки. */
+.analytics-page .analytics-acquisition-tabs { gap: 4px 20px; padding-bottom: 0; border-bottom: 1px solid var(--border); }
+.analytics-page .analytics-acquisition-tabs button {
+  position: relative; min-height: 40px; padding: 8px 0 12px; border: 0; border-radius: 0;
+  background: transparent; color: var(--muted-foreground); box-shadow: none;
+  font-size: 13px; line-height: 20px; font-weight: 500;
+}
+.analytics-page .analytics-acquisition-tabs button:hover,
+.analytics-page .analytics-acquisition-tabs button[aria-pressed='true'],
+.analytics-page .analytics-acquisition-tabs button[aria-pressed='true']:hover { background: transparent; color: var(--foreground); box-shadow: none; }
+.analytics-page .analytics-acquisition-tabs button::after { content: ''; position: absolute; inset: auto 0 -1px; height: 2px; background: transparent; }
+.analytics-page .analytics-acquisition-tabs button[aria-pressed='true']::after { background: var(--foreground); }
+.analytics-page .analytics-acquisition-tabs button:focus-visible { outline: 2px solid var(--ring); outline-offset: 4px; box-shadow: none; }
+/** Справка раскрывается на той же поверхности, без дополнительной вложенной карточки. */
+/** Тонкая рамка и внутренние отступы обозначают кнопку без тяжёлой заливки и декоративного значка. */
+.analytics-page .analytics-access-check-trigger { height: 36px; min-height: 36px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; background: transparent; color: var(--foreground); font-size: 13px; line-height: 20px; font-weight: 500; box-shadow: none; }
+.analytics-page .analytics-access-check-trigger:hover { background: var(--muted); border-color: var(--muted-foreground); color: var(--foreground); text-decoration: none; }
+.analytics-page .analytics-access-check-trigger:focus-visible { outline: 2px solid var(--ring); outline-offset: 4px; box-shadow: none; }
+:is(.analytics-page, .analytics-chart-dialog) .analytics-chart-info { border-color: var(--border); border-radius: 8px; }
+:is(.analytics-page, .analytics-chart-dialog) .analytics-chart-info[data-state='open'] { background: var(--background); }
+:is(.analytics-page, .analytics-chart-dialog) .analytics-chart-info > button { font-size: 13px; font-weight: 400; min-height: 36px; }
+:is(.analytics-page, .analytics-chart-dialog) .analytics-chart-info > button:hover { background: var(--muted); }
+:is(.analytics-page, .analytics-chart-dialog) .analytics-chart-info strong { font-weight: 500; }
+:is(.analytics-page, .analytics-chart-dialog) .analytics-chart-value-list button { align-items: baseline; border: 1px solid transparent; }
+:is(.analytics-page, .analytics-chart-dialog) .analytics-chart-value-list button[aria-pressed='true'] { border-color: var(--border); background: var(--muted); }
+:is(.analytics-page, .analytics-chart-dialog) .analytics-chart-value-list button > span:last-child { text-align: right; }
+.analytics-page .analytics-report-table tbody tr:nth-child(odd) { background: transparent; }
+.analytics-page .analytics-report-table tbody tr { border-top: 1px solid var(--border); }
+.analytics-page .analytics-report-table tbody tr:hover { background: var(--muted); }
+.analytics-page .analytics-report-table th { background: var(--background); font-size: 12px; line-height: 18px; }
+.analytics-page .analytics-report-table td { font-size: 13px; line-height: 20px; }
+/** Действия графиков остаются компактными; цвет показывают сами ряды данных. */
+:is(.analytics-page, .analytics-chart-dialog) .analytics-chart-actions button { width: 32px; height: 32px; border: 0; border-radius: 6px; background: transparent; }
+:is(.analytics-page, .analytics-chart-dialog) .analytics-chart-actions:not(.is-expanded) { margin-top: -4px; }
+:is(.analytics-page, .analytics-chart-dialog) .analytics-chart-actions button:hover { background: var(--muted); color: var(--foreground); }
+:is(.analytics-page, .analytics-chart-dialog) .analytics-chart-actions svg { width: 16px; height: 16px; stroke-width: 1.5; }
+.analytics-page .analytics-chart-view-controls { gap: 8px 12px; font-size: 13px; }
+.analytics-page .analytics-chart-view-controls select { min-height: 36px; padding-block: 6px; }
+.analytics-page .analytics-chart-view-controls > button { min-height: 36px; }
+@media (prefers-reduced-motion: reduce) {
+  :is(.analytics-page, .analytics-chart-dialog, .analytics-overlay) *,
+  :is(.analytics-page, .analytics-chart-dialog, .analytics-overlay) *::before { transition: none !important; animation: none !important; }
+}

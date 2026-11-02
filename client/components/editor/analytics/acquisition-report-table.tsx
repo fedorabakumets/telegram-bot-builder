@@ -1,20 +1,24 @@
 /** @fileoverview Рекламные результаты с раздельными валютами и раскрытием ограничений расчёта. */
-import {budgetMarker} from './acquisition-budget-source';
+import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
+import { AcquisitionResultRow } from './acquisition-result-row';
+import { AcquisitionResultDetails, AcquisitionResultLoading, acquisitionPeriodLabel } from './acquisition-result-details';
+import './acquisition-results.css';
+import { reportTimeLabel } from './analytics-report-filter';
 import type {AcquisitionReportRow} from './acquisition-types';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { acquisitionColumns, sortAcquisitionRows, type AcquisitionSortKey } from './acquisition-report-sort';
 import type { AnalyticsV2Snapshot } from '@shared/analytics/v2';
 import type { BotToken } from '@shared/schema';
 import { useAcquisitionReport } from './use-acquisition';
-import { reportTimeLabel } from './analytics-report-filter';
-import { acquisitionMoney } from './acquisition-money';
 import { AnalyticsChartState } from './analytics-chart-state';
 /** Показывает рекламные результаты; выбор быстрого дня отменяет режим всего срока. @param props - Область, снимок и выбор календарного дня. @returns Расходы и цены за период либо полный срок размещений. */
-export function AcquisitionReportTable({ projectId, tokenId, snapshot, tokens = [], onAddBudget }: {
+export function AcquisitionReportTable({ projectId, tokenId, snapshot, tokens = [], onAddBudget, renderBudget }: {
+  /** Встраивает форму расхода с выбранным источником и валютой. */ renderBudget?: (row: AcquisitionReportRow, currency: 'RUB' | 'USD', onDone: () => void) => ReactNode;
   /** Переход к бюджету выбранного источника и валюты. */ onAddBudget?:(row:AcquisitionReportRow,currency:'RUB'|'USD')=>void;
   /** Доступные боты для понятных подписей строк. */ tokens?: BotToken[];
   /** Проект. */ projectId: number; /** Бот. */ tokenId?: number | null; /** Общий снимок. */ snapshot?: AnalyticsV2Snapshot;
 }) {
+  const [budgetCurrency, setBudgetCurrency] = useState<'RUB' | 'USD' | null>(null);
   const [currency, setCurrency] = useState('RUB');
   const [lifetime, setLifetime] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
@@ -31,17 +35,21 @@ export function AcquisitionReportTable({ projectId, tokenId, snapshot, tokens = 
     const bot = tokens.find(item => item.id === id);
     return bot?.botUsername ? `@${bot.botUsername.replace(/^@/, '')}` : bot?.name || 'Бот недоступен';
   }
-  const chosen = rows.find(row => (row.rowKey ?? String(row.placementId)) === selected);
-  return <section className="space-y-4"><div className="flex flex-wrap gap-4 items-end justify-between"><div><h3 className="text-lg font-semibold">Результаты рекламы</h3><p className="text-sm text-muted-foreground">Расходы и первые контакты за календарные дни</p></div>
-    <div className="flex flex-wrap gap-3 items-center"><label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={lifetime} onChange={event => setLifetime(event.target.checked)} />За всё время</label><label className="analytics-control-field"><span>Валюта ручного пересчёта</span><select className="analytics-native-field" value={currency} onChange={event => setCurrency(event.target.value)}><option value="RUB">Рубли · RUB</option><option value="USD">Доллары · USD</option></select></label></div></div>
-    {!lifetime && query.data?.from && query.data?.to && <p className="text-xs text-muted-foreground">Период рекламы: {reportTimeLabel(query.data.from, snapshot?.range.timezone ?? 'Europe/Moscow')} — {reportTimeLabel(query.data.to, snapshot?.range.timezone ?? 'Europe/Moscow')}. Текущий день — на данный момент; остальные графики сохраняют свой период.</p>}
-    {query.isError ? <AnalyticsChartState title="Не удалось получить рекламный отчёт" description={query.error.message} onRetry={() => void query.refetch()} /> : !snapshot || query.isLoading ? <AnalyticsChartState loading /> : !rows.length ? <AnalyticsChartState title="Добавьте первый источник" description="Создайте ссылку, чтобы связать новые взаимодействия с рекламной публикацией." /> : <>
-      <div className="analytics-table-scroll"><table className="analytics-report-table"><caption className="sr-only">Результаты рекламных источников {lifetime ? 'за весь срок' : 'за выбранный период'}</caption><thead><tr>{acquisitionColumns.map(({key,label}) => <th key={key} scope="col" aria-sort={sort?.key === key ? sort.descending ? 'descending' : 'ascending' : 'none'}><button type="button" onClick={() => changeSort(key)} title="Изменить порядок строк">{label} <span aria-hidden="true">{sort?.key === key ? sort.descending ? '↓' : '↑' : '↕'}</span></button></th>)}</tr></thead>
-        <tbody>{rows.map(row => <tr key={row.rowKey ?? String(row.placementId)}><td><button type="button" aria-expanded={selected === (row.rowKey ?? String(row.placementId))} onClick={() => setSelected(selected === (row.rowKey ?? String(row.placementId)) ? null : (row.rowKey ?? String(row.placementId)))}>{row.sourceName || row.name}</button><p className="text-xs text-muted-foreground">{botLabel(row.tokenId)}</p></td><td>{(row.newUsers + (row.historicalUsers ?? 0)).toLocaleString('ru-RU')}{!!row.historicalUsers && <p className="text-xs text-muted-foreground">Из истории: {row.historicalUsers}</p>}</td><td>{row.returningUsers.toLocaleString('ru-RU')}</td><td>{row.spend.RUB == null && onAddBudget ? <button type="button" disabled={row.placementId==null && !budgetMarker(row.sourceKey)} title={row.placementId==null && !budgetMarker(row.sourceKey) ? 'У этой категории нет рекламной метки' : undefined} aria-label={`Указать бюджет ${'RUB'}: ${row.sourceName || row.name}`} onClick={()=>onAddBudget(row,'RUB')}>Указать</button> : acquisitionMoney(row.spend.RUB, 'RUB')}</td><td>{row.spend.USD == null && onAddBudget ? <button type="button" disabled={row.placementId==null && !budgetMarker(row.sourceKey)} title={row.placementId==null && !budgetMarker(row.sourceKey) ? 'У этой категории нет рекламной метки' : undefined} aria-label={`Указать бюджет ${'USD'}: ${row.sourceName || row.name}`} onClick={()=>onAddBudget(row,'USD')}>Указать</button> : acquisitionMoney(row.spend.USD, 'USD')}</td><td>{row.costPerUserByCurrency?.RUB == null && row.costPerUserByCurrency?.USD == null ? <button type="button" className="text-muted-foreground" onClick={() => setSelected(row.rowKey ?? String(row.placementId))}>{row.isDemo && row.demoCostPerContact ? `${acquisitionMoney(row.demoCostPerContact, row.currency)} · демо` : row.newUsers + (row.historicalUsers ?? 0) === 0 ? 'Нет первых контактов' : row.spend.RUB == null && row.spend.USD == null ? 'Расход не указан' : row.reason?.includes('курс') ? 'Не указан курс' : 'Недостаточно истории'}</button> : <>{row.costPerUserByCurrency?.RUB != null && <p>{acquisitionMoney(row.costPerUserByCurrency.RUB, 'RUB')}</p>}{row.costPerUserByCurrency?.USD != null && <p>{acquisitionMoney(row.costPerUserByCurrency.USD, 'USD')}</p>}</>}{row.estimated && <p className="text-xs text-muted-foreground">Оценка</p>}{row.currentDay && <p className="text-xs text-muted-foreground">На текущий момент</p>}</td></tr>)}</tbody></table></div>
-      {chosen && <div className="analytics-report-details space-y-3"><div className="flex justify-between gap-3"><strong>{chosen.name}</strong><button type="button" onClick={() => setSelected(null)}>Закрыть</button></div><dl className="flex flex-wrap gap-4"><div><dt className="text-muted-foreground">Повторные запуски</dt><dd>{chosen.repeatStarts.toLocaleString('ru-RU')}</dd></div><div><dt className="text-muted-foreground">Расход с фиксированными курсами</dt><dd>{chosen.convertedSpend == null ? 'Не рассчитан' : acquisitionMoney(chosen.convertedSpend, chosen.currency)}</dd></div><div><dt className="text-muted-foreground">Цена нового после пересчёта</dt><dd>{chosen.costPerUser == null ? 'Не рассчитана' : acquisitionMoney(chosen.costPerUser, chosen.currency)}</dd></div></dl>{chosen.reason && <p className="text-muted-foreground">{chosen.reason}</p>}<p className="text-xs text-muted-foreground">Запуски по ссылке не равны кликам. Цена считается по новым пользователям с известным первым взаимодействием. Суммы в исходных валютах показываются отдельно, даже когда курс для общего итога не указан.</p></div>}
-      {chosen && (chosen.estimated || chosen.currentDay) && <p className="text-sm text-muted-foreground">{chosen.estimated ? 'Оценка: использовано равномерное распределение оплаты по дням. ' : ''}{chosen.currentDay ? 'На текущий момент: календарный день ещё не завершён.' : ''}</p>}
-      <p className="text-xs text-muted-foreground">{lifetime ? 'Показаны источники за всё время.' : 'Готовые периоды рекламы считаются по календарным дням. Для часовых периодов показан текущий день.'} Валюты сохраняются отдельно. Пересчёт требует фиксированного курса каждой оплаты.</p>
-      <p className="text-xs text-muted-foreground" role="status">{query.data?.asOf ? `Снимок рекламного отчёта: ${new Date(query.data.asOf).toLocaleString('ru-RU', { timeZone: snapshot.range.timezone })} · ${snapshot.range.timezone}` : ''}</p>
+  return <section className="acquisition-results space-y-4" aria-label="Результаты рекламы">
+    <header className="acquisition-results-heading"><div><h3>Результаты рекламы</h3></div>
+      <label className="acquisition-results-lifetime"><input type="checkbox" checked={lifetime} onChange={event => setLifetime(event.target.checked)} />За всё время</label>
+    </header>
+    <p className="acquisition-results-period" title={!lifetime && query.data?.from && query.data?.to ? `${reportTimeLabel(query.data.from, snapshot?.range.timezone ?? 'Europe/Moscow')} — ${reportTimeLabel(query.data.to, snapshot?.range.timezone ?? 'Europe/Moscow')}` : undefined}>{lifetime ? 'За всё время' : query.data?.from && query.data?.to ? acquisitionPeriodLabel(query.data.from, query.data.to, snapshot?.range.timezone ?? 'Europe/Moscow') : 'Загружаем период отчёта…'}</p>
+    {query.isError ? <AnalyticsChartState title="Не удалось получить рекламный отчёт" description={query.error.message} onRetry={() => void query.refetch()} /> : !snapshot || query.isLoading ? <AcquisitionResultLoading /> : !rows.length ? <AnalyticsChartState title="Пока нет источников за этот период" description="Выберите другой период или создайте ссылку. Источник появится после первого запуска бота по ней." /> : <>
+      <div className="analytics-table-scroll"><table className="analytics-report-table acquisition-results-table"><caption className="sr-only">Результаты рекламных источников {lifetime ? 'за весь срок' : 'за выбранный период'}</caption>
+        <thead><tr>{acquisitionColumns.map(({key,label}) => {
+          const active = sort?.key === key;
+          const SortIcon = active ? sort.descending ? ArrowDown : ArrowUp : ArrowUpDown;
+          return <th key={key} scope="col" aria-sort={active ? sort.descending ? 'descending' : 'ascending' : 'none'}><button type="button" onClick={() => changeSort(key)} title="Изменить порядок строк">{label}<SortIcon size={14} strokeWidth={1.5} aria-hidden="true" /></button></th>;
+        })}</tr></thead>
+        <tbody>{rows.map(row => <AcquisitionResultRow key={row.rowKey ?? String(row.placementId)} row={row} botName={botLabel(row.tokenId)} selected={selected === (row.rowKey ?? String(row.placementId))} onToggle={() => { setBudgetCurrency(null); setSelected(selected === (row.rowKey ?? String(row.placementId)) ? null : (row.rowKey ?? String(row.placementId))); }} onAddBudget={onAddBudget} details={<AcquisitionResultDetails row={row} currency={currency} onCurrency={setCurrency} onClose={() => { setSelected(null); setBudgetCurrency(null); }} onAddBudget={renderBudget ? () => setBudgetCurrency(currency === 'USD' ? 'USD' : 'RUB') : onAddBudget ? () => onAddBudget(row, currency === 'USD' ? 'USD' : 'RUB') : undefined} budgetForm={budgetCurrency && renderBudget ? renderBudget(row, budgetCurrency, () => setBudgetCurrency(null)) : undefined} />} />)}</tbody>
+      </table></div>
+      <p className="acquisition-results-snapshot" role="status">{query.data?.asOf ? `Обновлено ${new Date(query.data.asOf).toLocaleString('ru-RU', { timeZone: snapshot.range.timezone, day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })} · ${snapshot.range.timezone}` : ''}</p>
     </>}
   </section>;
 }

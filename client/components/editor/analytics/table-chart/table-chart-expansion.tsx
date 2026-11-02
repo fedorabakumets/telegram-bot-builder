@@ -25,7 +25,7 @@ export function TableChartExpansion({ refresh, busy, ...props }: Props) {
   return <AnalyticsSnapshotRefreshContext.Provider value={{ refresh: () => void reload(), busy, error, label: 'Обновить график таблицы' }}>
     <AnalyticsChartActions title="График по таблице" open={() => setExpanded(true)} triggerRef={trigger} />
     {!expanded && chart}<Dialog open={expanded} onOpenChange={setExpanded}><DialogContent hideClose aria-describedby={undefined}
-      onCloseAutoFocus={event => { event.preventDefault(); trigger.current?.focus(); }} className="w-[calc(100%-1rem)] max-w-none sm:max-w-[min(1100px,96vw)] max-h-[94dvh] overflow-y-auto">
+      onCloseAutoFocus={event => { event.preventDefault(); trigger.current?.focus(); }} className="analytics-chart-dialog w-[calc(100%-1rem)] max-w-none sm:max-w-[min(1100px,96vw)] max-h-[94dvh] overflow-y-auto">
       <div className="flex flex-wrap items-center justify-between gap-3"><DialogTitle>График по таблице</DialogTitle><div className="flex items-center gap-2">
         <AnalyticsChartActions expanded open={() => setExpanded(true)} triggerRef={trigger} />
         <button type="button" onClick={() => setExpanded(false)} className="rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-ring">Закрыть график</button></div></div>{chart}</DialogContent></Dialog>

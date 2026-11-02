@@ -5,7 +5,7 @@ import { expect, it, vi } from 'vitest';
 import type { AnalyticsV2Snapshot, AnalyticsV2Source } from '@shared/analytics/v2';
 import { AnalyticsReportSources } from './analytics-report-sources';
 
-vi.mock('recharts', () => ({ ResponsiveContainer: () => null, ComposedChart: () => null, Area: () => null, Bar: () => null,
+vi.mock('recharts', () => ({ ResponsiveContainer: () => null, ComposedChart: () => null, Line: () => null, Area: () => null, Bar: () => null,
   XAxis: () => null, YAxis: () => null, CartesianGrid: () => null, Tooltip: () => null, ReferenceLine: () => null,
   ReferenceDot: () => null, Cell: () => null, Pie: () => null, PieChart: () => null }));
 /** Создаёт значение источника. @param id - Идентификатор. @param count - Первые контакты. @returns Строка источника. */

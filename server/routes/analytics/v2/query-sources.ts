@@ -4,8 +4,8 @@ import type { AnalyticsV2Range, AnalyticsV2Snapshot } from '../../../../shared/a
 import { v2ScopeSql, v2Count } from './query-scope';
 import { v2SourceOriginsSql } from './query-source-origins';
 import { v2SlotsSql, v2BucketDateSql } from './query-slots';
-/** Понятные названия происхождения; авторизационная ссылка не подтверждает успешный вход. */
-const SOURCE_LABELS: Record<string, string> = { no_marker: 'Без метки источника', unknown: 'Источник неизвестен',
+/** Короткие подписи источников для графиков и списков; авторизационная ссылка не подтверждает вход. */
+const SOURCE_LABELS: Record<string, string> = { no_marker: 'Без источника', unknown: 'Источник неизвестен',
   referral_unknown: 'Реферальный переход без пригласившего', site_login: 'Вход с сайта', auth_candidate: 'Авторизация на сайте', resolved: 'Источник' };
 /**
  * Получает распределение и ряд по одной методике первого взаимодействия.

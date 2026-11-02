@@ -16,6 +16,5 @@ export function AnalyticsCompactTooltip({active,label,payload,formatInterval}: {
   return <div className="analytics-compact-tooltip">
     <p className="analytics-compact-tooltip-period">{formatInterval(String(label))}</p>
     <div className="analytics-compact-tooltip-values">{payload.map((item,index)=><p className="analytics-compact-tooltip-row" key={`${item.name}:${index}`}><span style={{color:item.color}}>{item.name}</span><strong>{Number(item.value ?? 0).toLocaleString('ru-RU')}</strong></p>)}</div>
-    <p className="text-muted-foreground">Нажмите, чтобы закрепить все значения</p>
   </div>;
 }

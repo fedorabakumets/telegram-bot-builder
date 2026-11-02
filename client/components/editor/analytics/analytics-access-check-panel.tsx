@@ -113,7 +113,7 @@ export function AnalyticsAccessCheckPanel({
   return (
     <div className="space-y-2">
       <div className="analytics-access-summary flex flex-wrap items-start justify-between gap-4">
-        <div className="min-w-0 basis-full">{note}</div>
+        {note && <div className="min-w-0 basis-full">{note}</div>}
         {!active && (
           <AnalyticsAccessCheckButton
             tokens={tokens} selectedTokenId={selected} onSelectToken={setCheckTokenId}

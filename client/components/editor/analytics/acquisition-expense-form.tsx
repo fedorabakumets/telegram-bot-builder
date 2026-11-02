@@ -56,7 +56,7 @@ export function AcquisitionExpenseForm({ projectId, catalog, timezone, expense, 
     try { await mutation.mutateAsync(sourceMarker!==null ? {resource:'budgets',body:{...body,tokenId:Number(bot),marker:sourceMarker,timezone,...(equal ? {untilDay,allocation:'equal'} : {})}} : { resource: 'expenses', id: expense?.id, body: expense ? body : { ...body, placementId: Number(placementId), ...(equal ? { untilDay, allocation: 'equal' } : { allocation: 'single' }) } }); onSaved(); } catch { /* Ошибка запроса сохраняет форму открытой. */ }
   }
   return <form className="space-y-4" onSubmit={save}>
-    <div><h3 ref={heading} tabIndex={-1} className="text-lg font-semibold scroll-mt-4">{expense ? 'Изменить рекламный бюджет' : 'Добавить рекламный бюджет'}</h3><p className="text-sm text-muted-foreground">Исходная валюта сохраняется. Нулевой рекламный бюджет можно указать явно.</p></div>
+    <div><h3 ref={heading} tabIndex={-1} className="text-lg font-semibold scroll-mt-4">{expense ? 'Изменить рекламный бюджет' : 'Добавить рекламный бюджет'}</h3></div>
     <div className="analytics-form-grid analytics-budget-grid"><AcquisitionBudgetSource catalog={catalog} rows={discovered.data?.rows ?? []} tokens={tokens} bot={bot} setBot={setBot} value={placementId} onChange={setPlacementId} marker={marker} setMarker={setMarker} disabled={!!expense}/>
       {discovered.isError && <p role="alert">Не удалось загрузить найденные источники. <button type="button" onClick={()=>void discovered.refetch()}>Повторить</button></p>}
       <label>Сумма рекламного бюджета · обязательно<Input inputMode="decimal" required value={amount} placeholder="3000,00" onChange={event => { setAmount(event.target.value); setConfirmed(false); }} /></label>

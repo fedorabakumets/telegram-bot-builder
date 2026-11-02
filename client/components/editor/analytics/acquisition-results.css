@@ -1,0 +1,53 @@
+/** @fileoverview Компактный рекламный отчёт: ровные числа, спокойные действия и раскрываемые пояснения. */
+.acquisition-results-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; }
+.acquisition-results-heading p { font-size: 13px; line-height: 20px; color: var(--muted-foreground); margin-top: 4px; }
+.acquisition-results-lifetime { display: flex; align-items: center; gap: 8px; font-size: 13px; line-height: 20px; cursor: pointer; }
+.acquisition-results-period, .acquisition-results-snapshot { color: var(--muted-foreground); font-size: 12px; line-height: 20px; }
+/** Ограничение текущего дня читается отчётливее обычных метаданных рядом с суммой. */
+.acquisition-current-day { color: #62626b; }
+.dark .acquisition-current-day { color: #b4b4bc; }
+.analytics-page .acquisition-results .acquisition-results-table { min-width: 680px; }
+.analytics-page .acquisition-results .acquisition-results-table :is(th, td):not(:first-child) { text-align: right; }
+.analytics-page .acquisition-results .acquisition-results-table th { background: transparent; padding: 8px 12px; }
+/** Плотные строки центрируют все значения без пустой строки под названием источника. */
+.analytics-page .acquisition-results .acquisition-results-table tbody > tr:not(.acquisition-result-detail-row) > td { padding-block: 4px; vertical-align: middle; }
+.analytics-page .acquisition-results .acquisition-results-table th:first-child, .analytics-page .acquisition-results .acquisition-results-table td:first-child { padding-left: 0; }
+.analytics-page .acquisition-results .acquisition-results-table th:last-child, .analytics-page .acquisition-results .acquisition-results-table td:last-child { padding-right: 0; }
+.analytics-page .acquisition-results .acquisition-results-table button { text-decoration: none; }
+.acquisition-results-table th button { display: inline-flex; align-items: center; justify-content: flex-end; gap: 8px; width: 100%; min-height: 32px; font-weight: 400; text-align: right; }
+.acquisition-results-table th:first-child button { justify-content: flex-start; text-align: left; }
+.acquisition-results-table th svg { flex-shrink: 0; opacity: .4; }
+.acquisition-results-table th[aria-sort='ascending'] button, .acquisition-results-table th[aria-sort='descending'] button, .acquisition-results-table th button:hover { color: var(--foreground); }
+.acquisition-results-table th:not([aria-sort='none']) svg { opacity: 1; }
+.acquisition-source-toggle { display: flex; width: fit-content; align-items: center; gap: 8px; min-height: 28px; padding: 4px 0; text-align: left; }
+.acquisition-source-toggle svg { flex-shrink: 0; color: var(--muted-foreground); }
+.acquisition-source-toggle[aria-expanded='true'] svg { transform: rotate(90deg); }
+.analytics-page .acquisition-results .acquisition-results-table tbody tr[data-selected='true'] { background: var(--muted); }
+.acquisition-budget-action { min-height: 20px; padding: 0; color: var(--muted-foreground); }
+.analytics-page .acquisition-results .acquisition-results-table .acquisition-budget-action:hover { color: var(--foreground); text-decoration: underline; text-underline-offset: 4px; }
+.acquisition-result-details { padding-block: 16px; border-block: 1px solid var(--border); display: grid; gap: 16px; }
+/** Подробности раскрываются в таблице сразу за выбранным источником. */
+.analytics-page .acquisition-results .acquisition-results-table .acquisition-result-detail-row > td { padding: 0 12px; text-align: left; }
+.analytics-page .acquisition-results .acquisition-results-table .acquisition-result-detail-row:hover { background: transparent; }
+.acquisition-result-detail-row .acquisition-result-details { border: 0; }
+.acquisition-result-details header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.acquisition-result-details header button { font-size: 13px; color: var(--muted-foreground); padding: 4px 0; }
+.acquisition-result-details header button:hover { color: var(--foreground); }
+.acquisition-conversion-control { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; font-size: 13px; color: var(--muted-foreground); }
+.acquisition-conversion-control select { width: auto; min-width: 144px; min-height: 36px; padding-block: 6px; }
+.acquisition-result-details dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.acquisition-result-details dt { color: var(--muted-foreground); font-size: 12px; line-height: 20px; }
+.acquisition-result-details dd { margin-top: 4px; font-size: 16px; line-height: 24px; }
+.acquisition-result-details > p, .acquisition-results-notes { color: var(--muted-foreground); font-size: 13px; line-height: 20px; }
+.acquisition-results-notes summary { cursor: pointer; width: fit-content; padding-block: 4px; }
+.acquisition-results-notes summary:hover { color: var(--foreground); }
+.acquisition-results-notes > div { display: grid; gap: 8px; padding-top: 12px; max-width: 80ch; }
+.acquisition-results-loading { padding-block: 16px; }
+.acquisition-results-loading > div { display: grid; gap: 16px; }
+.acquisition-results-loading > div > div { display: grid; grid-template-columns: 2fr repeat(5, 1fr); gap: 24px; padding-block: 8px; }
+.acquisition-results-loading span:not(.sr-only) { height: 16px; background: var(--muted); border-radius: 4px; }
+@container analytics (max-width: 479px) {
+  .acquisition-results-heading { align-items: flex-start; }
+  .acquisition-result-details dl { grid-template-columns: minmax(0, 1fr); }
+  .acquisition-results-loading > div > div { gap: 8px; }
+}

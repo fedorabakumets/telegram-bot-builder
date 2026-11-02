@@ -24,6 +24,12 @@ import './analytics-dashboard.css';
 import './analytics-report.css';
 /** Контрастные состояния нативных флажков внутри рабочей вкладки. */
 import './analytics-checkbox.css';
+/** Единые поверхности и состояния основной вкладки и вынесенных окон. */
+import './analytics-theme.css';
+import './analytics-controls.css';
+import './analytics-overlays.css';
+/** Последовательная иерархия всех разделов, включая компактный режим. */
+import './analytics-polish.css';
 
 /** Контекст рабочей вкладки аналитики. */
 export interface AnalyticsPanelProps {
@@ -90,7 +96,7 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken, allP
         : data.coverage.status === 'unavailable' ? <AnalyticsChartState title="Пока нет данных для графиков" description="Сохранённая история переносится автоматически при запуске конструктора. Если переписки ещё не было, статистика появится после начала использования бота." />
         : <div aria-busy={snapshot.isFetching && changingPeriod.current} ref={node => { if (node) node.inert = snapshot.isPlaceholderData; }} className={`flex flex-col gap-4 ${snapshot.isFetching && changingPeriod.current ? 'analytics-period-updating' : ''}`}><AnalyticsSnapshotRefreshContext.Provider value={{ refresh: () => void refreshSnapshot(), busy: snapshot.isFetching, error: snapshotError }}><AnalyticsChartRangeContext.Provider value={range=>changeFilter(chartRangeFilter(filter,range))}><AnalyticsReportContent snapshot={data} /></AnalyticsChartRangeContext.Provider></AnalyticsSnapshotRefreshContext.Provider></div>}
       <AnalyticsAcquisitionSection key={`acquisition:${projectId}`} projectId={projectId} tokenId={selectedTokenId} tokens={tokens} timezone={filter.timezone} snapshot={snapshot.isError ? undefined : data} />
-      <AnalyticsCollapsibleSection title="Данные проекта" description="Текущие данные таблицы. Общий период применяется только при выборе колонки даты.">
+      <AnalyticsCollapsibleSection title="Данные проекта">
       <AnalyticsTableChartCard key={`table-chart:${projectId}`} projectId={projectId} range={snapshot.isError ? undefined : data?.range} />
       </AnalyticsCollapsibleSection>
     </div></ScrollArea></AnalyticsOpenPeriodContext.Provider>

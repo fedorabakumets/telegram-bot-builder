@@ -1,0 +1,12 @@
+/** @fileoverview Табличное выравнивание дат и чисел вместо многострочных описаний каждого интервала. */
+.analytics-chart-values .analytics-chart-value-list { display: block; max-height: 240px; overflow: auto; }
+.analytics-chart-values-grid { width: 100%; }
+.analytics-chart-values .analytics-chart-values-header,
+.analytics-chart-values .analytics-chart-value-list button { display: grid; align-items: baseline; gap: 16px; width: 100%; padding: 8px 12px; text-align: left; font-size: 13px; line-height: 20px; }
+.analytics-chart-values-header { position: sticky; top: 0; z-index: 1; background: var(--card); color: var(--muted-foreground); border-bottom: 1px solid var(--border); }
+.analytics-chart-values .analytics-chart-value-list button { min-height: 36px; padding-block: 6px; border: 1px solid transparent; border-radius: 4px; }
+.analytics-chart-values .analytics-chart-value-list :is(button, .analytics-chart-values-header) > span:not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; }
+.analytics-chart-values .analytics-chart-value-list button > span:not(:first-child) { white-space: nowrap; }
+.analytics-chart-values .analytics-chart-value-list button:hover,
+.analytics-chart-values .analytics-chart-value-list button[aria-pressed='true'] { background: var(--muted); }
+.analytics-chart-values .analytics-chart-value-list button[aria-pressed='true'] { border-color: var(--border); }

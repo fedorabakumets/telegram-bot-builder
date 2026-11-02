@@ -50,7 +50,7 @@ export function AnalyticsAcquisitionSection({ projectId, tokenId, tokens, timezo
   const [expense, setExpense] = useState<AcquisitionExpense | undefined>();
   const [target,setTarget]=useState<BudgetTarget|undefined>();
   const [saved, setSaved] = useState(false);
-  return <AnalyticsCollapsibleSection title="Источники и реклама" description="Свяжите рекламную публикацию, новых пользователей и рекламный бюджет.">
+  return <AnalyticsCollapsibleSection title="Источники и реклама">
     <section className={`analytics-card analytics-report-card analytics-acquisition-workspace border rounded-2xl ${expanded ? 'is-expanded' : ''}`}>
     <div className="analytics-acquisition-actions">
       <button type="button" aria-label="Обновить данные рекламы" title="Обновить данные рекламы" disabled={refreshing} onClick={() => void refreshAcquisition()}><RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin motion-reduce:animate-none' : ''}`} aria-hidden="true" /></button>
@@ -60,11 +60,11 @@ export function AnalyticsAcquisitionSection({ projectId, tokenId, tokens, timezo
     <div className="analytics-acquisition-tabs flex flex-wrap gap-2" role="group" aria-label="Работа с рекламой">{[['report', 'Результаты'], ['link', 'Создать ссылку'], ['expense', 'Добавить рекламный бюджет'], ['catalog', 'Ссылки и бюджеты']].map(([key, label]) => <Button key={key} variant="outline" aria-pressed={view === key} onClick={() => { setView(key as typeof view); setSaved(false); if (key === 'expense') {setExpense(undefined);setTarget(undefined);} }}>{label}</Button>)}</div>
     {saved && <p role="status" className="text-sm">Рекламный бюджет сохранён. Отчёт обновлён.</p>}
     {catalog.isError ? <AnalyticsChartState title="Не удалось загрузить источники" description={catalog.error.message} onRetry={() => void catalog.refetch()} /> : !catalog.data ? <AnalyticsChartState loading /> : <>
-      {view === 'report' && <AcquisitionReportTable tokens={tokens} projectId={projectId} tokenId={tokenId} snapshot={snapshot} onAddBudget={(row,currency)=>{setExpense(undefined);setTarget({placementId:row.placementId,tokenId:row.tokenId,marker:budgetMarker(row.sourceKey),currency});setView('expense');setSaved(false);}} />}
+      {view === 'report' && <AcquisitionReportTable tokens={tokens} projectId={projectId} tokenId={tokenId} snapshot={snapshot} renderBudget={(row, currency, onDone) => <AcquisitionExpenseForm tokens={tokens} tokenId={row.tokenId ?? tokenId} target={{ placementId: row.placementId, tokenId: row.tokenId, marker: budgetMarker(row.sourceKey), currency }} projectId={projectId} catalog={catalog.data} timezone={timezone} onSaved={() => { onDone(); setSaved(true); }} />} onAddBudget={(row,currency)=>{setExpense(undefined);setTarget({placementId:row.placementId,tokenId:row.tokenId,marker:budgetMarker(row.sourceKey),currency});setView('expense');setSaved(false);}} />}
       {/** Смена области сбрасывает выбранного в форме бота и неподтверждённый бюджет старой ссылки. */}
       {view === 'link' && <AcquisitionLinkForm key={`link:${projectId}:${tokenId ?? 'all'}`} projectId={projectId} timezone={timezone} tokenId={tokenId} tokens={tokens} />}
       {view === 'expense' && <AcquisitionExpenseForm key={expense?.id ?? `${tokenId ?? 'all'}:${JSON.stringify(target) ?? 'new'}`} tokens={tokens} tokenId={tokenId} target={target} projectId={projectId} catalog={catalog.data} timezone={timezone} expense={expense} onSaved={() => { setView('report'); setExpense(undefined); setSaved(true); }} />}
-      {view === 'catalog' && <AcquisitionCatalog projectId={projectId} catalog={catalog.data} onEditExpense={item => { setTarget(undefined);setExpense(item); setView('expense'); }} />}
+      {view === 'catalog' && <AcquisitionCatalog tokens={tokens} projectId={projectId} catalog={catalog.data} onEditExpense={item => { setTarget(undefined);setExpense(item); setView('expense'); }} />}
     </>}
     </section>
   </AnalyticsCollapsibleSection>;

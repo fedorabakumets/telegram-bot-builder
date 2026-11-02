@@ -1,0 +1,7 @@
+/** @fileoverview Спокойные текстовые переключатели графика с различимым выбором и фокусом. */
+.analytics-chart-view-switch { display: inline-flex; align-items: center; gap: 12px; flex-shrink: 0; }
+.analytics-chart-view-switch button { position: relative; min-height: 36px; padding: 8px 0; border: 0; border-radius: 0; background: transparent; color: var(--muted-foreground); font-size: 13px; line-height: 20px; font-weight: 400; box-shadow: none; }
+.analytics-chart-view-switch button[aria-pressed='true'] { color: var(--foreground); }
+.analytics-chart-view-switch button[aria-pressed='true']::after { content: ''; position: absolute; inset: auto 0 0; height: 2px; background: currentColor; }
+.analytics-chart-view-switch button:hover { color: var(--foreground); }
+.analytics-chart-view-switch button:focus-visible { outline: 2px solid var(--ring); outline-offset: 4px; box-shadow: none; }

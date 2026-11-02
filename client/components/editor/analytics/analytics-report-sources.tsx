@@ -1,4 +1,4 @@
-/** @fileoverview Согласованные динамика и распределение источников общего периода. */
+/** @fileoverview Согласованные динамика и плотное распределение источников общего периода. */
 import type { AnalyticsV2Snapshot } from '@shared/analytics/v2';
 import { AnalyticsReportChart, type ReportChartPoint } from './analytics-report-chart';
 import { AnalyticsReportDistribution, REPORT_COLORS } from './analytics-report-distribution';
@@ -27,14 +27,14 @@ export function AnalyticsReportSources({ snapshot }: { /** Общий снимо
     byDate.set(point.date, row);
   }
   return <div className="analytics-report-grid analytics-sources-compact">
-    <section className="analytics-card analytics-report-card border rounded-2xl"><header><h3 className="text-lg font-semibold">Динамика источников</h3>{previous && <AnalyticsReportComparison current={currentTotal} previous={previousTotal} approximate={approximate} />}</header><p className="text-sm text-muted-foreground">Источники первых сохранённых взаимодействий</p>
-      <AnalyticsReportChart compact title="Динамика источников" points={[...byDate.values()].sort((a, b) => a.date.localeCompare(b.date))} series={top.map((item, index) => ({ key: item.id, label: item.label, color: REPORT_COLORS[index] }))} timezone={snapshot.range.timezone} stepMs={snapshot.range.step_ms} range={snapshot.range}
+    <section className="analytics-card analytics-report-card border rounded-2xl"><header><h3 className="text-lg font-semibold">Динамика источников</h3>{previous && <AnalyticsReportComparison current={currentTotal} previous={previousTotal} approximate={approximate} />}</header>
+      <AnalyticsReportChart compact height={360} title="Динамика источников" points={[...byDate.values()].sort((a, b) => a.date.localeCompare(b.date))} series={top.map((item, index) => ({ key: item.id, label: item.label, color: REPORT_COLORS[index] }))} timezone={snapshot.range.timezone} stepMs={snapshot.range.step_ms} range={snapshot.range}
         emptyTitle="Нет первых взаимодействий за выбранный период"
         emptyDescription="В выбранном периоде первых сохранённых взаимодействий нет. Повторные обращения учитываются в активности." />
       {snapshot.sources.length > top.length && <p className="text-sm text-muted-foreground">На графике {top.length} крупнейших источников. Полное распределение доступно рядом.</p>}
     </section>
-    <AnalyticsReportDistribution compact periodSelectable title="Распределение по источникам" subtitle="Первые сохранённые взаимодействия за выбранный период" footnote="Доли рассчитаны по первым сохранённым взаимодействиям за выбранный период. Повторные входы учитываются отдельно." contextLabel={reportRangeLabel(snapshot.range)} items={[...sources.values()].map(item => ({ id: item.id, label: item.label, count: count(item),
+    <AnalyticsReportDistribution compact periodSelectable title="Распределение по источникам" contextLabel={reportRangeLabel(snapshot.range)} items={[...sources.values()].map(item => ({ id: item.id, label: item.label, count: count(item),
       previous: previous ? (previousById.has(item.id) ? count(previousById.get(item.id)!) : 0) : undefined, approximate,
-      details: [['Вернулись по ссылке', item.returning_users], ['Запуски по ссылке', item.starts]] }))} />
+      details: [...(previous ? [['В предыдущем периоде', previousById.has(item.id) ? count(previousById.get(item.id)!) : 0] as [string, number]] : []), ['Вернулись по ссылке', item.returning_users], ['Запуски по ссылке', item.starts]] }))} />
   </div>;
 }

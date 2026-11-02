@@ -11,5 +11,5 @@ it('не заменяет время снимка загрузкой при фо
   view.rerender(<AnalyticsReportStatus snapshot={snapshot} fetching={true} connection="connected" bridgeConnected={true}/>);
   expect(screen.getByRole('status').textContent).toBe(original);
   expect(screen.queryByText('Обновляем данные…')).not.toBeInTheDocument();
-  expect(screen.getByText('Живые обновления подключены')).toBeInTheDocument();
+  expect(screen.queryByText('Живые обновления подключены')).not.toBeInTheDocument();
 });

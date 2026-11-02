@@ -3,7 +3,6 @@ import { useState } from 'react';
 import type { AnalyticsV2MessageScope, AnalyticsV2Snapshot, AnalyticsV2Summary } from '@shared/analytics/v2';
 import { AnalyticsReportChart, type ReportChartPoint } from './analytics-report-chart';
 import { AnalyticsReportComparison, AnalyticsReportSummary } from './analytics-report-metrics';
-import { ChartInfoSpoiler } from './chart-info-spoiler';
 
 /** Вариант отображения чатов. */
 type Scope = 'all' | 'private' | 'group';
@@ -16,7 +15,7 @@ export function AnalyticsMessageCard({ snapshot }: { /** Общий снимок
   const [scope, setScope] = useState<Scope>('all');
   const { current, previous, range } = snapshot;
   if (!current.messages.chat_scopes || current.messages.incoming_to_bot == null || snapshot.points.some(point => !point.chat_scopes || point.incoming_to_bot == null) || (previous && (!previous.messages.chat_scopes || previous.messages.incoming_to_bot == null))) {
-      return <section className="analytics-card analytics-report-card border rounded-2xl"><h3 className="text-lg font-semibold">Сообщения</h3>
+      return <section className="analytics-card analytics-report-card analytics-messages-main border rounded-2xl"><h3 className="text-lg font-semibold">Сообщения</h3>
       <p className="text-sm text-muted-foreground">Обновите аналитику, чтобы увидеть данные по типам чатов.</p></section>;
   }
   const values = selectedMessages(current.messages, scope);
@@ -37,16 +36,16 @@ export function AnalyticsMessageCard({ snapshot }: { /** Общий снимок
   ] : [['Входящие', values.incoming_to_bot]];
   items.push(['Ответы бота', values.outgoing], ['Нажатия кнопок', values.callbacks + values.historical_callbacks]);
   /** Показатель и пояснения доступны также в развёрнутом графике. */
-  const expandedHeader = <div><p className="analytics-report-value">{total.toLocaleString('ru-RU')}</p><p className="analytics-message-description text-sm text-muted-foreground">сообщения боту и его ответы за период</p></div>;
+  const expandedHeader = <div><p className="analytics-report-value">{total.toLocaleString('ru-RU')}</p></div>;
   const expandedFooter = <div className="space-y-4"><AnalyticsReportSummary items={items} />
-    <p className="analytics-message-note text-xs text-muted-foreground">Итог — сообщения боту и его успешные ответы. Нажатия кнопок в сумму не входят.</p>
-    <div className="analytics-message-info"><ChartInfoSpoiler><p>Личные сообщения и подтверждённые обращения к боту в группах входят в число входящих; обычная переписка групп не учитывается. Старые групповые обращения без подтверждения могли не сохраниться.</p><p>Ответы и нажатия с неизвестным типом чата или из каналов видны только в режиме «Все». Кнопки-ссылки и кнопки клавиатуры не входят в счётчик нажатий.</p></ChartInfoSpoiler></div></div>;
-  return <section className="analytics-card analytics-report-card border rounded-2xl">
+    <p className="analytics-message-note text-xs text-muted-foreground">Нажатия кнопок не входят в итог сообщений</p>
+</div>;
+  return <section className="analytics-card analytics-report-card analytics-messages-main border rounded-2xl">
     <header><h3 className="text-lg font-semibold">Сообщения</h3><AnalyticsReportComparison current={total} previous={prior ? prior.incoming_to_bot + prior.outgoing : undefined} /></header>
     {expandedHeader}
     <div className="analytics-segments w-fit" role="group" aria-label="Тип чата">{([['all', 'Все'], ['private', 'Личные'], ['group', 'Группы']] as const).map(([value, label]) =>
       <button key={value} type="button" aria-pressed={scope === value} onClick={() => setScope(value)}>{label}</button>)}</div>
-    <AnalyticsReportChart compact expandedHeader={expandedHeader} expandedFooter={expandedFooter} title="Сообщения" points={points} series={series} timezone={range.timezone} stepMs={range.step_ms} range={range} />
+    <AnalyticsReportChart compact height={280} expandedHeader={expandedHeader} expandedFooter={expandedFooter} title="Сообщения" points={points} series={series} timezone={range.timezone} stepMs={range.step_ms} range={range} />
     {expandedFooter}
   </section>;
 }

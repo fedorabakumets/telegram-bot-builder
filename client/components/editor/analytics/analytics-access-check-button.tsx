@@ -4,7 +4,6 @@
  */
 import { useState } from 'react';
 import type { BotToken } from '@shared/schema';
-import { ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -35,7 +34,7 @@ interface AnalyticsAccessCheckButtonProps {
 }
 
 /**
- * Доступная кнопка проверки и диалог с читаемым описанием её действия.
+ * Текстовое действие проверки с одним контуром фокуса и диалогом подтверждения.
  * @param props - Свойства компонента
  * @returns JSX элемент
  */
@@ -46,17 +45,16 @@ export function AnalyticsAccessCheckButton({ tokens, selectedTokenId, onSelectTo
       <Button
         type="button"
         size="sm"
-        variant="outline"
-        className="h-10 shrink-0 gap-2 px-3 text-sm font-semibold"
+        variant="ghost"
+        className="analytics-access-check-trigger"
         disabled={pending || disabled}
         aria-busy={pending}
         title={disabled ? 'Добавьте бота в проект' : undefined}
         onClick={() => setOpen(true)}
       >
-        <ShieldCheck className="h-4 w-4" aria-hidden="true" />
-        {pending ? 'Запускаем проверку…' : 'Проверить доступы'}
+        {pending ? 'Запускаем проверку…' : 'Проверить доступность'}
       </Button>
-      <AlertDialogContent>
+      <AlertDialogContent className="analytics-overlay">
           <AlertDialogHeader>
             <AlertDialogTitle>Проверить доступы</AlertDialogTitle>
             <AlertDialogDescription>

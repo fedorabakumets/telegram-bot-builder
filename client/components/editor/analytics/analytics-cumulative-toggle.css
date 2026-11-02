@@ -1,0 +1,9 @@
+/** @fileoverview Компактный нейтральный переключатель накопления с явным положением ползунка. */
+:is(.analytics-page .analytics-report-card, .analytics-chart-dialog) .analytics-chart-view-controls > .analytics-cumulative-toggle { display: inline-flex; align-items: center; justify-content: flex-start; gap: 8px; flex: 0 0 auto; width: auto; min-height: 36px; padding: 8px 0; margin: 0; border: 0; border-radius: 4px; background: transparent; color: var(--muted-foreground); font-size: 12px; line-height: 20px; white-space: nowrap; }
+:is(.analytics-page .analytics-report-card, .analytics-chart-dialog) .analytics-chart-view-controls > .analytics-cumulative-toggle:hover { background: transparent; color: var(--foreground); }
+.analytics-cumulative-track { display: inline-flex; align-items: center; flex-shrink: 0; width: 24px; height: 14px; padding: 2px; border: 1px solid var(--muted-foreground); border-radius: 8px; }
+.analytics-cumulative-track > span { width: 8px; height: 8px; border-radius: 50%; background: var(--muted-foreground); }
+.analytics-cumulative-toggle[aria-checked='true'] { color: var(--foreground); }
+.analytics-cumulative-toggle[aria-checked='true'] .analytics-cumulative-track { background: var(--foreground); border-color: var(--foreground); }
+.analytics-cumulative-toggle[aria-checked='true'] .analytics-cumulative-track > span { background: var(--background); transform: translateX(10px); }
+:is(.analytics-page, .analytics-chart-dialog) .analytics-cumulative-toggle:focus-visible { outline: 2px solid var(--ring); outline-offset: 4px; box-shadow: none; }

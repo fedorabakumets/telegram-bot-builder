@@ -11,7 +11,6 @@ import { TableChartControls } from './table-chart-controls';
 import { getColumnTitle } from '@/components/editor/tables/utils/display-labels';
 import { getTableChartValueLabel } from './table-chart-labels';
 import { TableChartExpansion } from './table-chart-expansion';
-import { TableChartInfo } from './table-chart-info';
 import { useTableChartQuery } from './use-table-chart-query';
 import { TableChartDateControl } from './table-chart-date-control';
 import { AnalyticsReportPeriod } from '../analytics-report-period';
@@ -99,7 +98,6 @@ export function AnalyticsTableChartCard({ projectId, range }: AnalyticsTableChar
           {matches && chart && chart.warnings.length > 0 && <div className="analytics-table-warning space-y-2">{chart.warnings.map(warning => <p key={warning}>{warning}</p>)}</div>}
         </>
       )}
-      <TableChartInfo />
     </div>
   );
 }

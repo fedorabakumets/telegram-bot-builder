@@ -7,5 +7,5 @@ export function TableChartDateControl({ columns, value, onChange, enabled }: {
   /** Выбор столбца. */ onChange: (value: number | null) => void; /** Загружен общий диапазон. */ enabled: boolean;
 }) {
   return <div className="space-y-2"><label className="analytics-control-field text-sm"><span>Фильтр по периоду</span><select className="analytics-native-field" aria-label="Фильтр таблицы по периоду" value={value ?? ''} disabled={!enabled} onChange={event => onChange(event.target.value ? Number(event.target.value) : null)}><option value="">Все строки</option>{columns.map(column => <option key={column.id} value={column.id}>Дата: {getColumnTitle(column)}</option>)}</select></label>
-    <p className="text-xs text-muted-foreground">{value ? 'Используется общий период. Строки без корректной даты не попадают в график.' : 'Период не применяется. Выберите столбец с датами, чтобы отфильтровать строки.'}</p></div>;
+    <p className="text-xs text-muted-foreground">{value ? 'Строки без даты исключены' : 'Без фильтра по дате'}</p></div>;
 }

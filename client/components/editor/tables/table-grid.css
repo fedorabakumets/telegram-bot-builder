@@ -1,9 +1,9 @@
 /** @fileoverview Вертикальное закрепление заголовков и состояния прокручиваемой сетки данных. */
 .table-data-grid { table-layout: fixed; border-collapse: separate; border-spacing: 0; font-size: 14px; line-height: 20px; }
 .table-data-grid th, .table-data-grid td { border-right: 1px solid #27272a; border-bottom: 1px solid #27272a; padding: 0; vertical-align: top; background: #09090b; }
-.table-data-grid th { position: sticky; top: 0; z-index: 3; background: #181818; text-align: left; font-weight: 600; }
+.table-data-grid th { position: sticky; top: 0; z-index: 3; background: #09090b; color: #b4b4bc; text-align: left; font-weight: 600; }
 .table-data-grid .table-number { width: 56px; min-width: 56px; padding: 8px; color: #a1a1aa; font-size: 12px; }
-.table-data-grid tr:hover td { background: #181818; }
+.table-data-grid tr:hover td { background: #101012; }
 .table-column-filter { width: calc(100% - 16px); }
 .table-column-resizer { position: absolute; top: 0; right: -4px; bottom: 0; z-index: 5; width: 8px; cursor: col-resize; touch-action: none; }
 .table-column-resizer:hover, .table-column-resizer:focus-visible { background: #71717a; outline: none; }
@@ -13,6 +13,9 @@
 
 /** Черновики и полноразмерный редактор используют те же поверхности, что и сетка. */
 .table-wrap .table-cell-value { white-space: pre-wrap; overflow-wrap: anywhere; }
+/** Основной текст таблицы повторяет спокойный тон элементов вкладки файлов. */
+.table-data-grid .content-record > a, .table-data-grid .table-cell-value { color: #b4b4bc; }
+.table-data-grid .content-record > a:hover, .table-data-grid .table-cell-value:hover { color: #d4d4d8; }
 .table-cell-dialog { font-family: 'Manrope', sans-serif; background: #09090b; color: #fafafa; border-color: #27272a; }
 .table-cell-dialog button:focus-visible { outline: 2px solid #a1a1aa; outline-offset: 2px; }
 
@@ -25,4 +28,9 @@
 .table-actions-menu [data-highlighted] { background: #181818; color: #fafafa; }
 
 /** Локальные флажки остаются видимыми при глобальном сбросе нативного оформления. */
-.table-number input[type="checkbox"], .table-cell-dialog input[type="checkbox"] { appearance: auto; width: 16px; height: 16px; accent-color: #a1a1aa; vertical-align: middle; }
+.table-cell-dialog input[type="checkbox"] { appearance: auto; width: 16px; height: 16px; accent-color: #a1a1aa; vertical-align: middle; }
+/** Флажки сетки не имеют серой заливки, выбранное состояние остаётся заметным. */
+.table-data-grid .table-number input[type="checkbox"] { appearance: none; display: inline-grid; place-content: center; width: 16px; height: 16px; margin: 0; vertical-align: middle; border: 1px solid #71717a; border-radius: 3px; background: #09090b; cursor: pointer; }
+.table-data-grid .table-number input[type="checkbox"]:checked { background: #3b82f6; border-color: #3b82f6; }
+.table-data-grid .table-number input[type="checkbox"]:checked::before { content: ''; width: 8px; height: 5px; border-left: 2px solid white; border-bottom: 2px solid white; transform: translateY(-1px) rotate(-45deg); }
+.table-data-grid .table-number input[type="checkbox"]:indeterminate::before { content: ''; width: 8px; border-top: 2px solid #b4b4bc; }

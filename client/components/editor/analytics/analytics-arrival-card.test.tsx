@@ -7,7 +7,7 @@ import { AnalyticsArrivalCard } from './analytics-arrival-card';
 import { AnalyticsReportLeaders } from './analytics-report-leaders';
 import { AnalyticsReportOverview } from './analytics-report-overview';
 /** Список значений сохраняет реальные данные графика без зависимости от размера SVG в jsdom. */
-vi.mock('recharts', () => ({ ResponsiveContainer: () => null, ComposedChart: () => null, Area: () => null, Bar: () => null, XAxis: () => null, YAxis: () => null, CartesianGrid: () => null, Tooltip: () => null, ReferenceLine: () => null, ReferenceDot: () => null }));
+vi.mock('recharts', () => ({ ResponsiveContainer: () => null, ComposedChart: () => null, Line: () => null, Area: () => null, Bar: () => null, XAxis: () => null, YAxis: () => null, CartesianGrid: () => null, Tooltip: () => null, ReferenceLine: () => null, ReferenceDot: () => null }));
 /** Создаёт реалистичный снимок восстановленной истории с независимыми сообщениями. */
 function snapshot(options: {
   /** Подтверждённые новые люди. */ confirmed?: number;
@@ -38,7 +38,7 @@ it('возвращает на график 260 восстановленных л
   const point = screen.getByRole('button', { name: /Новые пользователи: 260/ });
   fireEvent.click(point);
   expect(point).toHaveAttribute('aria-pressed', 'true');
-  fireEvent.click(screen.getByRole('button', { name: 'Что это за график?' }));
+  expect(screen.queryByRole('button', { name: 'Что это за график?' })).not.toBeInTheDocument();
   expect(screen.getByText(/Эти значения не включаются в цену привлечения/)).toBeInTheDocument();
 });
 it('показывает смешанную историю одним рядом без потери людей и ложного сравнения', () => {
@@ -90,16 +90,15 @@ it('уточняет восстановленную аудиторию, сохр
   expect(screen.getByText('Пользователи бота за всё время').parentElement).toHaveTextContent('283');
   expect(screen.getByText('Авторы сообщений в группах').parentElement).toHaveTextContent(/1\s492/);
   const card = screen.getByRole('heading', { name: 'Новые пользователи' }).closest('section')!;
-  fireEvent.click(within(card).getByRole('button', { name: 'Что это за график?' }));
-  expect(screen.getByText(/Сохранённые свидетельства взаимодействия подтверждают/)).toBeInTheDocument();
-  expect(screen.getByText(/Это не означает, что эти люди пришли сейчас/)).toBeInTheDocument();
-  expect(screen.getByText(/Автор групповых сообщений может одновременно быть пользователем бота/)).toBeInTheDocument();
+  expect(within(card).queryByRole('button', { name: 'Что это за график?' })).not.toBeInTheDocument();
+  expect(screen.getByText(/Первое сохранённое обращение может быть позже фактического прихода/)).toBeInTheDocument();
+  expect(screen.getByText(/Авторы сообщений могут входить в аудиторию бота/)).toBeInTheDocument();
   const next = snapshot({ confirmed: 1, restored: 0, total: 284 });
   next.range = { ...next.range, from: '2026-11-01T00:00:00Z', to: '2026-11-02T00:00:00Z', period: '24h' };
   view.rerender(<AnalyticsArrivalCard snapshot={next} />);
   expect(screen.getByLabelText('Первые взаимодействия за период: 1')).toHaveTextContent('1');
   expect(screen.getByText('Пользователи бота за всё время').parentElement).toHaveTextContent('284');
-  expect(screen.getByText(/Итог за всё время не зависит от выбранного периода/)).toBeInTheDocument();
+  expect(screen.getByText('Пользователи бота за всё время')).toBeInTheDocument();
 });
 it('в режиме наблюдаемой переписки раскрывает сообщения без ложных нажатий или действий с ботом', () => {
   const value = snapshot();
@@ -115,7 +114,9 @@ it('в режиме наблюдаемой переписки раскрывае
   expect(observed.getByText('Наблюдаемые сообщения').parentElement).toHaveTextContent('300');
   expect(observed.queryByText('Нажатия кнопок')).not.toBeInTheDocument();
   expect(observed.queryByText('Всего действий')).not.toBeInTheDocument();
-  expect(observed.getByText(/1 окт\. 2026.*1 нояб\. 2026.*Europe\/Moscow/)).toBeInTheDocument();
+  expect(observed.queryByText(/1 окт\. 2026.*1 нояб\. 2026.*Europe\/Moscow/)).not.toBeInTheDocument();
+  expect(observed.queryByRole('button', { name: /Развернуть график/ })).not.toBeInTheDocument();
+  expect(observed.getByTitle(/1 окт\. 2026.*1 нояб\. 2026.*Europe\/Moscow/)).toBeInTheDocument();
 });
 
 it('показывает нажатия отдельно от суммы сообщений и обновляет их при смене периода', () => {
@@ -129,8 +130,8 @@ it('показывает нажатия отдельно от суммы соо�
   expect(card.getByText('12')).toBeInTheDocument();
   fireEvent.click(card.getByText('Все значения графика'));
   expect(card.getByRole('button', { name: /Нажатия кнопок: 7/ })).toBeInTheDocument();
-  fireEvent.click(card.getByRole('button', { name: 'Что это за график?' }));
-  expect(card.getByText(/Кнопки-ссылки и кнопки клавиатуры/)).toHaveTextContent('не входят в счётчик нажатий');
+  expect(card.queryByRole('button', { name: 'Что это за график?' })).not.toBeInTheDocument();
+  expect(card.getByText('Нажатия кнопок не входят в итог сообщений')).toBeInTheDocument();
   const next = snapshot();
   next.current.messages = { ...next.current.messages, total: 2, incoming: 1, incoming_to_bot: 1, outgoing: 1, callbacks: 0, historical_callbacks: 0, system: 0 };
   view.rerender(<AnalyticsReportOverview snapshot={next} />);

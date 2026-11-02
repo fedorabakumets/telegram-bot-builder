@@ -1,7 +1,10 @@
 /** @fileoverview Временной график с закреплением точки и доступным списком точных значений. */
 import type { ReactNode } from 'react';
 import { useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { ResponsiveContainer, ComposedChart, Area, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, ReferenceDot } from 'recharts';
+import { AnalyticsChartViewSwitch } from './analytics-chart-view-switch';
+import { AnalyticsCumulativeToggle } from './analytics-cumulative-toggle';
+import { AnalyticsChartValues } from './analytics-chart-values';
+import { ResponsiveContainer, ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, ReferenceDot } from 'recharts';
 import {AnalyticsChartRangeContext} from './analytics-chart-range-selection';
 import {AnalyticsChoosePeriod, AnalyticsOpenPeriodContext} from './analytics-choose-period';
 import { AnalyticsChartState } from './analytics-chart-state';
@@ -26,6 +29,7 @@ export interface ReportChartPoint {
 interface Props {
   /** Название карточки графика. */ title?: string;
   /** Компактная высота в обзорной карточке. */ compact?: boolean;
+  /** Высота основного графика внутри карточки. */ height?: number;
   /** Основной показатель для развёрнутого вида. */ expandedHeader?: ReactNode;
   /** Сводка и пояснение для развёрнутого вида. */ expandedFooter?: ReactNode;
   /** Временные точки. */ points: ReportChartPoint[];
@@ -42,7 +46,7 @@ interface Props {
  * @param props - Ряды, временной диапазон и доступные режимы.
  * @returns График с закрепляемыми подробностями и списком значений.
  */
-export function AnalyticsReportChart({ title, compact = false, expandedHeader, expandedFooter, points, series, timezone, stepMs, allowCumulative = true, range, emptyTitle, emptyDescription }: Props) {
+export function AnalyticsReportChart({ title, compact = false, height, expandedHeader, expandedFooter, points, series, timezone, stepMs, allowCumulative = true, range, emptyTitle, emptyDescription }: Props) {
   const [type, setType] = useState('line');
   const [cumulative, setCumulative] = useState(false);
   const applyRange=useContext(AnalyticsChartRangeContext);
@@ -125,29 +129,31 @@ export function AnalyticsReportChart({ title, compact = false, expandedHeader, e
     else setHovered(candidate?.isTooltipActive!==false && date && rows.some(row=>row.date===date) ? date : null);
   }
   const hasValues = rows.some(row => series.some(item => Number(row[item.key]) > 0));
+  /** При наведении активная точка выделяет значение без постоянных маркеров на всех датах. */
+  /** Все интервалы помещаются в карточке, поэтому вертикальная шкала не уезжает при прокрутке. */
   const chart = <figure className="min-w-0 space-y-3">
     {(!compact || expanded) && <div className="flex flex-wrap items-center justify-between gap-2"><AnalyticsReportPeriod range={range} timezone={timezone} /><AnalyticsChoosePeriod /></div>}
-    <div className="analytics-chart-view-controls flex flex-wrap items-center gap-3 text-sm"><label className="flex items-center gap-2">Вид<select aria-label="Вид графика" className="analytics-native-field" value={type} onChange={event => setType(event.target.value)}><option value="line">Линия</option><option value="bar">Столбцы</option></select></label>
-      {allowCumulative && <label className="flex items-center gap-2 text-muted-foreground"><input type="checkbox" checked={cumulative} onChange={event => setCumulative(event.target.checked)} /><span className="analytics-label-full">Накопительно внутри периода</span><span className="analytics-label-short" aria-label="Накопительно внутри периода">Накоп.</span></label>}{compact && !expanded && <AnalyticsChoosePeriod />}</div>
-    <div ref={chartRef} className="analytics-chart-plot min-w-0 overflow-x-auto"><div style={hasValues && type === 'bar' ? { minWidth: rows.length * series.length * 9 + 72 } : undefined}>{!hasValues ? <AnalyticsChartState title={emptyTitle ?? 'В выбранном периоде нет событий'} description={emptyDescription ?? 'Данные появятся после взаимодействий с ботом. Можно выбрать другой период.'} /> : <ResponsiveContainer width="100%" height={expanded ? 420 : compact ? 160 : 224}>
-      <ComposedChart data={rows} barGap={0} barCategoryGap="10%" margin={{ top: 8, right: 8, left: 0, bottom: 8 }} onClick={event=>selectPoint(event)} onMouseMove={event=>selectPoint(event,false)} onMouseLeave={()=>setHovered(null)} accessibilityLayer>
+    <div className="analytics-chart-view-controls flex flex-wrap items-center gap-3 text-sm"><AnalyticsChartViewSwitch value={type} onChange={setType} />
+      {allowCumulative && <AnalyticsCumulativeToggle checked={cumulative} onChange={setCumulative} /> }{compact && !expanded && <AnalyticsChoosePeriod />}</div>
+    <div ref={chartRef} className="analytics-chart-plot min-w-0"><div>{!hasValues ? <AnalyticsChartState title={emptyTitle ?? 'В выбранном периоде нет событий'} description={emptyDescription} /> : <ResponsiveContainer width="100%" height={expanded ? 420 : height ?? (compact ? 160 : 224)}>
+      <ComposedChart data={rows} barGap={0} barCategoryGap={series.length > 1 ? "20%" : "24%"} margin={{ top: 8, right: 8, left: 0, bottom: 8 }} onClick={event=>selectPoint(event)} onMouseMove={event=>selectPoint(event,false)} onMouseLeave={()=>setHovered(null)} accessibilityLayer>
         <CartesianGrid strokeDasharray="3 5" vertical={false} stroke="var(--border)" />
         <XAxis dataKey="date" tickFormatter={value => formatDate(String(value))} axisLine={false} tickLine={false} minTickGap={40} />
         <YAxis allowDecimals={false} axisLine={false} tickLine={false} width={42} tickFormatter={value => Number(value).toLocaleString('ru-RU')} />
-        {/** В развёрнутом режиме подсказка следует за точкой; в обычном остаётся под графиком. */}
-        <Tooltip content={expanded && !selected ? <AnalyticsCompactTooltip formatInterval={formatTooltipInterval} /> : () => null} cursor={selected ? false : {stroke:'var(--border)'}} wrapperStyle={{ pointerEvents: 'none', maxWidth: 'calc(100% - 16px)' }} />
-        {series.map(item => type === 'bar' ? <Bar key={item.key} dataKey={item.key} name={item.label} fill={item.color} radius={[4, 4, 0, 0]} maxBarSize={36} isAnimationActive={false} /> : <Area key={item.key} type="monotone" dataKey={item.key} name={item.label} stroke={item.color} fill={item.color} fillOpacity={0.08} strokeWidth={2} isAnimationActive={false} />)}
+        {/** Тёмная подсказка следует за наведённой точкой во всех размерах графика. */}
+        <Tooltip content={!selected ? <AnalyticsCompactTooltip formatInterval={formatTooltipInterval} /> : () => null} cursor={selected ? false : {stroke:'var(--border)'}} wrapperStyle={{ pointerEvents: 'none', maxWidth: 'calc(100% - 16px)' }} />
+        {series.map(item => type === 'bar' ? <Bar key={item.key} dataKey={item.key} name={item.label} fill={item.color} radius={0} maxBarSize={20} isAnimationActive={false} /> : <Line key={item.key} type="linear" dataKey={item.key} name={item.label} stroke={item.color} strokeWidth={2} dot={false} activeDot={{ r: 3, stroke: 'var(--card)', strokeWidth: 1.5 }} isAnimationActive={false} />)}
         {pinned && <ReferenceLine x={pinned.date} stroke="var(--muted-foreground)" strokeDasharray="4 4" />}
         {pinned && series.map(item => <ReferenceDot key={item.key} x={pinned.date} y={Number(pinned[item.key] ?? 0)} r={5} fill={item.color} stroke="var(--background)" strokeWidth={2} />)}
       </ComposedChart>
     </ResponsiveContainer>}</div></div>
-    <div data-analytics-chart-preview className="relative z-10" aria-hidden="true" hidden={!chosen || !!selected || expanded}>{chosen && !selected && !expanded && <div className="pointer-events-none"><AnalyticsCompactTooltip active label={chosen.date} payload={series.map(item => ({ name: item.label, color: item.color, value: Number(chosen[item.key] ?? 0) }))} formatInterval={formatTooltipInterval} /></div>}</div>
+
     <figcaption className="analytics-chart-legend flex flex-wrap gap-4 text-xs text-muted-foreground">{series.map(item => <span key={item.key}><span aria-hidden="true" style={{ color: item.color }}>● </span>{item.label}</span>)}</figcaption>
     {chosen && selected && <div ref={detailsRef} className="analytics-report-details analytics-selected-interval" aria-live="polite"><div className="analytics-selected-interval-header"><p>{cumulative && allowCumulative ? 'Накопительно за промежуток' : 'За этот промежуток'}</p><button type="button" onClick={() => {setSelected(null);setHovered(null);}}>Закрыть</button></div>
       <strong className="analytics-selected-interval-date">{formatInterval(chosen.date)}</strong>
       <dl className="analytics-selected-interval-values">{series.map(item => <div key={item.key}><dt><span aria-hidden="true" style={{color:item.color}}>● </span>{item.label}{cumulative ? ' · накопительно' : ''}</dt><dd>{Number(chosen[item.key] ?? 0).toLocaleString('ru-RU')}</dd></div>)}</dl>
       {applyRange && <button type="button" className="analytics-selected-interval-apply" onClick={()=>{applyRange(intervalBounds(chosen.date));setSelected(null);setHovered(null);}}>Выбрать этот период</button>}</div>}
-    {rows.length > 0 && <details><summary className="text-sm text-muted-foreground cursor-pointer py-2">Все значения графика</summary><div className="analytics-chart-value-list" role="list">{rows.map(row => <button key={row.date} type="button" aria-pressed={selected === row.date} onClick={() => setSelected(row.date)}><span>{formatInterval(row.date)}</span><span>{series.map(item => `${item.label}: ${Number(row[item.key] ?? 0).toLocaleString('ru-RU')}`).join(' · ')}</span></button>)}</div></details>}
+    {rows.length > 0 && <AnalyticsChartValues rows={rows} series={series} timezone={timezone} stepMs={stepMs} selected={selected} onSelect={setSelected} bounds={intervalBounds} formatFull={formatInterval} />}
   </figure>;
   return <div className="min-w-0 space-y-2"><AnalyticsChartActions title={title} open={() => setExpanded(true)} triggerRef={expandRef} />
     {!expanded && chart}<Dialog open={expanded} onOpenChange={setExpanded}><DialogContent hideClose aria-describedby={undefined}
