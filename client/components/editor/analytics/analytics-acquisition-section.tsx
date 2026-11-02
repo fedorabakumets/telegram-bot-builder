@@ -1,4 +1,4 @@
-/** @fileoverview Источники, конструктор ссылок и рекламный бюджет в единой рабочей области. */
+/** @fileoverview Источники, конструктор ссылок и рекламный бюджет в общей области с отдельным открытием рекламного блока на весь экран. */
 import { useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Maximize2, RefreshCw, X } from 'lucide-react';

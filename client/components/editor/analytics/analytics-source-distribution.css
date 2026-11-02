@@ -1,0 +1,15 @@
+/** @fileoverview Равная высота карточек источников и компактное распределение рядом с кольцом. */
+/** Источники продолжают высоту верхней пары; список использует свободное место рядом с кольцом. */
+@container analytics (min-width: 1100px) {
+  .analytics-page .analytics-sources-compact { align-items: stretch; }
+  .analytics-page .analytics-sources-compact > .analytics-report-card { min-height: 575px; }
+  .analytics-page .analytics-sources-compact .analytics-donut-content { flex: 1; min-height: 0; align-items: center; }
+  .analytics-page .analytics-sources-compact .analytics-donut-legend { height: 448px; max-height: 448px; }
+  .analytics-page .analytics-sources-compact .analytics-donut-content > div:first-child { align-self: center; }
+}
+.analytics-page .analytics-sources-compact .analytics-donut-legend { gap: 0; }
+.analytics-page .analytics-sources-compact .analytics-donut-legend > button { padding: 4px 8px; min-height: 40px; flex-shrink: 0; }
+.analytics-page .analytics-sources-compact .analytics-donut-row { padding: 4px; min-height: 32px; }
+
+/** Повторяющиеся сравнения не раздувают строки; значение прошлого периода доступно в подробностях. */
+.analytics-page .analytics-sources-compact .analytics-donut-legend > button > span.block { display: none; }

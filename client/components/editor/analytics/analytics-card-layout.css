@@ -1,0 +1,63 @@
+/** @fileoverview Общая компоновка карточек, доступности и справки аналитики. */
+/** Узкая панель показывает один график в строке, широкая оставляет каждому не менее 500 пикселей. */
+.analytics-page .analytics-overview-report-grid { grid-template-columns: minmax(0, 1fr); align-items: start; }
+@container analytics (min-width: 1100px) {
+  .analytics-page .analytics-overview-report-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+/** Сетка помогает сравнивать значения и остаётся тише самих рядов. */
+:is(.analytics-page, .analytics-chart-dialog) .recharts-cartesian-grid-horizontal line { stroke-opacity: .55; }
+/** Строка состояния отделяется от данных одной нижней границей. */
+.analytics-page .analytics-report-status { padding: 4px 0 12px; border: 0; border-bottom: 1px solid var(--border); border-radius: 0; }
+/** Пояснения графиков отделены линией вместо рамки внутри рамки. */
+:is(.analytics-page, .analytics-chart-dialog) .analytics-chart-info { border: 0; border-top: 1px solid var(--border); border-radius: 0; }
+:is(.analytics-page, .analytics-chart-dialog) .analytics-chart-info[data-state='open'] { background: transparent; }
+:is(.analytics-page, .analytics-chart-dialog) .analytics-chart-info > button { padding-inline: 0; border-radius: 0; }
+:is(.analytics-page, .analytics-chart-dialog) .analytics-chart-info > button:hover { background: transparent; }
+/** Полосы рейтингов используют тот же синий акцент, что и иконка аналитики. */
+:is(.analytics-page, .analytics-chart-dialog) .analytics-leader-bar { background-color: #3b82f6; }
+/** Полосы популярных действий сохраняют синий акцент и в увеличенном распределении. */
+:is(.analytics-page, .analytics-chart-dialog) .analytics-action-bar { background-color: #3b82f6; }
+/** Сводка доступности не резервирует пустые строки для коротких подписей. */
+.analytics-page .analytics-availability-card { padding: 16px; gap: 16px; }
+.analytics-page .analytics-availability-card .analytics-report-summary dt { min-height: 0; margin-bottom: 4px; }
+.analytics-page .analytics-availability-card .analytics-report-summary dd { font-size: 24px; line-height: 32px; }
+/** Контуры кнопок не дублируются кольцом от общей библиотеки компонентов. */
+:is(.analytics-page, .analytics-chart-dialog, .analytics-overlay) button:focus-visible { box-shadow: none; }
+@container analytics (max-width: 400px) {
+  /** Справка остаётся доступной и в узкой рабочей области. */
+  .analytics-page .analytics-card .analytics-chart-info,
+  .analytics-page .analytics-card p:has(+ .analytics-chart-info) { display: block; }
+  .analytics-page .analytics-availability-card .analytics-report-summary { grid-template-columns: minmax(0, 1fr); }
+  .analytics-page .analytics-availability-card .analytics-report-summary > div { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
+}
+
+/** Кнопка периода участвует в строке заголовка вместо абсолютного позиционирования старой иконки. */
+.analytics-page .analytics-report-card > header:has(> button) { padding-right: 0; min-height: 36px; align-items: center; gap: 8px 16px; }
+.analytics-page .analytics-report-card > header > button { margin-left: auto; flex-shrink: 0; align-self: center; }
+.analytics-page .analytics-report-card > header:has(> button) > h3 { padding-right: 0; }
+.analytics-page .analytics-report-card > header:has(> button) > div { min-width: 0; }
+
+/** Метрики и сравнение остаются под названием, период закреплён в первой строке справа. */
+.analytics-page .analytics-report-card > header:has(> button) { display: grid; grid-template-columns: minmax(0, 1fr) auto; }
+.analytics-page .analytics-report-card > header:has(> button) > button { grid-column: 2; grid-row: 1; }
+.analytics-page .analytics-report-card > header:has(> button) > h3,
+.analytics-page .analytics-report-card > header:has(> button) > div:has(h3) { grid-column: 1; grid-row: 1; }
+.analytics-page .analytics-report-card > header:has(> button) > span,
+.analytics-page .analytics-report-card > header:has(> button) > div:not(:has(h3)) { grid-column: 1 / -1; }
+
+/** Пояснение заголовка появляется только при наведении или клавиатурном фокусе. */
+.analytics-heading-hint { cursor: help; border-radius: 2px; }
+.analytics-heading-hint:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
+.analytics-heading-hint-content { max-width: 300px; padding: 8px 12px; background: #18181b; color: #ededf0; border: 1px solid #3f3f46; font-size: 12px; font-weight: 400; line-height: 18px; }
+
+/** Пояснение раскрывается под названием при наведении на карточку, как в отчётах Railway. */
+.analytics-heading-label { display: block; }
+.analytics-heading-description {
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  min-height: 32px; margin-top: 4px; opacity: 0; font-size: 12px; line-height: 16px; font-weight: 400; color: var(--muted-foreground);
+}
+.analytics-report-card:is(:hover, :focus-within) .analytics-heading-description,
+.analytics-table-chart-card:is(:hover, :focus-within) .analytics-heading-description,
+.analytics-acquisition-catalog details:is(:hover, :focus-within) > summary .analytics-heading-description { opacity: 1; }
+.analytics-page .analytics-report-card > header:has(> button) { align-items: start; }
+.analytics-page .analytics-report-card > header:has(> button) > button { align-self: start; }

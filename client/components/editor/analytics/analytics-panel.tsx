@@ -28,8 +28,10 @@ import './analytics-checkbox.css';
 import './analytics-theme.css';
 import './analytics-controls.css';
 import './analytics-overlays.css';
-/** Последовательная иерархия всех разделов, включая компактный режим. */
-import './analytics-polish.css';
+/** Итоговая компоновка идёт после базовых правил; порядок сохраняет каскад разделов. */
+import './analytics-card-layout.css';
+import './analytics-ranking-layout.css';
+import './analytics-source-distribution.css';
 
 /** Контекст рабочей вкладки аналитики. */
 export interface AnalyticsPanelProps {

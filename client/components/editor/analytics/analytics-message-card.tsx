@@ -1,4 +1,6 @@
 /** @fileoverview Карточка сообщений с раздельными показателями типов чатов. */
+import { AnalyticsHeadingHint } from './analytics-heading-hint';
+import { AnalyticsChoosePeriod } from './analytics-choose-period';
 import { useState } from 'react';
 import type { AnalyticsV2MessageScope, AnalyticsV2Snapshot, AnalyticsV2Summary } from '@shared/analytics/v2';
 import { AnalyticsReportChart, type ReportChartPoint } from './analytics-report-chart';
@@ -15,7 +17,7 @@ export function AnalyticsMessageCard({ snapshot }: { /** Общий снимок
   const [scope, setScope] = useState<Scope>('all');
   const { current, previous, range } = snapshot;
   if (!current.messages.chat_scopes || current.messages.incoming_to_bot == null || snapshot.points.some(point => !point.chat_scopes || point.incoming_to_bot == null) || (previous && (!previous.messages.chat_scopes || previous.messages.incoming_to_bot == null))) {
-      return <section className="analytics-card analytics-report-card analytics-messages-main border rounded-2xl"><h3 className="text-lg font-semibold">Сообщения</h3>
+      return <section className="analytics-card analytics-report-card analytics-messages-main border rounded-2xl"><h3 className="text-lg font-semibold"><AnalyticsHeadingHint label="Сообщения" /></h3>
       <p className="text-sm text-muted-foreground">Обновите аналитику, чтобы увидеть данные по типам чатов.</p></section>;
   }
   const values = selectedMessages(current.messages, scope);
@@ -41,7 +43,7 @@ export function AnalyticsMessageCard({ snapshot }: { /** Общий снимок
     <p className="analytics-message-note text-xs text-muted-foreground">Нажатия кнопок не входят в итог сообщений</p>
 </div>;
   return <section className="analytics-card analytics-report-card analytics-messages-main border rounded-2xl">
-    <header><h3 className="text-lg font-semibold">Сообщения</h3><AnalyticsReportComparison current={total} previous={prior ? prior.incoming_to_bot + prior.outgoing : undefined} /></header>
+    <header><h3 className="text-lg font-semibold"><AnalyticsHeadingHint label="Сообщения" /></h3><AnalyticsReportComparison current={total} previous={prior ? prior.incoming_to_bot + prior.outgoing : undefined} /><AnalyticsChoosePeriod/></header>
     {expandedHeader}
     <div className="analytics-segments w-fit" role="group" aria-label="Тип чата">{([['all', 'Все'], ['private', 'Личные'], ['group', 'Группы']] as const).map(([value, label]) =>
       <button key={value} type="button" aria-pressed={scope === value} onClick={() => setScope(value)}>{label}</button>)}</div>

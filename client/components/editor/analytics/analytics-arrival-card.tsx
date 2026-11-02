@@ -1,4 +1,6 @@
 /** @fileoverview Единый график первых взаимодействий без временного оформления исторических данных. */
+import { AnalyticsHeadingHint } from './analytics-heading-hint';
+import { AnalyticsChoosePeriod } from './analytics-choose-period';
 import type { AnalyticsV2Snapshot } from '@shared/analytics/v2';
 import { AnalyticsReportChart } from './analytics-report-chart';
 import { AnalyticsReportComparison, AnalyticsReportSummary } from './analytics-report-metrics';
@@ -21,8 +23,8 @@ export function AnalyticsArrivalCard({ snapshot }: { /** Общий снимок
   const expandedFooter = <div className="space-y-4"><AnalyticsReportSummary items={[[ 'Пользователи бота за всё время', audience.total_users ], [ 'Взаимодействовали за период', audience.active_users ], [ 'Вернулись за период', audience.returning_users ]]} />
     {historical && <p className="analytics-arrival-note text-xs text-muted-foreground">Первое сохранённое обращение может быть позже фактического прихода. Эти значения не включаются в цену привлечения.</p>}</div>;
   return <section className="analytics-card analytics-report-card analytics-arrival-card border rounded-2xl">
-    <header><h3 className="text-lg font-semibold">Новые пользователи</h3>
-      {previous && <AnalyticsReportComparison current={total} previous={previousTotal} />}</header>
+    <header><h3 className="text-lg font-semibold"><AnalyticsHeadingHint label="Новые пользователи" /></h3>
+      {previous && <AnalyticsReportComparison current={total} previous={previousTotal} />}<AnalyticsChoosePeriod/></header>
     {expandedHeader}
     <AnalyticsReportChart compact height={280} expandedHeader={expandedHeader} expandedFooter={expandedFooter} title="Новые пользователи" points={snapshot.points.map(point => ({ date: point.date, end_date: point.end_date, first_interactions: point.new_users + (point.restored_users ?? 0) }))} series={series} timezone={range.timezone} stepMs={range.step_ms} range={range}
       emptyTitle={unknown ? 'Первая дата старых пользователей неизвестна' : 'Нет подтверждённых новых пользователей за период'}

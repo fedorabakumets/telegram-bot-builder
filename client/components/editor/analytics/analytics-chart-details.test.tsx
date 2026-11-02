@@ -40,31 +40,8 @@ it('сохраняет выделение точки и её значения п
   fireEvent.click(screen.getByRole('button', {name:'Закрыть'}));
   expect(screen.queryByTestId('pinned-line')).not.toBeInTheDocument();
 });
-it('сохраняет тип и выбранную точку при увеличении и закрытии графика', () => {
-  render(<AnalyticsReportChart title="Сообщения" points={[{ date: '2026-11-01T00:00:00Z', incoming: 7 }]} series={[{ key: 'incoming', label: 'Входящие', color: '#10b981' }]} timezone="UTC" stepMs={86400000} />);
-  fireEvent.click(screen.getByRole('button', { name: 'Столбцы', exact: true }));
-  fireEvent.click(screen.getByTestId('chart'));
-  const open = screen.getByRole('button', { name: 'Развернуть график: Сообщения' });
-  fireEvent.pointerDown(open); fireEvent.click(open);
-  expect(screen.getByRole('dialog', { name: 'Сообщения' })).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Столбцы', exact: true })).toHaveAttribute('aria-pressed', 'true');
-  expect(screen.getByTestId('pinned-line')).toBeInTheDocument();
-  const close = screen.getByRole('button', { name: 'Закрыть график' });
-  fireEvent.pointerDown(close); fireEvent.click(close);
-  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Столбцы', exact: true })).toHaveAttribute('aria-pressed', 'true');
-  expect(screen.getByTestId('pinned-line')).toBeInTheDocument();
-});
-it('обновляет общий снимок в увеличенном окне и не дублирует кнопку в карточке', () => {
-  const refresh = vi.fn();
-  render(<AnalyticsSnapshotRefreshContext.Provider value={{ refresh, busy: false, error: 'Не удалось обновить данные. Попробуйте ещё раз.' }}>
-    <AnalyticsReportChart points={[]} series={[]} timezone="UTC" stepMs={86400000} /></AnalyticsSnapshotRefreshContext.Provider>);
-  expect(screen.queryByRole('button', { name: 'Обновить данные аналитики' })).not.toBeInTheDocument();
-  fireEvent.click(screen.getByRole('button', { name: 'Развернуть график' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Обновить данные аналитики' }));
-  expect(refresh).toHaveBeenCalledOnce();
-  expect(screen.getByRole('alert')).toHaveTextContent('Попробуйте ещё раз');
-});
+
+
 it('закрепляет полное значение и обновляет его без сброса выбора', () => {
   const props = { series: [{ key: 'incoming', label: 'Входящие', color: '#10b981' }], timezone: 'Europe/Moscow', stepMs: 86400000 };
   const point = { date: '2026-11-01T00:00:00Z', incoming: 12 };
@@ -131,12 +108,21 @@ it('показывает полные сутки русской датой в п
 });
 
 /** Переключатель меняет реальные значения и сохраняет режим в увеличенном окне. */
-it('складывает значения при включении накопления и сохраняет переключатель в окне', () => {
+it('складывает значения при включении накопления и сохраняет переключатель', () => {
   render(<AnalyticsReportChart title="Накопление" points={[{ date: '2026-11-01T00:00:00Z', incoming: 7 }, { date: '2026-11-02T00:00:00Z', incoming: 12 }]} series={[{ key: 'incoming', label: 'Входящие', color: '#10b981' }]} timezone="UTC" stepMs={86400000} />);
   fireEvent.click(screen.getByRole('switch', { name: 'Накопительно внутри периода' }));
   expect(screen.getByRole('switch', { name: 'Накопительно внутри периода' })).toBeChecked();
   fireEvent.mouseMove(screen.getByTestId('chart'));
   expect(screen.getByRole('button', { name: /Входящие: 19/ })).toBeInTheDocument();
-  fireEvent.click(screen.getByRole('button', { name: 'Развернуть график: Накопление' }));
   expect(screen.getByRole('switch', { name: 'Накопительно внутри периода' })).toBeChecked();
+});
+
+/** Наведение остаётся доступным после закрепления точки и не задерживается анимацией. */
+it('сохраняет всплывающую подсказку при закреплённой точке', () => {
+  render(<AnalyticsReportChart points={[{ date: '2026-11-01T00:00:00Z', incoming: 7 }]} series={[{ key: 'incoming', label: 'Входящие', color: '#10b981' }]} timezone="UTC" stepMs={86400000} />);
+  fireEvent.click(screen.getByTestId('chart'));
+  const props = tooltipMock.mock.calls.at(-1)?.[0];
+  expect(props.content.type).toBe(AnalyticsCompactTooltip);
+  expect(props.isAnimationActive).toBe(false);
+  expect(props.cursor).toEqual({ stroke: 'var(--border)' });
 });

@@ -17,7 +17,8 @@
 .analytics-page .analytics-form-grid label { font-size: 13px; color: var(--muted-foreground); }
 .analytics-page .analytics-form-grid :is(input, select) { min-height: 40px; font-size: 14px; }
 /** Навигация рекламы читается строкой разделов; выбор обозначен нижней линией без заливки. */
-.analytics-page .analytics-acquisition-tabs { gap: 4px 20px; padding-bottom: 0; border-bottom: 1px solid var(--border); }
+/** Вкладки рекламы обходятся без общей линии под действиями; активную вкладку отмечает короткое подчёркивание. */
+.analytics-page .analytics-acquisition-tabs { gap: 4px 20px; padding-bottom: 0; border-bottom: 0; }
 .analytics-page .analytics-acquisition-tabs button {
   position: relative; min-height: 40px; padding: 8px 0 12px; border: 0; border-radius: 0;
   background: transparent; color: var(--muted-foreground); box-shadow: none;

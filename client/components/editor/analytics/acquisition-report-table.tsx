@@ -1,4 +1,5 @@
 /** @fileoverview Рекламные результаты с раздельными валютами и раскрытием ограничений расчёта. */
+import { AnalyticsHeadingHint } from './analytics-heading-hint';
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
 import { AcquisitionResultRow } from './acquisition-result-row';
 import { AcquisitionResultDetails, AcquisitionResultLoading, acquisitionPeriodLabel } from './acquisition-result-details';
@@ -36,7 +37,7 @@ export function AcquisitionReportTable({ projectId, tokenId, snapshot, tokens = 
     return bot?.botUsername ? `@${bot.botUsername.replace(/^@/, '')}` : bot?.name || 'Бот недоступен';
   }
   return <section className="acquisition-results space-y-4" aria-label="Результаты рекламы">
-    <header className="acquisition-results-heading"><div><h3>Результаты рекламы</h3></div>
+    <header className="acquisition-results-heading"><div><h3><AnalyticsHeadingHint label="Результаты рекламы" /></h3></div>
       <label className="acquisition-results-lifetime"><input type="checkbox" checked={lifetime} onChange={event => setLifetime(event.target.checked)} />За всё время</label>
     </header>
     <p className="acquisition-results-period" title={!lifetime && query.data?.from && query.data?.to ? `${reportTimeLabel(query.data.from, snapshot?.range.timezone ?? 'Europe/Moscow')} — ${reportTimeLabel(query.data.to, snapshot?.range.timezone ?? 'Europe/Moscow')}` : undefined}>{lifetime ? 'За всё время' : query.data?.from && query.data?.to ? acquisitionPeriodLabel(query.data.from, query.data.to, snapshot?.range.timezone ?? 'Europe/Moscow') : 'Загружаем период отчёта…'}</p>

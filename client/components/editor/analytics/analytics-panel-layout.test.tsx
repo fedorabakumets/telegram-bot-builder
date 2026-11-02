@@ -15,7 +15,8 @@ vi.mock('./analytics-header', () => ({ AnalyticsHeader: () => <h1>Аналити
 vi.mock('./analytics-report-overview', () => ({ AnalyticsReportOverview: () => null, AnalyticsReportSummary: () => null }));
 vi.mock('./analytics-report-chart', () => ({ AnalyticsReportChart: () => null }));
 vi.mock('./analytics-report-sources', () => ({ AnalyticsReportSources: () => null }));
-vi.mock('./analytics-report-leaders', () => ({ AnalyticsReportLeaders: () => null }));
+/** Оба списка лидеров исключены из проверки размещения рекламного раздела. */
+vi.mock('./analytics-report-leaders', () => ({ AnalyticsReportLeaders: () => null, AnalyticsUserLeaders: () => null }));
 vi.mock('./analytics-report-distribution', () => ({ AnalyticsReportDistribution: () => null }));
 vi.mock('./analytics-access-check-panel', () => ({ AnalyticsAccessCheckPanel: () => null }));
 vi.mock('./table-chart/analytics-table-chart-card', () => ({ AnalyticsTableChartCard: () => <h3>График по таблице</h3> }));

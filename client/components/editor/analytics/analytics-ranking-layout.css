@@ -1,0 +1,45 @@
+/** @fileoverview Согласованная высота и строки рейтингов пользователей, групп и популярных действий. */
+/** Парная карточка лидеров показывает всю десятку и заполняет высоту графика полезными строками. */
+.analytics-page .analytics-active-leaders-grid { align-items: stretch; }
+.analytics-page .analytics-active-leaders-grid > .analytics-report-card { height: auto; }
+.analytics-page .analytics-active-leaders-grid .analytics-leaders-list {
+  display: flex; flex: 1; flex-direction: column; gap: 0; max-height: none; overflow: visible;
+}
+.analytics-page .analytics-active-leaders-grid .analytics-leaders-list > li { flex: 1; min-height: 40px; margin: 0; }
+.analytics-page .analytics-active-leaders-grid .analytics-leaders-list > li > button { padding: 4px 12px; }
+.analytics-page .analytics-active-leaders-grid .analytics-leader-bar { border-radius: 2px; }
+.analytics-page .analytics-active-leaders-grid .analytics-leaders-list .h-2 { height: 4px; margin-top: 4px; }
+
+/** Парные рейтинги действий сохраняют общую нижнюю границу при разной длине подписей. */
+.analytics-page .analytics-popular-actions-grid { align-items: stretch; }
+.analytics-page .analytics-popular-actions-grid > .analytics-report-card { height: auto; }
+
+/** Оба рейтинга действий имеют одинаковую область списка и одинаковый шаг строк. */
+.analytics-page .analytics-popular-actions-grid .analytics-donut-row > span:nth-child(2) {
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 14px;
+}
+
+/** Верхний и нижний ряды групп и действий используют общую высоту карточек на широкой панели. */
+@container analytics (min-width: 1100px) {
+  .analytics-page :is(.analytics-group-pair-grid, .analytics-popular-actions-grid) > .analytics-report-card { min-height: 560px; }
+}
+
+/** Десятка популярных действий оформлена как соседние рейтинги групп: все строки видны сразу. */
+.analytics-page .analytics-popular-actions-grid .analytics-ranking-distribution > div:has(> .analytics-donut-legend) { flex: 1; display: flex; min-height: 0; }
+.analytics-page .analytics-popular-actions-grid .analytics-donut-legend {
+  display: flex; flex: 1; flex-direction: column; height: auto; max-height: none; overflow: visible; gap: 0;
+}
+.analytics-page .analytics-popular-actions-grid .analytics-donut-legend > button { flex: 1; height: auto; min-height: 40px; padding: 4px 12px; }
+.analytics-page .analytics-popular-actions-grid .analytics-donut-legend .h-2 { height: 4px; border-radius: 2px; margin: 4px 0 0; }
+.analytics-page .analytics-popular-actions-grid .analytics-donut-legend .analytics-action-bar { border-radius: 2px; }
+
+/** Номера до десяти имеют отдельную колонку; подпись и полоса не перекрываются внутренним отступом строки. */
+.analytics-page .analytics-popular-actions-grid .analytics-donut-row {
+  align-items: center; grid-template-columns: 20px minmax(0, 1fr) auto 48px; gap: 8px; padding: 0; min-height: 28px; height: 28px;
+}
+.analytics-page .analytics-popular-actions-grid .analytics-donut-row > span:first-child { text-align: left; }
+
+/** Период заменяет полноэкранную кнопку справа от заголовка популярных действий. */
+.analytics-page .analytics-popular-actions-grid > .analytics-report-card > header { justify-content: space-between; align-items: center; gap: 8px 16px; }
+.analytics-page .analytics-popular-actions-grid > .analytics-report-card > header > div { flex: 1; min-width: 0; }
+.analytics-page .analytics-popular-actions-grid > .analytics-report-card > header > button { flex-shrink: 0; margin-left: auto; }

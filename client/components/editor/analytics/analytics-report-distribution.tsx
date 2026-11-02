@@ -1,4 +1,5 @@
 /** @fileoverview Диаграмма распределения с нумерацией рейтингов, ровной легендой и закреплёнными подробностями. */
+import { AnalyticsHeadingHint, AnalyticsSurfaceHint } from './analytics-heading-hint';
 import { useContext, useRef, useState } from 'react';
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { X } from 'lucide-react';
@@ -24,7 +25,8 @@ export const REPORT_COLORS = ['#3b82f6', '#10b981', '#fbbf24', '#fb7185', '#a78b
  * @param props - Данные распределения, подписи и выбранный вид.
  * @returns Диаграмма с доступной легендой и подробностями.
  */
-export function AnalyticsReportDistribution({ title, items, subtitle, donut = true, contextLabel, footnote, periodSelectable=false, compact=false }: {
+export function AnalyticsReportDistribution({ title, items, subtitle, donut = true, contextLabel, footnote, periodSelectable=false, compact=false, periodInHeader=true }: {
+  /** Заменяет полноэкранное действие выбором периода в заголовке. */ periodInHeader?: boolean;
   /** Компактный вид карточки источников. */ compact?: boolean;
   /** Распределение зависит от общего периода, а не является текущим снимком. */ periodSelectable?:boolean;
   /** Заголовок. */ title: string;
@@ -43,8 +45,8 @@ export function AnalyticsReportDistribution({ title, items, subtitle, donut = tr
   const maximum = Math.max(1, ...items.map(item => item.count));
   const chosen = items.find(item => item.id === selected);
   const content = <>
-    {(periodSelectable || (contextLabel && (!compact || expanded || !periodSelectable))) && <div className="flex flex-wrap items-center justify-between gap-2">{contextLabel && (!compact || expanded || !periodSelectable) && <p className="text-xs text-muted-foreground">{contextLabel}</p>}{periodSelectable && <AnalyticsChoosePeriod/>}</div>}
-    {!total && !items.some(item => item.previous !== undefined) ? <AnalyticsChartState title="Пока нет значений" /> : <div className={donut && total ? 'analytics-donut-content' : ''}>
+    {(!periodInHeader && (periodSelectable || (contextLabel && (!compact || expanded || !periodSelectable)))) && <div className="flex flex-wrap items-center justify-between gap-2">{contextLabel && (!compact || expanded || !periodSelectable) && <p className="text-xs text-muted-foreground">{contextLabel}</p>}{periodSelectable && <AnalyticsChoosePeriod/>}</div>}
+    {!total && !items.some(item => item.previous !== undefined) ? <AnalyticsChartState title="Пока нет значений" /> : <AnalyticsSurfaceHint label={title}><div className={donut && total ? 'analytics-donut-content' : ''}>
       {donut && total > 0 && <div className="w-full min-w-0 relative"><ResponsiveContainer width="100%" height={expanded ? undefined : compact ? 150 : 224} aspect={expanded ? 1 : undefined} maxHeight={expanded ? 420 : undefined}><PieChart><Pie data={items} dataKey="count" nameKey="label" innerRadius={expanded ? '48%' : compact ? 48 : 64} outerRadius={expanded ? '92%' : compact ? 65 : 88} paddingAngle={0} isAnimationActive={false} onClick={(item: ReportDistributionItem) => setSelected(item.id)}>
         {items.map((item, index) => <Cell key={item.id} fill={REPORT_COLORS[index % REPORT_COLORS.length]} stroke="none" />)}</Pie><Tooltip {...ANALYTICS_TOOLTIP_THEME} formatter={value => Number(value).toLocaleString('ru-RU')} /></PieChart></ResponsiveContainer><span className="pointer-events-none absolute inset-0 flex items-center justify-center text-lg font-semibold tabular-nums">{total.toLocaleString('ru-RU')}</span></div>}
       <div className={`analytics-donut-legend overflow-y-auto ${compact && !expanded ? "max-h-36" : "max-h-80"}`} role="list" aria-label={`${title}: точные значения`}>
@@ -54,12 +56,12 @@ export function AnalyticsReportDistribution({ title, items, subtitle, donut = tr
           {!donut && <span className="block h-2 rounded-full bg-muted mx-2"><span className="analytics-action-bar block h-full rounded-full" style={{ width: `${item.count / maximum * 100}%` }} /></span>}
         </button>)}
       </div>
-    </div>}
+    </div></AnalyticsSurfaceHint>}
     {chosen && <div className="analytics-report-details space-y-2" aria-live="polite"><div className="flex justify-between gap-3"><strong className="break-words">{chosen.label}</strong><button type="button" onClick={() => setSelected(null)}>Закрыть</button></div><dl className="flex flex-wrap gap-4">{[['Количество', chosen.count], ...(chosen.details ?? [])].map(([label, value]) => <div key={label}><dt className="text-muted-foreground">{label}</dt><dd className="font-semibold tabular-nums">{typeof value === 'number' ? value.toLocaleString('ru-RU') : value}</dd></div>)}</dl></div>}
     {footnote && <p className="analytics-distribution-footnote mt-auto text-xs text-muted-foreground">{footnote}</p>}</>;
   return <section className={`analytics-card analytics-report-card border rounded-2xl ${compact ? "analytics-distribution-compact" : ""} ${!donut ? "analytics-ranking-distribution" : ""}`}>
-    <header><div><h3 className="text-lg font-semibold">{title}</h3>{subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}</div></header>
-    <AnalyticsChartActions title={title} open={() => setExpanded(true)} triggerRef={expandRef} />
+    <header><div><h3 className="text-lg font-semibold"><AnalyticsHeadingHint label={title} /></h3>{subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}</div>{periodInHeader && periodSelectable && <AnalyticsChoosePeriod/>}</header>
+    {!periodInHeader && <AnalyticsChartActions title={title} open={() => setExpanded(true)} triggerRef={expandRef} />}
     {!expanded && content}<Dialog open={expanded} onOpenChange={setExpanded}><DialogContent hideClose aria-describedby={undefined}
       onCloseAutoFocus={event => { if (movingToPeriod.current) { movingToPeriod.current = false; return; } event.preventDefault(); expandRef.current?.focus(); }} className="analytics-chart-dialog w-[calc(100%-1rem)] max-w-none sm:max-w-[min(1100px,96vw)] max-h-[94dvh] overflow-y-auto">
       <div className="analytics-distribution-dialog-header flex min-w-0 items-center justify-between gap-3"><DialogTitle className="min-w-0 flex-1 text-left text-base font-semibold leading-6">{title}</DialogTitle><div className="flex shrink-0 items-center gap-2">

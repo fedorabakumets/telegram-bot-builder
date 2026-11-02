@@ -16,9 +16,9 @@ export function AnalyticsReportButtons({ snapshot }: { /** Общий снимо
   })).sort((a, b) => b.count - a.count || a.label.localeCompare(b.label)).slice(0, 10);
   return <AnalyticsCollapsibleSection title="Популярные действия">
     <div className="analytics-report-grid analytics-overview-report-grid analytics-popular-actions-grid">
-      <AnalyticsReportDistribution compact periodSelectable title="Нажатия кнопок" donut={false}
+      <AnalyticsReportDistribution compact periodSelectable periodInHeader title="Нажатия кнопок" donut={false}
         contextLabel={reportRangeLabel(snapshot.range)} items={ranking(false)} />
-      <AnalyticsReportDistribution compact periodSelectable title="Кнопки по числу людей" donut={false}
+      <AnalyticsReportDistribution compact periodSelectable periodInHeader title="Кнопки по числу людей" donut={false}
         contextLabel={reportRangeLabel(snapshot.range)} items={ranking(true)} />
     </div>
   </AnalyticsCollapsibleSection>;
