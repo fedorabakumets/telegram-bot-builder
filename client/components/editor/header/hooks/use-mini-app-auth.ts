@@ -33,17 +33,21 @@ export function useMiniAppAuth(): void {
   const { acceptSession, isLoading } = useTelegramAuth();
 
   useEffect(() => {
-    const tg = window.Telegram?.WebApp;
-    if (!tg) return;
-    tg.ready?.();
+    /** Сообщает Telegram о готовности сразу или после загрузки его API. */
+    const ready = () => window.Telegram?.WebApp?.ready?.();
+    const script = document.getElementById('telegram-mini-app-api');
+    ready();
+    script?.addEventListener('load', ready);
+    return () => script?.removeEventListener('load', ready);
   }, []);
 
   useEffect(() => {
     if (isLoading) return;
 
+    /** Запускает вход после получения данных Telegram, в том числе при поздней загрузке API. */
+    const authenticate = () => {
     const tg = window.Telegram?.WebApp;
     if (!tg?.initDataUnsafe?.user || !tg.initData) return;
-
     fetch('/api/auth/telegram/miniapp', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -62,5 +66,10 @@ export function useMiniAppAuth(): void {
         }
       })
       .catch((err) => showDebug(`❌ fetch error: ${err.message}`));
+    };
+    const script = document.getElementById('telegram-mini-app-api');
+    authenticate();
+    script?.addEventListener('load', authenticate);
+    return () => script?.removeEventListener('load', authenticate);
   }, [isLoading, acceptSession]);
 }
