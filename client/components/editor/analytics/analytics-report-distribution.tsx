@@ -57,7 +57,7 @@ export function AnalyticsReportDistribution({ title, items, subtitle, donut = tr
     </div>}
     {chosen && <div className="analytics-report-details space-y-2" aria-live="polite"><div className="flex justify-between gap-3"><strong className="break-words">{chosen.label}</strong><button type="button" onClick={() => setSelected(null)}>Закрыть</button></div><dl className="flex flex-wrap gap-4">{[['Количество', chosen.count], ...(chosen.details ?? [])].map(([label, value]) => <div key={label}><dt className="text-muted-foreground">{label}</dt><dd className="font-semibold tabular-nums">{typeof value === 'number' ? value.toLocaleString('ru-RU') : value}</dd></div>)}</dl></div>}
     {footnote && <p className="analytics-distribution-footnote mt-auto text-xs text-muted-foreground">{footnote}</p>}</>;
-  return <section className={`analytics-card analytics-report-card border rounded-2xl ${compact ? "analytics-distribution-compact" : ""}`}>
+  return <section className={`analytics-card analytics-report-card border rounded-2xl ${compact ? "analytics-distribution-compact" : ""} ${!donut ? "analytics-ranking-distribution" : ""}`}>
     <header><div><h3 className="text-lg font-semibold">{title}</h3>{subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}</div></header>
     <AnalyticsChartActions title={title} open={() => setExpanded(true)} triggerRef={expandRef} />
     {!expanded && content}<Dialog open={expanded} onOpenChange={setExpanded}><DialogContent hideClose aria-describedby={undefined}

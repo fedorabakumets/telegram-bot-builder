@@ -76,7 +76,7 @@ export function AnalyticsTableChartCard({ projectId, range }: AnalyticsTableChar
   const valueLabel = getTableChartValueLabel(matches && chart ? chart.aggregation : aggregation,
     getColumnTitle(columns.find(column => column.id === yColumnId) ?? { name: 'Значения' }));
   return (
-    <div className="analytics-card bg-background border rounded-xl p-4 flex flex-col gap-4">
+    <div className="analytics-card analytics-table-chart-card bg-background border rounded-xl p-4 flex flex-col gap-4">
       <h4 className="text-base font-semibold">График по таблице</h4>
       {tables.length === 0 ? (
         <AnalyticsChartState title="Добавьте данные проекта" description="Создайте таблицу во вкладке «Таблицы», затем выберите столбцы для графика." />

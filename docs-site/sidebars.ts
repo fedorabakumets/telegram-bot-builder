@@ -29,13 +29,19 @@ const sidebars: SidebarsConfig = {
       label: 'Интерфейс',
       items: [
         'interface/overview',
-        'interface/editor',
-        'interface/editor/canvas',
-        'interface/editor/properties',
-        'interface/editor/components',
-        'interface/editor/projects',
-        'interface/editor/sheets',
-        'interface/editor/toolbar',
+        {
+          type: 'category',
+          label: '🛠️ Вкладка «Редактор»',
+          link: {type: 'doc', id: 'interface/editor'},
+          items: [
+            'interface/editor/canvas',
+            'interface/editor/properties',
+            'interface/editor/components',
+            'interface/editor/projects',
+            'interface/editor/sheets',
+            'interface/editor/toolbar',
+          ],
+        },
         'interface/bot',
         'interface/users',
         'interface/dialogs',
@@ -44,10 +50,10 @@ const sidebars: SidebarsConfig = {
         'interface/versions',
         'interface/agent',
         'interface/terminal',
-        'interface/analytics',
+        {type: 'doc', id: 'interface/analytics', label: '📊 Вкладка «Аналитика»'},
         {
           type: 'category',
-          label: 'Таблицы',
+          label: '🗄️ Вкладка «Таблицы»',
           items: [
             'interface/tables/overview',
             'interface/tables/editing',
@@ -57,7 +63,7 @@ const sidebars: SidebarsConfig = {
         },
         {
           type: 'category',
-          label: 'Рассылки',
+          label: '📢 Вкладка «Рассылки»',
           items: [
             'interface/broadcasts/overview',
             'interface/broadcasts/create',

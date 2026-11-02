@@ -32,7 +32,7 @@ export function AnalyticsReportContent({ snapshot }: { /** Снимок выбр
     <AnalyticsCollapsibleSection title="Источники трафика" description="Первое привлечение и повторные входы хранятся отдельно. Без метки нельзя достоверно установить площадку.">
     <AnalyticsReportSources snapshot={snapshot} />
     </AnalyticsCollapsibleSection>
-    <AnalyticsCollapsibleSection title="Самые активные" description="Рейтинг направленных сообщений и нажатий кнопок за общий период.">
+    <AnalyticsCollapsibleSection title="Самые активные" description="Активность групп и рейтинги пользователей и групп за выбранный период.">
     <AnalyticsReportLeaders snapshot={snapshot} />
     </AnalyticsCollapsibleSection>
     <AnalyticsReportButtons snapshot={snapshot} />

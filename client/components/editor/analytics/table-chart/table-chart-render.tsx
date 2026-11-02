@@ -48,6 +48,8 @@ export interface TableChartRenderProps {
  * @returns JSX элемент графика или пустое состояние
  */
 export function TableChartRender({ data, chartType, valueLabel, categoryLabel, selectedLabel, onSelectedLabelChange, expanded = false }: TableChartRenderProps): React.JSX.Element {
+  /** Компактный график занимает меньше места, увеличенный сохраняет подробный масштаб. */
+  const chartHeight = expanded ? 420 : 180;
   /** Выбор хранится вместе с исходным массивом, чтобы не показывать устаревшие данные после смены настроек. */
   const [selection, setSelection] = useState<{ /** Набор данных в момент выбора. */ data: TableChartPoint[]; /** Выбранная категория. */ point: TableChartPoint } | null>(null);
   const selected = onSelectedLabelChange ? data.find(point => point.label === selectedLabel) ?? null : selection?.data === data ? selection.point : null;
@@ -76,7 +78,7 @@ export function TableChartRender({ data, chartType, valueLabel, categoryLabel, s
   if (chartType === 'pie') {
     return (
       <TableChartAxes chartType={chartType} categoryLabel={categoryLabel} valueLabel={valueLabel} details={details}>
-      <ResponsiveContainer width="100%" height={expanded ? 420 : 260}>
+      <ResponsiveContainer width="100%" height={chartHeight}>
         <PieChart>
           <Pie data={data} dataKey="value" nameKey="label" outerRadius={expanded ? 140 : 90} isAnimationActive={false} onClick={point => selectPoint(point)} label>
             {data.map((_, i) => (
@@ -93,7 +95,7 @@ export function TableChartRender({ data, chartType, valueLabel, categoryLabel, s
   if (chartType === 'line') {
     return (
       <TableChartAxes chartType={chartType} categoryLabel={categoryLabel} valueLabel={valueLabel} details={details}>
-      <ResponsiveContainer width="100%" height={expanded ? 420 : 260}>
+      <ResponsiveContainer width="100%" height={chartHeight}>
         <LineChart data={data} onClick={selectFromChart}>
           <CartesianGrid vertical={false} stroke="var(--border)" strokeDasharray="4 4" />
           <XAxis dataKey="label" tick={{ fontSize: 12, fill: 'var(--muted-foreground)' }} tickLine={false} axisLine={false} minTickGap={32} interval="preserveStartEnd" tickFormatter={value => String(value).length > 12 ? `${String(value).slice(0, 12)}…` : String(value)} />
@@ -108,7 +110,7 @@ export function TableChartRender({ data, chartType, valueLabel, categoryLabel, s
 
   return (
     <TableChartAxes chartType={chartType} categoryLabel={categoryLabel} valueLabel={valueLabel} details={details}>
-      <ResponsiveContainer width="100%" height={expanded ? 420 : 260}>
+      <ResponsiveContainer width="100%" height={chartHeight}>
       <BarChart data={data} onClick={selectFromChart} margin={{ top: 24, right: 12, left: 0, bottom: 0 }}>
         <CartesianGrid vertical={false} stroke="var(--border)" strokeDasharray="4 4" />
           <XAxis dataKey="label" tick={{ fontSize: 12, fill: 'var(--muted-foreground)' }} tickLine={false} axisLine={false} minTickGap={32} interval="preserveStartEnd" tickFormatter={value => String(value).length > 12 ? `${String(value).slice(0, 12)}…` : String(value)} />

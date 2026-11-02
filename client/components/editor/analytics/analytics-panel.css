@@ -5,6 +5,19 @@
 .analytics-content .whitespace-nowrap { white-space: normal; }
 .analytics-content .truncate { white-space: normal; overflow: visible; text-wrap: balance; }
 .analytics-content p { text-wrap: pretty; }
+/** На средних панелях фильтры располагаются в одной строке с названием вкладки. */
+@container (min-width: 800px) and (max-width: 1200px) {
+  .analytics-responsive-header { padding-block: 4px 12px; }
+  .analytics-responsive-header.space-y-4 > .analytics-header-content { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; margin-block-start: 0; }
+  .analytics-header-content .workspace-tab-heading { display: contents; }
+  .analytics-header-content .workspace-tab-heading > div:first-child { grid-column: 1; grid-row: 1; }
+  .analytics-header-content .workspace-tab-heading > div:first-child > p { display: none; }
+  .analytics-header-content .workspace-tab-heading > div:last-child { grid-column: 3; grid-row: 1; }
+  .analytics-header-content .workspace-tab-actions { gap: 4px; }
+  .analytics-header-content .workspace-tab-actions > :is(button, a) { width: 32px; height: 32px; padding: 0; }
+  .analytics-header-content .workspace-tab-actions span { display: none; }
+  .analytics-header-content.space-y-4 > .analytics-scope { grid-column: 2; grid-row: 1; min-width: 0; margin: 0; gap: 12px; align-items: center; }
+}
 /** Две группы показателей заменяют мелкий разноцветный текст в одну строку. */
 .analytics-audience-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 16px; }
 .analytics-audience-summary > div { display: flex; min-width: 0; flex-direction: column; gap: 4px; }

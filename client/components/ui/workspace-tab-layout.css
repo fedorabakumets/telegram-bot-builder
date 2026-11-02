@@ -27,6 +27,19 @@
 }
 @media (min-width: 640px) { .workspace-tab-frame { padding: 12px 24px 24px; } }
 
+/** На средних панелях название, область проекта и действия находятся на одной линии. */
+@container (min-width: 800px) and (max-width: 1200px) {
+  :is(.tables-header, .files-page-header, .versions-content, .code-workspace-heading) .workspace-header-content > .space-y-4 { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px 12px; }
+  :is(.tables-header, .files-page-header, .versions-content, .code-workspace-heading) .workspace-header-content > .space-y-4 > .workspace-tab-heading { display: contents; }
+  :is(.tables-header, .files-page-header, .versions-content, .code-workspace-heading) .workspace-tab-heading > div:first-child { grid-column: 1; grid-row: 1; }
+  :is(.tables-header, .files-page-header, .versions-content, .code-workspace-heading) .workspace-tab-heading > div:first-child > p { display: none; }
+  :is(.tables-header, .files-page-header, .versions-content, .code-workspace-heading) .workspace-tab-heading > div:last-child:not(:first-child) { grid-column: 3; grid-row: 1; }
+  :is(.tables-header, .files-page-header, .versions-content, .code-workspace-heading) .workspace-header-content > .space-y-4 > :is(.tables-context, .files-scope-controls, .workspace-project-scope) { grid-column: 2; grid-row: 1; min-width: 0; max-width: 420px; margin: 0; }
+  :is(.tables-header, .files-page-header, .versions-content, .code-workspace-heading) .workspace-header-content > .space-y-4 > :is(.tables-header-tools, .files-header-actions) { grid-column: 1 / -1; margin: 0; }
+  .code-workspace-heading .workspace-tab-actions > :is(button, a) { width: 32px; height: 32px; padding: 0; }
+  .code-workspace-heading .workspace-tab-actions > :is(button, a) > span, .files-page-header .files-heading-action-label { display: none; }
+}
+
 /** Компактные шапки выбранных рабочих вкладок повторяют аналитику на узких панелях. */
 @container (max-width: 479px) {
   :is(.tables-header, .versions-content, .code-workspace-heading) .workspace-tab-heading.workspace-tab-heading { align-items: center; gap: 8px; }
@@ -47,6 +60,16 @@
 
 /** Шапка кода может находиться в отдельной мобильной области за пределами панели. */
 .code-workspace-heading { container: code-workspace-heading / inline-size; }
+/** В панели кода селектор проекта выравнивается с названием и действиями. */
+@container code-workspace-heading (min-width: 320px) and (max-width: 799px) {
+  .code-workspace-heading .workspace-header-content > .space-y-4 { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px; }
+  .code-workspace-heading .workspace-tab-heading { display: contents; }
+  .code-workspace-heading .workspace-tab-heading > div:first-child { grid-column: 1; grid-row: 1; }
+  .code-workspace-heading .workspace-tab-heading > div:first-child > p { display: none; }
+  .code-workspace-heading .workspace-tab-heading > div:last-child:not(:first-child) { grid-column: 3; grid-row: 1; }
+  .code-workspace-heading .workspace-header-content > .space-y-4 > .workspace-project-scope { grid-column: 2; grid-row: 1; min-width: 0; margin: 0; }
+  .code-workspace-heading .workspace-project-scope [role='combobox'] { height: 32px; font-size: 12px; }
+}
 @container code-workspace-heading (max-width: 479px) {
   .workspace-header-toggle { display: block; padding: 0 0 6px; color: var(--muted-foreground); font-size: 12px; line-height: 20px; }
   .workspace-header-content[hidden] { display: none; }

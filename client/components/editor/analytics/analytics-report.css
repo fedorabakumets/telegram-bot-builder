@@ -31,6 +31,8 @@
 .analytics-form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 16px; align-items: end; }
 .analytics-form-grid label { display: flex; flex-direction: column; gap: 8px; font-size: 14px; line-height: 20px; min-width: 0; }
 .analytics-table-scroll { overflow-x: auto; max-width: 100%; }
+/** Уплотняем карточку таблицы, оставляя настройки и подписи доступными. */
+.analytics-table-chart-card { gap: 8px; }
 .analytics-report-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; line-height: 20px; }
 .analytics-report-table th, .analytics-report-table td { padding: 12px; vertical-align: top; }
 .analytics-report-table th { color: var(--muted-foreground); font-weight: 500; }
@@ -44,17 +46,16 @@
 @container (min-width: 960px) { .analytics-report-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @container (max-width: 479px) { .analytics-report-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } .analytics-report-value { font-size: 30px; line-height: 36px; } }
 
-/** Парные карточки резервируют две строки описания и прижимают справку к общему нижнему краю. */
+/** Парные карточки резервируют две строки описания без растягивания промежутков. */
 .analytics-page { container-name: analytics; }
 @container analytics (min-width: 960px) {
-  .analytics-overview-report-grid > .analytics-report-card { height: 100%; }
+  .analytics-overview-report-grid { align-items: start; }
+  .analytics-overview-report-grid > .analytics-report-card { height: auto; }
   .analytics-overview-report-grid > .analytics-report-card > div:nth-child(2) { min-height: 60px; }
   .analytics-overview-report-grid > .analytics-report-card > p:nth-child(5) { min-height: 32px; }
-  .analytics-overview-report-grid > .analytics-report-card > :last-child { margin-top: auto; }
   /** Раскрытая справка не растягивает соседнюю карточку и не отодвигает её кнопку вниз. */
   .analytics-overview-report-grid:has(> .analytics-report-card > [data-state='open']:last-child) { align-items: start; }
   .analytics-overview-report-grid:has(> .analytics-report-card > [data-state='open']:last-child) > .analytics-report-card { height: auto; }
-  .analytics-overview-report-grid:has(> .analytics-report-card > [data-state='open']:last-child) > .analytics-report-card > :last-child { margin-top: 0; }
 }
 
 /** Бюджет использует читаемые строки полей вместо длинной полосы из шести колонок. */
@@ -70,7 +71,7 @@
 /** Компактные обзорные карточки оставляют место данным, а не пустым отступам. */
 .analytics-page .analytics-overview-report-grid > .analytics-report-card { gap: 8px; padding: 14px 16px; }
 .analytics-overview-report-grid .analytics-report-summary { gap: 8px 16px; }
-.analytics-overview-report-grid .analytics-report-summary dt { min-height: 0; }
+.analytics-overview-report-grid .analytics-report-summary dt { min-height: 32px; }
 .analytics-overview-report-grid .analytics-report-card > :last-child { display: grid; gap: 10px; }
 .analytics-overview-report-grid .analytics-chart-actions:not(.is-expanded) { top: 16px; right: 16px; }
 
@@ -81,6 +82,26 @@
 
 /** В обзоре сводка использует всю ширину карточки и занимает меньше строк. */
 @container (min-width: 360px) { .analytics-overview-report-grid .analytics-report-summary { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+/** Четыре показателя сообщений помещаются в один ряд при достаточной ширине карточки. */
+@container (min-width: 400px) {
+  .analytics-overview-report-grid .analytics-report-card:has(.analytics-message-note) .analytics-report-summary { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .analytics-overview-report-grid .analytics-report-card:has(.analytics-message-note) .analytics-report-summary > div { display: flex; min-width: 0; flex-direction: column; }
+  .analytics-overview-report-grid .analytics-report-card:has(.analytics-message-note) .analytics-report-summary dt { flex: 1; min-height: 0; overflow-wrap: anywhere; }
+}
+
+/** В парных карточках компактная подпись освобождает место для периода в общей строке. */
+@container analytics (min-width: 960px) and (max-width: 1200px) {
+  .analytics-overview-report-grid { align-items: stretch; }
+  .analytics-overview-report-grid > .analytics-report-card { height: 100%; }
+  .analytics-overview-report-grid .analytics-chart-view-controls { gap: 8px; align-items: center; }
+  .analytics-overview-report-grid .analytics-chart-view-controls > label { gap: 4px; }
+  .analytics-overview-report-grid .analytics-chart-view-controls select { width: 88px; padding-inline: 6px; }
+  .analytics-overview-report-grid .analytics-chart-view-controls > label:nth-child(2) { min-height: 40px; white-space: nowrap; }
+  .analytics-overview-report-grid .analytics-chart-view-controls > button { align-self: center; min-height: 40px; white-space: nowrap; }
+  .analytics-overview-report-grid .analytics-chart-view-controls .analytics-label-full { display: none; }
+  .analytics-overview-report-grid .analytics-chart-view-controls .analytics-label-short { display: inline; }
+}
 
 /** Компактные карточки источников сохраняют полный список в прокручиваемой легенде. */
 .analytics-page .analytics-sources-compact > .analytics-report-card { gap: 8px; padding: 14px 16px; }
@@ -99,7 +120,14 @@
 /** Рейтинг остаётся компактным, а все строки доступны прокруткой и в развёрнутом виде. */
 .analytics-page .analytics-leaders-compact { gap: 8px; padding: 14px 16px; }
 .analytics-leaders-compact .analytics-chart-actions:not(.is-expanded) { top: 16px; right: 16px; }
+/** Под заголовком оставляем место для кнопок, прежде чем показывать период. */
+.analytics-leaders-compact > header { min-height: 36px; }
 .analytics-leaders-list { max-height: 300px; overflow-y: auto; }
+/** Период и кнопка рейтинга выравниваются по центру и не пересекаются с действиями карточки. */
+.analytics-leaders-period > button { align-self: center; }
+/** Режимы рейтинга групп равномерно занимают доступную ширину карточки. */
+.analytics-leaders-compact .analytics-segments[aria-label="Методика рейтинга групп"] { display: grid; width: 100%; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.analytics-leaders-compact .analytics-segments[aria-label="Методика рейтинга групп"] > button { min-width: 0; height: auto; min-height: 40px; white-space: normal; text-align: center; }
 .analytics-leaders-list > li > button { padding: 6px 12px; }
 
 /** У распределений компактный список остаётся доступным с прокруткой. */
@@ -107,9 +135,23 @@
 .analytics-distribution-compact .analytics-chart-actions:not(.is-expanded) { top: 16px; right: 16px; }
 .analytics-distribution-compact .analytics-donut-legend { gap: 4px; }
 .analytics-distribution-compact .analytics-donut-legend button { padding-block: 4px; }
+/** Рейтинг кнопок показывает больше строк, сохраняя прокрутку длинного списка. */
+.analytics-page .analytics-ranking-distribution .analytics-donut-legend { max-height: 300px; }
 
 /** Кнопка периода и переключатель вида выровнены по центру одной строки. */
 .analytics-chart-view-controls > button { align-self: center; min-height: 40px; }
+
+/** Единое оформление настроек графика сохраняет компактность и видимый фокус. */
+.analytics-chart-view-controls select,
+.analytics-chart-view-controls > button { border: 1px solid var(--border); border-radius: 8px; background: var(--background); color: var(--foreground); font-size: 13px; transition: border-color 150ms ease, background-color 150ms ease; }
+.analytics-chart-view-controls select:hover,
+.analytics-chart-view-controls > button:hover { border-color: var(--muted-foreground); background: var(--muted); }
+.analytics-chart-view-controls select:focus-visible,
+.analytics-chart-view-controls > button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.analytics-chart-view-controls > label:nth-child(2) { cursor: pointer; }
+.analytics-chart-view-controls > label:nth-child(2):hover { color: var(--foreground); }
+@media (prefers-reduced-motion: reduce) { .analytics-chart-view-controls select, .analytics-chart-view-controls > button { transition: none; } }
+
 
 /** Заголовок и показатели активности ровно выравниваются и не перекрывают действия. */
 .analytics-active-card > header { align-items: center; justify-content: flex-start; gap: 8px 16px; min-height: 36px; }
@@ -125,6 +167,25 @@
 
 /** На узком экране действия рекламы выровнены и допускают перенос подписи. */
 .analytics-acquisition-tabs button { max-width: 100%; height: auto; min-height: 40px; white-space: normal; text-align: center; padding-block: 8px; }
+/** Выбранный раздел рекламы заметен среди доступных переходов. */
+.analytics-acquisition-tabs button[aria-pressed='true'] { background: var(--primary); border-color: var(--primary); color: var(--primary-foreground); font-weight: 600; }
+.analytics-acquisition-tabs button[aria-pressed='true']:hover { background: var(--primary); color: var(--primary-foreground); }
+.analytics-acquisition-tabs button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+/** Действия рекламы сохраняют текущую форму при обновлении и увеличении рабочей области. */
+.analytics-acquisition-workspace { position: relative; }
+.analytics-acquisition-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.analytics-acquisition-actions > button { display: inline-flex; width: 36px; height: 36px; align-items: center; justify-content: center; border: 1px solid var(--border); border-radius: 6px; color: var(--muted-foreground); }
+.analytics-acquisition-actions > button:hover { color: var(--foreground); background: var(--muted); }
+.analytics-acquisition-actions > button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.analytics-acquisition-actions > button:disabled { opacity: .5; }
+.analytics-acquisition-workspace.is-expanded { position: fixed; z-index: 50; inset: 16px; overflow-y: auto; background: var(--background); box-shadow: 0 0 0 100vmax rgb(0 0 0 / 65%); }
+/** Списки источников, ссылок и расходов прокручиваются независимо друг от друга. */
+.analytics-acquisition-catalog :is(.analytics-placement-list, ul.space-y-3, .analytics-table-scroll) { max-height: min(240px, 30dvh); overflow: auto; }
+.analytics-acquisition-workspace.is-expanded .analytics-acquisition-catalog :is(.analytics-placement-list, ul.space-y-3, .analytics-table-scroll) { max-height: none; }
+@container analytics (min-width: 700px) {
+  .analytics-acquisition-actions { position: absolute; top: 24px; right: 24px; }
+  .analytics-acquisition-workspace > .analytics-acquisition-tabs { padding-right: 88px; }
+}
 @container analytics (max-width: 400px) { .analytics-acquisition-tabs { display: grid; grid-template-columns: minmax(0, 1fr); } .analytics-acquisition-tabs button { width: 100%; } }
 
 /** Шапка увеличенного распределения: единые действия и заметный клавиатурный фокус. */
@@ -280,6 +341,7 @@
 /** Компактные показатели занимают две колонки, сохраняя полные доступные подписи. */
 @container analytics (max-width: 400px) {
   .analytics-page .analytics-report-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .analytics-overview-report-grid .analytics-report-summary dt { min-height: 0; }
   .analytics-report-summary > div { min-width: 0; }
   .analytics-report-summary dt { overflow-wrap: anywhere; }
 }
@@ -330,6 +392,14 @@
 .analytics-collapsible-description { margin-top: 4px; font-size: 14px; line-height: 20px; color: var(--muted-foreground); }
 .analytics-collapsible-content { display: flex; flex-direction: column; gap: 16px; margin-top: 16px; }
 
+/** На узком экране интервалы между разделами задаются общим промежутком списка. */
+@container analytics (max-width: 400px) {
+  .analytics-collapsible-section { padding-top: 0; }
+  .analytics-collapsible-heading { min-height: 40px; gap: 8px; }
+  .analytics-collapsible-title { line-height: 24px; }
+  .analytics-collapsible-chevron { flex: none; width: 32px; text-align: center; }
+}
+
 /** Закреплённый промежуток: дата, значения и действия читаются отдельными группами. */
 .analytics-selected-interval { display: grid; gap: 12px; min-width: 0; }
 .analytics-selected-interval-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: var(--muted-foreground); font-size: 12px; }
@@ -358,4 +428,12 @@
   .analytics-chart-dialog .analytics-chart-view-controls > label:nth-child(2) { gap: 3px; font-size: 11px; white-space: nowrap; }
   .analytics-chart-dialog .analytics-label-full { display: none; }
   .analytics-chart-dialog .analytics-label-short { display: inline; }
+}
+
+/** На узком экране длинный заголовок обтекает действия, а режимы стоят рядом. */
+@container analytics (max-width: 400px) {
+  .analytics-page .analytics-leaders-compact:has(.analytics-segments[aria-label="Методика рейтинга групп"]) > header h3 { display: block; padding-right: 0; }
+  .analytics-page .analytics-leaders-compact:has(.analytics-segments[aria-label="Методика рейтинга групп"]) > header h3::before { content: ""; float: right; width: 68px; height: 32px; }
+  .analytics-page .analytics-leaders-compact .analytics-segments[aria-label="Методика рейтинга групп"] { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
+  .analytics-page .analytics-leaders-compact .analytics-segments[aria-label="Методика рейтинга групп"] > button { min-width: 0; min-height: 40px; height: auto; padding: 6px 4px; white-space: normal; line-height: 16px; }
 }

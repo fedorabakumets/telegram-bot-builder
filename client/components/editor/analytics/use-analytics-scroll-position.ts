@@ -4,8 +4,9 @@ import { useEffect, useRef } from 'react';
 export function useAnalyticsScrollPosition(projectId: number, tokenId?: number | null) {
   const root = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const viewport = root.current?.querySelector<HTMLElement>('[data-radix-scroll-area-viewport]');
-    if (!viewport) return;
+    const scrollArea = root.current;
+    const viewport = scrollArea?.querySelector<HTMLElement>('[data-radix-scroll-area-viewport]');
+    if (!scrollArea || !viewport) return;
     const key = `analytics:scroll:${projectId}:${tokenId ?? 'all'}`;
     let target = 0;
     try { const saved = Number(localStorage.getItem(key)); if (Number.isFinite(saved) && saved > 0) target = saved; } catch { /* Ограничение хранилища не мешает прокрутке. */ }
@@ -24,14 +25,16 @@ export function useAnalyticsScrollPosition(projectId: number, tokenId?: number |
     if (viewport.firstElementChild) observer.observe(viewport.firstElementChild);
     restore();
     viewport.addEventListener('scroll', save, { passive: true });
-    viewport.addEventListener('wheel', interact, { passive: true });
-    viewport.addEventListener('pointerdown', interact);
-    viewport.addEventListener('keydown', interact);
+    scrollArea.addEventListener('wheel', interact, { passive: true, capture: true });
+    scrollArea.addEventListener('touchstart', interact, { passive: true, capture: true });
+    scrollArea.addEventListener('pointerdown', interact, true);
+    scrollArea.addEventListener('keydown', interact, true);
     window.addEventListener('pagehide', save);
     return () => {
       save(); observer.disconnect();
-      viewport.removeEventListener('scroll', save); viewport.removeEventListener('wheel', interact);
-      viewport.removeEventListener('pointerdown', interact); viewport.removeEventListener('keydown', interact);
+      viewport.removeEventListener('scroll', save); scrollArea.removeEventListener('wheel', interact, true);
+      scrollArea.removeEventListener('touchstart', interact, true);
+      scrollArea.removeEventListener('pointerdown', interact, true); scrollArea.removeEventListener('keydown', interact, true);
       window.removeEventListener('pagehide', save);
     };
   }, [projectId, tokenId]);

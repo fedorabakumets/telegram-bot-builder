@@ -15,6 +15,12 @@
 .files-page .files-scope-controls [role='combobox'] { width: 100%; max-width: none; min-width: 0; height: 40px; font-size: 14px; line-height: 20px; background: #ffffff; }
 .dark .files-page .files-scope-controls [role='combobox'] { background: #09090b; border-color: #29292d; }
 .files-page .files-scope-controls [role='combobox'] > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/** На средних панелях проект и бот остаются рядом с названием вкладки. */
+@container (min-width: 800px) and (max-width: 1200px) {
+  .files-page .files-scope-controls { flex-wrap: nowrap; }
+  .files-page .files-scope-controls > div { flex: 0 1 160px; min-width: 0; }
+  .files-page .files-scope-controls [role='combobox'] { height: 32px; font-size: 12px; }
+}
 .files-page [data-testid='file-storage-toolbar'] { flex-direction: column; align-items: stretch; border: 0; padding: 0; gap: 8px; background: transparent; }
 .files-page [data-testid='category-tabs'] { flex: none; }
 .files-page [data-testid='category-tabs'] [role='tablist'] { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); width: 100%; padding: 4px; gap: 4px; background: #f4f4f5; box-shadow: none; }
