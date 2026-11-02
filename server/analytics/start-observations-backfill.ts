@@ -8,7 +8,7 @@ import type { AnalyticsHistoryBackfillOptions, HistoryBackfillScope } from './hi
  * @param client - Соединение платформы.
  * @returns Очередь проектов и ботов, включая архивных.
  */
-async function captureStartObservationScopes(client: PoolClient): Promise<HistoryBackfillScope[]> {
+export async function captureStartObservationScopes(client: PoolClient): Promise<HistoryBackfillScope[]> {
   const { rows } = await client.query(`SELECT m.project_id project,m.token_id token,MAX(m.id)::text through
     FROM bot_messages m JOIN bot_tokens t ON t.id=m.token_id AND t.project_id=m.project_id JOIN bot_projects p ON p.id=t.project_id
       LEFT JOIN analytics_start_observation_backfill_v2 b ON b.project_id=m.project_id AND b.token_id=m.token_id
