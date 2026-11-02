@@ -1,5 +1,6 @@
 /** @fileoverview Атомарный перенос всей оставшейся истории: факты, источники и курсоры становятся видны одним commit. */
 import type { Pool, PoolClient } from 'pg';
+import {captureAutomaticEvidenceScopes,transferAutomaticEvidence} from './automatic-evidence-backfill';
 import { backfillAnalyticsBatch } from '../database/analytics-v2/backfill';
 import { backfillStartObservationsBatch } from '../database/analytics-v2/start-observations-backfill';
 import { captureHistoryBackfillScopes } from './history-backfill-queue';
@@ -7,7 +8,7 @@ import { captureStartObservationScopes } from './start-observations-backfill';
 import { connectHistoryBackfill, historyBackfillErrorCode, historyBackfillPause, historyBackfillSettings } from './history-backfill-utils';
 import type { AnalyticsHistoryBackfillOptions, HistoryBackfillTask } from './history-backfill-types';
 /**
- * Выполняет оба контура в уже открытой транзакции; ограниченные чтения не делают промежуточных commit.
+ * Выполняет все три контура в уже открытой транзакции; ограниченные чтения не делают промежуточных commit.
  * @param client - Соединение одной транзакции.
  * @param signal - Отмена с полным откатом.
  * @param batchSize - Размер чтения, а не отдельной транзакции.
@@ -16,6 +17,7 @@ import type { AnalyticsHistoryBackfillOptions, HistoryBackfillTask } from './his
 export async function transferAnalyticsHistoryAtomically(client: PoolClient, signal: AbortSignal, batchSize = 1000): Promise<number> {
   const events = await captureHistoryBackfillScopes(client);
   const markers = await captureStartObservationScopes(client);
+  const evidence = await captureAutomaticEvidenceScopes(client);
   /** Переносит захваченный конечный диапазон без промежуточной публикации данных. */
   async function transfer(scopes: typeof events, execute: HistoryBackfillTask['execute']) {
     for (const scope of scopes) {
@@ -27,9 +29,10 @@ export async function transferAnalyticsHistoryAtomically(client: PoolClient, sig
     }
   }
   await transfer(events, backfillAnalyticsBatch);
+  await transferAutomaticEvidence(client,evidence,signal,batchSize);
   await transfer(markers, backfillStartObservationsBatch);
   signal.throwIfAborted();
-  return events.length + markers.length;
+  return events.length + markers.length + evidence.length;
 }
 /**
  * Запускает одну атомарную операцию после готовности HTTP, координируя её с прежними исполнителями.
