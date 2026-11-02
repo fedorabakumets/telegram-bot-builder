@@ -17,7 +17,7 @@ export function AnalyticsReportStatus({ snapshot, fetching, connection, bridgeCo
   const connected = connection === 'connected' && bridgeConnected === true;
   return <div className="space-y-2 text-sm text-muted-foreground">
     <div className="flex flex-wrap justify-between gap-2"><p>{snapshot ? `${format(snapshot.range.from)} — ${format(snapshot.range.to)} · ${snapshot.range.timezone}` : 'Период применяется ко всем отчётам ниже'}</p>
-      <p role="status" aria-live="polite">{fetching ? 'Обновляем данные…' : snapshot ? `Снимок ${format(snapshot.as_of)}` : 'Ожидаем данные'}</p></div>
+      <p role="status" aria-live="polite">{snapshot ? `Снимок ${format(snapshot.as_of)}` : fetching ? 'Обновляем данные…' : 'Ожидаем данные'}</p></div>
     <p className="text-xs">{connected ? 'Живые обновления подключены' : connection === 'connecting' || (connection === 'connected' && bridgeConnected === null) ? 'Подключаем живые обновления…' : 'Живые обновления временно недоступны. Доступна кнопка «Обновить».'}</p>
     {snapshot && snapshot.coverage.status !== 'complete' && <details className="text-xs"><summary className="cursor-pointer py-1">О полноте данных</summary><div className="analytics-report-coverage mt-2 space-y-2"><p>{snapshot.coverage.description}</p>
       {snapshot.coverage.legacy_unknown_users > 0 && <p>Точная дата первого использования неизвестна у {snapshot.coverage.legacy_unknown_users.toLocaleString('ru-RU')} человек. Первые сохранённые направленные действия, если они есть, показаны отдельно как восстановленная история.</p>}

@@ -29,7 +29,7 @@ it('меняет область и период одним запросом бе
   expect(requests[0]).toContain('period=30d'); expect(requests[0]).toContain('tokenId=7');
   hook.rerender({ period: '7d', tokenId: null });
   expect(hook.result.current.data).toBeUndefined();
-  await waitFor(() => expect(requests).toHaveLength(2));
+  await waitFor(() => expect(requests).toHaveLength(2), { timeout: 2000 });
   expect(requests[1]).toContain('period=7d'); expect(requests[1]).not.toContain('tokenId=');
   expect(client.getQueryCache().getAll().every(query => !('refetchInterval' in query.options))).toBe(true);
   hook.unmount(); client.clear();
@@ -41,10 +41,10 @@ it('принимает события своего проекта и восст�
   act(() => { live.message?.({ type: 'analytics-changed', projectId: 99, tokenId: 7 }); live.message?.({ type: 'analytics-changed', projectId: 12, tokenId: 8 }); });
   await new Promise(resolve => setTimeout(resolve, 300)); expect(requests).toHaveLength(1);
   act(() => { live.message?.({ type: 'analytics-changed', projectId: 12, tokenId: 7 }); live.message?.({ type: 'analytics-changed', projectId: 12, tokenId: 7 }); });
-  await waitFor(() => expect(requests).toHaveLength(2));
-  act(() => live.reconnect?.()); await waitFor(() => expect(requests).toHaveLength(3));
+  await waitFor(() => expect(requests).toHaveLength(2), { timeout: 2000 });
+  act(() => live.reconnect?.()); await waitFor(() => expect(requests).toHaveLength(3), { timeout: 2000 });
   Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'visible' });
-  act(() => document.dispatchEvent(new Event('visibilitychange'))); await waitFor(() => expect(requests).toHaveLength(4));
+  act(() => document.dispatchEvent(new Event('visibilitychange'))); await waitFor(() => expect(requests).toHaveLength(4), { timeout: 2000 });
   hook.unmount(); client.clear(); expect(live.message).toBeNull();
 });
 it('обновляет скользящее окно по границе даже без новых событий', async () => {

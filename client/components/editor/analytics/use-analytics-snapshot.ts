@@ -36,13 +36,13 @@ export function useAnalyticsSnapshot(projectId: number, tokenId: number | null |
   });
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined;
-    /** Объединяет всплеск событий в одну загрузку активных отчётов. */
+    /** Объединяет поток событий миграции и ботов не чаще одного запроса в секунду. */
     const invalidate = () => {
       if (timer) return;
       timer = setTimeout(() => {
         timer = undefined;
         void client.invalidateQueries({ predicate: item => ['analytics-v2', 'analytics-acquisition', 'bot-table-chart', 'chat-access-check'].includes(String(item.queryKey[0])) && item.queryKey[1] === projectId });
-      }, 250);
+      }, 1000);
     };
     const unsubscribe = subscribeSharedTerminalWs(raw => {
       if (!raw || typeof raw !== 'object') return;
