@@ -14,7 +14,7 @@
 | [bot_message_media](./bot_message_media.md) | 6 | Таблица связи сообщений с медиафайлами |
 | [bot_messages](./bot_messages.md) | 13 | Таблица истории сообщений между ботом и пользователями |
 | [bot_projects](./bot_projects.md) | 18 | Таблица проектов ботов |
-| [bot_table_columns](./bot_table_columns.md) | 4 | Таблица bot_table_columns — колонки пользовательской таблицы |
+| [bot_table_columns](./bot_table_columns.md) | 5 | Таблица bot_table_columns — колонки пользовательской таблицы |
 | [bot_table_rows](./bot_table_rows.md) | 4 | Таблица bot_table_rows — строки пользовательской таблицы (данные в JSONB) |
 | [bot_tables](./bot_tables.md) | 4 | Таблица bot_tables — пользовательские таблицы проекта |
 | [bot_templates](./bot_templates.md) | 28 | Таблица сценариев ботов |

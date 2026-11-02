@@ -1,6 +1,6 @@
 # project-tables
 
-Эндпоинтов: **27**
+Эндпоинтов: **29**
 
 ### `GET` /api/projects/{id}/tables
 
@@ -260,6 +260,20 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tables/1 -b cookies.txt \
 | 400 | Откат |
 | 401 | Нет session cookie и Bearer PAT |
 | 403 | Нет доступа к проекту |
+
+### `POST` /api/projects/{id}/tables/{tableId}/cells/edit
+
+POST /api/projects/{id}/tables/{tableId}/cells/edit
+
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Успешный ответ |
+| 401 | Требуется авторизация (сессия или Bearer PAT) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `GET` /api/projects/{id}/tables/{tableId}/chart
 
@@ -537,6 +551,20 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tables/1/columns/3 \
   "position": 0
 }
 ```
+
+### `PUT` /api/projects/{id}/tables/{tableId}/columns/{columnId}/settings
+
+PUT /api/projects/{id}/tables/{tableId}/columns/{columnId}/settings
+
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Успешный ответ |
+| 401 | Требуется авторизация (сессия или Bearer PAT) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `PUT` /api/projects/{id}/tables/{tableId}/columns/reorder
 
