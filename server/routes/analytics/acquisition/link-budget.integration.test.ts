@@ -76,3 +76,14 @@ it('отклоняет бюджет архивного источника и о�
     await expect(saveLinkBudget(client,1,{...body,unexpected:true},null)).rejects.toThrow();
   }finally{await client.query('ROLLBACK');client.release();}
 });
+
+it('сохраняет курс, примечание и подтверждённое распределение нового источника',async()=>{
+  const client=await database.pool.connect();
+  try {
+    await client.query('BEGIN');
+    await saveLinkBudget(client,1,{tokenId:11,marker:'future_allocated',amount:'100.00',currency:'USD',day:'2026-11-02',untilDay:'2026-11-04',allocation:'equal',timezone:'Europe/Moscow',exchangeRateRubPerUsd:'80.5',exchangeRateDate:'2026-11-01',note:'Тест'},null);
+    const {rows}=await client.query("SELECT amount::text,exchange_rate_rub_per_usd::text rate,note,estimated FROM analytics_expenses ORDER BY day");
+    expect(rows.map(row=>Number(row.amount))).toEqual([33.33,33.33,33.34]);
+    expect(rows.every(row=>Number(row.rate)===80.5 && row.note==='Тест' && row.estimated)).toBe(true);
+  }finally{await client.query('ROLLBACK');client.release();}
+});

@@ -11,6 +11,8 @@ import { AnalyticsChartState } from './analytics-chart-state';
 import { AnalyticsSectionHeading } from './analytics-section-heading';
 import { AnalyticsHeaderPeriod } from './analytics-header-period';
 import { AnalyticsReportStatus } from './analytics-report-status';
+import {AnalyticsOpenPeriodContext} from './analytics-choose-period';
+import {AnalyticsChartRangeContext,chartRangeFilter} from './analytics-chart-range-selection';
 import { AnalyticsReportContent } from './analytics-report-content';
 import { AnalyticsAcquisitionSection } from './analytics-acquisition-section';
 import { AnalyticsTableChartCard } from './table-chart/analytics-table-chart-card';
@@ -36,6 +38,7 @@ export interface AnalyticsPanelProps {
  * @returns Рабочая вкладка аналитики.
  */
 export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken, allProjects, onProjectChange }: AnalyticsPanelProps) {
+  const [periodRequest,setPeriodRequest]=useState(0);
   const [filter, setFilter] = useState(() => initialReportFilter(projectId));
   const [refreshError, setRefreshError] = useState('');
   const [refreshing, setRefreshing] = useState(false);
@@ -63,17 +66,17 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken, allP
   const periodPosition = useAnalyticsPeriodPosition(scrollRoot, snapshot.data, snapshot.isError);
   const data = snapshot.data;
   return <div className="analytics-page @container flex min-h-0 min-w-0 flex-col h-full bg-background">
-    <AnalyticsHeader periodControl={<AnalyticsHeaderPeriod filter={filter} range={!snapshot.isError ? data?.range : undefined} onChange={changeFilter} />} audienceCounts={new Map(!snapshot.isError && data?.project_id === projectId ? data.token_audiences?.map(item => [item.token_id, item.total_users] as const) ?? [] : [])} totalUsers={!snapshot.isError && data?.project_id === projectId && data?.token_id === selectedTokenId ? data.current.audience.total_users : undefined} projectId={projectId} tokens={tokens} selectedTokenId={selectedTokenId} onSelectToken={onSelectToken} allProjects={allProjects} onProjectChange={onProjectChange} isRefreshing={refreshing || (!data && snapshot.isFetching)} onRefresh={() => void refresh()} />
-    <ScrollArea ref={scrollRoot} className="min-h-0 flex-1"><div ref={periodPosition.content} className="analytics-content workspace-tab-frame flex flex-col gap-4">
+    <AnalyticsHeader periodControl={<AnalyticsHeaderPeriod openRequest={periodRequest} filter={filter} range={!snapshot.isError ? data?.range : undefined} onChange={changeFilter} />} audienceCounts={new Map(!snapshot.isError && data?.project_id === projectId ? data.token_audiences?.map(item => [item.token_id, item.total_users] as const) ?? [] : [])} totalUsers={!snapshot.isError && data?.project_id === projectId && data?.token_id === selectedTokenId ? data.current.audience.total_users : undefined} projectId={projectId} tokens={tokens} selectedTokenId={selectedTokenId} onSelectToken={onSelectToken} allProjects={allProjects} onProjectChange={onProjectChange} isRefreshing={refreshing || (!data && snapshot.isFetching)} onRefresh={() => void refresh()} />
+    <AnalyticsOpenPeriodContext.Provider value={()=>setPeriodRequest(value=>value+1)}><ScrollArea ref={scrollRoot} className="min-h-0 flex-1"><div ref={periodPosition.content} className="analytics-content workspace-tab-frame flex flex-col gap-4">
       <AnalyticsReportStatus snapshot={data} fetching={snapshot.isFetching} connection={snapshot.connection} bridgeConnected={snapshot.bridgeConnected} />
       {refreshError && <div role="alert" className="analytics-refresh-error"><p>{refreshError}</p><button type="button" onClick={() => void refresh()}>Повторить</button></div>}
       {snapshot.isError ? <AnalyticsChartState title="Не удалось загрузить аналитику" description={snapshot.error.message} onRetry={() => void snapshot.refetch()} />
         : !data ? <AnalyticsChartState loading />
         : data.coverage.status === 'unavailable' ? <AnalyticsChartState title="Пока нет данных для графиков" description="Сохранённая история переносится автоматически при запуске конструктора. Если переписки ещё не было, статистика появится после начала использования бота." />
-        : <AnalyticsReportContent snapshot={data} />}
+        : <AnalyticsChartRangeContext.Provider value={range=>changeFilter(chartRangeFilter(filter,range))}><AnalyticsReportContent snapshot={data} /></AnalyticsChartRangeContext.Provider>}
       <AnalyticsAcquisitionSection key={`acquisition:${projectId}`} projectId={projectId} tokenId={selectedTokenId} tokens={tokens} timezone={filter.timezone} snapshot={snapshot.isError ? undefined : data} />
       <AnalyticsSectionHeading title="Данные проекта" description="Текущие данные таблицы. Общий период применяется только при выборе колонки даты." />
       <AnalyticsTableChartCard key={`table-chart:${projectId}`} projectId={projectId} range={snapshot.isError ? undefined : data?.range} />
-    </div></ScrollArea>
+    </div></ScrollArea></AnalyticsOpenPeriodContext.Provider>
   </div>;
 }

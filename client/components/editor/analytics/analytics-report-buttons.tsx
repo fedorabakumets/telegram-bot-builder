@@ -21,7 +21,7 @@ export function AnalyticsReportButtons({ snapshot }: { /** Общий снимо
       <button type="button" aria-pressed={!people} onClick={() => setPeople(false)}>Нажатия</button>
       <button type="button" aria-pressed={people} onClick={() => setPeople(true)}>Люди</button>
     </div>
-    <AnalyticsReportDistribution key={people ? 'people' : 'clicks'} title={people ? 'Кнопки по числу людей' : 'Нажатия кнопок'} donut={false}
+    <AnalyticsReportDistribution periodSelectable key={people ? 'people' : 'clicks'} title={people ? 'Кнопки по числу людей' : 'Нажатия кнопок'} donut={false}
       contextLabel={reportRangeLabel(snapshot.range)} items={items} />
   </div>;
 }

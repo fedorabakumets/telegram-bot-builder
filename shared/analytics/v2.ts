@@ -1,6 +1,19 @@
 /** @fileoverview Общий контракт подтверждённой аналитики, диапазонов и полноты истории. */
 /** Полнота истории выбранного окна; восстановленная первая дата не считается точной. */
 export type AnalyticsV2HistoryStatus = 'complete' | 'partial' | 'unavailable';
+/** Счётчики действий в личных или групповых чатах за период. */
+export interface AnalyticsV2MessageScope {
+  /** Входящие сообщения. */ incoming: number;
+  /** Входящие сообщения, адресованные боту. */ incoming_to_bot: number;
+  /** Отправленные ботом сообщения. */ outgoing: number;
+  /** Подтверждённые нажатия с Telegram ID. */ callbacks: number;
+  /** Проверенные записи старых нажатий без Telegram ID. */ historical_callbacks: number;
+}
+/** Счётчики известных типов чата; неизвестные и каналы входят только в общие значения. */
+export interface AnalyticsV2ChatScopes {
+  /** Личные чаты. */ private: AnalyticsV2MessageScope;
+  /** Группы и супергруппы. */ group: AnalyticsV2MessageScope;
+}
 /** Нормализованный диапазон одного снимка. */
 export interface AnalyticsV2Range {
   /** Включённая граница UTC. */
@@ -29,8 +42,11 @@ export interface AnalyticsV2Summary {
   /** Реальные сообщения, нажатия и служебные события. */
   messages: {
     /** Реальные входящие сообщения. */ incoming: number;
+    /** Личные и подтверждённые направленные боту групповые сообщения. */ incoming_to_bot: number;
     /** Успешные отправки бота. */ outgoing: number;
     /** Реальные нажатия кнопок. */ callbacks: number;
+    /** Проверенные записи старой истории без Telegram ID. */ historical_callbacks: number;
+    /** Достоверно известные типы чата. */ chat_scopes: AnalyticsV2ChatScopes;
     /** Служебные события. */ system: number;
     /** Сумма входящих и ответов бота. */ total: number;
   };
@@ -57,10 +73,16 @@ export interface AnalyticsV2Point {
   returning_users: number;
   /** Входящие сообщения. */
   incoming: number;
+  /** Личные и подтверждённые направленные боту групповые сообщения. */
+  incoming_to_bot: number;
   /** Успешные исходящие сообщения. */
   outgoing: number;
   /** Нажатия кнопок. */
   callbacks: number;
+  /** Аудированные старые записи нажатий без Telegram ID. */
+  historical_callbacks: number;
+  /** Достоверно известные типы чата. */
+  chat_scopes: AnalyticsV2ChatScopes;
   /** События состояния. */
   system: number;
   /** Группы с событиями внутри точки. */

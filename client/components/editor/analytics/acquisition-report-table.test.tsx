@@ -21,3 +21,10 @@ it('не дублирует общий выбор периода кнопкам�
   expect(screen.queryByRole('button', { name: 'Сегодня' })).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Вчера' })).not.toBeInTheDocument();
 });
+
+it('открывает бюджет с источником и валютой выбранной пустой ячейки',()=>{
+  const onAddBudget=vi.fn();
+  render(<AcquisitionReportTable projectId={12} snapshot={{range:{from:'2026-11-01T00:00:00Z',to:'2026-11-02T00:00:00Z',timezone:'UTC'}} as AnalyticsV2Snapshot} onAddBudget={onAddBudget}/>);
+  fireEvent.click(screen.getByRole('button',{name:'Указать бюджет RUB: Канал'}));
+  expect(onAddBudget).toHaveBeenCalledWith(report.rows[0],'RUB');
+});

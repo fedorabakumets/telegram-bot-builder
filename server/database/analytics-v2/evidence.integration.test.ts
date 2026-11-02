@@ -26,7 +26,7 @@ describe('Отдельное восстановление аудитории', (
       expect((await backfillAudienceEvidenceBatch(client, { ...policy, writerSha256: 'b'.repeat(64) })).evidence_count).toBe('0');
       const value = await readAnalyticsV2Snapshot(client, 1, 11, range);
       expect(value.current.audience).toMatchObject({ total_users: 2, restored_users: 2, active_users: 2, new_users: 0 });
-      expect(value.current.messages).toEqual({ total: 0, incoming: 0, outgoing: 0, callbacks: 0, system: 0 });
+      expect(value.current.messages).toMatchObject({ total: 0, incoming: 0, outgoing: 0, callbacks: 0, historical_callbacks: 2, system: 0 });
       expect(value.points.reduce((sum, point) => sum + point.restored_users, 0)).toBe(2);
       expect(value.coverage.status).toBe('partial'); expect(value.leaders.users).toEqual([]);
       await client.query('DELETE FROM bot_messages');

@@ -23,7 +23,7 @@ export function AnalyticsReportControls({ filter, onChange }: Props) {
     if (!dates.from || !dates.to || dates.to < dates.from || dates.from > reportDay(new Date(), filter.timezone)) {
       setError('Укажите начальную и конечную даты. Начало должно быть не позже окончания и сегодняшнего дня.'); return;
     }
-    setError(''); onChange({ ...filter, ...dates, period: 'custom', step: 'auto' });
+    setError(''); onChange({ ...filter, ...dates, interval:undefined, period: 'custom', step: 'auto' });
   }
   const zones = [...new Set([filter.timezone, 'Europe/Moscow', 'UTC', 'Europe/Berlin', 'Asia/Almaty', 'Asia/Tashkent', 'Asia/Dubai', 'America/New_York'])];
   return <section className="space-y-4" aria-label="Период всех отчётов">
@@ -31,7 +31,7 @@ export function AnalyticsReportControls({ filter, onChange }: Props) {
       <div className="space-y-2 min-w-0 w-full"><span className="text-sm text-muted-foreground">Период отчёта</span>
         <div className="analytics-period-options" role="group" aria-label="Период">
           {Object.entries(REPORT_PERIODS).map(([value, label]) => <button key={value} type="button" aria-pressed={filter.period === value}
-            onClick={() => onChange({ ...filter, period: value as AnalyticsReportFilter['period'], step: 'auto' })}>{label}</button>)}
+            onClick={() => onChange({ ...filter, interval:undefined, period: value as AnalyticsReportFilter['period'], step: 'auto' })}>{label}</button>)}
         </div>
       </div>
     </div>

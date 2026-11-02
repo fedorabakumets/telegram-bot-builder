@@ -68,7 +68,7 @@ describe('Общий снимок аналитики', () => {
   it('разделяет людей, сообщения, callback и наблюдавшуюся переписку', async () => {
     const value = await snapshot();
     expect(value.current.audience).toEqual({ new_users: 2, restored_users: 1, first_history_status: 'partial', total_users: 4, active_users: 4, returning_users: 1, unknown_first_users: 1 });
-    expect(value.current.messages).toEqual({ incoming: 5, outgoing: 1, callbacks: 1, system: 1, total: 6 });
+    expect(value.current.messages).toMatchObject({ incoming: 5, outgoing: 1, callbacks: 1, historical_callbacks: 0, system: 1, total: 6 });
     expect(value.current.groups).toEqual({ active_groups: 1, participants: 1, directed_actions: 0 });
     expect(value.leaders.groups).toEqual([]);
     expect(value.leaders.groups_observed[0]).toMatchObject({ id: '-100', name: 'Чат проекта', messages: 1 });

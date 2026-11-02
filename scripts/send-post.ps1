@@ -1,4 +1,9 @@
-$token = "7713154819:AAFiw_jFMrgvmHfiHm_BjOrRSSXPcLun15c"
+<#
+.SYNOPSIS
+Отправляет подготовленный пост с токеном из переменной окружения.
+#>
+$token = $env:TELEGRAM_BOT_TOKEN
+if (-not $token) { throw 'Укажите TELEGRAM_BOT_TOKEN в переменных окружения.' }
 $chatId = "-1003811656637"
 
 $text = @"

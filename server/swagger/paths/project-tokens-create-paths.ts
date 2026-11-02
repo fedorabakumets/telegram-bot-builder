@@ -65,7 +65,7 @@ export function registerProjectTokensCreatePaths(
               id: 7,
               projectId: 42,
               name: "Основной",
-              token: "7123456789:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw",
+              token: "<TELEGRAM_BOT_TOKEN>",
               botUsername: "my_bot",
             },
           },

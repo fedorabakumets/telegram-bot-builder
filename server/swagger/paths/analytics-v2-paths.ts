@@ -28,7 +28,7 @@ export function registerAnalyticsV2Paths(registry: OpenAPIRegistry, security: Ar
     responses: { 200: { description: 'Согласованный снимок и полнота истории', content: { 'application/json': { schema: AnalyticsV2SnapshotSchema } } }, ...failures },
   });
   registry.registerPath({method:'post',path:`${base}/acquisition/budgets`,tags:['analytics-v2'],security,
-    summary:'Сохранить рекламный бюджет простой start-ссылки',description:'Атомарно создаёт источник, техническое размещение, публичную метку и дневной расход; существующая метка используется повторно без изменения прежних даты начала и пояса. Сумма — decimal-строка. link_, ref и ref_ запрещены. Конфликт маршрута или занятой ссылки даёт 409. Повторный POST добавляет отдельную финансовую запись, не является идемпотентным.',
+    summary:'Сохранить рекламный бюджет простой start-ссылки',description:'Атомарно создаёт источник, техническое размещение, публичную метку и дневной расход; существующая метка используется повторно без изменения прежних даты начала и пояса. Сумма — decimal-строка. Поддерживает фиксированный курс, дату курса, примечание и явное равномерное распределение untilDay с allocation=equal. link_, ref и ref_ запрещены. Конфликт маршрута или занятой ссылки даёт 409. Повторный POST добавляет отдельную финансовую запись, не является идемпотентным.',
     request:{params,body:{required:true,content:{'application/json':{schema:linkBudgetInput}}}},
     responses:{201:{description:'Сохранённый дневной расход',content:{'application/json':{schema:z.object({item:AcquisitionSchemas.expenses.item})}}},...failures},
   });

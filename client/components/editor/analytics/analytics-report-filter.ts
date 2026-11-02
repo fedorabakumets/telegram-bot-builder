@@ -6,6 +6,8 @@ const REPORT_STEPS: Record<string, number> = { '1m': 60000, '5m': 300000, '1h': 
 export interface AnalyticsReportFilter {
   /** Готовый период или календарный диапазон. */
   period: keyof typeof REPORT_PERIODS;
+  /** Точный выбранный промежуток графика; календарь заменяет его полными днями. */
+  interval?: { /** Начало UTC. */ from:string; /** Конец UTC, не включая. */ to:string };
   /** Первый календарный день. */
   from: string;
   /** Последний календарный день включительно. */
@@ -41,7 +43,11 @@ export function nextReportDay(day: string, offset = 1): string {
 export function reportParams(filter: AnalyticsReportFilter, tokenId?: number | null): URLSearchParams {
   const params = new URLSearchParams({ timezone: filter.timezone });
   if (tokenId != null) params.set('tokenId', String(tokenId));
-  if (filter.period === 'custom') {
+  if (filter.period === 'custom' && filter.interval) {
+    const start=Date.parse(filter.interval.from), end=Date.parse(filter.interval.to);
+    if (!Number.isFinite(start) || !Number.isFinite(end) || start>=end || end>Date.now()) throw new Error('Выберите корректный промежуток, который уже начался.');
+    params.set('from',new Date(start).toISOString()); params.set('to',new Date(end).toISOString());
+  } else if (filter.period === 'custom') {
     if (!filter.from || !filter.to || filter.to < filter.from) throw new Error('Дата окончания должна быть не раньше начала.');
     params.set('from', reportMidnight(filter.from, filter.timezone));
     params.set('to', new Date(Math.min(Date.now(), Date.parse(reportMidnight(nextReportDay(filter.to), filter.timezone)))).toISOString());
@@ -61,7 +67,7 @@ export function reportStepAvailable(filter: AnalyticsReportFilter, step: string)
   if (filter.period === 'all') return false;
   const windows: Record<string, number> = { '1h': 3600000, '3h': 10800000, '24h': 86400000, '7d': 604800000, '30d': 2592000000, '12w': 7257600000, '12m': 31536000000 };
   try {
-    const duration = filter.period === 'custom' ? Date.parse(reportMidnight(nextReportDay(filter.to), filter.timezone)) - Date.parse(reportMidnight(filter.from, filter.timezone)) : windows[filter.period];
+    const duration = filter.period === 'custom' && filter.interval ? Date.parse(filter.interval.to)-Date.parse(filter.interval.from) : filter.period === 'custom' ? Date.parse(reportMidnight(nextReportDay(filter.to), filter.timezone)) - Date.parse(reportMidnight(filter.from, filter.timezone)) : windows[filter.period];
     return Math.ceil(duration / REPORT_STEPS[step]) <= 500;
   } catch { return false; }
 }

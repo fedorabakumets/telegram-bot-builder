@@ -74,7 +74,7 @@ export const PublicBotTokenSchema = z
 export const FullBotTokenSchema = PublicBotTokenSchema.omit({ botId: true })
   .extend({
     /** Сырой Telegram bot token (секрет!) */
-    token: z.string().openapi({ example: "7123456789:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw" }),
+    token: z.string().openapi({ example: "<TELEGRAM_BOT_TOKEN>" }),
     /** Секрет webhook (может быть) */
     webhookSecretToken: z.string().nullable().optional(),
     /** API Hash (секрет) */
@@ -118,7 +118,7 @@ export const TokensFirstResponseSchema = z
     }),
     /** Сырой Telegram token или null */
     token: z.string().nullable().openapi({
-      example: "7123456789:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw",
+      example: "<TELEGRAM_BOT_TOKEN>",
       description: "RAW SECRET для .env. Не логировать. Cache-Control: no-store.",
     }),
   })
@@ -131,7 +131,7 @@ export const CreateBotTokenBodySchema = z
     name: z.string().min(1).openapi({ example: "Основной бот" }),
     /** Сырой Telegram token */
     token: z.string().min(1).openapi({
-      example: "7123456789:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw",
+      example: "<TELEGRAM_BOT_TOKEN>",
     }),
     /** Игнорируется — берётся из сессии/проекта */
     ownerId: z.number().nullable().optional(),

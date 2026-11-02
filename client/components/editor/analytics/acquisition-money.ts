@@ -6,7 +6,7 @@ export function acquisitionMoney(value: string | null, currency: string): string
   return `${whole.replace(/\B(?=(\d{3})+(?!\d))/g, ' ')}${fraction ? `,${fraction}` : ''} ${currency === 'RUB' ? '₽' : '$'}`;
 }
 /**
- * Делит сумму на целые копейки; остаток распределяется по первым дням.
+ * Делит сумму на целые копейки; остаток добавляется последнему дню, как при сохранении на сервере.
  * @param amount - Общая точная сумма.
  * @param from - Первый календарный день.
  * @param to - Последний календарный день включительно.
@@ -22,7 +22,7 @@ export function previewExpenseAllocation(amount: string, from: string, to: strin
   const cents = BigInt(whole) * 100n + BigInt(fraction.padEnd(2, '0'));
   const quotient = cents / BigInt(days), remainder = cents % BigInt(days);
   return Array.from({ length: days }, (_, index) => {
-    const part = quotient + (BigInt(index) < remainder ? 1n : 0n);
+    const part = quotient + (index === days - 1 ? remainder : 0n);
     return { day: new Date(start + index * 86400000).toISOString().slice(0, 10), amount: `${part / 100n}.${String(part % 100n).padStart(2, '0')}` };
   });
 }

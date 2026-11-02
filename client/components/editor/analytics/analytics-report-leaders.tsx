@@ -1,6 +1,7 @@
 /** @fileoverview Рейтинги пользователей и групп с прямым переходом к переписке из каждой строки. */
 import { useState, type ReactNode } from 'react';
 import type { AnalyticsV2Leader, AnalyticsV2Snapshot } from '@shared/analytics/v2';
+import {AnalyticsChoosePeriod} from './analytics-choose-period';
 import { AnalyticsChartState } from './analytics-chart-state';
 import { AnalyticsReportSummary } from './analytics-report-overview';
 import { AnalyticsReportChart } from './analytics-report-chart';
@@ -30,7 +31,7 @@ function Leaders({ title, items, group, observed, projectId, tokenId, contextLab
   }
   return <section className="analytics-card analytics-report-card border rounded-2xl"><header><h3 className="text-lg font-semibold">{title}</h3></header>
     {controls}
-    <p className="text-xs text-muted-foreground">{contextLabel}</p>
+    <div className="flex flex-wrap items-center justify-between gap-2"><p className="text-xs text-muted-foreground">{contextLabel}</p><AnalyticsChoosePeriod/></div>
     <p className="text-sm text-muted-foreground">{messageRanking ? 'Входящие сообщения, которые бот увидел в каждой группе за выбранный период. Нажатия кнопок и ответы бота не включены.' : observed ? 'Уникальные авторы групповых сообщений за выбранный период, включая обычную переписку. Это не общее число участников группы.' : group ? 'Уникальные люди, взаимодействовавшие с ботом в группе за период, включая проверенную старую историю.' : 'Направленные сообщения и настоящие нажатия кнопок за выбранный период.'}</p>
     {!items.length ? <AnalyticsChartState title={observed ? 'Пока нет авторов сообщений' : 'Пока нет действий'} description={observed ? 'В выбранном периоде бот не наблюдал групповых сообщений.' : 'Рейтинг появится после взаимодействий в выбранном периоде.'} /> : <ol className="space-y-2">{items.map((item, index) => <li key={item.id} className="flex flex-wrap items-center gap-2"><button type="button" aria-expanded={selected === item.id} onClick={() => setSelected(selected === item.id ? null : item.id)} className="min-w-0 flex-1 basis-48 p-3 rounded-lg text-left hover:bg-muted/50">
       <span className="flex gap-3"><span className="text-sm text-muted-foreground tabular-nums">{index + 1}</span><span className="min-w-0 flex-1 break-words text-sm">{item.name}</span><span className="text-sm font-semibold tabular-nums">{item.total.toLocaleString('ru-RU')}</span></span>

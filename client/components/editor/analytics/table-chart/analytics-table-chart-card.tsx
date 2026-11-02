@@ -2,6 +2,7 @@
  * @fileoverview Карточка графика по пользовательской таблице.
  * @module editor/analytics/table-chart/analytics-table-chart-card
  */
+import {AnalyticsChoosePeriod} from '../analytics-choose-period';
 import { AnalyticsChartState } from '../analytics-chart-state';
 import React, { useEffect, useState } from 'react';
 import { useTablesQuery, useColumnsQuery } from '@/components/editor/tables/hooks/use-tables-query';
@@ -88,7 +89,7 @@ export function AnalyticsTableChartCard({ projectId, range }: AnalyticsTableChar
             chartType={chartType} onChartTypeChange={setChartType} yIsNumeric={yIsNumeric}
           />
           <TableChartDateControl columns={columns} value={dateColumnId} onChange={setDateColumnId} enabled={!!range} />
-          {dateColumnId && range && <AnalyticsReportPeriod range={range} timezone={range.timezone ?? 'Europe/Moscow'} />}
+          {dateColumnId && range && <div className="flex flex-wrap items-center justify-between gap-2"><AnalyticsReportPeriod range={range} timezone={range.timezone ?? 'Europe/Moscow'} /><AnalyticsChoosePeriod/></div>}
           {dateColumnId && !range ? <AnalyticsChartState title="Ожидаем общий период" description="График появится после успешной загрузки периода отчёта." />
             : chartQuery.isError ? <AnalyticsChartState title="Не удалось построить график" description="Повторите загрузку или выберите другую таблицу." onRetry={() => void chartQuery.refetch()} />
             : chartQuery.isFetching && !matches ? <AnalyticsChartState loading />

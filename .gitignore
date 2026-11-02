@@ -43,6 +43,9 @@ bots/*
 
 # Environment variables
 .env
+# Локальные секреты развёртывания не должны попадать в историю репозитория.
+.env.railway
+vercel.env
 .env.local
 .env.development.local
 .env.test.local

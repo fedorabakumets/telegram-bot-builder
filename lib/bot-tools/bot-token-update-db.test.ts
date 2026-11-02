@@ -10,7 +10,7 @@ import { updateBotTokenInDb } from './bot-token-update-db.ts';
 describe('db_update_bot_token validation', () => {
   it('переиспользует isTelegramBotTokenFormat', () => {
     expect(
-      isTelegramBotTokenFormat('7123456789:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsawX'),
+      isTelegramBotTokenFormat(String(123456789) + ':' + 'a'.repeat(35)),
     ).toBe(true);
     expect(isTelegramBotTokenFormat('bad')).toBe(false);
   });

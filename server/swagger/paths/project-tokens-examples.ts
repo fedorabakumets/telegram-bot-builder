@@ -48,7 +48,7 @@ export const TOKEN_LIST_ITEM_EXAMPLE = {
 export const TOKENS_FIRST_EXAMPLE = {
   hasToken: true,
   id: 7,
-  token: "7123456789:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw",
+  token: "<TELEGRAM_BOT_TOKEN>",
 };
 
 /** Parse success */

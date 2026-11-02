@@ -6,14 +6,26 @@
  */
 export function v2ScopeSql(entriesOnly = false): string {
   return `WITH scoped AS (
-    SELECT * FROM analytics_events_v2 WHERE project_id=$1 AND ($2::integer IS NULL OR token_id=$2) AND occurred_at<$4::timestamptz
+    SELECT e.*, (e.directed OR (e.kind='message_in' AND e.chat_type IN ('group','supergroup') AND EXISTS (
+      SELECT 1 FROM analytics_audience_evidence_v2 a WHERE a.project_id=e.project_id AND (a.token_id=e.token_id OR $2::integer IS NULL)
+        AND a.reason='addressed_command' AND a.message_event_key=e.event_key))) AS confirmed_directed
+    FROM analytics_events_v2 e WHERE e.project_id=$1 AND ($2::integer IS NULL OR e.token_id=$2) AND e.occurred_at<$4::timestamptz
       ${entriesOnly ? "AND directed AND metadata->>'entry'='true'" : ''}
   ), dedup AS (
     SELECT DISTINCT ON (CASE WHEN $2::integer IS NULL AND kind='message_in' AND chat_type IN ('group','supergroup')
       THEN 'group:'||COALESCE(chat_id,'')||':'||event_key ELSE 'bot:'||token_id||':'||event_key END) *
     FROM scoped ORDER BY CASE WHEN $2::integer IS NULL AND kind='message_in' AND chat_type IN ('group','supergroup')
-      THEN 'group:'||COALESCE(chat_id,'')||':'||event_key ELSE 'bot:'||token_id||':'||event_key END,directed DESC,id
+      THEN 'group:'||COALESCE(chat_id,'')||':'||event_key ELSE 'bot:'||token_id||':'||event_key END,confirmed_directed DESC,directed DESC,id
   ), events AS (SELECT * FROM dedup WHERE occurred_at >= $3::timestamptz),
+  addressed_only AS (
+    SELECT DISTINCT ON (CASE WHEN $2::integer IS NULL THEN a.message_event_key ELSE a.token_id::text||':'||a.message_event_key END)
+      a.observed_at FROM analytics_audience_evidence_v2 a
+    WHERE a.project_id=$1 AND ($2::integer IS NULL OR a.token_id=$2) AND a.reason='addressed_command'
+      AND a.message_event_key IS NOT NULL AND a.observed_at >= $3::timestamptz AND a.observed_at<$4::timestamptz
+      AND NOT EXISTS (SELECT 1 FROM scoped s WHERE s.kind='message_in' AND s.event_key=a.message_event_key
+        AND (s.token_id=a.token_id OR $2::integer IS NULL))
+    ORDER BY CASE WHEN $2::integer IS NULL THEN a.message_event_key ELSE a.token_id::text||':'||a.message_event_key END,a.id
+  ),
   contacts AS (
     SELECT user_id,occurred_at FROM events WHERE directed
     UNION ALL SELECT user_id,observed_at FROM analytics_audience_evidence_v2

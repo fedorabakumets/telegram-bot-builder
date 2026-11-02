@@ -117,7 +117,7 @@ curl -s -X POST http://localhost:5000/api/projects/42/tokens -b cookies.txt \
   "id": 7,
   "projectId": 42,
   "name": "Основной",
-  "token": "7123456789:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw",
+  "token": "<TELEGRAM_BOT_TOKEN>",
   "botUsername": "my_bot"
 }
 ```
@@ -281,7 +281,7 @@ curl -s http://localhost:5000/api/projects/42/tokens/first -b cookies.txt
 {
   "hasToken": true,
   "id": 7,
-  "token": "7123456789:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw"
+  "token": "<TELEGRAM_BOT_TOKEN>"
 }
 ```
 

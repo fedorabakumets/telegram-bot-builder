@@ -3,6 +3,10 @@ import './common';
 import { z } from 'zod';
 /** Неотрицательный счётчик. */
 const count = z.number().int().nonnegative();
+/** Счётчики достоверно известного типа чата. */
+const messageScope = z.object({ incoming: count, incoming_to_bot: count, outgoing: count, callbacks: count, historical_callbacks: count });
+/** Известные типы чата; остальные входят только в общий итог. */
+const chatScopes = z.object({ private: messageScope, group: messageScope });
 /** Итоги окна; только total_users относится ко всему времени. */
 export const AnalyticsV2SummarySchema = z.object({
   /** Подтверждённая аудитория. */ audience: z.object({
@@ -17,8 +21,11 @@ export const AnalyticsV2SummarySchema = z.object({
   }),
   /** Сообщения и отдельные события. */ messages: z.object({
     /** Входящие без callback. */ incoming: count,
+    /** Личные и подтверждённые направленные обращения в группе. */ incoming_to_bot: count,
     /** Успешные ответы бота. */ outgoing: count,
     /** Реальные нажатия. */ callbacks: count.describe('Физические callback с Telegram ID; старые свидетельства без ID не увеличивают счётчик.'),
+    /** Записи проверенной старой истории. */ historical_callbacks: count.describe('Аудированные записи нажатий без Telegram ID; возможны повторы.'),
+    /** Счётчики по достоверному типу чата. */ chat_scopes: chatScopes,
     /** События состояния. */ system: count,
     /** Входящие плюс исходящие. */ total: count,
   }),
@@ -39,8 +46,11 @@ export const AnalyticsV2PointSchema = z.object({
   /** Уникальные активные. */ active_users: count,
   /** Вернувшиеся. */ returning_users: count,
   /** Входящие. */ incoming: count,
+  /** Личные и подтверждённые направленные обращения в группе. */ incoming_to_bot: count,
   /** Исходящие. */ outgoing: count,
   /** Нажатия. */ callbacks: count,
+  /** Сохранённые старые нажатия без Telegram ID. */ historical_callbacks: count.describe('Аудированные записи нажатий без Telegram ID; возможны повторы.'),
+  /** Счётчики по достоверному типу чата. */ chat_scopes: chatScopes,
   /** События состояния. */ system: count,
   /** Группы с событиями внутри слота. */ groups_active: count,
   /** Уникальные авторы наблюдаемых групповых сообщений. */ group_participants: count,

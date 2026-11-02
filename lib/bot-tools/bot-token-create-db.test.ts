@@ -51,7 +51,7 @@ describe('addBotTokenInDb', () => {
 describe('isTelegramBotTokenFormat', () => {
   it('принимает типичный токен BotFather', () => {
     expect(
-      isTelegramBotTokenFormat('7123456789:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsawX'),
+      isTelegramBotTokenFormat(String(123456789) + ':' + 'a'.repeat(35)),
     ).toBe(true);
   });
 

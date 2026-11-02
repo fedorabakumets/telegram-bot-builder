@@ -1,13 +1,19 @@
 /** @fileoverview Общие фильтры, сводки и формы аналитики с ровной адаптивной сеткой. */
 .analytics-native-field { min-width: 0; width: 100%; min-height: 40px; padding: 8px 12px; background: var(--background); color: var(--foreground); border: 1px solid var(--border); border-radius: 8px; font-size: 14px; line-height: 20px; }
 .analytics-native-field:focus-visible, .analytics-page input:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+/** Клик по SVG-сектору не рисует системную чёрную рамку; клавиатурный фокус остаётся заметным. */
+.analytics-donut-content :is(.recharts-pie, .recharts-pie-sector, .recharts-sector):focus:not(:focus-visible) { outline: none; }
+.analytics-donut-content :is(.recharts-pie, .recharts-pie-sector, .recharts-sector):focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+/** При нажатии мышью график не получает белую рамку, клавиатурный фокус остаётся видимым. */
+.analytics-report-card :is(.recharts-wrapper, .recharts-surface):focus:not(:focus-visible) { outline: none; }
+.analytics-report-card :is(.recharts-wrapper, .recharts-surface):focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 .analytics-report-filters { padding: 16px; border: 1px solid var(--border); border-radius: 16px; }
 .analytics-report-filters .analytics-segments button[aria-pressed='true'] { background: var(--muted); color: var(--foreground); box-shadow: inset 0 0 0 1px var(--border); font-weight: 600; }
 .analytics-report-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
 .analytics-report-summary dt { min-height: 40px; font-size: 12px; line-height: 16px; color: var(--muted-foreground); }
 .analytics-report-summary dd { font-size: 20px; line-height: 28px; font-weight: 600; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .analytics-report-card { display: flex; flex-direction: column; gap: 16px; }
-.analytics-report-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
+.analytics-report-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: stretch; }
 .analytics-report-card > header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; }
 .analytics-report-value { font-size: 36px; line-height: 40px; font-weight: 600; font-variant-numeric: tabular-nums; }
 .analytics-report-details { padding: 16px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; line-height: 20px; }
@@ -27,3 +33,26 @@
 .analytics-report-coverage { border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; font-size: 14px; line-height: 20px; color: var(--muted-foreground); }
 @container (min-width: 960px) { .analytics-report-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @container (max-width: 479px) { .analytics-report-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } .analytics-report-value { font-size: 30px; line-height: 36px; } }
+
+/** Парные карточки резервируют две строки описания и прижимают справку к общему нижнему краю. */
+.analytics-page { container-name: analytics; }
+@container analytics (min-width: 960px) {
+  .analytics-report-grid > .analytics-report-card { height: 100%; }
+  .analytics-report-grid > .analytics-report-card > div:nth-child(2) { min-height: 80px; }
+  .analytics-report-grid > .analytics-report-card > p:nth-child(5) { min-height: 32px; }
+  .analytics-report-grid > .analytics-report-card > :last-child { margin-top: auto; }
+  /** Раскрытая справка не растягивает соседнюю карточку и не отодвигает её кнопку вниз. */
+  .analytics-report-grid:has(> .analytics-report-card > [data-state='open']:last-child) { align-items: start; }
+  .analytics-report-grid:has(> .analytics-report-card > [data-state='open']:last-child) > .analytics-report-card { height: auto; }
+  .analytics-report-grid:has(> .analytics-report-card > [data-state='open']:last-child) > .analytics-report-card > :last-child { margin-top: 0; }
+}
+
+/** Бюджет использует читаемые строки полей вместо длинной полосы из шести колонок. */
+.analytics-budget-grid { grid-template-columns: minmax(0, 1fr); }
+@container (min-width: 480px) { .analytics-budget-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@container (min-width: 720px) { .analytics-budget-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+/** Компактная тёмная подсказка переносит длинные подписи и не разрастается из-за нулевых рядов. */
+.analytics-compact-tooltip { width: max-content; max-width: min(260px, calc(100cqw - 32px)); padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; background: #09090b; color: #fafafa; font-size: 11px; line-height: 16px; display: grid; gap: 4px; overflow-wrap: anywhere; }
+.analytics-compact-tooltip-period { font-weight: 600; }
+.analytics-compact-tooltip-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.analytics-compact-tooltip-row strong { flex-shrink: 0; font-variant-numeric: tabular-nums; }

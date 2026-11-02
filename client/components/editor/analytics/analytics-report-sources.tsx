@@ -24,6 +24,6 @@ export function AnalyticsReportSources({ snapshot }: { /** Общий снимо
         emptyDescription="В выбранном периоде первых сохранённых взаимодействий нет. Повторные обращения учитываются в активности." />
       {snapshot.sources.length > top.length && <p className="text-sm text-muted-foreground">На графике {top.length} крупнейших источников. Полное распределение доступно рядом.</p>}
     </section>
-    <AnalyticsReportDistribution title="Распределение по источникам" subtitle="Первые сохранённые взаимодействия за выбранный период" contextLabel={reportRangeLabel(snapshot.range)} items={snapshot.sources.map(item => ({ id: item.id, label: item.label, count: item.new_users + (item.restored_users ?? 0), details: [['Вернулись по ссылке', item.returning_users], ['Запуски по ссылке', item.starts]] }))} />
+    <AnalyticsReportDistribution periodSelectable title="Распределение по источникам" subtitle="Первые сохранённые взаимодействия за выбранный период" footnote="Доли рассчитаны по первым сохранённым взаимодействиям за выбранный период. Повторные входы учитываются отдельно." contextLabel={reportRangeLabel(snapshot.range)} items={snapshot.sources.map(item => ({ id: item.id, label: item.label, count: item.new_users + (item.restored_users ?? 0), details: [['Вернулись по ссылке', item.returning_users], ['Запуски по ссылке', item.starts]] }))} />
   </div>;
 }

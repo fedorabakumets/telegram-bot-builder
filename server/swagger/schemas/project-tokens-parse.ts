@@ -11,7 +11,7 @@ export const ParseTokenRequestSchema = z
   .object({
     /** Сырой Telegram bot token */
     token: z.string().min(1).openapi({
-      example: "7123456789:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw",
+      example: "<TELEGRAM_BOT_TOKEN>",
       description: "Полный bot token от @BotFather",
     }),
   })

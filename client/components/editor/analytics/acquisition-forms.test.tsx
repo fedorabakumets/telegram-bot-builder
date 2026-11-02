@@ -6,7 +6,7 @@ import { AcquisitionExpenseForm } from './acquisition-expense-form';
 import type { AcquisitionCatalog, AcquisitionExpense } from './acquisition-types';
 /** Записи мутаций для проверки контракта формы. */
 const mutation = vi.hoisted(() => ({ mutateAsync: vi.fn(), isPending: false, isError: false, error: null }));
-vi.mock('./use-acquisition', () => ({ useAcquisitionMutation: () => mutation }));
+vi.mock('./use-acquisition', () => ({ useAcquisitionMutation: () => mutation, useAcquisitionReport: () => ({data:{rows:[]}}) }));
 /** Справочник с единственным тестовым размещением. */
 const catalog: AcquisitionCatalog = { sources: [], links: [], expenses: [], placements: [{ id: 1, sourceId: 2, tokenId: 3, name: 'Ноябрьская публикация', startsOn: null, endsOn: null, timezone: 'Europe/Moscow', archivedAt: null }] };
 beforeEach(() => { mutation.mutateAsync.mockReset(); mutation.mutateAsync.mockResolvedValue({ items: [] }); });
@@ -36,4 +36,14 @@ it('редактирование расхода не отправляет пол
   const call = mutation.mutateAsync.mock.calls[0][0];
   expect(call.id).toBe(9); expect(call.body).toMatchObject({ amount: '35.00', exchangeRateDate: '2026-10-31' });
   expect(call.body).not.toHaveProperty('allocation'); expect(call.body).not.toHaveProperty('placementId');
+});
+
+it('позволяет указать будущую метку без ранее оплаченных источников',async()=>{
+  render(<AcquisitionExpenseForm projectId={12} catalog={{sources:[],links:[],expenses:[],placements:[]}} tokens={[{id:3,name:'Тест',botUsername:'test_bot'} as any]} tokenId={3} timezone="Europe/Moscow" onSaved={()=>{}}/>);
+  fireEvent.change(screen.getByLabelText('Источник · обязательно'),{target:{value:'new'}});
+  fireEvent.change(screen.getByLabelText('Метка нового источника'),{target:{value:'future_ad'}});
+  fireEvent.change(screen.getByLabelText('Сумма рекламного бюджета · обязательно'),{target:{value:'100,00'}});
+  fireEvent.click(screen.getByRole('button',{name:'Сохранить рекламный бюджет'}));
+  await waitFor(()=>expect(mutation.mutateAsync).toHaveBeenCalledOnce());
+  expect(mutation.mutateAsync.mock.calls[0][0]).toMatchObject({resource:'budgets',body:{tokenId:3,marker:'future_ad',amount:'100.00',currency:'RUB'}});
 });

@@ -9,6 +9,7 @@ import { AcquisitionLinkForm } from './acquisition-link-form';
 import { AcquisitionExpenseForm } from './acquisition-expense-form';
 import { AcquisitionReportTable } from './acquisition-report-table';
 import { AcquisitionCatalog } from './acquisition-catalog';
+import {budgetMarker,type BudgetTarget} from './acquisition-budget-source';
 import type { AcquisitionExpense } from './acquisition-types';
 /** Собирает рекламную область и передаёт выбор календарного дня общим фильтрам. @param props - Область, боты, снимок и выбор дня. @returns Отчёт, каталог и формы ссылок и расходов. */
 export function AnalyticsAcquisitionSection({ projectId, tokenId, tokens, timezone, snapshot }: {
@@ -23,17 +24,18 @@ export function AnalyticsAcquisitionSection({ projectId, tokenId, tokens, timezo
   /** Восстанавливает открытый раздел рекламы вместе с позицией страницы. */
   useEffect(() => { try { localStorage.setItem(`analytics:acquisition-view:${projectId}`, view); } catch { /* Сохранение необязательно для работы вкладки. */ } }, [projectId, view]);
   const [expense, setExpense] = useState<AcquisitionExpense | undefined>();
+  const [target,setTarget]=useState<BudgetTarget|undefined>();
   const [saved, setSaved] = useState(false);
   return <section className="analytics-card analytics-report-card border rounded-2xl">
     <header><div><h3 className="text-lg font-semibold">Источники и реклама</h3><p className="text-sm text-muted-foreground">Свяжите рекламную публикацию, новых пользователей и рекламный бюджет.</p></div></header>
-    <div className="flex flex-wrap gap-2" role="group" aria-label="Работа с рекламой">{[['report', 'Результаты'], ['link', 'Создать ссылку'], ['expense', 'Добавить рекламный бюджет'], ['catalog', 'Ссылки и бюджеты']].map(([key, label]) => <Button key={key} variant="outline" aria-pressed={view === key} onClick={() => { setView(key as typeof view); setSaved(false); if (key === 'expense') setExpense(undefined); }}>{label}</Button>)}</div>
+    <div className="flex flex-wrap gap-2" role="group" aria-label="Работа с рекламой">{[['report', 'Результаты'], ['link', 'Создать ссылку'], ['expense', 'Добавить рекламный бюджет'], ['catalog', 'Ссылки и бюджеты']].map(([key, label]) => <Button key={key} variant="outline" aria-pressed={view === key} onClick={() => { setView(key as typeof view); setSaved(false); if (key === 'expense') {setExpense(undefined);setTarget(undefined);} }}>{label}</Button>)}</div>
     {saved && <p role="status" className="text-sm">Рекламный бюджет сохранён. Отчёт обновлён.</p>}
     {catalog.isError ? <AnalyticsChartState title="Не удалось загрузить источники" description={catalog.error.message} onRetry={() => void catalog.refetch()} /> : !catalog.data ? <AnalyticsChartState loading /> : <>
-      {view === 'report' && <AcquisitionReportTable tokens={tokens} projectId={projectId} tokenId={tokenId} snapshot={snapshot} />}
+      {view === 'report' && <AcquisitionReportTable tokens={tokens} projectId={projectId} tokenId={tokenId} snapshot={snapshot} onAddBudget={(row,currency)=>{setExpense(undefined);setTarget({placementId:row.placementId,tokenId:row.tokenId,marker:budgetMarker(row.sourceKey),currency});setView('expense');setSaved(false);}} />}
       {/** Смена области сбрасывает выбранного в форме бота и неподтверждённый бюджет старой ссылки. */}
       {view === 'link' && <AcquisitionLinkForm key={`link:${projectId}:${tokenId ?? 'all'}`} projectId={projectId} timezone={timezone} tokenId={tokenId} tokens={tokens} />}
-      {view === 'expense' && <AcquisitionExpenseForm key={expense?.id ?? 'new'} projectId={projectId} catalog={catalog.data} timezone={timezone} expense={expense} onSaved={() => { setView('report'); setExpense(undefined); setSaved(true); }} />}
-      {view === 'catalog' && <AcquisitionCatalog projectId={projectId} catalog={catalog.data} onEditExpense={item => { setExpense(item); setView('expense'); }} />}
+      {view === 'expense' && <AcquisitionExpenseForm key={expense?.id ?? `${tokenId ?? 'all'}:${JSON.stringify(target) ?? 'new'}`} tokens={tokens} tokenId={tokenId} target={target} projectId={projectId} catalog={catalog.data} timezone={timezone} expense={expense} onSaved={() => { setView('report'); setExpense(undefined); setSaved(true); }} />}
+      {view === 'catalog' && <AcquisitionCatalog projectId={projectId} catalog={catalog.data} onEditExpense={item => { setTarget(undefined);setExpense(item); setView('expense'); }} />}
     </>}
   </section>;
 }
