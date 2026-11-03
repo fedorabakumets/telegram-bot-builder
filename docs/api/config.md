@@ -1,6 +1,6 @@
 # config
 
-Эндпоинтов: **1**
+Эндпоинтов: **2**
 
 ### `GET` /api/config
 
@@ -25,6 +25,8 @@ Bootstrap экрана входа Studio
 curl -s http://localhost:5000/api/config
 ```
 
+**Operation ID:** `get_api_config_a2de2395f9366c28`
+
 #### Ответы
 
 | Код | Описание |
@@ -41,3 +43,17 @@ curl -s http://localhost:5000/api/config
   "apiBaseUrl": "https://example.com"
 }
 ```
+
+### `GET` /api/disabled-node-types
+
+Типы блоков, отключённые в редакторе
+
+**Авторизация:** Публичный
+
+**Operation ID:** `get_api_disabled_node_types_6db71df8b160c814`
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Список типов |

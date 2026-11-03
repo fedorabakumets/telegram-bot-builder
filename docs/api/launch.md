@@ -20,6 +20,8 @@
 curl -s http://localhost:5000/api/launch/15/logs -b cookies.txt
 ```
 
+**Operation ID:** `get_api_launch_launchId_logs_a4180457e6aba55a`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |

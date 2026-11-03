@@ -7,6 +7,7 @@ import { saveCellEdits } from '../api/cell-edits-api';
 import type { TableCellEdit } from '@shared/table-cell-edit';
 import { useState, useCallback, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTablesLive } from './use-tables-live';
 import { useTablesQuery, useColumnsQuery, useRowsQuery, tableKeys } from './use-tables-query';
 import { useTableStructure } from './use-table-structure';
 import { useTableImports } from './use-table-imports';
@@ -20,6 +21,7 @@ import type { BotTable, TableColumn, TableRow } from '../types';
  * @returns Состояние и методы управления таблицами
  */
 export function useTablesState(projectId: number, selectedTokenId?: number | null) {
+  useTablesLive(projectId);
   const queryClient = useQueryClient();
 
   /** Системные (виртуальные) таблицы из API пользователей */

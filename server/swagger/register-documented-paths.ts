@@ -5,6 +5,17 @@
 
 import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import { registerAnalyticsV2Paths } from './paths/analytics-v2-paths';
+import { registerProjectTablesSettingsPaths } from './paths/project-tables-settings-paths';
+import { registerProjectTablesExtraReadPaths } from './paths/project-tables-extra-read-paths';
+import { registerProjectTablesExtraWritePaths } from './paths/project-tables-extra-write-paths';
+import { registerProjectTablesImportPaths } from './paths/project-tables-import-paths';
+import { registerAnalyticsRangePaths } from './paths/analytics-range-paths';
+import { registerChatAccessJobsPaths } from './paths/chat-access-jobs-paths';
+import { registerAdditionalRuntimePaths } from './paths/additional-runtime-paths';
+import { registerGroupsAnalyticsPaths } from './paths/groups-analytics-paths';
+import { registerMediaS3ProxyPaths } from './paths/media-s3-proxy-paths';
+import { registerUserSettingsReadPaths } from './paths/user-settings-read-paths';
+import { applyDurableTableContracts } from '../../lib/api-docs/durable-table-contracts';
 import "./schemas/common";
 import { registerAgentAutoAuthPaths } from "./paths/agent-auto-auth-paths";
 import { registerAgentTokenPaths } from "./paths/agent-token-paths";
@@ -248,3 +259,17 @@ registerProjectBroadcastCampaignsMutatePaths(documentedRegistry, cookieSecurity)
 /** Буквальный поиск сохранённых сообщений диалогов. */
 registerDialogMessageSearchPaths(documentedRegistry, cookieSecurity);
 registerAnalyticsV2Paths(documentedRegistry, cookieSecurity);
+/** Контракты новых операций используют те же валидаторы, что HTTP. */
+registerProjectTablesSettingsPaths(documentedRegistry, cookieSecurity);
+/** Явные контракты дополнительных серверных операций таблиц. */
+registerProjectTablesExtraReadPaths(documentedRegistry, cookieSecurity);
+registerProjectTablesExtraWritePaths(documentedRegistry, cookieSecurity);
+registerProjectTablesImportPaths(documentedRegistry, cookieSecurity);
+registerAnalyticsRangePaths(documentedRegistry, cookieSecurity);
+registerChatAccessJobsPaths(documentedRegistry, cookieSecurity);
+registerAdditionalRuntimePaths(documentedRegistry, cookieSecurity);
+registerGroupsAnalyticsPaths(documentedRegistry, cookieSecurity);
+registerMediaS3ProxyPaths(documentedRegistry, cookieSecurity);
+registerUserSettingsReadPaths(documentedRegistry, cookieSecurity);
+/** Общий дополнительный контракт повторяемых POST без изменения прежних HTTP-форматов. */
+applyDurableTableContracts(documentedRegistry);

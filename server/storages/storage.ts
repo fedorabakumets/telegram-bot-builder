@@ -93,9 +93,10 @@ export interface IStorage {
    * Обновить проект бота
    * @param id - ID проекта
    * @param project - Данные для обновления
+   * @param expectedRevision - Ревизия исходного снимка для защиты записи
    * @returns Обновленный проект бота или undefined, если не найден
    */
-  updateBotProject(id: number, project: StorageBotProjectUpdate): Promise<BotProject | undefined>;
+  updateBotProject(id: number, project: StorageBotProjectUpdate, expectedRevision?: number): Promise<BotProject | undefined>;
 
   /**
    * Переупорядочивает проекты по переданному массиву ID.

@@ -31,9 +31,12 @@ export async function deleteProjectTokenHandler(req: Request, res: Response): Pr
     }
 
     try {
-      await stopBot(projectId, tokenId);
-    } catch (stopError) {
-      console.warn(`[DeleteToken] Не удалось остановить бота ${tokenId}:`, stopError);
+      const stopped = await stopBot(projectId, tokenId);
+      if (!stopped.success) {
+        res.status(409).json({ message: 'Остановка не подтверждена; токен не удалён', outcome: 'unknown', sideEffects: { runtimeApply: 'unknown' } }); return;
+      }
+    } catch {
+      res.status(409).json({ message: 'Остановка не подтверждена; токен не удалён', outcome: 'unknown' }); return;
     }
 
     const success = await storage.deleteBotToken(tokenId);
@@ -50,7 +53,7 @@ export async function deleteProjectTokenHandler(req: Request, res: Response): Pr
       timestamp: new Date().toISOString(),
     }).catch((err) => console.error('[DeleteToken] broadcastProjectEvent:', err));
 
-    res.json({ message: 'Token deleted successfully' });
+    res.json({ message: 'Token deleted successfully', effect: 'application', outcome: 'saved', persistence: { confirmed: true, method: 'returning', projectId, tokenId }, sideEffects: { runtimeApply: 'stopped' } });
   } catch (error) {
     console.error('[DeleteToken] Ошибка удаления токена проекта:', error);
     res.status(500).json({ message: 'Не удалось удалить токен' });

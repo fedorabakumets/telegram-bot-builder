@@ -7,12 +7,14 @@
 import 'dotenv/config';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { createBotcraftMcpServer } from '../../lib/bot-tools/mcp-register-tools.ts';
+import { resolveMcpProfile } from '../../lib/bot-tools/mcp-profile.ts';
 
 /**
  * Запускает MCP-сервер через stdio (с файловыми load/save)
  */
 async function main(): Promise<void> {
-  const server = createBotcraftMcpServer({ enableFileTools: true });
+  /** Выбирает компактный каталог только при явной настройке окружения. */
+  const server = createBotcraftMcpServer({ enableFileTools: true, profile: resolveMcpProfile() });
   const transport = new StdioServerTransport();
   await server.connect(transport);
 }

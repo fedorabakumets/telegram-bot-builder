@@ -5,6 +5,8 @@
 
 import "./common";
 import { z } from "zod";
+import { tableOperationsSchema } from '../../../shared/table-ops-schema';
+import { BotTableRowSchema } from './project-tables-rows';
 
 /** Условие фильтра строк */
 export const TableRowFilterSchema = z.object({
@@ -36,7 +38,7 @@ export const QueryTableRowsBodySchema = z.object({
 /** Страница строк */
 export const QueryTableRowsResultSchema = z.object({
   /** Строки страницы */
-  rows: z.array(z.record(z.string(), z.unknown())),
+  rows: z.array(BotTableRowSchema),
   /** Сколько всего подошло */
   total: z.number().int(),
   /** Предел */
@@ -56,7 +58,7 @@ export const ApplyTableOpsBodySchema = z.object({
   /** Нужен, если среди операций есть удаление */
   confirm: z.boolean().optional(),
   /** До 50 операций */
-  ops: z.array(z.record(z.string(), z.unknown())).min(1).max(50),
+  ops: tableOperationsSchema,
 }).openapi("ApplyTableOpsBody");
 
 /** Ответ пакета при ошибке */
@@ -64,5 +66,5 @@ export const ApplyTableOpsErrorSchema = z.object({
   /** Текст */
   message: z.string(),
   /** Индекс операции, пакет откатан */
-  failed_op_index: z.number().int(),
+  failed_op_index: z.number().int().optional(),
 }).openapi("ApplyTableOpsError");

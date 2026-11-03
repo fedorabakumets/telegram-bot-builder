@@ -6,6 +6,8 @@
 import { cachedOps } from '../../database/db-cache';
 import { syncTableToScenario } from "../../services/content-table";
 import { CONTENT_TABLE_NAME } from "../../database/bot-tables/limits";
+import { broadcastProjectEvent } from '../../terminal/broadcastProjectEvent';
+import { broadcastContentSnapshot } from './broadcast-content-snapshot';
 
 /**
  * Синхронизирует изменённые строки _content и публикует одно событие
@@ -30,6 +32,9 @@ export async function notifyTableChange(
         console.error("[tables] синхронизация _content:", error);
       }
     }
+    /** Потеря live-доставки не отменяет сохранённые ячейки; ревизия защищает от позднего снимка. */
+    try { await broadcastContentSnapshot(projectId); }
+    catch (error) { console.error('[tables] доставка сценария:', error); }
   }
   try {
     const { getRedisPublisher } = await import("../../redis/redisClient");
@@ -38,4 +43,9 @@ export async function notifyTableChange(
   } catch {
     /* уведомление не должно ломать уже сохранённый ответ */
   }
+  /** Доставка интерфейсу отделена от Python reload и не отменяет уже сделанный COMMIT. */
+  try {
+    await broadcastProjectEvent(projectId, { type: 'table-updated', projectId,
+      data: { tableId }, timestamp: new Date().toISOString() });
+  } catch { /* Интерфейс перечитает данные при восстановлении соединения. */ }
 }

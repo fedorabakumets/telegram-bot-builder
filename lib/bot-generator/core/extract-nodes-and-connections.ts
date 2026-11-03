@@ -8,6 +8,7 @@
 
 import { BotData, BotDataWithSheets, Node } from '@shared/schema';
 import { migrateAnimationNodesToMedia } from './migrate-animation-to-media';
+import { hasActiveInput } from '@shared/active-input';
 
 type GraphConnection = {
   id: string;
@@ -102,11 +103,14 @@ function buildConnectionKey(connection: Pick<GraphConnection, 'source' | 'target
   ].join('::');
 }
 
-function mergeConnections(primary: GraphConnection[], fallback: GraphConnection[]): GraphConnection[] {
+/** Объединяет связи, не восстанавливая сохранённое ребро выключенного ввода. */
+function mergeConnections(primary: GraphConnection[], fallback: GraphConnection[], nodes: Node[]): GraphConnection[] {
   const merged: GraphConnection[] = [];
   const seen = new Set<string>();
 
   for (const connection of [...primary, ...fallback]) {
+    const source = nodes.find(node => node.id === connection.source);
+    if (connection.sourceHandle === 'input-target' && source && !hasActiveInput(source)) continue;
     const key = buildConnectionKey(connection);
     if (seen.has(key)) {
       continue;
@@ -155,7 +159,8 @@ function synthesizeConnectionsFromNodes(nodes: Node[]): GraphConnection[] {
     if (!data) continue;
 
     pushConnection(node.id, data.autoTransitionTo, { sourceHandle: 'auto-transition' });
-    pushConnection(node.id, data.inputTargetNodeId, { sourceHandle: 'input-target' });
+    /** Оставшаяся ссылка выключенного ввода не создаёт исполняемое ребро. */
+    if (hasActiveInput(node)) pushConnection(node.id, data.inputTargetNodeId, { sourceHandle: 'input-target' });
     pushConnection(node.id, data.keyboardNodeId, { sourceHandle: 'keyboard-link' });
     pushConnection(node.id, data.refundEmptyTarget, { sourceHandle: 'refund-empty' });
     pushConnection(node.id, data.refundNotFoundTarget, { sourceHandle: 'refund-not-found' });
@@ -230,7 +235,7 @@ export function extractNodesAndConnections(botData: BotData | BotDataWithSheets)
     const synthesizedConnections = synthesizeConnectionsFromNodes(allNodes);
     return {
       nodes: allNodes,
-      connections: mergeConnections(legacyConnections, synthesizedConnections),
+      connections: mergeConnections(legacyConnections, synthesizedConnections, allNodes),
     };
   }
 
@@ -242,6 +247,6 @@ export function extractNodesAndConnections(botData: BotData | BotDataWithSheets)
 
   return {
     nodes: transformedNodes,
-    connections: mergeConnections(legacyConnections, synthesizedConnections),
+    connections: mergeConnections(legacyConnections, synthesizedConnections, transformedNodes),
   };
 }

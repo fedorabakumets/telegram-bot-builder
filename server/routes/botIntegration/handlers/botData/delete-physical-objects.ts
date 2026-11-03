@@ -50,26 +50,26 @@ export function resolveStorageKey(filePath: string): string {
  * бэкенда по `storageConfigId` (Req 10.4). Отсутствие объекта игнорируется
  * (идемпотентность); прочие ошибки логируются и не прерывают цикл.
  * @param rows - Записи медиафайлов (нужны `filePath` и `storageConfigId`)
+ * @returns Отдельные счётчики удаления, отсутствия и ошибок без секретов
  */
 export async function deleteUploadedPhysicalObjects(
   rows: DeletableMediaRow[],
-): Promise<void> {
-  if (rows.length === 0) return;
-
-  const registry = await ensureStorageRegistryLoaded();
-
+): Promise<{ deleted: number; missing: number; failed: number; untracked: number }> {
+  const result = { deleted: 0, missing: 0, failed: 0, untracked: 0 };
+  if (!rows.length) return result;
+  let registry: Awaited<ReturnType<typeof ensureStorageRegistryLoaded>>;
+  try { registry = await ensureStorageRegistryLoaded(); }
+  catch { return { ...result, failed: rows.length }; }
   for (const row of rows) {
-    if (!row.filePath) continue;
-    const backend = registry.resolveBackend(row.storageConfigId);
+    if (!row.filePath) { result.untracked++; continue; }
     try {
-      await backend.delete(resolveStorageKey(row.filePath));
+      await registry.resolveBackend(row.storageConfigId).delete(resolveStorageKey(row.filePath));
+      result.deleted++;
     } catch (err) {
       const code = (err as NodeJS.ErrnoException)?.code;
-      // Отсутствие объекта — успех (идемпотентность, Req 10.4).
-      if (code && MISSING_OBJECT_CODES.has(code)) continue;
-      console.warn(
-        `[deleteFiles] Не удалось удалить объект из хранилища "${row.storageConfigId ?? "local-default"}": ${(err as Error)?.message ?? "неизвестная ошибка"}`,
-      );
+      if (code && MISSING_OBJECT_CODES.has(code)) result.missing++;
+      else { result.failed++; console.warn('[deleteFiles] Физическое удаление объекта не подтверждено'); }
     }
   }
+  return result;
 }

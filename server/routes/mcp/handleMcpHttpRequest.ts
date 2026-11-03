@@ -8,6 +8,7 @@ import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/
 import { runWithMcpToken } from '../../../lib/bot-tools/mcp-request-context';
 import { createBotcraftMcpServer } from '../../../lib/bot-tools/mcp-register-tools';
 import { getDisabledNodeTypes } from '../../services/disabled-node-types';
+import { resolveMcpProfile } from '../../../lib/bot-tools/mcp-profile';
 
 /**
  * Обрабатывает POST /mcp в stateless-режиме (новый server+transport на запрос).
@@ -28,6 +29,8 @@ export async function handleMcpHttpRequest(req: Request, res: Response): Promise
     const server = createBotcraftMcpServer({
       enableFileTools: false,
       disabledNodeTypes,
+      /** Профиль задаёт оператор сервера, а не параметры пользовательского запроса. */
+      profile: resolveMcpProfile(),
     });
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: undefined,

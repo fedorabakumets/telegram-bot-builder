@@ -63,6 +63,8 @@ function parseDeleteBody(body: unknown): { items: DeleteItem[] } | { error: stri
  * @returns Promise<void>
  */
 export async function deleteProjectFilesHandler(req: Request, res: Response): Promise<void> {
+  let deleted = 0;
+  let physical = { deleted: 0, missing: 0, failed: 0, untracked: 0 };
   try {
     const projectId = parseInt(req.params.projectId, 10);
     if (isNaN(projectId)) {
@@ -86,29 +88,13 @@ export async function deleteProjectFilesHandler(req: Request, res: Response): Pr
       bySource[item.source].push(item.id);
     }
 
-    let deleted = 0;
-
     if (bySource.uploaded.length > 0) {
-      const rows = await db
-        .select({
-          id: mediaFiles.id,
-          filePath: mediaFiles.filePath,
-          storageConfigId: mediaFiles.storageConfigId,
-        })
-        .from(mediaFiles)
-        .where(
-          and(eq(mediaFiles.projectId, projectId), inArray(mediaFiles.id, bySource.uploaded)),
-        );
-
-      if (rows.length > 0) {
-        await db
-          .delete(mediaFiles)
-          .where(
-            and(eq(mediaFiles.projectId, projectId), inArray(mediaFiles.id, bySource.uploaded)),
-          );
-        deleted += rows.length;
-        await deleteUploadedPhysicalObjects(rows);
-      }
+      /** Считаем только фактически удалённые строки, а не предварительный SELECT. */
+      const rows = await db.delete(mediaFiles)
+        .where(and(eq(mediaFiles.projectId, projectId), inArray(mediaFiles.id, bySource.uploaded)))
+        .returning({ id: mediaFiles.id, filePath: mediaFiles.filePath, storageConfigId: mediaFiles.storageConfigId });
+      deleted += rows.length;
+      physical = await deleteUploadedPhysicalObjects(rows);
     }
 
     const messageIds = [...bySource.incoming, ...bySource.outgoing];
@@ -120,9 +106,14 @@ export async function deleteProjectFilesHandler(req: Request, res: Response): Pr
       deleted += removed.length;
     }
 
-    res.json({ success: true, deleted });
+    const requested = new Set(parsed.items.map(item => `${item.source}:${item.id}`)).size;
+    const missing = Math.max(0, requested - deleted);
+    const complete = missing === 0 && physical.failed === 0 && physical.untracked === 0;
+    res.status(complete ? 200 : 207).json({ success: complete, status: complete ? 'saved' : 'partial', deleted, requested, missing, physical,
+      persistence: { confirmed: complete, databaseConfirmed: true, physicalConfirmed: complete, method: 'delete_returning' } });
   } catch (error) {
     console.error("Ошибка удаления файлов проекта:", error);
-    res.status(500).json({ success: false, message: "Не удалось удалить файлы" });
+    res.status(500).json({ success: false, status: deleted ? 'partial' : 'error', message: "Не удалось завершить удаление файлов", deleted, physical,
+      persistence: { confirmed: false, databaseConfirmed: deleted > 0, physicalConfirmed: false } });
   }
 }

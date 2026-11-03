@@ -67,7 +67,7 @@ export async function rewriteButtonNavigationInDb(
   if (!confirm || result.plan.changed === 0) {
     return { applied: false, requiresConfirmation: !confirm && result.plan.changed > 0, ...result.plan };
   }
-  const written = await updateProjectInDb(projectId, result.project, options);
+  const written = await updateProjectInDb(projectId, result.project, { ...options, expectedRevision: options?.expectedRevision ?? fetched.revision });
   if ('error' in written) return { ...written, plan: result.plan };
-  return { applied: true, ...result.plan };
+  return { ...written, applied: true, ...result.plan };
 }

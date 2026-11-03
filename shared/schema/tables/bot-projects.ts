@@ -40,6 +40,8 @@ export const botProjects = pgTable("bot_projects", {
   lastExportedStructureAt: timestamp("last_exported_structure_at"),
   /** Дата создания проекта */
   createdAt: timestamp("created_at").defaultNow(),
+  /** Монотонная ревизия для атомарной защиты от конкурентной записи */
+  revision: integer("revision").notNull().default(0),
   /** Дата последнего обновления проекта */
   updatedAt: timestamp("updated_at").defaultNow(),
   /** Порядок сортировки проекта в списке */

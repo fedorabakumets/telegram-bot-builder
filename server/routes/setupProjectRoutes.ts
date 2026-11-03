@@ -31,6 +31,7 @@ import { listBotTokensHandler } from "./projectRoutes/handlers/listBotTokensHand
 import { uploadImageHandler } from "./projectManagement/handlers/uploadImageHandler";
 import { handleGenerateCode } from "./projects/generateCode";
 import { getAdminIdsHandler, updateAdminIdsHandler, removeAdminIdHandler } from "./projectRoutes/handlers/adminIdsHandler";
+import { getBotSettingsHandler } from "./projectRoutes/handlers/getBotSettingsHandler";
 import { requireProjectAccess } from "../middleware/requireProjectAccess";
 
 /**
@@ -76,6 +77,9 @@ export function setupProjectRoutes(app: Express, requireDbReady: (_req: any, res
 
     // Безопасный список токенов проекта (без секрета token) — для дискавери MCP-агентом
     app.get("/api/projects/:id/tokens/list", requireDbReady, requireProjectAccess, listBotTokensHandler);
+
+    /** Безопасные настройки без токена, с проверкой реального проекта. */
+    app.get("/api/projects/:id/tokens/:tokenId/settings", requireDbReady, requireProjectAccess, getBotSettingsHandler);
 
     // Управление ID администраторов бота
     app.get("/api/projects/:id/admin-ids", requireProjectAccess, getAdminIdsHandler);

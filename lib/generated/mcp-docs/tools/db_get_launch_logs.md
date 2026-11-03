@@ -1,53 +1,177 @@
+<!-- @fileoverview Автоматическая карточка реального действия MCP. -->
 # `db_get_launch_logs`
-
-## Назначение
 
 Логи одного запуска по launch_id, до 500 строк, более старые страницы через before_id.
 
-## Когда использовать
-
-Используй этот тул только после проверки его фактической схемы и контекста задачи. Если задача относится к другой операции, сначала найди связанный workflow через `get_workflow_docs`.
+Раздел: logs. Транспорт: http, stdio.
 
 ## Параметры
 
-- `launch_id` — number; необязательный параметр.
-- `limit` — number; необязательный параметр.
+```json
+{
+  "type": "object",
+  "properties": {
+    "launch_id": {
+      "type": "integer",
+      "exclusiveMinimum": 0
+    },
+    "limit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 500
+    },
+    "before_id": {
+      "type": "integer",
+      "exclusiveMinimum": 0
+    }
+  },
+  "required": [
+    "launch_id"
+  ],
+  "additionalProperties": false,
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}
+```
 
-Точные типы и обязательность берутся из схемы MCP-регистрации. Перед вызовом проверь описание инструмента в MCP-клиенте; не придумывай отсутствующие поля.
+## Эффект
+
+```json
+{
+  "section": "logs",
+  "effect": "read",
+  "completionMode": "immediate",
+  "destructive": false,
+  "runtimeApply": "not_applicable"
+}
+```
 
 ## Пример вызова
 
 ```json
 {
-  "tool": "db_get_launch_logs",
-  "arguments": { "launch_id": "<значение>" }
+  "action_id": "db_get_launch_logs",
+  "args": {
+    "launch_id": 1
+  }
 }
 ```
 
-## Пример успешного ответа
+Структурный пример проверен Zod; ID и данные замените реальными.
 
-Форма ответа зависит от параметров и текущего состояния проекта. Сохрани фактический ответ MCP и проверь поле ошибки, если оно присутствует.
+## Ответ и ошибки
 
-## Типичные ошибки
+Прежний text content сохранён. Метаданные `_meta.botcraft` различают prepared/read/saved/pending/partial/unknown/error/unverified. Только `persistence.confirmed=true` подтверждает сохранение. Неизвестный исход требует чтения состояния до повтора; live-доставка и применение ботом проверяются отдельно.
 
-- Переданы неизвестные или пропущенные обязательные параметры.
-- Использован ID другого проекта, листа или токена.
-- Следующая нода, цель перехода или запись не существует.
-- Агент не проверил ответ инструмента перед следующим действием.
+### Схема результата
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "data": {
+      "anyOf": [
+        {},
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "execution": {
+      "type": "object",
+      "properties": {
+        "section": {
+          "type": "string"
+        },
+        "effect": {
+          "type": "string",
+          "enum": [
+            "read",
+            "prepare",
+            "write",
+            "file",
+            "external",
+            "unknown"
+          ]
+        },
+        "destructive": {
+          "type": "boolean"
+        },
+        "runtimeApply": {
+          "type": "string",
+          "enum": [
+            "not_applicable",
+            "separate"
+          ]
+        },
+        "completionMode": {
+          "type": "string",
+          "enum": [
+            "immediate",
+            "job"
+          ]
+        },
+        "pollAction": {
+          "type": "string"
+        },
+        "outcome": {
+          "type": "string",
+          "enum": [
+            "prepared",
+            "read",
+            "saved",
+            "pending",
+            "partial",
+            "unknown",
+            "error",
+            "unverified",
+            "file_result"
+          ]
+        },
+        "persistence": {
+          "type": "object",
+          "properties": {
+            "confirmed": {
+              "type": "boolean"
+            },
+            "projectId": {
+              "type": "integer",
+              "exclusiveMinimum": 0
+            },
+            "revision": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "confirmed"
+          ],
+          "additionalProperties": false
+        },
+        "sideEffects": {
+          "type": "object",
+          "additionalProperties": {}
+        }
+      },
+      "required": [
+        "section",
+        "effect",
+        "destructive",
+        "runtimeApply",
+        "completionMode",
+        "outcome",
+        "persistence"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "execution"
+  ],
+  "additionalProperties": false,
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}
+```
 
 ## Ограничения и безопасность
 
-Тул может изменять live-БД, проект или состояние бота. Выполняй его только в рамках явной просьбы пользователя и проверь результат после операции.
-- Не перезапускай бота автоматически; перезапуск допустим только по явной просьбе пользователя.
-- После операции перечитай состояние и вызови подходящую проверку или логи.
-- Если тул требует `confirm`, передавай его только после подтверждения пользователя.
-
-## Связанные инструменты
-
-- `get_tool_docs` — получить карточку этого и связанных тулов.
-- `search_tool_docs` — найти подходящие инструменты.
-- `get_workflow_docs` — получить рекомендуемую последовательность действий.
-
-## Рекомендуемый следующий шаг
-
-Проверь фактический ответ MCP, затем вызови следующий тул из соответствующего workflow.
+Изучите describe_actions, проверьте реальные ID и права проекта. Для разрушительных и внешних действий требуется явное намерение пользователя. Для повторов сохраняйте requestId, если он объявлен. Отсутствие ошибки транспорта не доказывает сохранение.

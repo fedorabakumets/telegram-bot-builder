@@ -6,12 +6,16 @@
  */
 
 import 'dotenv/config';
+import { readFileSync } from 'node:fs';
+import { validateGeneratedClient } from './validate-generated';
 
 /**
  * Выставляет env и поднимает generated MCP
  * @returns {Promise<void>}
  */
 async function main(): Promise<void> {
+  /** Не исполняет старый generated, который мог публиковать ключи и секреты. */
+  validateGeneratedClient(readFileSync(new URL('./generated/src/index.ts', import.meta.url), 'utf8'));
   const token = process.env.MCP_AGENT_TOKEN?.trim();
   if (!token) {
     console.error(
@@ -23,7 +27,7 @@ async function main(): Promise<void> {
   process.env.API_BASE_URL = process.env.API_BASE_URL?.trim() || 'http://localhost:5000';
   process.env.BEARER_TOKEN_AGENTTOKEN = token;
 
-  // side-effect: подключение StdioServerTransport
+  /** Подключение транспорта допускается только после проверки определений. */
   await import('./generated/src/index.ts');
 }
 

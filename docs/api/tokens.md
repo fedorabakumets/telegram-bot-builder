@@ -20,6 +20,8 @@ MCP: `GET /api/bot/tokens/{tokenId}/status` (тег `bot`).
 curl -s http://localhost:5000/api/tokens/7/bot-status -b cookies.txt
 ```
 
+**Operation ID:** `get_api_tokens_tokenId_bot_status_3faa7633d84fe1c5`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -48,6 +50,8 @@ curl -s http://localhost:5000/api/tokens/7/bot-status -b cookies.txt
 ```bash
 curl -s http://localhost:5000/api/tokens/7/launch-history -b cookies.txt
 ```
+
+**Operation ID:** `get_api_tokens_tokenId_launch_history_6a33287384462e4e`
 
 #### Параметры
 

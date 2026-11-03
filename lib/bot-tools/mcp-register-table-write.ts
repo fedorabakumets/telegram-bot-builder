@@ -23,8 +23,11 @@ import {
   updateRow,
 } from './bot-tables-write.ts';
 import { tableToolResult } from './mcp-table-result.ts';
+import { tableOperationsSchema } from '../../shared/table-ops-schema';
 
 const cells = z.record(z.string(), z.string()).describe('Ключ — числовой id столбца строкой, значение — текст, пустая строка допустима');
+/** Необязательный UUID включает постоянный журнал и ответ-квитанцию ID; неопределённый исход не повторяется. */
+const requestId = z.string().uuid().optional().describe('Один UUID на попытку. С ним результат — квитанция ID, данные перечитайте отдельно. Повторите тот же UUID при потере ответа; unknown нельзя выполнять заново автоматически.');
 
 /**
  * Регистрирует инструменты изменения
@@ -33,8 +36,8 @@ const cells = z.record(z.string(), z.string()).describe('Ключ — число
 export function registerTableWriteTools(server: McpServer): void {
   server.registerTool('db_create_table', {
     description: 'Создать пользовательскую таблицу. Имя _content зарезервировано.',
-    inputSchema: { project_id: z.number(), name: z.string() },
-  }, async ({ project_id, name }) => tableToolResult(await createTable(project_id, name)));
+    inputSchema: { project_id: z.number(), name: z.string(), request_id: requestId },
+  }, async ({ project_id, name, request_id }) => tableToolResult(await createTable(project_id, name, { requestId: request_id })));
 
   server.registerTool('db_rename_table', {
     description: 'Переименовать таблицу. Служебную _content переименовать нельзя.',
@@ -48,8 +51,8 @@ export function registerTableWriteTools(server: McpServer): void {
 
   server.registerTool('db_add_table_column', {
     description: 'Добавить столбец.',
-    inputSchema: { project_id: z.number(), table_id: z.number(), name: z.string(), position: z.number().int().optional() },
-  }, async ({ project_id, table_id, name, position }) => tableToolResult(await addColumn(project_id, table_id, name, position)));
+    inputSchema: { project_id: z.number(), table_id: z.number(), name: z.string(), position: z.number().int().optional(), request_id: requestId },
+  }, async ({ project_id, table_id, name, position, request_id }) => tableToolResult(await addColumn(project_id, table_id, name, position, { requestId: request_id })));
 
   server.registerTool('db_rename_table_column', {
     description: 'Переименовать столбец.',
@@ -72,8 +75,9 @@ export function registerTableWriteTools(server: McpServer): void {
       project_id: z.number(),
       table_id: z.number(),
       rows: z.array(z.object({ row_index: z.number().int().optional(), data: cells })).max(200),
+      request_id: requestId,
     },
-  }, async ({ project_id, table_id, rows }) => tableToolResult(await addRows(project_id, table_id, rows)));
+  }, async ({ project_id, table_id, rows, request_id }) => tableToolResult(await addRows(project_id, table_id, rows, { requestId: request_id })));
 
   server.registerTool('db_update_table_row', {
     description: 'Полностью заменить ячейки строки.',
@@ -108,9 +112,10 @@ export function registerTableWriteTools(server: McpServer): void {
       mode: z.enum(['append', 'replace']),
       confirm: z.boolean().optional(),
       rows: z.array(cells).max(200),
+      request_id: requestId,
     },
-  }, async ({ project_id, table_id, mode, confirm, rows }) => tableToolResult(
-    await importRows(project_id, table_id, mode, rows, { confirm }),
+  }, async ({ project_id, table_id, mode, confirm, rows, request_id }) => tableToolResult(
+    await importRows(project_id, table_id, mode, rows, { confirm, requestId: request_id }),
   ));
 
   server.registerTool('db_apply_table_ops', {
@@ -119,9 +124,10 @@ export function registerTableWriteTools(server: McpServer): void {
       project_id: z.number(),
       table_id: z.number(),
       confirm: z.boolean().optional(),
-      ops: z.array(z.record(z.string(), z.unknown())).max(50),
+      ops: tableOperationsSchema,
+      request_id: requestId,
     },
-  }, async ({ project_id, table_id, confirm, ops }) => tableToolResult(
-    await applyTableOps(project_id, table_id, ops as Array<Record<string, unknown> & { op: string }>, confirm),
+  }, async ({ project_id, table_id, confirm, ops, request_id }) => tableToolResult(
+    await applyTableOps(project_id, table_id, ops as Array<Record<string, unknown> & { op: string }>, confirm, { requestId: request_id }),
   ));
 }

@@ -35,23 +35,14 @@ export async function importRowsInProject(
   mode: "append" | "replace",
   rows: Array<Record<string, unknown>>,
 ): Promise<RowRecord[] | MutateFail> {
-  const columns = await loadColumnsInProject(db, projectId, tableId);
-  if (columns.length === 0) {
-    const owned = await db.query(`SELECT id FROM bot_tables WHERE id = $1 AND project_id = $2`, [tableId, projectId]);
-    if (!owned.rows[0]) return { ok: false, status: 404, message: "Таблица не найдена" };
-  }
-  const ids = new Set(columns.map((column) => String(column.id)));
-  const ready: ReadyRow[] = [];
-  for (const [index, row] of rows.entries()) {
-    const cells = validateCells(row, ids, columns, true);
-    if (!cells.ok) return { ok: false, status: 400, message: cells.message };
-    ready.push({ rowIndex: index, data: cells.data });
-  }
   await db.query("BEGIN");
   try {
     await db.query(`SET LOCAL statement_timeout = '${SQL_TIMEOUT}'`);
     /** Блокировка таблицы исключает одинаковые индексы при одновременном добавлении строк. */
     await db.query("SELECT id FROM bot_tables WHERE id = $1 AND project_id = $2 FOR UPDATE", [tableId, projectId]);
+    const checked = await prepareRows(db, projectId, tableId, rows);
+    if ("status" in checked) { await db.query("ROLLBACK"); return checked; }
+    const ready = checked;
     if (mode === "replace") {
       const cleared = await clearRowsInProject(db, projectId, tableId);
       if ("status" in cleared) {
@@ -76,4 +67,28 @@ export async function importRowsInProject(
     await db.query("ROLLBACK");
     throw error;
   }
+}
+
+/**
+ * Проверяет строки после блокировки таблицы.
+ * @param db - Соединение с удерживаемой блокировкой таблицы.
+ * @param projectId - Проект.
+ * @param tableId - Таблица.
+ * @param rows - Исходные строки.
+ * @returns Проверенные строки либо отказ до записи.
+ */
+async function prepareRows(db: Queryable, projectId: number, tableId: number, rows: Array<Record<string, unknown>>): Promise<ReadyRow[] | MutateFail> {
+  const columns = await loadColumnsInProject(db, projectId, tableId);
+  if (columns.length === 0) {
+    const owned = await db.query(`SELECT id FROM bot_tables WHERE id = $1 AND project_id = $2`, [tableId, projectId]);
+    if (!owned.rows[0]) return { ok: false, status: 404, message: "Таблица не найдена" };
+  }
+  const ids = new Set(columns.map((column) => String(column.id)));
+  const ready: ReadyRow[] = [];
+  for (const [index, row] of rows.entries()) {
+    const cells = validateCells(row, ids, columns, true);
+    if (!cells.ok) return { ok: false, status: 400, message: cells.message };
+    ready.push({ rowIndex: index, data: cells.data });
+  }
+  return ready;
 }

@@ -1,6 +1,7 @@
 /** @fileoverview Описание API чтения диалогов выбранного бота. */
 import type { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
 import { z } from 'zod';
+import { MessageErrorSchema, UnauthorizedSchema } from '../schemas/common';
 import { ProjectDialogsResponseSchema } from '../schemas/project-dialogs';
 
 /**
@@ -21,11 +22,11 @@ export function registerProjectDialogsPaths(registry: OpenAPIRegistry, security:
     responses: {
       200: { description: 'Страница диалогов и сохранённые проверки доступа',
         content: { 'application/json': { schema: ProjectDialogsResponseSchema } } },
-      400: { description: 'Некорректные параметры или курсор' },
-      401: { description: 'Требуется авторизация' },
-      403: { description: 'Нет доступа к проекту' },
-      404: { description: 'Бот не принадлежит проекту' },
-      500: { description: 'Не удалось прочитать диалоги' },
+      400: { description: 'Некорректные параметры или курсор', content: { 'application/json': { schema: MessageErrorSchema } } },
+      401: { description: 'Требуется авторизация', content: { 'application/json': { schema: UnauthorizedSchema } } },
+      403: { description: 'Нет доступа к проекту', content: { 'application/json': { schema: MessageErrorSchema } } },
+      404: { description: 'Бот не принадлежит проекту', content: { 'application/json': { schema: MessageErrorSchema } } },
+      500: { description: 'Не удалось прочитать диалоги', content: { 'application/json': { schema: MessageErrorSchema } } },
     },
   });
 }

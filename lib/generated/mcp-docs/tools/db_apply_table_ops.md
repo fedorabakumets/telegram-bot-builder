@@ -1,55 +1,361 @@
+<!-- @fileoverview Автоматическая карточка реального действия MCP. -->
 # `db_apply_table_ops`
-
-## Назначение
 
 До 50 операций одной транзакцией: столбцы, строки, переиндексация. Если есть удаление, нужен confirm: true. При ошибке всё откатывается, в ответе failed_op_index.
 
-## Когда использовать
-
-Используй этот тул только после проверки его фактической схемы и контекста задачи. Если задача относится к другой операции, сначала найди связанный workflow через `get_workflow_docs`.
+Раздел: tables. Транспорт: http, stdio.
 
 ## Параметры
 
-- `project_id` — number; обязательный параметр.
-- `table_id` — number; обязательный параметр.
-- `confirm` — boolean; необязательный параметр.
-- `ops` — array; обязательный параметр.
+```json
+{
+  "type": "object",
+  "properties": {
+    "project_id": {
+      "type": "number"
+    },
+    "table_id": {
+      "type": "number"
+    },
+    "confirm": {
+      "type": "boolean"
+    },
+    "ops": {
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "const": "add_column"
+              },
+              "name": {
+                "type": "string"
+              },
+              "position": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "op",
+              "name"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "const": "rename_column"
+              },
+              "column_id": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "op",
+              "column_id",
+              "name"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "const": "delete_column"
+              },
+              "column_id": {
+                "$ref": "#/properties/ops/items/anyOf/1/properties/column_id"
+              }
+            },
+            "required": [
+              "op",
+              "column_id"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "const": "add_rows"
+              },
+              "rows": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "additionalProperties": {}
+                    },
+                    "row_index": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "op",
+              "rows"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "const": "update_row"
+              },
+              "row_id": {
+                "$ref": "#/properties/ops/items/anyOf/1/properties/column_id"
+              },
+              "data": {
+                "$ref": "#/properties/ops/items/anyOf/3/properties/rows/items/properties/data"
+              }
+            },
+            "required": [
+              "op",
+              "row_id",
+              "data"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "const": "patch_row"
+              },
+              "row_id": {
+                "$ref": "#/properties/ops/items/anyOf/1/properties/column_id"
+              },
+              "data": {
+                "$ref": "#/properties/ops/items/anyOf/3/properties/rows/items/properties/data"
+              }
+            },
+            "required": [
+              "op",
+              "row_id",
+              "data"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "const": "delete_row"
+              },
+              "row_id": {
+                "$ref": "#/properties/ops/items/anyOf/1/properties/column_id"
+              }
+            },
+            "required": [
+              "op",
+              "row_id"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "const": "reindex"
+              }
+            },
+            "required": [
+              "op"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "minItems": 1,
+      "maxItems": 50
+    },
+    "request_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Один UUID на попытку. С ним результат — квитанция ID, данные перечитайте отдельно. Повторите тот же UUID при потере ответа; unknown нельзя выполнять заново автоматически."
+    }
+  },
+  "required": [
+    "project_id",
+    "table_id",
+    "ops"
+  ],
+  "additionalProperties": false,
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}
+```
 
-Точные типы и обязательность берутся из схемы MCP-регистрации. Перед вызовом проверь описание инструмента в MCP-клиенте; не придумывай отсутствующие поля.
+## Эффект
+
+```json
+{
+  "section": "tables",
+  "effect": "write",
+  "completionMode": "immediate",
+  "destructive": true,
+  "runtimeApply": "not_applicable"
+}
+```
 
 ## Пример вызова
 
 ```json
 {
-  "tool": "db_apply_table_ops",
-  "arguments": { "project_id": "<значение>" }
+  "action_id": "db_apply_table_ops",
+  "args": {
+    "project_id": 1,
+    "table_id": 1,
+    "ops": [
+      {
+        "op": "add_column",
+        "name": "1"
+      }
+    ]
+  }
 }
 ```
 
-## Пример успешного ответа
+Структурный пример проверен Zod; ID и данные замените реальными.
 
-Форма ответа зависит от параметров и текущего состояния проекта. Сохрани фактический ответ MCP и проверь поле ошибки, если оно присутствует.
+## Ответ и ошибки
 
-## Типичные ошибки
+Прежний text content сохранён. Метаданные `_meta.botcraft` различают prepared/read/saved/pending/partial/unknown/error/unverified. Только `persistence.confirmed=true` подтверждает сохранение. Неизвестный исход требует чтения состояния до повтора; live-доставка и применение ботом проверяются отдельно.
 
-- Переданы неизвестные или пропущенные обязательные параметры.
-- Использован ID другого проекта, листа или токена.
-- Следующая нода, цель перехода или запись не существует.
-- Агент не проверил ответ инструмента перед следующим действием.
+### Схема результата
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "data": {
+      "anyOf": [
+        {},
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "execution": {
+      "type": "object",
+      "properties": {
+        "section": {
+          "type": "string"
+        },
+        "effect": {
+          "type": "string",
+          "enum": [
+            "read",
+            "prepare",
+            "write",
+            "file",
+            "external",
+            "unknown"
+          ]
+        },
+        "destructive": {
+          "type": "boolean"
+        },
+        "runtimeApply": {
+          "type": "string",
+          "enum": [
+            "not_applicable",
+            "separate"
+          ]
+        },
+        "completionMode": {
+          "type": "string",
+          "enum": [
+            "immediate",
+            "job"
+          ]
+        },
+        "pollAction": {
+          "type": "string"
+        },
+        "outcome": {
+          "type": "string",
+          "enum": [
+            "prepared",
+            "read",
+            "saved",
+            "pending",
+            "partial",
+            "unknown",
+            "error",
+            "unverified",
+            "file_result"
+          ]
+        },
+        "persistence": {
+          "type": "object",
+          "properties": {
+            "confirmed": {
+              "type": "boolean"
+            },
+            "projectId": {
+              "type": "integer",
+              "exclusiveMinimum": 0
+            },
+            "revision": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "confirmed"
+          ],
+          "additionalProperties": false
+        },
+        "sideEffects": {
+          "type": "object",
+          "additionalProperties": {}
+        }
+      },
+      "required": [
+        "section",
+        "effect",
+        "destructive",
+        "runtimeApply",
+        "completionMode",
+        "outcome",
+        "persistence"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "execution"
+  ],
+  "additionalProperties": false,
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}
+```
 
 ## Ограничения и безопасность
 
-Тул может изменять live-БД, проект или состояние бота. Выполняй его только в рамках явной просьбы пользователя и проверь результат после операции.
-- Не перезапускай бота автоматически; перезапуск допустим только по явной просьбе пользователя.
-- После операции перечитай состояние и вызови подходящую проверку или логи.
-- Если тул требует `confirm`, передавай его только после подтверждения пользователя.
-
-## Связанные инструменты
-
-- `get_tool_docs` — получить карточку этого и связанных тулов.
-- `search_tool_docs` — найти подходящие инструменты.
-- `get_workflow_docs` — получить рекомендуемую последовательность действий.
-
-## Рекомендуемый следующий шаг
-
-Проверь фактический ответ MCP, затем вызови следующий тул из соответствующего workflow.
+Изучите describe_actions, проверьте реальные ID и права проекта. Для разрушительных и внешних действий требуется явное намерение пользователя. Для повторов сохраняйте requestId, если он объявлен. Отсутствие ошибки транспорта не доказывает сохранение.

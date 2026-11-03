@@ -9,6 +9,7 @@
  */
 
 import { apiFetch } from './api-fetch.ts';
+import { verifyMutation, type MutationResult } from './mutation-proof.ts';
 import type { ReadDbOptions } from './node-query-db.ts';
 
 /** Лёгкий безопасный элемент списка токенов бота (без секрета token) */
@@ -334,7 +335,7 @@ export async function startBotInDb(
   projectId: number,
   tokenId?: number,
   options?: ReadDbOptions,
-): Promise<{ ok: true; message: string; processId: string | null } | { error: string }> {
+): Promise<MutationResult<{ ok: true; message: string; processId: string | null } | { error: string }>> {
   let res: Response;
   try {
     res = await apiFetch(`/api/projects/${projectId}/bot/start`, {
@@ -344,24 +345,25 @@ export async function startBotInDb(
       body: JSON.stringify(tokenId != null ? { tokenId } : {}),
     });
   } catch (err) {
-    return { error: `Не удалось соединиться с сервером: ${(err as Error).message}` };
+    return { error: `Связь прервана; перечитайте состояние перед повтором: ${(err as Error).message}`, outcome: "unknown" };
   }
 
   if (!res.ok) {
     const body = await res.text().catch(() => '');
     if (res.status === 404) return { error: `HTTP 404: проект не найден${body ? `: ${body}` : ''}` };
     if (res.status === 400) return { error: body ? `HTTP 400: ${body}` : 'HTTP 400' };
-    return { error: body ? `HTTP ${res.status}: ${body}` : `HTTP ${res.status}` };
+    return { error: body ? `HTTP ${res.status}: ${body}` : `HTTP ${res.status}`, ...(res.status >= 500 ? { outcome: "unknown" as const } : {}) };
   }
 
   let body: { message?: string; processId?: string | null };
   try {
     body = (await res.json()) as { message?: string; processId?: string | null };
   } catch (err) {
-    return { error: `Не удалось разобрать ответ сервера: ${(err as Error).message}` };
+    return { error: `Ответ не удалось прочитать; исход действия неизвестен: ${(err as Error).message}`, outcome: "unknown" };
   }
 
-  return { ok: true, message: body.message ?? 'Бот запущен', processId: body.processId ?? null };
+  if (typeof body?.message !== 'string') return { error: 'Сервер не подтвердил принятие запуска', outcome: 'unknown' };
+  return { ok: true, message: body.message, processId: body.processId ?? null, effect: 'external', outcome: 'pending', persistence: { confirmed: false, method: 'accepted' } };
 }
 
 /**
@@ -380,7 +382,7 @@ export async function stopBotInDb(
   projectId: number,
   tokenId: number,
   options?: ReadDbOptions & { confirm?: boolean },
-): Promise<{ ok: true; message: string } | { error: string }> {
+): Promise<MutationResult<{ ok: true; message: string } | { error: string }>> {
   if (options?.confirm !== true) {
     return { error: 'Остановка живого бота. Передайте confirm: true для подтверждения.' };
   }
@@ -394,24 +396,24 @@ export async function stopBotInDb(
       body: JSON.stringify({ tokenId }),
     });
   } catch (err) {
-    return { error: `Не удалось соединиться с сервером: ${(err as Error).message}` };
+    return { error: `Связь прервана; перечитайте состояние перед повтором: ${(err as Error).message}`, outcome: "unknown" };
   }
 
   if (!res.ok) {
     const body = await res.text().catch(() => '');
     if (res.status === 404) return { error: `HTTP 404: проект не найден${body ? `: ${body}` : ''}` };
     if (res.status === 400) return { error: body ? `HTTP 400: ${body}` : 'HTTP 400' };
-    return { error: body ? `HTTP ${res.status}: ${body}` : `HTTP ${res.status}` };
+    return { error: body ? `HTTP ${res.status}: ${body}` : `HTTP ${res.status}`, ...(res.status >= 500 ? { outcome: "unknown" as const } : {}) };
   }
 
   let body: { message?: string };
   try {
     body = (await res.json()) as { message?: string };
   } catch (err) {
-    return { error: `Не удалось разобрать ответ сервера: ${(err as Error).message}` };
+    return { error: `Ответ не удалось прочитать; исход действия неизвестен: ${(err as Error).message}`, outcome: "unknown" };
   }
 
-  return { ok: true, message: body.message ?? 'Бот остановлен' };
+  return verifyMutation({ ok: true as const, message: body?.message ?? 'Команда остановки отправлена' }, `/api/bot/tokens/${tokenId}/status`, value => value?.status === 'stopped' && value?.restorePending !== true, { ...options, effect: 'external' });
 }
 
 /**
@@ -434,7 +436,7 @@ export async function restartBotInDb(
   projectId: number,
   tokenId?: number,
   options?: ReadDbOptions,
-): Promise<{ ok: true; message: string; processId: string | null } | { error: string }> {
+): Promise<MutationResult<{ ok: true; message: string; processId: string | null } | { error: string }>> {
   let res: Response;
   try {
     res = await apiFetch(`/api/projects/${projectId}/bot/restart`, {
@@ -444,24 +446,25 @@ export async function restartBotInDb(
       body: JSON.stringify(tokenId != null ? { tokenId } : {}),
     });
   } catch (err) {
-    return { error: `Не удалось соединиться с сервером: ${(err as Error).message}` };
+    return { error: `Связь прервана; перечитайте состояние перед повтором: ${(err as Error).message}`, outcome: "unknown" };
   }
 
   if (!res.ok) {
     const body = await res.text().catch(() => '');
     if (res.status === 404) return { error: `HTTP 404: ${body || 'экземпляр бота или проект не найден'}` };
     if (res.status === 400) return { error: body ? `HTTP 400: ${body}` : 'HTTP 400' };
-    return { error: body ? `HTTP ${res.status}: ${body}` : `HTTP ${res.status}` };
+    return { error: body ? `HTTP ${res.status}: ${body}` : `HTTP ${res.status}`, ...(res.status >= 500 ? { outcome: "unknown" as const } : {}) };
   }
 
   let body: { message?: string; processId?: string | null };
   try {
     body = (await res.json()) as { message?: string; processId?: string | null };
   } catch (err) {
-    return { error: `Не удалось разобрать ответ сервера: ${(err as Error).message}` };
+    return { error: `Ответ не удалось прочитать; исход действия неизвестен: ${(err as Error).message}`, outcome: "unknown" };
   }
 
-  return { ok: true, message: body.message ?? 'Бот перезапущен', processId: body.processId ?? null };
+  if (typeof body?.message !== 'string') return { error: 'Сервер не подтвердил принятие перезапуска', outcome: 'unknown' };
+  return { ok: true, message: body.message, processId: body.processId ?? null, effect: 'external', outcome: 'pending', persistence: { confirmed: false, method: 'accepted' } };
 }
 
 /**
@@ -481,9 +484,9 @@ export async function restartBotInDb(
 export async function restartAllBotsInDb(
   projectId: number,
   options?: ReadDbOptions & { confirm?: boolean },
-): Promise<
+): Promise<MutationResult<
   { ok: true; restarted: number; failed: number; results: unknown[]; message?: string } | { error: string }
-> {
+>> {
   if (options?.confirm !== true) {
     return { error: 'Перезапуск всех ботов проекта. Передайте confirm: true для подтверждения.' };
   }
@@ -497,24 +500,25 @@ export async function restartAllBotsInDb(
       body: '{}',
     });
   } catch (err) {
-    return { error: `Не удалось соединиться с сервером: ${(err as Error).message}` };
+    return { error: `Связь прервана; перечитайте состояние перед повтором: ${(err as Error).message}`, outcome: "unknown" };
   }
 
   if (!res.ok) {
     const body = await res.text().catch(() => '');
     if (res.status === 404) return { error: `HTTP 404: ${body || 'токены проекта не найдены'}` };
-    return { error: body ? `HTTP ${res.status}: ${body}` : `HTTP ${res.status}` };
+    return { error: body ? `HTTP ${res.status}: ${body}` : `HTTP ${res.status}`, ...(res.status >= 500 ? { outcome: "unknown" as const } : {}) };
   }
 
   let body: { restarted?: number; failed?: number; results?: unknown[]; message?: string };
   try {
     body = (await res.json()) as { restarted?: number; failed?: number; results?: unknown[]; message?: string };
   } catch (err) {
-    return { error: `Не удалось разобрать ответ сервера: ${(err as Error).message}` };
+    return { error: `Ответ не удалось прочитать; исход действия неизвестен: ${(err as Error).message}`, outcome: "unknown" };
   }
 
+  if (!Number.isSafeInteger(body.restarted) || body.restarted! < 0 || !Number.isSafeInteger(body.failed) || body.failed! < 0) return { error: 'Сервер не вернул точную сводку перезапуска', outcome: 'unknown' };
   return {
-    ok: true,
+    ok: true, effect: 'external', outcome: body.failed! > 0 ? 'partial' : 'pending', persistence: { confirmed: false, method: 'accepted' },
     restarted: body.restarted ?? 0,
     failed: body.failed ?? 0,
     results: body.results ?? [],
@@ -533,7 +537,7 @@ export async function restartAllBotsInDb(
 export async function startOfflineBotsInDb(
   projectId: number,
   options?: ReadDbOptions & { confirm?: boolean },
-): Promise<
+): Promise<MutationResult<
   | {
     ok: true;
     started: number;
@@ -544,7 +548,7 @@ export async function startOfflineBotsInDb(
     message?: string;
   }
   | { error: string }
-> {
+>> {
   if (options?.confirm !== true) {
     return {
       error: 'Запуск всех офлайн-ботов проекта. Передайте confirm: true для подтверждения.',
@@ -560,13 +564,13 @@ export async function startOfflineBotsInDb(
       body: '{}',
     });
   } catch (err) {
-    return { error: `Не удалось соединиться с сервером: ${(err as Error).message}` };
+    return { error: `Связь прервана; перечитайте состояние перед повтором: ${(err as Error).message}`, outcome: "unknown" };
   }
 
   if (!res.ok) {
     const body = await res.text().catch(() => '');
     if (res.status === 404) return { error: `HTTP 404: ${body || 'токены проекта не найдены'}` };
-    return { error: body ? `HTTP ${res.status}: ${body}` : `HTTP ${res.status}` };
+    return { error: body ? `HTTP ${res.status}: ${body}` : `HTTP ${res.status}`, ...(res.status >= 500 ? { outcome: "unknown" as const } : {}) };
   }
 
   let body: {
@@ -580,11 +584,12 @@ export async function startOfflineBotsInDb(
   try {
     body = (await res.json()) as typeof body;
   } catch (err) {
-    return { error: `Не удалось разобрать ответ сервера: ${(err as Error).message}` };
+    return { error: `Ответ не удалось прочитать; исход действия неизвестен: ${(err as Error).message}`, outcome: "unknown" };
   }
 
+  if (!Number.isSafeInteger(body.started) || body.started! < 0 || !Number.isSafeInteger(body.failed) || body.failed! < 0) return { error: 'Сервер не вернул точную сводку запуска', outcome: 'unknown' };
   return {
-    ok: true,
+    ok: true, effect: 'external', outcome: body.failed! > 0 ? 'partial' : 'pending', persistence: { confirmed: false, method: 'accepted' },
     started: body.started ?? 0,
     failed: body.failed ?? 0,
     skippedRunning: body.skippedRunning ?? 0,
@@ -605,7 +610,7 @@ export async function deleteBotTokenInDb(
   projectId: number,
   tokenId: number,
   options?: ReadDbOptions & { confirm?: boolean },
-): Promise<{ ok: true; message?: string } | { error: string }> {
+): Promise<MutationResult<{ ok: true; message?: string } | { error: string }>> {
   if (options?.confirm !== true) {
     return {
       error: 'Удаление токена необратимо. Передайте confirm: true для подтверждения.',
@@ -619,7 +624,7 @@ export async function deleteBotTokenInDb(
       method: 'DELETE',
     });
   } catch (err) {
-    return { error: `Не удалось соединиться с сервером: ${(err as Error).message}` };
+    return { error: `Связь прервана; перечитайте состояние перед повтором: ${(err as Error).message}`, outcome: "unknown" };
   }
 
   if (!res.ok) {
@@ -628,7 +633,7 @@ export async function deleteBotTokenInDb(
       return { error: `HTTP 403: нет доступа к проекту токена${body ? `: ${body}` : ''}` };
     }
     if (res.status === 404) return { error: `HTTP 404: ${body || 'токен не найден'}` };
-    return { error: body ? `HTTP ${res.status}: ${body}` : `HTTP ${res.status}` };
+    return { error: body ? `HTTP ${res.status}: ${body}` : `HTTP ${res.status}`, ...(res.status >= 500 ? { outcome: "unknown" as const } : {}) };
   }
 
   let message: string | undefined;
@@ -639,5 +644,5 @@ export async function deleteBotTokenInDb(
     /* ignore */
   }
 
-  return { ok: true, message };
+  return verifyMutation({ ok: true as const, message }, `/api/projects/${projectId}/tokens/list`, value => Array.isArray(value) && !value.some(item => item.id === tokenId), options);
 }

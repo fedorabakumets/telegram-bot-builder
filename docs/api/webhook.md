@@ -28,6 +28,8 @@
 
 **Polling vs webhook:** при `launchMode: polling` этот URL не регистрируется в Telegram; эндпоинт может оставаться доступным, но апдейты не приходят.
 
+**Operation ID:** `post_api_webhook_projectId_tokenId_761e7a576528db30`
+
 **Тело запроса:** `TelegramWebhookUpdate`
 
 #### Параметры

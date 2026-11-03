@@ -24,11 +24,13 @@ export interface SendMediaFile {
  *
  * @param nodeData - Данные узла
  * @param storage - Хранилище данных
+ * @param projectId - Проект, которому обязаны принадлежать вложения
  * @returns Массив медиафайлов
  */
 export async function extractMediaFromNode(
   nodeData: Record<string, unknown>,
-  storage: IStorage
+  storage: IStorage,
+  projectId: number
 ): Promise<SendMediaFile[]> {
   const mediaFiles: SendMediaFile[] = [];
 
@@ -78,6 +80,7 @@ export async function extractMediaFromNode(
       else if (typeof media === 'object' && media !== null && 'mediaId' in media) {
         const mediaObj = media as { mediaId: number; mediaType: string };
         const mediaRecord = await storage.getMediaFile(mediaObj.mediaId);
+        if (mediaRecord && mediaRecord.projectId !== projectId) throw new Error("Медиа не принадлежит проекту");
         if (mediaRecord) {
           mediaFiles.push({
             id: mediaRecord.id,

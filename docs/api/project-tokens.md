@@ -1,6 +1,6 @@
 # project-tokens
 
-Эндпоинтов: **30**
+Эндпоинтов: **31**
 
 ### `GET` /api/projects/{id}/tokens
 
@@ -17,6 +17,8 @@
 ```bash
 curl -s http://localhost:5000/api/projects/42/tokens -b cookies.txt
 ```
+
+**Operation ID:** `get_api_projects_id_tokens_443b3cd56ddc3127`
 
 #### Параметры
 
@@ -89,6 +91,8 @@ curl -s -X POST http://localhost:5000/api/projects/42/tokens -b cookies.txt \
   -d '{"name":"Основной","token":"7123…:AAH…"}'
 ```
 
+**Operation ID:** `post_api_projects_id_tokens_8bb6b54e450b52e2`
+
 **Тело запроса:** `CreateBotTokenBody`
 
 #### Параметры
@@ -138,6 +142,8 @@ curl -s -X POST http://localhost:5000/api/projects/42/tokens -b cookies.txt \
 curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7 -b cookies.txt \
   -H 'Content-Type: application/json' -d '{"name":"Новое имя"}'
 ```
+
+**Operation ID:** `put_api_projects_id_tokens_tokenId_53fe45ccefb18209`
 
 **Тело запроса:** `UpdateBotTokenBody`
 
@@ -209,6 +215,8 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/bot-info -b cookie
   -d '{"field":"name","value":"Новое имя"}'
 ```
 
+**Operation ID:** `put_api_projects_id_tokens_tokenId_bot_info_ed828250482dec72`
+
 **Тело запроса:** `BotInfoUpdateRequest`
 
 #### Параметры
@@ -240,6 +248,32 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/bot-info -b cookie
 }
 ```
 
+### `GET` /api/projects/{id}/tokens/{tokenId}/settings
+
+Безопасные настройки бота без токена и ENV
+
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+
+**Operation ID:** `get_api_projects_id_tokens_tokenId_settings_137e9b952e2b1d35`
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `id` | path | да | — | — |
+| `tokenId` | path | да | — | — |
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Настройки существующего бота проекта |
+| 400 | Некорректные параметры |
+| 401 | Нет авторизации |
+| 403 | Нет доступа к проекту |
+| 404 | Бот или пользователь не найдены |
+| 500 | Не удалось прочитать данные |
+
 ### `GET` /api/projects/{id}/tokens/first
 
 Дефолтный токен для codegen (.env)
@@ -257,6 +291,8 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/bot-info -b cookie
 ```bash
 curl -s http://localhost:5000/api/projects/42/tokens/first -b cookies.txt
 ```
+
+**Operation ID:** `get_api_projects_id_tokens_first_7a1e2cd760b1063e`
 
 #### Параметры
 
@@ -300,6 +336,8 @@ curl -s http://localhost:5000/api/projects/42/tokens/first -b cookies.txt
 ```bash
 curl -s http://localhost:5000/api/projects/42/tokens/list -b cookies.txt
 ```
+
+**Operation ID:** `get_api_projects_id_tokens_list_0139a121a4a86cd3`
 
 #### Параметры
 
@@ -353,6 +391,8 @@ curl -s -X POST http://localhost:5000/api/projects/42/tokens/parse -b cookies.tx
   -d '{"token":"7123…:AAH…"}'
 ```
 
+**Operation ID:** `post_api_projects_id_tokens_parse_06b82c0d03ea7222`
+
 **Тело запроса:** `ParseTokenRequest`
 
 #### Параметры
@@ -403,6 +443,8 @@ curl -s -X POST http://localhost:5000/api/projects/42/tokens/parse -b cookies.tx
 curl -s -X DELETE http://localhost:5000/api/projects/42/tokens/7 -b cookies.txt
 ```
 
+**Operation ID:** `delete_api_projects_projectId_tokens_tokenId_8327d9448fe4c0e6`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -445,6 +487,8 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/auto-restart \
   -b cookies.txt -H 'Content-Type: application/json' \
   -d '{"autoRestart":1,"maxRestartAttempts":3}'
 ```
+
+**Operation ID:** `put_api_projects_projectId_tokens_tokenId_auto_restart_478ff1a315c6e4eb`
 
 **Тело запроса:** `AutoRestartRequest`
 
@@ -492,6 +536,8 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/catch-all-handlers
   -b cookies.txt -H 'Content-Type: application/json' -d '{"catchAllHandlers":1}'
 ```
 
+**Operation ID:** `put_api_projects_projectId_tokens_tokenId_catch_all_handlers_3153b56724d52fb7`
+
 **Тело запроса:** `CatchAllHandlersRequest`
 
 #### Параметры
@@ -536,6 +582,8 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/catch-all-handlers
 curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/content-cache \
   -b cookies.txt -H 'Content-Type: application/json' -d '{"contentCache":1}'
 ```
+
+**Operation ID:** `put_api_projects_projectId_tokens_tokenId_content_cache_0dd5845b6ce1af87`
 
 **Тело запроса:** `ContentCacheRequest`
 
@@ -596,6 +644,8 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/env-batch \
 # → {"success":true,"applied":1,"results":["skipped:BOT_TOKEN:masked"]}
 ```
 
+**Operation ID:** `put_api_projects_projectId_tokens_tokenId_env_batch_6e67cadfc1554597`
+
 **Тело запроса:** `ProjectTokenEnvBatchRequest`
 
 #### Параметры
@@ -643,6 +693,8 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/env-batch \
 ```bash
 curl -s http://localhost:5000/api/projects/42/tokens/7/env-variables -b cookies.txt
 ```
+
+**Operation ID:** `get_api_projects_projectId_tokens_tokenId_env_variables_b074e217d24e5578`
 
 #### Параметры
 
@@ -694,6 +746,8 @@ curl -s -X POST http://localhost:5000/api/projects/42/tokens/7/env-variables \
   -d '{"key":"API_KEY","value":"secret","isSecret":1}'
 ```
 
+**Operation ID:** `post_api_projects_projectId_tokens_tokenId_env_variables_e6e25ab93f4c5c20`
+
 **Тело запроса:** `ProjectTokenEnvCreateBody`
 
 #### Параметры
@@ -740,6 +794,8 @@ curl -s -X DELETE http://localhost:5000/api/projects/42/tokens/7/env-variables/1
   -b cookies.txt
 ```
 
+**Operation ID:** `delete_api_projects_projectId_tokens_tokenId_env_variables_id_09470447009b2e93`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -781,6 +837,8 @@ Partial `{ key?, value?, isSecret? }`. Чужой id → 404 (сверка token
 curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/env-variables/15 \
   -b cookies.txt -H 'Content-Type: application/json' -d '{"value":"new"}'
 ```
+
+**Operation ID:** `put_api_projects_projectId_tokens_tokenId_env_variables_id_74553502a626c604`
 
 **Тело запроса:** `ProjectTokenEnvUpdateBody`
 
@@ -824,6 +882,8 @@ curl -s http://localhost:5000/api/projects/42/tokens/7/env-variables/15/reveal \
   -b cookies.txt
 ```
 
+**Operation ID:** `get_api_projects_projectId_tokens_tokenId_env_variables_id_reveal_aabc67f8558f15a9`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -865,6 +925,8 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/launch-settings \
   -b cookies.txt -H 'Content-Type: application/json' \
   -d '{"launchMode":"polling"}'
 ```
+
+**Operation ID:** `put_api_projects_projectId_tokens_tokenId_launch_settings_3a62d04ebc675e80`
 
 **Тело запроса:** `LaunchSettingsRequest`
 
@@ -913,6 +975,8 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/log-level \
   -b cookies.txt -H 'Content-Type: application/json' -d '{"logLevel":"WARNING"}'
 ```
 
+**Operation ID:** `put_api_projects_projectId_tokens_tokenId_log_level_139232e1cf093e3d`
+
 **Тело запроса:** `LogLevelRequest`
 
 #### Параметры
@@ -957,6 +1021,8 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/log-level \
 curl -s -X DELETE http://localhost:5000/api/projects/42/tokens/7/logs -b cookies.txt
 ```
 
+**Operation ID:** `delete_api_projects_projectId_tokens_tokenId_logs_a12504887a7f7a5c`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -1000,6 +1066,8 @@ Live-логи бота (bot_logs)
 ```bash
 curl -s 'http://localhost:5000/api/projects/42/tokens/7/logs?limit=100' -b cookies.txt
 ```
+
+**Operation ID:** `get_api_projects_projectId_tokens_tokenId_logs_b816ce9e34988bf0`
 
 #### Параметры
 
@@ -1056,6 +1124,8 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/messages-retention
   -b cookies.txt -H 'Content-Type: application/json' -d '{"messagesRetentionDays":60}'
 ```
 
+**Operation ID:** `put_api_projects_projectId_tokens_tokenId_messages_retention_2d9a7efacabdac9a`
+
 **Тело запроса:** `UpdateMessagesRetentionRequest`
 
 #### Параметры
@@ -1100,6 +1170,8 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/messages-retention
 curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/protect-content \
   -b cookies.txt -H 'Content-Type: application/json' -d '{"protectContent":1}'
 ```
+
+**Operation ID:** `put_api_projects_projectId_tokens_tokenId_protect_content_8eafec40dcda8ea9`
 
 **Тело запроса:** `ProtectContentRequest`
 
@@ -1146,6 +1218,8 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/save-incoming-medi
   -b cookies.txt -H 'Content-Type: application/json' -d '{"saveIncomingMedia":1}'
 ```
 
+**Operation ID:** `put_api_projects_projectId_tokens_tokenId_save_incoming_media_42e0d27e5f4c3f3c`
+
 **Тело запроса:** `SaveIncomingMediaRequest`
 
 #### Параметры
@@ -1178,17 +1252,31 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/save-incoming-medi
 
 ### `PUT` /api/projects/{projectId}/tokens/{tokenId}/track-group-membership
 
-PUT /api/projects/{projectId}/tokens/{tokenId}/track-group-membership
+Сохранить слежение за участием бота в группах
 
 **Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+
+Настройка сохранена, token-updated публикуется отдельно; применение ENV при следующем запуске.
+
+**Operation ID:** `put_api_projects_projectId_tokens_tokenId_track_group_membership_f066ec46aa06032c`
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `projectId` | path | да | — | — |
+| `tokenId` | path | да | — | — |
 
 #### Ответы
 
 | Код | Описание |
 |-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
+| 200 | Настройка записана |
+| 400 | Флаг не 0/1 или значение вне диапазона |
+| 401 | Не авторизован |
+| 403 | Нет владения токеном |
+| 404 | Токен не найден |
+| 500 | Ошибка обновления |
 
 ### `PUT` /api/projects/{projectId}/tokens/{tokenId}/track-user-blocks
 
@@ -1201,6 +1289,8 @@ PUT /api/projects/{projectId}/tokens/{tokenId}/track-group-membership
 **Auth:** `requireTokenOwnership`. WS `token-updated`. В env бота (при следующем запуске) — 0/1.
 
 
+
+**Operation ID:** `put_api_projects_projectId_tokens_tokenId_track_user_blocks_7dbf340b04c2dffa`
 
 **Тело запроса:** `TrackUserBlocksRequest`
 
@@ -1248,6 +1338,8 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/userbot \
   -d '{"userbotEnabled":1,"userbotApiId":"123","userbotApiHash":"abc","userbotSessionString":null}'
 ```
 
+**Operation ID:** `put_api_projects_projectId_tokens_tokenId_userbot_fd8b7550187fae6d`
+
 **Тело запроса:** `UserbotPutRequest`
 
 #### Параметры
@@ -1294,6 +1386,8 @@ curl -s -X POST http://localhost:5000/api/projects/42/tokens/7/userbot/send-code
   -d '{"apiId":"123","apiHash":"abc","phone":"+79001234567"}'
 ```
 
+**Operation ID:** `post_api_projects_projectId_tokens_tokenId_userbot_send_code_8a3615c3873252ee`
+
 **Тело запроса:** `UserbotSendCodeRequest`
 
 #### Параметры
@@ -1338,6 +1432,8 @@ curl -s -X POST http://localhost:5000/api/projects/42/tokens/7/userbot/sign-in \
   -d '{"phone":"+79001234567","code":"12345"}'
 ```
 
+**Operation ID:** `post_api_projects_projectId_tokens_tokenId_userbot_sign_in_9eaeee4d1d08853f`
+
 **Тело запроса:** `UserbotSignInRequest`
 
 #### Параметры
@@ -1372,6 +1468,8 @@ Userbot auth: пароль 2FA
 curl -s -X POST http://localhost:5000/api/projects/42/tokens/7/userbot/sign-in-2fa \
   -b cookies.txt -H 'Content-Type: application/json' -d '{"password":"…"}'
 ```
+
+**Operation ID:** `post_api_projects_projectId_tokens_tokenId_userbot_sign_in_2fa_7831afac81178311`
 
 **Тело запроса:** `UserbotSignIn2faRequest`
 

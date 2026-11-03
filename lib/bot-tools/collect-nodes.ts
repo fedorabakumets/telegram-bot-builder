@@ -4,6 +4,7 @@
  */
 
 import type { Node } from '@shared/schema';
+import { hasActiveInput } from '@shared/active-input';
 
 /** Нода с контекстом листа */
 export interface NodeWithSheet {
@@ -56,7 +57,7 @@ export function collectNodeTransitions(node: Node): Array<{ label: string; targe
   if (data.keyboardNodeId) {
     transitions.push({ label: 'keyboardNodeId', target: data.keyboardNodeId });
   }
-  if (data.inputTargetNodeId) {
+  if (hasActiveInput(node) && data.inputTargetNodeId) {
     transitions.push({ label: 'inputTargetNodeId', target: data.inputTargetNodeId });
   }
   if ((data as any).refundEmptyTarget) {

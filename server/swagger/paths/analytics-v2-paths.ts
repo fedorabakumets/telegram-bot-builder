@@ -3,20 +3,30 @@ import type { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
 import { z } from 'zod';
 import { AnalyticsV2QuerySchema, AnalyticsV2SnapshotSchema } from '../schemas/analytics-v2';
 import { AcquisitionReportSchema, AcquisitionSchemas, AcquisitionHistorySchema } from '../schemas/analytics-acquisition';
-import { linkBudgetInput } from '../../routes/analytics/acquisition/link-budget';
-import { sourceInput } from '../../routes/analytics/acquisition/validation';
-import { placementPatch, expensePatch } from '../../routes/analytics/acquisition/update';
-import { reportInput } from '../../routes/analytics/acquisition/report';
+import { linkBudgetInput } from '../../../shared/analytics/acquisition/link-budget';
+import { sourceInput } from '../../../shared/analytics/acquisition/validation';
+import { placementPatch, expensePatch } from '../../../shared/analytics/acquisition/update';
+import { reportInput } from '../../../shared/analytics/acquisition/report';
+import { MessageErrorSchema, UnauthorizedSchema } from '../schemas/common';
+import { ProjectPersistenceSchema } from '../schemas/persistence';
 /** Параметр проекта. */
 const params = z.object({ /** ID проекта. */ id: z.coerce.number().int().positive() });
+/** Тело контролируемой ошибки; issues — исходные детали Zod с зависящими от кода дополнительными полями. */
+const validationFailure = MessageErrorSchema.extend({
+  /** Детали нарушенных ограничений, если отказал Zod. */ issues: z.array(z.object({
+    /** Код ограничения. */ code: z.string(), /** Путь поля. */ path: z.array(z.union([z.string(), z.number()])),
+    /** Текст ограничения. */ message: z.string(),
+  }).passthrough()).optional(),
+});
 /** Общие ошибки защищённого API. */
 const failures = {
-  /** Некорректные поля. */ 400: { description: 'Некорректные поля, даты, сумма или шаг; JSON message и необязательные issues' },
-  /** Нет авторизации. */ 401: { description: 'Требуется сессия или Bearer PAT' },
-  /** Чужой проект или бот. */ 403: { description: 'Нет доступа к проекту или бот не принадлежит проекту' },
-  /** Объект отсутствует. */ 404: { description: 'Объект не найден внутри проекта' },
-  /** Конфликт start. */ 409: { description: 'Публичная метка пересекается с пользовательским маршрутом /start' },
-  /** Недоступность. */ 503: { description: 'Снимок или сохранение временно недоступны; неизвестное не заменяется нулём' },
+  /** Некорректные поля. */ 400: { description: 'Некорректные поля, даты, сумма или шаг', content: { 'application/json': { schema: validationFailure } } },
+  /** Нет авторизации. */ 401: { description: 'Требуется сессия или Bearer PAT', content: { 'application/json': { schema: UnauthorizedSchema } } },
+  /** Чужой проект или бот. */ 403: { description: 'Нет доступа к проекту или бот не принадлежит проекту', content: { 'application/json': { schema: MessageErrorSchema } } },
+  /** Объект отсутствует. */ 404: { description: 'Объект не найден внутри проекта', content: { 'application/json': { schema: MessageErrorSchema } } },
+  /** Конфликт start. */ 409: { description: 'Конфликт публичной метки либо ключа повторной доставки', content: { 'application/json': { schema: MessageErrorSchema } } },
+  /** Ошибка снимка. */ 500: { description: 'Не удалось получить снимок', content: { 'application/json': { schema: MessageErrorSchema } } },
+  /** Недоступность. */ 503: { description: 'Снимок или сохранение временно недоступны', content: { 'application/json': { schema: MessageErrorSchema } } },
 };
 /** Регистрирует реальные API без отдельной расчётной логики документации. */
 export function registerAnalyticsV2Paths(registry: OpenAPIRegistry, security: Array<Record<string, string[]>>): void {
@@ -30,7 +40,7 @@ export function registerAnalyticsV2Paths(registry: OpenAPIRegistry, security: Ar
   registry.registerPath({method:'post',path:`${base}/acquisition/budgets`,tags:['analytics-v2'],security,
     summary:'Сохранить рекламный бюджет простой start-ссылки',description:'Атомарно создаёт источник, техническое размещение, публичную метку и дневной расход; существующая метка используется повторно без изменения прежних даты начала и пояса. Сумма — decimal-строка. Поддерживает фиксированный курс, дату курса, примечание и явное равномерное распределение untilDay с allocation=equal. link_, ref и ref_ запрещены. Конфликт маршрута или занятой ссылки даёт 409. Повторный POST добавляет отдельную финансовую запись, не является идемпотентным.',
     request:{params,body:{required:true,content:{'application/json':{schema:linkBudgetInput}}}},
-    responses:{201:{description:'Сохранённый дневной расход',content:{'application/json':{schema:z.object({item:AcquisitionSchemas.expenses.item})}}},...failures},
+    responses:{201:{description:'Сохранённый дневной расход',content:{'application/json':{schema:z.object({item:AcquisitionSchemas.expenses.item, /** Подтверждённая транзакция. */ persistence:ProjectPersistenceSchema})}}},...failures},
   });
   registry.registerPath({ method: 'get', path: `${base}/acquisition/exchange-rate`, tags: ['analytics-v2'], security,
     summary: 'Бесплатный официальный курс USD/RUB ЦБ на дату рекламного бюджета',
@@ -66,13 +76,13 @@ export function registerAnalyticsV2Paths(registry: OpenAPIRegistry, security: Ar
       summary: `Создать: ${names[resource]}`,
       description: 'Все связи проверяются в проекте. Расходы: allocation=equal и untilDay явно распределяют сумму по дням с сохранением итога; estimated=true. Курс exchangeRateRubPerUsd — RUB за один USD. Ссылка имеет постоянную bc_-метку и не создаёт login-код. Реферер должен быть подтверждённым пользователем проекта.',
       request: { params, body: { required: true, content: { 'application/json': { schema: input } } } },
-      responses: { 201: { description: 'Созданный объект; для расходов массив дневных строк', content: { 'application/json': { schema: resource === 'expenses' ? z.object({ items: z.array(item) }) : z.object({ item }) } } }, ...failures },
+      responses: { 201: { description: 'Созданный объект; для расходов массив дневных строк', content: { 'application/json': { schema: resource === 'expenses' ? z.object({ items: z.array(item), /** Подтверждённая транзакция. */ persistence: ProjectPersistenceSchema }) : z.object({ item, /** Подтверждённая транзакция. */ persistence: ProjectPersistenceSchema }) } } }, ...failures },
     });
     registry.registerPath({ method: 'patch', path: `${base}/acquisition/${resource}/{resourceId}`, tags: ['analytics-v2'], security,
       summary: `Исправить или архивировать: ${names[resource]}`,
       description: 'Изменения сохраняются в аудите. archived=true архивирует, false восстанавливает. Нельзя изменить code, источник/бота опубликованной ссылки или связь размещения.',
       request: { params: params.extend({ resourceId: z.coerce.number().int().positive() }), body: { required: true, content: { 'application/json': { schema: patches[resource] } } } },
-      responses: { 200: { description: 'Обновлённый объект', content: { 'application/json': { schema: z.object({ item }) } } }, ...failures },
+      responses: { 200: { description: 'Обновлённый объект', content: { 'application/json': { schema: z.object({ item, /** Подтверждённая транзакция. */ persistence: ProjectPersistenceSchema }) } } }, ...failures },
     });
   }
 }

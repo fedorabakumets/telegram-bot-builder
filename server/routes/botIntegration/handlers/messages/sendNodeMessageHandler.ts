@@ -84,7 +84,7 @@ export async function sendNodeMessageHandler(req: Request, res: Response): Promi
       projectId,
     });
     const [mediaFiles, buttons] = await Promise.all([
-      extractMediaFromNode(node.data, storage),
+      extractMediaFromNode(node.data, storage, projectId),
       Promise.resolve(extractButtonsFromNode(node.data)),
     ]);
     const useHtml = String(node.data.formatMode) === "html" || Boolean(node.data.markdown);
@@ -94,7 +94,9 @@ export async function sendNodeMessageHandler(req: Request, res: Response): Promi
       textWithVariables,
       mediaFiles,
       buttons,
-      useHtml
+      useHtml,
+      undefined,
+      projectId
     );
 
     await storage.createBotMessage({

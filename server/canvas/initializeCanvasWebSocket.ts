@@ -65,7 +65,9 @@ export function initializeCanvasWebSocket(): WebSocketServer {
             if (parsed.projectId !== projectId) return;
 
             const actor = enrichCanvasActor(sessionUser, parsed.actor, parsed.tabId);
-            const outbound = { ...parsed, actor, userId: actor.userId };
+            /** Черновик клиента не может выдавать себя за подтверждённую серверную ревизию. */
+            const { revision: _untrustedRevision, ...draft } = parsed;
+            const outbound = { ...draft, actor, userId: actor.userId };
             broadcastCanvasSync(projectId, outbound, ws);
           } catch {
             // Игнорируем некорректные сообщения

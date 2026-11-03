@@ -7,6 +7,20 @@
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
+import { scenarioNodeSchema, scenarioNodePatchSchema, scenarioOperationsSchema } from '../../shared/scenario-operation-schema.ts';
+import { optionalActionRequestIdSchema } from '../../shared/action-request-id.ts';
+import { registerAnalyticsExtraTools } from './mcp-register-analytics-extra-tools.ts';
+import { registerTableExtraTools } from './mcp-register-table-extra-tools.ts';
+import { registerUserDataTools } from './mcp-register-user-data-tools.ts';
+import { registerDialogWriteTools } from './mcp-register-dialog-write-tools.ts';
+import { registerBroadcastTools } from './mcp-register-broadcast-tools.ts';
+import { registerProjectFilesTools } from './mcp-register-project-files-tools.ts';
+import { registerBotSettingsTools } from './mcp-register-bot-settings-tools.ts';
+import { registerTemplateTools } from './mcp-register-template-tools.ts';
+import { registerVersionLogExtraTools } from './mcp-register-version-log-extra-tools.ts';
+import { registerTableBundleTools } from './mcp-register-table-bundle-tools.ts';
+import { createMcpActionRegistry } from './mcp-action-registry.ts';
+import { registerMcpActionTools } from './mcp-action-tools.ts';
 import { registerBotLogTools } from './mcp-register-log-tools.ts';
 import { registerPopularButtonsTools } from './mcp-register-popular-buttons-tools.ts';
 import { registerPremiumTools } from './mcp-register-premium-tools.ts';
@@ -110,6 +124,8 @@ export const MCP_SERVER_INFO = {
 
 /** Опции регистрации тулов */
 export interface RegisterMcpToolsOptions {
+  /** Профиль инструментов: полный по умолчанию или четыре инструмента каталога. */
+  profile?: 'full' | 'compact';
   /**
    * Включить load_project / save_project (диск bots/).
    * Только для stdio; на remote HTTP должно быть false.
@@ -134,6 +150,9 @@ function textResult(data: unknown) {
  * @param options - Опции (файловые тулы)
  */
 export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOptions = {}): void {
+  const targetServer = server;
+  const registry = createMcpActionRegistry(server);
+  server = registry.facade;
   /** Настройка юзербота доступна в обоих транспортах */
   registerUserbotTools(server);
   registerToolDocsTools(server);
@@ -275,7 +294,7 @@ export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOpt
       description: 'Добавить ноду в project.json',
       inputSchema: {
         project_json: z.union([z.string(), z.record(z.unknown())]),
-        node: z.record(z.unknown()).describe('Объект ноды'),
+        node: scenarioNodeSchema.describe('Узел по общей схеме проекта'),
         sheet_id: z.string().optional(),
       },
     },
@@ -294,7 +313,7 @@ export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOpt
       inputSchema: {
         project_json: z.union([z.string(), z.record(z.unknown())]),
         node_id: z.string(),
-        patch: z.record(z.unknown()).describe('{ position?, data?, type? }'),
+        patch: scenarioNodePatchSchema.describe('Только изменяемые поля: position, data, type'),
         sheet_id: z.string().optional().describe('ID листа (иначе автопоиск по всем листам)'),
       },
     },
@@ -367,16 +386,18 @@ export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOpt
   server.registerTool(
     'update_project_db',
     {
-      description: 'Записать сценарий в БД запущенного приложения и в реальном времени обновить открытый холст (live-редактирование). Адресация по числовому projectId из URL редактора',
+      description: 'Записать сценарий проекта и получить квитанцию сохранения. Передайте expected_revision из чтения проекта для защиты от перезаписи конкурентных правок. Без неё сохраняется совместимый безусловный режим. Рассылка обновления холста не подтверждает применение интерфейсом.',
       inputSchema: {
         project_id: z.number().describe('Числовой ID проекта из URL редактора'),
         project_json: z.union([z.string(), z.record(z.unknown())]).describe('project.json'),
+        expected_revision: z.number().int().nonnegative().optional().describe('Ревизия прочитанного проекта; при конфликте сохранение отклоняется.'),
         commit_message: z.string().optional().describe('Заметка к версии (ручной чекпоинт)'),
         skip_validation: z.boolean().optional().describe('Пропустить валидацию перед записью'),
       },
     },
-    async ({ project_id, project_json, commit_message, skip_validation }) =>
+    async ({ project_id, project_json, expected_revision, commit_message, skip_validation }) =>
       textResult(await updateProjectInDb(project_id, project_json, {
+        expectedRevision: expected_revision,
         commitMessage: commit_message,
         skipValidation: skip_validation,
       })),
@@ -388,7 +409,7 @@ export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOpt
       description: 'Добавить ноду в проект в БД живого приложения с обновлением холста (live). Адресация по числовому projectId из URL редактора',
       inputSchema: {
         project_id: z.number().describe('Числовой ID проекта из URL редактора'),
-        node: z.record(z.unknown()).describe('Объект ноды'),
+        node: scenarioNodeSchema.describe('Узел по общей схеме проекта'),
         sheet_id: z.string().optional(),
         commit_message: z.string().optional().describe('Заметка к версии (ручной чекпоинт)'),
       },
@@ -410,7 +431,7 @@ export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOpt
       inputSchema: {
         project_id: z.number().describe('Числовой ID проекта из URL редактора'),
         node_id: z.string(),
-        patch: z.record(z.unknown()).describe('{ position?, data?, type? }'),
+        patch: scenarioNodePatchSchema.describe('Только изменяемые поля: position, data, type'),
         sheet_id: z.string().optional().describe('ID листа (иначе автопоиск по всем листам)'),
         commit_message: z.string().optional().describe('Заметка к версии (ручной чекпоинт)'),
       },
@@ -573,9 +594,10 @@ export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOpt
     'db_create_project',
     {
       description: 'Создать новый проект с дефолтным сценарием (/start → приветствие) в БД живого приложения. Возвращает id нового проекта.',
-      inputSchema: { name: z.string().describe('Название нового проекта') },
+      inputSchema: { name: z.string().describe('Название нового проекта'),
+        request_id: optionalActionRequestIdSchema.describe('UUID одного намерения; сохраните для безопасного повтора') },
     },
-    async ({ name }) => textResult(await createProjectInDb(name)),
+    async ({ name, request_id }) => textResult(await createProjectInDb(name, { requestId: request_id })),
   );
 
   server.registerTool(
@@ -585,9 +607,10 @@ export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOpt
       inputSchema: {
         source_project_id: z.number().describe('ID проекта-источника'),
         name: z.string().optional().describe('Имя копии (по умолчанию «{имя} (копия)»)'),
+        request_id: optionalActionRequestIdSchema.describe('UUID одного намерения; сохраните для безопасного повтора'),
       },
     },
-    async ({ source_project_id, name }) => textResult(await duplicateProjectInDb(source_project_id, { name })),
+    async ({ source_project_id, name, request_id }) => textResult(await duplicateProjectInDb(source_project_id, { name, requestId: request_id })),
   );
 
   server.registerTool(
@@ -633,7 +656,8 @@ export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOpt
     async ({ project_ids }) => textResult(await reorderProjectsInDb(project_ids)),
   );
 
-  server.registerTool(
+  /** Экспорт с записью на диск принадлежит только локальному stdio-клиенту. */
+  if (enableFileTools) server.registerTool(
     'db_export_project',
     {
       description: 'Экспортировать проект в готовый Python-код бота (bot.py): сохраняет файл на диск в каталог bots/ и возвращает путь, размер, число строк и превью (а не весь код — чтобы не раздувать контекст). Полный код — флаг inline:true или чтение файла.',
@@ -940,10 +964,10 @@ export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOpt
   server.registerTool(
     'db_apply_ops',
     {
-      description: 'Пакет операций к проекту в БД за одну транзакцию (один live-broadcast/версия). update_node/remove_node без sheet_id ищут ноду по всем листам; при отсутствии — ошибка, без записи. Адресация по projectId из URL',
+      description: 'Пакет операций: чтение проекта с ревизией, изменения в памяти и одна защищённая запись. Это не транзакция всего GET→PUT. Ошибка операции не записывает пакет, конфликт ревизии требует перечитать проект. Версия и live-рассылка имеют отдельные статусы.',
       inputSchema: {
         project_id: z.number().describe('Числовой ID проекта из URL редактора'),
-        ops: z.array(z.record(z.unknown())).describe('Массив операций; поле op: add_node, update_node, remove_node, connect_nodes, …; для update/remove без sheet_id — автопоиск по листам'),
+        ops: scenarioOperationsSchema.describe('Проверяемый пакет операций; update/remove без sheet_id ищут узел по листам'),
         commit_message: z.string().optional().describe('Заметка к версии (ручной чекпоинт)'),
         skip_validation: z.boolean().optional().describe('Пропустить валидацию перед записью (для легаси с битыми ссылками; style:default уже принимается)'),
       },
@@ -1169,6 +1193,18 @@ export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOpt
   );
 
   registerTableTools(server, enableFileTools);
+  /** Подключает новые операции через те же HTTP-проверки проекта и общие схемы. */
+  registerAnalyticsExtraTools(server);
+  registerTableExtraTools(server);
+  registerUserDataTools(server);
+  registerDialogWriteTools(server);
+  registerBroadcastTools(server);
+  registerProjectFilesTools(server);
+  registerBotSettingsTools(server);
+  registerTemplateTools(server);
+  registerVersionLogExtraTools(server);
+  registerTableBundleTools(server);
+  registerMcpActionTools(targetServer, registry.actions, options.profile);
 }
 
 /**

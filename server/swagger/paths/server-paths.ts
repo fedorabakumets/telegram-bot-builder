@@ -4,7 +4,7 @@
  */
 
 import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
-import { UnauthorizedSchema } from "../schemas/common";
+import { UnauthorizedSchema, SetupRequiredSchema } from "../schemas/common";
 import { ServerEnvKeysResponseSchema } from "../schemas/server";
 import {
   SERVER_ENV_DENY_EXACT,
@@ -57,6 +57,7 @@ export function registerServerPaths(
       },
       503: {
         description: "Приложение не прошло setup — глобальный setupGuard (настройка в /admin)",
+        content: { 'application/json': { schema: SetupRequiredSchema } },
       },
     },
   });

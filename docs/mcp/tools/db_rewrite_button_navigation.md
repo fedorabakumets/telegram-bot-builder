@@ -1,56 +1,192 @@
+<!-- @fileoverview Автоматическая карточка реального действия MCP. -->
 # `db_rewrite_button_navigation`
-
-## Назначение
 
 Массово переключить кнопочную навигацию между новыми сообщениями и edit_message. Без confirm возвращает только план; запись выполняется одной версией.
 
-## Когда использовать
-
-Используй этот тул только после проверки его фактической схемы и контекста задачи. Если задача относится к другой операции, сначала найди связанный workflow через `get_workflow_docs`.
+Раздел: scenario. Транспорт: http, stdio.
 
 ## Параметры
 
-- `project_id` — number; обязательный параметр.
-- `mode` — enum; обязательный параметр.
-- `confirm` — boolean; обязательный параметр.
-- `sheet_id` — string; необязательный параметр.
-- `commit_message` — string; необязательный параметр.
+```json
+{
+  "type": "object",
+  "properties": {
+    "project_id": {
+      "type": "number",
+      "description": "Числовой ID проекта из URL редактора"
+    },
+    "mode": {
+      "type": "string",
+      "enum": [
+        "edit_current",
+        "send_new"
+      ],
+      "description": "edit_current — менять текущее сообщение; send_new — отменить правки этого инструмента"
+    },
+    "confirm": {
+      "type": "boolean",
+      "default": false,
+      "description": "true — применить показанный план"
+    },
+    "sheet_id": {
+      "type": "string",
+      "description": "Менять целевые экраны только этого листа"
+    },
+    "commit_message": {
+      "type": "string",
+      "description": "Заметка к версии проекта"
+    }
+  },
+  "required": [
+    "project_id",
+    "mode"
+  ],
+  "additionalProperties": false,
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}
+```
 
-Точные типы и обязательность берутся из схемы MCP-регистрации. Перед вызовом проверь описание инструмента в MCP-клиенте; не придумывай отсутствующие поля.
+## Эффект
+
+```json
+{
+  "section": "scenario",
+  "effect": "write",
+  "completionMode": "immediate",
+  "destructive": false,
+  "runtimeApply": "separate"
+}
+```
 
 ## Пример вызова
 
 ```json
 {
-  "tool": "db_rewrite_button_navigation",
-  "arguments": { "project_id": "<значение>" }
+  "action_id": "db_rewrite_button_navigation",
+  "args": {
+    "project_id": 1,
+    "mode": "edit_current",
+    "confirm": false
+  }
 }
 ```
 
-## Пример успешного ответа
+Структурный пример проверен Zod; ID и данные замените реальными.
 
-Форма ответа зависит от параметров и текущего состояния проекта. Сохрани фактический ответ MCP и проверь поле ошибки, если оно присутствует.
+## Ответ и ошибки
 
-## Типичные ошибки
+Прежний text content сохранён. Метаданные `_meta.botcraft` различают prepared/read/saved/pending/partial/unknown/error/unverified. Только `persistence.confirmed=true` подтверждает сохранение. Неизвестный исход требует чтения состояния до повтора; live-доставка и применение ботом проверяются отдельно.
 
-- Переданы неизвестные или пропущенные обязательные параметры.
-- Использован ID другого проекта, листа или токена.
-- Следующая нода, цель перехода или запись не существует.
-- Агент не проверил ответ инструмента перед следующим действием.
+### Схема результата
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "data": {
+      "anyOf": [
+        {},
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "execution": {
+      "type": "object",
+      "properties": {
+        "section": {
+          "type": "string"
+        },
+        "effect": {
+          "type": "string",
+          "enum": [
+            "read",
+            "prepare",
+            "write",
+            "file",
+            "external",
+            "unknown"
+          ]
+        },
+        "destructive": {
+          "type": "boolean"
+        },
+        "runtimeApply": {
+          "type": "string",
+          "enum": [
+            "not_applicable",
+            "separate"
+          ]
+        },
+        "completionMode": {
+          "type": "string",
+          "enum": [
+            "immediate",
+            "job"
+          ]
+        },
+        "pollAction": {
+          "type": "string"
+        },
+        "outcome": {
+          "type": "string",
+          "enum": [
+            "prepared",
+            "read",
+            "saved",
+            "pending",
+            "partial",
+            "unknown",
+            "error",
+            "unverified",
+            "file_result"
+          ]
+        },
+        "persistence": {
+          "type": "object",
+          "properties": {
+            "confirmed": {
+              "type": "boolean"
+            },
+            "projectId": {
+              "type": "integer",
+              "exclusiveMinimum": 0
+            },
+            "revision": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "confirmed"
+          ],
+          "additionalProperties": false
+        },
+        "sideEffects": {
+          "type": "object",
+          "additionalProperties": {}
+        }
+      },
+      "required": [
+        "section",
+        "effect",
+        "destructive",
+        "runtimeApply",
+        "completionMode",
+        "outcome",
+        "persistence"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "execution"
+  ],
+  "additionalProperties": false,
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}
+```
 
 ## Ограничения и безопасность
 
-Тул может изменять live-БД, проект или состояние бота. Выполняй его только в рамках явной просьбы пользователя и проверь результат после операции.
-- Не перезапускай бота автоматически; перезапуск допустим только по явной просьбе пользователя.
-- После операции перечитай состояние и вызови подходящую проверку или логи.
-- Если тул требует `confirm`, передавай его только после подтверждения пользователя.
-
-## Связанные инструменты
-
-- `get_tool_docs` — получить карточку этого и связанных тулов.
-- `search_tool_docs` — найти подходящие инструменты.
-- `get_workflow_docs` — получить рекомендуемую последовательность действий.
-
-## Рекомендуемый следующий шаг
-
-Проверь фактический ответ MCP, затем вызови следующий тул из соответствующего workflow.
+Изучите describe_actions, проверьте реальные ID и права проекта. Для разрушительных и внешних действий требуется явное намерение пользователя. Для повторов сохраняйте requestId, если он объявлен. Отсутствие ошибки транспорта не доказывает сохранение.

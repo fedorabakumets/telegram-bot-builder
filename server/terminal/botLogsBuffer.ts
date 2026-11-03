@@ -230,18 +230,19 @@ export function stopFlushTimer(): void {
 
 /**
  * Удаляет все логи бота из БД и очищает буфер.
- * Вызывается перед запуском нового экземпляра бота.
+ * Вызывается перед запуском нового экземпляра бота; HTTP очистка требует строгого подтверждения.
  * @param projectId - Идентификатор проекта
  * @param tokenId - Идентификатор токена
+ * @param strict - Возвращать ошибку вызывающему коду при недоступности БД
  */
-export async function clearBotLogs(projectId: number, tokenId: number): Promise<void> {
+export async function clearBotLogs(projectId: number, tokenId: number, strict = false): Promise<void> {
   const key = `${projectId}_${tokenId}`;
   // Сначала сбрасываем буфер чтобы старые логи не записались в БД после очистки
   await flushBuffer(key);
   // Очищаем in-memory буфер
   buffer.delete(key);
 
-  if (globalThis.__dbPoolActive === false) return;
+  if (globalThis.__dbPoolActive === false) { if (strict) throw new Error('База логов недоступна'); return; }
   try {
     // Удаляем только live-логи (без launch_id) — логи истории запусков (с launch_id) сохраняем
     await db.execute(sql`
@@ -249,5 +250,6 @@ export async function clearBotLogs(projectId: number, tokenId: number): Promise<
     `);
   } catch (err) {
     console.error(`[BotLogsBuffer] Ошибка очистки логов для ${key}:`, err);
+    if (strict) throw err;
   }
 }

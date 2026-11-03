@@ -3,6 +3,7 @@
  */
 
 import type { Node } from '@shared/schema';
+import { hasActiveInput } from '@shared/active-input';
 import { nanoid } from 'nanoid';
 import { getNodeDefaults } from './node-defaults';
 import type { NodeWithSheet } from './node-utils';
@@ -81,34 +82,14 @@ export function getLinkedInputSummary(linkedNode: NodeWithSheet | null): LinkedI
 }
 
 /**
- * Проверяет, есть ли у `message` старые поля сбора ответа.
+ * Проверяет, включён ли у `message` старый режим сбора ответа.
+ * Сохранённые параметры и inputTargetNodeId сами по себе не включают ввод.
  *
  * @param {Node} node - Проверяемый узел.
- * @returns {boolean} `true`, если в узле есть legacy-настройки ввода.
+ * @returns {boolean} `true` только при явно включённом legacy-сборе ответа.
  */
 export function hasLegacyMessageInput(node: Node): boolean {
-  const data = node.data as any;
-  return Boolean(
-    data.collectUserInput ||
-    data.inputType ||
-    data.enableTextInput ||
-    data.enablePhotoInput ||
-    data.enableVideoInput ||
-    data.enableAudioInput ||
-    data.enableDocumentInput ||
-    data.inputRequired ||
-    data.appendVariable ||
-    data.inputVariable ||
-    data.textInputVariable ||
-    data.photoInputVariable ||
-    data.videoInputVariable ||
-    data.audioInputVariable ||
-    data.documentInputVariable ||
-    data.waitForTextInput ||
-    data.inputTargetNodeId ||
-    data.inputPrompt ||
-    data.saveToDatabase
-  );
+  return node.type === 'message' && hasActiveInput(node);
 }
 
 /**

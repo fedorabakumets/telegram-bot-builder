@@ -8,6 +8,7 @@ import * as path from 'node:path';
 import type { BotDataWithSheets } from '@shared/schema';
 import { validateBotProject } from './validate-project.ts';
 import type { ValidateProjectResult } from './types.ts';
+import { atomicWriteVerified, type LocalFileReceipt } from './atomic-local-file.ts';
 
 /**
  * Резолвит пользовательский путь в безопасный путь к project.json внутри каталога bots/
@@ -84,7 +85,7 @@ export async function saveProject(
   userPath: string,
   projectJson: unknown,
   options?: { skipValidation?: boolean },
-): Promise<{ path: string; validation: ValidateProjectResult; bytesWritten: number } | { error: string }> {
+): Promise<({ path: string; validation: ValidateProjectResult; bytesWritten: number } & LocalFileReceipt) | { error: string; outcome?: string }> {
   const project = parseProject(projectJson);
   if (!project) return { error: 'Невалидный project_json' };
 
@@ -97,9 +98,11 @@ export async function saveProject(
   if ('error' in resolvedResult) return resolvedResult;
   const { resolved } = resolvedResult;
 
-  await fs.mkdir(path.dirname(resolved), { recursive: true });
   const content = JSON.stringify(project, null, 2);
-  await fs.writeFile(resolved, content, 'utf8');
-
-  return { path: resolved, validation, bytesWritten: Buffer.byteLength(content, 'utf8') };
+  try {
+    const receipt = await atomicWriteVerified(resolved, content, path.resolve(process.cwd(), 'bots'));
+    return { path: resolved, validation, bytesWritten: Buffer.byteLength(content, 'utf8'), ...receipt };
+  } catch (error) {
+    return { error: (error as Error).message, outcome: (error as { outcome?: string }).outcome ?? 'unknown' };
+  }
 }

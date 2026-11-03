@@ -16,6 +16,12 @@ export const TableChartPointSchema = z.object({
 export const TableChartQuerySchema = z.object({
   /** Столбец групп. */
   xColumnId: z.string().openapi({ example: "3" }),
+  /** Столбец даты для ограничения периода. */
+  dateColumnId: z.string().optional(),
+  /** Начало периода включительно: ISO с часовым поясом. */
+  from: z.string().optional(),
+  /** Конец периода исключительно: ISO с часовым поясом. */
+  to: z.string().optional(),
   /** Столбец значений. */
   yColumnId: z.string().openapi({ example: "4" }),
   /** Способ подсчёта. */

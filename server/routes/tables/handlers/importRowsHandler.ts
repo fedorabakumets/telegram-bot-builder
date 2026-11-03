@@ -4,6 +4,7 @@
  */
 
 import type { Request, Response } from "express";
+import { tableWriteReceipt } from "../write-receipt";
 import { importRowsInProject } from "../../../database/bot-tables/import-rows";
 import { MAX_ADD_ROWS } from "../../../database/bot-tables/limits";
 import { fail, sqlFailure } from "../http-error";
@@ -45,7 +46,7 @@ export async function importRowsHandler(req: Request, res: Response): Promise<vo
       fail(res, imported.status, imported.message);
       return;
     }
-    res.status(201).json(imported);
+    res.status(201).json(tableWriteReceipt(res, imported, owned.projectId, owned.table.id));
     await notifyTableChange(owned.projectId, owned.table.id, owned.table.name, imported.map((row) => row.data));
   } catch (error) {
     const parsed = sqlFailure(error);

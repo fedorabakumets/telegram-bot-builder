@@ -10,6 +10,7 @@
  */
 
 import type { Request, Response } from "express";
+import { durableProjectCreation } from "./project-creation-durable";
 import { storage } from "../../../storages/storage";
 import type { StorageBotProjectInput } from "../../../storages/storageTypes";
 import { getOwnerIdFromRequest } from "../../../telegram/auth-middleware";
@@ -64,6 +65,7 @@ export async function duplicateProjectHandler(req: Request, res: Response): Prom
             return;
         }
 
+        await durableProjectCreation(req, res, ownerId, "duplicate_project", async () => {
         // Имя из тела запроса (если непустая строка), иначе «{имя источника} (копия)»
         const requestedName = typeof req.body?.name === "string" ? req.body.name.trim() : "";
         const name = requestedName.length > 0 ? requestedName : `${source.name} (копия)`;
@@ -77,6 +79,8 @@ export async function duplicateProjectHandler(req: Request, res: Response): Prom
         };
 
         const project = await storage.createBotProject(projectData);
+        const persistence = { confirmed: true, method: 'returning', projectId: project.id, revision: project.revision };
+        await res.locals.actionRequestCheckpoint?.({ id: project.id, name: project.name, revision: project.revision, persistence });
 
         // Создаём таблицу _content для нового проекта
         try {
@@ -93,7 +97,8 @@ export async function duplicateProjectHandler(req: Request, res: Response): Prom
         }
 
         const { nodeCount, sheetsCount } = countNodesAndSheets(project.data);
-        res.status(201).json(toProjectListItem(project, nodeCount, sheetsCount));
+        res.status(201).json({ ...toProjectListItem(project, nodeCount, sheetsCount), revision: project.revision, effect: "application", outcome: "saved", persistence });
+        });
     } catch (error) {
         res.status(500).json({ message: "Не удалось дублировать проект" });
     }

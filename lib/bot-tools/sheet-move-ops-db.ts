@@ -33,6 +33,12 @@ export interface MoveSheetToProjectDbSuccess {
   newSheetName: string;
   /** Режим операции */
   mode: MoveSheetMode;
+  /** Подтверждённые изменения проектов */
+  persistence: { target: unknown; source?: unknown };
+  /** Эффект операции */
+  effect: "application";
+  /** Статус сохранения */
+  outcome: "saved";
 }
 
 /** Результат переноса листа между проектами в БД с ошибкой */
@@ -41,6 +47,12 @@ export interface MoveSheetToProjectDbError {
   error: string;
   /** Доп. детали (HTTP-статус, тело, валидация) */
   details?: unknown;
+  /** Частично выполненный перенос требует сверки перед повтором */
+  outcome?: "partial" | "unknown";
+  /** Исход удаления из источника при частичном переносе */
+  sourceOutcome?: "not_saved" | "unknown";
+  /** Подтверждённый эффект в целевом проекте */
+  persistence?: unknown;
 }
 
 /** Объединённый тип возврата moveSheetToProjectInDb */
@@ -86,22 +98,27 @@ export async function moveSheetToProjectInDb(
   if ('error' in moved) return { error: moved.error };
 
   // Шаг 1: пишем целевой проект (лист появляется здесь)
-  const targetSave = await updateProjectInDb(targetProjectId, moved.target, options);
+  const targetSave = await updateProjectInDb(targetProjectId, moved.target, { ...options, expectedRevision: targetFetched.revision });
   if ('error' in targetSave) {
-    return { error: `Не удалось записать целевой проект: ${targetSave.error}`, details: targetSave };
+    return { error: `Не удалось подтвердить запись целевого проекта: ${targetSave.error}`, details: targetSave, ...(targetSave.outcome === "unknown" ? { outcome: "unknown" as const } : {}) };
   }
 
+  let sourceReceipt: unknown;
   // Шаг 2: в режиме move удаляем лист из источника (только после успеха цели)
   if (mode === 'move') {
-    const sourceSave = await updateProjectInDb(sourceProjectId, moved.source, options);
+    const sourceSave = await updateProjectInDb(sourceProjectId, moved.source, { ...options, expectedRevision: sourceFetched.revision });
     if ('error' in sourceSave) {
       return {
         error:
-          `Лист скопирован в целевой проект, но не удалён из исходного: ${sourceSave.error}. ` +
-          `Удали лист ${sheetId} из проекта ${sourceProjectId} вручную.`,
+          `Лист сохранён в целевом проекте, но удаление из исходного не подтверждено: ${sourceSave.error}. ` +
+          `Перечитайте оба проекта перед повтором операции.`,
         details: sourceSave,
+        outcome: "partial",
+        sourceOutcome: sourceSave.outcome === "unknown" ? "unknown" : "not_saved",
+        persistence: targetSave.persistence,
       };
     }
+    sourceReceipt = sourceSave.persistence;
   }
 
   return {
@@ -111,5 +128,8 @@ export async function moveSheetToProjectInDb(
     newSheetId: moved.newSheetId,
     newSheetName: moved.newSheetName,
     mode,
+    effect: "application",
+    outcome: "saved",
+    persistence: { target: targetSave.persistence, ...(sourceReceipt ? { source: sourceReceipt } : {}) },
   };
 }

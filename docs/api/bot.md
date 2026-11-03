@@ -23,6 +23,8 @@ curl -s -X DELETE 'http://localhost:5000/api/bot/env/15?telegram_id=123' \
   -H 'Authorization: Bearer mcp_…'
 ```
 
+**Operation ID:** `delete_api_bot_env_id_4b5e355175d56aaf`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -71,6 +73,8 @@ curl -s -X PATCH 'http://localhost:5000/api/bot/env/15?telegram_id=123' \
   -d '{"value":"new"}'
 ```
 
+**Operation ID:** `patch_api_bot_env_id_3a9f1cd163ad3cf0`
+
 **Тело запроса:** `BotApiUpdateEnvBody`
 
 #### Параметры
@@ -114,6 +118,8 @@ curl -s -X PATCH 'http://localhost:5000/api/bot/env/15?telegram_id=123' \
 curl -s 'http://localhost:5000/api/bot/env/15/reveal?telegram_id=123' \
   -H 'Authorization: Bearer mcp_…'
 ```
+
+**Operation ID:** `get_api_bot_env_id_reveal_3c3e62f2b209fa2a`
 
 #### Параметры
 
@@ -161,6 +167,8 @@ Safe DTO без data/token. **Клиент:** Bot Manager.
 curl -s 'http://localhost:5000/api/bot/projects?telegram_id=123' \
   -H 'Authorization: Bearer mcp_…'
 ```
+
+**Operation ID:** `get_api_bot_projects_9a13230546b8b285`
 
 #### Параметры
 
@@ -215,6 +223,8 @@ curl -s -X POST 'http://localhost:5000/api/bot/projects?telegram_id=123' \
   -d '{"name":"Новый бот"}'
 ```
 
+**Operation ID:** `post_api_bot_projects_4c2d03f0afffb272`
+
 **Тело запроса:** `BotApiCreateProjectBody`
 
 #### Параметры
@@ -262,6 +272,8 @@ curl -s -X DELETE 'http://localhost:5000/api/bot/projects/42?telegram_id=123' \
   -H 'Authorization: Bearer mcp_…'
 ```
 
+**Operation ID:** `delete_api_bot_projects_id_edebe6228403c407`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -308,6 +320,8 @@ hasProjectAccess. **Клиент:** Bot Manager.
 curl -s 'http://localhost:5000/api/bot/projects/42?telegram_id=123' \
   -H 'Authorization: Bearer mcp_…'
 ```
+
+**Operation ID:** `get_api_bot_projects_id_48eb30ac7f28e13d`
 
 #### Параметры
 
@@ -359,6 +373,8 @@ curl -s -X PATCH 'http://localhost:5000/api/bot/projects/42?telegram_id=123' \
   -d '{"name":"Новое имя"}'
 ```
 
+**Operation ID:** `patch_api_bot_projects_id_2e917507e5e559e0`
+
 **Тело запроса:** `BotApiRenameProjectBody`
 
 #### Параметры
@@ -408,6 +424,8 @@ curl -s -X PATCH 'http://localhost:5000/api/bot/projects/42?telegram_id=123' \
 curl -s 'http://localhost:5000/api/bot/projects/42/collaborators?telegram_id=123' \
   -b cookies.txt
 ```
+
+**Operation ID:** `get_api_bot_projects_id_collaborators_80fb0ce84f316ce0`
 
 #### Параметры
 
@@ -463,6 +481,8 @@ curl -s -X POST 'http://localhost:5000/api/bot/projects/42/collaborators?telegra
   -b cookies.txt -H 'Content-Type: application/json' -d '{"user_id":999}'
 ```
 
+**Operation ID:** `post_api_bot_projects_id_collaborators_f0a2a2af7e46916f`
+
 **Тело запроса:** `BotApiAddCollaboratorBody`
 
 #### Параметры
@@ -513,6 +533,8 @@ curl -s -X DELETE \
   -b cookies.txt
 ```
 
+**Operation ID:** `delete_api_bot_projects_id_collaborators_userId_8a9290039974d101`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -560,6 +582,8 @@ curl -s -X DELETE \
 curl -s -X PUT 'http://localhost:5000/api/bot/projects/42/data?telegram_id=123' \
   -H 'Authorization: Bearer mcp_…' -H 'Content-Type: application/json' -d @project.json
 ```
+
+**Operation ID:** `put_api_bot_projects_id_data_2394c3cee7d835f7`
 
 #### Параметры
 
@@ -611,6 +635,8 @@ curl -s 'http://localhost:5000/api/bot/projects/42/export?telegram_id=123' \
   -H 'Authorization: Bearer mcp_…'
 ```
 
+**Operation ID:** `get_api_bot_projects_id_export_a2a2f46cd63272a9`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -660,6 +686,8 @@ curl -s 'http://localhost:5000/api/bot/projects/42/export?telegram_id=123' \
 curl -s 'http://localhost:5000/api/bot/projects/42/tokens?telegram_id=123' \
   -H 'Authorization: Bearer mcp_…'
 ```
+
+**Operation ID:** `get_api_bot_projects_id_tokens_8ed0b6653965a462`
 
 #### Параметры
 
@@ -716,6 +744,8 @@ curl -s -X POST 'http://localhost:5000/api/bot/projects/42/tokens?telegram_id=12
   -d '{"token":"123:ABC…"}'
 ```
 
+**Operation ID:** `post_api_bot_projects_id_tokens_3bdb7a79caa9c41e`
+
 **Тело запроса:** `BotApiCreateTokenBody`
 
 #### Параметры
@@ -767,6 +797,8 @@ curl -s -X POST 'http://localhost:5000/api/bot/projects/import?telegram_id=123' 
   -H 'Authorization: Bearer mcp_…' -H 'Content-Type: application/json' -d @project.json
 ```
 
+**Operation ID:** `post_api_bot_projects_import_1cc2788cdd61be9b`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -812,6 +844,8 @@ hasProjectAccess к проекту токена. **Клиент:** Bot Manager.
 curl -s -X DELETE 'http://localhost:5000/api/bot/tokens/7?telegram_id=123' \
   -H 'Authorization: Bearer mcp_…'
 ```
+
+**Operation ID:** `delete_api_bot_tokens_tokenId_ce1fd000ced0b958`
 
 #### Параметры
 
@@ -859,6 +893,8 @@ UI — `/api/projects/…/env-variables`. **Клиент:** unused.
 curl -s 'http://localhost:5000/api/bot/tokens/7/env?telegram_id=123' \
   -H 'Authorization: Bearer mcp_…'
 ```
+
+**Operation ID:** `get_api_bot_tokens_tokenId_env_9742b733cad64096`
 
 #### Параметры
 
@@ -917,6 +953,8 @@ curl -s -X POST 'http://localhost:5000/api/bot/tokens/7/env?telegram_id=123' \
   -d '{"key":"API_KEY","value":"secret","isSecret":1}'
 ```
 
+**Operation ID:** `post_api_bot_tokens_tokenId_env_351c35e591c1cec9`
+
 **Тело запроса:** `BotApiCreateEnvBody`
 
 #### Параметры
@@ -971,6 +1009,8 @@ curl -s 'http://localhost:5000/api/bot/tokens/7/photo?telegram_id=123' \
   -H 'Authorization: Bearer mcp_…'
 ```
 
+**Operation ID:** `get_api_bot_tokens_tokenId_photo_f01529aa5b5a88d8`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -1018,6 +1058,8 @@ curl -s 'http://localhost:5000/api/bot/tokens/7/photo?telegram_id=123' \
 curl -s 'http://localhost:5000/api/bot/tokens/7/stats?telegram_id=123' \
   -H 'Authorization: Bearer mcp_…'
 ```
+
+**Operation ID:** `get_api_bot_tokens_tokenId_stats_72f32e35b832033c`
 
 #### Параметры
 
@@ -1068,6 +1110,8 @@ curl -s 'http://localhost:5000/api/bot/tokens/7/stats?telegram_id=123' \
 curl -s 'http://localhost:5000/api/bot/tokens/7/status?telegram_id=123' \
   -H 'Authorization: Bearer mcp_…'
 ```
+
+**Operation ID:** `get_api_bot_tokens_tokenId_status_a6485ef5f5358867`
 
 #### Параметры
 
@@ -1123,6 +1167,8 @@ curl -s 'http://localhost:5000/api/bot/tokens/7/status?telegram_id=123' \
 curl -s 'http://localhost:5000/api/bot/tokens/7/users?telegram_id=123&limit=10&offset=0' \
   -H 'Authorization: Bearer mcp_…'
 ```
+
+**Operation ID:** `get_api_bot_tokens_tokenId_users_2ac18cf568ec86e4`
 
 #### Параметры
 
@@ -1183,6 +1229,8 @@ curl -s 'http://localhost:5000/api/bot/tokens/7/users?telegram_id=123&limit=10&o
 curl -s 'http://localhost:5000/api/bot/tokens/7/users/161?telegram_id=123' \
   -H 'Authorization: Bearer mcp_…'
 ```
+
+**Operation ID:** `get_api_bot_tokens_tokenId_users_userId_befeea1a7762d01a`
 
 #### Параметры
 

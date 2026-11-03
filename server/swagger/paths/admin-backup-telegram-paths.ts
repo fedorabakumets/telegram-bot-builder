@@ -3,7 +3,7 @@
  */
 import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import { z } from "zod";
-import { ADMIN_SECURITY, AdminCookiesSchema } from "../schemas/admin-common";
+import { ADMIN_SECURITY, AdminCookiesSchema, AdminUnauthorizedSchema } from "../schemas/admin-common";
 
 /**
  * Регистрирует отправку проверочного файла без содержимого базы.
@@ -19,7 +19,7 @@ export function registerAdminBackupTelegramPaths(registry: OpenAPIRegistry): voi
     responses: {
       200: { description: "Проверочный файл отправлен", content: { "application/json": { schema: z.object({ ok: z.literal(true) }) } } },
       400: { description: "Некорректные настройки или ошибка Telegram", content: { "application/json": { schema: z.object({ message: z.string() }) } } },
-      401: { description: "Нет admin-сессии" },
+      401: { description: "Нет admin-сессии", content: { 'application/json': { schema: AdminUnauthorizedSchema } } },
     },
   });
 }

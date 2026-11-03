@@ -15,6 +15,8 @@ curl -s -X POST -b cookies.txt -H 'Content-Type: application/json' \
   -d '{"tokenId":7}' 'http://localhost:5000/api/projects/42/bot/restart'
 ```
 
+**Operation ID:** `post_api_projects_id_bot_restart_7fdf9e4f2326a50e`
+
 **Тело запроса:** `ProjectBotTokenBody`
 
 #### Параметры
@@ -55,6 +57,8 @@ curl -s -X POST -b cookies.txt -H 'Content-Type: application/json' \
 ```bash
 curl -s -X POST -b cookies.txt 'http://localhost:5000/api/projects/42/bot/restart-all'
 ```
+
+**Operation ID:** `post_api_projects_id_bot_restart_all_647e086d9ebad916`
 
 #### Параметры
 
@@ -106,6 +110,8 @@ curl -s -X POST -b cookies.txt -H 'Content-Type: application/json' \
   -d '{"tokenId":7}' 'http://localhost:5000/api/projects/42/bot/start'
 ```
 
+**Operation ID:** `post_api_projects_id_bot_start_989a74f87fe7b3d5`
+
 **Тело запроса:** `ProjectBotTokenBody`
 
 #### Параметры
@@ -154,6 +160,8 @@ curl -s -X POST -b cookies.txt -H 'Content-Type: application/json' \
 ```bash
 curl -s -X POST http://localhost:5000/api/projects/1/bot/start-offline-all -b cookies.txt
 ```
+
+**Operation ID:** `post_api_projects_id_bot_start_offline_all_6805be7354e569c7`
 
 #### Параметры
 
@@ -210,6 +218,8 @@ curl -s -X POST http://localhost:5000/api/projects/1/bot/start-offline-all -b co
 ```bash
 curl -s http://localhost:5000/api/projects/42/bot/statuses -b cookies.txt
 ```
+
+**Operation ID:** `get_api_projects_id_bot_statuses_b754b8421736ad9d`
 
 #### Параметры
 
@@ -269,6 +279,8 @@ curl -s -X POST -b cookies.txt -H 'Content-Type: application/json' \
   -d '{"tokenId":7}' 'http://localhost:5000/api/projects/42/bot/stop'
 ```
 
+**Operation ID:** `post_api_projects_id_bot_stop_4db7dda481c7fee4`
+
 **Тело запроса:** `ProjectBotTokenBody`
 
 #### Параметры
@@ -309,6 +321,8 @@ curl -s -X POST -b cookies.txt -H 'Content-Type: application/json' \
 ```bash
 curl -s -b cookies.txt 'http://localhost:5000/api/projects/42/bot/data'
 ```
+
+**Operation ID:** `get_api_projects_projectId_bot_data_581f50fad75146b5`
 
 #### Параметры
 
@@ -354,6 +368,8 @@ Telegram getMe для токена проекта (`tokenId` или default). `p
 ```bash
 curl -s -b cookies.txt 'http://localhost:5000/api/projects/42/bot/info?tokenId=7'
 ```
+
+**Operation ID:** `get_api_projects_projectId_bot_info_d2b431d85ba79141`
 
 #### Параметры
 

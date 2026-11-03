@@ -23,6 +23,8 @@ export interface CanvasSyncMessage {
   userId?: number;
   /** Временная метка для last-write-wins */
   timestamp: number;
+  /** Ревизия подтверждённого сохранения; отсутствует у локальных черновиков. */
+  revision?: number;
   /** Актуальные данные проекта */
   data: BotDataWithSheets;
 }
@@ -49,6 +51,8 @@ export function isCanvasSyncMessage(msg: unknown): msg is CanvasSyncMessage {
     && typeof (msg as CanvasSyncMessage).projectId === 'number'
     && typeof (msg as CanvasSyncMessage).tabId === 'string'
     && typeof (msg as CanvasSyncMessage).timestamp === 'number'
+    && ((msg as CanvasSyncMessage).revision === undefined
+      || (Number.isSafeInteger((msg as CanvasSyncMessage).revision) && (msg as CanvasSyncMessage).revision! >= 0))
     && typeof (msg as CanvasSyncMessage).data === 'object'
   );
 }

@@ -12,6 +12,8 @@ Bootstrap first-run (configured + adminEnabled)
 
 Настройка платформы — через `/admin/login` → `/admin/settings` (не публичный wizard).
 
+**Operation ID:** `get_api_setup_bootstrap_0fdb17d0195d2798`
+
 #### Ответы
 
 | Код | Описание |
@@ -31,6 +33,8 @@ Bootstrap first-run (configured + adminEnabled)
 `configured=false` — UI редиректит в `/admin`, `setupGuard` отвечает 503 на остальные `/api/*`.
 
 При dev-login в `/admin/settings` (`auth_login_mode=dev_login`) — `configured=true` без BotFather.
+
+**Operation ID:** `get_api_setup_status_73eb8d38325478f2`
 
 #### Ответы
 

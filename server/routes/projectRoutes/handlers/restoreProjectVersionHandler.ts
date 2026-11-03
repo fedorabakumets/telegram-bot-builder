@@ -9,8 +9,7 @@
 
 import type { Request, Response } from "express";
 import { storage } from "../../../storages/storage";
-import type { StorageBotProjectUpdate } from "../../../storages/storageTypes";
-import { syncContentToTable } from "../../../services/content-table";
+import { updateProjectHandler } from "./updateProjectHandler";
 
 /**
  * Обрабатывает запрос на восстановление проекта из версии
@@ -33,27 +32,18 @@ export async function restoreProjectVersionHandler(req: Request, res: Response):
             return;
         }
 
-        const project = await storage.updateBotProject(projectId, {
+        // Общий путь обеспечивает историю, квитанцию и одинаковые побочные эффекты.
+        const current = await storage.getBotProject(projectId);
+        if (!current) { res.status(404).json({ message: "Проект не найден" }); return; }
+        req.body = {
             data: version.snapshot,
-        } as StorageBotProjectUpdate);
-        if (!project) {
-            res.status(404).json({ message: "Проект не найден" });
-            return;
-        }
-
-        // Синхронизация контента в таблицу _content
-        try {
-            await syncContentToTable(projectId, version.snapshot);
-            const { getRedisPublisher } = await import("../../../redis/redisClient");
-            const pub = getRedisPublisher();
-            if (pub) {
-                await pub.publish(`bot:table_updated:${projectId}`, "reload");
-            }
-        } catch (err) {
-            console.error(`[restoreProjectVersionHandler] Ошибка синхронизации _content для проекта ${projectId}:`, err);
-        }
-
-        res.json(project);
+            expectedRevision: req.body?.expectedRevision ?? current.revision,
+            agentEdit: req.body?.agentEdit === true,
+            agentSessionId: req.body?.agentSessionId,
+            agentDisplayName: req.body?.agentDisplayName,
+            commitMessage: `Откат к версии #${versionId}`,
+        };
+        await updateProjectHandler(req, res);
     } catch (error) {
         console.error("Ошибка восстановления версии проекта:", error);
         res.status(500).json({ message: "Не удалось восстановить версию проекта", error: (error as Error).message });

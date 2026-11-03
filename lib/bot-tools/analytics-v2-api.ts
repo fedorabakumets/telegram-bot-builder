@@ -17,7 +17,7 @@ export interface AnalyticsApiRequest {
  */
 export async function requestAnalyticsV2(request: AnalyticsApiRequest): Promise<unknown> {
   if (!Number.isSafeInteger(request.projectId) || request.projectId <= 0) return { error: 'Некорректный проект' };
-  if (!/^(v2\/snapshot|acquisition(?:\/(?:report|sources|placements|links|expenses)(?:\/\d+(?:\/history)?)?)?)$/.test(request.endpoint)) return { error: 'Неизвестный ресурс аналитики' };
+  if (!/^(v2\/snapshot|activity-leaders|acquisition(?:\/(?:report|exchange-rate|budgets|sources|placements|links|expenses)(?:\/\d+(?:\/history)?)?)?)$/.test(request.endpoint)) return { error: 'Неизвестный ресурс аналитики' };
   const query = new URLSearchParams();
   for (const [key, value] of Object.entries(request.query ?? {})) if (value !== undefined) query.set(key, String(value));
   try {

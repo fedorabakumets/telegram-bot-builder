@@ -4,6 +4,7 @@
  */
 
 import type { Request, Response } from "express";
+import { tableWriteReceipt } from "../write-receipt";
 import { addColumnInProject } from "../../../database/bot-tables/mutate-column";
 import { parseEntityName } from "../../../database/bot-tables/validate-cells";
 import { fail, sqlFailure } from "../http-error";
@@ -31,7 +32,7 @@ export async function createColumnHandler(req: Request, res: Response): Promise<
       fail(res, column.status, column.message);
       return;
     }
-    res.status(201).json(column);
+    res.status(201).json(tableWriteReceipt(res, column, owned.projectId, owned.table.id));
     await notifyTableChange(owned.projectId, owned.table.id, owned.table.name);
   } catch (error) {
     const parsed = sqlFailure(error);

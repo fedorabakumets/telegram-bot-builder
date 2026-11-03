@@ -4,6 +4,7 @@
  */
 
 import type { Request, Response } from "express";
+import { tableWriteReceipt } from "../write-receipt";
 import { renameTableInProject } from "../../../database/bot-tables/mutate-table";
 import { parseEntityName } from "../../../database/bot-tables/validate-cells";
 import { fail, sqlFailure } from "../http-error";
@@ -30,7 +31,7 @@ export async function renameTableHandler(req: Request, res: Response): Promise<v
       fail(res, table.status, table.message);
       return;
     }
-    res.json(table);
+    res.json(tableWriteReceipt(res, table, owned.projectId, owned.table.id));
     await notifyTableChange(owned.projectId, table.id, table.name);
   } catch (error) {
     const parsed = sqlFailure(error);

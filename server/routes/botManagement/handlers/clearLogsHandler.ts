@@ -24,8 +24,8 @@ export async function handleClearLogs(req: Request, res: Response): Promise<void
       return;
     }
 
-    await clearBotLogs(projectId, tokenId);
-    res.json({ success: true });
+    await clearBotLogs(projectId, tokenId, true);
+    res.json({ success: true, persistence: { confirmed: true, method: 'database_delete' } });
   } catch (err) {
     console.error('[ClearLogs] Ошибка очистки логов:', err);
     res.status(500).json({ error: 'Ошибка очистки логов' });

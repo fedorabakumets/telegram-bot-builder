@@ -14,6 +14,8 @@ import { apiFetch } from './api-fetch.ts';
  * Опции записи проекта в БД через HTTP API
  */
 export interface UpdateProjectInDbOptions {
+  /** Ожидаемая ревизия исходного снимка; при несовпадении сервер вернёт 409 */
+  expectedRevision?: number;
   /** Базовый URL API (по умолчанию API_BASE_URL или http://localhost:5000) */
   apiBaseUrl?: string;
   /** Заметка к версии (непустая → ручной чекпоинт kind='manual') */
@@ -26,6 +28,16 @@ export interface UpdateProjectInDbOptions {
   agentDisplayName?: string;
 }
 
+/** Подтверждение записи конкретной ревизии проекта. */
+export interface ProjectPersistenceReceipt {
+  /** Сервер подтвердил запись возвращённой строки */
+  confirmed: true;
+  /** Идентификатор проекта */
+  projectId: number;
+  /** Ревизия записанного снимка */
+  revision: number;
+}
+
 /** Успешный результат записи проекта в БД */
 export interface UpdateProjectInDbSuccess {
   /** Признак успеха */
@@ -34,10 +46,24 @@ export interface UpdateProjectInDbSuccess {
   projectId: number;
   /** HTTP-статус ответа сервера */
   status: number;
+  /** Подтверждённая сервером ревизия записи */
+  revision: number;
+  /** Эффект операции */
+  effect: "application";
+  /** Подтверждённый результат */
+  outcome: "saved";
+  /** Квитанция сохранения */
+  persistence: ProjectPersistenceReceipt;
+  /** Статусы сопутствующих действий */
+  sideEffects?: Record<string, unknown>;
 }
 
 /** Результат записи проекта с ошибкой */
 export interface UpdateProjectInDbError {
+  /** Неизвестный исход требует перечитать проект перед повтором */
+  outcome?: "error" | "unknown";
+  /** Эффект операции */
+  effect?: "application";
   /** Текст ошибки */
   error: string;
   /** Результат валидации (если ошибка валидации) */
@@ -97,6 +123,7 @@ export async function updateProjectInDb(
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         data: project,
+        expectedRevision: options?.expectedRevision,
         agentEdit: true,
         agentSessionId: options?.agentSessionId,
         agentDisplayName: options?.agentDisplayName,
@@ -106,11 +133,18 @@ export async function updateProjectInDb(
 
     if (!res.ok) {
       const body = await res.text();
-      return { error: `HTTP ${res.status}`, status: res.status, body };
+      return { error: `HTTP ${res.status}`, status: res.status, body, outcome: res.status >= 500 ? "unknown" : "error", effect: "application" };
     }
 
-    return { ok: true, projectId, status: res.status };
+    let saved: { id?: number; revision?: number; persistence?: { confirmed?: boolean; projectId?: number; revision?: number }; sideEffects?: Record<string, unknown> };
+    try { saved = await res.json(); }
+    catch { return { error: "Ответ сохранения не удалось прочитать; перечитайте проект перед повтором", outcome: "unknown", effect: "application", status: res.status }; }
+    if (!saved || saved.id !== projectId || !Number.isSafeInteger(saved.revision) || saved.revision! < 1 || saved.persistence?.confirmed !== true || saved.persistence.projectId !== projectId || saved.persistence.revision !== saved.revision || (options?.expectedRevision !== undefined && saved.revision !== options.expectedRevision + 1)) {
+      return { error: "Сервер не подтвердил сохранение: проверьте состояние проекта перед повтором", status: res.status, outcome: "unknown", effect: "application" };
+    }
+    return { ok: true, projectId, status: res.status, revision: saved.revision!, effect: "application", outcome: "saved",
+      persistence: { confirmed: true, projectId, revision: saved.revision! }, sideEffects: saved.sideEffects };
   } catch (err) {
-    return { error: `Не удалось соединиться с сервером: ${(err as Error).message}` };
+    return { error: `Связь прервана; исход записи неизвестен, перечитайте проект перед повтором: ${(err as Error).message}`, outcome: "unknown", effect: "application" };
   }
 }

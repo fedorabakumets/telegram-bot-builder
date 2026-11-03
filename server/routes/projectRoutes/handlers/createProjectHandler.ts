@@ -8,6 +8,7 @@
  */
 
 import type { Request, Response } from "express";
+import { durableProjectCreation } from "./project-creation-durable";
 import { insertBotProjectSchema } from "@shared/schema";
 import { z } from "zod";
 import { storage } from "../../../storages/storage";
@@ -34,7 +35,7 @@ export async function createProjectHandler(req: Request, res: Response): Promise
             return;
         }
 
-        const { ownerId: _ignored, ...bodyData } = req.body;
+        const { ownerId: _ignored, ...bodyData } = req.body ?? {};
         const validatedData = insertBotProjectSchema.parse(bodyData) as StorageBotProjectInput;
 
         const projectData: StorageBotProjectInput = {
@@ -43,7 +44,10 @@ export async function createProjectHandler(req: Request, res: Response): Promise
             sessionId: null,
         };
 
+        await durableProjectCreation(req, res, ownerId, "create_project", async () => {
         const project = await storage.createBotProject(projectData);
+        const persistence = { confirmed: true, method: 'returning', projectId: project.id, revision: project.revision };
+        await res.locals.actionRequestCheckpoint?.({ id: project.id, name: project.name, revision: project.revision, persistence });
 
         // Создаём таблицу _content для нового проекта
         try {
@@ -59,7 +63,8 @@ export async function createProjectHandler(req: Request, res: Response): Promise
             console.error(`[createProjectHandler] Ошибка broadcast projects-changed для владельца ${ownerId}:`, err);
         }
 
-        res.status(201).json(project);
+        res.status(201).json({ ...project, effect: "application", outcome: "saved", persistence });
+        });
     } catch (error) {
         if (error instanceof z.ZodError) {
             res.status(400).json({ message: "Неверные данные", errors: error.errors });

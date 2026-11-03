@@ -3,7 +3,9 @@
  * @module setupBotIntegrationRoutes
  */
 
+import { getBotUserDataHandler } from './botUsers/handlers/getBotUserDataHandler';
 import { getMessageFileSize } from './botIntegration/handlers/botData/get-message-file-size';
+import { durableProjectAction } from "./durable-project-action";
 import type { Express } from "express";
 import { requireProjectAccess } from "../middleware/requireProjectAccess";
 import { requireMediaFileOwnership } from "../middleware/requireMediaFileOwnership";
@@ -45,6 +47,8 @@ import {
  * @returns void
  */
 export function setupBotIntegrationRoutes(app: Express) {
+  /** Точная карточка пользователя с переменными выбранного бота. */
+  app.get('/api/projects/:projectId/users/:userId', requireProjectAccess, getBotUserDataHandler);
   app.get('/api/projects/:projectId/dialogs', requireProjectAccess, listDialogsHandler);
   /** Поиск сохранённого текста требует разрешения на проект и явного токена. */
   app.get('/api/projects/:projectId/dialogs/messages/search', requireProjectAccess, searchDialogMessagesHandler);
@@ -100,12 +104,12 @@ export function setupBotIntegrationRoutes(app: Express) {
   app.post(
     "/api/projects/:projectId/users/:userId/send-message",
     requireProjectAccess,
-    sendMessageHandler,
+    durableProjectAction(sendMessageHandler, "send_dialog_message"),
   );
   app.post(
     "/api/projects/:projectId/users/:userId/send-node-message",
     requireProjectAccess,
-    sendNodeMessageHandler,
+    durableProjectAction(sendNodeMessageHandler, "send_node_message"),
   );
   app.delete(
     "/api/projects/:projectId/users/:userId/messages",
@@ -134,7 +138,7 @@ export function setupBotIntegrationRoutes(app: Express) {
   app.post(
     "/api/projects/:projectId/bot/send-group-message",
     requireProjectAccess,
-    sendGroupMessageHandler,
+    durableProjectAction(sendGroupMessageHandler, "send_group_message"),
   );
 
   setupBroadcastRoutes(app);

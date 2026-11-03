@@ -28,6 +28,6 @@ export async function columnSettingsHandler(req: Request, res: Response): Promis
     });
     if (!result) { fail(res, 404, 'Столбец не найден'); return; }
     await notifyTableChange(owned.projectId, owned.table.id, owned.table.name);
-    res.json({ settings: parsed.data });
+    res.json({ settings: parsed.data, persistence: { confirmed: true, projectId: owned.projectId, tableId: owned.table.id } });
   } catch (error) { const result = sqlFailure(error); fail(res, result.status, result.message); }
 }

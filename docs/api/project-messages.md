@@ -1,6 +1,6 @@
 # project-messages
 
-Эндпоинтов: **5**
+Эндпоинтов: **4**
 
 ### `GET` /api/projects/{id}/messages/activity
 
@@ -26,6 +26,8 @@
 curl -s 'http://localhost:5000/api/projects/42/messages/activity?granularity=1h&split=true&tokenId=7' \
   -b cookies.txt
 ```
+
+**Operation ID:** `get_api_projects_id_messages_activity_704beb5b895093fd`
 
 #### Параметры
 
@@ -81,6 +83,8 @@ curl -s 'http://localhost:5000/api/projects/42/messages/activity?granularity=1h&
 curl -s 'http://localhost:5000/api/projects/42/messages/all?limit=50&tokenId=7' \
   -b cookies.txt
 ```
+
+**Operation ID:** `get_api_projects_id_messages_all_2c3956be02ea0757`
 
 #### Параметры
 
@@ -148,6 +152,8 @@ curl -s -X DELETE 'http://localhost:5000/api/projects/42/messages/501?tokenId=7'
   -b cookies.txt
 ```
 
+**Operation ID:** `delete_api_projects_projectId_messages_messageId_6460e40eb49b7790`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -201,6 +207,8 @@ curl -s -X PATCH 'http://localhost:5000/api/projects/42/messages/501?tokenId=7' 
   -b cookies.txt
 ```
 
+**Operation ID:** `patch_api_projects_projectId_messages_messageId_2efb6d6faa20306b`
+
 **Тело запроса:** `EditMessageRequest`
 
 #### Параметры
@@ -242,17 +250,3 @@ curl -s -X PATCH 'http://localhost:5000/api/projects/42/messages/501?tokenId=7' 
   "editedInTelegram": true
 }
 ```
-
-### `GET` /api/projects/{projectId}/messages/{messageId}/file-size
-
-GET /api/projects/{projectId}/messages/{messageId}/file-size
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |

@@ -21,6 +21,8 @@ UI: `ServerStatus` (поллинг до `ready`). Railway/балансировщ
 curl -s http://localhost:5000/api/health
 ```
 
+**Operation ID:** `get_api_health_5f2110c8501b45eb`
+
 #### Ответы
 
 | Код | Описание |
@@ -50,6 +52,8 @@ Healthcheck без тела (204)
 ```bash
 curl -s -I -X HEAD http://localhost:5000/api/health
 ```
+
+**Operation ID:** `head_api_health_db61bf636ac9424a`
 
 #### Ответы
 

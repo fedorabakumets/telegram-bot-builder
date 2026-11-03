@@ -19,6 +19,7 @@ describe('addBotTokenInDb', () => {
   it('получает профиль перед созданием и передаёт все его поля', async () => {
     vi.mocked(apiFetch).mockResolvedValueOnce(Response.json(profile));
     vi.mocked(apiFetch).mockResolvedValueOnce(Response.json({ id: 301, token, botUsername: 'example_bot' }, { status: 201 }));
+    vi.mocked(apiFetch).mockResolvedValueOnce(Response.json([{ id: 301, name: 'Обменники (@example_bot)' }]));
     const result = await addBotTokenInDb(289, token, { apiBaseUrl: 'http://test', isDefault: true });
     expect(vi.mocked(apiFetch).mock.calls[0][0]).toBe('/api/projects/289/tokens/parse');
     expect(JSON.parse(String(vi.mocked(apiFetch).mock.calls[0][1]?.body))).toEqual({ token });
@@ -31,6 +32,7 @@ describe('addBotTokenInDb', () => {
   it('сохраняет заданное имя и возвращает существующую запись без секрета', async () => {
     vi.mocked(apiFetch).mockResolvedValueOnce(Response.json(profile));
     vi.mocked(apiFetch).mockResolvedValueOnce(Response.json({ id: 301, token }));
+    vi.mocked(apiFetch).mockResolvedValueOnce(Response.json([{ id: 301, name: "Мой бот" }]));
     expect(await addBotTokenInDb(289, token, { name: 'Мой бот' })).toMatchObject({ created: false, name: 'Мой бот' });
     expect(JSON.parse(String(vi.mocked(apiFetch).mock.calls[1][1]?.body)).name).toBe('Мой бот');
   });

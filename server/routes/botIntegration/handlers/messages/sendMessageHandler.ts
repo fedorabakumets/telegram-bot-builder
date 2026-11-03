@@ -4,7 +4,7 @@
  */
 
 import type { Request, Response } from "express";
-import { sendMessageSchema } from "@shared/schema";
+import { httpDialogMessageBodySchema } from "../../../../../shared/schema/dialog-write-contracts";
 import { storage } from "../../../../storages/storage";
 import {
   analyzeTelegramError,
@@ -38,7 +38,7 @@ export async function sendMessageHandler(req: Request, res: Response): Promise<v
       return;
     }
 
-    const validationResult = sendMessageSchema.safeParse(req.body);
+    const validationResult = httpDialogMessageBodySchema.safeParse(req.body);
     if (!validationResult.success) {
       res.status(400).json({
         message: "Неверное тело запроса",
@@ -103,7 +103,8 @@ export async function sendMessageHandler(req: Request, res: Response): Promise<v
       mediaFiles,
       buttons,
       true,
-      buttonsPerRow
+      buttonsPerRow,
+      projectId
     );
 
     /** ID отправленного сообщения в Telegram (из result.message_id) */

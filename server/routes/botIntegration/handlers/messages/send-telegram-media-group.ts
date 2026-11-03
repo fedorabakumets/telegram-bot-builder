@@ -6,7 +6,8 @@
  */
 
 import { existsSync, readFileSync } from 'fs';
-import { basename, join } from 'path';
+import { basename } from 'path';
+import { resolveOwnedMediaPath, assertRemoteMediaReference } from './media-reference-security';
 import type { SendMediaFile } from "./extract-media";
 import type { TelegramSendResult, TelegramMessage } from "./send-telegram-message";
 import { sendTelegramMessage } from "./send-telegram-message";
@@ -40,6 +41,7 @@ interface MediaGroupItem {
  * @param caption - Подпись (ставится только первому элементу)
  * @param mediaFiles - Медиафайлы
  * @param useHtml - Использовать HTML форматирование подписи
+ * @param projectId - Проект для проверки владения локальными медиа
  * @returns Типизированный результат Telegram API (первое сообщение альбома)
  */
 export async function sendTelegramMediaGroup(
@@ -47,14 +49,15 @@ export async function sendTelegramMediaGroup(
   chatId: string,
   caption: string,
   mediaFiles: SendMediaFile[],
-  useHtml: boolean
+  useHtml: boolean,
+  projectId?: number
 ): Promise<TelegramSendResult> {
   // Отфильтровываем неподдерживаемые в альбоме типы (sticker/voice и пр.)
   const supported = mediaFiles.filter((m) => ALBUM_TYPES.has(m.type)).slice(0, MAX_ALBUM_SIZE);
 
   // Пограничный случай: 0 или 1 элемент — делегируем одиночной отправке
   if (supported.length < 2) {
-    return sendTelegramMessage(token, chatId, caption, supported, [], useHtml);
+    return sendTelegramMessage(token, chatId, caption, supported, [], useHtml, undefined, projectId);
   }
 
   const maskedToken = token.length > 12 ? `${token.slice(0, 8)}...${token.slice(-4)}` : '***';
@@ -68,17 +71,17 @@ export async function sendTelegramMediaGroup(
   const files: MultipartFile[] = [];
   const trimmed = caption.trim();
 
-  supported.forEach((item, idx) => {
+  for (const [idx, item] of supported.entries()) {
     let mediaRef = item.url;
     if (isLocalPath(item.url)) {
-      const absolutePath = join(process.cwd(), item.url.startsWith('/') ? item.url.slice(1) : item.url);
+      const absolutePath = await resolveOwnedMediaPath(item.url, projectId);
       if (!existsSync(absolutePath)) {
         throw new Error(`Файл не найден на диске: ${absolutePath}`);
       }
       const field = `file${idx}`;
       files.push({ field, fileName: basename(absolutePath), buffer: readFileSync(absolutePath) });
       mediaRef = `attach://${field}`;
-    }
+    } else { await assertRemoteMediaReference(item.url); }
 
     const entry: MediaGroupItem = { type: item.type, media: mediaRef };
     // Подпись ставим только первому элементу
@@ -87,7 +90,7 @@ export async function sendTelegramMediaGroup(
       if (useHtml) entry.parse_mode = 'HTML';
     }
     media.push(entry);
-  });
+  }
 
   try {
     const url = `https://api.telegram.org/bot${token}/sendMediaGroup`;

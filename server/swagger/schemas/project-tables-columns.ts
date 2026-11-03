@@ -5,6 +5,7 @@
 
 import "./common";
 import { z } from "zod";
+import { tableColumnSettingsSchema } from '../../../shared/table-column-settings';
 
 /** Колонка пользовательской таблицы */
 export const BotTableColumnSchema = z
@@ -17,6 +18,8 @@ export const BotTableColumnSchema = z
     name: z.string().openapi({ example: "Цена" }),
     /** Позиция для сортировки */
     position: z.number().int().openapi({ example: 0 }),
+    /** Подпись и ограничения ячеек. */
+    settings: tableColumnSettingsSchema.optional(),
   })
   .openapi("BotTableColumn");
 

@@ -1,5 +1,5 @@
 /**
- * @fileoverview Пакетное применение операций над проектом в одной транзакции
+ * @fileoverview Пакетное применение операций в памяти и одна запись проекта с защитой ревизии
  * @description Чистая функция applyOpsToProject последовательно применяет массив
  * операций к проекту in-memory (chaining: результат каждой операции становится
  * входом следующей) и возвращает итоговый проект с валидацией. Db-обёртка
@@ -151,7 +151,7 @@ export function applyOpsToProject(
 }
 
 /**
- * Применяет пакет операций к проекту в живой БД за одну транзакцию: один GET
+ * Применяет пакет операций к проекту в живой БД с защитой ревизии: один GET
  * актуального проекта → applyOpsToProject (chaining in-memory) → один PUT через
  * updateProjectInDb (agentEdit:true). На всю пачку приходится один live-broadcast
  * и одна версия в истории. При ошибке чтения или любой операции запись не делается.
@@ -171,5 +171,5 @@ export async function applyOpsInDb(
   const result = applyOpsToProject(fetched.data, ops);
   if ('error' in result) return result;
 
-  return updateProjectInDb(projectId, result.project, options);
+  return updateProjectInDb(projectId, result.project, { ...options, expectedRevision: options?.expectedRevision ?? fetched.revision });
 }

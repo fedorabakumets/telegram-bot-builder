@@ -4,6 +4,7 @@
  */
 
 import type { Express, RequestHandler } from "express";
+import { durableTableWrite } from "./durable-table-write";
 import { pool } from "../../database/db";
 import { requireProjectAccess } from "../../middleware/requireProjectAccess";
 import { setupTableChartRoutes } from "./chart/setup-table-chart-routes";
@@ -48,27 +49,27 @@ export function setupTablesRoutes(
 
   app.get(base, ...guard, getTablesHandler);
   app.get(`${base}/search`, ...guard, findTablesHandler);
-  app.post(`${base}/import`, ...guard, importBundleHandler);
-  app.post(base, ...guard, createTableHandler);
+  app.post(`${base}/import`, ...guard, durableTableWrite("importBundleHandler", importBundleHandler));
+  app.post(base, ...guard, durableTableWrite("createTableHandler", createTableHandler));
   app.get(`${base}/:tableId`, ...guard, getTableHandler);
   app.put(`${base}/:tableId`, ...guard, renameTableHandler);
   app.delete(`${base}/:tableId`, ...guard, deleteTableHandler);
-  app.post(`${base}/:tableId/cells/edit`, ...guard, editCellsHandler);
-  app.post(`${base}/:tableId/apply-ops`, ...guard, applyOpsHandler);
+  app.post(`${base}/:tableId/cells/edit`, ...guard, durableTableWrite("editCellsHandler", editCellsHandler));
+  app.post(`${base}/:tableId/apply-ops`, ...guard, durableTableWrite("applyOpsHandler", applyOpsHandler));
   app.get(`${base}/:tableId/summary`, ...guard, summaryHandler);
   app.get(`${base}/:tableId/columns`, ...guard, getColumnsHandler);
   app.put(`${base}/:tableId/columns/reorder`, ...guard, reorderColumnsHandler);
-  app.post(`${base}/:tableId/columns`, ...guard, createColumnHandler);
+  app.post(`${base}/:tableId/columns`, ...guard, durableTableWrite("createColumnHandler", createColumnHandler));
   app.put(`${base}/:tableId/columns/:columnId/settings`, ...guard, columnSettingsHandler);
   app.put(`${base}/:tableId/columns/:columnId`, ...guard, renameColumnHandler);
   app.delete(`${base}/:tableId/columns/:columnId`, ...guard, deleteColumnHandler);
   app.get(`${base}/:tableId/rows`, ...guard, getRowsHandler);
   app.post(`${base}/:tableId/rows/query`, ...guard, queryRowsHandler);
   app.post(`${base}/:tableId/rows/count`, ...guard, countRowsHandler);
-  app.post(`${base}/:tableId/rows/import`, ...guard, importRowsHandler);
+  app.post(`${base}/:tableId/rows/import`, ...guard, durableTableWrite("importRowsHandler", importRowsHandler));
   app.post(`${base}/:tableId/rows/reindex`, ...guard, reindexRowsHandler);
   app.delete(`${base}/:tableId/rows`, ...guard, clearRowsHandler);
-  app.post(`${base}/:tableId/rows`, ...guard, createRowsHandler);
+  app.post(`${base}/:tableId/rows`, ...guard, durableTableWrite("createRowsHandler", createRowsHandler));
   app.get(`${base}/:tableId/rows/:rowId`, ...guard, getRowHandler);
   app.put(`${base}/:tableId/rows/:rowId`, ...guard, updateRowHandler);
   app.patch(`${base}/:tableId/rows/:rowId`, ...guard, patchRowHandler);

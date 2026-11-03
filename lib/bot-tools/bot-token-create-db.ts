@@ -6,13 +6,14 @@
  */
 
 import { apiFetch } from './api-fetch.ts';
+import { verifyMutation, type MutationReceipt } from './mutation-proof.ts';
 import type { ReadDbOptions } from './node-query-db.ts';
 
 /** Формат Telegram bot token: `{botId}:{секрет}` */
 const TOKEN_REGEX = /^\d+:[A-Za-z0-9_-]{35,}$/;
 
 /** Безопасный результат добавления токена (без секрета) */
-export interface AddBotTokenResult {
+export interface AddBotTokenResult extends Partial<MutationReceipt> {
   /** Успех */
   ok: true;
   /** true — создан новый; false — уже был в проекте (дубликат) */
@@ -35,6 +36,8 @@ export interface AddBotTokenResult {
 interface RawCreatedToken {
   /** ID */
   id?: number;
+  /** Подтверждение сервера без секрета */
+  persistence?: { confirmed?: boolean; projectId?: number; resourceId?: number; secretMatched?: boolean };
   /** Имя */
   name?: string;
   /** Username */
@@ -66,7 +69,7 @@ export async function addBotTokenInDb(
   projectId: number,
   token: string,
   options?: ReadDbOptions & { name?: string; isDefault?: boolean },
-): Promise<AddBotTokenResult | { error: string }> {
+): Promise<AddBotTokenResult | { error: string; outcome?: "unknown" }> {
   const trimmed = token.trim();
   if (!trimmed) {
     return { error: 'Поле token обязательно' };
@@ -115,7 +118,7 @@ export async function addBotTokenInDb(
       body: JSON.stringify(body),
     });
   } catch (err) {
-    return { error: `Не удалось соединиться с сервером: ${(err as Error).message}` };
+    return { error: `Связь прервана; исход записи токена неизвестен: ${(err as Error).message}`, outcome: "unknown" };
   }
 
   if (!res.ok) {
@@ -136,7 +139,7 @@ export async function addBotTokenInDb(
   try {
     raw = (await res.json()) as RawCreatedToken;
   } catch (err) {
-    return { error: `Не удалось разобрать ответ сервера: ${(err as Error).message}` };
+    return { error: `Ответ записи токена не удалось прочитать; перечитайте состояние: ${(err as Error).message}`, outcome: "unknown" };
   }
 
   if (typeof raw.id !== 'number') {
@@ -144,7 +147,7 @@ export async function addBotTokenInDb(
   }
 
   const created = res.status === 201;
-  return {
+  const result: AddBotTokenResult = {
     ok: true,
     created,
     id: raw.id,
@@ -156,4 +159,8 @@ export async function addBotTokenInDb(
       ? 'Токен добавлен. UI обновится через WS token-created.'
       : 'Токен уже был в проекте — возвращён существующий.',
   };
+  if (raw.persistence?.confirmed === true && raw.persistence.projectId === projectId && raw.persistence.resourceId === raw.id && raw.persistence.secretMatched === true) {
+    return { ...result, effect: 'application', outcome: 'saved', persistence: { confirmed: true, method: 'returning' } };
+  }
+  return verifyMutation(result, `/api/projects/${projectId}/tokens/list`, value => Array.isArray(value) && value.some(item => item.id === raw.id), options);
 }

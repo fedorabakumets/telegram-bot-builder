@@ -4,6 +4,7 @@
  */
 
 import type { Request, Response } from "express";
+import { tableWriteReceipt } from "../write-receipt";
 import { deleteRowInProject } from "../../../database/bot-tables/mutate-row";
 import { fail, positiveId, sqlFailure } from "../http-error";
 import { notifyTableChange } from "../notify-table-change";
@@ -29,7 +30,7 @@ export async function deleteRowHandler(req: Request, res: Response): Promise<voi
       fail(res, deleted.status, deleted.message);
       return;
     }
-    res.json({ success: true });
+    res.json(tableWriteReceipt(res, { success: true }, owned.projectId, owned.table.id));
     await notifyTableChange(owned.projectId, owned.table.id, owned.table.name);
   } catch (error) {
     const parsed = sqlFailure(error);

@@ -6,11 +6,12 @@
  */
 
 import { apiFetch } from './api-fetch.ts';
+import { verifyMutation, type MutationReceipt } from './mutation-proof.ts';
 import { isTelegramBotTokenFormat } from './bot-token-create-db.ts';
 import type { ReadDbOptions } from './node-query-db.ts';
 
 /** Безопасный результат обновления токена (без секрета) */
-export interface UpdateBotTokenResult {
+export interface UpdateBotTokenResult extends Partial<MutationReceipt> {
   /** Успех */
   ok: true;
   /** ID токена */
@@ -31,6 +32,8 @@ export interface UpdateBotTokenResult {
 interface RawUpdatedToken {
   /** ID */
   id?: number;
+  /** Подтверждение сервера без секрета */
+  persistence?: { confirmed?: boolean; projectId?: number; resourceId?: number; secretMatched?: boolean };
   /** Имя */
   name?: string;
   /** Username */
@@ -54,7 +57,7 @@ export async function updateBotTokenInDb(
   tokenId: number,
   token: string,
   options?: ReadDbOptions & { name?: string },
-): Promise<UpdateBotTokenResult | { error: string }> {
+): Promise<UpdateBotTokenResult | { error: string; outcome?: "unknown" }> {
   const trimmed = token.trim();
   if (!trimmed) {
     return { error: 'Поле token обязательно' };
@@ -80,7 +83,7 @@ export async function updateBotTokenInDb(
       body: JSON.stringify(body),
     });
   } catch (err) {
-    return { error: `Не удалось соединиться с сервером: ${(err as Error).message}` };
+    return { error: `Связь прервана; исход записи токена неизвестен: ${(err as Error).message}`, outcome: "unknown" };
   }
 
   if (!res.ok) {
@@ -101,14 +104,18 @@ export async function updateBotTokenInDb(
   try {
     raw = (await res.json()) as RawUpdatedToken;
   } catch (err) {
-    return { error: `Не удалось разобрать ответ сервера: ${(err as Error).message}` };
+    return { error: `Ответ записи токена не удалось прочитать; перечитайте состояние: ${(err as Error).message}`, outcome: "unknown" };
   }
 
   if (typeof raw.id !== 'number') {
     return { error: 'Сервер не вернул id токена' };
   }
 
+  if (raw.id !== tokenId || raw.persistence?.confirmed !== true || raw.persistence.projectId !== projectId || raw.persistence.resourceId !== tokenId || raw.persistence.secretMatched !== true) {
+    return { error: 'Сервер не подтвердил сохранение нового секрета токена; перечитайте состояние перед повтором', outcome: 'unknown' };
+  }
   return {
+    effect: 'application', outcome: 'saved', persistence: { confirmed: true, method: 'returning' },
     ok: true,
     id: raw.id,
     name: raw.name ?? name ?? '',

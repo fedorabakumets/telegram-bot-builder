@@ -5,37 +5,15 @@
  * @module botIntegration/handlers/botData/project-files-types
  */
 
-/** Допустимые типы медиа для фильтрации */
-export const MEDIA_TYPES = [
-  "photo",
-  "video",
-  "animation",
-  "audio",
-  "voice",
-  "video_note",
-  "document",
-  "sticker",
-] as const;
-
-/** Тип медиа (один из MEDIA_TYPES) */
+import { MEDIA_TYPES, COVER_TYPE, VALID_SOURCES, VALID_CATEGORIES } from "../../../../../shared/schema/project-file-contracts";
+export { MEDIA_TYPES, COVER_TYPE, VALID_SOURCES, VALID_CATEGORIES };
+/** Тип медиа. */
 export type MediaType = (typeof MEDIA_TYPES)[number];
-
-/** Специальный тип-фильтр «обложка/превью» (thumbnail) — Req 6.4 */
-export const COVER_TYPE = "cover" as const;
-
-/** Допустимые значения фильтра по типу: медиа-типы + обложка */
+/** Тип фильтра медиа. */
 export type FilterMediaType = MediaType | typeof COVER_TYPE;
-
-/** Допустимые источники файлов (легаси-параметр source) */
-export const VALID_SOURCES = ["incoming", "outgoing", "uploaded"] as const;
-
-/** Источник файла */
+/** Источник файла. */
 export type FileSource = (typeof VALID_SOURCES)[number];
-
-/** Допустимые категории (новый параметр category) */
-export const VALID_CATEGORIES = ["all", "incoming", "outgoing", "uploaded"] as const;
-
-/** Категория файлов по источнику */
+/** Категория файлов. */
 export type FileCategory = (typeof VALID_CATEGORIES)[number];
 
 /**

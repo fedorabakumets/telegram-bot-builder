@@ -7,6 +7,7 @@
  */
 
 import { Node } from '@/types/bot';
+import { hasActiveInput } from '@shared/active-input';
 import { getIsMobile } from '@/components/editor/header/hooks/use-mobile';
 import { getKeyboardNodeId } from '@/components/editor/canvas/canvas-node/keyboard-connection';
 
@@ -374,7 +375,7 @@ function inferConnectionsFromNodes(
       }
     }
 
-    if (typeof data.inputTargetNodeId === 'string' && data.inputTargetNodeId) {
+    if (hasActiveInput(node) && typeof data.inputTargetNodeId === 'string' && data.inputTargetNodeId) {
       pushConnection({
         fromId: node.id,
         toId: data.inputTargetNodeId,

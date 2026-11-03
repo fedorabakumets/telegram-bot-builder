@@ -62,7 +62,7 @@ export async function addSheetInDb(
 ): Promise<SheetOpsDbResult> {
   const fetched = await fetchProjectFromDb(projectId, options);
   if ('error' in fetched) return fetched;
-  return applyAndSave(projectId, addSheetToProject(fetched.data, name), options);
+  return applyAndSave(projectId, addSheetToProject(fetched.data, name), { ...options, expectedRevision: options?.expectedRevision ?? fetched.revision });
 }
 
 /**
@@ -81,7 +81,7 @@ export async function duplicateSheetInDb(
 ): Promise<SheetOpsDbResult> {
   const fetched = await fetchProjectFromDb(projectId, options);
   if ('error' in fetched) return fetched;
-  return applyAndSave(projectId, duplicateSheetInProject(fetched.data, sheetId), options);
+  return applyAndSave(projectId, duplicateSheetInProject(fetched.data, sheetId), { ...options, expectedRevision: options?.expectedRevision ?? fetched.revision });
 }
 
 /**
@@ -100,7 +100,7 @@ export async function renameSheetInDb(
 ): Promise<SheetOpsDbResult> {
   const fetched = await fetchProjectFromDb(projectId, options);
   if ('error' in fetched) return fetched;
-  return applyAndSave(projectId, renameSheetInProject(fetched.data, sheetId, newName), options);
+  return applyAndSave(projectId, renameSheetInProject(fetched.data, sheetId, newName), { ...options, expectedRevision: options?.expectedRevision ?? fetched.revision });
 }
 
 /**
@@ -117,7 +117,7 @@ export async function removeSheetInDb(
 ): Promise<SheetOpsDbResult> {
   const fetched = await fetchProjectFromDb(projectId, options);
   if ('error' in fetched) return fetched;
-  return applyAndSave(projectId, removeSheetFromProject(fetched.data, sheetId), options);
+  return applyAndSave(projectId, removeSheetFromProject(fetched.data, sheetId), { ...options, expectedRevision: options?.expectedRevision ?? fetched.revision });
 }
 
 /**
@@ -134,7 +134,7 @@ export async function setActiveSheetInDb(
 ): Promise<SheetOpsDbResult> {
   const fetched = await fetchProjectFromDb(projectId, options);
   if ('error' in fetched) return fetched;
-  return applyAndSave(projectId, setActiveSheetInProject(fetched.data, sheetId), options);
+  return applyAndSave(projectId, setActiveSheetInProject(fetched.data, sheetId), { ...options, expectedRevision: options?.expectedRevision ?? fetched.revision });
 }
 
 /**
@@ -153,7 +153,7 @@ export async function reorderSheetsInDb(
 ): Promise<SheetOpsDbResult> {
   const fetched = await fetchProjectFromDb(projectId, options);
   if ('error' in fetched) return fetched;
-  return applyAndSave(projectId, reorderSheetsInProject(fetched.data, sheetIds), options);
+  return applyAndSave(projectId, reorderSheetsInProject(fetched.data, sheetIds), { ...options, expectedRevision: options?.expectedRevision ?? fetched.revision });
 }
 
 /**

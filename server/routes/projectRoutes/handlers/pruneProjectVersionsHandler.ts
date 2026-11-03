@@ -8,6 +8,7 @@
  */
 
 import type { Request, Response } from "express";
+import { z } from "zod";
 import { storage } from "../../../storages/storage";
 import { broadcastVersionsChanged } from '../../../canvas/broadcastVersionsChanged';
 
@@ -25,16 +26,14 @@ export async function pruneProjectVersionsHandler(req: Request, res: Response): 
             return;
         }
 
-        const { keep, kind, authorKind } = (req.body ?? {}) as {
-            keep?: number;
-            kind?: "auto" | "manual";
-            authorKind?: "agent" | "user";
-        };
+        const { keep, kind, authorKind } = z.object({ keep: z.number().int().nonnegative().optional(),
+            kind: z.enum(['auto', 'manual']).optional(), authorKind: z.enum(['agent', 'user']).optional() }).parse(req.body ?? {});
 
         const deleted = await storage.deleteProjectVersionsBulk(projectId, { keep, kind, authorKind });
-        broadcastVersionsChanged(projectId);
-        res.json({ deleted });
+        try { broadcastVersionsChanged(projectId); } catch { /* Уведомление не отменяет удаление. */ }
+        res.json({ deleted, effect: "application", outcome: "saved", persistence: { confirmed: true, method: "returning", projectId, affectedRows: deleted } });
     } catch (error) {
+        if (error instanceof z.ZodError) { res.status(400).json({ message: "Неверный фильтр удаления версий" }); return; }
         console.error("Ошибка массового удаления версий проекта:", error);
         res.status(500).json({ message: "Не удалось удалить версии проекта", error: (error as Error).message });
     }
