@@ -31,7 +31,7 @@
       "bot-json-prompt"
     ],
     "folder_titles": {},
-    "updated_at": "2026-11-03T05:23:21+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
@@ -50,7 +50,7 @@
   {
     "path": "api/README",
     "title": "Telegram Bot Builder API — API Reference",
-    "excerpt": "REST API визуального конструктора Telegram-ботов. Авторизация: сессионная cookie или Bearer PAT. Документация: /admin (вход по ADMIN_API_KEY",
+    "excerpt": "Явно документированные контракты. Сборка без запуска приложения; не включает автоматически обнаруживаемые недокументированные маршруты.",
     "parts": [
       "api",
       "README"
@@ -58,7 +58,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-11-02T21:03:32Z",
+    "updated_at": "2026-11-03T04:34:45Z",
     "tags": [],
     "author": ""
   },
@@ -73,7 +73,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-10-19T18:19:52+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
@@ -88,7 +88,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-10-31T21:27:30+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
@@ -103,7 +103,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-10-31T21:27:30+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
@@ -118,14 +118,14 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-10-31T21:27:30+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "api/analytics-v2",
     "title": "analytics-v2",
-    "excerpt": "Эндпоинтов: **21**",
+    "excerpt": "Эндпоинтов: **23**",
     "parts": [
       "api",
       "analytics-v2"
@@ -133,7 +133,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-11-02T21:03:32Z",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
@@ -148,7 +148,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-10-19T18:19:52+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
@@ -163,7 +163,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-08-12T00:53:11+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
@@ -178,7 +178,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-08-12T00:53:11+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
@@ -193,14 +193,14 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-08-12T01:28:36+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "api/config",
     "title": "config",
-    "excerpt": "Эндпоинтов: **1**",
+    "excerpt": "Эндпоинтов: **2**",
     "parts": [
       "api",
       "config"
@@ -208,22 +208,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-09-01T18:38:33Z",
-    "tags": [],
-    "author": ""
-  },
-  {
-    "path": "api/disabled-node-types",
-    "title": "disabled-node-types",
-    "excerpt": "Эндпоинтов: **1**",
-    "parts": [
-      "api",
-      "disabled-node-types"
-    ],
-    "folder_titles": {
-      "api": "Api"
-    },
-    "updated_at": "2026-09-13T17:59:58Z",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
@@ -238,7 +223,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-08-09T01:18:19+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
@@ -253,7 +238,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-09-01T18:38:33Z",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
@@ -268,7 +253,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-08-12T00:53:11+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
@@ -283,7 +268,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-10-01T18:51:28Z",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
@@ -298,7 +283,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-08-18T17:25:44+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
@@ -313,14 +298,14 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-08-12T04:33:16+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "api/project-dialogs",
     "title": "project-dialogs",
-    "excerpt": "Эндпоинтов: **5**",
+    "excerpt": "Эндпоинтов: **9**",
     "parts": [
       "api",
       "project-dialogs"
@@ -328,14 +313,14 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-10-14T04:54:15Z",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "api/project-files",
     "title": "project-files",
-    "excerpt": "Эндпоинтов: **4**",
+    "excerpt": "Эндпоинтов: **5**",
     "parts": [
       "api",
       "project-files"
@@ -343,7 +328,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-08-12T01:16:05+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
@@ -358,14 +343,14 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-10-15T08:19:31Z",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "api/project-messages",
     "title": "project-messages",
-    "excerpt": "Эндпоинтов: **5**",
+    "excerpt": "Эндпоинтов: **4**",
     "parts": [
       "api",
       "project-messages"
@@ -373,7 +358,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-11-02T21:03:32Z",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
@@ -388,14 +373,14 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-11-02T21:03:32Z",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "api/project-tokens",
     "title": "project-tokens",
-    "excerpt": "Эндпоинтов: **30**",
+    "excerpt": "Эндпоинтов: **31**",
     "parts": [
       "api",
       "project-tokens"
@@ -403,14 +388,14 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-11-02T20:47:50+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "api/project-users",
     "title": "project-users",
-    "excerpt": "Эндпоинтов: **12**",
+    "excerpt": "Эндпоинтов: **13**",
     "parts": [
       "api",
       "project-users"
@@ -418,7 +403,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-10-19T18:19:52+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
@@ -433,14 +418,14 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-08-23T22:51:09+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "api/projects",
     "title": "projects",
-    "excerpt": "Эндпоинтов: **24**",
+    "excerpt": "Эндпоинтов: **18**",
     "parts": [
       "api",
       "projects"
@@ -448,7 +433,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-11-02T21:03:32Z",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
@@ -463,7 +448,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-10-02T20:25:03Z",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
@@ -478,7 +463,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-08-07T05:35:31+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
@@ -493,7 +478,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-08-12T00:53:11+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
@@ -508,7 +493,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-10-03T11:20:48Z",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
@@ -523,7 +508,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-08-12T00:53:11+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
@@ -538,7 +523,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-08-18T17:25:44+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
@@ -553,7 +538,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-08-09T00:17:32+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
@@ -568,7 +553,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-10-01T00:08:19Z",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
@@ -583,7 +568,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-10-15T08:19:31Z",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
@@ -598,7 +583,7 @@
     "folder_titles": {
       "database": "Database"
     },
-    "updated_at": "2026-11-02T21:03:32Z",
+    "updated_at": "2026-11-03T04:34:45Z",
     "tags": [],
     "author": ""
   },
@@ -778,7 +763,7 @@
     "folder_titles": {
       "database": "Database"
     },
-    "updated_at": "2026-10-15T06:28:56Z",
+    "updated_at": "2026-11-03T04:34:45Z",
     "tags": [],
     "author": ""
   },
@@ -1498,7 +1483,7 @@
     "folder_titles": {
       "features": "🧩 Возможности"
     },
-    "updated_at": "2026-11-03T05:23:21+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
@@ -3272,7 +3257,7 @@
     "folder_titles": {
       "mcp": "🤖 MCP-конструктор"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
@@ -3287,7 +3272,7 @@
     "folder_titles": {
       "mcp": "🤖 MCP-конструктор"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
@@ -3307,6 +3292,36 @@
     "author": ""
   },
   {
+    "path": "mcp/compact-migration-progress",
+    "title": "Компактный MCP: план и учёт",
+    "excerpt": "<!-- @fileoverview План перехода к компактному MCP и учёт работы субагентов. -->",
+    "parts": [
+      "mcp",
+      "compact-migration-progress"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/compact-profile",
+    "title": "Компактный профиль MCP",
+    "excerpt": "<!-- @fileoverview Настройка компактного профиля MCP и общих контрактов действий. -->",
+    "parts": [
+      "mcp",
+      "compact-profile"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
     "path": "mcp/example-simple-bot",
     "title": "Пример: простой бот через MCP",
     "excerpt": "Демонстрационный проект, собранный **инструментами MCP botcraft-builder**.",
@@ -3322,6 +3337,21 @@
     "author": ""
   },
   {
+    "path": "mcp/feature-coverage",
+    "title": "Покрытие вкладок конструктора через MCP",
+    "excerpt": "<!-- @fileoverview Доказательная матрица пользовательских возможностей HTTP/MCP и оставшихся пробелов. -->",
+    "parts": [
+      "mcp",
+      "feature-coverage"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
     "path": "mcp/overview",
     "title": "MCP-конструктор ботов — обзор",
     "excerpt": "<!-- @fileoverview Краткий обзор возможностей и подключения MCP-конструктора ботов. -->",
@@ -3332,7 +3362,7 @@
     "folder_titles": {
       "mcp": "🤖 MCP-конструктор"
     },
-    "updated_at": "2026-11-02T08:24:35+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
@@ -3348,6 +3378,36 @@
       "mcp": "🤖 MCP-конструктор"
     },
     "updated_at": "2026-10-13T04:37:38Z",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/reliability-worklog",
+    "title": "Надёжный MCP: исполнение цели",
+    "excerpt": "<!-- @fileoverview Матрица исполнения цели надёжного MCP, назначений и доказательств. -->",
+    "parts": [
+      "mcp",
+      "reliability-worklog"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/reliability",
+    "title": "Надёжная работа с MCP",
+    "excerpt": "<!-- @fileoverview Стабильная ссылка на канонические правила сохранения, доступные также через MCP. -->",
+    "parts": [
+      "mcp",
+      "reliability"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
@@ -3828,7 +3888,7 @@
   {
     "path": "mcp/nodes/input",
     "title": "Input-нода",
-    "excerpt": "`input` сама вопрос не отправляет: предыдущая `message` показывает его, а `input` ожидает следующее событие Telegram и сохраняет полезную на",
+    "excerpt": "<!-- @fileoverview Настройки input и отличие перехода после ответа от включения сбора ввода. -->",
     "parts": [
       "mcp",
       "nodes",
@@ -3838,7 +3898,7 @@
       "mcp": "🤖 MCP-конструктор",
       "nodes": "Nodes"
     },
-    "updated_at": "2026-10-25T19:57:28+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
@@ -6036,6 +6096,23 @@
     "author": ""
   },
   {
+    "path": "mcp/rules/persistence",
+    "title": "Надёжная работа с MCP",
+    "excerpt": "<!-- @fileoverview Подтверждение сохранения, конкуренция и восстановление после неоднозначных ответов MCP. -->",
+    "parts": [
+      "mcp",
+      "rules",
+      "persistence"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "rules": "Rules"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
     "path": "mcp/rules/project-format",
     "title": "Формат project.json",
     "excerpt": "Проект имеет `version: 2`, `activeSheetId` и массив `sheets`. Каждый лист содержит `id`, `name`, `nodes` и необязательный `viewState`. Нода ",
@@ -6122,8 +6199,8 @@
   },
   {
     "path": "mcp/tools/README",
-    "title": "Карточки MCP-инструментов",
-    "excerpt": "<!--",
+    "title": "Каталог действий MCP",
+    "excerpt": "Сгенерировано из SDK: 210 действий.",
     "parts": [
       "mcp",
       "tools",
@@ -6133,14 +6210,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-11-02T08:24:35+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/add_node",
     "title": "`add_node`",
-    "excerpt": "Добавить ноду в project.json",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -6150,14 +6227,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:57:28+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/connect_nodes",
     "title": "`connect_nodes`",
-    "excerpt": "Соединить ноды: auto-transition, button-goto+branch, input-target",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -6167,14 +6244,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/create_node",
     "title": "`create_node`",
-    "excerpt": "Создать одну ноду с дефолтами конструктора (get_node_schema перед незнакомым типом). Для command_trigger: только латиница (/buy, /refund), н",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -6184,14 +6261,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:57:28+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_add_bot_token",
     "title": "`db_add_bot_token`",
-    "excerpt": "Подключить бота к проекту: добавить токен от @BotFather (модалка «Подключить бота»).",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -6201,14 +6278,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_add_node",
     "title": "`db_add_node`",
-    "excerpt": "Добавить ноду в проект в БД живого приложения с обновлением холста (live). Адресация по числовому projectId из URL редактора",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -6218,14 +6295,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:57:28+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_add_sheet",
     "title": "`db_add_sheet`",
-    "excerpt": "Добавить лист в проект в БД живого приложения (live). Адресация по числовому projectId из URL редактора",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -6235,14 +6312,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_add_table_column",
     "title": "`db_add_table_column`",
-    "excerpt": "Добавить столбец.",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -6252,14 +6329,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:57:28+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_add_table_rows",
     "title": "`db_add_table_rows`",
-    "excerpt": "Добавить до 200 строк. Ключи data — id столбцов. Чужой ключ отклоняется до записи.",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -6269,14 +6346,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:57:28+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_apply_ops",
     "title": "`db_apply_ops`",
-    "excerpt": "Пакет операций к проекту в БД за одну транзакцию (один live-broadcast/версия). update_node/remove_node без sheet_id ищут ноду по всем листам",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -6286,14 +6363,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:57:28+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_apply_table_ops",
     "title": "`db_apply_table_ops`",
-    "excerpt": "До 50 операций одной транзакцией: столбцы, строки, переиндексация. Если есть удаление, нужен confirm: true. При ошибке всё откатывается, в о",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -6303,14 +6380,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:57:28+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_archive_project",
     "title": "`db_archive_project`",
-    "excerpt": "Поместить проект в личный архив владельца токена. Скрывает проект только у этого пользователя;",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -6320,14 +6397,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_auto_layout",
     "title": "`db_auto_layout`",
-    "excerpt": "Пересчитать позиции всех нод листа иерархической авто-раскладкой (как кнопка «Авто-расстановка»). Меняет только координаты, не трогает связи",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -6337,14 +6414,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_bot_launch_history",
     "title": "`db_bot_launch_history`",
-    "excerpt": "История запусков бота по token_id (статус, время старта/остановки, ошибка, pid) БЕЗ секрета token. token_id берётся из db_list_bot_tokens.",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -6354,14 +6431,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_bot_logs",
     "title": "`db_bot_logs`",
-    "excerpt": "Последние live-логи бота (stdout/stderr/status) — для отладки. token_id берётся из db_list_bot_tokens.",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -6371,14 +6448,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:57:28+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_bot_status",
     "title": "`db_bot_status`",
-    "excerpt": "Статус бота по token_id (running/stopped, имя, username, uptime, статистика пользователей) БЕЗ секрета token. token_id берётся из db_list_bo",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -6388,14 +6465,31 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:57:28+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_cancel_chat_access_check",
+    "title": "`db_cancel_chat_access_check`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_cancel_chat_access_check"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_check_chat_access",
     "title": "`db_check_chat_access`",
-    "excerpt": "Проверяет через Telegram актуальный доступ бота к личке, группе или каналу. Для лички используется краткое действие «печатает» без сообщения",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -6405,14 +6499,48 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_clear_bot_logs",
+    "title": "`db_clear_bot_logs`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_clear_bot_logs"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_clear_dialog_history",
+    "title": "`db_clear_dialog_history`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_clear_dialog_history"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_clear_table_rows",
     "title": "`db_clear_table_rows`",
-    "excerpt": "Удалить все строки таблицы. Нужен confirm: true, иначе запрос не отправляется.",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -6422,14 +6550,31 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_clear_users",
+    "title": "`db_clear_users`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_clear_users"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_compare_analytics",
     "title": "`db_compare_analytics`",
-    "excerpt": "Сравнивает временные метрики в одном снимке БД. previous — предыдущее окно той же длительности; explicit — compare_from/compare_to. Один ист",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -6439,14 +6584,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_connect_nodes",
     "title": "`db_connect_nodes`",
-    "excerpt": "Соединить ноды (auto-transition, button-goto+branch, input-target) в проекте в БД живого приложения с обновлением холста (live). Адресация п",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -6456,14 +6601,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:57:28+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_count_table_rows",
     "title": "`db_count_table_rows`",
-    "excerpt": "Сколько строк подходит под те же фильтры, что и db_find_table_rows.",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -6473,14 +6618,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:57:28+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_create_analytics_expense",
-    "title": "db_create_analytics_expense",
-    "excerpt": "<!--",
+    "title": "`db_create_analytics_expense`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -6490,14 +6635,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-11-02T08:24:35+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_create_analytics_link",
-    "title": "db_create_analytics_link",
-    "excerpt": "<!--",
+    "title": "`db_create_analytics_link`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -6507,14 +6652,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-11-02T08:24:35+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_create_analytics_placement",
-    "title": "db_create_analytics_placement",
-    "excerpt": "<!--",
+    "title": "`db_create_analytics_placement`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -6524,14 +6669,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-11-02T08:24:35+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_create_analytics_source",
-    "title": "db_create_analytics_source",
-    "excerpt": "<!--",
+    "title": "`db_create_analytics_source`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -6541,14 +6686,48 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-11-02T08:24:35+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_create_bot_env",
+    "title": "`db_create_bot_env`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_create_bot_env"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_create_checkpoint",
+    "title": "`db_create_checkpoint`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_create_checkpoint"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_create_project",
     "title": "`db_create_project`",
-    "excerpt": "Создать новый проект с дефолтным сценарием (/start → приветствие) в БД живого приложения. Возвращает id нового проекта.",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -6558,14 +6737,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_create_table",
     "title": "`db_create_table`",
-    "excerpt": "Создать пользовательскую таблицу. Имя _content зарезервировано.",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -6575,14 +6754,48 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:57:28+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_create_template",
+    "title": "`db_create_template`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_create_template"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_delete_bot_env",
+    "title": "`db_delete_bot_env`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_delete_bot_env"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_delete_bot_token",
     "title": "`db_delete_bot_token`",
-    "excerpt": "Удалить токен бота из проекта (НЕОБРАТИМО). ТРЕБУЕТ confirm: true.",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -6592,14 +6805,65 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_delete_broadcast",
+    "title": "`db_delete_broadcast`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_delete_broadcast"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_delete_campaign",
+    "title": "`db_delete_campaign`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_delete_campaign"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_delete_dialog_message",
+    "title": "`db_delete_dialog_message`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_delete_dialog_message"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_delete_project",
     "title": "`db_delete_project`",
-    "excerpt": "Удалить проект целиком (НЕОБРАТИМО): останавливает бота и удаляет все связанные данные. Требует confirm: true.",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -6609,14 +6873,31 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_delete_project_files",
+    "title": "`db_delete_project_files`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_delete_project_files"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_delete_table",
     "title": "`db_delete_table`",
-    "excerpt": "Удалить таблицу. Нужен confirm: true, иначе запрос не отправляется. _content удалить нельзя.",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -6626,14 +6907,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_delete_table_column",
     "title": "`db_delete_table_column`",
-    "excerpt": "Удалить столбец. Нужен confirm: true, иначе запрос не отправляется.",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -6643,14 +6924,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_delete_table_row",
     "title": "`db_delete_table_row`",
-    "excerpt": "Удалить строку. Нужен confirm: true, иначе запрос не отправляется.",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -6660,14 +6941,48 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_delete_template",
+    "title": "`db_delete_template`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_delete_template"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_delete_user",
+    "title": "`db_delete_user`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_delete_user"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_delete_version",
     "title": "`db_delete_version`",
-    "excerpt": "Удалить одну версию проекта из истории в БД (НЕОБРАТИМО). Адресация по числовому projectId из URL редактора",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -6677,14 +6992,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_disconnect_nodes",
     "title": "`db_disconnect_nodes`",
-    "excerpt": "Снять переход между нодами в проекте в БД живого приложения с обновлением холста (live). Без branch снимает все рёбра from→to; с branch — то",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -6694,14 +7009,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:57:28+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_duplicate_node",
     "title": "`db_duplicate_node`",
-    "excerpt": "Дублировать ноду на том же листе в БД живого приложения с обновлением холста (live). Копия получает новый id и смещённую позицию; исходящие ",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -6711,14 +7026,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:57:28+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_duplicate_project",
     "title": "`db_duplicate_project`",
-    "excerpt": "Дублировать проект целиком (полная копия сценария со всеми листами и связями) в БД живого приложения. Bot token НЕ копируется — копия создаё",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -6728,14 +7043,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_duplicate_sheet",
     "title": "`db_duplicate_sheet`",
-    "excerpt": "Дублировать лист со всеми нодами в БД живого приложения с обновлением холста (live). Копия получает суффикс «(копия)», новые id нод/веток, в",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -6745,14 +7060,82 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_edit_broadcast",
+    "title": "`db_edit_broadcast`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_edit_broadcast"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_edit_campaign",
+    "title": "`db_edit_campaign`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_edit_campaign"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_edit_dialog_message",
+    "title": "`db_edit_dialog_message`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_edit_dialog_message"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_edit_table_cells",
+    "title": "`db_edit_table_cells`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_edit_table_cells"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_export_bot_logs",
     "title": "`db_export_bot_logs`",
-    "excerpt": "Экспорт периода логов в локальный файл txt/jsonl, до 5000 строк. Возвращает путь и признак неполного экспорта.",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -6762,14 +7145,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_export_project",
     "title": "`db_export_project`",
-    "excerpt": "Экспортировать проект в готовый Python-код бота (bot.py): сохраняет файл на диск в каталог bots/ и возвращает путь, размер, число строк и пр",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -6779,14 +7162,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_export_project_tables",
     "title": "`db_export_project_tables`",
-    "excerpt": "Выгрузить все пользовательские таблицы в JSON версии 1 или JSONL во временный каталог.",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -6796,14 +7179,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_export_table",
     "title": "`db_export_table`",
-    "excerpt": "Выгрузить таблицу в csv, json или jsonl во временный закрытый каталог. Путь назначает сервер.",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -6813,14 +7196,31 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_export_table_data",
+    "title": "`db_export_table_data`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_export_table_data"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_find_inbound",
     "title": "`db_find_inbound`",
-    "excerpt": "Найти все входящие ссылки на ноду: кнопки, автопереходы, ветки и служебные связи. Read-only; цель может уже отсутствовать.",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -6830,14 +7230,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_find_nodes",
     "title": "`db_find_nodes`",
-    "excerpt": "Поиск нод по подстроке (регистронезависимо): текст/команда/id и поля кнопок (url, copyText, text). Read-only. Адресация по projectId из URL",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -6847,14 +7247,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:57:28+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_find_table_rows",
     "title": "`db_find_table_rows`",
-    "excerpt": "Поиск строк: до 5 условий, без произвольного SQL. Операторы equals, not_equals, contains, starts_with, ends_with, filled, empty, greater_tha",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -6864,14 +7264,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:57:28+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_find_tables",
     "title": "`db_find_tables`",
-    "excerpt": "Найти пользовательские таблицы по части имени.",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -6881,14 +7281,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:57:28+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_get_acquisition_report",
-    "title": "db_get_acquisition_report",
-    "excerpt": "<!--",
+    "title": "`db_get_acquisition_report`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -6898,14 +7298,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-11-02T08:24:35+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_get_active_users_chart",
     "title": "`db_get_active_users_chart`",
-    "excerpt": "Карточка «Активные пользователи»: split total — общий ряд, cohort — новички и вернувшиеся по слотам. До 500 точек. Итоги окна уникальны и не",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -6915,14 +7315,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_get_active_users_summary",
     "title": "`db_get_active_users_summary`",
-    "excerpt": "Уникальные активные пользователи, новички и вернувшиеся за окно. Один user_id у нескольких ботов считается один раз. Итоги не суммируются по",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -6932,14 +7332,31 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_get_activity_leaders",
+    "title": "`db_get_activity_leaders`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_get_activity_leaders"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_get_analytics_exchange_rate",
-    "title": "db_get_analytics_exchange_rate",
-    "excerpt": "<!--",
+    "title": "`db_get_analytics_exchange_rate`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -6949,14 +7366,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-11-02T08:24:35+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_get_analytics_history",
-    "title": "db_get_analytics_history",
-    "excerpt": "<!--",
+    "title": "`db_get_analytics_history`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -6966,14 +7383,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-11-02T08:24:35+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_get_analytics_range",
     "title": "`db_get_analytics_range`",
-    "excerpt": "Точные UTC [from,to) и независимый шаг для registrations/messages/active_users; period либо from+to. 12w=84 дня,12m=365. Итоги active_users ",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -6983,14 +7400,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_get_analytics_v2",
-    "title": "db_get_analytics_v2",
-    "excerpt": "<!--",
+    "title": "`db_get_analytics_v2`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7000,14 +7417,99 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-11-02T08:24:35+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_get_bot_admin_ids",
+    "title": "`db_get_bot_admin_ids`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_get_bot_admin_ids"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_get_bot_log",
+    "title": "`db_get_bot_log`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_get_bot_log"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_get_bot_settings",
+    "title": "`db_get_bot_settings`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_get_bot_settings"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_get_broadcast",
+    "title": "`db_get_broadcast`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_get_broadcast"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_get_campaign",
+    "title": "`db_get_campaign`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_get_campaign"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_get_chat_access_check",
     "title": "`db_get_chat_access_check`",
-    "excerpt": "Возвращает активную или последнюю массовую проверку доступов выбранного бота. Повторяйте, пока status равен pending, running или cancelling.",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7017,14 +7519,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_get_dialog_messages",
     "title": "`db_get_dialog_messages`",
-    "excerpt": "Читает сохранённые сообщения конкретного чата выбранного бота. Первая страница — последние сообщения, курсор ведёт к более старым; внутри ст",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7034,14 +7536,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_get_groups_chart",
     "title": "`db_get_groups_chart`",
-    "excerpt": "Точки карточки «Группы»: когда панель впервые сохранила группу. Периоды как у пользователей, по умолчанию 30d. mode period — новые группы по",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7051,14 +7553,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_get_groups_summary",
     "title": "`db_get_groups_summary`",
-    "excerpt": "Текущие числа карточки «Группы» одного бота: всего, доступны и исключили. token_id обязателен, группы разных ботов не смешиваются. Каналы не",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7068,14 +7570,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_get_launch_logs",
     "title": "`db_get_launch_logs`",
-    "excerpt": "Логи одного запуска по launch_id, до 500 строк, более старые страницы через before_id.",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7085,14 +7587,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_get_messages_chart",
     "title": "`db_get_messages_chart`",
-    "excerpt": "Точки карточки «Активность сообщений». mode: period или cumulative (накопление от нуля за выбранный период). split: total или direction (inc",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7102,14 +7604,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_get_messages_summary",
     "title": "`db_get_messages_summary`",
-    "excerpt": "Сводка активности сообщений: сохранённая история, сообщения за период и направления, среднее сохранённых сообщений на текущую запись bot_use",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7119,14 +7621,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_get_node",
     "title": "`db_get_node`",
-    "excerpt": "Прочитать одну ноду целиком из БД живого приложения по id. Адресация по числовому projectId из URL редактора",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7136,14 +7638,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:57:28+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_get_popular_buttons",
     "title": "`db_get_popular_buttons`",
-    "excerpt": "Карточка «Топ кнопок»: до 10 меток по сохранённым нажатиям за период. Период по умолчанию 30d; 12w — 84 дня. returned_clicks — сумма топа, а",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7153,14 +7655,31 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_get_storage_quota",
+    "title": "`db_get_storage_quota`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_get_storage_quota"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_get_table",
     "title": "`db_get_table`",
-    "excerpt": "Таблица, столбцы (имя и числовой id) и сводка заполненности.",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7170,14 +7689,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:57:28+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_get_table_chart",
     "title": "`db_get_table_chart`",
-    "excerpt": "Группы пользовательской таблицы для графика: количество, сумма, среднее, минимум или максимум. Не больше 50 групп. Не создаёт изображение. Т",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7187,14 +7706,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_get_table_row",
     "title": "`db_get_table_row`",
-    "excerpt": "Одна строка таблицы проекта.",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7204,14 +7723,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:57:28+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_get_table_summary",
     "title": "`db_get_table_summary`",
-    "excerpt": "Число строк и сколько непустых ячеек в каждом столбце.",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7221,14 +7740,31 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:57:28+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_get_template",
+    "title": "`db_get_template`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_get_template"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_get_traffic_sources_chart",
     "title": "`db_get_traffic_sources_chart`",
-    "excerpt": "Динамика регистраций по текущему параметру источника. До 500 слотов и 20 отдельных источников; остальные в other_count. По умолчанию 30d, то",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7238,14 +7774,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_get_traffic_sources_summary",
     "title": "`db_get_traffic_sources_summary`",
-    "excerpt": "Доли источников трафика по записям bot_users: period all — текущая аудитория, остальные периоды — регистрации за окно. По умолчанию 30d, top",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7255,14 +7791,48 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_get_user",
+    "title": "`db_get_user`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_get_user"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_get_user_variables",
+    "title": "`db_get_user_variables`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_get_user_variables"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_get_users_chart",
     "title": "`db_get_users_chart`",
-    "excerpt": "Точки карточки «Всего пользователей». mode: period — регистрации по слотам, cumulative — накопление. group_by: total — общая аудитория, sour",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7272,14 +7842,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_get_users_languages",
     "title": "`db_get_users_languages`",
-    "excerpt": "Карточка «Языки»: снимок сохранённой аудитории, до 20 крупнейших языков. Проценты среди всех записей с известным языком, не только топ-20. Б",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7289,14 +7859,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_get_users_premium",
     "title": "`db_get_users_premium`",
-    "excerpt": "Текущий снимок карточки Premium: Premium и обычные пользователи, количество и целые проценты. Читает сохранённые bot_users, без истории и пе",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7306,14 +7876,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_get_users_summary",
     "title": "`db_get_users_summary`",
-    "excerpt": "Записи пользователей, новые за период и аудитория до периода. В готовом периоде ещё текущий снимок: сколько людей писали лично, в группах и ",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7323,14 +7893,31 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_get_version",
+    "title": "`db_get_version`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_get_version"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_import_project_tables",
     "title": "`db_import_project_tables`",
-    "excerpt": "Прочитать общий JSON версии 1. Без confirm возвращает только превью. Запись и замена требуют confirm: true.",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7340,14 +7927,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_import_table_file",
     "title": "`db_import_table_file`",
-    "excerpt": "Импорт CSV или JSON из рабочего каталога или временной папки. Ссылки и чужие пути запрещены. replace требует confirm: true.",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7357,14 +7944,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:57:28+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_import_table_rows",
     "title": "`db_import_table_rows`",
-    "excerpt": "Импорт до 200 строк. mode append или replace. replace требует confirm: true до обращения к API.",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7374,14 +7961,31 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:57:28+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_import_tables_data",
+    "title": "`db_import_tables_data`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_import_tables_data"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_list_analytics_expenses",
-    "title": "db_list_analytics_expenses",
-    "excerpt": "<!--",
+    "title": "`db_list_analytics_expenses`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7391,14 +7995,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-11-02T08:24:35+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_list_analytics_links",
-    "title": "db_list_analytics_links",
-    "excerpt": "<!--",
+    "title": "`db_list_analytics_links`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7408,14 +8012,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-11-02T08:24:35+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_list_analytics_placements",
-    "title": "db_list_analytics_placements",
-    "excerpt": "<!--",
+    "title": "`db_list_analytics_placements`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7425,14 +8029,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-11-02T08:24:35+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_list_analytics_sources",
-    "title": "db_list_analytics_sources",
-    "excerpt": "<!--",
+    "title": "`db_list_analytics_sources`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7442,14 +8046,31 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-11-02T08:24:35+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_list_bot_env",
+    "title": "`db_list_bot_env`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_list_bot_env"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_list_bot_launches",
     "title": "`db_list_bot_launches`",
-    "excerpt": "Страница истории запусков токена; before_id читает более старые запуски. Доступ проверяется по проекту.",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7459,14 +8080,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_list_bot_tokens",
     "title": "`db_list_bot_tokens`",
-    "excerpt": "Список токенов бота проекта (id/имя/username/флаги/messagesRetentionDays) БЕЗ самого токена. Нужен для получения token_id для db_bot_status/",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7476,14 +8097,48 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_list_broadcast_campaigns",
+    "title": "`db_list_broadcast_campaigns`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_list_broadcast_campaigns"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_list_broadcasts",
+    "title": "`db_list_broadcasts`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_list_broadcasts"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_list_connections",
     "title": "`db_list_connections`",
-    "excerpt": "Граф связей проекта из БД живого приложения: рёбра from→to с типом (auto/button/branch/parallel/input/keyboard) и флагом broken. Read-only. ",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7493,14 +8148,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_list_dialogs",
     "title": "`db_list_dialogs`",
-    "excerpt": "Список сохранённых диалогов бота: поиск по имени, названию, username и ID, пагинация, последнее сообщение и сохранённый доступ. Не проверяет",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7510,14 +8165,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_list_nodes",
     "title": "`db_list_nodes`",
-    "excerpt": "Лёгкий список нод проекта из БД живого приложения: id, type, лист, краткая сводка (без полного data)",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7527,14 +8182,31 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:57:28+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_list_project_files",
+    "title": "`db_list_project_files`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_list_project_files"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_list_projects",
     "title": "`db_list_projects`",
-    "excerpt": "Список проектов владельца токена из БД живого приложения: id, name, число нод/листов, isArchivedForMe.",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7544,14 +8216,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_list_sheets",
     "title": "`db_list_sheets`",
-    "excerpt": "Лёгкий read-only список листов проекта из БД живого приложения: id, name, число нод",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7561,14 +8233,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_list_table_columns",
     "title": "`db_list_table_columns`",
-    "excerpt": "Столбцы таблицы: числовой id, имя и позиция. Ключи ячеек — эти id строками.",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7578,14 +8250,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:57:28+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_list_table_rows",
     "title": "`db_list_table_rows`",
-    "excerpt": "Страница строк. limit по умолчанию 100, максимум 500. sort: id, row_index или column:<id>.",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7595,14 +8267,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:57:28+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_list_tables",
     "title": "`db_list_tables`",
-    "excerpt": "Список пользовательских таблиц проекта. Системные таблицы пользователей и сообщений сюда не входят.",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7612,14 +8284,31 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:57:28+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_list_templates",
+    "title": "`db_list_templates`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_list_templates"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_list_unavailable_users",
     "title": "`db_list_unavailable_users`",
-    "excerpt": "Люди выбранного бота с удалённым аккаунтом или блокировкой бота. kind: deleted, blocked или both. Возвращает id, имя, username и ссылки tg:/",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7629,14 +8318,31 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_list_users",
+    "title": "`db_list_users`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_list_users"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_list_versions",
     "title": "`db_list_versions`",
-    "excerpt": "Список версий проекта из БД живого приложения (история чекпоинтов и авто-снимков): id, label, автор, kind, дата. Адресация по числовому proj",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7646,14 +8352,31 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_mark_file_used",
+    "title": "`db_mark_file_used`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_mark_file_used"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_move_node",
     "title": "`db_move_node`",
-    "excerpt": "Перенести ноду на другой лист проекта в БД живого приложения с обновлением холста (live). id и связи сохраняются. Адресация по числовому pro",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7663,14 +8386,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:57:28+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_move_sheet_to_project",
     "title": "`db_move_sheet_to_project`",
-    "excerpt": "Перенести (move) или скопировать (copy) лист из одного проекта в другой в БД живого приложения с обновлением обоих холстов (live). Оригиналь",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7680,14 +8403,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_patch_table_row",
     "title": "`db_patch_table_row`",
-    "excerpt": "Изменить только переданные ячейки. Пустая строка сохраняется.",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7697,14 +8420,48 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:57:28+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_patch_table_row_expected",
+    "title": "`db_patch_table_row_expected`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_patch_table_row_expected"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_preview_broadcast_audience",
+    "title": "`db_preview_broadcast_audience`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_preview_broadcast_audience"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_project_summary",
     "title": "`db_project_summary`",
-    "excerpt": "Лёгкая сводка проекта из БД живого приложения: листы, число нод, счётчик по типам (без data нод)",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7714,14 +8471,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_prune_versions",
     "title": "`db_prune_versions`",
-    "excerpt": "Массово удалить версии проекта из истории по фильтру (НЕОБРАТИМО). keep — сколько последних оставить; kind — только auto/manual; author_kind",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7731,14 +8488,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_reindex_table_rows",
     "title": "`db_reindex_table_rows`",
-    "excerpt": "Перенумеровать строки с нуля.",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7748,14 +8505,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_remove_node",
     "title": "`db_remove_node`",
-    "excerpt": "Удалить ноду из проекта в БД (live). Без sheet_id ищет по всем листам; если ноды нет — ошибка. Адресация по projectId из URL",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7765,14 +8522,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_remove_sheet",
     "title": "`db_remove_sheet`",
-    "excerpt": "Удалить лист из проекта в БД живого приложения (live). Нельзя удалить последний лист. Адресация по числовому projectId из URL редактора",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7782,14 +8539,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_rename_project",
     "title": "`db_rename_project`",
-    "excerpt": "Переименовать проект в БД живого приложения. Меняет только имя (без правки сценария, без новой версии).",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7799,14 +8556,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_rename_sheet",
     "title": "`db_rename_sheet`",
-    "excerpt": "Переименовать лист в проекте в БД живого приложения (live). Адресация по числовому projectId из URL редактора",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7816,14 +8573,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_rename_table",
     "title": "`db_rename_table`",
-    "excerpt": "Переименовать таблицу. Служебную _content переименовать нельзя.",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7833,14 +8590,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_rename_table_column",
     "title": "`db_rename_table_column`",
-    "excerpt": "Переименовать столбец.",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7850,14 +8607,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_reorder_projects",
     "title": "`db_reorder_projects`",
-    "excerpt": "Изменить порядок проектов в списке. project_ids — полный список id проектов владельца в нужном порядке.",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7867,14 +8624,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_reorder_sheets",
     "title": "`db_reorder_sheets`",
-    "excerpt": "Изменить порядок листов проекта в БД живого приложения (live). sheetIds — полный список id листов в нужном порядке (перестановка всех сущест",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7884,14 +8641,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_reorder_table_columns",
     "title": "`db_reorder_table_columns`",
-    "excerpt": "Задать полный порядок столбцов массивом их id.",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7901,14 +8658,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_report_button_navigation",
     "title": "`db_report_button_navigation`",
-    "excerpt": "Показать эффект каждой кнопки: новое сообщение, редактирование текущего, смена клавиатуры, внешнее действие или битая цель. Read-only.",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7918,14 +8675,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_restart_all_bots",
     "title": "`db_restart_all_bots`",
-    "excerpt": "Перезапустить ВСЕ запущенные боты проекта. ТРЕБУЕТ confirm: true (затрагивает все боты). Возвращает сводку restarted/failed/results. История",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7935,14 +8692,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_restart_bot",
     "title": "`db_restart_bot`",
-    "excerpt": "Перезапустить бот проекта (stop+start). Если token_id не указан — текущий/дефолтный бот; если указан — конкретный токен (для проектов с неск",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7952,14 +8709,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:57:28+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_restore_version",
     "title": "`db_restore_version`",
-    "excerpt": "Откатить проект к версии из истории в БД живого приложения с обновлением холста (live). Создаёт новый чекпоинт отката. Адресация по числовом",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7969,14 +8726,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_rewrite_button_navigation",
     "title": "`db_rewrite_button_navigation`",
-    "excerpt": "Массово переключить кнопочную навигацию между новыми сообщениями и edit_message. Без confirm возвращает только план; запись выполняется одно",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -7986,14 +8743,31 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_save_analytics_link_budget",
+    "title": "`db_save_analytics_link_budget`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_save_analytics_link_budget"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_search_bot_logs",
     "title": "`db_search_bot_logs`",
-    "excerpt": "Поиск сохранённых логов бота по ISO-периоду, тексту и типу. История ограничена сроком хранения.",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -8003,14 +8777,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:57:28+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_search_dialog_messages",
     "title": "`db_search_dialog_messages`",
-    "excerpt": "Поиск буквальной подстроки без учёта регистра в сохранённых сообщениях выбранного бота. Без chat_id поиск идёт по всем чатам; для chat_id тр",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -8020,14 +8794,65 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_send_dialog_message",
+    "title": "`db_send_dialog_message`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_send_dialog_message"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_send_group_message",
+    "title": "`db_send_group_message`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_send_group_message"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_send_node_message",
+    "title": "`db_send_node_message`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_send_node_message"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_set_active_sheet",
     "title": "`db_set_active_sheet`",
-    "excerpt": "Сделать лист активным в проекте в БД живого приложения (live). Адресация по числовому projectId из URL редактора",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -8037,14 +8862,48 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_set_bot_profile",
+    "title": "`db_set_bot_profile`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_set_bot_profile"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_set_bot_settings",
+    "title": "`db_set_bot_settings`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_set_bot_settings"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_set_messages_retention",
     "title": "`db_set_messages_retention`",
-    "excerpt": "Установить срок хранения сообщений диалога для токена (bot_messages). 0 = безлимит; иначе 7/30/60/90/180/365 дней. Сервер раз в час удаляет ",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -8054,14 +8913,48 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_set_table_column_settings",
+    "title": "`db_set_table_column_settings`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_set_table_column_settings"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_set_user_database_enabled",
+    "title": "`db_set_user_database_enabled`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_set_user_database_enabled"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_set_userbot_settings",
     "title": "`db_set_userbot_settings`",
-    "excerpt": "Настроить Telethon Userbot. Пропущенные поля не меняются; пустые и замаскированные секреты сохраняются. Настройки применятся при следующем з",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -8071,14 +8964,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:57:28+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_start_bot",
     "title": "`db_start_bot`",
-    "excerpt": "Запустить бота проекта в БД живого приложения. Запуск асинхронный — после успеха проверь db_bot_status. Старт пишется в историю запусков и о",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -8088,14 +8981,31 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:57:28+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_start_broadcast",
+    "title": "`db_start_broadcast`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_start_broadcast"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_start_chat_access_check",
     "title": "`db_start_chat_access_check`",
-    "excerpt": "Запускает массовую проверку людей выбранного бота: у кого есть личное сообщение или ещё нет сообщений. Кто писал только в группе или канале,",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -8105,14 +9015,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_start_offline_bots",
     "title": "`db_start_offline_bots`",
-    "excerpt": "Запустить всех ОФЛАЙН ботов проекта (уже running и недействительные токены не трогает). ТРЕБУЕТ confirm: true.",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -8122,14 +9032,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_stop_bot",
     "title": "`db_stop_bot`",
-    "excerpt": "Остановить бота проекта. ТРЕБУЕТ confirm: true (останавливает работающего бота). Стоп пишется в историю запусков и обновляет UI в реальном в",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -8139,14 +9049,48 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_stop_broadcast",
+    "title": "`db_stop_broadcast`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_stop_broadcast"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_stop_campaign",
+    "title": "`db_stop_campaign`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_stop_campaign"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_suggest_table_chart",
     "title": "`db_suggest_table_chart`",
-    "excerpt": "Предлагает столбцы, подсчёт и вид графика пользовательской таблицы. Объясняет, если значения категории почти не повторяются или подписи слиш",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -8156,14 +9100,31 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_sync_dialog_group",
+    "title": "`db_sync_dialog_group`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_sync_dialog_group"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_unarchive_project",
     "title": "`db_unarchive_project`",
-    "excerpt": "Вернуть проект из личного архива владельца токена. Эквивалент POST /api/projects/:id/unarchive.",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -8173,14 +9134,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_update_analytics_expense",
-    "title": "db_update_analytics_expense",
-    "excerpt": "<!--",
+    "title": "`db_update_analytics_expense`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -8190,14 +9151,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-11-02T08:24:35+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_update_analytics_link",
-    "title": "db_update_analytics_link",
-    "excerpt": "<!--",
+    "title": "`db_update_analytics_link`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -8207,14 +9168,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-11-02T08:24:35+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_update_analytics_placement",
-    "title": "db_update_analytics_placement",
-    "excerpt": "<!--",
+    "title": "`db_update_analytics_placement`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -8224,14 +9185,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-11-02T08:24:35+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_update_analytics_source",
-    "title": "db_update_analytics_source",
-    "excerpt": "<!--",
+    "title": "`db_update_analytics_source`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -8241,14 +9202,31 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-11-02T08:24:35+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_update_bot_env",
+    "title": "`db_update_bot_env`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_update_bot_env"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_update_bot_token",
     "title": "`db_update_bot_token`",
-    "excerpt": "Сменить Telegram-токен у существующей записи (TokenDisplayEdit).",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -8258,14 +9236,31 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_update_file_metadata",
+    "title": "`db_update_file_metadata`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_update_file_metadata"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_update_node",
     "title": "`db_update_node`",
-    "excerpt": "Обновить ноду по id в БД (live). Без sheet_id ищет по всем листам; если ноды нет — ошибка, не silent ok. Адресация по projectId из URL",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -8275,14 +9270,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:57:28+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_update_table_row",
     "title": "`db_update_table_row`",
-    "excerpt": "Полностью заменить ячейки строки.",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -8292,14 +9287,82 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:57:28+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_update_template",
+    "title": "`db_update_template`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_update_template"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_update_user",
+    "title": "`db_update_user`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_update_user"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_upload_project_file",
+    "title": "`db_upload_project_file`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_upload_project_file"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/db_use_template",
+    "title": "`db_use_template`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "db_use_template"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_userbot_send_code",
     "title": "`db_userbot_send_code`",
-    "excerpt": "Шаг 1: отправить код входа Telethon. Без api_hash используется сохранённый API Hash. Сначала сохраните API ID и Hash через db_set_userbot_se",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -8309,14 +9372,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:57:28+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_userbot_sign_in",
     "title": "`db_userbot_sign_in`",
-    "excerpt": "Шаг 2: вход по коду после db_userbot_send_code. При needs_2fa=true вызовите db_userbot_sign_in_2fa. Успешный вход сохраняет сессию и включае",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -8326,14 +9389,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:57:28+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/db_userbot_sign_in_2fa",
     "title": "`db_userbot_sign_in_2fa`",
-    "excerpt": "Шаг 3: пароль 2FA после needs_2fa=true. Сессия сохраняется сервером, режим включается. Для применения нужен запуск или перезапуск бота; авто",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -8343,14 +9406,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:57:28+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/generate_bot_code",
     "title": "`generate_bot_code`",
-    "excerpt": "Генерация bot.py из валидного project.json",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -8360,14 +9423,31 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/get_node_docs",
+    "title": "`get_node_docs`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "get_node_docs"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/get_node_example",
     "title": "`get_node_example`",
-    "excerpt": "Эталонный пример ноды — копируй формат data отсюда",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -8377,14 +9457,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:57:28+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/get_node_schema",
     "title": "`get_node_schema`",
-    "excerpt": "Схема и правила формата ноды по типу (обязательно перед созданием нод)",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -8394,14 +9474,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:57:28+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/get_project_db",
     "title": "`get_project_db`",
-    "excerpt": "Прочитать весь сценарий проекта из БД живого приложения (тяжёлый: возвращает полный BotDataWithSheets). Адресация по числовому projectId из ",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -8411,14 +9491,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:57:28+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/get_prompt_guide",
     "title": "`get_prompt_guide`",
-    "excerpt": "Полный гайд project.json (docs/bot-json-prompt.md). В т.ч. правило: команды только латиницей (не /купить)",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -8428,14 +9508,65 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/get_rule_docs",
+    "title": "`get_rule_docs`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "get_rule_docs"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/get_tool_docs",
+    "title": "`get_tool_docs`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "get_tool_docs"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/get_workflow_docs",
+    "title": "`get_workflow_docs`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "get_workflow_docs"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/list_commands",
     "title": "`list_commands`",
-    "excerpt": "Стандартные и допустимые команды Telegram (/start, /help, /paysupport…). Свои command_trigger — только латиница a-z0-9_ (/buy, /refund); кир",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -8445,14 +9576,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/list_node_types",
     "title": "`list_node_types`",
-    "excerpt": "Список всех типов нод конструктора с кратким описанием",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -8462,14 +9593,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:57:28+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/list_operators",
     "title": "`list_operators`",
-    "excerpt": "Допустимые операторы condition-ноды (белый список)",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -8479,14 +9610,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:57:28+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/load_project",
     "title": "`load_project`",
-    "excerpt": "Прочитать project.json бота с диска (из каталога bots/)",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -8496,14 +9627,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/remove_node",
     "title": "`remove_node`",
-    "excerpt": "Удалить ноду из project.json. Без sheet_id ищет ноду по всем листам; если не найдена — ошибка",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -8513,14 +9644,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/save_project",
     "title": "`save_project`",
-    "excerpt": "Записать project.json на диск в каталог bots/ (с валидацией перед записью)",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -8530,14 +9661,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/scaffold_minimal_project",
     "title": "`scaffold_minimal_project`",
-    "excerpt": "Создать пустой project.json v2 со стартовой парой /start → message (или переданными нодами)",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -8547,14 +9678,48 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:57:28+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/search_docs",
+    "title": "`search_docs`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "search_docs"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/tools/search_tool_docs",
+    "title": "`search_tool_docs`",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
+    "parts": [
+      "mcp",
+      "tools",
+      "search_tool_docs"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор",
+      "tools": "Tools"
+    },
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/update_node",
     "title": "`update_node`",
-    "excerpt": "Обновить ноду в project.json по id. Без sheet_id ищет ноду по всем листам; если не найдена — ошибка (не silent ok)",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -8564,14 +9729,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:57:28+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/update_project_db",
     "title": "`update_project_db`",
-    "excerpt": "Записать сценарий в БД запущенного приложения и в реальном времени обновить открытый холст (live-редактирование). Адресация по числовому pro",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -8581,14 +9746,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:57:28+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/validate_bot_project",
     "title": "`validate_bot_project`",
-    "excerpt": "Валидация project.json: zod-схема + доменные правила (битые target, condition branches, дубли id)",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -8598,14 +9763,14 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:57:28+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "mcp/tools/validate_node",
     "title": "`validate_node`",
-    "excerpt": "Валидация одной ноды",
+    "excerpt": "<!-- @fileoverview Автоматическая карточка реального действия MCP. -->",
     "parts": [
       "mcp",
       "tools",
@@ -8615,7 +9780,7 @@
       "mcp": "🤖 MCP-конструктор",
       "tools": "Tools"
     },
-    "updated_at": "2026-10-25T19:57:28+03:00",
+    "updated_at": "2026-11-03T07:33:45+03:00",
     "tags": [],
     "author": ""
   },
