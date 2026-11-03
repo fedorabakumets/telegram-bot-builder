@@ -73,7 +73,7 @@
           "file": "server/index.ts",
           "line": 87,
           "method": "USE",
-          "expression": "(req, res, next) => {\r\n  const start = Date.now();\r\n  const path = req.path;\r\n  let capturedJsonResponse: Record<string, any> | undefined = undefined;\r\n\r\n  const originalResJson = res.json;\r\n  res.json = function (bodyJson, ...args) {\r\n    capturedJsonResponse = bodyJson;\r\n    return originalResJson…"
+          "expression": "(req, res, next) => {\n  const start = Date.now();\n  const path = req.path;\n  let capturedJsonResponse: Record<string, any> | undefined = undefined;\n\n  const originalResJson = res.json;\n  res.json = function (bodyJson, ...args) {\n    capturedJsonResponse = bodyJson;\n    return originalResJson.apply(r…"
         },
         "routes": [],
         "reason": "Middleware или статический mount, не отдельная HTTP-операция; не доказательство отсутствия вложенных Router."
@@ -83,7 +83,7 @@
           "file": "server/index.ts",
           "line": 154,
           "method": "USE",
-          "expression": "(err: any, _req: Request, res: Response, _next: NextFunction) => {\r\n    const status = err.status || err.statusCode || 500;\r\n    const message = err.message || \"Внутренняя ошибка сервера\";\r\n\r\n    if (!res.headersSent) {\r\n      res.status(status).json({ message });\r\n    }\r\n    throw err;\r\n  }"
+          "expression": "(err: any, _req: Request, res: Response, _next: NextFunction) => {\n    const status = err.status || err.statusCode || 500;\n    const message = err.message || \"Внутренняя ошибка сервера\";\n\n    if (!res.headersSent) {\n      res.status(status).json({ message });\n    }\n    throw err;\n  }"
         },
         "routes": [],
         "reason": "Middleware или статический mount, не отдельная HTTP-операция; не доказательство отсутствия вложенных Router."
@@ -524,7 +524,7 @@
       "file": "server/index.ts",
       "line": 87,
       "method": "USE",
-      "expression": "(req, res, next) => {\r\n  const start = Date.now();\r\n  const path = req.path;\r\n  let capturedJsonResponse: Record<string, any> | undefined = undefined;\r\n\r\n  const originalResJson = res.json;\r\n  res.json = function (bodyJson, ...args) {\r\n    capturedJsonResponse = bodyJson;\r\n    return originalResJson…"
+      "expression": "(req, res, next) => {\n  const start = Date.now();\n  const path = req.path;\n  let capturedJsonResponse: Record<string, any> | undefined = undefined;\n\n  const originalResJson = res.json;\n  res.json = function (bodyJson, ...args) {\n    capturedJsonResponse = bodyJson;\n    return originalResJson.apply(r…"
     },
     {
       "file": "server/index.ts",
@@ -537,7 +537,7 @@
       "file": "server/index.ts",
       "line": 154,
       "method": "USE",
-      "expression": "(err: any, _req: Request, res: Response, _next: NextFunction) => {\r\n    const status = err.status || err.statusCode || 500;\r\n    const message = err.message || \"Внутренняя ошибка сервера\";\r\n\r\n    if (!res.headersSent) {\r\n      res.status(status).json({ message });\r\n    }\r\n    throw err;\r\n  }"
+      "expression": "(err: any, _req: Request, res: Response, _next: NextFunction) => {\n    const status = err.status || err.statusCode || 500;\n    const message = err.message || \"Внутренняя ошибка сервера\";\n\n    if (!res.headersSent) {\n      res.status(status).json({ message });\n    }\n    throw err;\n  }"
     },
     {
       "file": "server/index.ts",
