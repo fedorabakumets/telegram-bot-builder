@@ -14,6 +14,7 @@ import { UserDates } from './user-dates';
 import { UserTags } from './user-tags';
 import { UserResponsesList } from '../../../responses-table/components/user-responses-list';
 import { UserJsonData } from './user-json-data';
+import { getUserTags, getUserUpdatedAt } from '../../../utils/user-extra-fields';
 
 /**
  * Пропсы компонента UserDetailsDialog
@@ -75,11 +76,11 @@ export function UserDetailsDialog(props: UserDetailsDialogProps): React.JSX.Elem
 
           <UserDates
             createdAt={selectedUser.createdAt}
-            updatedAt={selectedUser.updatedAt}
+            updatedAt={getUserUpdatedAt(selectedUser)}
             lastInteraction={selectedUser.lastInteraction}
           />
 
-          <UserTags tags={selectedUser.tags || []} />
+          <UserTags tags={getUserTags(selectedUser)} />
 
           {selectedUser.userData && Object.keys(selectedUser.userData).length > 0 ? (
             <UserResponsesList

@@ -27,6 +27,8 @@
 - [Set variable](mcp/nodes/set-variable.md)
 - [Bot table](mcp/nodes/bot-table.md)
 
+Для отправки файлового результата `convert_file` укажите в `message` единственное вложение `attachedMedia: ["{имя_переменной}"]` без других полей медиа. Данные файла декодируются из base64 и отправляются документом.
+
 ## Workflow
 
 - [Калькулятор](mcp/workflows/calculator.md)

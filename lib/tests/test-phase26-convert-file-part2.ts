@@ -9,6 +9,7 @@
 import fs from 'fs';
 import { execSync } from 'child_process';
 import { generatePythonCode } from '../bot-generator.ts';
+import { generateMessage } from '../templates/message/message.renderer';
 
 // ─── Вспомогательные узлы ────────────────────────────────────────────────────
 
@@ -191,3 +192,68 @@ function syntax(code: string, label: string) {
 console.log('\n╔══════════════════════════════════════════════════════════════╗');
 console.log('║   Фаза 26 — convert_file, часть 2 (J + K)                  ║');
 console.log('╚══════════════════════════════════════════════════════════════╝\n');
+
+/** Создаёт код с запросом и сохранением результата в переменную. */
+function makeQueryCode(): string {
+  return genDB(makeCleanProject([makeStartNode(), makePsqlQueryNode('query')], true), 'query');
+}
+
+/** Создаёт код обработчика сообщения с файлом из переменной. */
+function makeFileCode(): string {
+  return generateMessage({ nodeId: 'message', messageText: 'Файл', attachedMedia: ['{export}'] });
+}
+
+test('J01', 'результаты запроса нормализуют datetime в isoformat', () => {
+  ok(makeQueryCode().includes("v.isoformat() if hasattr(v, 'isoformat') else v"), 'Нормализация даты отсутствует');
+});
+test('J02', 'нормализация применяется к полям строки', () => {
+  ok(makeQueryCode().includes('{k: _norm_val(v) for k, v in r.items()}'), 'Нормализация полей отсутствует');
+});
+test('J03', 'нормализация применяется к списку строк', () => {
+  ok(makeQueryCode().includes('_result = [_norm_row(r) for r in _result]'), 'Нормализация списка отсутствует');
+});
+test('J04', 'нормализация применяется к отдельной строке', () => {
+  ok(makeQueryCode().includes('_result = _norm_row(_result)'), 'Нормализация строки отсутствует');
+});
+test('J05', 'результат сохраняется в пользовательскую переменную', () => {
+  ok(makeQueryCode().includes('set_user_var(user_id, "users_data"'), 'Сохранение результата отсутствует');
+});
+test('J06', 'код запроса проходит проверку синтаксиса', () => syntax(makeQueryCode(), 'query'));
+test('K01', 'файл берётся из указанной переменной', () => {
+  ok(makeFileCode().includes('user_data.get(user_id, {}).get("export")'), 'Переменная файла отсутствует');
+});
+test('K02', 'объект файла проверяется перед отправкой', () => {
+  ok(makeFileCode().includes('_file_var_val.get("type") == "file"'), 'Проверка типа файла отсутствует');
+});
+test('K03', 'содержимое файла декодируется из base64', () => {
+  ok(makeFileCode().includes('_b64.b64decode(_file_var_val["data"])'), 'Декодирование отсутствует');
+});
+test('K04', 'файл передаётся как BufferedInputFile', () => {
+  ok(makeFileCode().includes('BufferedInputFile as _BufInputFile'), 'BufferedInputFile отсутствует');
+});
+test('K05', 'имя файла берётся из метаданных', () => {
+  ok(makeFileCode().includes('_file_var_val.get("fileName", "export.csv")'), 'Имя файла отсутствует');
+});
+test('K06', 'ошибка отправки файла обрабатывается', () => {
+  ok(makeFileCode().includes('except Exception as _fe:'), 'Обработка ошибки отсутствует');
+});
+test('K07', 'код сообщения с файлом проходит проверку синтаксиса', () => {
+  syntax(makeFileCode(), 'file-handler');
+  const start = makeStartNode();
+  const command = { ...start, type: 'command_trigger', data: { ...start.data, autoTransitionTo: 'message', enableAutoTransition: true } };
+  const code = gen(makeCleanProject([command, makeMessageNode('message', 'Файл', ['{export}'])]), 'file');
+  ok(code.includes('BufferedInputFile as _BufInputFile'), 'Обработчик файла отсутствует в полном сценарии');
+  syntax(code, 'file');
+});
+test('K08', 'незакрытая скобка не распознаётся как переменная файла', () => {
+  const code = generateMessage({ nodeId: 'message', attachedMedia: ['{export'] });
+  ok(!code.includes('BufferedInputFile as _BufInputFile'), 'Некорректная переменная распознана как файл');
+});
+test('K09', 'объект file_id не распознаётся как переменная файла', () => {
+  const code = generateMessage({ nodeId: 'message', attachedMedia: ['{"__type":"file_id","fileIdsByToken":{}}'] });
+  ok(!code.includes('BufferedInputFile as _BufInputFile'), 'file_id ошибочно распознан как переменная');
+});
+
+const failed = results.filter(result => !result.passed);
+console.log(`\nФаза 26, часть 2: ${results.length - failed.length}/${results.length} пройдено`);
+if (failed.length) process.exitCode = 1;

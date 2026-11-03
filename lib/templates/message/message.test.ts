@@ -77,7 +77,8 @@ describe('message.py.jinja2 шаблон', () => {
 
         assert.ok(result.includes('def _resolve_dynamic_path('));
         assert.ok(result.includes('project_{id}'));
-        assert.ok(result.includes('builder.adjust(2)'));
+        assert.ok(result.includes('if len(_dynamic_row) == 2:'));
+        assert.ok(result.includes('builder.row(*_dynamic_row)'));
       });
 
       it('должен генерировать reply клавиатуру', () => {
@@ -187,9 +188,9 @@ describe('message.py.jinja2 шаблон', () => {
       });
 
       /**
-       * columns=1 → builder.adjust(1)
+       * При columns=1 каждая кнопка формирует отдельный ряд.
        */
-      it('columns=1 → builder.adjust(1)', () => {
+      it('columns=1 формирует ряды по одной кнопке', () => {
         const result = generateMessage({
           nodeId: 'msg_col1',
           messageText: 'Выберите:',
@@ -207,13 +208,14 @@ describe('message.py.jinja2 шаблон', () => {
           },
           buttons: [],
         });
-        assert.ok(result.includes('builder.adjust(1)'), `Ожидался builder.adjust(1), получено:\n${result}`);
+        assert.ok(result.includes('if len(_dynamic_row) == 1:'));
+        assert.ok(result.includes('builder.row(*_dynamic_row)'));
       });
 
       /**
-       * columns=4 → builder.adjust(4)
+       * При columns=4 в ряду до четырёх кнопок.
        */
-      it('columns=4 → builder.adjust(4)', () => {
+      it('columns=4 формирует ряды по четыре кнопки', () => {
         const result = generateMessage({
           nodeId: 'msg_col4',
           messageText: 'Выберите:',
@@ -231,7 +233,8 @@ describe('message.py.jinja2 шаблон', () => {
           },
           buttons: [],
         });
-        assert.ok(result.includes('builder.adjust(4)'), `Ожидался builder.adjust(4), получено:\n${result}`);
+        assert.ok(result.includes('if len(_dynamic_row) == 4:'));
+        assert.ok(result.includes('builder.row(*_dynamic_row)'));
       });
     });
 
@@ -247,7 +250,7 @@ describe('message.py.jinja2 шаблон', () => {
         const result = generateMessage(validParamsWithSecurity);
 
         assert.ok(result.includes('check_auth'));
-        assert.ok(result.includes('❌ Необходимо войти в систему'));
+        assert.ok(result.includes('❌ Сначала запустите бота: /start'));
       });
     });
 
@@ -264,7 +267,7 @@ describe('message.py.jinja2 шаблон', () => {
       it('должен генерировать вызов следующего обработчика', () => {
         const result = generateMessage(validParamsWithAutoTransition);
 
-        assert.ok(result.includes('await handle_callback_next_step(fake_callback)'));
+        assert.ok(result.includes('await handle_callback_next_step(fake_callback, state=state)'));
       });
 
       it('должен генерировать логирование автоперехода', () => {
@@ -317,7 +320,7 @@ describe('message.py.jinja2 шаблон', () => {
       it('должен отклонять string вместо boolean', () => {
         const result = messageParamsSchema.safeParse({
           nodeId: 'msg_123',
-          isPrivateOnly: 'true',
+          adminOnly: 'true',
         });
 
         assert.ok(!result.success);
@@ -332,13 +335,14 @@ describe('message.py.jinja2 шаблон', () => {
         assert.ok(!result.success);
       });
 
-      it('должен отклонять неправильный formatMode', () => {
+      it('заменяет неподдерживаемый formatMode на none', () => {
         const result = messageParamsSchema.safeParse({
           nodeId: 'msg_123',
           formatMode: 'markdown_v2',
         });
 
-        assert.ok(!result.success);
+        assert.ok(result.success);
+        if (result.success) assert.strictEqual(result.data.formatMode, 'none');
       });
     });
 
@@ -357,7 +361,7 @@ describe('message.py.jinja2 шаблон', () => {
         if (result.success) {
           assert.strictEqual(result.data.keyboardType, 'none');
           assert.strictEqual(result.data.formatMode, 'none');
-          assert.strictEqual(result.data.isPrivateOnly, false);
+          assert.strictEqual(result.data.requiresAuth, false);
         }
       });
 
@@ -412,11 +416,12 @@ describe('message.py.jinja2 шаблон', () => {
     });
 
     describe('messageSendRecipients', () => {
-      it('должен генерировать bot.send_message для получателей с type=chat_id', () => {
+      it('должен генерировать отправку для получателей с type=chat_id', () => {
         const result = generateMessage(validParamsWithRecipients);
 
-        assert.ok(result.includes('bot.send_message'));
-        assert.ok(result.includes('_recipient_chat_id'));
+        assert.ok(result.includes('_b.send_message(_target_chat_id'));
+        assert.ok(result.includes('_rchat_id'));
+        assert.ok(result.includes('_send_to_'));
       });
 
       it('должен генерировать отправку для каждого chat_id получателя', () => {
@@ -431,15 +436,15 @@ describe('message.py.jinja2 шаблон', () => {
         const result = generateMessage(validParamsWithRecipients);
 
         assert.ok(result.includes('replace_variables_in_text'));
-        assert.ok(result.includes('_recipient_chat_id'));
+        assert.ok(result.includes('_rchat = replace_variables_in_text('));
       });
 
       it('должен обрабатывать переменные в threadId через replace_variables_in_text', () => {
         const result = generateMessage(validParamsWithRecipients);
 
         // r3 имеет threadId='{thread_id}'
-        assert.ok(result.includes('_recipient_thread_id'));
-        assert.ok(result.includes('_thread_id_int'));
+        assert.ok(result.includes('_rthread = replace_variables_in_text('));
+        assert.ok(result.includes('_rthread_int'));
       });
 
       it('не должен генерировать дополнительных отправок если все получатели type=user', () => {
@@ -451,8 +456,8 @@ describe('message.py.jinja2 шаблон', () => {
           ],
         });
 
-        assert.ok(!result.includes('_recipient_chat_id'));
-        assert.ok(!result.includes('📤 Сообщение отправлено получателю'));
+        assert.ok(!result.includes('_rchat_id'));
+        assert.ok(!result.includes('📤 Отправлено получателю'));
       });
 
       it('не должен генерировать дополнительных отправок если messageSendRecipients пустой', () => {
@@ -462,13 +467,13 @@ describe('message.py.jinja2 шаблон', () => {
           messageSendRecipients: [],
         });
 
-        assert.ok(!result.includes('_recipient_chat_id'));
+        assert.ok(!result.includes('_rchat_id'));
       });
 
       it('должен генерировать логирование успешной отправки', () => {
         const result = generateMessage(validParamsWithRecipients);
 
-        assert.ok(result.includes('📤 Сообщение отправлено получателю'));
+        assert.ok(result.includes('📤 Отправлено получателю'));
       });
 
       it('должен генерировать обработку ошибок отправки', () => {
@@ -552,7 +557,7 @@ describe('message.py.jinja2 шаблон', () => {
       it('должен отклонять string вместо boolean', () => {
         const result = messageParamsSchema.safeParse({
           nodeId: 'msg_123',
-          isPrivateOnly: 'true',
+          requiresAuth: 'true',
         });
         assert.ok(!result.success);
       });
@@ -574,14 +579,14 @@ describe('message.py.jinja2 шаблон', () => {
     });
 
     describe('Значения по умолчанию', () => {
-      it('должен использовать false для isPrivateOnly по умолчанию', () => {
+      it('должен использовать false для requiresAuth по умолчанию', () => {
         const result = messageParamsSchema.safeParse({
           nodeId: 'msg_123',
         });
 
         assert.ok(result.success);
         if (result.success) {
-          assert.strictEqual(result.data.isPrivateOnly, false);
+          assert.strictEqual(result.data.requiresAuth, false);
         }
       });
 
@@ -631,16 +636,16 @@ describe('message.py.jinja2 шаблон', () => {
     });
 
     describe('Структура схемы', () => {
-      it('должен иметь 38 полей', () => {
+      it('должен иметь 54 поля', () => {
         const shape = messageParamsSchema.shape;
         const fields = Object.keys(shape);
 
-        assert.strictEqual(fields.length, 38);
+        assert.strictEqual(fields.length, 54);
       });
 
-      it('должен использовать ZodOptional для isPrivateOnly', () => {
+      it('должен использовать ZodOptional для requiresAuth', () => {
         const shape = messageParamsSchema.shape;
-        assert.ok(shape.isPrivateOnly.isOptional());
+        assert.ok(shape.requiresAuth.isOptional());
       });
 
       it('должен использовать ZodOptional для adminOnly', () => {

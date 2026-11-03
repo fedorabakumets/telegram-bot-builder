@@ -8,6 +8,7 @@ import { Calendar, Clock } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { UserBotData } from '@shared/schema';
+import { getUserUpdatedAt } from '../../utils/user-extra-fields';
 
 /**
  * @interface DatesSectionProps
@@ -26,6 +27,7 @@ interface DatesSectionProps {
  * @returns {JSX.Element} Секция с датами
  */
 export function DatesSection({ user, formatDate }: DatesSectionProps): React.JSX.Element {
+  const updatedAt = getUserUpdatedAt(user);
   return (
     <>
       <div className="space-y-2 sm:space-y-3">
@@ -39,11 +41,11 @@ export function DatesSection({ user, formatDate }: DatesSectionProps): React.JSX
             <span className="text-muted-foreground whitespace-nowrap">Регистрация:</span>
             <span className="font-medium truncate">{formatDate(user.createdAt)}</span>
           </div>
-          {user.updatedAt && (
+          {updatedAt && (
             <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-sm">
               <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-muted-foreground" />
               <span className="text-muted-foreground whitespace-nowrap">Обновление:</span>
-              <span className="font-medium truncate">{formatDate(user.updatedAt)}</span>
+              <span className="font-medium truncate">{formatDate(updatedAt)}</span>
             </div>
           )}
           <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-sm">

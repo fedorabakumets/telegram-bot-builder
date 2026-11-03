@@ -11,8 +11,8 @@ export const validParamsBasic: MessageTemplateParams = {
   messageText: 'Привет! Выберите опцию:',
   keyboardType: 'inline',
   buttons: [
-    { text: 'Опция 1', action: 'goto', target: 'option_1', id: 'btn_1' },
-    { text: 'Опция 2', action: 'goto', target: 'option_2', id: 'btn_2' },
+    { text: 'Опция 1', action: 'goto', target: 'option_1', id: 'btn_1', buttonType: 'normal', skipDataCollection: false, hideAfterClick: false },
+    { text: 'Опция 2', action: 'goto', target: 'option_2', id: 'btn_2', buttonType: 'normal', skipDataCollection: false, hideAfterClick: false },
   ],
 };
 
@@ -31,7 +31,7 @@ export const validParamsWithMedia: MessageTemplateParams = {
   imageUrl: 'https://example.com/image.jpg',
   keyboardType: 'inline',
   buttons: [
-    { text: '👍 Нравится', action: 'goto', target: 'like', id: 'btn_like' },
+    { text: '👍 Нравится', action: 'goto', target: 'like', id: 'btn_like', buttonType: 'normal', skipDataCollection: false, hideAfterClick: false },
   ],
 };
 
@@ -40,7 +40,6 @@ export const validParamsWithSecurity: MessageTemplateParams = {
   nodeId: 'admin_panel',
   messageText: 'Панель администратора',
   adminOnly: true,
-  isPrivateOnly: true,
   requiresAuth: true,
   keyboardType: 'inline',
   buttons: [

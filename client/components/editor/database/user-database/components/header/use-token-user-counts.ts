@@ -35,7 +35,7 @@ export function useTokenUserCounts(
       const url = buildUsersApiUrl(`/api/projects/${projectId}/users/stats`, tokenId);
       return {
         queryKey: [url, tokenId],
-        queryFn: () => apiRequest<TokenUserStats>('GET', url),
+        queryFn: (): Promise<TokenUserStats> => apiRequest('GET', url),
         staleTime: 30_000,
         enabled: projectId > 0 && tokenId > 0,
       };

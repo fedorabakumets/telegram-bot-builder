@@ -5,6 +5,7 @@
  */
 
 import { run } from 'node:test';
+import { spec } from 'node:test/reporters';
 import { glob } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -49,14 +50,10 @@ async function runTests() {
     files: testFiles,
     timeout: 60000,
     execArgv: ['--import', 'tsx/esm'],
-    // Используем спецификацию для более читаемого вывода
-    reporter: {
-      write: (data: string) => {
-        // Преобразуем TAP-вывод в читаемый формат
-        process.stdout.write(data);
-      }
-    }
+
   });
+
+  testRun.pipe(new spec()).pipe(process.stdout);
 
   // Ждём завершения
   return new Promise<void>((resolve, reject) => {

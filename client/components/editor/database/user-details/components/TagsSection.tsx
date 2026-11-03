@@ -9,6 +9,7 @@ import { Tag } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { UserBotData } from '@shared/schema';
+import { getUserTags } from '../../utils/user-extra-fields';
 
 /**
  * @interface TagsSectionProps
@@ -25,7 +26,8 @@ interface TagsSectionProps {
  * @returns {JSX.Element | null} Секция с тегами или null
  */
 export function TagsSection({ user }: TagsSectionProps): React.JSX.Element | null {
-  if (!user.tags || !Array.isArray(user.tags) || user.tags.length === 0) {
+  const tags = getUserTags(user);
+  if (tags.length === 0) {
     return null;
   }
 
@@ -38,7 +40,7 @@ export function TagsSection({ user }: TagsSectionProps): React.JSX.Element | nul
           <Label className="text-xs sm:text-sm font-semibold">Теги</Label>
         </div>
         <div className="flex flex-wrap gap-1 sm:gap-1.5 pl-5 sm:pl-6">
-          {user.tags.map((tag, index) => (
+          {tags.map((tag, index) => (
             <Badge key={index} variant="secondary" className="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5">
               {String(tag)}
             </Badge>

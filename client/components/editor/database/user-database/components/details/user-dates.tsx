@@ -36,10 +36,10 @@ export function UserDates({
           <span className="text-sm text-muted-foreground">Регистрация:</span>{' '}
           {String(formatDate(createdAt ?? null))}
         </div>
-        <div>
+        {updatedAt != null && <div>
           <span className="text-sm text-muted-foreground">Последнее обновление:</span>{' '}
-          {String(formatDate(updatedAt ?? null))}
-        </div>
+          {String(formatDate(updatedAt))}
+        </div>}
         <div>
           <span className="text-sm text-muted-foreground">Последняя активность:</span>{' '}
           {String(formatDate(lastInteraction ?? null))}

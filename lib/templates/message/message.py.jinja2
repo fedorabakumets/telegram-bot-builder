@@ -624,7 +624,7 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
             if locals().get('_sent_result') is not None:
                 return _sent_result
 {%- endif %}
-{%- if mediaItem and mediaItem[0] == '{' and mediaItem[-1] == '}' and '"__type":"file_id"' not in mediaItem %}
+{%- if mediaItem and mediaItem[0] == '{' and mediaItem[mediaItem.length - 1] == '}' and '"__type":"file_id"' not in mediaItem %}
 {%- set _fileVarName = mediaItem | replace('{', '') | replace('}', '') %}
             # Проверяем — вдруг это file-объект из convert_file ({"type":"file","data":...})
             # Не трогаем JSON file_id ({"__type":"file_id",...}) — это не {var.name}

@@ -1,88 +1,42 @@
-/**
- * @fileoverview Кастомный репортер для тестов с поддержкой UTF-8
- * Выводит результаты тестов в читаемом формате с эмодзи
- * @module tests/utf8-reporter
- */
+/** @fileoverview Читаемый отчёт событий Node.js с поддержкой UTF-8. */
+import type { TestEvent } from 'node:test/reporters';
 
-import { TestEvent, TestReporter } from 'node:test/reporters';
-
-export class UTF8Reporter implements TestReporter {
+/** Собирает и выводит результаты тестов. */
+export class UTF8Reporter {
+  /** Количество успешных тестов. */
   private passed = 0;
+  /** Количество неуспешных тестов. */
   private failed = 0;
+  /** Количество пропущенных тестов. */
   private skipped = 0;
+  /** Количество отложенных тестов. */
   private todo = 0;
-  private currentSuite: string[] = [];
 
-  start(): void {
-    console.log('\n🧪 Запуск тестов...\n');
-  }
+  /** Выводит начало отчёта. */
+  start(): void { console.log('\n🧪 Запуск тестов...\n'); }
 
+  /**
+   * Обрабатывает реальное событие тестового потока Node.js.
+   * @param event - Событие теста.
+   */
   onTestEvent(event: TestEvent): void {
-    switch (event.type) {
-      case 'test:start':
-        // Начало теста
-        break;
-
-      case 'test:pass':
-        this.passed++;
-        const testName = this.extractTestName(event.data);
-        console.log(`  ✅ ${testName}`);
-        break;
-
-      case 'test:fail':
-        this.failed++;
-        const failedName = this.extractTestName(event.data);
-        const errorMsg = event.data.details?.error?.message || 'Неизвестная ошибка';
-        console.log(`  ❌ ${failedName}`);
-        console.log(`     └─ ${errorMsg.split('\n')[0]}`);
-        break;
-
-      case 'test:skip':
-        this.skipped++;
-        const skipName = this.extractTestName(event.data);
-        console.log(`  ⏭️  ${skipName}`);
-        break;
-
-      case 'test:todo':
-        this.todo++;
-        const todoName = this.extractTestName(event.data);
-        console.log(`  📝 ${todoName}`);
-        break;
-
-      case 'suite:start':
-        if (event.data.name) {
-          this.currentSuite.push(event.data.name);
-          console.log(`\n📁 ${this.currentSuite.join(' › ')}`);
-        }
-        break;
-
-      case 'suite:end':
-        this.currentSuite.pop();
-        break;
+    if (event.type === 'test:pass') {
+      if (event.data.details.type === 'suite') return;
+      if (event.data.skip) { this.skipped++; console.log(`  ⏭️  ${event.data.name}`); }
+      else if (event.data.todo) { this.todo++; console.log(`  📝 ${event.data.name}`); }
+      else { this.passed++; console.log(`  ✅ ${event.data.name}`); }
+    } else if (event.type === 'test:fail') {
+      if (event.data.details.type === 'suite') return;
+      this.failed++;
+      console.log(`  ❌ ${event.data.name}`);
+      console.log(`     └─ ${event.data.details.error?.message?.split('\n')[0] || 'Неизвестная ошибка'}`);
     }
   }
 
+  /** Выводит итоги и устанавливает код ошибки при неуспешных тестах. */
   end(): void {
     const total = this.passed + this.failed + this.skipped + this.todo;
-    console.log('\n' + '═'.repeat(50));
-    console.log(`📊 Результаты тестов:`);
-    console.log(`   Всего:  ${total}`);
-    console.log(`   ✅ Прошло: ${this.passed}`);
-    console.log(`   ❌ Провалено: ${this.failed}`);
-    console.log(`   ⏭️  Пропущено: ${this.skipped}`);
-    console.log(`   📝 Отложено: ${this.todo}`);
-    console.log('═'.repeat(50) + '\n');
-
-    if (this.failed > 0) {
-      console.log('❌ Тесты не прошли!\n');
-      process.exitCode = 1;
-    } else {
-      console.log('✅ Все тесты прошли успешно!\n');
-    }
-  }
-
-  private extractTestName(data: any): string {
-    // Получаем имя теста из данных события
-    return data.name || data.testName || 'Без названия';
+    console.log(`\n📊 Всего: ${total} · Прошло: ${this.passed} · Провалено: ${this.failed} · Пропущено: ${this.skipped} · Отложено: ${this.todo}\n`);
+    if (this.failed > 0) process.exitCode = 1;
   }
 }
