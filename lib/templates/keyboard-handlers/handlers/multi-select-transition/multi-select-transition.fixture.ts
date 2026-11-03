@@ -7,7 +7,7 @@ import type { Node } from '@shared/schema';
 import type { MultiSelectTransitionTemplateParams } from './multi-select-transition.params';
 
 /** Тестовые данные для multi-select-transition */
-export const multiSelectTransitionFixture: MultiSelectTransitionTemplateParams = {
+export const multiSelectTransitionFixture: MultiSelectTransitionTemplateParams & { /** Отступ в тестовых данных. */ indentLevel: string } = {
   multiSelectNodes: [
     {
       id: 'node1',
@@ -45,7 +45,7 @@ export const multiSelectTransitionFixture: MultiSelectTransitionTemplateParams =
 };
 
 /** Фикстура с command узлом */
-export const commandTargetFixture: MultiSelectTransitionTemplateParams = {
+export const commandTargetFixture: MultiSelectTransitionTemplateParams & { /** Отступ в тестовых данных. */ indentLevel: string } = {
   multiSelectNodes: [
     {
       id: 'node1',
@@ -77,7 +77,7 @@ export const commandTargetFixture: MultiSelectTransitionTemplateParams = {
 };
 
 /** Фикстура без continueButtonTarget с соединениями */
-export const connectionsFixture: MultiSelectTransitionTemplateParams = {
+export const connectionsFixture: MultiSelectTransitionTemplateParams & { /** Отступ в тестовых данных. */ indentLevel: string } = {
   multiSelectNodes: [
     {
       id: 'node1',
@@ -111,7 +111,7 @@ export const connectionsFixture: MultiSelectTransitionTemplateParams = {
 };
 
 /** Фикстура с несуществующим целевым узлом */
-export const missingTargetFixture: MultiSelectTransitionTemplateParams = {
+export const missingTargetFixture: MultiSelectTransitionTemplateParams & { /** Отступ в тестовых данных. */ indentLevel: string } = {
   multiSelectNodes: [
     {
       id: 'node1',

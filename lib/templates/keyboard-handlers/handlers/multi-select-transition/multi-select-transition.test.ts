@@ -22,10 +22,11 @@ describe('generateMultiSelectTransition', () => {
     assert.ok(result.includes('🔄 Переходим к узлу node2'));
   });
 
-  it('должен генерировать вызов команды для command узла', () => {
+  it('предупреждает об устаревшем command-узле без вызова удалённого обработчика', () => {
     const result = generateMultiSelectTransition(commandTargetFixture);
 
-    assert.ok(result.includes('await handle_command_menu'));
+    assert.ok(result.includes('Неизвестный тип узла: command'));
+    assert.ok(!result.includes('await handle_command_menu'));
   });
 
   it('должен генерировать переход по соединению если нет continueButtonTarget', () => {

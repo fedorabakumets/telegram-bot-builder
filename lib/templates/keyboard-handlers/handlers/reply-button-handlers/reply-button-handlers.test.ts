@@ -22,7 +22,7 @@ describe('generateReplyButtonHandlers', () => {
     assert.ok(result.includes('async def handle_reply_btn1'));
     assert.ok(result.includes('async def handle_reply_btn2'));
     assert.ok(result.includes('fake_callback = SimpleNamespace('));
-    assert.ok(result.includes('await handle_callback_node2(fake_callback)'));
+    assert.ok(result.includes('await handle_callback_node2(fake_callback, state=None)'));
     assert.ok(!result.includes('await handle_callback_node2(message)'));
   });
 

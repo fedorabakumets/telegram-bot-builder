@@ -44,7 +44,7 @@ export const validParamsWithSecurity: MessageTemplateParams = {
   requiresAuth: true,
   keyboardType: 'inline',
   buttons: [
-    { text: 'Пользователи', action: 'goto', target: 'users', id: 'btn_users' },
+    { text: 'Пользователи', action: 'goto', target: 'users', id: 'btn_users', buttonType: 'normal', skipDataCollection: false, hideAfterClick: false },
   ],
 };
 
@@ -54,8 +54,8 @@ export const validParamsReply: MessageTemplateParams = {
   messageText: 'Главное меню',
   keyboardType: 'reply',
   buttons: [
-    { text: 'Профиль', action: 'goto', target: 'profile', id: 'btn_profile' },
-    { text: 'Настройки', action: 'goto', target: 'settings', id: 'btn_settings' },
+    { text: 'Профиль', action: 'goto', target: 'profile', id: 'btn_profile', buttonType: 'normal', skipDataCollection: false, hideAfterClick: false },
+    { text: 'Настройки', action: 'goto', target: 'settings', id: 'btn_settings', buttonType: 'normal', skipDataCollection: false, hideAfterClick: false },
   ],
   resizeKeyboard: true,
   oneTimeKeyboard: false,

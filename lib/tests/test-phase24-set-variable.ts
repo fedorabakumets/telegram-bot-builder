@@ -376,7 +376,7 @@ console.log('── Блок H: regex_extract ───────────�
 
 test('H01', 'regex_extract → содержит re.search', () => {
   const p = makeCleanProject([
-    makeCmd('/start', 'sv1'),
+    makeCmd('cmd1', '/start', 'sv1'),
     makeSV('sv1', [{ id: 'a1', variable: 'rate', value: '{bot_response}', mode: 'regex_extract', pattern: '(\\d+)\\s*рублей', regexGroup: '1' }], 'msg1'),
     makeMsg('msg1', 'Курс: {rate}'),
   ]);
@@ -386,7 +386,7 @@ test('H01', 'regex_extract → содержит re.search', () => {
 
 test('H02', 'regex_extract → содержит паттерн', () => {
   const p = makeCleanProject([
-    makeCmd('/start', 'sv1'),
+    makeCmd('cmd1', '/start', 'sv1'),
     makeSV('sv1', [{ id: 'a1', variable: 'num', value: '{text}', mode: 'regex_extract', pattern: '(\\d+)', regexGroup: '1' }], 'msg1'),
     makeMsg('msg1'),
   ]);
@@ -396,7 +396,7 @@ test('H02', 'regex_extract → содержит паттерн', () => {
 
 test('H03', 'regex_extract → содержит .group()', () => {
   const p = makeCleanProject([
-    makeCmd('/start', 'sv1'),
+    makeCmd('cmd1', '/start', 'sv1'),
     makeSV('sv1', [{ id: 'a1', variable: 'val', value: '{src}', mode: 'regex_extract', pattern: '#(\\d+)', regexGroup: '1' }], 'msg1'),
     makeMsg('msg1'),
   ]);
@@ -406,7 +406,7 @@ test('H03', 'regex_extract → содержит .group()', () => {
 
 test('H04', 'regex_extract → синтаксис Python OK', () => {
   const p = makeCleanProject([
-    makeCmd('/start', 'sv1'),
+    makeCmd('cmd1', '/start', 'sv1'),
     makeSV('sv1', [{ id: 'a1', variable: 'price', value: '{response}', mode: 'regex_extract', pattern: '(\\d[\\d\\s]*)\\s*руб', regexGroup: '1' }], 'msg1'),
     makeMsg('msg1', 'Цена: {price}'),
   ]);
@@ -415,7 +415,7 @@ test('H04', 'regex_extract → синтаксис Python OK', () => {
 
 test('H05', 'regex_extract → содержит logging.info с regex_extract', () => {
   const p = makeCleanProject([
-    makeCmd('/start', 'sv1'),
+    makeCmd('cmd1', '/start', 'sv1'),
     makeSV('sv1', [{ id: 'a1', variable: 'x', value: '{y}', mode: 'regex_extract', pattern: '(\\w+)', regexGroup: '0' }], 'msg1'),
     makeMsg('msg1'),
   ]);

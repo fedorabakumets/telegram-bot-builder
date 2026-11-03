@@ -7,7 +7,7 @@ import type { Node } from '@shared/schema';
 import type { ReplyButtonHandlersTemplateParams } from './reply-button-handlers.params';
 
 /** Тестовые данные для reply-button-handlers */
-export const replyButtonHandlersFixture: ReplyButtonHandlersTemplateParams = {
+export const replyButtonHandlersFixture: ReplyButtonHandlersTemplateParams & { /** Отступ в тестовых данных. */ indentLevel: string } = {
   nodes: [
     {
       id: 'node1',
@@ -57,13 +57,13 @@ export const replyButtonHandlersFixture: ReplyButtonHandlersTemplateParams = {
 };
 
 /** Фикстура с пустыми узлами */
-export const emptyNodesFixture: ReplyButtonHandlersTemplateParams = {
+export const emptyNodesFixture: ReplyButtonHandlersTemplateParams & { /** Отступ в тестовых данных. */ indentLevel: string } = {
   nodes: [],
   indentLevel: '',
 };
 
 /** Фикстура с узлами без reply кнопок */
-export const noReplyNodesFixture: ReplyButtonHandlersTemplateParams = {
+export const noReplyNodesFixture: ReplyButtonHandlersTemplateParams & { /** Отступ в тестовых данных. */ indentLevel: string } = {
   nodes: [
     {
       id: 'node1',
@@ -80,7 +80,7 @@ export const noReplyNodesFixture: ReplyButtonHandlersTemplateParams = {
 };
 
 /** Фикстура с мультивыбором */
-export const multiSelectFixture: ReplyButtonHandlersTemplateParams = {
+export const multiSelectFixture: ReplyButtonHandlersTemplateParams & { /** Отступ в тестовых данных. */ indentLevel: string } = {
   nodes: [
     {
       id: 'node1',

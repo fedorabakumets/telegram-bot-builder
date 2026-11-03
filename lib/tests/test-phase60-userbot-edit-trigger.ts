@@ -95,6 +95,12 @@ test('A01', 'userbot_edit_trigger → генерируется events.MessageEdi
   ok(code.includes('events.MessageEdited'), 'events.MessageEdited должен быть в коде');
 });
 
+test('A01a', 'обработчик генерируется без ID проекта', () => {
+  const code = genNoProject(makeCleanProject([makeUserbotEditTriggerNode('uet1')]), 'a01a');
+  ok(code.includes('events.MessageEdited'), 'events.MessageEdited должен быть в коде');
+  syntax(code, 'a01a');
+});
+
 test('A02', 'генерируется handle_userbot_edit_ с nodeId', () => {
   const p = makeCleanProject([makeUserbotEditTriggerNode('uet1')]);
   const code = gen(p, 'a02');

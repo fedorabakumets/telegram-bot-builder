@@ -70,9 +70,9 @@ function makeCleanProject(nodes: any[]) {
     sheets: [{
       id: 'sheet-db',
       name: 'Лист 1',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      viewState: { zoom: 1, position: { x: 0, y: 0 } },
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      viewState: { zoom: 1, pan: { x: 0, y: 0 } },
       nodes,
     }],
   };

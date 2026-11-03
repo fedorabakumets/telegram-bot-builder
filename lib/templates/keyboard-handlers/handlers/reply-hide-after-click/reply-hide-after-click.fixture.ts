@@ -7,7 +7,7 @@ import type { Node } from '@shared/schema';
 import type { ReplyHideAfterClickTemplateParams } from './reply-hide-after-click.params';
 
 /** Тестовые данные с кнопками hideAfterClick */
-export const replyHideAfterClickFixture: ReplyHideAfterClickTemplateParams = {
+export const replyHideAfterClickFixture: ReplyHideAfterClickTemplateParams & { /** Отступ в тестовых данных. */ indentLevel: string } = {
   nodes: [
     {
       id: 'node1',
@@ -54,7 +54,7 @@ export const replyHideAfterClickFixture: ReplyHideAfterClickTemplateParams = {
 };
 
 /** Фикстура без кнопок hideAfterClick */
-export const noHideAfterClickFixture: ReplyHideAfterClickTemplateParams = {
+export const noHideAfterClickFixture: ReplyHideAfterClickTemplateParams & { /** Отступ в тестовых данных. */ indentLevel: string } = {
   nodes: [
     {
       id: 'node1',
@@ -77,7 +77,7 @@ export const noHideAfterClickFixture: ReplyHideAfterClickTemplateParams = {
 };
 
 /** Фикстура с несколькими кнопками hideAfterClick */
-export const multipleHideAfterClickFixture: ReplyHideAfterClickTemplateParams = {
+export const multipleHideAfterClickFixture: ReplyHideAfterClickTemplateParams & { /** Отступ в тестовых данных. */ indentLevel: string } = {
   nodes: [
     {
       id: 'node1',
