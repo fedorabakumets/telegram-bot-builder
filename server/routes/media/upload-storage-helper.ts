@@ -27,6 +27,7 @@ import { mediaFiles } from "@shared/schema";
 import { db } from "../../database/db";
 import type { StorageBackend, StorageRegistry } from "../../storage/storage-backend";
 import { LOCAL_DEFAULT_ID } from "../../storage/storage-config";
+import { getUploadsStorageId } from "../../storage/uploads-storage";
 
 /** Результат записи загруженного файла в целевой бэкенд */
 export interface UploadPersistResult {
