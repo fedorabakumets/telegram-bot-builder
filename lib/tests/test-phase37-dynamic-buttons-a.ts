@@ -6,7 +6,7 @@
  * Блок C: Стили кнопок (8 тестов)
  */
 
-import { makeProject, gen, syntax, ok, test, assertIncludesAll, assertExcludes, makeStartNode, makeDynamicMessageNode, printSummaryAndExit, type Result } from './test-phase-dynamic-buttons-helpers.ts';
+import { makeProject, gen, syntax, ok, test, assertIncludesAll, assertExcludes, makeStartNode, makeDynamicMessageNode, printSummaryAndExit, type Result } from './test-phase39-dynamic-buttons-helpers.ts';
 
 const results: Result[] = [];
 /** Обёртка теста с захватом результатов */
@@ -31,8 +31,8 @@ t('A03', 'enableDynamicButtons=true генерирует _normalize_dynamic_styl
 t('A04', 'генерирует _dynamic_source = all_user_vars.get("projects")', () => {
   ok(gen(makeProject([makeStartNode(), makeDynamicMessageNode('msg1')]), 'a04').includes('all_user_vars.get("projects")'), '_dynamic_source с "projects" не найдено');
 });
-t('A05', 'columns=2 генерирует builder.adjust(2)', () => {
-  ok(gen(makeProject([makeStartNode(), makeDynamicMessageNode('msg1', 'Меню', { columns: 2 })]), 'a05').includes('builder.adjust(2)'), 'builder.adjust(2) не найдено');
+t('A05', 'columns=2 генерирует len(_dynamic_row) == 2', () => {
+  ok(gen(makeProject([makeStartNode(), makeDynamicMessageNode('msg1', 'Меню', { columns: 2 })]), 'a05').includes('len(_dynamic_row) == 2'), 'len(_dynamic_row) == 2 не найдено');
 });
 t('A06', 'enableDynamicButtons=true генерирует InlineKeyboardBuilder (не ReplyKeyboardBuilder)', () => {
   const code = gen(makeProject([makeStartNode(), makeDynamicMessageNode('msg1')]), 'a06');

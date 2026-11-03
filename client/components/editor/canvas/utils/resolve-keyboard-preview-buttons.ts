@@ -13,7 +13,7 @@ import {
 /** Параметры превью клавиатуры для холста */
 export interface KeyboardPreviewParams {
   /** Кнопки для отображения в превью */
-  previewButtons: { id: string }[];
+  previewButtons: { id: string; text?: string }[];
   /** Тип клавиатуры с учётом dynamic mode */
   effectiveKeyboardType: 'inline' | 'reply' | 'none';
   /** Раскладка для KeyboardGrid */
@@ -39,7 +39,7 @@ export function resolveKeyboardPreviewParams(node: Node): KeyboardPreviewParams 
   const staticButtons = node.data.buttons || [];
   const keyboardLayout = (node.data as any).keyboardLayout as KeyboardLayout | undefined;
 
-  let previewButtons: { id: string }[];
+  let previewButtons: { id: string; text?: string }[];
 
   if (enableDynamicButtons) {
     const dynamicItems = buildDynamicButtonsPreviewItems(dynamicButtons);
@@ -53,8 +53,8 @@ export function resolveKeyboardPreviewParams(node: Node): KeyboardPreviewParams 
 
       if (dynamicRowIdx !== -1) {
         const btnMap = new Map(staticButtons.map((button: any) => [button.id, button]));
-        const before: { id: string }[] = [];
-        const after: { id: string }[] = [];
+        const before: { id: string; text?: string }[] = [];
+        const after: { id: string; text?: string }[] = [];
 
         for (let i = 0; i < keyboardLayout.rows.length; i++) {
           const row = keyboardLayout.rows[i];

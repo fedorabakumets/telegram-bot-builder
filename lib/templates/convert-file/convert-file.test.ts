@@ -10,7 +10,6 @@ import {
 import {
   validParamsEmpty,
   validParamsCsv,
-  validParamsJson,
   nodesWithConvertFile,
   nodesWithoutConvertFile,
   nodesWithNullAndMixed,

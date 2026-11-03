@@ -21,3 +21,20 @@ it('сохраняет настройки исключения пользова�
   assert.equal(node.data.userIdSource, 'custom');
   assert.equal(node.data.userIdManual, '{target_user_id}');
 });
+
+it('сохраняет настройки задержки после проверки схемы', () => {
+  const node = nodeSchema.parse({
+    id: 'delay_1', type: 'delay', position: { x: 0, y: 0 },
+    data: { seconds: '{timeout}', unit: 'minutes', mode: 'background' },
+  });
+  assert.deepEqual([node.data.seconds, node.data.unit, node.data.mode], ['{timeout}', 'minutes', 'background']);
+});
+
+it('сохраняет источник подключения SQL-узла после проверки схемы', () => {
+  const node = nodeSchema.parse({
+    id: 'sql_1', type: 'psql_query', position: { x: 0, y: 0 },
+    data: { connectionSource: 'env', connectionEnvVar: 'BOT_DATABASE_URL' },
+  });
+  assert.equal(node.data.connectionSource, 'env');
+  assert.equal(node.data.connectionEnvVar, 'BOT_DATABASE_URL');
+});

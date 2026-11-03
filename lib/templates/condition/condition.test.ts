@@ -31,9 +31,6 @@ import {
   validParamsIsNotSubscribed,
   validParamsIsSubscribedLink,
   validParamsMixedSubscribedAndVar,
-  nodesWithConditionIsSubscribed,
-  nodesWithConditionIsNotSubscribed,
-  nodesWithConditionMixedSubscription,
 } from './condition.fixture';
 import { conditionParamsSchema } from './condition.schema';
 
@@ -135,12 +132,12 @@ describe('generateConditionHandlers() из Node[]', () => {
 
   it('генерирует сравнение для оператора equals', () => {
     const r = generateConditionHandlers(nodesWithConditionEquals);
-    expect(r).toContain('val == "admin"');
+    expect(r).toContain('str(val) == str(replace_variables_in_text("admin", _all_vars))');
   });
 
   it('генерирует проверку подстроки для оператора contains', () => {
     const r = generateConditionHandlers(nodesWithConditionContains);
-    expect(r).toContain('"gmail" in val');
+    expect(r).toContain('str(replace_variables_in_text("gmail", _all_vars)) in str(val)');
   });
 
   it('содержит logging.info', () => {
@@ -169,14 +166,14 @@ describe('generateConditionHandlers() из ConditionTemplateParams', () => {
 
   it('генерирует код для equals', () => {
     const r = generateConditionHandlers(validParamsEquals);
-    expect(r).toContain('val == "admin"');
-    expect(r).toContain('val == "moderator"');
+    expect(r).toContain('str(val) == str(replace_variables_in_text("admin", _all_vars))');
+    expect(r).toContain('str(val) == str(replace_variables_in_text("moderator", _all_vars))');
   });
 
   it('генерирует код для contains', () => {
     const r = generateConditionHandlers(validParamsContains);
-    expect(r).toContain('"gmail" in val');
-    expect(r).toContain('"yahoo" in val');
+    expect(r).toContain('str(replace_variables_in_text("gmail", _all_vars)) in str(val)');
+    expect(r).toContain('str(replace_variables_in_text("yahoo", _all_vars)) in str(val)');
   });
 
   it('несколько узлов → несколько функций', () => {
@@ -191,7 +188,7 @@ describe('generateConditionHandlers() из ConditionTemplateParams', () => {
 describe('generateConditionHandlers() — числовые операторы', () => {
   it('greater_than → генерирует _num_val > N', () => {
     const r = generateConditionHandlers(nodesWithConditionGreaterThan);
-    expect(r).toContain('_num_val > 18');
+    expect(r).toContain('_num_val > float(replace_variables_in_text("18", _all_vars)');
   });
 
   it('greater_than → генерирует блок try/except для _num_val', () => {
@@ -202,7 +199,7 @@ describe('generateConditionHandlers() — числовые операторы', 
 
   it('less_than → генерирует _num_val < N', () => {
     const r = generateConditionHandlers(nodesWithConditionLessThan);
-    expect(r).toContain('_num_val < 18');
+    expect(r).toContain('_num_val < float(replace_variables_in_text("18", _all_vars)');
   });
 
   it('less_than → генерирует блок try/except для _num_val', () => {
@@ -212,7 +209,8 @@ describe('generateConditionHandlers() — числовые операторы', 
 
   it('between → генерирует N1 <= _num_val <= N2', () => {
     const r = generateConditionHandlers(nodesWithConditionBetween);
-    expect(r).toContain('18 <= _num_val <= 65');
+    expect(r).toContain('_num_val <= float(replace_variables_in_text("65", _all_vars)');
+    expect(r).toContain('float(replace_variables_in_text("18", _all_vars)');
   });
 
   it('between → генерирует блок try/except для _num_val', () => {
@@ -222,17 +220,18 @@ describe('generateConditionHandlers() — числовые операторы', 
 
   it('greater_than params → генерирует _num_val > N', () => {
     const r = generateConditionHandlers(validParamsGreaterThan);
-    expect(r).toContain('_num_val > 18');
+    expect(r).toContain('_num_val > float(replace_variables_in_text("18", _all_vars)');
   });
 
   it('less_than params → генерирует _num_val < N', () => {
     const r = generateConditionHandlers(validParamsLessThan);
-    expect(r).toContain('_num_val < 18');
+    expect(r).toContain('_num_val < float(replace_variables_in_text("18", _all_vars)');
   });
 
   it('between params → генерирует N1 <= _num_val <= N2', () => {
     const r = generateConditionHandlers(validParamsBetween);
-    expect(r).toContain('18 <= _num_val <= 65');
+    expect(r).toContain('_num_val <= float(replace_variables_in_text("65", _all_vars)');
+    expect(r).toContain('float(replace_variables_in_text("18", _all_vars)');
   });
 });
 
@@ -347,7 +346,6 @@ describe('generateConditionHandlers() — системные операторы'
   });
 
   it('системная ветка без target — генерирует pass', () => {
-    const r = generateConditionHandlers(validParamsIsPrivate);
     // validParamsIsPrivate has target, so test without target
     const params = {
       entries: [{
@@ -363,7 +361,7 @@ describe('generateConditionHandlers() — системные операторы'
   it('смешанный is_private + equals — оба прохода генерируются', () => {
     const r = generateConditionHandlers(validParamsMixedSystemAndVar);
     expect(r).toContain("callback_query.message.chat.type == 'private'");
-    expect(r).toContain('val == "admin"');
+    expect(r).toContain('str(val) == str(replace_variables_in_text("admin", _all_vars))');
     expect(r).toContain('_all_vars');
   });
 
@@ -389,7 +387,7 @@ describe('generateConditionHandlers() — системные операторы'
       }],
     };
     // collectConditionEntries should skip this
-    const r = generateConditionHandlers(params);
+    generateConditionHandlers(params);
     // When passed as params directly, schema validation will fail on empty variable for non-system
     // But via nodes it should be skipped
     const nodes = [{
@@ -540,7 +538,7 @@ describe('generateConditionHandlers() — is_admin / is_premium / is_bot', () =>
   it('смешанный is_admin + equals — оба прохода генерируются', () => {
     const r = generateConditionHandlers(validParamsMixedAdminAndVar);
     expect(r).toContain('callback_query.from_user.id in ADMIN_IDS');
-    expect(r).toContain('val == "vip"');
+    expect(r).toContain('str(val) == str(replace_variables_in_text("vip", _all_vars))');
     expect(r).toContain('_all_vars');
   });
 
@@ -645,7 +643,7 @@ describe('generateConditionHandlers() — is_subscribed / is_not_subscribed', ()
   it('смешанный is_subscribed + equals — оба прохода генерируются', () => {
     const r = generateConditionHandlers(validParamsMixedSubscribedAndVarSystem);
     expect(r).toContain('await _is_user_subscribed("@vip_channel")');
-    expect(r).toContain('val == "vip"');
+    expect(r).toContain('str(val) == str(replace_variables_in_text("vip", _all_vars))');
     expect(r).toContain('_all_vars');
   });
 });

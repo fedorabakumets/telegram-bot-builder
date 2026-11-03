@@ -2,20 +2,12 @@
  * @fileoverview Экспорт утилит для работы с кодом
  */
 
-// Database utilities re-exports
-export * from '../database';
+/** Утилиты проверки кода и формирования текста сообщения. */
+export { isFunctionDefined, isImportDefined, countFunctionDefinitions, generateMessageText } from '../../templates/filters/python-formatters';
+export type { GenerateMessageTextOptions } from '../../templates/filters/python-formatters';
 
-// Code deduplication utilities
-export { isFunctionDefined, isImportDefined, countFunctionDefinitions } from './code-deduplication';
+/** Генераторы безопасного чтения и записи CSV. */
+export { generateSafeCsvWrite, generateSafeCsvRead } from '../../templates/filters/csv-code-generators';
 
-// CSV safe code generation
-export { generateSafeCsvWrite, generateSafeCsvRead } from '../../templates/csv-safe';
-
-// Message text generation
-export { generateMessageText, type GenerateMessageTextOptions } from './generate-message-text';
-
-// Other utilities
-export * from './generateGeneratedComment';
-
-// Re-export cn utility for UI components
+/** Объединение классов интерфейса. */
 export { cn } from '../../../client/utils/utils';

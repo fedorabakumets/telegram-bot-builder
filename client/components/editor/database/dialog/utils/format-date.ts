@@ -11,8 +11,8 @@ import { ru } from 'date-fns/locale';
  * @param date - Дата для форматирования
  * @returns Отформатированная строка или пустая строка
  */
-export function formatDate(date: Date | string | null | undefined): string {
-  if (!date) return '';
+export function formatDate(date: Date | string | number | null | undefined): string {
+  if (date == null || date === '') return '';
   try {
     const dateObj = typeof date === 'string' ? new Date(date) : date;
     return format(dateObj, 'PPp', { locale: ru });

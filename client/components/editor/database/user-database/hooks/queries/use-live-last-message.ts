@@ -55,7 +55,9 @@ export function useLiveLastMessage(
     const userIdStr = String(userId);
 
     const unsubscribe = liveContext.subscribe((msg) => {
-      if (String(msg.data?.userId) !== userIdStr) return;
+      if (msg.type !== 'new-message' || msg.projectId !== projectId) return;
+      if (selectedTokenId && msg.tokenId !== selectedTokenId) return;
+      if (String(msg.data.userId) !== userIdStr) return;
       if (msg.data.messageType !== 'user') return;
 
       const newMessage: BotMessageWithMedia = {
@@ -68,9 +70,12 @@ export function useLiveLastMessage(
         messageData: msg.data.messageData ?? {},
         nodeId: msg.data.nodeId ?? null,
         primaryMediaId: null,
+        chatId: msg.data.chatId ?? null,
+        chatType: msg.data.chatType ?? 'private',
+        telegramMessageId: null,
         createdAt: new Date(msg.data.createdAt),
         media: [],
-      } as BotMessageWithMedia;
+      };
 
       const queryKey = buildLastMessageQueryKey(projectId, userId, selectedTokenId);
       queryClient.setQueryData<BotMessageWithMedia | null>(queryKey, newMessage);

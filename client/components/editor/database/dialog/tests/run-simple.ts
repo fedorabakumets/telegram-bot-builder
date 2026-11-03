@@ -9,7 +9,6 @@ import { spec } from 'node:test/reporters';
 import { glob } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { Transform } from 'node:stream';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 

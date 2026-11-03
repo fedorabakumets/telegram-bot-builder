@@ -13,7 +13,7 @@ vi.mock('@/hooks/use-toast', () => ({
   })),
 }));
 
-vi.mock('@lib/queryClient', () => ({
+vi.mock('@/queryClient', () => ({
   apiRequest: vi.fn(),
 }));
 
@@ -76,7 +76,7 @@ describe('useSendNode', () => {
     };
 
     await act(async () => {
-      result.current.mutate(sendNodeData);
+      await result.current.mutateAsync(sendNodeData);
     });
 
     expect(mockApiRequest).toHaveBeenCalledWith(
@@ -94,7 +94,7 @@ describe('useSendNode', () => {
 
     const onSent = vi.fn();
     const wrapper = createWrapper();
-    const { result } = renderHook(() => useSendNode(1, onSent), { wrapper });
+    const { result } = renderHook(() => useSendNode(1, undefined, onSent), { wrapper });
 
     const sendNodeData: SendNodeData = {
       nodeId: 'node-123',
@@ -102,7 +102,7 @@ describe('useSendNode', () => {
     };
 
     await act(async () => {
-      result.current.mutate(sendNodeData);
+      await result.current.mutateAsync(sendNodeData);
     });
 
     expect(onSent).toHaveBeenCalledTimes(1);
@@ -121,7 +121,7 @@ describe('useSendNode', () => {
     };
 
     await act(async () => {
-      result.current.mutate(sendNodeData);
+      await result.current.mutateAsync(sendNodeData);
     });
 
     expect(mockApiRequest).toHaveBeenCalledWith(
@@ -198,7 +198,7 @@ describe('useSendNode', () => {
     };
 
     await act(async () => {
-      result.current.mutate(sendNodeData);
+      await result.current.mutateAsync(sendNodeData);
     });
 
     expect(mockApiRequest).toHaveBeenCalledWith(
@@ -223,7 +223,7 @@ describe('useSendNode', () => {
     };
 
     await act(async () => {
-      result.current.mutate(sendNodeData);
+      await result.current.mutateAsync(sendNodeData);
     });
 
     expect(mockApiRequest).toHaveBeenCalledWith(
@@ -248,7 +248,7 @@ describe('useSendNode', () => {
     };
 
     await act(async () => {
-      result.current.mutate(sendNodeData);
+      await result.current.mutateAsync(sendNodeData);
     });
 
     expect(mockApiRequest).toHaveBeenCalledWith(
@@ -273,7 +273,7 @@ describe('useSendNode', () => {
     };
 
     await act(async () => {
-      result.current.mutate(sendNodeData);
+      await result.current.mutateAsync(sendNodeData);
     });
 
     expect(mockApiRequest).toHaveBeenCalledWith(
@@ -307,7 +307,7 @@ describe('useSendNode', () => {
     };
 
     await act(async () => {
-      result.current.mutate(sendNodeData);
+      await result.current.mutateAsync(sendNodeData);
     });
 
     expect(mockApiRequest).toHaveBeenCalledWith(

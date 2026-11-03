@@ -71,7 +71,7 @@ interface CodePanelProps {
  * @returns JSX элемент панели кода
  */
 export function CodePanel({
-  botDataArray, projectIds, projectName, onClose,
+  botDataArray, projectIds, projectName,
   projects, onProjectChange, onRefresh,
   selectedFormat: externalSelectedFormat, onFormatChange,
   areAllCollapsed, onCollapseChange,

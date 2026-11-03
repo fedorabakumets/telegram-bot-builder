@@ -6,7 +6,7 @@
  * Блок F: Граничные случаи (6 тестов)
  */
 
-import { makeProject, gen, syntax, ok, test, assertExcludes, makeStartNode, makeDynamicMessageNode, makeDynamicKeyboardNode, printSummaryAndExit, type Result } from './test-phase-dynamic-buttons-helpers.ts';
+import { makeProject, gen, syntax, ok, test, assertExcludes, makeStartNode, makeDynamicMessageNode, makeDynamicKeyboardNode, printSummaryAndExit, type Result } from './test-phase39-dynamic-buttons-helpers.ts';
 
 const results: Result[] = [];
 /** Обёртка теста с захватом результатов */
@@ -22,17 +22,17 @@ console.log('╚═════════════════════�
 // ══ Блок D: Колонки и раскладка ══════════════════════════════════════════════
 console.log('══ Блок D: Колонки и раскладка ══════════════════════════════════════');
 
-t('D01', 'columns=1 → builder.adjust(1)', () => {
-  ok(gen(makeProject([makeStartNode(), makeDynamicMessageNode('msg1', 'Меню', { columns: 1 })]), 'd01').includes('builder.adjust(1)'), 'builder.adjust(1) не найдено');
+t('D01', 'columns=1 → len(_dynamic_row) == 1', () => {
+  ok(gen(makeProject([makeStartNode(), makeDynamicMessageNode('msg1', 'Меню', { columns: 1 })]), 'd01').includes('len(_dynamic_row) == 1'), 'len(_dynamic_row) == 1 не найдено');
 });
-t('D02', 'columns=3 → builder.adjust(3)', () => {
-  ok(gen(makeProject([makeStartNode(), makeDynamicMessageNode('msg1', 'Меню', { columns: 3 })]), 'd02').includes('builder.adjust(3)'), 'builder.adjust(3) не найдено');
+t('D02', 'columns=3 → len(_dynamic_row) == 3', () => {
+  ok(gen(makeProject([makeStartNode(), makeDynamicMessageNode('msg1', 'Меню', { columns: 3 })]), 'd02').includes('len(_dynamic_row) == 3'), 'len(_dynamic_row) == 3 не найдено');
 });
-t('D03', 'columns=6 → builder.adjust(6)', () => {
-  ok(gen(makeProject([makeStartNode(), makeDynamicMessageNode('msg1', 'Меню', { columns: 6 })]), 'd03').includes('builder.adjust(6)'), 'builder.adjust(6) не найдено');
+t('D03', 'columns=6 → len(_dynamic_row) == 6', () => {
+  ok(gen(makeProject([makeStartNode(), makeDynamicMessageNode('msg1', 'Меню', { columns: 6 })]), 'd03').includes('len(_dynamic_row) == 6'), 'len(_dynamic_row) == 6 не найдено');
 });
-t('D04', 'columns=2 (дефолт) → builder.adjust(2)', () => {
-  ok(gen(makeProject([makeStartNode(), makeDynamicMessageNode('msg1', 'Меню', { columns: 2 })]), 'd04').includes('builder.adjust(2)'), 'builder.adjust(2) не найдено');
+t('D04', 'columns=2 (дефолт) → len(_dynamic_row) == 2', () => {
+  ok(gen(makeProject([makeStartNode(), makeDynamicMessageNode('msg1', 'Меню', { columns: 2 })]), 'd04').includes('len(_dynamic_row) == 2'), 'len(_dynamic_row) == 2 не найдено');
 });
 t('D05', 'keyboard-нода с enableDynamicButtons=true → форсирует inline (нет ReplyKeyboardBuilder)', () => {
   const msg = { id: 'msg1', type: 'message', position: { x: 0, y: 0 }, data: { messageText: 'Меню', buttons: [], keyboardType: 'none', formatMode: 'none', markdown: false, keyboardNodeId: 'kbd1' } };
@@ -103,7 +103,7 @@ t('F04', 'очень длинный callbackTemplate → код генериру
 });
 t('F05', 'columns=0 (невалидное) → нормализуется до 1, синтаксис OK', () => {
   const code = gen(makeProject([makeStartNode(), makeDynamicMessageNode('msg1', 'Меню', { columns: 0 })]), 'f05');
-  ok(code.includes('builder.adjust(1)') || code.includes('builder.adjust(2)'), 'builder.adjust с нормализованным значением не найдено');
+  ok(code.includes('len(_dynamic_row) == 1') && code.includes('builder.row(*_dynamic_row)'), 'формирование строки с нормализованной шириной не найдено');
   syntax(code, 'f05');
 });
 t('F06', 'весь проект с динамическими кнопками компилируется в Python', () => {

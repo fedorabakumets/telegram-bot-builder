@@ -32,6 +32,8 @@ export const validParamsEmpty: PsqlQueryTemplateParams = {
   connectionSource: 'builtin',
   connectionEnvVar: '',
   connectionString: '',
+  builtinEnabled: true,
+  panelDsnDenied: false,
 };
 
 /** SELECT с first_row форматом */
@@ -45,6 +47,8 @@ export const validParamsSingle: PsqlQueryTemplateParams = {
   connectionSource: 'builtin',
   connectionEnvVar: '',
   connectionString: '',
+  builtinEnabled: true,
+  panelDsnDenied: false,
 };
 
 /** SELECT с text форматом и textTemplate */
@@ -58,6 +62,8 @@ export const validParamsText: PsqlQueryTemplateParams = {
   connectionSource: 'builtin',
   connectionEnvVar: '',
   connectionString: '',
+  builtinEnabled: true,
+  panelDsnDenied: false,
 };
 
 /** UPDATE с affected форматом */
@@ -71,6 +77,8 @@ export const validParamsAffected: PsqlQueryTemplateParams = {
   connectionSource: 'builtin',
   connectionEnvVar: '',
   connectionString: '',
+  builtinEnabled: true,
+  panelDsnDenied: false,
 };
 
 /** Подключение через переменную окружения */
@@ -84,6 +92,8 @@ export const validParamsEnvConnection: PsqlQueryTemplateParams = {
   connectionSource: 'env',
   connectionEnvVar: 'MY_EXTERNAL_DB',
   connectionString: '',
+  builtinEnabled: true,
+  panelDsnDenied: false,
 };
 
 /** Подключение через прямой connection string */
@@ -97,6 +107,8 @@ export const validParamsCustomConnection: PsqlQueryTemplateParams = {
   connectionSource: 'custom',
   connectionEnvVar: '',
   connectionString: 'postgresql://user:pass@db.example.com:5432/mydb',
+  builtinEnabled: true,
+  panelDsnDenied: false,
 };
 
 // ─── Высокоуровневые фикстуры (Node[]) для collectPsqlQueryEntries ────────────

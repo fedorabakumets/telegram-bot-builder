@@ -97,6 +97,12 @@ export const nodeSchema = z.object({
     keyboardType: z.enum(['reply', 'inline', 'none']).default('none'),
     /** Идентификатор отдельной ноды клавиатуры, связанной с сообщением. */
     keyboardNodeId: z.string().optional(),
+    /** Значение задержки в ноде ожидания, допускает переменные. */
+    seconds: z.string().optional(),
+    /** Единица измерения задержки. */
+    unit: z.enum(['seconds', 'minutes', 'hours', 'days', 'weeks']).optional(),
+    /** Режим выполнения задержки. */
+    mode: z.enum(['blocking', 'background']).optional(),
     /** Массив кнопок клавиатуры */
     buttons: z.array(buttonSchema).default([]),
     /** Перемешивать порядок inline-кнопок при каждом показе */
@@ -817,6 +823,12 @@ export const nodeSchema = z.object({
     attachedMediaThumbnails: z.record(z.string(), z.string()).optional().default({}),
     /** SQL-запрос для узла psql_query, поддерживает {переменные} */
     query: z.string().default(''),
+    /** Источник подключения для SQL-запроса. */
+    connectionSource: z.enum(['builtin', 'env', 'custom']).optional(),
+    /** Имя переменной окружения с адресом базы. */
+    connectionEnvVar: z.string().optional(),
+    /** Адрес подключения, заданный пользователем. */
+    connectionString: z.string().optional(),
     /** Переменная для сохранения результата запроса */
     saveResultTo: z.string().default(''),
     /**

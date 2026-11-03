@@ -10,7 +10,6 @@ import {
   validParamsEnabled,
   validParamsDisabled,
   invalidParamsWrongType,
-  expectedOutput,
 } from './universal-handlers.fixture';
 import { universalHandlersParamsSchema } from './universal-handlers.schema';
 
@@ -176,9 +175,12 @@ describe('universal-handlers.py.jinja2 шаблон', () => {
     });
 
     describe('Структура схемы', () => {
-      it('должен иметь 3 поля', () => {
+      it('содержит настройки обработчиков и сбора ввода', () => {
         const shape = universalHandlersParamsSchema.shape;
-        assert.strictEqual(Object.keys(shape).length, 3);
+        assert.deepStrictEqual(Object.keys(shape).sort(), [
+          'generateCatchAll', 'hasInputCollection', 'hasInputTimeoutNodes',
+          'hasSkipDataCollectionButtons', 'userDatabaseEnabled',
+        ]);
       });
 
       it('должен содержать ключевые поля схемы', () => {
