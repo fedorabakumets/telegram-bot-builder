@@ -12,3 +12,12 @@ it('сохраняет ссылку на клавиатуру после про�
   });
   assert.equal(node.data.keyboardNodeId, 'keyboard_1');
 });
+
+it('сохраняет настройки исключения пользователя после проверки схемы', () => {
+  const node = nodeSchema.parse({
+    id: 'kick_1', type: 'kick_user', position: { x: 0, y: 0 },
+    data: { userIdSource: 'custom', userIdManual: '{target_user_id}' },
+  });
+  assert.equal(node.data.userIdSource, 'custom');
+  assert.equal(node.data.userIdManual, '{target_user_id}');
+});

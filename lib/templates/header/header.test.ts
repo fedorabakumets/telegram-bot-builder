@@ -10,7 +10,6 @@ import {
   validParamsAllEnabled,
   validParamsAllDisabled,
   invalidParamsWrongType,
-  expectedOutputStandard,
 } from './header.fixture';
 import { headerParamsSchema } from './header.schema';
 

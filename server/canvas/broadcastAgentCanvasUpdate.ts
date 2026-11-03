@@ -5,22 +5,21 @@
  * @module server/canvas/broadcastAgentCanvasUpdate
  */
 
-import type { BotDataWithSheets } from '@shared/schema';
 import { buildAgentCanvasActor } from '../../shared/canvas-sync/canvas-actor';
-import type { CanvasSyncMessage } from '../../shared/canvas-sync/canvas-sync-message';
-import { broadcastCanvasSync } from './broadcastCanvasSync';
+import { broadcastCanvasSyncWire } from './broadcastCanvasSync';
+import type { AgentCanvasSnapshot } from './parse-agent-canvas-data';
 
 /**
  * Вещает снапшот сценария от ИИ-агента всем клиентам комнаты проекта.
  * Сообщение содержит actor.kind='agent', tabId и timestamp — без них клиентский
  * guard isCanvasSyncMessage отбросит сообщение.
  * @param projectId - ID проекта
- * @param data - Актуальные данные проекта (снапшот BotDataWithSheets)
+ * @param data - Подготовленный снимок проекта
  * @param agent - Параметры сессии агента (sessionId, displayName)
  */
 export function broadcastAgentCanvasUpdate(
   projectId: number,
-  data: BotDataWithSheets,
+  data: AgentCanvasSnapshot,
   agent?: { sessionId?: string; displayName?: string },
 ): void {
   const actor = buildAgentCanvasActor({
@@ -28,15 +27,15 @@ export function broadcastAgentCanvasUpdate(
     displayName: agent?.displayName ?? 'ИИ-агент',
   });
 
-  const message: CanvasSyncMessage = {
-    type: 'canvas-sync',
+  const message = {
+    type: 'canvas-sync' as const,
     projectId,
     tabId: `mcp-${actor.sessionId}`,
     actor,
     userId: actor.userId,
     timestamp: Date.now(),
-    data,
+    data: data.data,
   };
 
-  broadcastCanvasSync(projectId, message);
+  broadcastCanvasSyncWire(projectId, message);
 }

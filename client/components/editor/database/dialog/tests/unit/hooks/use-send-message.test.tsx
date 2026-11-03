@@ -13,14 +13,13 @@ vi.mock('@/hooks/use-toast', () => ({
   })),
 }));
 
-vi.mock('@lib/queryClient', () => ({
+vi.mock('@/queryClient', () => ({
   apiRequest: vi.fn(),
 }));
 
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useSendMessage } from '../../../hooks/use-send-message';
-import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/queryClient';
 
 const mockApiRequest = vi.mocked(apiRequest);
@@ -56,7 +55,7 @@ function createWrapper() {
 describe('useSendMessage', () => {
   it('должен возвращать мутацию с правильными методами', () => {
     const wrapper = createWrapper();
-    const { result } = renderHook(() => useSendMessage(1, 123), { wrapper });
+    const { result } = renderHook(() => useSendMessage({ projectId: 1, userId: 123, addOptimisticMessage: vi.fn(), removeOptimisticMessage: vi.fn() }), { wrapper });
 
     expect(result.current.mutate).toBeDefined();
     expect(result.current.mutateAsync).toBeDefined();
@@ -69,16 +68,16 @@ describe('useSendMessage', () => {
     mockApiRequest.mockResolvedValue({ ok: true } as any);
 
     const wrapper = createWrapper();
-    const { result } = renderHook(() => useSendMessage(1, 123), { wrapper });
+    const { result } = renderHook(() => useSendMessage({ projectId: 1, userId: 123, addOptimisticMessage: vi.fn(), removeOptimisticMessage: vi.fn() }), { wrapper });
 
     await act(async () => {
-      result.current.mutate({ messageText: 'Тестовое сообщение' });
+      await result.current.mutateAsync({ messageText: 'Тестовое сообщение' });
     });
 
     expect(mockApiRequest).toHaveBeenCalledWith(
       'POST',
       '/api/projects/1/users/123/send-message',
-      { messageText: 'Тестовое сообщение' }
+      { messageText: 'Тестовое сообщение', mediaUrls: [], buttons: [], buttonsPerRow: 0 }
     );
   });
 
@@ -87,10 +86,10 @@ describe('useSendMessage', () => {
 
     const onSent = vi.fn();
     const wrapper = createWrapper();
-    const { result } = renderHook(() => useSendMessage(1, 123, onSent), { wrapper });
+    const { result } = renderHook(() => useSendMessage({ projectId: 1, userId: 123, onSent, addOptimisticMessage: vi.fn(), removeOptimisticMessage: vi.fn() }), { wrapper });
 
     await act(async () => {
-      result.current.mutate({ messageText: 'Тестовое сообщение' });
+      await result.current.mutateAsync({ messageText: 'Тестовое сообщение' });
     });
 
     expect(onSent).toHaveBeenCalledTimes(1);
@@ -100,7 +99,7 @@ describe('useSendMessage', () => {
     mockApiRequest.mockRejectedValue(new Error('Failed to send'));
 
     const wrapper = createWrapper();
-    const { result } = renderHook(() => useSendMessage(1, 123), { wrapper });
+    const { result } = renderHook(() => useSendMessage({ projectId: 1, userId: 123, addOptimisticMessage: vi.fn(), removeOptimisticMessage: vi.fn() }), { wrapper });
 
     // Используем mutateAsync и ловим ошибку
     await act(async () => {
@@ -119,11 +118,11 @@ describe('useSendMessage', () => {
 
   it('должен выбрасывать ошибку если userId не указан', async () => {
     const wrapper = createWrapper();
-    const { result } = renderHook(() => useSendMessage(1, undefined), { wrapper });
+    const { result } = renderHook(() => useSendMessage({ projectId: 1, userId: undefined, addOptimisticMessage: vi.fn(), removeOptimisticMessage: vi.fn() }), { wrapper });
 
     await act(async () => {
       try {
-        result.current.mutate({ messageText: 'Тестовое сообщение' });
+        await result.current.mutateAsync({ messageText: 'Тестовое сообщение' });
       } catch (error) {
         expect((error as Error).message).toBe('No user selected');
       }
@@ -134,16 +133,16 @@ describe('useSendMessage', () => {
     mockApiRequest.mockResolvedValue({ ok: true } as any);
 
     const wrapper = createWrapper();
-    const { result } = renderHook(() => useSendMessage(999, 123), { wrapper });
+    const { result } = renderHook(() => useSendMessage({ projectId: 999, userId: 123, addOptimisticMessage: vi.fn(), removeOptimisticMessage: vi.fn() }), { wrapper });
 
     await act(async () => {
-      result.current.mutate({ messageText: 'Тестовое сообщение' });
+      await result.current.mutateAsync({ messageText: 'Тестовое сообщение' });
     });
 
     expect(mockApiRequest).toHaveBeenCalledWith(
       'POST',
       '/api/projects/999/users/123/send-message',
-      { messageText: 'Тестовое сообщение' }
+      { messageText: 'Тестовое сообщение', mediaUrls: [], buttons: [], buttonsPerRow: 0 }
     );
   });
 
@@ -151,16 +150,16 @@ describe('useSendMessage', () => {
     mockApiRequest.mockResolvedValue({ ok: true } as any);
 
     const wrapper = createWrapper();
-    const { result } = renderHook(() => useSendMessage(1, 456), { wrapper });
+    const { result } = renderHook(() => useSendMessage({ projectId: 1, userId: 456, addOptimisticMessage: vi.fn(), removeOptimisticMessage: vi.fn() }), { wrapper });
 
     await act(async () => {
-      result.current.mutate({ messageText: 'Тестовое сообщение' });
+      await result.current.mutateAsync({ messageText: 'Тестовое сообщение' });
     });
 
     expect(mockApiRequest).toHaveBeenCalledWith(
       'POST',
       '/api/projects/1/users/456/send-message',
-      { messageText: 'Тестовое сообщение' }
+      { messageText: 'Тестовое сообщение', mediaUrls: [], buttons: [], buttonsPerRow: 0 }
     );
   });
 
@@ -168,16 +167,16 @@ describe('useSendMessage', () => {
     mockApiRequest.mockResolvedValue({ ok: true } as any);
 
     const wrapper = createWrapper();
-    const { result } = renderHook(() => useSendMessage(1, 123), { wrapper });
+    const { result } = renderHook(() => useSendMessage({ projectId: 1, userId: 123, addOptimisticMessage: vi.fn(), removeOptimisticMessage: vi.fn() }), { wrapper });
 
     await act(async () => {
-      result.current.mutate({ messageText: 'Привет, мир!' });
+      await result.current.mutateAsync({ messageText: 'Привет, мир!' });
     });
 
     expect(mockApiRequest).toHaveBeenCalledWith(
       'POST',
       '/api/projects/1/users/123/send-message',
-      { messageText: 'Привет, мир!' }
+      { messageText: 'Привет, мир!', mediaUrls: [], buttons: [], buttonsPerRow: 0 }
     );
   });
 
@@ -185,16 +184,16 @@ describe('useSendMessage', () => {
     mockApiRequest.mockResolvedValue({ ok: true } as any);
 
     const wrapper = createWrapper();
-    const { result } = renderHook(() => useSendMessage(1, 123), { wrapper });
+    const { result } = renderHook(() => useSendMessage({ projectId: 1, userId: 123, addOptimisticMessage: vi.fn(), removeOptimisticMessage: vi.fn() }), { wrapper });
 
     await act(async () => {
-      result.current.mutate({ messageText: '' });
+      await result.current.mutateAsync({ messageText: '' });
     });
 
     expect(mockApiRequest).toHaveBeenCalledWith(
       'POST',
       '/api/projects/1/users/123/send-message',
-      { messageText: '' }
+      { messageText: '', mediaUrls: [], buttons: [], buttonsPerRow: 0 }
     );
   });
 
@@ -202,16 +201,16 @@ describe('useSendMessage', () => {
     mockApiRequest.mockResolvedValue({ ok: true } as any);
 
     const wrapper = createWrapper();
-    const { result } = renderHook(() => useSendMessage(1, 123), { wrapper });
+    const { result } = renderHook(() => useSendMessage({ projectId: 1, userId: 123, addOptimisticMessage: vi.fn(), removeOptimisticMessage: vi.fn() }), { wrapper });
 
     await act(async () => {
-      result.current.mutate({ messageText: '<b>Жирный</b> текст' });
+      await result.current.mutateAsync({ messageText: '<b>Жирный</b> текст' });
     });
 
     expect(mockApiRequest).toHaveBeenCalledWith(
       'POST',
       '/api/projects/1/users/123/send-message',
-      { messageText: '<b>Жирный</b> текст' }
+      { messageText: '<b>Жирный</b> текст', mediaUrls: [], buttons: [], buttonsPerRow: 0 }
     );
   });
 });

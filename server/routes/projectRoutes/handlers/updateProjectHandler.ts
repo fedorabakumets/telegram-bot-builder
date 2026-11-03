@@ -124,14 +124,10 @@ export async function updateProjectHandler(req: Request, res: Response): Promise
             if (req.body?.agentEdit === true) {
                 try {
                     const canvasData = parseAgentCanvasData(validatedData.data);
-                    if (canvasData) {
-                        broadcastAgentCanvasUpdate(projectId, canvasData, {
-                            sessionId: req.body.agentSessionId,
-                            displayName: req.body.agentDisplayName,
-                        });
-                    } else {
-                        console.warn(`[updateProjectHandler] Некорректный снимок холста для проекта ${projectId}`);
-                    }
+                    broadcastAgentCanvasUpdate(projectId, canvasData, {
+                        sessionId: req.body.agentSessionId,
+                        displayName: req.body.agentDisplayName,
+                    });
                 } catch (err) {
                     console.error(`[updateProjectHandler] Ошибка broadcast canvas-sync для проекта ${projectId}:`, err);
                 }

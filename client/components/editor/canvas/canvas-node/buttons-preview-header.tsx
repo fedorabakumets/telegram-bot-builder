@@ -1,12 +1,22 @@
+/** @fileoverview Заголовок предпросмотра клавиатуры и её настроек. */
 interface ButtonsPreviewHeaderProps {
+  /** Включён множественный выбор. */
   isMultiSelect?: boolean;
-  keyboardType?: 'inline' | 'reply';
+  /** Тип отображаемой клавиатуры. */
+  keyboardType?: 'none' | 'inline' | 'reply';
+  /** Кнопки формируются динамически. */
   isDynamicMode?: boolean;
+  /** Краткое описание динамических кнопок. */
   dynamicSummary?: string;
   /** Перемешивание кнопок включено */
   shuffleButtons?: boolean;
 }
 
+/**
+ * Показывает параметры предпросмотра клавиатуры.
+ * @param props - Настройки предпросмотра.
+ * @returns Заголовок клавиатуры.
+ */
 export function ButtonsPreviewHeader({
   isMultiSelect,
   keyboardType,
@@ -14,6 +24,7 @@ export function ButtonsPreviewHeader({
   dynamicSummary,
   shuffleButtons,
 }: ButtonsPreviewHeaderProps) {
+  /** Возвращает подпись типа клавиатуры. @returns Подпись. */
   const getKeyboardLabel = () => {
     if (isDynamicMode) return 'Dynamic inline';
     if (isMultiSelect) return 'Множественный выбор';

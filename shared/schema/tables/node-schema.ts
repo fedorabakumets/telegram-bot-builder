@@ -206,7 +206,9 @@ export const nodeSchema = z.object({
     /** ID целевого пользователя для операций с пользователями */
     targetUserId: z.string().optional(),
     /** Источник ID пользователя: "manual" — вручную, "variable" — из переменной, "last_message" — из последнего сообщения */
-    userIdSource: z.enum(['manual', 'variable', 'last_message']).default('last_message'),
+    userIdSource: z.enum(['manual', 'variable', 'last_message', 'current_user', 'reply_user', 'custom']).default('last_message'),
+    /** Ручной ID или переменная для исключения пользователя. */
+    userIdManual: z.string().optional(),
     /** Имя переменной с ID пользователя */
     userVariableName: z.string().optional(),
     /** ID целевой группы */

@@ -19,8 +19,6 @@ import {
   validParamsDatetimeOnly,
   validParamsDatetimeWithTimezone,
   invalidParamsWrongType,
-  expectedOutputAllEnabled,
-  expectedOutputAllDisabled,
 } from './imports.fixture';
 import { importsParamsSchema } from './imports.schema';
 
@@ -371,11 +369,11 @@ describe('imports.py.jinja2 шаблон', () => {
     });
 
     describe('Структура схемы', () => {
-      it('должен иметь все 10 полей', () => {
+      it('должен содержать все поля текущего контракта', () => {
         const shape = importsParamsSchema.shape;
         const fields = Object.keys(shape);
 
-        assert.strictEqual(fields.length, 10);
+        assert.strictEqual(fields.length, 18);
         assert.ok(fields.includes('userDatabaseEnabled'));
         assert.ok(fields.includes('hasInlineButtons'));
         assert.ok(fields.includes('hasAutoTransitions'));
@@ -386,6 +384,14 @@ describe('imports.py.jinja2 шаблон', () => {
         assert.ok(fields.includes('hasUrlImages'));
         assert.ok(fields.includes('hasDatetimeNodes'));
         assert.ok(fields.includes('hasTimezoneNodes'));
+        assert.ok(fields.includes('hasReplyKeyboard'));
+        assert.ok(fields.includes('hasLocalMediaFiles'));
+        assert.ok(fields.includes('hasBotCommands'));
+        assert.ok(fields.includes('hasDeepLinkTriggers'));
+        assert.ok(fields.includes('hasUserbotNodes'));
+        assert.ok(fields.includes('hasRateCounterNodes'));
+        assert.ok(fields.includes('hasSendInvoiceNodes'));
+        assert.ok(fields.includes('hasInputTimeoutNodes'));
       });
 
       it('должен использовать ZodDefault для всех полей', () => {

@@ -24,11 +24,6 @@ interface BotsPanelProps {
   onProjectChange?: (projectId: number) => void;
 }
 
-interface BotStatusResponse {
-  status: string;
-  instance: any;
-}
-
 /**
  * Панель ботов
  */

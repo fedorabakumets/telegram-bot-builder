@@ -10,8 +10,6 @@ import {
   validParamsEnabled,
   validParamsDisabled,
   invalidParamsWrongType,
-  expectedOutputEnabled,
-  expectedOutputDisabled,
 } from './main.fixture';
 import { mainParamsSchema } from './main.schema';
 

@@ -15,9 +15,6 @@ import {
   validParamsEmptyButtonIds,
   invalidParamsWrongType,
   invalidParamsMissingField,
-  expectedOutputInline,
-  expectedOutputReply,
-  expectedOutputEmpty,
   validParamsContactLocation,
   validParamsCopyText,
   validParamsWebApp,
@@ -816,7 +813,6 @@ describe('keyboard.py.jinja2 шаблон', () => {
       it('url кнопки подставляет {переменные} через replace_variables_in_text', () => {
         const result = generateKeyboard({
           nodeId: 'kb_ready',
-          projectId: 77,
           keyboardType: 'inline',
           buttons: [{
             id: 'btn_open',

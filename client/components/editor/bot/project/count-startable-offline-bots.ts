@@ -16,7 +16,7 @@ interface OfflineCountToken {
 /** Статус процесса бота */
 interface OfflineCountStatus {
   /** ID токена */
-  tokenId: number;
+  tokenId?: number;
   /** running / stopped / … */
   status?: string | null;
 }

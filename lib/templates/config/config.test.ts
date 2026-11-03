@@ -12,8 +12,6 @@ import {
   validParamsDatabaseOnly,
   validParamsProjectOnly,
   invalidParamsWrongType,
-  expectedOutputAllEnabled,
-  expectedOutputAllDisabled,
 } from './config.fixture';
 import { configParamsSchema } from './config.schema';
 
