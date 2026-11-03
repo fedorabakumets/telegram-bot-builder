@@ -35,8 +35,8 @@ export function maskSecret(value: string | null | undefined): string | null {
  * @param result - Ответ userbotAuth.py
  * @returns копия ответа с маской вместо session string
  */
-export function toPublicAuthResult<T extends { session_string?: string | null }>(result: T): T {
-  if (!result.session_string) return result;
+export function toPublicAuthResult<T extends object>(result: T): T {
+  if (!("session_string" in result) || !result.session_string) return result;
   return { ...result, session_string: SECRET_MASK };
 }
 

@@ -7,7 +7,6 @@ import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import {
   ForbiddenSchema,
   MessageErrorSchema,
-  UnauthorizedSchema,
 } from "../schemas/common";
 import {
   ProjectsCookiesSchema, ProjectsAuthHeadersSchema,

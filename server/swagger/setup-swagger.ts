@@ -45,7 +45,7 @@ function toApiRelativePath(fullPath: string): string {
  * @param documented - Fragment из Zod registry
  * @returns Объединённый document
  */
-function mergeDocumentedPaths(base: OpenApiDocument, documented: OpenApiDocument): OpenApiDocument {
+function mergeDocumentedPaths(base: OpenApiDocument, documented: ReturnType<OpenApiGeneratorV3["generateDocument"]>): OpenApiDocument {
   const mergedPaths = { ...base.paths };
 
   for (const [path, methods] of Object.entries(documented.paths ?? {})) {
@@ -134,7 +134,7 @@ export function buildOpenApiDocument(app: Express): OpenApiDocument {
   const documented = generator.generateDocument({
     openapi: "3.0.3",
     info: base.info,
-  }) as OpenApiDocument;
+  });
 
   return mergeDocumentedPaths(base, documented);
 }
@@ -150,7 +150,7 @@ export function setupSwagger(app: Express): void {
   setupAdminRoutes(app);
 
   if (isAdminEnabled()) {
-    setupDocsUis(app, document, {
+    setupDocsUis(app, { ...document }, {
       basePath: "/admin/docs",
       specPath: "/admin/openapi.json",
       protect: requireAdminAuth,
@@ -159,6 +159,6 @@ export function setupSwagger(app: Express): void {
   }
 
   if (process.env.NODE_ENV !== "production") {
-    setupDocsUis(app, document);
+    setupDocsUis(app, { ...document });
   }
 }

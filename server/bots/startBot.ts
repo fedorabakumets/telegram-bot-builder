@@ -15,12 +15,6 @@ import { precompileBotCode } from './precompileBotCode';
 import { buildWorkerBaseEnv } from './workerBaseEnv';
 
 /**
- * Модуль для работы с URL
- * @external url
- */
-import { URL } from "node:url";
-
-/**
  * Модуль для работы с путями к файлам
  * @external path
  */

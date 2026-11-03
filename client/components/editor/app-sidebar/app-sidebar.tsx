@@ -19,8 +19,6 @@ import type { AppSidebarProps } from './types';
  * @returns JSX элемент вертикального сайдбара
  */
 export function AppSidebar({
-  projectName,
-  botInfo,
   currentTab,
   onTabChange,
   onSaveAsTemplate,

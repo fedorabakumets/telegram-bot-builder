@@ -4,7 +4,7 @@
  */
 
 import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
-import type { ZodTypeAny } from "zod";
+import type { ProjectTokensEnvIdParamsSchema } from "../schemas/project-tokens-params";
 import {
   ForbiddenSchema,
   MessageErrorSchema,
@@ -28,7 +28,7 @@ import { registerProjectTokensEnvBatchPaths } from "./project-tokens-env-batch-p
 export function registerProjectTokensEnvMutatePaths(
   registry: OpenAPIRegistry,
   cookieSecurity: Array<Record<string, string[]>>,
-  envIdParams: ZodTypeAny,
+  envIdParams: typeof ProjectTokensEnvIdParamsSchema,
 ): void {
   const auth = "**Auth:** `requireTokenOwnership`.\n\n";
 

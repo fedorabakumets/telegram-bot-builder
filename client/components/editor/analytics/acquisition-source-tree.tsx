@@ -2,7 +2,7 @@
 import { AnalyticsHeadingHint } from './analytics-heading-hint';
 import type { AcquisitionCatalog } from './acquisition-types';
 /** Показывает каждый источник один раз без действий переименования и архивирования. */
-export function AcquisitionSourceTree({ projectId, catalog, }: {
+export function AcquisitionSourceTree({ catalog, }: {
   /** Проект. */ projectId: number;
   /** Каталог источников. */ catalog: AcquisitionCatalog;
   /** Открыть переименование. */ onEdit?: (id: number) => void;

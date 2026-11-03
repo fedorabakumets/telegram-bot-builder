@@ -75,7 +75,7 @@ interface WorkerCommand {
 /** Необязательные параметры запуска бота */
 export interface BotStartOptions {
   /** Настройки webhook, если бот работает через webhook */
-  webhook?: { webhookUrl: string; webhookPort: number };
+  webhook?: { webhookUrl: string | undefined; webhookPort: number };
   /** Переменные окружения бота вместо файла .env */
   env?: Record<string, string>;
   /** Сборка в S3 для удалённого исполнителя */
@@ -104,6 +104,15 @@ interface ProjectWorker {
   memoryMb?: number;
 }
 
+/**
+ * Считывает состояние воркера после вызова внешних обработчиков событий.
+ * @param worker - Контекст воркера
+ * @returns Текущий статус воркера
+ */
+function getWorkerStatus(worker: ProjectWorker): ProjectWorker["status"] {
+  return worker.status;
+}
+
 /** Параметры запуска бота, нужные для повторного запуска в пересозданном контейнере */
 interface BotStartArgs {
   /** ID проекта */
@@ -115,7 +124,7 @@ interface BotStartArgs {
   /** Путь к bot.py на сервере */
   botFile: string;
   /** Настройки webhook, если бот работает через webhook */
-  webhook?: { webhookUrl: string; webhookPort: number };
+  webhook?: { webhookUrl: string | undefined; webhookPort: number };
   /** Переменные окружения бота; если заданы, воркер не читает .env */
   env?: Record<string, string>;
   /** Сборка в S3 для удалённого исполнителя */
@@ -389,7 +398,7 @@ class BotWorkerManager extends EventEmitter {
 
         this.emit("worker-exited", projectId, code, signal);
 
-        if (!wasReady && worker.status !== "ready") {
+        if (!wasReady && getWorkerStatus(worker) !== "ready") {
           reject(new Error(`Воркер проекта ${projectId} завершился с кодом ${code}`));
         }
       });

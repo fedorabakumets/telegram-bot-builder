@@ -35,14 +35,14 @@ function timestamp(value: string): number {
 export function resolveAnalyticsRange(options: AnalyticsRangeOptions, now = Date.now()) {
   if ((options.from === undefined) !== (options.to === undefined) || (options.from !== undefined && options.period !== undefined)) throw new Error('Укажите period либо обе даты from/to');
   const period = options.from !== undefined ? null : options.period ?? '30d';
-  if (period !== null && !Object.hasOwn(ANALYTICS_PERIOD_MS, period)) throw new Error('Некорректный период');
+  if (period !== null && !Object.prototype.hasOwnProperty.call(ANALYTICS_PERIOD_MS, period)) throw new Error('Некорректный период');
   const to = options.to !== undefined ? timestamp(options.to) : now;
   const from = options.from !== undefined ? timestamp(options.from) : to - ANALYTICS_PERIOD_MS[period!];
   const duration = to - from;
   if (!Number.isFinite(duration) || duration <= 0 || duration > ANALYTICS_PERIOD_MS['12m'] || to > now) throw new Error('Диапазон должен быть положительным, до 365 дней и без будущих дат');
   const defaults = { '1h': '1m', '3h': '5m', '24h': '1h', '7d': '1d', '30d': '1d', '12w': '7d', '12m': '30d' } as const;
   const step = options.step ?? (period ? defaults[period] : duration <= 3600000 ? '1m' : duration <= 10800000 ? '5m' : duration <= 86400000 ? '1h' : '1d');
-  if (!Object.hasOwn(ANALYTICS_STEPS, step) || Math.ceil(duration / ANALYTICS_STEPS[step]) > 500) throw new Error('Некорректный шаг или более 500 точек');
+  if (!Object.prototype.hasOwnProperty.call(ANALYTICS_STEPS, step) || Math.ceil(duration / ANALYTICS_STEPS[step]) > 500) throw new Error('Некорректный шаг или более 500 точек');
   return { from: new Date(from).toISOString(), to: new Date(to).toISOString(), step, period, duration_ms: duration, timezone: 'UTC', boundary: '[from,to)' };
 }
 /**

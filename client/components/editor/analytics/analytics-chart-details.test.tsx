@@ -7,7 +7,6 @@ import {reportParams} from './analytics-report-filter';
 import { AnalyticsReportChart } from './analytics-report-chart';
 import { AnalyticsCompactTooltip } from './analytics-compact-tooltip';
 import { AnalyticsReportOverview } from './analytics-report-overview';
-import { AnalyticsSnapshotRefreshContext } from './analytics-chart-actions';
 import type { AnalyticsV2Snapshot } from '@shared/analytics/v2';
 /** Перехватывает настройки плавающей подсказки для проверки формата даты. */
 const tooltipMock = vi.hoisted(() => vi.fn((_props: any) => null));
@@ -104,7 +103,7 @@ it('закрепляет промежуток нажатием и применя
 it('показывает полные сутки русской датой в подсказке', () => {
   render(<AnalyticsReportChart points={[{date:'2026-09-28T00:00:00Z',incoming:7}]} series={[{key:'incoming',label:'Входящие',color:'#10b981'}]} timezone="UTC" stepMs={86400000} />);
   fireEvent.mouseMove(screen.getByTestId('chart'));
-  expect(tooltipMock.mock.calls.at(-1)?.[0].content.props.formatInterval('2026-09-28T00:00:00Z')).toBe('Понедельник, 28 сентября 2026 г.');
+  expect(tooltipMock.mock.calls[tooltipMock.mock.calls.length - 1]?.[0].content.props.formatInterval('2026-09-28T00:00:00Z')).toBe('Понедельник, 28 сентября 2026 г.');
 });
 
 /** Переключатель меняет реальные значения и сохраняет режим в увеличенном окне. */
@@ -121,7 +120,7 @@ it('складывает значения при включении накопл
 it('сохраняет всплывающую подсказку при закреплённой точке', () => {
   render(<AnalyticsReportChart points={[{ date: '2026-11-01T00:00:00Z', incoming: 7 }]} series={[{ key: 'incoming', label: 'Входящие', color: '#10b981' }]} timezone="UTC" stepMs={86400000} />);
   fireEvent.click(screen.getByTestId('chart'));
-  const props = tooltipMock.mock.calls.at(-1)?.[0];
+  const props = tooltipMock.mock.calls[tooltipMock.mock.calls.length - 1]?.[0];
   expect(props.content.type).toBe(AnalyticsCompactTooltip);
   expect(props.isAnimationActive).toBe(false);
   expect(props.cursor).toEqual({ stroke: 'var(--border)' });

@@ -135,7 +135,7 @@ export async function notifyAdminAboutUserMessage(
       const bytes = await readStream(stream);
       const form = new FormData();
       form.append("chat_id", String(adminId));
-      form.append("photo", new Blob([bytes], { type: file.mime }), file.fileName);
+      form.append("photo", new Blob([new Uint8Array(bytes)], { type: file.mime }), file.fileName);
       await callTelegram(token, "sendPhoto", adminId, { method: "POST", body: form });
     }
   }

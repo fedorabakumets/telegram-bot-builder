@@ -68,7 +68,7 @@ export function parseProjectFilesQuery(req: Request): ParseResult {
   if (!rawCategory) {
     return { ok: false, error: "Параметр category обязателен: all | incoming | outgoing | uploaded" };
   }
-  if (![...VALID_CATEGORIES, ...VALID_SOURCES].includes(rawCategory)) {
+  if (!([...VALID_CATEGORIES, ...VALID_SOURCES] as readonly string[]).includes(rawCategory)) {
     return { ok: false, error: "Неверный category. Допустимые: all | incoming | outgoing | uploaded" };
   }
   const category = rawCategory as FileCategory;

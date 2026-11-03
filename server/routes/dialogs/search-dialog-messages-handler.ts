@@ -29,7 +29,7 @@ export async function searchDialogMessagesHandler(req: Request, res: Response): 
     }
     const { rows } = await pool.query(query.sql, query.values);
     const messages = rows.slice(0, limit).map(mapDialogMessage);
-    const last = messages.at(-1);
+    const last = messages[messages.length - 1];
     const hasMore = rows.length > limit;
     res.json({ ok: true, project_id: projectId, token_id: tokenId, query: text,
       chat_id: chatId ?? null, chat_type: chatType ?? null, messages, has_more: hasMore,

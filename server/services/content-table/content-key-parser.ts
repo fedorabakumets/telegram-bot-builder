@@ -171,7 +171,7 @@ export function extractContentFromNodes(sheets: any[]): ContentEntry[] {
  * @param type - Тип записи (message, button, url и т.д.)
  * @returns Объект с nodeId, field, subId и subField для обновления ноды
  */
-export function parseContentKey(key: string, type: string): ParsedContentKey {
+export function parseContentKey(key: string, _type: string): ParsedContentKey {
   const parts = key.split(".");
 
   // Простой ключ без точек — это nodeId целиком для message

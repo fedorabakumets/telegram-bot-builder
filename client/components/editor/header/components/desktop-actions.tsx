@@ -3,12 +3,6 @@
  * @description Компонент отображает все кнопки управления для десктопной версии
  */
 
-import { DesktopToggleHeaderButton } from './desktop-toggle-header-button';
-import { DesktopToggleSidebarButton } from './desktop-toggle-sidebar-button';
-import { DesktopToggleCanvasButton } from './desktop-toggle-canvas-button';
-import { DesktopTogglePropertiesButton } from './desktop-toggle-properties-button';
-import { DesktopToggleCodeButton } from './desktop-toggle-code-button';
-import { DesktopToggleCodeEditorButton } from './desktop-toggle-code-editor-button';
 import { DesktopLoadTemplateButton } from './desktop-load-template-button';
 import { DesktopSaveTemplateButton } from './desktop-save-template-button';
 import { cn } from '@/utils/utils';
@@ -43,21 +37,8 @@ export interface DesktopActionsProps {
  * Десктопные действия: кнопки управления панелями и шаблонами
  */
 export function DesktopActions({
-  onToggleHeader,
-  onToggleSidebar,
-  onToggleCanvas,
-  onToggleProperties,
-  onToggleCode,
-  onToggleCodeEditor,
-  onOpenFileExplorer,
   onLoadTemplate,
   onSaveAsTemplate,
-  headerVisible,
-  sidebarVisible,
-  canvasVisible,
-  propertiesVisible,
-  codeVisible,
-  codeEditorVisible,
   isVertical,
 }: DesktopActionsProps) {
   return (

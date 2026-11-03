@@ -54,7 +54,7 @@ export async function updateProjectHandler(req: Request, res: Response): Promise
                 res.status(409).json({
                     message: "Проект изменился в другой сессии. Обновите проект перед сохранением.",
                     code: "PROJECT_CONFLICT",
-                    updatedAt: currentProject.updatedAt,
+                    updatedAt: currentProject?.updatedAt,
                 });
                 return;
             }

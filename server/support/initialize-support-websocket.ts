@@ -16,7 +16,6 @@ import {
 } from "./support-connections";
 
 /** Сокет пользователя Studio */
-const USER_PATH = "/api/support/ws";
 
 /** Сокет админки. Путь под /admin, чтобы ушла cookie admin_auth */
 const ADMIN_PATH = "/admin/api/support/ws";

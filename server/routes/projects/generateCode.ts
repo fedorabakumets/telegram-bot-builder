@@ -9,7 +9,6 @@
 
 import type { Request, Response } from 'express';
 import { storage } from '../../storages/storage';
-import { createRequire } from 'module';
 import { fileURLToPath } from 'url';
 import { resolve, dirname } from 'path';
 import { isPsqlBuiltinEnabled } from '../../utils/isPsqlBuiltinEnabled';

@@ -60,7 +60,7 @@ export async function applyTableOps(
         await db.query("ROLLBACK");
         return {
           ok: false,
-          status: "status" in step ? step.status : 400,
+          status: step.status ?? 400,
           message: step.message,
           failed_op_index: index,
         };
@@ -87,5 +87,5 @@ export async function applyTableOps(
  * @returns Признак отказа
  */
 function isFail(step: unknown): step is { ok: false; message: string; status?: number } {
-  return Boolean(step) && typeof step === "object" && "ok" in step && (step as { ok: boolean }).ok === false;
+  return step !== null && typeof step === "object" && "ok" in step && (step as { ok: boolean }).ok === false;
 }

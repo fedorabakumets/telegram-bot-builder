@@ -128,7 +128,7 @@ export async function notifyUserAboutSupportReply(
     const bytes = await readStream(stream);
     const form = new FormData();
     form.append("chat_id", String(userId));
-    form.append("photo", new Blob([bytes], { type: file.mime }), file.fileName);
+    form.append("photo", new Blob([new Uint8Array(bytes)], { type: file.mime }), file.fileName);
     await callTelegram(token, "sendPhoto", userId, { method: "POST", body: form });
   }
 }

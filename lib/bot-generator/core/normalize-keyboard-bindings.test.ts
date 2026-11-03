@@ -5,7 +5,7 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import type { Connection, Node } from '@shared/schema';
+import type { Node } from '@shared/schema';
 import { normalizeKeyboardBindings } from './normalize-keyboard-bindings';
 
 /**
@@ -26,7 +26,7 @@ function makeMessageNode(id: string, data: Record<string, unknown> = {}): Node {
       keyboardType: 'none',
       ...data,
     },
-  } as Node;
+  } as unknown as Node;
 }
 
 /**
@@ -46,7 +46,7 @@ function makeConditionNode(id: string, sourceNodeId: string): Node {
       variable: 'subscription',
       branches: [],
     },
-  } as Node;
+  } as unknown as Node;
 }
 
 /**
@@ -84,12 +84,12 @@ function makeKeyboardNode(id: string, data: Record<string, unknown> = {}): Node 
  * @param target - ID цели
  * @returns Соединение
  */
-function makeConnection(source: string, target: string): Connection {
+function makeConnection(source: string, target: string) {
   return {
     id: `${source}_${target}`,
     source,
     target,
-  } as Connection;
+  };
 }
 
 describe('normalizeKeyboardBindings', () => {
@@ -403,7 +403,7 @@ describe('normalizeKeyboardBindings', () => {
           invoiceDescription: 'D',
           invoiceAmount: '1',
         },
-      } as Node,
+      } as unknown as Node,
       makeKeyboardNode('kbd_1', {
         keyboardType: 'inline',
         buttons: [

@@ -10,7 +10,7 @@ export function mapTelegramMedia(value: unknown) {
   const data = value as Record<string, unknown>;
   return ['photo', 'video', 'animation', 'audio', 'voice', 'document', 'sticker', 'video_note'].flatMap(type => {
     const raw = data[type];
-    const item = type === 'photo' && Array.isArray(raw) ? raw.at(-1) : raw;
+    const item = type === 'photo' && Array.isArray(raw) ? raw[raw.length - 1] : raw;
     if (!item || typeof item !== 'object' || Array.isArray(item)) return [];
     const source = item as Record<string, unknown>;
     const fields = Object.fromEntries(['file_id', 'file_unique_id', 'file_name', 'mime_type',

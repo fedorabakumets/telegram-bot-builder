@@ -12,7 +12,7 @@ function Harness(){
 }
 it('открывает общий календарь кнопкой из карточки',async()=>{
   render(<Harness/>);
-  fireEvent.click(screen.getByRole('button',{name:'Выбрать период',exact:true}));
+  fireEvent.click(screen.getByRole('button',{name:'Выбрать период'}));
   expect(await screen.findByRole('group',{name:'Период'})).toBeInTheDocument();
   expect(screen.getAllByRole('group',{name:'Период'})).toHaveLength(1);
 });

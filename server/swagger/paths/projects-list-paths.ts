@@ -9,7 +9,7 @@ import { MessageErrorSchema, UnauthorizedSchema } from "../schemas/common";
 import {
   BotProjectListSchema,
   ProjectListSchema,
-  ProjectsCookiesSchema, ProjectsAuthHeadersSchema,
+  ProjectsCookiesSchema,
 } from "../schemas/projects";
 import {
   BOT_PROJECT_EXAMPLE,

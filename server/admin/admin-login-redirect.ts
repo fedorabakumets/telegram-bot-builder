@@ -12,7 +12,7 @@ import { isConfigured } from "../services/app-settings.service";
  * @param res - Ответ Express
  * @returns Promise<void>
  */
-export async function redirectAfterAdminLogin(req: Request, res: Response): Promise<void> {
+export async function redirectAfterAdminLogin(_req: Request, res: Response): Promise<void> {
   const configured = await isConfigured();
   if (!configured) {
     res.redirect(302, "/admin/settings");

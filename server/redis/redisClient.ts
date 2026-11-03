@@ -7,6 +7,10 @@
 
 /** Тип клиента ioredis (используется для типизации без прямого импорта) */
 type RedisClient = {
+  /** Текущее состояние подключения. */
+  status: string;
+  /** Выполняет Lua-скрипт с указанными ключами и аргументами. */
+  eval(script: string, keyCount: number, ...args: string[]): Promise<unknown>;
   get(key: string): Promise<string | null>;
   set(key: string, value: string, ...args: (string | number)[]): Promise<unknown>;
   sadd(key: string, ...members: string[]): Promise<number>;

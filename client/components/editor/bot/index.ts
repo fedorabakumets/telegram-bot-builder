@@ -11,6 +11,6 @@ export * from './project';
 export * from './profile';
 export * from './add-bot';
 export * from './token';
-export * from './terminal';
+
 export * from './hooks';
 export * from './contexts';

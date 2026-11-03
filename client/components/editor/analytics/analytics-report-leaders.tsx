@@ -6,19 +6,17 @@ import {AnalyticsChoosePeriod} from './analytics-choose-period';
 import { AnalyticsChartState } from './analytics-chart-state';
 import { AnalyticsReportSummary } from './analytics-report-overview';
 import { AnalyticsReportChart } from './analytics-report-chart';
-import { reportRangeLabel } from './analytics-report-filter';
 
 /**
  * Показывает рейтинг с видимым периодом и закреплением участника.
  * @param props - Рейтинг и область перехода к диалогу.
  * @returns Карточка лидеров с подробностями.
  */
-function Leaders({ title, items, group, observed, projectId, tokenId, contextLabel, controls, messageRanking }: {
+function Leaders({ title, items, group, observed, projectId, tokenId, controls, messageRanking }: {
   /** Название. */ title: string; /** Строки рейтинга. */ items: AnalyticsV2Leader[]; /** Групповой режим. */ group?: boolean;
   /** Показывать количество сообщений вместо уникальных авторов. */ messageRanking?: boolean;
   /** Рейтинг доступных боту групповых сообщений вместо направленных действий. */ observed?: boolean;
   /** Проект. */ projectId: number; /** Выбранный бот. */ tokenId: number | null;
-  /** Точные границы периода рейтинга. */ contextLabel: string;
   /** Переключатель, относящийся только к этой карточке рейтинга. */ controls?: ReactNode;
 }) {
   const [selected, setSelected] = useState<string | null>(null);
@@ -54,11 +52,11 @@ export function AnalyticsReportLeaders({ snapshot }: { /** Общий снимо
     <AnalyticsReportSummary items={[[ 'Активные группы', snapshot.current.groups.active_groups ], [ 'Авторы сообщений в группах', snapshot.current.groups.participants ], [ 'Действия с ботами', snapshot.current.groups.directed_actions ]]} />
     <p className="text-xs text-muted-foreground">Авторы сообщений могут входить в аудиторию бота. Эти показатели не складываются.</p></section>
 
-      <Leaders title="Группы по сообщениям" items={snapshot.leaders.groups_messages ?? []} group observed messageRanking projectId={snapshot.project_id} tokenId={snapshot.token_id} contextLabel={reportRangeLabel(snapshot.range)} />
+      <Leaders title="Группы по сообщениям" items={snapshot.leaders.groups_messages ?? []} group observed messageRanking projectId={snapshot.project_id} tokenId={snapshot.token_id} />
     </div>
     <div className="analytics-report-grid analytics-overview-report-grid analytics-active-leaders-grid analytics-group-pair-grid">
-      <Leaders title="Группы по авторам переписки" items={snapshot.leaders.groups_observed.map(item => ({ ...item, total: item.people ?? item.total }))} group observed projectId={snapshot.project_id} tokenId={snapshot.token_id} contextLabel={reportRangeLabel(snapshot.range)} />
-      <Leaders title="Действия с ботами" items={snapshot.leaders.groups.map(item => ({ ...item, total: item.people ?? item.total }))} group projectId={snapshot.project_id} tokenId={snapshot.token_id} contextLabel={reportRangeLabel(snapshot.range)} />
+      <Leaders title="Группы по авторам переписки" items={snapshot.leaders.groups_observed.map(item => ({ ...item, total: item.people ?? item.total }))} group observed projectId={snapshot.project_id} tokenId={snapshot.token_id} />
+      <Leaders title="Действия с ботами" items={snapshot.leaders.groups.map(item => ({ ...item, total: item.people ?? item.total }))} group projectId={snapshot.project_id} tokenId={snapshot.token_id} />
     </div>
   </div>;
 }
@@ -69,5 +67,5 @@ export function AnalyticsReportLeaders({ snapshot }: { /** Общий снимо
  * @returns Карточка десяти самых активных пользователей.
  */
 export function AnalyticsUserLeaders({ snapshot }: { /** Общий снимок. */ snapshot: AnalyticsV2Snapshot }) {
-  return <Leaders title="Топ-10 пользователей" items={snapshot.leaders.users.slice(0, 10)} projectId={snapshot.project_id} tokenId={snapshot.token_id} contextLabel={reportRangeLabel(snapshot.range)} />;
+  return <Leaders title="Топ-10 пользователей" items={snapshot.leaders.users.slice(0, 10)} projectId={snapshot.project_id} tokenId={snapshot.token_id} />;
 }

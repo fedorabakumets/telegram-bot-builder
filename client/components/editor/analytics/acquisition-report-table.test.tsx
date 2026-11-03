@@ -57,7 +57,7 @@ it('раскрывает сведения сразу после выбранно
   report.rows.push({ ...report.rows[0], placementId: 2, name: 'Второй канал', sourceName: 'Второй канал' });
   try {
     render(<AcquisitionReportTable projectId={12} snapshot={{ range: { from: '2026-11-01T00:00:00Z', to: '2026-11-02T00:00:00Z', timezone: 'UTC' } } as AnalyticsV2Snapshot} />);
-    const trigger = screen.getByRole('button', { name: 'Канал', exact: true });
+    const trigger = screen.getByRole('button', { name: 'Канал' });
     fireEvent.click(trigger);
     const details = screen.getByRole('region', { name: 'Подробности: Канал' });
     expect(trigger.closest('tr')?.nextElementSibling).toContainElement(details);

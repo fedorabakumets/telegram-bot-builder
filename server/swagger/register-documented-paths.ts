@@ -137,9 +137,9 @@ documentedRegistry.registerComponent("securitySchemes", "adminCookie", {
  * Auth для Studio/MCP: cookie **или** Bearer PAT (OpenAPI OR-список).
  * Swagger Authorize покажет оба способа; runtime и так принимает любой.
  */
-const cookieSecurity = [
-  { cookieAuth: [] as string[] },
-  { agentToken: [] as string[] },
+const cookieSecurity: Record<string, string[]>[] = [
+  { cookieAuth: [] },
+  { agentToken: [] },
 ];
 const publicSecurity: never[] = [];
 

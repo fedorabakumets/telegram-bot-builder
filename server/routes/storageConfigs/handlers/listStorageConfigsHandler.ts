@@ -21,7 +21,7 @@ import { toStorageConfigDto } from "../storage-config-dto";
  * @returns {Promise<void>}
  */
 export async function listStorageConfigsHandler(
-  req: Request,
+  _req: Request,
   res: Response,
 ): Promise<void> {
   try {

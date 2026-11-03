@@ -3,7 +3,7 @@
  * @module auth/utils/sessionUtils.test
  */
 
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect } from "vitest";
 import type { Request } from "express";
 import { destroySession, saveSession, regenerateSession } from "./sessionUtils";
 

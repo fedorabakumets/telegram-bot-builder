@@ -17,7 +17,7 @@
  * @module server/storage/tests/storage-multistorage.integration.test
  */
 
-import { mkdtemp, rm, readFile } from "fs/promises";
+import { mkdtemp, rm } from "fs/promises";
 import os from "os";
 import path from "path";
 
@@ -56,7 +56,7 @@ async function makeTempDir(): Promise<string> {
 async function streamToBuffer(stream: NodeJS.ReadableStream): Promise<Buffer> {
   const chunks: Buffer[] = [];
   for await (const chunk of stream) {
-    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk as Buffer));
+    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
   }
   return Buffer.concat(chunks);
 }

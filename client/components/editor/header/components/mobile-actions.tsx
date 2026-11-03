@@ -4,15 +4,8 @@
  */
 
 import { TelegramChatInvite } from './telegram-chat-invite';
-import { ToggleHeaderButton } from './toggle-header-button';
-import { ToggleSidebarButton } from './toggle-sidebar-button';
-import { ToggleCanvasButton } from './toggle-canvas-button';
-import { TogglePropertiesButton } from './toggle-properties-button';
-import { ToggleCodeButton } from './toggle-code-button';
-import { ToggleCodeEditorButton } from './toggle-code-editor-button';
 import { LoadTemplateButton } from './load-template-button';
 import { SaveTemplateButton } from './save-template-button';
-import { ThemeToggle } from './theme-toggle';
 import { UserAuth } from './user-auth';
 import type { AppUser } from '@/types/telegram-user';
 
@@ -54,21 +47,8 @@ export interface MobileActionsProps {
  * Мобильные действия: кнопки управления панелями и сценариями
  */
 export function MobileActions({
-  onToggleHeader,
-  onToggleSidebar,
-  onToggleCanvas,
-  onToggleProperties,
-  onToggleCode,
-  onToggleCodeEditor,
-  onOpenFileExplorer,
   onLoadTemplate,
   onSaveAsTemplate,
-  headerVisible,
-  sidebarVisible,
-  canvasVisible,
-  propertiesVisible,
-  codeVisible,
-  codeEditorVisible,
   onCloseMenu,
   user,
   isLoading,

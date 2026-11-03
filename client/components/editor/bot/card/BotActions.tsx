@@ -56,8 +56,6 @@ export function BotActions({
   stopBotMutation,
   onRequestDelete,
   deletePending,
-  onEditProfile,
-  isProfileLoading,
   tokenId,
   projectId,
 }: BotActionsProps) {

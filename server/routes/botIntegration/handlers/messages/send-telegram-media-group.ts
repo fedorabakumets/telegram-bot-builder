@@ -105,7 +105,7 @@ export async function sendTelegramMediaGroup(
           'Content-Length': body.length.toString(),
         },
         signal: AbortSignal.timeout(30000),
-        body,
+        body: new Uint8Array(body),
       });
     } else {
       response = await fetchWithProxy(url, {

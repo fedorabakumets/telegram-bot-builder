@@ -11,6 +11,9 @@ import { fanOutSupportLocal } from "./support-connections";
 /** Канал Redis для событий чата поддержки между репликами */
 export const SUPPORT_EVENT_CHANNEL = "platform:support_event";
 
+/** Убирает идентификатор источника отдельно из каждого варианта события. */
+type SupportEventWithoutOrigin<T> = T extends SupportWsEvent ? Omit<T, "originInstanceId"> : never;
+
 /**
  * Рассылает событие сокетам этой реплики без публикации в Redis.
  * Вызывается подписчиком чужих реплик.
@@ -26,9 +29,9 @@ export function broadcastSupportEventLocal(event: SupportWsEvent): void {
  * @param event - Событие без originInstanceId
  */
 export async function broadcastSupportEvent(
-  event: Omit<SupportWsEvent, "originInstanceId">,
+  event: SupportEventWithoutOrigin<SupportWsEvent>,
 ): Promise<void> {
-  const full = { ...event, originInstanceId: getInstanceId() } as SupportWsEvent;
+  const full: SupportWsEvent = { ...event, originInstanceId: getInstanceId() };
   broadcastSupportEventLocal(full);
 
   if (!isRedisAvailable()) return;

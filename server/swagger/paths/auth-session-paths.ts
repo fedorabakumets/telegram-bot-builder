@@ -28,7 +28,8 @@ export function registerAuthSessionPaths(
   registry: OpenAPIRegistry,
   publicSecurity: never[],
 ): void {
-  const sessionSecurity = [{ cookieAuth: [] as string[] }, { agentToken: [] as string[] }];
+  /** Допустимые способы авторизации сессии. */
+  const sessionSecurity: Record<string, string[]>[] = [{ cookieAuth: [] }, { agentToken: [] }];
   registry.registerPath({
     method: "get",
     path: "/api/auth/me",

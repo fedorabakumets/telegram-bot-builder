@@ -11,7 +11,7 @@
 /// <reference types="vitest/globals" />
 
 import '@testing-library/jest-dom';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { DialogInput } from '../../components/dialog-input';
 
 // Мокируем CompactInlineEditor
@@ -42,7 +42,8 @@ vi.mock('@/components/ui/button', () => ({
 }));
 
 // Мокируем lucide-react иконки
-vi.mock('lucide-react', () => ({
+vi.mock('lucide-react', async (importOriginal) => ({
+  ...await importOriginal<typeof import('lucide-react')>(),
   RefreshCw: ({ className }: any) => (
     <svg data-testid="refresh-cw-icon" className={className} />
   ),
@@ -58,31 +59,31 @@ describe('DialogInput', () => {
 
   describe('Рендеринг', () => {
     it('должен рендерить поле ввода', () => {
-      render(<DialogInput isPending={false} onSend={vi.fn()} />);
+      render(<DialogInput projectId={1} isPending={false} onSend={vi.fn()} />);
 
       expect(screen.getByTestId('compact-inline-editor')).toBeInTheDocument();
     });
 
     it('должен рендерить placeholder', () => {
-      render(<DialogInput isPending={false} onSend={vi.fn()} />);
+      render(<DialogInput projectId={1} isPending={false} onSend={vi.fn()} />);
 
       expect(screen.getByTestId('compact-inline-editor')).toHaveAttribute('placeholder', 'Введите сообщение...');
     });
 
     it('должен рендерить кнопку отправки', () => {
-      render(<DialogInput isPending={false} onSend={vi.fn()} />);
+      render(<DialogInput projectId={1} isPending={false} onSend={vi.fn()} />);
 
       expect(screen.getByTestId('dialog-panel-button-send')).toBeInTheDocument();
     });
 
     it('должен рендерить текст подсказки про Enter', () => {
-      render(<DialogInput isPending={false} onSend={vi.fn()} />);
+      render(<DialogInput projectId={1} isPending={false} onSend={vi.fn()} />);
 
       expect(screen.getByText('Enter - отправить')).toBeInTheDocument();
     });
 
     it('должен применять стили к контейнеру', () => {
-      const { container } = render(<DialogInput isPending={false} onSend={vi.fn()} />);
+      const { container } = render(<DialogInput projectId={1} isPending={false} onSend={vi.fn()} />);
 
       const outerDiv = container.firstChild as HTMLElement;
       expect(outerDiv).toHaveClass('p-3');
@@ -92,7 +93,7 @@ describe('DialogInput', () => {
 
   describe('Ввод текста', () => {
     it('должен обновлять значение при вводе', async () => {
-      render(<DialogInput isPending={false} onSend={vi.fn()} />);
+      render(<DialogInput projectId={1} isPending={false} onSend={vi.fn()} />);
 
       const input = screen.getByTestId('compact-inline-editor');
       fireEvent.change(input, { target: { value: 'Новое сообщение' } });
@@ -101,7 +102,7 @@ describe('DialogInput', () => {
     });
 
     it('должен начинать с пустым значением', () => {
-      render(<DialogInput isPending={false} onSend={vi.fn()} />);
+      render(<DialogInput projectId={1} isPending={false} onSend={vi.fn()} />);
 
       expect(screen.getByTestId('compact-inline-editor')).toHaveValue('');
     });
@@ -110,7 +111,7 @@ describe('DialogInput', () => {
   describe('Отправка сообщения', () => {
     it('должен вызывать onSend при клике на кнопку', () => {
       const onSend = vi.fn();
-      render(<DialogInput isPending={false} onSend={onSend} />);
+      render(<DialogInput projectId={1} isPending={false} onSend={onSend} />);
 
       const input = screen.getByTestId('compact-inline-editor');
       fireEvent.change(input, { target: { value: 'Тестовое сообщение' } });
@@ -118,13 +119,13 @@ describe('DialogInput', () => {
       const button = screen.getByTestId('dialog-panel-button-send');
       fireEvent.click(button);
 
-      expect(onSend).toHaveBeenCalledWith('Тестовое сообщение');
+      expect(onSend).toHaveBeenCalledWith('Тестовое сообщение', [], [], 0);
       expect(onSend).toHaveBeenCalledTimes(1);
     });
 
     it('должен очищать поле после отправки', () => {
       const onSend = vi.fn();
-      render(<DialogInput isPending={false} onSend={onSend} />);
+      render(<DialogInput projectId={1} isPending={false} onSend={onSend} />);
 
       const input = screen.getByTestId('compact-inline-editor');
       fireEvent.change(input, { target: { value: 'Тестовое сообщение' } });
@@ -137,7 +138,7 @@ describe('DialogInput', () => {
 
     it('не должен отправлять пустое сообщение', () => {
       const onSend = vi.fn();
-      render(<DialogInput isPending={false} onSend={onSend} />);
+      render(<DialogInput projectId={1} isPending={false} onSend={onSend} />);
 
       const button = screen.getByTestId('dialog-panel-button-send');
       fireEvent.click(button);
@@ -147,7 +148,7 @@ describe('DialogInput', () => {
 
     it('не должен отправлять сообщение с пробелами', () => {
       const onSend = vi.fn();
-      render(<DialogInput isPending={false} onSend={onSend} />);
+      render(<DialogInput projectId={1} isPending={false} onSend={onSend} />);
 
       const input = screen.getByTestId('compact-inline-editor');
       fireEvent.change(input, { target: { value: '   ' } });
@@ -160,7 +161,7 @@ describe('DialogInput', () => {
 
     it('не должен отправлять когда isPending=true', () => {
       const onSend = vi.fn();
-      render(<DialogInput isPending={true} onSend={onSend} />);
+      render(<DialogInput projectId={1} isPending={true} onSend={onSend} />);
 
       const input = screen.getByTestId('compact-inline-editor');
       fireEvent.change(input, { target: { value: 'Тестовое сообщение' } });
@@ -174,14 +175,14 @@ describe('DialogInput', () => {
 
   describe('Состояние кнопки', () => {
     it('должен быть disabled когда поле пустое', () => {
-      render(<DialogInput isPending={false} onSend={vi.fn()} />);
+      render(<DialogInput projectId={1} isPending={false} onSend={vi.fn()} />);
 
       const button = screen.getByTestId('dialog-panel-button-send');
       expect(button).toBeDisabled();
     });
 
     it('должен быть disabled когда введены только пробелы', () => {
-      render(<DialogInput isPending={false} onSend={vi.fn()} />);
+      render(<DialogInput projectId={1} isPending={false} onSend={vi.fn()} />);
 
       const input = screen.getByTestId('compact-inline-editor');
       fireEvent.change(input, { target: { value: '   ' } });
@@ -191,7 +192,7 @@ describe('DialogInput', () => {
     });
 
     it('должен быть enabled когда есть текст', () => {
-      render(<DialogInput isPending={false} onSend={vi.fn()} />);
+      render(<DialogInput projectId={1} isPending={false} onSend={vi.fn()} />);
 
       const input = screen.getByTestId('compact-inline-editor');
       fireEvent.change(input, { target: { value: 'Текст' } });
@@ -201,7 +202,7 @@ describe('DialogInput', () => {
     });
 
     it('должен быть disabled когда isPending=true', () => {
-      render(<DialogInput isPending={true} onSend={vi.fn()} />);
+      render(<DialogInput projectId={1} isPending={true} onSend={vi.fn()} />);
 
       const input = screen.getByTestId('compact-inline-editor');
       fireEvent.change(input, { target: { value: 'Текст' } });
@@ -213,37 +214,37 @@ describe('DialogInput', () => {
 
   describe('Отображение иконки загрузки', () => {
     it('должен показывать иконку загрузки когда isPending=true', () => {
-      render(<DialogInput isPending={true} onSend={vi.fn()} />);
+      render(<DialogInput projectId={1} isPending={true} onSend={vi.fn()} />);
 
       expect(screen.getByTestId('refresh-cw-icon')).toBeInTheDocument();
     });
 
     it('не должен показывать иконку загрузки когда isPending=false', () => {
-      render(<DialogInput isPending={false} onSend={vi.fn()} />);
+      render(<DialogInput projectId={1} isPending={false} onSend={vi.fn()} />);
 
       expect(screen.queryByTestId('refresh-cw-icon')).not.toBeInTheDocument();
     });
 
     it('должен показывать иконку отправки когда isPending=false', () => {
-      render(<DialogInput isPending={false} onSend={vi.fn()} />);
+      render(<DialogInput projectId={1} isPending={false} onSend={vi.fn()} />);
 
       expect(screen.getByTestId('send-icon')).toBeInTheDocument();
     });
 
     it('не должен показывать иконку отправки когда isPending=true', () => {
-      render(<DialogInput isPending={true} onSend={vi.fn()} />);
+      render(<DialogInput projectId={1} isPending={true} onSend={vi.fn()} />);
 
       expect(screen.queryByTestId('send-icon')).not.toBeInTheDocument();
     });
 
     it('должен показывать текст "Отправить" когда isPending=false', () => {
-      render(<DialogInput isPending={false} onSend={vi.fn()} />);
+      render(<DialogInput projectId={1} isPending={false} onSend={vi.fn()} />);
 
       expect(screen.getByText('Отправить')).toBeInTheDocument();
     });
 
     it('не должен показывать текст "Отправить" когда isPending=true', () => {
-      render(<DialogInput isPending={true} onSend={vi.fn()} />);
+      render(<DialogInput projectId={1} isPending={true} onSend={vi.fn()} />);
 
       expect(screen.queryByText('Отправить')).not.toBeInTheDocument();
     });
@@ -251,7 +252,7 @@ describe('DialogInput', () => {
 
   describe('Стили кнопки', () => {
     it('должен иметь size="sm"', () => {
-      render(<DialogInput isPending={false} onSend={vi.fn()} />);
+      render(<DialogInput projectId={1} isPending={false} onSend={vi.fn()} />);
 
       const button = screen.getByTestId('dialog-panel-button-send');
       expect(button).toHaveAttribute('data-size', 'sm');
@@ -260,21 +261,21 @@ describe('DialogInput', () => {
 
   describe('Flex контейнер кнопки', () => {
     it('должен иметь flex контейнер для кнопки', () => {
-      const { container } = render(<DialogInput isPending={false} onSend={vi.fn()} />);
+      const { container } = render(<DialogInput projectId={1} isPending={false} onSend={vi.fn()} />);
 
       const flexContainer = container.querySelector('.flex');
       expect(flexContainer).toBeInTheDocument();
     });
 
     it('должен иметь justify-between', () => {
-      const { container } = render(<DialogInput isPending={false} onSend={vi.fn()} />);
+      const { container } = render(<DialogInput projectId={1} isPending={false} onSend={vi.fn()} />);
 
       const flexContainer = container.querySelector('.flex');
       expect(flexContainer).toHaveClass('justify-between');
     });
 
     it('должен иметь items-center', () => {
-      const { container } = render(<DialogInput isPending={false} onSend={vi.fn()} />);
+      const { container } = render(<DialogInput projectId={1} isPending={false} onSend={vi.fn()} />);
 
       const flexContainer = container.querySelector('.flex');
       expect(flexContainer).toHaveClass('items-center');

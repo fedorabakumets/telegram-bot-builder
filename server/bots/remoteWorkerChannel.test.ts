@@ -77,7 +77,7 @@ describe("RemoteWorkerChannel", () => {
     let signal: string | null = null;
     channel.on("exit", (_c, s) => (signal = s));
     channel.kill();
-    assert.strictEqual(hub.sent.at(-1)?.k, "kill");
+    assert.strictEqual(hub.sent[hub.sent.length - 1]?.k, "kill");
     t.mock.timers.tick(5_000);
     assert.strictEqual(signal, "SIGKILL");
   });

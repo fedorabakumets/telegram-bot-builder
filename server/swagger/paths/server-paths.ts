@@ -15,12 +15,12 @@ import {
 /**
  * Регистрирует paths группы server.
  * @param registry - Реестр zod-to-openapi
- * @param cookieSecurity - Security cookie сессии
+ * @param cookieSecurity - Допустимые способы авторизации
  * @returns void
  */
 export function registerServerPaths(
   registry: OpenAPIRegistry,
-  cookieSecurity: Array<{ cookieAuth: string[] }>,
+  cookieSecurity: Record<string, string[]>[],
 ): void {
   const denylist =
     `${SERVER_ENV_DENY_EXACT.join(", ")}; имена с префиксами ${SERVER_ENV_DENY_PREFIXES.map((p) => `${p}*`).join(", ")}; ` +

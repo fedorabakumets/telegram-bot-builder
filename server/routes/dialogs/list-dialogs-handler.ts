@@ -33,7 +33,7 @@ export async function listDialogsHandler(req: Request, res: Response): Promise<v
         created_at: row.last_message.created_at ? new Date(row.last_message.created_at).toISOString() : null } : null,
     }));
     const hasMore = result.rows.length > limit;
-    const last = dialogs.at(-1);
+    const last = dialogs[dialogs.length - 1];
     const next = hasMore && last ? encodeDialogCursor({ scope: query.scope,
       time: last.last_activity_at ? new Date(last.last_activity_at).toISOString() : null,
       type: last.chat_type, id: last.chat_id }) : null;

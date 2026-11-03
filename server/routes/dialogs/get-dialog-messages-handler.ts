@@ -31,7 +31,7 @@ export async function getDialogMessagesHandler(req: Request, res: Response): Pro
     }
     const { rows } = await pool.query(query.sql, query.values);
     const selected = rows.slice(0, limit).map(mapDialogMessage);
-    const last = selected.at(-1);
+    const last = selected[selected.length - 1];
     const hasMore = rows.length > limit;
     const cursor = hasMore && last ? encodeMessageCursor({ scope: query.scope,
       time: last.created_at, id: last.id as number }) : null;

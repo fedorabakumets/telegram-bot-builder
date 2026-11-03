@@ -252,7 +252,7 @@ async function sendMediaMessage(
           'Content-Length': body.length.toString(),
         },
         signal: AbortSignal.timeout(30000),
-        body,
+        body: new Uint8Array(body),
       });
     } else {
       // Внешний URL или Telegram file_id — передаём как строку в JSON

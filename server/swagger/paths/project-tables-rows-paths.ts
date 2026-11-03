@@ -9,7 +9,6 @@ import { DatabaseCookiesSchema, DatabaseAuthHeadersSchema } from "../schemas/dat
 import { TableIdParamsSchema } from "../schemas/project-tables-params";
 import {
   BotTableRowListSchema,
-  BotTableRowSchema,
   CreateBotTableRowsBodySchema,
 } from "../schemas/project-tables-rows";
 import { PROJECT_TABLES_AUTH_ERRORS } from "./project-tables-errors";

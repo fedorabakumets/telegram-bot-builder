@@ -2,7 +2,6 @@
  * @fileoverview Адаптивная шапка редактора. Узкая шапка прокручивается по горизонтали.
  */
 
-import { useIsMobile } from '@/components/editor/header/hooks/use-mobile';
 import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
 import { useTelegramLogin } from '@/components/editor/header/hooks/use-telegram-login';
 import { useTelegramAuthListener } from '@/components/editor/header/hooks/use-telegram-auth-listener';
@@ -10,9 +9,6 @@ import type { AdaptiveHeaderProps } from './types';
 import { Navigation } from './components/navigation';
 import { DesktopActionsFull } from './components/desktop-actions-full';
 import { Separator } from './components/separator';
-import { MobileHeaderControls } from './components/mobile-header-controls';
-import { MobileMenu } from './components/mobile-menu';
-import { Logo } from './components/logo';
 import { ProjectSwitcher } from './components/project-switcher';
 import { ProjectArchiveBadge } from './components/project-archive-badge';
 import { EditorLearnButton } from '@/components/editor/canvas/learn';
@@ -21,7 +17,6 @@ import { requestEditorLearn, useEditorLearnActive } from '@/components/editor/ca
 export function AdaptiveHeader({
   config,
   projectName,
-  botInfo,
   projects,
   currentProjectId,
   onProjectChange,
@@ -42,8 +37,6 @@ export function AdaptiveHeader({
   canvasVisible,
   codeVisible,
   codeEditorVisible,
-  onOpenMobileSidebar,
-  onOpenMobileProperties,
   isCurrentProjectArchived = false,
   onUnarchiveCurrentProject,
   isUnarchivePending = false,
@@ -56,8 +49,6 @@ export function AdaptiveHeader({
 
   // Подключаем listener postMessage один раз на верхнем уровне
   useTelegramAuthListener();
-  // Определяем мобильное устройство
-  const isMobile = useIsMobile();
   const learnActive = useEditorLearnActive();
 
   // Определяем ориентацию заголовка

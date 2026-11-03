@@ -13,7 +13,7 @@ export interface AnalyticsSnapshotRefresh {
 export const AnalyticsSnapshotRefreshContext = createContext<AnalyticsSnapshotRefresh | null>(null);
 
 /** Показывает отдельное обновление таблицы без плавающей кнопки периода. @param props - Состояние и открытие графика. @returns Кнопки и ошибка отдельного обновления. */
-export function AnalyticsChartActions({ open, triggerRef, expanded = false, title }: { /** Открывает увеличенный график. */ open: () => void; /** Возврат фокуса. */ triggerRef: RefObject<HTMLButtonElement>; /** График открыт в окне. */ expanded?: boolean; /** Название карточки графика. */ title?: string }) {
+export function AnalyticsChartActions({ expanded = false }: { /** Открывает увеличенный график. */ open: () => void; /** Возврат фокуса. */ triggerRef: RefObject<HTMLButtonElement>; /** График открыт в окне. */ expanded?: boolean; /** Название карточки графика. */ title?: string }) {
   const refresh = useContext(AnalyticsSnapshotRefreshContext);
   /** Общий снимок обновляется из шапки вкладки, без повторной кнопки в каждой карточке. */
   const showRefresh = !!refresh && (!!refresh.label || expanded);

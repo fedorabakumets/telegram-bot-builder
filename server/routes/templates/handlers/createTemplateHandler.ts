@@ -24,6 +24,7 @@ export async function createTemplateHandler(req: Request, res: Response): Promis
     const validated = createBotTemplateBodySchema.parse(req.body);
     const template = await storage.createBotTemplate({
       ...validated,
+      data: validated.data,
       ownerId,
       isPublic: validated.isPublic ?? 0,
       featured: 0,

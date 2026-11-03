@@ -3,7 +3,7 @@
  * @module server/bots/restoreRunningBots.test
  */
 
-import { describe, it, mock, beforeEach } from 'node:test';
+import { describe, it } from 'node:test';
 import assert from 'node:assert';
 
 /** Маркер, который graceful-shutdown записывает в errorMessage */

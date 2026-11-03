@@ -6,8 +6,7 @@
 import assert from 'node:assert/strict';
 import { maskBotToken, toPublicBotToken, toPublicBotInstance, isMaskedOrPlaceholderToken } from '../../server/routes/botTokens/to-public-bot-token.ts';
 import { selectCurrentAndPast } from '../../client/components/editor/bot/card/select-current-launch.ts';
-import type { BotToken } from '../../shared/schema/index.ts';
-import type { BotLaunchHistory } from '../../shared/schema/index.ts';
+import type { BotToken, BotLaunchHistory } from '../../shared/schema.ts';
 /**
  * Маска токена не содержит секрет после двоеточия
  */

@@ -53,7 +53,7 @@ function loadTemplateFromFile(fileName: string): { template: InsertBotTemplate; 
   const raw = readFileSync(filePath, "utf8");
   const hash = computeHash(raw);
   const template = insertBotTemplateSchema.parse(JSON.parse(raw));
-  return { template, hash };
+  return { template: { ...template, data: template.data }, hash };
 }
 
 /**

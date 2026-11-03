@@ -5,7 +5,7 @@
  * холста и панели свойств в компоненте Canvas.
  */
 
-import { Navigation, Sidebar, Sliders, Monitor } from 'lucide-react';
+import { Navigation, Sidebar, Sliders } from 'lucide-react';
 
 /**
  * Свойства компонента кнопок управления интерфейсом
@@ -38,11 +38,9 @@ interface InterfaceTogglesProps {
 export function InterfaceToggles({
   headerVisible,
   sidebarVisible,
-  canvasVisible,
   propertiesVisible,
   onToggleHeader,
   onToggleSidebar,
-  onToggleCanvas,
   onToggleProperties
 }: InterfaceTogglesProps) {
   /**
