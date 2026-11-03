@@ -31,7 +31,7 @@
       "bot-json-prompt"
     ],
     "folder_titles": {},
-    "updated_at": "2026-11-02T09:05:40+03:00",
+    "updated_at": "2026-11-03T05:23:21+03:00",
     "tags": [],
     "author": ""
   },
@@ -50,7 +50,7 @@
   {
     "path": "api/README",
     "title": "Telegram Bot Builder API — API Reference",
-    "excerpt": "<!--",
+    "excerpt": "REST API визуального конструктора Telegram-ботов. Авторизация: сессионная cookie или Bearer PAT. Документация: /admin (вход по ADMIN_API_KEY",
     "parts": [
       "api",
       "README"
@@ -58,7 +58,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-11-02T08:24:35+03:00",
+    "updated_at": "2026-11-02T21:03:32Z",
     "tags": [],
     "author": ""
   },
@@ -123,24 +123,9 @@
     "author": ""
   },
   {
-    "path": "api/analytics-v2-guide",
-    "title": "Аналитика v2: API и данные",
-    "excerpt": "<!--",
-    "parts": [
-      "api",
-      "analytics-v2-guide"
-    ],
-    "folder_titles": {
-      "api": "Api"
-    },
-    "updated_at": "2026-11-02T20:47:50+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
     "path": "api/analytics-v2",
-    "title": "API аналитики v2",
-    "excerpt": "<!--",
+    "title": "analytics-v2",
+    "excerpt": "Эндпоинтов: **21**",
     "parts": [
       "api",
       "analytics-v2"
@@ -148,7 +133,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-11-02T22:32:18+03:00",
+    "updated_at": "2026-11-02T21:03:32Z",
     "tags": [],
     "author": ""
   },
@@ -380,7 +365,7 @@
   {
     "path": "api/project-messages",
     "title": "project-messages",
-    "excerpt": "Эндпоинтов: **4**",
+    "excerpt": "Эндпоинтов: **5**",
     "parts": [
       "api",
       "project-messages"
@@ -388,14 +373,14 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-08-14T18:47:54+03:00",
+    "updated_at": "2026-11-02T21:03:32Z",
     "tags": [],
     "author": ""
   },
   {
     "path": "api/project-tables",
     "title": "project-tables",
-    "excerpt": "Эндпоинтов: **27**",
+    "excerpt": "Эндпоинтов: **29**",
     "parts": [
       "api",
       "project-tables"
@@ -403,7 +388,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-10-13T04:39:01Z",
+    "updated_at": "2026-11-02T21:03:32Z",
     "tags": [],
     "author": ""
   },
@@ -455,7 +440,7 @@
   {
     "path": "api/projects",
     "title": "projects",
-    "excerpt": "Эндпоинтов: **23**",
+    "excerpt": "Эндпоинтов: **24**",
     "parts": [
       "api",
       "projects"
@@ -463,7 +448,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-10-15T08:19:31Z",
+    "updated_at": "2026-11-02T21:03:32Z",
     "tags": [],
     "author": ""
   },
@@ -613,7 +598,7 @@
     "folder_titles": {
       "database": "Database"
     },
-    "updated_at": "2026-10-31T21:27:30+03:00",
+    "updated_at": "2026-11-02T21:03:32Z",
     "tags": [],
     "author": ""
   },
@@ -808,7 +793,7 @@
     "folder_titles": {
       "database": "Database"
     },
-    "updated_at": "2026-07-04T19:19:59+03:00",
+    "updated_at": "2026-11-02T21:03:32Z",
     "tags": [],
     "author": ""
   },
@@ -1513,7 +1498,7 @@
     "folder_titles": {
       "features": "🧩 Возможности"
     },
-    "updated_at": "2026-11-02T09:05:40+03:00",
+    "updated_at": "2026-11-03T05:23:21+03:00",
     "tags": [],
     "author": ""
   },
@@ -3955,7 +3940,7 @@
       "mcp": "🤖 MCP-конструктор",
       "nodes": "Nodes"
     },
-    "updated_at": "2026-10-25T20:07:55+03:00",
+    "updated_at": "2026-11-03T05:07:23+03:00",
     "tags": [],
     "author": ""
   },
