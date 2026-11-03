@@ -14,7 +14,7 @@ import type { BotData, BotDataWithSheets } from '@shared/schema';
 /** Минимальные данные бота в старом формате */
 function makeLegacyData(withNodes = false): BotData {
   if (!withNodes) {
-    return { nodes: [], connections: [] };
+    return { nodes: [] };
   }
   return {
     nodes: [
@@ -25,7 +25,6 @@ function makeLegacyData(withNodes = false): BotData {
         data: {} as any,
       },
     ],
-    connections: [],
   };
 }
 
@@ -279,15 +278,14 @@ describe('SheetsManager.validateData', () => {
 describe('SheetsManager.toLegacyFormat', () => {
   it('конвертирует в старый формат', () => {
     const data = makeProjectData();
+    data.sheets[0].nodes = makeLegacyData(true).nodes;
     const legacy = SheetsManager.toLegacyFormat(data);
-    expect(Array.isArray(legacy.nodes)).toBe(true);
-    expect(Array.isArray(legacy.connections)).toBe(true);
+    expect(legacy.nodes).toEqual(data.sheets[0].nodes);
   });
 
-  it('возвращает пустые массивы если нет листов', () => {
+  it('возвращает пустой список узлов если нет листов', () => {
     const data = { sheets: [], activeSheetId: undefined, version: 2 as const };
     const legacy = SheetsManager.toLegacyFormat(data);
     expect(legacy.nodes).toHaveLength(0);
-    expect(legacy.connections).toHaveLength(0);
   });
 });

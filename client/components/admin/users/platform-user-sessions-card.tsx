@@ -32,7 +32,7 @@ export function PlatformUserSessionsCard({ userId, sessions }: PlatformUserSessi
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['/admin/api/users', userId] }),
   });
   const revokeAll = () => {
-    if (window.confirm('Завершить все сессии этого аккаунта?')) revokeMutation.mutate();
+    if (window.confirm('Завершить все сессии этого аккаунта?')) revokeMutation.mutate(undefined);
   };
   return (
     <Card>

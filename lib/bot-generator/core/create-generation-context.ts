@@ -7,7 +7,7 @@
  * @module bot-generator/core/create-generation-context
  */
 
-import type { BotData, BotGroup } from '@shared/schema';
+import type { BotData, BotDataWithSheets, BotGroup } from '@shared/schema';
 import type { EnhancedNode } from '../types/enhanced-node.types';
 import type { GenerationOptions } from './generation-options.types';
 import type { GenerationContext } from './generation-context';
@@ -43,13 +43,13 @@ function extractAllNodeIds(nodes: EnhancedNode[]): string[] {
  * const context = createGenerationContext(botData, 'MyBot', groups, options);
  */
 export function createGenerationContext(
-  botData: BotData,
+  botData: BotData | BotDataWithSheets,
   botName: string,
   groups: BotGroup[],
   options: GenerationOptions
 ): GenerationContext {
   // Используем extractNodesAndConnections для поддержки как nodes[], так и sheets[]
-  const { nodes: rawNodes, connections } = extractNodesAndConnections(botData as any);
+  const { nodes: rawNodes, connections } = extractNodesAndConnections(botData);
   const normalizedNodes = normalizeKeyboardBindings(rawNodes, connections);
   const nodes = toEnhancedNodes(normalizedNodes);
   const allNodeIds = extractAllNodeIds(nodes);

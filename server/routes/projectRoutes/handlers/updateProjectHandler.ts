@@ -17,6 +17,7 @@ import { restartAllRunningBots } from "../../../bots/restartAllRunningBots";
 import { syncContentToTable } from "../../../services/content-table";
 import { getOwnerIdFromRequest } from "../../../telegram/auth-middleware";
 import { broadcastAgentCanvasUpdate } from "../../../canvas/broadcastAgentCanvasUpdate";
+import { parseAgentCanvasData } from "../../../canvas/parse-agent-canvas-data";
 import { broadcastProjectsChangedToUsers } from "../../../terminal/broadcastProjectsChanged";
 import { getProjectMemberIds } from "../../../terminal/resolveProjectMembers";
 
@@ -122,10 +123,15 @@ export async function updateProjectHandler(req: Request, res: Response): Promise
             // с actor.kind='agent' (без пометки «несохранённые изменения» на клиенте).
             if (req.body?.agentEdit === true) {
                 try {
-                    broadcastAgentCanvasUpdate(projectId, validatedData.data, {
-                        sessionId: req.body.agentSessionId,
-                        displayName: req.body.agentDisplayName,
-                    });
+                    const canvasData = parseAgentCanvasData(validatedData.data);
+                    if (canvasData) {
+                        broadcastAgentCanvasUpdate(projectId, canvasData, {
+                            sessionId: req.body.agentSessionId,
+                            displayName: req.body.agentDisplayName,
+                        });
+                    } else {
+                        console.warn(`[updateProjectHandler] Некорректный снимок холста для проекта ${projectId}`);
+                    }
                 } catch (err) {
                     console.error(`[updateProjectHandler] Ошибка broadcast canvas-sync для проекта ${projectId}:`, err);
                 }

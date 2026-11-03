@@ -31,4 +31,12 @@ export interface ImportsTemplateParams {
   hasLocalMediaFiles?: boolean;
   /** Есть ли команды бота */
   hasBotCommands?: boolean;
+  /** Есть ли узлы пользовательского Telegram-клиента. */
+  hasUserbotNodes?: boolean;
+  /** Есть ли узлы подсчёта частоты. */
+  hasRateCounterNodes?: boolean;
+  /** Есть ли узлы отправки счёта. */
+  hasSendInvoiceNodes?: boolean;
+  /** Есть ли таймаут ожидания ввода. */
+  hasInputTimeoutNodes?: boolean;
 }

@@ -95,6 +95,8 @@ export const nodeSchema = z.object({
     mediaCaption: z.string().optional(),
     /** Тип клавиатуры: "reply" — reply-клавиатура, "inline" — inline-кнопки, "none" — без клавиатуры */
     keyboardType: z.enum(['reply', 'inline', 'none']).default('none'),
+    /** Идентификатор отдельной ноды клавиатуры, связанной с сообщением. */
+    keyboardNodeId: z.string().optional(),
     /** Массив кнопок клавиатуры */
     buttons: z.array(buttonSchema).default([]),
     /** Перемешивать порядок inline-кнопок при каждом показе */

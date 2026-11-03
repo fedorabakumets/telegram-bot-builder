@@ -1,5 +1,6 @@
+/** @fileoverview Генерация Python-кода бота из данных проекта. */
 // Внешние зависимости
-import { BotData, BotGroup, Node } from '@shared/schema';
+import { BotData, BotDataWithSheets, BotGroup, Node } from '@shared/schema';
 
 // Ядро: контекст и состояние
 import { createGenerationContext } from './bot-generator/core/create-generation-context';
@@ -213,7 +214,7 @@ interface CodeSections {
  * Создаёт контекст генерации из данных бота и опций
  */
 function buildGenerationContext(
-  botData: BotData,
+  botData: BotData | BotDataWithSheets,
   options: GeneratePythonCodeOptions
 ): { context: GenerationContext; genOptions: GenerationOptions } {
   const {
@@ -297,7 +298,6 @@ function generateCodeSections(
       hasReplyKeyboard: flags.hasReplyKeyboardResult,
       hasLocalMediaFiles: flags.hasLocalMediaFilesResult,
       hasBotCommands: flags.hasBotCommandsResult,
-      hasDeepLinkTriggers: flags.hasDeepLinkTriggersResult,
       hasUserbotNodes: flags.hasUserbotNodesResult,
       hasRateCounterNodes: flags.hasRateCounterNodesResult,
       hasSendInvoiceNodes: flags.hasSendInvoiceNodesResult,
@@ -812,7 +812,7 @@ function assembleAndValidate(
  * const code = generatePythonCode(botData, { botName: 'MyBot', enableLogging: true });
  */
 export function generatePythonCode(
-  botData: BotData,
+  botData: BotData | BotDataWithSheets,
   options: GeneratePythonCodeOptions = {}
 ): string {
   const { context } = buildGenerationContext(botData, options);

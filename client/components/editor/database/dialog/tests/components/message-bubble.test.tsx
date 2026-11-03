@@ -13,7 +13,7 @@
 import { render, screen } from '@testing-library/react';
 import { MessageBubble } from '../../components/message-bubble';
 import type { BotMessageWithMedia } from '../../types';
-import type { UserBotData } from '@shared/schema';
+import type { UserBotData } from '@/types/bot';
 
 /**
  * Создаёт тестовое сообщение
@@ -23,6 +23,10 @@ function createTestMessage(overrides: Partial<BotMessageWithMedia> = {}): BotMes
     id: 1,
     createdAt: new Date('2024-03-14T10:30:00Z'),
     projectId: 1,
+    tokenId: 1,
+    chatId: null,
+    chatType: 'private',
+    telegramMessageId: null,
     userId: '123',
     messageType: 'bot',
     messageText: 'Test message',
@@ -43,7 +47,7 @@ function createTestUser(overrides: Partial<UserBotData> = {}): UserBotData {
     lastName: 'Иванов',
     userName: 'ivanov',
     ...overrides,
-  } as UserBotData;
+  };
 }
 
 describe('MessageBubble', () => {
@@ -83,7 +87,7 @@ describe('MessageBubble', () => {
       expect(screen.getByText('User message')).toBeInTheDocument();
     });
 
-    it('должен применять класс justify-end для сообщений пользователя', () => {
+    it('должен располагать сообщения пользователя слева', () => {
       const message = createTestMessage({ messageType: 'user' });
       
       const { container } = render(
@@ -94,10 +98,10 @@ describe('MessageBubble', () => {
         />
       );
       
-      expect(container.querySelector('.justify-end')).toBeInTheDocument();
+      expect(container.querySelector('.justify-start')).toBeInTheDocument();
     });
 
-    it('должен применять класс justify-start для сообщений бота', () => {
+    it('должен располагать сообщения бота справа', () => {
       const message = createTestMessage({ messageType: 'bot' });
       
       const { container } = render(
@@ -108,7 +112,7 @@ describe('MessageBubble', () => {
         />
       );
       
-      expect(container.querySelector('.justify-start')).toBeInTheDocument();
+      expect(container.querySelector('.justify-end')).toBeInTheDocument();
     });
   });
 
@@ -140,8 +144,8 @@ describe('MessageBubble', () => {
         />
       );
       
-      expect(screen.getByText('Жирный')).toHaveClass('font-bold');
-      expect(screen.getByText('текст')).toHaveClass('italic');
+      expect(screen.getByText('Жирный').closest('strong')).toHaveClass('font-bold');
+      expect(screen.getByText('текст').closest('em')).toHaveClass('italic');
     });
 
     it('должен обрабатывать null текст', () => {
@@ -367,9 +371,9 @@ describe('MessageBubble', () => {
         />
       );
 
-      // Проверяем что аватар присутствует (иконка пользователя)
-      const userIcon = screen.getByTestId('dialog-message-user-0').querySelector('.lucide-user');
-      expect(userIcon).toBeInTheDocument();
+      // Аватар пользователя загружается через прокси проекта.
+      const avatar = screen.getByRole('img', { name: 'User avatar' });
+      expect(avatar).toHaveAttribute('src', '/api/projects/1/users/123/avatar?tokenId=1');
     });
   });
 

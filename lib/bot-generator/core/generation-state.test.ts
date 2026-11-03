@@ -172,13 +172,14 @@ describe('pipeline — emitOnce предотвращает дублирован�
     assert.strictEqual(count, 1, `Ожидалось 1, найдено ${count}`);
   });
 
-  it('Dispatcher() инициализируется ровно 1 раз', () => {
+  it('Dispatcher с хранилищем инициализируется ровно 1 раз', () => {
     const code = generatePythonCode(makeMinimalBotData(), {
       botName: 'TestBot',
       userDatabaseEnabled: true,
     });
-    const count = countOccurrences(code, 'dp = Dispatcher()');
+    const count = countOccurrences(code, 'dp = Dispatcher(');
     assert.strictEqual(count, 1, `Ожидалось 1, найдено ${count}`);
+    assert.ok(code.includes('dp = Dispatcher(storage=PostgresStorage())'));
   });
 
   it('init_database определена ровно 1 раз при userDatabaseEnabled=true', () => {

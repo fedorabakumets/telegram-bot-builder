@@ -15,7 +15,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { DialogHeader } from '../../components/dialog-header';
-import type { UserBotData } from '@shared/schema';
+import type { UserBotData } from '@/types/bot';
 
 // Мокируем UI компоненты
 vi.mock('@/components/ui/button', () => ({
@@ -67,7 +67,7 @@ function createTestUser(overrides: Partial<UserBotData> = {}): UserBotData {
     lastName: 'Иванов',
     userName: 'ivanov',
     ...overrides,
-  } as UserBotData;
+  };
 }
 
 /**

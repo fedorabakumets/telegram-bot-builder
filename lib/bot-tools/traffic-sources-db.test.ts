@@ -66,13 +66,13 @@ describe('Источники трафика', () => {
     expect(new Headers(fetchMock.mock.calls[0][1].headers).get('Authorization')).toBe('Bearer request-token');
   });
   it.each([
-    [points[0], points[0]],
-    [{ date: 'invalid', sources: {} }],
-    [{ date: points[0].date, sources: { bad: -1 } }],
-    Array.from({ length: 501 }, () => points[0]),
-    [{ date: points[0].date, sources: { ['a'.repeat(257)]: 1 } }],
-    [{ date: points[0].date, sources: { huge: Number.MAX_SAFE_INTEGER, overflow: 1 } }],
-  ])('отклоняет повреждённые и слишком большие ряды', async raw => {
+    { raw: [points[0], points[0]] },
+    { raw: [{ date: 'invalid', sources: {} }] },
+    { raw: [{ date: points[0].date, sources: { bad: -1 } }] },
+    { raw: Array.from({ length: 501 }, () => points[0]) },
+    { raw: [{ date: points[0].date, sources: { ['a'.repeat(257)]: 1 } }] },
+    { raw: [{ date: points[0].date, sources: { huge: Number.MAX_SAFE_INTEGER, overflow: 1 } }] },
+  ])('отклоняет повреждённые и слишком большие ряды', async ({ raw }) => {
     fetchMock.mockResolvedValue(Response.json(raw));
     expect(await getTrafficSourcesChartInDb(289)).toHaveProperty('error');
   });

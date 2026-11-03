@@ -62,7 +62,7 @@ export function ActiveSessionsCard() {
 
   /** Завершает все сессии кроме текущей после подтверждения */
   const revokeOthers = () => {
-    if (window.confirm('Завершить все остальные сессии?')) revokeMutation.mutate();
+    if (window.confirm('Завершить все остальные сессии?')) revokeMutation.mutate(undefined);
   };
 
   return (

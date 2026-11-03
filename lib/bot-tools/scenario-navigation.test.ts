@@ -61,7 +61,7 @@ function makeProject(): BotDataWithSheets {
         },
       ],
     }],
-  } as BotDataWithSheets;
+  } as unknown as BotDataWithSheets;
 }
 
 describe('анализ навигации сценария', () => {

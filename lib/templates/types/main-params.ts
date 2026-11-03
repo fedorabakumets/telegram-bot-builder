@@ -23,6 +23,8 @@ export interface MainTemplateParams {
   hasScheduleTrigger?: boolean;
   /** Есть ли api_trigger ноды (HTTP-сервер на WEBHOOK_PORT) */
   hasApiTrigger?: boolean;
+  /** Есть ли узлы пользовательского Telegram-клиента. */
+  hasUserbotNodes?: boolean;
   /** URL вебхука (если задан — включается webhook режим) */
   webhookUrl?: string | null;
   /** Порт aiohttp сервера для webhook режима */

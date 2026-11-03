@@ -42,7 +42,7 @@ describe('mcp-request-context / apiFetch', () => {
   });
 
   it('apiFetch ставит Authorization из ALS', async () => {
-    const fetchMock = vi.fn(async () => new Response('{}', { status: 200 }));
+    const fetchMock = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) => new Response('{}', { status: 200 }));
     vi.stubGlobal('fetch', fetchMock);
 
     await runWithMcpToken('mcp_req', async () => {
