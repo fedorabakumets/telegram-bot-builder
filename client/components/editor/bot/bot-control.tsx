@@ -222,6 +222,7 @@ export function BotControl({ projectId, onBotStarted, onBotStopped, onBotDeleted
     const status = allBotStatuses.find(
       s => s.tokenId === token.id || s.instance?.tokenId === token.id,
     );
+    if (status?.frozen) return <Badge variant="destructive">Заморожен</Badge>;
     if (status?.status === 'running') {
       return (
         <Badge variant="default" className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border-green-200 dark:border-green-800">
