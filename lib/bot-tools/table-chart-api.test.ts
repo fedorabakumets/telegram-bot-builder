@@ -1,8 +1,12 @@
 /** @fileoverview Проверка отказа в доступе и параметров маршрута графика. */
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { fetch as nodeFetch } from 'undici';
 import express from 'express';
 import type { Pool } from 'pg';
 import { setupTableChartRoutes } from '../../server/routes/tables/chart/setup-table-chart-routes';
+/** Использует настоящий транспорт только для изолированного локального HTTP-сервера. */
+beforeEach(() => vi.stubGlobal('fetch', nodeFetch));
+afterEach(() => vi.unstubAllGlobals());
 
 /**
  * Поднимает маршрут на свободном порту.

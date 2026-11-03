@@ -33,8 +33,9 @@ export async function deleteProjectVersionHandler(req: Request, res: Response): 
         }
 
         const deleted = await storage.deleteProjectVersion(projectId, versionId);
-        broadcastVersionsChanged(projectId);
-        res.json({ deleted });
+        if (!deleted) { res.status(404).json({ message: "Версия уже удалена" }); return; }
+        try { broadcastVersionsChanged(projectId); } catch { /* Уведомление не отменяет сохранённое удаление. */ }
+        res.json({ deleted, effect: "application", outcome: "saved", persistence: { confirmed: true, method: "returning", projectId, versionId } });
     } catch (error) {
         console.error("Ошибка удаления версии проекта:", error);
         res.status(500).json({ message: "Не удалось удалить версию проекта", error: (error as Error).message });

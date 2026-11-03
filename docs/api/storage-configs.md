@@ -18,6 +18,8 @@
 
 **Авторизация:** cookie или Bearer PAT. Клиент: `useStorageConfigs`.
 
+**Operation ID:** `get_api_storage_configs_58100e4e7095eb86`
+
 #### Ответы
 
 | Код | Описание |
@@ -71,6 +73,8 @@
 
 После успеха — `StorageRegistry.reload()`. **Не отдаёт** ключи и `secretsEnc`.
 
+**Operation ID:** `post_api_storage_configs_12898e229f0e3b8e`
+
 **Тело запроса:** `CreateStorageConfigRequest`
 
 #### Пример тела запроса
@@ -107,6 +111,8 @@
 
 **Отдаёт:** `{ ok: true, id }`. Объекты на диске/S3 этим вызовом не удаляются.
 
+**Operation ID:** `delete_api_storage_configs_id_895c44036f1fa07c`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -136,6 +142,8 @@
 **Креды:** пара ключей перешифровывается; без полей — старые секреты не трогаются.
 
 **Отдаёт** DTO без секретов. После успеха — `StorageRegistry.reload()`.
+
+**Operation ID:** `patch_api_storage_configs_id_c07228c69ecf3099`
 
 **Тело запроса:** `UpdateStorageConfigRequest`
 
@@ -176,6 +184,8 @@ Connectivity-check **без** активации.
 
 **200** `{ ok: true, message }` · **400** `{ ok: false, message }` (без секретов).
 Активация — отдельно `PATCH` с `isActive: true`.
+
+**Operation ID:** `post_api_storage_configs_id_test_171f06405ec3071a`
 
 #### Параметры
 

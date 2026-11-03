@@ -7,6 +7,7 @@
  * @module botIntegration/handlers/messages/build-media-files
  */
 
+import { telegramFileReferenceSchema } from "../../../../../shared/schema/media-reference-contracts";
 import type { SendMediaFile } from "./extract-media";
 
 /**
@@ -37,22 +38,16 @@ export function buildMediaFiles(mediaUrls: string[], tokenId: number): SendMedia
     const url = mediaUrls[i];
 
     // Формат JSON file_id
-    if (url.startsWith('{"__type":"file_id"')) {
+    if (url.trimStart().startsWith('{')) {
       try {
-        const parsed = JSON.parse(url) as {
-          __type: string;
-          mediaType?: string;
-          fileIdsByToken?: Record<string, string>;
-        };
-        const fileIdsByToken = parsed.fileIdsByToken ?? {};
-        // Сначала ищем file_id для текущего токена, затем берём первый доступный
-        const fileId =
-          fileIdsByToken[String(tokenId)] ?? Object.values(fileIdsByToken)[0];
+        const parsed = telegramFileReferenceSchema.parse(JSON.parse(url));
+        const fileId = parsed.fileIdsByToken[String(tokenId)];
+        if (!fileId) throw new Error('Нет file_id выбранного бота');
         if (fileId) {
           result.push({ id: i, url: fileId, type: parsed.mediaType ?? 'photo' });
         }
       } catch {
-        console.warn(`[buildMediaFiles] Не удалось распарсить file_id: ${url.slice(0, 80)}`);
+        throw new Error("Недопустимая запись Telegram file_id");
       }
       continue;
     }

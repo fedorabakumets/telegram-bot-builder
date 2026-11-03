@@ -4,6 +4,7 @@
  */
 
 import type { Request, Response } from "express";
+import { updateUserDataBodySchema } from "../../../../shared/schema/user-data-contracts";
 import { pool as dbPool } from "../../../database/db";
 import { getRequestTokenId, resolveEffectiveProjectTokenId } from "../../utils/resolve-request-token";
 
@@ -28,11 +29,11 @@ export async function updateBotUserHandler(req: Request, res: Response): Promise
     const values: unknown[] = [];
     let paramIndex = 1;
 
-    if (req.body.isActive !== undefined) {
+    /** Общий контракт сохраняет совместимость старых значений 0/1. */
+    const body = updateUserDataBodySchema.safeParse({ isActive: req.body.isActive === 1 || req.body.isActive === true || req.body.isActive === "1" });
+    if (req.body.isActive !== undefined && body.success) {
       updateFields.push(`is_active = $${paramIndex++}`);
-      values.push(
-        req.body.isActive === 1 || req.body.isActive === true || req.body.isActive === "1" ? 1 : 0,
-      );
+      values.push(body.data.isActive ? 1 : 0);
     }
 
     if (updateFields.length === 0) {

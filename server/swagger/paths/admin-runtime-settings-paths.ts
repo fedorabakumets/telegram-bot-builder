@@ -8,6 +8,7 @@ import { z } from "zod";
 import { ADMIN_SECURITY, AdminCookiesSchema, AdminUnauthorizedSchema } from "../schemas/admin-common";
 import { ADMIN_CURL_LOGIN, ADMIN_UNAUTHORIZED_EXAMPLE } from "./admin-examples";
 import { registerAdminBackupTelegramPaths } from "./admin-backup-telegram-paths";
+import { MessageErrorSchema } from '../schemas/common';
 
 /** Поле раздела без секрета */
 const FieldSchema = z.object({
@@ -62,7 +63,8 @@ export function registerAdminRuntimeSettingsPaths(registry: OpenAPIRegistry): vo
     responses: {
       200: { description: "Поля и хранилища", content: { "application/json": { schema: GroupSchema } } },
       401: denied,
-      404: { description: "Неизвестный раздел" },
+      404: { description: "Неизвестный раздел", content: { 'application/json': { schema: MessageErrorSchema } } },
+      500: { description: 'Ошибка загрузки', content: { 'application/json': { schema: MessageErrorSchema } } },
     },
   });
   registry.registerPath({
@@ -85,7 +87,9 @@ export function registerAdminRuntimeSettingsPaths(registry: OpenAPIRegistry): vo
     },
     responses: {
       200: { description: "Сохранено", content: { "application/json": { schema: z.object({ ok: z.literal(true), warnings: z.array(z.string()) }) } } },
-      400: { description: "Публичное хранилище или неверное тело" },
+      400: { description: "Публичное хранилище или неверное тело", content: { 'application/json': { schema: MessageErrorSchema } } },
+      404: { description: 'Неизвестный раздел', content: { 'application/json': { schema: MessageErrorSchema } } },
+      500: { description: 'Ошибка сохранения', content: { 'application/json': { schema: MessageErrorSchema } } },
       401: denied,
     },
   });

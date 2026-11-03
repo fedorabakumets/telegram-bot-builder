@@ -13,6 +13,7 @@ import { isPublicApiPath } from "../middleware/requireApiAuth";
 import { buildOpenApiTags, collectApiRoutes } from "./collect-routes";
 import { documentedRegistry } from "./register-documented-paths";
 import { setupDocsUis } from "./setup-docs-uis";
+import { withStableOperationIds } from '../../lib/api-docs/operation-ids';
 
 export { DOCS_PATHS, SWAGGER_PATHS } from "./setup-docs-uis";
 
@@ -136,7 +137,8 @@ export function buildOpenApiDocument(app: Express): OpenApiDocument {
     info: base.info,
   });
 
-  return mergeDocumentedPaths(base, documented);
+  /** Назначает ID после слияния, чтобы детальная документация их не затёрла. */
+  return withStableOperationIds(mergeDocumentedPaths(base, documented));
 }
 
 /**

@@ -14,6 +14,8 @@
 curl -s -X DELETE http://localhost:5000/api/media/10 -b cookies.txt
 ```
 
+**Operation ID:** `delete_api_media_id_19c3cd63827c601d`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -40,6 +42,8 @@ curl -s -X DELETE http://localhost:5000/api/media/10 -b cookies.txt
 ```bash
 curl -s http://localhost:5000/api/media/10 -b cookies.txt
 ```
+
+**Operation ID:** `get_api_media_id_21beeb57c73216ab`
 
 #### Параметры
 
@@ -89,6 +93,8 @@ curl -s -X PUT http://localhost:5000/api/media/10 -b cookies.txt \
   -H 'Content-Type: application/json' -d '{"description":"cover"}'
 ```
 
+**Operation ID:** `put_api_media_id_770b51618f2aeccc`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -136,6 +142,8 @@ curl -s -X POST http://localhost:5000/api/media/10/file-id -b cookies.txt \
   -H 'Content-Type: application/json' -d '{"tokenId":7,"fileId":"AgAC…"}'
 ```
 
+**Operation ID:** `post_api_media_id_file_id_e4c37d8f2dbca16d`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -162,6 +170,8 @@ curl -s -X POST http://localhost:5000/api/media/10/file-id -b cookies.txt \
 ```bash
 curl -s -X POST http://localhost:5000/api/media/10/use -b cookies.txt
 ```
+
+**Operation ID:** `post_api_media_id_use_d1b6a2dd2dece99e`
 
 #### Параметры
 
@@ -190,6 +200,8 @@ Probe доступности/типа URL. SSRF ограничен `validateExte
 curl -s -X POST http://localhost:5000/api/media/check-url -b cookies.txt \
   -H 'Content-Type: application/json' -d '{"url":"https://example.com/a.jpg"}'
 ```
+
+**Operation ID:** `post_api_media_check_url_fc6a6ae4ef637a12`
 
 #### Параметры
 
@@ -224,6 +236,8 @@ curl -s -X POST http://localhost:5000/api/media/check-url -b cookies.txt \
 curl -s -X POST http://localhost:5000/api/media/download-url/42 -b cookies.txt \
   -H 'Content-Type: application/json' -d '{"url":"https://example.com/a.jpg"}'
 ```
+
+**Operation ID:** `post_api_media_download_url_projectId_33fdeb53ce180018`
 
 #### Параметры
 
@@ -261,6 +275,8 @@ curl -s -X POST http://localhost:5000/api/media/download-urls/42 -b cookies.txt 
   -H 'Content-Type: application/json' -d '{"urls":["https://example.com/a.jpg"]}'
 ```
 
+**Operation ID:** `post_api_media_download_urls_projectId_d90993814e4c3b1f`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -297,6 +313,8 @@ curl -s -X POST http://localhost:5000/api/media/download-urls/42 -b cookies.txt 
 ```bash
 curl -s http://localhost:5000/api/media/project/42 -b cookies.txt
 ```
+
+**Operation ID:** `get_api_media_project_projectId_6181a4bfb0ade2ef`
 
 #### Параметры
 
@@ -336,17 +354,29 @@ curl -s http://localhost:5000/api/media/project/42 -b cookies.txt
 
 ### `GET` /api/media/s3-proxy/{configId}/*
 
-GET /api/media/s3-proxy/{configId}/*
+Прочитать зарегистрированный приватный объект S3
 
 **Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+
+Звёздочка — остаток пути ключа Express. Требуется запись media_files и доступ к её проекту. Content-Type определяется расширением, Cache-Control:private.
+
+**Operation ID:** `get_api_media_s3_proxy_configId_7050280ebaf884d9`
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `configId` | path | да | — | — |
 
 #### Ответы
 
 | Код | Описание |
 |-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
+| 200 | Поток байтов объекта |
+| 401 | Нет авторизации |
+| 403 | Нет доступа к проекту файла |
+| 404 | Объект, ключ, хранилище или запись отсутствует; JSON либо пустое тело |
+| 502 | Хранилище не прочитано; пустое тело ответа |
 
 ### `GET` /api/media/search/{projectId}
 
@@ -359,6 +389,8 @@ Query `q` — строка поиска. `requireProjectAccess`. **Клиент:
 ```bash
 curl -s 'http://localhost:5000/api/media/search/42?q=photo' -b cookies.txt
 ```
+
+**Operation ID:** `get_api_media_search_projectId_b04f9303dc72dfd1`
 
 #### Параметры
 
@@ -413,6 +445,8 @@ curl -s -X POST http://localhost:5000/api/media/upload-from-url -b cookies.txt \
   -d '{"projectId":42,"nodeName":"start","imageUrl":"https://example.com/a.jpg"}'
 ```
 
+**Operation ID:** `post_api_media_upload_from_url_71d824bbd7a627c3`
+
 **Тело запроса:** `UploadMediaFromUrlRequest`
 
 #### Параметры
@@ -452,6 +486,8 @@ multipart field `files` (≤20). `requireProjectAccess`.
 curl -s -X POST http://localhost:5000/api/media/upload-multiple/42 -b cookies.txt -F files=@a.jpg -F files=@b.jpg
 ```
 
+**Operation ID:** `post_api_media_upload_multiple_projectId_c5fb62f82cb55856`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -478,6 +514,8 @@ multipart field `file`. `requireProjectAccess`. **Клиент:** `use-media`.
 ```bash
 curl -s -X POST http://localhost:5000/api/media/upload/42 -b cookies.txt -F file=@photo.jpg
 ```
+
+**Operation ID:** `post_api_media_upload_projectId_791f7ee37609ac2a`
 
 #### Параметры
 

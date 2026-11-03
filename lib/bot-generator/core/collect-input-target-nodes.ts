@@ -8,6 +8,7 @@
  */
 
 import type { EnhancedNode } from '../types/enhanced-node.types';
+import { hasActiveInput } from '@shared/active-input';
 
 /**
  * Собирает целевые узлы ввода в множество
@@ -24,7 +25,7 @@ export function collectInputTargetNodes(nodes: EnhancedNode[]): Set<string> {
   nodes
     .filter(node => node !== null && node !== undefined)
     .forEach(node => {
-      if (node.data?.inputTargetNodeId) {
+      if (hasActiveInput(node) && node.data?.inputTargetNodeId) {
         inputTargetNodeIds.add(node.data.inputTargetNodeId);
       }
     });

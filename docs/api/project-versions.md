@@ -20,6 +20,8 @@
 curl -s http://localhost:5000/api/projects/42/versions -b cookies.txt
 ```
 
+**Operation ID:** `get_api_projects_id_versions_31cd9f007b99014d`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -82,6 +84,8 @@ curl -s -X DELETE http://localhost:5000/api/projects/42/versions/7 \
   -b cookies.txt
 ```
 
+**Operation ID:** `delete_api_projects_id_versions_versionId_6f181ffb26073c67`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -125,6 +129,8 @@ curl -s -X DELETE http://localhost:5000/api/projects/42/versions/7 \
 ```bash
 curl -s http://localhost:5000/api/projects/42/versions/7 -b cookies.txt
 ```
+
+**Operation ID:** `get_api_projects_id_versions_versionId_7da2c2226e9f72ee`
 
 #### Параметры
 
@@ -190,6 +196,8 @@ curl -s http://localhost:5000/api/projects/42/versions/7 -b cookies.txt
 curl -s -X POST http://localhost:5000/api/projects/42/versions/7/restore \
   -b cookies.txt
 ```
+
+**Operation ID:** `post_api_projects_id_versions_versionId_restore_3879345e814dca97`
 
 #### Параметры
 
@@ -259,6 +267,8 @@ curl -s -X POST http://localhost:5000/api/projects/42/versions/commit \
   -b cookies.txt -H 'Content-Type: application/json' \
   -d '{"message":"Добавил приветствие"}'
 ```
+
+**Operation ID:** `post_api_projects_id_versions_commit_26855922d832f1a2`
 
 **Тело запроса:** `VersionCommitRequest`
 
@@ -334,6 +344,8 @@ curl -s -X POST http://localhost:5000/api/projects/42/versions/prune \
   -b cookies.txt -H 'Content-Type: application/json' \
   -d '{"keep":30,"kind":"auto"}'
 ```
+
+**Operation ID:** `post_api_projects_id_versions_prune_c4d8441128f90f0f`
 
 **Тело запроса:** `VersionPruneRequest`
 

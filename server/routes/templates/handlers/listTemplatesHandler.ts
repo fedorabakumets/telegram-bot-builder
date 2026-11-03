@@ -5,6 +5,7 @@
 
 import type { Request, Response } from "express";
 
+import { assertOwnerId, canViewOrUseTemplate } from "../template-access";
 import { storage } from "../../../storages/storage";
 
 /**
@@ -13,10 +14,12 @@ import { storage } from "../../../storages/storage";
  * @param res - Ответ Express
  * @returns Promise<void>
  */
-export async function listTemplatesHandler(_req: Request, res: Response): Promise<void> {
+export async function listTemplatesHandler(req: Request, res: Response): Promise<void> {
   try {
+    const ownerId = assertOwnerId(req, res);
+    if (ownerId === null) return;
     const allTemplates = await storage.getAllBotTemplates();
-    const templates = allTemplates.filter((t) => t.ownerId === null || t.isPublic === 1);
+    const templates = allTemplates.filter((t) => canViewOrUseTemplate(t, ownerId));
     const mapped = templates.map((template) => ({
       ...template,
       flow_data: template.data,

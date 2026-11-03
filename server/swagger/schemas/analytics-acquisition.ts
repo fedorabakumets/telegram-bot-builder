@@ -1,7 +1,7 @@
 /** @fileoverview OpenAPI рекламных объектов и денежных ответов с точными decimal-строками. */
 import './common';
 import { z } from 'zod';
-import { sourceInput, placementInput, linkInput, expenseInput, money, rate } from '../../routes/analytics/acquisition/validation';
+import { sourceInput, placementInput, linkInput, expenseInput, money, rate } from '../../../shared/analytics/acquisition/validation';
 /** Общая идентичность и жизненный цикл. */
 const identity = z.object({
   /** Объект. */ id: z.number().int(), /** Проект. */ projectId: z.number().int(),

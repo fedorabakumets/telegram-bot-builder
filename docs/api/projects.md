@@ -1,6 +1,6 @@
 # projects
 
-Эндпоинтов: **24**
+Эндпоинтов: **18**
 
 ### `GET` /api/projects
 
@@ -19,6 +19,8 @@
 ```bash
 curl -s http://localhost:5000/api/projects -b cookies.txt
 ```
+
+**Operation ID:** `get_api_projects_0105eb242b29ff92`
 
 #### Параметры
 
@@ -83,6 +85,8 @@ curl -s -X POST http://localhost:5000/api/projects -b cookies.txt \
   -H 'Content-Type: application/json' \
   -d '{"name":"Мой бот"}'
 ```
+
+**Operation ID:** `post_api_projects_2ad296b7759d8310`
 
 **Тело запроса:** `CreateProjectRequest`
 
@@ -167,6 +171,8 @@ curl -s -X POST http://localhost:5000/api/projects -b cookies.txt \
 curl -s -X DELETE http://localhost:5000/api/projects/42 -b cookies.txt
 ```
 
+**Operation ID:** `delete_api_projects_id_db80ae8fb374283e`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -208,6 +214,8 @@ curl -s -X DELETE http://localhost:5000/api/projects/42 -b cookies.txt
 ```bash
 curl -s http://localhost:5000/api/projects/42 -b cookies.txt
 ```
+
+**Operation ID:** `get_api_projects_id_0a1de0586bc1564d`
 
 #### Параметры
 
@@ -274,6 +282,8 @@ curl -s http://localhost:5000/api/projects/42 -b cookies.txt
 curl -s -X PUT http://localhost:5000/api/projects/42 -b cookies.txt \
   -H 'Content-Type: application/json' -d '{"name":"Новое имя"}'
 ```
+
+**Operation ID:** `put_api_projects_id_e21c21d31da03a51`
 
 **Тело запроса:** `UpdateProjectRequest`
 
@@ -348,6 +358,8 @@ curl -s -X PUT http://localhost:5000/api/projects/42 -b cookies.txt \
 curl -s http://localhost:5000/api/projects/42/admin-ids -b cookies.txt
 ```
 
+**Operation ID:** `get_api_projects_id_admin_ids_31dabdce82489415`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -398,6 +410,8 @@ curl -s -X PUT http://localhost:5000/api/projects/42/admin-ids -b cookies.txt \
   -H 'Content-Type: application/json' \
   -d '{"adminIds":"123456789,987654321"}'
 ```
+
+**Operation ID:** `put_api_projects_id_admin_ids_4375928ca566ca86`
 
 **Тело запроса:** `UpdateAdminIdsRequest`
 
@@ -450,6 +464,8 @@ curl -s -X POST http://localhost:5000/api/projects/42/admin-ids/remove \
   -d '{"adminId":"del_admin_987654321"}'
 ```
 
+**Operation ID:** `post_api_projects_id_admin_ids_remove_98d50e8bd6507488`
+
 **Тело запроса:** `RemoveAdminIdRequest`
 
 #### Параметры
@@ -485,34 +501,6 @@ curl -s -X POST http://localhost:5000/api/projects/42/admin-ids/remove \
 }
 ```
 
-### `GET` /api/projects/{id}/analytics/activity-leaders
-
-GET /api/projects/{id}/analytics/activity-leaders
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `GET` /api/projects/{id}/analytics/range
-
-GET /api/projects/{id}/analytics/range
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
 ### `POST` /api/projects/{id}/archive
 
 Поместить проект в личный архив
@@ -526,6 +514,8 @@ GET /api/projects/{id}/analytics/range
 ```bash
 curl -s -X POST http://localhost:5000/api/projects/42/archive -b cookies.txt
 ```
+
+**Operation ID:** `post_api_projects_id_archive_43451044400a14a4`
 
 #### Параметры
 
@@ -571,6 +561,8 @@ curl -s -X POST http://localhost:5000/api/projects/42/duplicate \
   -b cookies.txt -H 'Content-Type: application/json' \
   -d '{"name":"Мой бот (копия)"}'
 ```
+
+**Operation ID:** `post_api_projects_id_duplicate_e30f49ad06daadc8`
 
 **Тело запроса:** `DuplicateProjectRequest`
 
@@ -637,6 +629,8 @@ curl -s -X POST http://localhost:5000/api/projects/42/duplicate \
 curl -s -X POST http://localhost:5000/api/projects/42/export -b cookies.txt
 ```
 
+**Operation ID:** `post_api_projects_id_export_3be3de398e1a35a8`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -684,6 +678,8 @@ curl -s -X POST http://localhost:5000/api/projects/42/generate -b cookies.txt \
   -H 'Content-Type: application/json' \
   -d '{"userDatabaseEnabled":true,"enableLogging":false}'
 ```
+
+**Operation ID:** `post_api_projects_id_generate_2ee33bb94a186f1c`
 
 **Тело запроса:** `GenerateCodeRequest`
 
@@ -744,6 +740,8 @@ curl -s -X POST http://localhost:5000/api/projects/42/generate -b cookies.txt \
 curl -s http://localhost:5000/api/projects/42/launches/all -b cookies.txt
 ```
 
+**Operation ID:** `get_api_projects_id_launches_all_f35c161fa65ca81e`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -800,6 +798,8 @@ curl -s 'http://localhost:5000/api/projects/42/logs/all?limit=200&tokenId=7' \
   -b cookies.txt
 ```
 
+**Operation ID:** `get_api_projects_id_logs_all_2a728802c3546b24`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -849,6 +849,8 @@ curl -s 'http://localhost:5000/api/projects/42/logs/all?limit=200&tokenId=7' \
 curl -s -X POST http://localhost:5000/api/projects/42/unarchive -b cookies.txt
 ```
 
+**Operation ID:** `post_api_projects_id_unarchive_2cda5e46fb37e381`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -874,48 +876,6 @@ curl -s -X POST http://localhost:5000/api/projects/42/unarchive -b cookies.txt
 }
 ```
 
-### `POST` /api/projects/{projectId}/chat-access-checks
-
-POST /api/projects/{projectId}/chat-access-checks
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `POST` /api/projects/{projectId}/chat-access-checks/{jobId}/cancel
-
-POST /api/projects/{projectId}/chat-access-checks/{jobId}/cancel
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `GET` /api/projects/{projectId}/chat-access-checks/active
-
-GET /api/projects/{projectId}/chat-access-checks/active
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
 ### `GET` /api/projects/{projectId}/collaborators
 
 Участники проекта (владелец + коллабораторы)
@@ -931,6 +891,8 @@ Read-only список для Files UI: владелец и приглашённ
 ```bash
 curl -s http://localhost:5000/api/projects/42/collaborators -b cookies.txt
 ```
+
+**Operation ID:** `get_api_projects_projectId_collaborators_9579619d56724880`
 
 #### Параметры
 
@@ -968,20 +930,6 @@ curl -s http://localhost:5000/api/projects/42/collaborators -b cookies.txt
 ]
 ```
 
-### `POST` /api/projects/{projectId}/dialogs/{chatId}/check-access
-
-POST /api/projects/{projectId}/dialogs/{chatId}/check-access
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
 ### `GET` /api/projects/list
 
 Лёгкий список проектов (без секретов и data)
@@ -999,6 +947,8 @@ POST /api/projects/{projectId}/dialogs/{chatId}/check-access
 ```bash
 curl -s http://localhost:5000/api/projects/list -b cookies.txt
 ```
+
+**Operation ID:** `get_api_projects_list_342469a92433f409`
 
 #### Параметры
 
@@ -1053,6 +1003,8 @@ curl -s -X PUT http://localhost:5000/api/projects/reorder -b cookies.txt \
   -H 'Content-Type: application/json' \
   -d '{"projectIds":[42,7,15]}'
 ```
+
+**Operation ID:** `put_api_projects_reorder_7d6e9c5b92764a65`
 
 **Тело запроса:** `ReorderProjectsRequest`
 

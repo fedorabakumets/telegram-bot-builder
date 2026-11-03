@@ -87,6 +87,7 @@ import { useCanvasSync } from '@/hooks/use-canvas-sync';
 import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
 import type { CanvasActor } from '@shared/canvas-sync/canvas-actor';
 import type { CanvasSyncMessage } from '@shared/canvas-sync/canvas-sync-message';
+import { isSavedProjectReceipt, preferNewerProject, rollbackProjectList } from './editor/utils/project-cache-revision';
 import { apiRequest } from '@/queryClient';
 import { SheetsManager } from '@/utils/sheets/sheets-manager';
 import { clearKeyboardNodeId, getKeyboardNodeId } from '@/components/editor/canvas/canvas-node/keyboard-connection';
@@ -390,7 +391,9 @@ export default function Editor() {
         restartOnUpdate: params.restartOnUpdate || false,
         // Передаём новое имя если оно было указано при вызове мутации
         ...(params.newName ? { name: params.newName } : {}),
-        ...(isAdminEditor && activeProject.updatedAt ? { expectedUpdatedAt: activeProject.updatedAt } : {}),
+        /** Сохраняем прочитанную ревизию для всех пользователей, включая обычный редактор. */
+        ...(Number.isSafeInteger(activeProject.revision) ? { expectedRevision: activeProject.revision }
+          : isAdminEditor && activeProject.updatedAt ? { expectedUpdatedAt: activeProject.updatedAt } : {}),
         // Непустая заметка превращает снимок в постоянный ручной чекпоинт
         ...(params.commitMessage ? { commitMessage: params.commitMessage } : {}),
       });
@@ -438,9 +441,17 @@ export default function Editor() {
       }
 
       // Возвращаем контекст для отката
-      return { previousProjects, previousProject, previousList };
+      return { previousProjects, previousProject, previousList, projectId: activeProject.id };
     },
     onSuccess: async (_updatedProject, variables) => {
+      /** Принимаем новую ревизию немедленно, до асинхронной инвалидации запросов. */
+      if (!isSavedProjectReceipt(_updatedProject)) {
+        toast({ title: 'Сохранение не подтверждено', description: 'Перечитайте проект перед повтором. Локальные изменения сохранены в редакторе.', variant: 'destructive' });
+        return;
+      }
+      queryClient.setQueryData<BotProject>([`/api/projects/${_updatedProject.id}`], old => preferNewerProject(old, _updatedProject));
+      /** Поздний ответ другого проекта не снимает его локальный черновик после переключения. */
+      if (_updatedProject?.id !== activeProject?.id) return;
       // Reset local changes flag only after successful save
       setHasLocalChanges(false);
       setRemoteSyncActor(null);
@@ -467,13 +478,13 @@ export default function Editor() {
     onError: (_error, _variables, context) => {
       // Откатываем изменения при ошибке
       if (context?.previousProjects) {
-        queryClient.setQueryData(['/api/projects'], context.previousProjects);
+        queryClient.setQueryData<BotProject[]>(['/api/projects'], current => rollbackProjectList(current, context.previousProjects!));
       }
-      if (context?.previousProject && activeProject?.id) {
-        queryClient.setQueryData([`/api/projects/${activeProject.id}`], context.previousProject);
+      if (context?.previousProject && context.projectId) {
+        queryClient.setQueryData<BotProject>([`/api/projects/${context.projectId}`], current => preferNewerProject(current, context.previousProject!));
       }
       if (context?.previousList) {
-        queryClient.setQueryData(['/api/projects/list'], context.previousList);
+        queryClient.setQueryData<Array<Omit<BotProject, 'data'>>>(['/api/projects/list'], current => rollbackProjectList(current, context.previousList!));
       }
 
       toast({
@@ -736,6 +747,13 @@ export default function Editor() {
     if (msg.actor.kind !== 'agent') {
       setHasLocalChanges(true);
     } else if (activeProject?.id) {
+      /** Обновляет токен конкурентной записи вместе с подтверждённым снимком агента. */
+      if (Number.isSafeInteger(msg.revision)) {
+        queryClient.setQueryData<BotProject>([`/api/projects/${activeProject.id}`], old => old
+          ? preferNewerProject(old, { ...old, data: msg.data, revision: msg.revision! }) : old);
+      } else {
+        void queryClient.invalidateQueries({ queryKey: [`/api/projects/${activeProject.id}`], exact: true });
+      }
       queryClient.invalidateQueries({ queryKey: ['/api/projects', activeProject.id, 'versions'] });
     }
     if (remoteSyncDismissTimerRef.current) {
@@ -821,6 +839,12 @@ export default function Editor() {
   }, [activeProject?.id, queryClient]);
 
   const { broadcastReset } = useCanvasSync({
+    /** Отсекает старые live-снимки относительно уже загруженного проекта. */
+    savedRevision: activeProject?.revision,
+    /** Локальный черновик остаётся на своей ревизии и не перезаписывает новую запись агента. */
+    hasLocalChanges,
+    onRemoteConflict: () => toast({ title: 'Проект изменён в другом окне',
+      description: 'Ваши несохранённые правки оставлены в редакторе. Перед сохранением сравните их с новой версией проекта.', variant: 'destructive' }),
     projectId: activeProject?.id,
     botDataWithSheets,
     localUser,

@@ -48,7 +48,10 @@ describe('Единый API/MCP контракт аналитики', () => {
     const fetch = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) => new Response('secret-database-details', { status: 403 })); vi.stubGlobal('fetch', fetch);
     await withClient(async client => {
       const names = (await client.listTools()).tools.map(tool => tool.name);
-      expect(names).toHaveLength(15);
+      expect(names.sort()).toEqual([
+        'db_get_analytics_exchange_rate', 'db_get_analytics_history', 'db_get_analytics_v2', 'db_get_acquisition_report',
+        ...['source', 'placement', 'link', 'expense'].flatMap(resource => [`db_create_analytics_${resource}`, `db_update_analytics_${resource}`, `db_list_analytics_${resource}s`]),
+      ].sort());
       const result = await client.callTool({ name: 'db_update_analytics_link', arguments: { project_id: 12, resource_id: 5, data: { archived: true } } });
       expect(result.isError).toBe(true);
       expect(JSON.stringify(result)).not.toContain('secret-database-details');
@@ -60,7 +63,9 @@ describe('Единый API/MCP контракт аналитики', () => {
   it('экспортирует все пути, денежные строки, снимок и одинаковые ограничения записи', () => {
     const registry = new OpenAPIRegistry(); registerAnalyticsV2Paths(registry, [{ agentToken: [] }]);
     const spec = new OpenApiGeneratorV3(registry.definitions).generateDocument({ openapi: '3.0.3', info: { title: 'analytics', version: '2' } });
-    expect(Object.keys(spec.paths)).toHaveLength(15);
+    expect(Object.keys(spec.paths)).toHaveLength(17);
+    expect(spec.paths['/api/projects/{id}/analytics/acquisition/budgets']?.post).toBeDefined();
+    expect(spec.paths['/api/projects/{id}/analytics/acquisition/exchange-rate']?.get).toBeDefined();
     expect(spec.paths['/api/projects/{id}/analytics/v2/snapshot']?.get?.responses['200']).toBeDefined();
     const serialized = JSON.stringify(spec);
     expect(serialized).toContain('AnalyticsV2Snapshot');

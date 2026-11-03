@@ -8,7 +8,9 @@ import { reorderColumnsInProject } from "../../../database/bot-tables/mutate-col
 import { fail, sqlFailure } from "../http-error";
 import { notifyTableChange } from "../notify-table-change";
 import { ownedTable } from "../owned-table";
-import { tablePool } from "../table-db";
+import { withClient } from "../table-db";
+import { lockedTableWrite } from '../locked-table-write';
+import { tableWriteReceipt } from '../write-receipt';
 
 /**
  * Обрабатывает PUT /api/projects/:id/tables/:tableId/columns/reorder
@@ -20,16 +22,16 @@ export async function reorderColumnsHandler(req: Request, res: Response): Promis
     const owned = await ownedTable(req, res);
     if (!owned) return;
     const columnIds = req.body?.column_ids;
-    if (!Array.isArray(columnIds) || columnIds.some((id) => typeof id !== "number")) {
+    if (!Array.isArray(columnIds) || columnIds.some((id) => typeof id !== "number") || new Set(columnIds).size !== columnIds.length) {
       fail(res, 400, "column_ids должен быть массивом чисел");
       return;
     }
-    const columns = await reorderColumnsInProject(tablePool, owned.projectId, owned.table.id, columnIds);
+    const columns = await withClient(db => lockedTableWrite(db, owned.projectId, owned.table.id, client => reorderColumnsInProject(client, owned.projectId, owned.table.id, columnIds)));
     if ("status" in columns) {
       fail(res, columns.status, columns.message);
       return;
     }
-    res.json(columns);
+    res.json(tableWriteReceipt(res, columns, owned.projectId, owned.table.id));
     await notifyTableChange(owned.projectId, owned.table.id, owned.table.name);
   } catch (error) {
     const parsed = sqlFailure(error);

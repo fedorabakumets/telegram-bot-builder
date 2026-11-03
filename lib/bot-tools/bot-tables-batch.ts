@@ -36,6 +36,6 @@ export function applyTableOps(
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ confirm: confirm === true, ops }),
+    body: JSON.stringify({ confirm: confirm === true, ops, ...(options?.requestId ? { requestId: options.requestId } : {}) }),
   });
 }

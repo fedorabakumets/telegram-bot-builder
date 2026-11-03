@@ -1,13 +1,13 @@
 /** @fileoverview Атомарное сохранение бюджета для простой start-метки. */
 import type { PoolClient } from 'pg';
-import { z } from 'zod';
-import { AcquisitionError, day, id, money, timezone, expenseInput } from './validation';
+import { AcquisitionError } from './validation';
 import { acquisitionBot, createAcquisition } from './create';
 import { createExpenses } from './expenses';
 import { acquisitionDto, recordAcquisitionChange, scopedRow } from './storage';
 import { findStartConflict } from './link-routing';
-/** Проверяет бюджет без возможности сохранить авторизационный или реферальный код как рекламу. */
-export const linkBudgetInput=z.object({tokenId:id,marker:z.string().regex(/^[A-Za-z0-9_-]{1,64}$/).refine(v=>! /^(link_|ref(?:_|$))/i.test(v),'Эта метка зарезервирована для входа или рефералов'),amount:money,currency:z.enum(['RUB','USD']),day,timezone,...expenseInput.pick({exchangeRateRubPerUsd:true,exchangeRateDate:true,note:true,untilDay:true,allocation:true}).shape}).strict();
+/** Общий контракт доступен старым импортам без изменения поведения. */
+import { linkBudgetInput } from '../../../../shared/analytics/acquisition/link-budget';
+export { linkBudgetInput };
 /** Сохраняет связанные сущности в транзакции маршрута; повторная оплата использует ту же метку. */
 export async function saveLinkBudget(client:PoolClient,project:number,body:unknown,actor:string|null) {
   const input=linkBudgetInput.parse(body);

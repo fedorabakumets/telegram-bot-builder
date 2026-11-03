@@ -66,7 +66,7 @@ export async function addNodeInDb(
 ): Promise<NodeOpsDbResult> {
   const fetched = await fetchProjectFromDb(projectId, options);
   if ('error' in fetched) return fetched;
-  return applyAndSave(projectId, addNodeToProject(fetched.data, node, sheetId), options);
+  return applyAndSave(projectId, addNodeToProject(fetched.data, node, sheetId), { ...options, expectedRevision: options?.expectedRevision ?? fetched.revision });
 }
 
 /**
@@ -87,7 +87,7 @@ export async function updateNodeInDb(
 ): Promise<NodeOpsDbResult> {
   const fetched = await fetchProjectFromDb(projectId, options);
   if ('error' in fetched) return fetched;
-  return applyAndSave(projectId, updateNodeInProject(fetched.data, nodeId, patch, sheetId), options);
+  return applyAndSave(projectId, updateNodeInProject(fetched.data, nodeId, patch, sheetId), { ...options, expectedRevision: options?.expectedRevision ?? fetched.revision });
 }
 
 /**
@@ -106,7 +106,7 @@ export async function removeNodeInDb(
 ): Promise<NodeOpsDbResult> {
   const fetched = await fetchProjectFromDb(projectId, options);
   if ('error' in fetched) return fetched;
-  return applyAndSave(projectId, removeNodeFromProject(fetched.data, nodeId, sheetId), options);
+  return applyAndSave(projectId, removeNodeFromProject(fetched.data, nodeId, sheetId), { ...options, expectedRevision: options?.expectedRevision ?? fetched.revision });
 }
 
 /**
@@ -127,7 +127,7 @@ export async function connectNodesInDb(
 ): Promise<NodeOpsDbResult> {
   const fetched = await fetchProjectFromDb(projectId, options);
   if ('error' in fetched) return fetched;
-  return applyAndSave(projectId, connectNodes(fetched.data, fromId, toId, connectOptions ?? {}), options);
+  return applyAndSave(projectId, connectNodes(fetched.data, fromId, toId, connectOptions ?? {}), { ...options, expectedRevision: options?.expectedRevision ?? fetched.revision });
 }
 
 /**
@@ -149,7 +149,7 @@ export async function disconnectNodesInDb(
 ): Promise<NodeOpsDbResult> {
   const fetched = await fetchProjectFromDb(projectId, options);
   if ('error' in fetched) return fetched;
-  return applyAndSave(projectId, disconnectNodes(fetched.data, fromId, toId, disconnectOptions ?? {}), options);
+  return applyAndSave(projectId, disconnectNodes(fetched.data, fromId, toId, disconnectOptions ?? {}), { ...options, expectedRevision: options?.expectedRevision ?? fetched.revision });
 }
 
 /**
@@ -172,7 +172,7 @@ export async function duplicateNodeInDb(
   if ('error' in fetched) return fetched;
   const mutated = duplicateNodeInProject(fetched.data, nodeId, dupOptions);
   if ('error' in mutated) return { error: mutated.error };
-  const saved = await updateProjectInDb(projectId, mutated.project, options);
+  const saved = await updateProjectInDb(projectId, mutated.project, { ...options, expectedRevision: options?.expectedRevision ?? fetched.revision });
   if ('error' in saved) return saved;
   return { ...saved, newNodeId: mutated.newNodeId } as NodeOpsDbResult;
 }
@@ -196,7 +196,7 @@ export async function moveNodeInDb(
 ): Promise<NodeOpsDbResult> {
   const fetched = await fetchProjectFromDb(projectId, options);
   if ('error' in fetched) return fetched;
-  return applyAndSave(projectId, moveNodeToProjectSheet(fetched.data, nodeId, toSheetId, moveOptions), options);
+  return applyAndSave(projectId, moveNodeToProjectSheet(fetched.data, nodeId, toSheetId, moveOptions), { ...options, expectedRevision: options?.expectedRevision ?? fetched.revision });
 }
 
 /**
@@ -215,5 +215,5 @@ export async function autoLayoutSheetInDb(
 ): Promise<NodeOpsDbResult> {
   const fetched = await fetchProjectFromDb(projectId, options);
   if ('error' in fetched) return fetched;
-  return applyAndSave(projectId, autoLayoutSheetInProject(fetched.data, sheetId), options);
+  return applyAndSave(projectId, autoLayoutSheetInProject(fetched.data, sheetId), { ...options, expectedRevision: options?.expectedRevision ?? fetched.revision });
 }

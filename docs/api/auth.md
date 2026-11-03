@@ -25,6 +25,8 @@ curl -s -X POST http://localhost:5000/api/auth/dev-login \
   -d '{"id":123456789,"firstName":"Иван","username":"ivan_p"}'
 ```
 
+**Operation ID:** `post_api_auth_dev_login_98f47c46b6e2ce40`
+
 **Тело запроса:** `DevLoginRequest`
 
 #### Пример тела запроса
@@ -79,6 +81,8 @@ HTML-страница входа (popup)
 curl -s http://localhost:5000/api/auth/login | head
 ```
 
+**Operation ID:** `get_api_auth_login_c6bbd4e523f3dec6`
+
 #### Ответы
 
 | Код | Описание |
@@ -102,6 +106,8 @@ Rate limit: общий лимит mutating auth. `/api/auth/*` вне setupGuard
 ```bash
 curl -s -X POST http://localhost:5000/api/auth/logout -b cookies.txt -c cookies.txt
 ```
+
+**Operation ID:** `post_api_auth_logout_0e43fdd4e884d366`
 
 #### Параметры
 
@@ -145,6 +151,8 @@ curl -s -X POST http://localhost:5000/api/auth/logout -b cookies.txt -c cookies.
 ```bash
 curl -s http://localhost:5000/api/auth/me -b cookies.txt
 ```
+
+**Operation ID:** `get_api_auth_me_210c275ef84e162c`
 
 #### Параметры
 
@@ -196,6 +204,8 @@ curl -s -X POST http://localhost:5000/api/auth/telegram \
   -H 'Content-Type: application/json' -c cookies.txt \
   -d '{"id":123456789,"first_name":"Иван","id_token":"eyJ..."}'
 ```
+
+**Operation ID:** `post_api_auth_telegram_46cb0081740cb3a3`
 
 **Тело запроса:** `TelegramAuthRequest`
 
@@ -253,6 +263,8 @@ curl -s -X POST http://localhost:5000/api/auth/telegram \
 curl -s -X POST http://localhost:5000/api/auth/telegram/logout -b cookies.txt -c cookies.txt
 ```
 
+**Operation ID:** `post_api_auth_telegram_logout_19555cfc60cdaa88`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -294,6 +306,8 @@ curl -s -X POST http://localhost:5000/api/auth/telegram/miniapp \
   -H 'Content-Type: application/json' -c cookies.txt \
   -d '{"initData":"user=%7B%22id%22%3A123...&hash=..."}'
 ```
+
+**Operation ID:** `post_api_auth_telegram_miniapp_2208c7036344bb66`
 
 **Тело запроса:** `MiniAppAuthRequest`
 
@@ -351,6 +365,8 @@ curl -s -X POST http://localhost:5000/api/auth/telegram/miniapp \
 curl -s http://localhost:5000/api/auth/telegram/user/123456789
 ```
 
+**Operation ID:** `get_api_auth_telegram_user_id_87fe528af772cca8`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -389,15 +405,15 @@ curl -s http://localhost:5000/api/auth/telegram/user/123456789
 
 **Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
-Завершает все сессии текущего пользователя, кроме текущей.
+**Operation ID:** `delete_api_profile_sessions_f3585fc2da8ab9e9`
 
 #### Ответы
 
 | Код | Описание |
 |-----|----------|
-| 200 | Остальные сессии завершены |
+| 200 | Число завершённых сессий |
 | 401 | Требуется авторизация |
-| 503 | Redis временно недоступен |
+| 503 | Реестр сессий недоступен |
 
 ### `GET` /api/profile/sessions
 
@@ -405,23 +421,31 @@ curl -s http://localhost:5000/api/auth/telegram/user/123456789
 
 **Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
-Возвращает активные сессии текущего пользователя. Внутренний connect.sid не раскрывается.
+Сессии текущего пользователя; внутренний sessionId/connect.sid исключён.
+
+**Operation ID:** `get_api_profile_sessions_e1d5105bcd8c96f5`
 
 #### Ответы
 
 | Код | Описание |
 |-----|----------|
-| 200 | Список активных сессий |
+| 200 | Публичные сессии |
 | 401 | Требуется авторизация |
-| 503 | Redis временно недоступен |
+| 503 | Реестр сессий недоступен |
 
 ### `DELETE` /api/profile/sessions/{id}
 
-Завершить активную сессию
+Завершить другую сессию
 
 **Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
-Завершает выбранную сессию текущего пользователя. Текущую сессию завершить этим методом нельзя.
+**Operation ID:** `delete_api_profile_sessions_id_e87a728417e33d9e`
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `id` | path | да | — | — |
 
 #### Ответы
 
@@ -429,5 +453,5 @@ curl -s http://localhost:5000/api/auth/telegram/user/123456789
 |-----|----------|
 | 200 | Сессия завершена |
 | 401 | Требуется авторизация |
-| 404 | Сессия не найдена или является текущей |
-| 503 | Redis временно недоступен |
+| 404 | Не найдена либо является текущей |
+| 503 | Реестр сессий недоступен |

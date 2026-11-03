@@ -10,6 +10,7 @@ import { SQL_TIMEOUT } from "./limits";
 import { clearRowsInProject, insertRowsInProject } from "./mutate-row";
 import { parseEntityName, validateCells } from "./validate-cells";
 import type { Queryable } from "./queryable";
+import { tableBundleSchema } from '../../../shared/table-bundle-schema';
 
 /** Таблица из файла версии 1 */
 export interface BundleTable {
@@ -47,6 +48,10 @@ export async function importBundleInProject(
   mode: "create" | "replace",
   tables: BundleTable[],
 ): Promise<{ ok: true; tables: BundleItemResult[] } | { ok: false; status: number; message: string; failed_table_index: number }> {
+  /** Та же проверка защищает внутренние вызовы до первого изменения БД. */
+  const checked = tableBundleSchema.safeParse({ tables });
+  if (!checked.success) return { ok: false, status: 400, message: checked.error.issues[0]?.message ?? 'Проверьте пакет', failed_table_index: Number(checked.error.issues[0]?.path[1]) || 0 };
+  tables = checked.data.tables;
   const done: BundleItemResult[] = [];
   await db.query('BEGIN');
   try {

@@ -2,7 +2,7 @@
  * @fileoverview Расширенное хранилище поверх DatabaseStorage с кэшированием и служебными оптимизациями
  */
 
-import { type BotGroup, botGroups, type BotInstance, botInstances, type BotMessage, type BotProject, type BotTemplate, type BotToken, type TelegramUserDB, telegramUsers } from "@shared/schema";
+import { type BotGroup, botGroups, type BotInstance, botInstances, type BotMessage, type BotProject, type BotTemplate, botTemplates, type BotToken, type TelegramUserDB, telegramUsers } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import type { MessageMedia } from "../storages/message-media";
 import type { StorageBotGroupInput, StorageBotGroupUpdate, StorageBotProjectInput, StorageBotProjectUpdate, StorageBotTemplateInput, StorageBotTemplateUpdate, StorageTelegramUserInput } from "../storages/storageTypes";
@@ -34,28 +34,66 @@ export class EnhancedDatabaseStorage extends DatabaseStorage {
     return await cachedOps.getTemplateListCached(category, () => super.getTemplatesByCategory(category));
   }
 
+  /** Создаёт проект одной попыткой, чтобы неоднозначный ответ не создавал дубликат.
+   * @param insertProject - Данные создания
+   * @returns Созданная строка
+   */
   async createBotProject(insertProject: StorageBotProjectInput): Promise<BotProject> {
-    return await dbManager.executeWithRetry(async () => {
-      const project = await super.createBotProject(insertProject);
-      cachedOps.invalidateProject(project.id);
-      return project;
-    });
+    // Нельзя повторять INSERT после неоднозначного сбоя драйвера.
+    const project = await super.createBotProject(insertProject);
+    cachedOps.invalidateProject(project.id);
+    return project;
   }
 
-  async updateBotProject(id: number, updateData: StorageBotProjectUpdate): Promise<BotProject | undefined> {
-    return await dbManager.executeWithRetry(async () => {
-      const project = await super.updateBotProject(id, updateData);
-      cachedOps.invalidateProject(id);
-      return project;
-    });
+  /** Удаляет проект одной попыткой и удаляет из кеша даже после неоднозначного сбоя.
+   * @param id - Идентификатор проекта
+   * @returns Признак удаления строки
+   */
+  async deleteBotProject(id: number): Promise<boolean> {
+    try { return await super.deleteBotProject(id); }
+    finally { cachedOps.invalidateProject(id); }
   }
 
+  /** Удаляет шаблон без повторов и сбрасывает кеш.
+   * @param id - Идентификатор шаблона
+   * @returns Признак удаления
+   */
+  async deleteBotTemplate(id: number): Promise<boolean> {
+    try { return await super.deleteBotTemplate(id); }
+    finally { cachedOps.invalidateTemplate(id); }
+  }
+
+  /**
+   * Переупорядочивает проекты одной транзакцией и сбрасывает кеш затронутых записей.
+   * @param projectIds - Желаемый порядок проектов
+   * @returns Завершение сохранения
+   */
+  async reorderBotProjects(projectIds: number[]): Promise<void> {
+    try { await super.reorderBotProjects(projectIds); }
+    finally { projectIds.forEach((id) => cachedOps.invalidateProject(id)); }
+  }
+
+  /**
+   * Сохраняет проект атомарно и сбрасывает кеш, включая конфликт ревизии.
+   * @param id - ID проекта
+   * @param updateData - Поля обновления
+   * @param expectedRevision - Ожидаемая ревизия
+   * @returns Записанная строка либо отсутствие записи
+   */
+  async updateBotProject(id: number, updateData: StorageBotProjectUpdate, expectedRevision?: number): Promise<BotProject | undefined> {
+    // Ошибка драйвера после commit неоднозначна: повтор может создать вторую запись.
+    try { return await super.updateBotProject(id, updateData, expectedRevision); }
+    finally { cachedOps.invalidateProject(id); }
+  }
+
+  /** Создаёт шаблон одной попыткой и сбрасывает кеш даже при неоднозначном исходе.
+   * @param insertTemplate - Поля нового шаблона
+   * @returns Созданная строка
+   */
   async createBotTemplate(insertTemplate: StorageBotTemplateInput): Promise<BotTemplate> {
-    return await dbManager.executeWithRetry(async () => {
-      const template = await super.createBotTemplate(insertTemplate);
-      cachedOps.invalidateAllTemplates();
-      return template;
-    });
+    // INSERT нельзя повторять при неоднозначном обрыве после commit.
+    try { return await super.createBotTemplate(insertTemplate); }
+    finally { cachedOps.invalidateAllTemplates(); }
   }
 
   /**
@@ -78,12 +116,14 @@ export class EnhancedDatabaseStorage extends DatabaseStorage {
     return await super.getUserBotTemplates(ownerId);
   }
 
+  /** Обновляет шаблон без автоматического повторения записи.
+   * @param id - Идентификатор шаблона
+   * @param updateData - Поля обновления
+   * @returns Сохранённая строка либо отсутствие записи
+   */
   async updateBotTemplate(id: number, updateData: StorageBotTemplateUpdate): Promise<BotTemplate | undefined> {
-    return await dbManager.executeWithRetry(async () => {
-      const template = await super.updateBotTemplate(id, updateData);
-      cachedOps.invalidateTemplate(id);
-      return template;
-    });
+    try { return await super.updateBotTemplate(id, updateData); }
+    finally { cachedOps.invalidateTemplate(id); }
   }
 
   // Поддержка транзакций для сложных операций
@@ -100,14 +140,15 @@ export class EnhancedDatabaseStorage extends DatabaseStorage {
   }
 
   // Массовые операции с лучшей производительностью
+  /** Создаёт пакет шаблонов одним атомарным INSERT без повтора.
+   * @param templates - Новые шаблоны
+   * @returns Созданные строки
+   */
   async bulkCreateTemplates(templates: StorageBotTemplateInput[]): Promise<BotTemplate[]> {
-    return await dbManager.executeWithRetry(async () => {
-      const results = await Promise.all(
-        templates.map(template => super.createBotTemplate(template))
-      );
-      cachedOps.invalidateAllTemplates();
-      return results;
-    });
+    if (templates.length === 0) return [];
+    // Один INSERT атомарен; повтор после потери ответа запрещён.
+    try { return await this.db.insert(botTemplates).values(templates).returning(); }
+    finally { cachedOps.invalidateAllTemplates(); }
   }
 
   // Методы групп ботов - использовать реализацию родителя напрямую

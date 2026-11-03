@@ -2,6 +2,7 @@
  * @fileoverview Разбор одной операции пакета
  * @module server/database/bot-tables/parse-one-op
  */
+import { tableOperationSchema } from '../../../shared/table-ops-schema';
 
 /**
  * Разбирает одну операцию
@@ -9,8 +10,9 @@
  * @returns Операция или ошибка
  */
 export function parseOneOp(item: unknown): { message: string } | { op: string; [key: string]: unknown } {
-  if (!item || typeof item !== "object") return { message: "Некорректная операция" };
-  const source = item as Record<string, unknown>;
+  const parsed = tableOperationSchema.safeParse(item);
+  if (!parsed.success) return { message: 'Некорректная операция или её параметры' };
+  const source = parsed.data as Record<string, unknown>;
   const op = source.op;
   if (op === "reindex") return { op };
   if (op === "add_column" && typeof source.name === "string") {

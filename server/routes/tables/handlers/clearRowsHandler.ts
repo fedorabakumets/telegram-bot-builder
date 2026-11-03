@@ -4,11 +4,13 @@
  */
 
 import type { Request, Response } from "express";
+import { tableWriteReceipt } from "../write-receipt";
 import { clearRowsInProject } from "../../../database/bot-tables/mutate-row";
 import { fail, sqlFailure } from "../http-error";
 import { notifyTableChange } from "../notify-table-change";
 import { ownedTable } from "../owned-table";
-import { tablePool } from "../table-db";
+import { withClient } from "../table-db";
+import { lockedTableWrite } from '../locked-table-write';
 
 /**
  * Обрабатывает DELETE /api/projects/:id/tables/:tableId/rows
@@ -23,12 +25,12 @@ export async function clearRowsHandler(req: Request, res: Response): Promise<voi
       fail(res, 400, "Очистка строк необратима. Передайте confirm: true");
       return;
     }
-    const cleared = await clearRowsInProject(tablePool, owned.projectId, owned.table.id);
+    const cleared = await withClient(db => lockedTableWrite(db, owned.projectId, owned.table.id, client => clearRowsInProject(client, owned.projectId, owned.table.id)));
     if ("status" in cleared) {
       fail(res, cleared.status, cleared.message);
       return;
     }
-    res.json({ success: true, deleted: cleared.deleted });
+    res.json(tableWriteReceipt(res, { success: true, deleted: cleared.deleted }, owned.projectId, owned.table.id));
     await notifyTableChange(owned.projectId, owned.table.id, owned.table.name);
   } catch (error) {
     const parsed = sqlFailure(error);

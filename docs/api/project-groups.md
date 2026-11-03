@@ -18,6 +18,8 @@ curl -s -X POST -b cookies.txt -H 'Content-Type: application/json' \
   'http://localhost:5000/api/projects/42/bot/send-group-message?tokenId=7'
 ```
 
+**Operation ID:** `post_api_projects_projectId_bot_send_group_message_cc81c37dd127cc79`
+
 **Тело запроса:** `SendGroupMessageRequest`
 
 #### Параметры
@@ -74,6 +76,8 @@ curl -s -X POST -b cookies.txt -H 'Content-Type: application/json' \
 curl -s 'http://localhost:5000/api/projects/42/groups?tokenId=7' -b cookies.txt
 ```
 
+**Operation ID:** `get_api_projects_projectId_groups_e8f0770cb84c0680`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -126,6 +130,8 @@ curl -s 'http://localhost:5000/api/projects/42/groups?tokenId=7' -b cookies.txt
 curl -s -b cookies.txt \
   'http://localhost:5000/api/projects/42/groups/-1001234567890/messages?limit=50'
 ```
+
+**Operation ID:** `get_api_projects_projectId_groups_groupId_messages_14f64f53dbaaa42b`
 
 #### Параметры
 
@@ -192,6 +198,8 @@ curl -s -X POST -b cookies.txt \
   'http://localhost:5000/api/projects/42/groups/-1001234567890/sync?tokenId=7'
 ```
 
+**Operation ID:** `post_api_projects_projectId_groups_groupId_sync_cff8ec3800b1a8f5`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -235,28 +243,48 @@ curl -s -X POST -b cookies.txt \
 
 ### `GET` /api/projects/{projectId}/groups/analytics/growth
 
-GET /api/projects/{projectId}/groups/analytics/growth
+Динамика первого сохранения групп
 
 **Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+
+**Operation ID:** `get_api_projects_projectId_groups_analytics_growth_15ba3ac74779edfa`
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `projectId` | path | да | — | — |
+| `tokenId` | query | нет | — | — |
+| `granularity` | query | нет | — | — |
 
 #### Ответы
 
 | Код | Описание |
 |-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
+| 200 | Временной ряд |
+| 401 | Нет авторизации |
+| 403 | Нет доступа к проекту |
 
 ### `GET` /api/projects/{projectId}/groups/analytics/stats
 
-GET /api/projects/{projectId}/groups/analytics/stats
+Текущая сводка уникальных групп
 
 **Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+
+**Operation ID:** `get_api_projects_projectId_groups_analytics_stats_aa285e468c00104f`
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `projectId` | path | да | — | — |
+| `tokenId` | query | нет | — | — |
+| `granularity` | query | нет | — | — |
 
 #### Ответы
 
 | Код | Описание |
 |-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
+| 200 | Счётчики групп |
+| 401 | Нет авторизации |
+| 403 | Нет доступа к проекту |

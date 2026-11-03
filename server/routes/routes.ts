@@ -2,6 +2,8 @@
  * @fileoverview Основной роутер HTTP API для проектов, токенов, интеграций и базы пользователей
  */
 
+import { requireBotSettingBody, requireBotProfileBody } from "../middleware/require-bot-setting-body";
+import { updateMediaMetadataSchema } from "../../shared/schema/media-metadata-contracts";
 import { querySourcesAllTime } from './analytics/sources-all-time-query';
 import { insertBotTokenSchema } from "@shared/schema";
 import { ChildProcess } from "child_process";
@@ -38,8 +40,11 @@ import { queryUsersByChatKind } from "./analytics/users-by-chat-kind-query";
 import { requireTokenOwnership } from "../middleware/requireResourceOwnership";
 import { requireMediaOwnership } from "../middleware/mediaOwnership";
 import { setupTemplatesRoutes } from "./templates/setupTemplatesRoutes";
+import { clearBotUsersHandler } from "./botUsers/handlers/clearBotUsersHandler";
 import { deleteBotUserHandler } from "./botUsers/handlers/deleteBotUserHandler";
 import { updateBotUserHandler } from "./botUsers/handlers/updateBotUserHandler";
+import { botTokenWriteReceipt } from "./botTokens/token-write-receipt";
+import { updateProjectTokenHandler } from "./botTokens/handlers/updateProjectTokenHandler";
 import { deleteProjectTokenHandler } from "./botTokens/handlers/deleteProjectTokenHandler";
 import { isMaskedOrPlaceholderToken, toPublicBotToken } from "./botTokens/to-public-bot-token";
 import { checkUrlAccessibility } from "../utils/checkUrlAccessibility";
@@ -807,7 +812,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // Update bot information via Telegram API
-  app.put("/api/projects/:id/tokens/:tokenId/bot-info", requireTokenOwnership, async (req, res) => {
+  app.put("/api/projects/:id/tokens/:tokenId/bot-info", requireTokenOwnership, requireBotProfileBody, async (req, res) => {
     try {
       const projectId = parseInt(req.params.id);
       const tokenId = parseInt(req.params.tokenId);
@@ -958,7 +963,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         const duplicate = existingTokens.find(t => t.token === enrichedTokenData.token);
         if (duplicate) {
           console.log(`[routes] Токен уже существует в проекте (id=${duplicate.id}), возвращаем существующий`);
-          return res.status(200).json(duplicate);
+          return res.status(200).json({ ...toPublicBotToken(duplicate), ...botTokenWriteReceipt(duplicate, projectId, enrichedTokenData.token ?? undefined) });
         }
       }
 
@@ -972,7 +977,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         timestamp: new Date().toISOString(),
       }).catch(err => console.error('[routes] broadcastProjectEvent error:', err));
 
-      res.status(201).json(token);
+      res.status(201).json({ ...toPublicBotToken(token), ...botTokenWriteReceipt(token, projectId, enrichedTokenData.token ?? undefined) });
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
@@ -983,61 +988,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     return;
   });
 
-  // Update a token by project and token ID
-  app.put("/api/projects/:id/tokens/:tokenId", async (req, res) => {
-    try {
-      const projectId = parseInt(req.params.id);
-      const tokenId = parseInt(req.params.tokenId);
-
-      // Check project ownership if user is authenticated
-      const ownerId = getOwnerIdFromRequest(req);
-      if (ownerId !== null) {
-        const project = await storage.getBotProject(projectId);
-        if (!project) {
-          return res.status(404).json({ message: "Project not found" });
-        }
-        const hasAccess = await storage.hasProjectAccess(projectId, ownerId);
-        if (!hasAccess) {
-          return res.status(403).json({ message: "You don't have permission to modify tokens in this project" });
-        }
-
-        // Also verify that the token belongs to this project
-        const token = await storage.getBotToken(tokenId);
-        if (!token || token.projectId !== projectId) {
-          return res.status(404).json({ message: "Token not found in this project" });
-        }
-      }
-
-      const updateData = insertBotTokenSchema.partial().parse(req.body) as StorageBotTokenUpdate;
-      if (updateData.token && isMaskedOrPlaceholderToken(updateData.token)) {
-        delete (updateData as { token?: string }).token;
-      }
-      // Новый секрет токена снова делает бота доступным для рассылок
-      if (updateData.token) {
-        updateData.isActive = 1;
-      }
-
-      const updatedToken = await storage.updateBotToken(tokenId, updateData);
-      if (!updatedToken) {
-        return res.status(404).json({ message: "Token not found" });
-      }
-
-      void emitTokenUpdated({
-        projectId,
-        tokenId,
-        before: undefined,
-        source: 'api',
-      }).catch((err) => console.error('[put-project-token] emitTokenUpdated:', err));
-
-      res.json(toPublicBotToken(updatedToken));
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid data", errors: error.errors });
-      }
-      res.status(500).json({ message: "Failed to update token" });
-    }
-    return;
-  });
+  /** Обновление токена использует явный whitelist и повторную проверку принадлежности проекту. */
+  app.put("/api/projects/:id/tokens/:tokenId", updateProjectTokenHandler);
 
   // Delete a token for a specific project (hasProjectAccess + сверка projectId)
   app.delete(
@@ -1050,7 +1002,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
    * Переключение настроек автоперезапуска для токена бота
    * PUT /api/projects/:projectId/tokens/:tokenId/auto-restart
    */
-  app.put("/api/projects/:projectId/tokens/:tokenId/auto-restart", requireTokenOwnership, async (req, res) => {
+  app.put("/api/projects/:projectId/tokens/:tokenId/auto-restart", requireTokenOwnership, requireBotSettingBody("auto-restart"), async (req, res) => {
     try {
       const tokenId = parseInt(req.params.tokenId);
       const projectId = parseInt(req.params.projectId);
@@ -1089,7 +1041,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
    * Обновление защиты контента для токена бота
    * PUT /api/projects/:projectId/tokens/:tokenId/protect-content
    */
-  app.put("/api/projects/:projectId/tokens/:tokenId/protect-content", requireTokenOwnership, async (req, res) => {
+  app.put("/api/projects/:projectId/tokens/:tokenId/protect-content", requireTokenOwnership, requireBotSettingBody("protect-content"), async (req, res) => {
     try {
       const tokenId = parseInt(req.params.tokenId);
       const projectId = parseInt(req.params.projectId);
@@ -1133,7 +1085,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
    * Обновление настройки сохранения входящих медиафайлов для токена бота
    * PUT /api/projects/:projectId/tokens/:tokenId/save-incoming-media
    */
-  app.put("/api/projects/:projectId/tokens/:tokenId/save-incoming-media", requireTokenOwnership, async (req, res) => {
+  app.put("/api/projects/:projectId/tokens/:tokenId/save-incoming-media", requireTokenOwnership, requireBotSettingBody("save-incoming-media"), async (req, res) => {
     try {
       const tokenId = parseInt(req.params.tokenId);
       const projectId = parseInt(req.params.projectId);
@@ -1170,7 +1122,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
    * (handle_unhandled_message, handle_unhandled_photo, fallback_callback_handler).
    * Значение в .env пишется как 0/1 (как USER_DATABASE), а не true/false.
    */
-  app.put("/api/projects/:projectId/tokens/:tokenId/catch-all-handlers", requireTokenOwnership, async (req, res) => {
+  app.put("/api/projects/:projectId/tokens/:tokenId/catch-all-handlers", requireTokenOwnership, requireBotSettingBody("catch-all-handlers"), async (req, res) => {
     try {
       const tokenId = parseInt(req.params.tokenId);
       const projectId = parseInt(req.params.projectId);
@@ -1200,7 +1152,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   /** Обновляет автоматическое отслеживание блокировок через my_chat_member. */
-  app.put("/api/projects/:projectId/tokens/:tokenId/track-user-blocks", requireTokenOwnership, async (req, res) => {
+  app.put("/api/projects/:projectId/tokens/:tokenId/track-user-blocks", requireTokenOwnership, requireBotSettingBody("track-user-blocks"), async (req, res) => {
     try {
       const tokenId = parseInt(req.params.tokenId);
       const projectId = parseInt(req.params.projectId);
@@ -1220,7 +1172,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   /** Обновляет слежение за добавлением и исключением бота в группах. */
-  app.put("/api/projects/:projectId/tokens/:tokenId/track-group-membership", requireTokenOwnership, async (req, res) => {
+  app.put("/api/projects/:projectId/tokens/:tokenId/track-group-membership", requireTokenOwnership, requireBotSettingBody("track-group-membership"), async (req, res) => {
     try {
       const tokenId = parseInt(req.params.tokenId);
       const projectId = parseInt(req.params.projectId);
@@ -1248,7 +1200,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
    * Аксессор get_content и кэш _content_cache генерируются всегда.
    * Значение в .env пишется как 0/1 (как CATCH_ALL_HANDLERS), а не true/false.
    */
-  app.put("/api/projects/:projectId/tokens/:tokenId/content-cache", requireTokenOwnership, async (req, res) => {
+  app.put("/api/projects/:projectId/tokens/:tokenId/content-cache", requireTokenOwnership, requireBotSettingBody("content-cache"), async (req, res) => {
     try {
       const tokenId = parseInt(req.params.tokenId);
       const projectId = parseInt(req.params.projectId);
@@ -1416,7 +1368,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
    * Обновление уровня логирования для токена бота
    * PUT /api/projects/:projectId/tokens/:tokenId/log-level
    */
-  app.put("/api/projects/:projectId/tokens/:tokenId/log-level", requireTokenOwnership, async (req, res) => {
+  app.put("/api/projects/:projectId/tokens/:tokenId/log-level", requireTokenOwnership, requireBotSettingBody("log-level"), async (req, res) => {
     try {
       const tokenId = parseInt(req.params.tokenId);
       const projectId = parseInt(req.params.projectId);
@@ -1448,7 +1400,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
    * Обновление настроек режима запуска для токена бота
    * PUT /api/projects/:projectId/tokens/:tokenId/launch-settings
    */
-  app.put("/api/projects/:projectId/tokens/:tokenId/launch-settings", requireTokenOwnership, async (req, res) => {
+  app.put("/api/projects/:projectId/tokens/:tokenId/launch-settings", requireTokenOwnership, requireBotSettingBody("launch-settings"), async (req, res) => {
     try {
       const tokenId = parseInt(req.params.tokenId);
       const projectId = parseInt(req.params.projectId);
@@ -1496,7 +1448,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         source: 'api',
       }).catch((err) => console.error('[launch-settings] emitTokenUpdated:', err));
 
-      res.json({ success: true, launchMode, webhookBaseUrl, webhookSecretToken });
+      /** Секрет webhook никогда не возвращается после записи. */
+      res.json({ success: true, launchMode, webhookBaseUrl, persistence: { confirmed: true, method: 'storage_returning' } });
     } catch (error) {
       res.status(500).json({ message: "Ошибка обновления настроек запуска" });
     }
@@ -2211,7 +2164,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   app.put("/api/media/:id", requireMediaOwnership, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const updates = req.body;
+      const validation = updateMediaMetadataSchema.safeParse(req.body);
+      if (!validation.success) return res.status(400).json({ message: "Недопустимые метаданные файла" });
+      const updates = validation.data;
 
       const mediaFile = await storage.updateMediaFile(id, updates);
 
@@ -3267,63 +3222,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   );
 
   // Delete all user data for a project
-  app.delete("/api/projects/:id/users", async (req, res) => {
-    try {
-      const projectId = parseInt(req.params.id);
-      const tokenId = getRequestTokenId(req);
-
-      // Проверяем права доступа к проекту для авторизованных пользователей
-      const ownerId = getOwnerIdFromRequest(req);
-      if (ownerId !== null) {
-        const hasAccess = await storage.hasProjectAccess(projectId, ownerId);
-        if (!hasAccess) {
-          return res.status(403).json({ message: "Нет прав доступа к проекту" });
-        }
-      }
-
-      let totalDeleted = 0;
-
-      try {
-        // Удаляем всех пользователей из таблицы bot_users для данного проекта
-        const deleteResult = await dbPool.query(
-          tokenId
-            ? `DELETE FROM bot_users WHERE project_id = $1 AND token_id = $2`
-            : `DELETE FROM bot_users WHERE project_id = $1`,
-          tokenId ? [projectId, tokenId] : [projectId]
-        );
-
-        totalDeleted += deleteResult.rowCount || 0;
-        console.log(`Deleted ${deleteResult.rowCount || 0} users from bot_users for project ${projectId}`);
-      } catch (dbError) {
-        console.log("bot_users table not found or error:", (dbError as any).message);
-      }
-
-      // Удаляем сообщения из таблицы bot_messages
-      try {
-        const deleteMessagesResult = await dbPool.query(
-          tokenId
-            ? `DELETE FROM bot_messages WHERE project_id = $1 AND token_id = $2`
-            : `DELETE FROM bot_messages WHERE project_id = $1`,
-          tokenId ? [projectId, tokenId] : [projectId]
-        );
-
-        totalDeleted += deleteMessagesResult.rowCount || 0;
-        console.log(`Deleted ${deleteMessagesResult.rowCount || 0} messages from bot_messages for project ${projectId}`);
-      } catch (dbError) {
-        console.log("bot_messages table not found or error:", (dbError as any).message);
-      }
-
-      res.json({
-        message: "All user data deleted successfully",
-        deleted: true,
-        deletedCount: totalDeleted
-      });
-    } catch (error) {
-      console.error("Failed to delete user data:", error);
-      res.status(500).json({ message: "Failed to delete user data" });
-    }
-    return;
-  });
+  /** Удаление базы выполняется атомарно после проверки доступа к проекту. */
+  app.delete("/api/projects/:id/users", requireProjectAccess, clearBotUsersHandler);
 
   // Bot Messages endpoints
 
@@ -3427,7 +3327,7 @@ function setupTokenEnvVariableRoutes(app: Express) {
         value: value ?? "",
         isSecret: isSecret ?? 0,
       });
-      res.status(201).json(variable);
+      res.status(201).json({ ...variable, persistence: { confirmed: true, method: 'storage_returning' } });
     } catch (error) {
       res.status(500).json({ message: "Ошибка создания переменной окружения" });
     }
@@ -3470,7 +3370,7 @@ function setupTokenEnvVariableRoutes(app: Express) {
 
       const updated = await storage.updateEnvVariable(id, updateData);
       if (!updated) return res.status(404).json({ message: "Не удалось обновить" });
-      res.json(updated);
+      res.json({ ...updated, persistence: { confirmed: true, method: 'storage_returning' } });
     } catch (error) {
       res.status(500).json({ message: "Ошибка обновления переменной окружения" });
     }
@@ -3491,7 +3391,7 @@ function setupTokenEnvVariableRoutes(app: Express) {
       }
       const deleted = await storage.deleteEnvVariable(id);
       if (!deleted) return res.status(404).json({ message: "Переменная не найдена" });
-      res.json({ success: true });
+      res.json({ success: true, persistence: { confirmed: true, method: 'storage_delete' } });
     } catch (error) {
       res.status(500).json({ message: "Ошибка удаления переменной окружения" });
     }

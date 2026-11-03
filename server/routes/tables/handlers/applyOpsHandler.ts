@@ -4,6 +4,7 @@
  */
 
 import type { Request, Response } from "express";
+import { tableWriteReceipt } from "../write-receipt";
 import { applyTableOps } from "../../../database/bot-tables/apply-ops";
 import { opsNeedConfirm, parseTableOps } from "../../../database/bot-tables/table-ops";
 import { fail, sqlFailure } from "../http-error";
@@ -34,7 +35,7 @@ export async function applyOpsHandler(req: Request, res: Response): Promise<void
       res.status(applied.status).json({ message: applied.message, failed_op_index: applied.failed_op_index });
       return;
     }
-    res.json({ results: applied.results });
+    res.json(tableWriteReceipt(res, { results: applied.results }, owned.projectId, owned.table.id));
     await notifyTableChange(owned.projectId, owned.table.id, applied.tableName, applied.contentRows);
   } catch (error) {
     const parsed = sqlFailure(error);

@@ -19,6 +19,8 @@ curl -s -b cookies.txt \
   'http://localhost:5000/api/projects/42/broadcast-campaigns'
 ```
 
+**Operation ID:** `get_api_projects_projectId_broadcast_campaigns_2a257faa14323cfe`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -89,6 +91,8 @@ curl -s -X DELETE -b cookies.txt \
   'http://localhost:5000/api/projects/42/broadcast-campaigns/3'
 ```
 
+**Operation ID:** `delete_api_projects_projectId_broadcast_campaigns_campaignId_d86a5960d971d1b9`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -135,6 +139,8 @@ curl -s -X DELETE -b cookies.txt \
 curl -s -b cookies.txt \
   'http://localhost:5000/api/projects/42/broadcast-campaigns/3'
 ```
+
+**Operation ID:** `get_api_projects_projectId_broadcast_campaigns_campaignId_305df51f0c3d4b49`
 
 #### Параметры
 
@@ -257,6 +263,8 @@ curl -s -X PUT -b cookies.txt -H 'Content-Type: application/json' \
   'http://localhost:5000/api/projects/42/broadcast-campaigns/3'
 ```
 
+**Operation ID:** `put_api_projects_projectId_broadcast_campaigns_campaignId_ed7e93ab82d3ae4d`
+
 **Тело запроса:** `EditBroadcastCampaignRequest`
 
 #### Параметры
@@ -327,6 +335,8 @@ curl -s -X PUT -b cookies.txt -H 'Content-Type: application/json' \
 curl -s -X POST -b cookies.txt \
   'http://localhost:5000/api/projects/42/broadcast-campaigns/3/stop'
 ```
+
+**Operation ID:** `post_api_projects_projectId_broadcast_campaigns_campaignId_stop_58b3aba3f62a30cc`
 
 #### Параметры
 
@@ -399,6 +409,8 @@ curl -s -X POST -b cookies.txt \
 curl -s -b cookies.txt \
   'http://localhost:5000/api/projects/42/broadcasts?page=1&tokenId=7'
 ```
+
+**Operation ID:** `get_api_projects_projectId_broadcasts_0b46c259147b981b`
 
 #### Параметры
 
@@ -476,6 +488,8 @@ curl -s -X POST -b cookies.txt -H 'Content-Type: application/json' \
   'http://localhost:5000/api/projects/42/broadcasts'
 ```
 
+**Operation ID:** `post_api_projects_projectId_broadcasts_936fbe6fc38d99ae`
+
 **Тело запроса:** `CreateBroadcastRequest`
 
 #### Параметры
@@ -545,6 +559,8 @@ curl -s -X DELETE -b cookies.txt \
   'http://localhost:5000/api/projects/42/broadcasts/15'
 ```
 
+**Operation ID:** `delete_api_projects_projectId_broadcasts_broadcastId_56cba0273d78e106`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -588,6 +604,8 @@ curl -s -X DELETE -b cookies.txt \
 curl -s -b cookies.txt \
   'http://localhost:5000/api/projects/42/broadcasts/15'
 ```
+
+**Operation ID:** `get_api_projects_projectId_broadcasts_broadcastId_3422948af42c0ccf`
 
 #### Параметры
 
@@ -666,6 +684,8 @@ curl -s -X PUT -b cookies.txt -H 'Content-Type: application/json' \
   'http://localhost:5000/api/projects/42/broadcasts/15'
 ```
 
+**Operation ID:** `put_api_projects_projectId_broadcasts_broadcastId_83e25dc09e6f5ec7`
+
 **Тело запроса:** `EditBroadcastRequest`
 
 #### Параметры
@@ -720,6 +740,8 @@ curl -s -X PUT -b cookies.txt -H 'Content-Type: application/json' \
 curl -s -X POST -b cookies.txt \
   'http://localhost:5000/api/projects/42/broadcasts/15/stop'
 ```
+
+**Operation ID:** `post_api_projects_projectId_broadcasts_broadcastId_stop_b794ea48f3faaa86`
 
 #### Параметры
 
@@ -792,6 +814,8 @@ curl -s -X POST -b cookies.txt -H 'Content-Type: application/json' \
   -d '{"filters":{"tags":["vip"]},"tokenIds":[7,8]}' \
   'http://localhost:5000/api/projects/42/broadcasts/preview-audience'
 ```
+
+**Operation ID:** `post_api_projects_projectId_broadcasts_preview_audience_5fad217d7aa2fd00`
 
 **Тело запроса:** `PreviewAudienceRequest`
 

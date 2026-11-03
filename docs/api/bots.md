@@ -18,6 +18,8 @@ UI сейчас почти не вызывает; предпочтительны
 curl -s http://localhost:5000/api/bots -b cookies.txt
 ```
 
+**Operation ID:** `get_api_bots_cd30098083163f8d`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |

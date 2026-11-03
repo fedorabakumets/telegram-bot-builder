@@ -1,6 +1,111 @@
 # project-dialogs
 
-Эндпоинтов: **5**
+Эндпоинтов: **9**
+
+### `POST` /api/projects/{projectId}/chat-access-checks
+
+Запустить фоновую проверку личных диалогов
+
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+
+Одна активная проверка на бота; 201 означает созданную задачу, а не завершённую проверку.
+
+**Operation ID:** `post_api_projects_projectId_chat_access_checks_65c4bd9c45e313e5`
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `projectId` | path | да | — | — |
+| `tokenId` | query | нет | — | — |
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 201 | Созданная задача |
+| 400 | Некорректные параметры либо завершённая задача |
+| 401 | Нет авторизации |
+| 403 | Нет доступа к проекту |
+| 404 | Бот или задача не найдены в проекте |
+| 409 | Проверка уже выполняется |
+
+### `POST` /api/projects/{projectId}/chat-access-checks/{jobId}/cancel
+
+Отменить оставшуюся очередь проверки
+
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+
+**Operation ID:** `post_api_projects_projectId_chat_access_checks_jobId_cancel_c5209e0545070ea5`
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `projectId` | path | да | — | — |
+| `jobId` | path | да | — | — |
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Состояние cancelling либо cancelled |
+| 400 | Некорректные параметры либо завершённая задача |
+| 401 | Нет авторизации |
+| 403 | Нет доступа к проекту |
+| 404 | Бот или задача не найдены в проекте |
+
+### `GET` /api/projects/{projectId}/chat-access-checks/active
+
+Прочитать активную или последнюю проверку бота
+
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+
+**Operation ID:** `get_api_projects_projectId_chat_access_checks_active_8527b43acc9e3e34`
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `projectId` | path | да | — | — |
+| `tokenId` | query | да | — | — |
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Задача либо null |
+| 400 | Некорректные параметры либо завершённая задача |
+| 401 | Нет авторизации |
+| 403 | Нет доступа к проекту |
+| 404 | Бот или задача не найдены в проекте |
+
+### `POST` /api/projects/{projectId}/dialogs/{chatId}/check-access
+
+Проверить личный чат действием typing и сохранить результат
+
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+
+**Operation ID:** `post_api_projects_projectId_dialogs_chatId_check_access_e21728a51784aab3`
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `projectId` | path | да | — | — |
+| `chatId` | path | да | — | — |
+| `tokenId` | query | да | — | — |
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Известный результат проверки |
+| 400 | Параметры отклонены либо Telegram дал неопределённый результат |
+| 401 | Нет авторизации |
+| 403 | Нет доступа к проекту |
+| 404 | Бот или задача не найдены в проекте |
+| 500 | Ошибка проверки; сохранённый статус приложен, если запись удалась |
 
 ### `GET` /api/projects/{projectId}/users/{userId}/avatar
 
@@ -18,6 +123,8 @@
 curl -s -o avatar.jpg -b cookies.txt \
   'http://localhost:5000/api/projects/42/users/123456789/avatar?tokenId=7'
 ```
+
+**Operation ID:** `get_api_projects_projectId_users_userId_avatar_483774e31eef1a3c`
 
 #### Параметры
 
@@ -53,6 +160,8 @@ UI сейчас почти не вызывает; API доступен для о
 curl -s -X DELETE -b cookies.txt \
   'http://localhost:5000/api/projects/42/users/123456789/messages?tokenId=7'
 ```
+
+**Operation ID:** `delete_api_projects_projectId_users_userId_messages_1d662a13069a1d0b`
 
 #### Параметры
 
@@ -99,6 +208,8 @@ curl -s -X DELETE -b cookies.txt \
 curl -s -b cookies.txt \
   'http://localhost:5000/api/projects/42/users/123456789/messages?tokenId=7&limit=50'
 ```
+
+**Operation ID:** `get_api_projects_projectId_users_userId_messages_64c347b5b3d4ec78`
 
 #### Параметры
 
@@ -162,6 +273,8 @@ curl -s -X POST -b cookies.txt -H 'Content-Type: application/json' \
   -d '{"messageText":"Здравствуйте!"}'
 ```
 
+**Operation ID:** `post_api_projects_projectId_users_userId_send_message_7ea96c32bb8f279e`
+
 **Тело запроса:** `SendDialogMessageRequest`
 
 #### Параметры
@@ -223,6 +336,8 @@ curl -s -X POST -b cookies.txt -H 'Content-Type: application/json' \
   'http://localhost:5000/api/projects/42/users/123456789/send-node-message?tokenId=7' \
   -d '{"nodeId":"welcome-msg"}'
 ```
+
+**Operation ID:** `post_api_projects_projectId_users_userId_send_node_message_14261f78c452585c`
 
 **Тело запроса:** `SendNodeMessageRequest`
 

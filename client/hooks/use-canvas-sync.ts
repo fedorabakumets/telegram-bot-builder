@@ -11,11 +11,18 @@ import { isCanvasResetMessage, type CanvasResetMessage, type CanvasResetKind } f
 import { isCanvasVersionsChangedMessage, type CanvasVersionsChangedMessage } from '@shared/canvas-sync/canvas-versions-changed-message';
 import type { AppUser } from '@/types/telegram-user';
 import { buildLocalCanvasActor } from './canvas-sync/build-local-canvas-actor';
+import { acceptsCanvasOrder, type CanvasOrder } from '@shared/canvas-sync/revision-order';
 
 /** Параметры хука синхронизации холста */
 export interface UseCanvasSyncOptions {
   /** ID активного проекта */
   projectId?: number;
+  /** Ревизия последнего подтверждённого состояния активного проекта. */
+  savedRevision?: number;
+  /** Несохранённый черновик нельзя заменять входящим снимком. */
+  hasLocalChanges?: boolean;
+  /** Уведомляет о сохранённом удалённом изменении, отложенном до разрешения конфликта. */
+  onRemoteConflict?: (msg: CanvasSyncMessage) => void;
   /** Текущие данные холста */
   botDataWithSheets: BotDataWithSheets | null | undefined;
   /** Текущий пользователь (для actor.kind=user) */
@@ -84,6 +91,12 @@ export function useCanvasSync(options: UseCanvasSyncOptions): UseCanvasSyncResul
   const tabIdRef = useRef(createTabId());
   const isApplyingRemoteRef = useRef(false);
   const lastAppliedTimestampRef = useRef(0);
+  /** Отдельный порядок серверных ревизий не зависит от задержки побочных эффектов. */
+  const lastOrderRef = useRef<CanvasOrder>();
+  /** Отложенный снимок хранится отдельно от исходной ревизии локального черновика. */
+  const deferredRemoteRef = useRef<CanvasSyncMessage>();
+  const dirtyRef = useRef(options.hasLocalChanges === true);
+  const conflictRef = useRef(options.onRemoteConflict);
   const lastSentPayloadRef = useRef('');
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onRemoteUpdateRef = useRef(onRemoteUpdate);
@@ -105,6 +118,13 @@ export function useCanvasSync(options: UseCanvasSyncOptions): UseCanvasSyncResul
   localUserRef.current = localUser;
   agentActorRef.current = agentActor;
   projectIdRef.current = projectId;
+  dirtyRef.current = options.hasLocalChanges === true;
+  conflictRef.current = options.onRemoteConflict;
+  /** Локальное сохранение также повышает водораздел запоздавших серверных снимков. */
+  if (projectId !== undefined && Number.isSafeInteger(options.savedRevision)
+    && (lastOrderRef.current?.projectId !== projectId || (lastOrderRef.current.revision ?? -1) < options.savedRevision!)) {
+    lastOrderRef.current = { projectId, revision: options.savedRevision!, timestamp: lastOrderRef.current?.projectId === projectId ? lastOrderRef.current.timestamp : 0 };
+  }
 
   /**
    * Обрабатывает входящее сообщение сброса/сохранения от другого клиента.
@@ -114,6 +134,8 @@ export function useCanvasSync(options: UseCanvasSyncOptions): UseCanvasSyncResul
     if (msg.tabId === tabIdRef.current) return;
     const pid = projectIdRef.current;
     if (pid != null && msg.projectId !== pid) return;
+    /** Чужое сохранение или сброс не разрешают удалить локальный черновик. */
+    if (dirtyRef.current) return;
     onRemoteResetRef.current?.(msg.kind);
   });
 
@@ -131,10 +153,20 @@ export function useCanvasSync(options: UseCanvasSyncOptions): UseCanvasSyncResul
     if (msg.tabId === tabIdRef.current) return;
     const pid = projectIdRef.current;
     if (pid != null && msg.projectId !== pid) return;
-    if (msg.timestamp <= lastAppliedTimestampRef.current) return;
+    if (!acceptsCanvasOrder(lastOrderRef.current, msg)) return;
+    if (dirtyRef.current) {
+      const previous = deferredRemoteRef.current;
+      if (!previous || acceptsCanvasOrder(previous, msg)) {
+        deferredRemoteRef.current = msg;
+        conflictRef.current?.(msg);
+      }
+      return;
+    }
+    lastOrderRef.current = { projectId: msg.projectId, timestamp: msg.timestamp,
+      revision: msg.revision ?? (lastOrderRef.current?.projectId === msg.projectId ? lastOrderRef.current.revision : undefined) };
 
     const payload = JSON.stringify(msg.data);
-    if (payload === lastSentPayloadRef.current) return;
+    if (payload === lastSentPayloadRef.current) { onRemoteSyncRef.current?.(msg); return; }
 
     lastAppliedTimestampRef.current = msg.timestamp;
     lastSentPayloadRef.current = payload;
@@ -151,6 +183,13 @@ export function useCanvasSync(options: UseCanvasSyncOptions): UseCanvasSyncResul
       }, 0);
     });
   });
+
+  useEffect(() => {
+    if (options.hasLocalChanges || !deferredRemoteRef.current) return;
+    const deferred = deferredRemoteRef.current;
+    deferredRemoteRef.current = undefined;
+    if (deferred.projectId === projectId) applyRemoteRef.current(deferred);
+  }, [options.hasLocalChanges, projectId]);
 
   useEffect(() => {
     if (!enabled || !projectId || typeof BroadcastChannel === 'undefined') return;

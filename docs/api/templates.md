@@ -22,6 +22,8 @@
 
 **Клиент:** `useVseStsenary`.
 
+**Operation ID:** `get_api_templates_5013cb47f0d0cca3`
+
 #### Ответы
 
 | Код | Описание |
@@ -121,6 +123,8 @@
 
 `ownerId` ставится из сессии. **Клиент:** `save-template-modal`.
 
+**Operation ID:** `post_api_templates_42afe28831150f91`
+
 **Тело запроса:** `CreateTemplateRequest`
 
 #### Пример тела запроса
@@ -189,6 +193,8 @@
 
 **Клиент:** `useUdalitStsenary`.
 
+**Operation ID:** `delete_api_templates_id_f646511c02b634ed`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -228,6 +234,8 @@
 
 **Отдаёт:** сырой шаблон **без** алиаса `flow_data`.
 
+**Operation ID:** `get_api_templates_id_d6efb6fec750ab81`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -257,6 +265,8 @@
 
 **Права:** только свой шаблон (`ownerId === caller`). Системные и чужие → 403.
 **Не принимает:** `featured`, rating/счётчики, `ownerId`.
+
+**Operation ID:** `put_api_templates_id_41b959518e29ba38`
 
 **Тело запроса:** `UpdateTemplateRequest`
 
@@ -293,6 +303,8 @@
 3. Копия: `category: custom`, `isPublic: 0`, **`ownerId` = текущий user**
 
 **Клиент:** `useIspolzovatStsenary`.
+
+**Operation ID:** `post_api_templates_id_use_d8701fcb05edc61d`
 
 #### Параметры
 
@@ -400,6 +412,8 @@
 
 **Клиент:** `useMoiStsenary` → `/category/custom` (требует сессию).
 
+**Operation ID:** `get_api_templates_category_category_34ff90a3fafbb519`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -430,6 +444,8 @@
 **Не отдаёт:** чужие приватные featured.
 
 **Авторизация:** cookie / PAT. **Клиент:** `useRekomenduemyeStsenary` (запрос при активной вкладке featured).
+
+**Operation ID:** `get_api_templates_featured_0f3b9e073c9f7dac`
 
 #### Ответы
 
@@ -527,6 +543,8 @@
 **Query:** `q` обязателен (иначе 400).
 
 **Privacy:** публичные + системные (`ownerId=null`) + свои.
+
+**Operation ID:** `get_api_templates_search_069fd6ffa162a79b`
 
 #### Параметры
 

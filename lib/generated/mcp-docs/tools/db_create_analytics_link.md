@@ -1,14 +1,11 @@
-<!--
-@fileoverview Контракт аналитики v2, автоматически экспортированный из регистрации.
--->
-
-# db_create_analytics_link
+<!-- @fileoverview Автоматическая карточка реального действия MCP. -->
+# `db_create_analytics_link`
 
 Создать: ссылки. data совпадает с POST API. Все связанные ID проверяются в проекте. Ссылки bc_ постоянны; конфликт маршрута /start возвращает 409. Расход amount строкой, allocation=equal явно распределяет по day..untilDay. exchangeRateRubPerUsd — сохранённый ручной курс RUB за 1 USD.
 
-## Параметры
+Раздел: analytics. Транспорт: http, stdio.
 
-Схема публикуется самим MCP и совпадает с авторизованным HTTP API:
+## Параметры
 
 ```json
 {
@@ -62,25 +59,148 @@
 }
 ```
 
-## Пример
+## Эффект
 
 ```json
 {
-  "tool": "db_create_analytics_link",
-  "arguments": {
-    "project_id": 12,
+  "section": "analytics",
+  "effect": "write",
+  "completionMode": "immediate",
+  "destructive": false,
+  "runtimeApply": "not_applicable"
+}
+```
+
+## Пример вызова
+
+```json
+{
+  "action_id": "db_create_analytics_link",
+  "args": {
+    "project_id": 1,
     "data": {
-      "placementId": 6,
-      "purpose": "acquisition"
+      "placementId": 1
     }
   }
 }
 ```
 
+Структурный пример проверен Zod; ID и данные замените реальными.
+
 ## Ответ и ошибки
 
-Ответ API сохраняется без пересчёта. Денежные значения — строки; null цены не равен нулю. В отчётах учитывайте as_of/asOf, coverage, complete и reason. Старые сборки ботов дают неполную историю. Код HTTP 400 означает некорректные параметры, 403 — чужой проект/бот, 404 — отсутствующий объект, 409 — конфликт маршрута start, 503 — временную недоступность. Ошибка помечена isError.
+Прежний text content сохранён. Метаданные `_meta.botcraft` различают prepared/read/saved/pending/partial/unknown/error/unverified. Только `persistence.confirmed=true` подтверждает сохранение. Неизвестный исход требует чтения состояния до повтора; live-доставка и применение ботом проверяются отдельно.
 
-Инструмент изменяет указанные рекламные данные проекта; архивирование сохраняет историю.
+### Схема результата
 
-Связанный процесс: [аналитика и реклама](../workflows/analytics-acquisition.md).
+```json
+{
+  "type": "object",
+  "properties": {
+    "data": {
+      "anyOf": [
+        {},
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "execution": {
+      "type": "object",
+      "properties": {
+        "section": {
+          "type": "string"
+        },
+        "effect": {
+          "type": "string",
+          "enum": [
+            "read",
+            "prepare",
+            "write",
+            "file",
+            "external",
+            "unknown"
+          ]
+        },
+        "destructive": {
+          "type": "boolean"
+        },
+        "runtimeApply": {
+          "type": "string",
+          "enum": [
+            "not_applicable",
+            "separate"
+          ]
+        },
+        "completionMode": {
+          "type": "string",
+          "enum": [
+            "immediate",
+            "job"
+          ]
+        },
+        "pollAction": {
+          "type": "string"
+        },
+        "outcome": {
+          "type": "string",
+          "enum": [
+            "prepared",
+            "read",
+            "saved",
+            "pending",
+            "partial",
+            "unknown",
+            "error",
+            "unverified",
+            "file_result"
+          ]
+        },
+        "persistence": {
+          "type": "object",
+          "properties": {
+            "confirmed": {
+              "type": "boolean"
+            },
+            "projectId": {
+              "type": "integer",
+              "exclusiveMinimum": 0
+            },
+            "revision": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "confirmed"
+          ],
+          "additionalProperties": false
+        },
+        "sideEffects": {
+          "type": "object",
+          "additionalProperties": {}
+        }
+      },
+      "required": [
+        "section",
+        "effect",
+        "destructive",
+        "runtimeApply",
+        "completionMode",
+        "outcome",
+        "persistence"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "execution"
+  ],
+  "additionalProperties": false,
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}
+```
+
+## Ограничения и безопасность
+
+Изучите describe_actions, проверьте реальные ID и права проекта. Для разрушительных и внешних действий требуется явное намерение пользователя. Для повторов сохраняйте requestId, если он объявлен. Отсутствие ошибки транспорта не доказывает сохранение.

@@ -18,6 +18,8 @@
 
 Требуется авторизация: сессионная cookie или Bearer PAT агента.
 
+**Operation ID:** `get_api_server_env_keys_6a35936108e0561f`
+
 #### Ответы
 
 | Код | Описание |

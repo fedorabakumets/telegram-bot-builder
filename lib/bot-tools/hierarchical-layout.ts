@@ -15,6 +15,7 @@
  */
 
 import type { Node } from '@shared/schema';
+import { hasActiveInput } from '@shared/active-input';
 
 /**
  * Извлекает ID связанной клавиатуры из данных узла (инлайн из keyboard-connection).
@@ -403,7 +404,7 @@ function inferConnectionsFromNodes(
       }
     }
 
-    if (typeof data.inputTargetNodeId === 'string' && data.inputTargetNodeId) {
+    if (hasActiveInput(node) && typeof data.inputTargetNodeId === 'string' && data.inputTargetNodeId) {
       pushConnection({
         fromId: node.id,
         toId: data.inputTargetNodeId,

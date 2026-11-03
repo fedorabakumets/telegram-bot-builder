@@ -70,18 +70,15 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
    * Обновить проект бота в базе данных и кэше
    * @param id - ID проекта
    * @param updateData - Данные для обновления
+   * @param expectedRevision - Необязательная ожидаемая ревизия
    * @returns Обновленный проект бота или undefined, если не найден
    */
-  async updateBotProject(id: number, updateData: Partial<InsertBotProject>): Promise<BotProject | undefined> {
-    const [project] = await this.db
-      .update(botProjects)
-      .set({ ...updateData, updatedAt: new Date() })
-      .where(eq(botProjects.id, id))
-      .returning();
-    if (project) {
-      this.projectCache.set(id, project);
-    }
-    return project || undefined;
+  async updateBotProject(id: number, updateData: Partial<InsertBotProject>, expectedRevision?: number): Promise<BotProject | undefined> {
+    // Общий writer сохраняет атомарную ревизию и исключает служебные поля.
+    const project = await super.updateBotProject(id, updateData, expectedRevision);
+    if (project) this.projectCache.set(id, project);
+    else this.projectCache.delete(id);
+    return project;
   }
 
   /**

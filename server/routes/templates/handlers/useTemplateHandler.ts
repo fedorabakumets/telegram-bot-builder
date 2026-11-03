@@ -3,6 +3,9 @@
  * @module server/routes/templates/handlers/useTemplateHandler
  */
 
+import { durableAction } from "../../../services/action-requests/durable-action";
+import { actionRequestLedger } from "../../../services/action-requests/default-ledger";
+import { externalActionReceipt } from "../../durable-project-action";
 import type { Request, Response } from "express";
 
 import { storage } from "../../../storages/storage";
@@ -37,6 +40,7 @@ export async function useTemplateHandler(req: Request, res: Response): Promise<v
       return;
     }
 
+    await durableAction(async () => {
     await storage.incrementTemplateUseCount(id);
 
     const newProject = await storage.createBotProject({
@@ -47,6 +51,8 @@ export async function useTemplateHandler(req: Request, res: Response): Promise<v
       userDatabaseEnabled: 1,
     });
 
+    /** Частичный результат фиксируется до следующего неатомарного шага. */
+    if (res.locals.actionRequestCheckpoint) await res.locals.actionRequestCheckpoint({ projectId: newProject.id });
     const copiedTemplate = await storage.createBotTemplate({
       name: template.name,
       description: template.description,
@@ -77,6 +83,8 @@ export async function useTemplateHandler(req: Request, res: Response): Promise<v
       project: newProject,
       copiedTemplate,
     });
+    }, { action: 'use_template', scope: () => `owner:${ownerId}:template:${id}`, ledger: actionRequestLedger, receipt: externalActionReceipt })(req, res, () => undefined);
+
   } catch (error) {
     console.error("Template use error:", error);
     res.status(500).json({ message: "Failed to use template" });

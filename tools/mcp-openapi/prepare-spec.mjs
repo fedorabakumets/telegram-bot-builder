@@ -8,6 +8,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { normalizeMcpSecurity } from './security.mjs';
+import { mayExposeOperation } from './exposure.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, '../..');
@@ -17,7 +19,6 @@ const INCLUDE_TAGS = new Set([
   'project-tokens',
   'project-bot',
   'projects',
-  'agent-tokens',
   'health',
   'bots',
   'tokens',
@@ -25,8 +26,8 @@ const INCLUDE_TAGS = new Set([
 
 /**
  * Операция относится к whitelist-тегу
- * @param {unknown} op - OpenAPI operation object
- * @returns {boolean}
+ * @param {unknown} op - Описание операции OpenAPI.
+ * @returns {boolean} Принадлежность разрешённым тегам.
  */
 function opIncluded(op) {
   if (!op || typeof op !== 'object') return false;
@@ -56,8 +57,11 @@ function main() {
         kept[method] = op;
         continue;
       }
-      if (opIncluded(op)) {
-        kept[method] = op;
+      if (opIncluded(op) && mayExposeOperation(p, op, method)) {
+        kept[method] = {
+          ...op,
+          security: normalizeMcpSecurity(op.security ?? doc.security, `${method.toUpperCase()} ${p}`),
+        };
         keptOps += 1;
       }
     }
@@ -72,23 +76,23 @@ function main() {
       title: `${doc.info?.title || 'API'} (MCP subset)`,
       description:
         (doc.info?.description || '') +
-        '\n\nУрезанный spec для tools/mcp-openapi: теги ' +
-        [...INCLUDE_TAGS].join(', ') +
-        '.',
+        '\n\nОграниченный альтернативный адаптер tools/mcp-openapi: только пять проверенных GET-операций чтения проектов, списка ботов, статусов и health. Изменения выполняются основным MCP. Новые пути не публикуются автоматически.',
     },
     servers: [{ url: process.env.API_BASE_URL || 'http://localhost:5000' }],
     'x-mcp': true,
     paths,
-    tags: (doc.tags || []).filter((t) => INCLUDE_TAGS.has(t.name)),
+    tags: [...new Set(Object.values(paths).flatMap((methods) => Object.values(methods).flatMap((operation) => operation.tags ?? [])))].map((name) =>
+      (doc.tags || []).find((tag) => tag.name === name) ?? { name }),
   };
 
   // Убираем adminCookie из securitySchemes — MCP ходит только с Bearer PAT
-  if (filtered.components?.securitySchemes) {
-    const { adminCookie: _a, cookieAuth: _c, ...rest } = filtered.components.securitySchemes;
-    filtered.components.securitySchemes = {
-      agentToken: rest.agentToken ?? doc.components.securitySchemes.agentToken,
-    };
+  if (!doc.components?.securitySchemes?.agentToken) {
+    throw new Error('В исходной спецификации отсутствует схема авторизации agentToken');
   }
+  filtered.components = {
+    ...doc.components,
+    securitySchemes: { agentToken: doc.components.securitySchemes.agentToken },
+  };
   filtered.security = [{ agentToken: [] }];
 
   fs.writeFileSync(outPath, JSON.stringify(filtered, null, 2), 'utf8');

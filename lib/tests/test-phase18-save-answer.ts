@@ -14,6 +14,7 @@
 import fs from 'fs';
 import { execSync } from 'child_process';
 import { generatePythonCode } from '../bot-generator.ts';
+import { migrateLegacyMessageInputToLinkedInputs } from '../../client/components/editor/canvas/canvas/utils/migrate-message-input';
 
 type Result = { id: string; name: string; passed: boolean; note: string };
 const results: Result[] = [];
@@ -525,7 +526,7 @@ test('A01', 'message -> input -> message генерирует dedicated waiting_
   const code = gen(project, 'a01');
   const msg = block(code, 'msg_1');
   const inp = block(code, 'input_1');
-  assertIncludesAll(msg, ['await handle_callback_input_1(fake_callback)'], 'A01 message');
+  assertIncludesAll(msg, ['await handle_callback_input_1(fake_callback, state=state)'], 'A01 message');
   assertIncludesAll(inp, [
     '@dp.callback_query(lambda c: c.data == "input_1")',
     'async def handle_callback_input_1',
@@ -543,7 +544,7 @@ test('A02', 'message -> input -> input -> message сохраняет цепоч�
   const intro = block(code, 'msg_intro');
   const first = block(code, 'input_text_1');
   const second = block(code, 'input_text_2');
-  assertIncludesAll(intro, ['await handle_callback_input_text_1(fake_callback)'], 'A02 intro');
+  assertIncludesAll(intro, ['await handle_callback_input_text_1(fake_callback, state=state)'], 'A02 intro');
   assertIncludesAll(first, ['"variable": "user_name"', '"next_node_id": "input_text_2"'], 'A02 first');
   assertIncludesAll(second, ['"variable": "user_email"', '"next_node_id": "msg_done"'], 'A02 second');
   assertIncludesAll(code, ['await handle_callback_input_text_2(fake_callback)'], 'A02 chain');
@@ -1018,7 +1019,7 @@ test('D02', 'message -> input -> message с autoTransition на dedicated input 
   ]);
 
   const code = gen(project, 'd02');
-  assertIncludesAll(block(code, 'msg_1'), ['await handle_callback_input_1(fake_callback)'], 'D02');
+  assertIncludesAll(block(code, 'msg_1'), ['await handle_callback_input_1(fake_callback, state=state)'], 'D02');
   assertIncludesAll(block(code, 'input_1'), ['"next_node_id": "msg_2"'], 'D02 input');
   syntax(code, 'd02');
 });
@@ -1383,7 +1384,9 @@ test('H03', 'dedicated input не мешает пустому keyboard узлу 
   ]);
 
   const code = gen(project, 'h03');
-  assertIncludesAll(code, ['handle_callback_input_1', 'без самостоятельной отправки сообщения'], 'H03');
+  /** Проверяем поведение input, а не изменяемый поясняющий комментарий keyboard-шаблона. */
+  assertIncludesAll(block(code, 'input_1'), ['async def handle_callback_input_1', '"modes": ["contact"]', '"next_node_id": "msg_2"'], 'H03');
+  ok(countOccurrences(code, 'async def handle_callback_input_1') === 1, 'H03: input handler должен быть единственным');
   syntax(code, 'h03');
 });
 
@@ -1488,7 +1491,8 @@ test('I04', 'несколько autoTransition веток сходятся в о
   assertIncludesAll(code, [
     'await handle_callback_shared_input_1(fake_callback)',
   ], 'I04');
-  ok(countOccurrences(code, 'await handle_callback_shared_input_1(fake_callback)') >= 3, 'I04: ожидается несколько autoTransition вызовов');
+  /** Вызовы сохраняют передаваемое FSM-состояние либо явное отсутствие состояния. */
+  ok((code.match(/await handle_callback_shared_input_1\(fake_callback(?:, state=(?:state|None))?\)/g) || []).length >= 3, 'I04: ожидается несколько autoTransition вызовов');
   syntax(code, 'i04');
 });
 
@@ -1705,7 +1709,8 @@ test('J01b', 'dedicated input не должен дублироваться gener
   ok(countOccurrences(code, '@dp.callback_query(lambda c: c.data == "input_age")') === 1, 'J01b: dedicated input должен иметь один callback handler');
   ok(countOccurrences(code, 'async def handle_callback_input_age') === 1, 'J01b: dedicated input handler не должен дублироваться');
   ok(!code.includes('handle_callback_t_age'), 'J01b: generic short-id callback для input не должен генерироваться');
-  assertIncludesAll(block(code, 'input_age'), ['Активация input-узла input_age', '"waiting_for_input"'], 'J01b');
+  /** Состояние ожидания и переменная надёжнее текста диагностического комментария. */
+  assertIncludesAll(block(code, 'input_age'), ['"waiting_for_input"', '"node_id": "input_age"', '"variable": "age"'], 'J01b');
   syntax(code, 'j01b');
 });
 
@@ -1962,6 +1967,28 @@ test('K05', 'цепочка message -> callback input -> message компили�
     '"variable": "selected_option"',
   ], 'K05');
   syntax(code, 'k05');
+});
+
+/** Оставшийся target не должен включать ожидание при загрузке меню с отдельной клавиатурой. */
+test('L01', 'orphan inputTargetNodeId не включает ввод и сохраняет inline-клавиатуру', () => {
+  const source = makeMessageNode('msg_forum', 'Форум', {
+    collectUserInput: false, inputTargetNodeId: 'msg_category', inputRequired: true,
+    enableTextInput: true, inputVariable: 'old_value', saveToDatabase: true,
+    keyboardNodeId: 'forum_keyboard',
+  });
+  const keyboard = { id: 'forum_keyboard', type: 'keyboard', position: { x: 200, y: 0 }, data: {
+    keyboardType: 'inline', buttons: [makeButton('Категория форума', 'goto', 'msg_category')],
+  } };
+  const migrated = migrateLegacyMessageInputToLinkedInputs([
+    source, keyboard, makeMessageNode('msg_category', 'Категория'),
+  ] as any);
+  ok(migrated.length === 3, 'Миграция самопроизвольно добавила input');
+  const code = gen(makeProject(migrated), 'l01');
+  const message = block(code, 'msg_forum');
+  ok(!/user_data\[user_id\]\["waiting_for_input"\]\s*=/.test(message), 'Меню стало ожидать ввод');
+  ok(code.includes('Категория форума'), 'Потеряна inline-кнопка связанной клавиатуры');
+  ok(code.includes('msg_category'), 'Потеряна цель кнопки');
+  syntax(code, 'l01');
 });
 
 const passed = results.filter(r => r.passed).length;const failed = results.filter(r => !r.passed).length;

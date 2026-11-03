@@ -23,7 +23,7 @@ export async function handleBotRestartAll(req: Request, res: Response): Promise<
     }
 
     if (result.message) {
-      res.json({ message: result.message, restarted: 0 });
+      res.json({ message: result.message, restarted: result.restarted, failed: result.failed, results: result.results });
       return;
     }
 

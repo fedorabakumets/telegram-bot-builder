@@ -235,7 +235,7 @@ function unsafeMessageReason(data: Record<string, any>): string | undefined {
     || (Array.isArray(data.attachedMedia) && data.attachedMedia.length)
   ) return 'message_contains_media';
   if (
-    data.collectUserInput || data.inputTargetNodeId || data.responseType === 'buttons'
+    data.collectUserInput || data.responseType === 'buttons'
     || (Array.isArray(data.responseOptions) && data.responseOptions.length)
   ) return 'message_collects_input';
   if (data.enableConditionalMessages || (Array.isArray(data.conditionalMessages) && data.conditionalMessages.length)) {

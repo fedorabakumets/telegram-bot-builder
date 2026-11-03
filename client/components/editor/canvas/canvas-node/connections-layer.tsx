@@ -19,6 +19,7 @@
  */
 
 import { memo, useState } from 'react';
+import { hasActiveInput } from '@shared/active-input';
 import { connectionSvgStyle } from './connection-svg-style';
 import { Node } from '@/types/bot';
 import {
@@ -304,7 +305,7 @@ export function collectConnections(nodes: Node[]): Connection[] {
     // 3. Input target — куда идёт после ввода пользователя
     const inputTargetNodeId = (node.data as any)?.inputTargetNodeId
       || (node.type === 'input' ? (node.data as any)?.autoTransitionTo : undefined);
-    if (inputTargetNodeId && existingIds.has(inputTargetNodeId)) {
+    if (hasActiveInput(node) && inputTargetNodeId && existingIds.has(inputTargetNodeId)) {
       connections.push({
         fromId: node.id,
         toId: inputTargetNodeId,

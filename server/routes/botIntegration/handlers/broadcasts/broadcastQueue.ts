@@ -61,9 +61,10 @@ async function sendBroadcastMessage(
   mediaFiles: SendMediaFile[],
   buttons: InlineButton[],
   buttonsPerRow: number,
+  projectId: number,
 ): Promise<{ ok: boolean; messageId?: number; retryAfter?: number; errorCode?: number; description?: string }> {
   try {
-    const result = await sendTelegramMessage(token, userId, text, mediaFiles, buttons, true, buttonsPerRow) as {
+    const result = await sendTelegramMessage(token, userId, text, mediaFiles, buttons, true, buttonsPerRow, projectId) as {
       ok?: boolean;
       result?: { message_id?: number };
       error_code?: number;
@@ -220,7 +221,7 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
         let sent = false;
 
         while (retries < 3 && !sent) {
-          const result = await sendBroadcastMessage(token, user.userId, text, mediaFiles, inlineButtons, buttonsPerRow);
+          const result = await sendBroadcastMessage(token, user.userId, text, mediaFiles, inlineButtons, buttonsPerRow, projectId);
 
           if (result.ok) {
             deliveredCount++;
@@ -334,7 +335,7 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
     if (groupIds && groupIds.length > 0 && !tokenInvalid && activeBroadcasts.get(broadcastId) !== "stopped") {
       for (const groupId of groupIds) {
         try {
-          const groupResult = await sendTelegramMessage(token, groupId, broadcast.messageText, mediaFiles, inlineButtons, true, buttonsPerRow) as {
+          const groupResult = await sendTelegramMessage(token, groupId, broadcast.messageText, mediaFiles, inlineButtons, true, buttonsPerRow, projectId) as {
             ok?: boolean;
             result?: { message_id?: number };
           };

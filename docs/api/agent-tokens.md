@@ -22,6 +22,8 @@ curl -s http://localhost:5000/api/agent-tokens \
   -H 'Authorization: Bearer mcp_…'
 ```
 
+**Operation ID:** `get_api_agent_tokens_801a157be1af6a31`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -68,6 +70,8 @@ curl -s -X POST http://localhost:5000/api/agent-tokens -b cookies.txt \
   -H 'Content-Type: application/json' \
   -d '{"label":"Cursor MCP","scopes":"read,write","expiresInDays":90}'
 ```
+
+**Operation ID:** `post_api_agent_tokens_1cba9bab82f0bc60`
 
 **Тело запроса:** `CreateAgentTokenRequest`
 
@@ -127,6 +131,8 @@ curl -s -X POST http://localhost:5000/api/agent-tokens -b cookies.txt \
 ```bash
 curl -s -X DELETE http://localhost:5000/api/agent-tokens/1 -b cookies.txt
 ```
+
+**Operation ID:** `delete_api_agent_tokens_id_b63d9aa6c54bbef4`
 
 #### Параметры
 

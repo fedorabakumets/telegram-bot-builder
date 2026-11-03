@@ -22,6 +22,7 @@
 | last_exported_structure_sheet_url | text | - | YES | - | - | URL последней экспортированной Google Таблицы структуры проекта |
 | last_exported_structure_at | timestamp | - | YES | - | - | Дата последнего экспорта структуры проекта в Google Таблицы |
 | created_at | timestamp | `now()` | YES | - | - | Дата создания проекта |
+| revision | integer | `0` | NO | - | - | Монотонная ревизия для атомарной защиты от конкурентной записи |
 | updated_at | timestamp | `now()` | YES | - | - | Дата последнего обновления проекта |
 | sort_order | real | `0` | YES | - | - | Порядок сортировки проекта в списке |
 | admin_ids | text | `''` | YES | - | - | ID администраторов бота (через запятую) |

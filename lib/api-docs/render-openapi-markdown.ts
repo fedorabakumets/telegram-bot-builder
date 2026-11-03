@@ -5,6 +5,7 @@
 
 import fs from "fs";
 import path from "path";
+import { writeGeneratedFile } from '../../tools/mcp-catalog/write-file';
 import {
   renderParametersTable,
   renderRequestExample,
@@ -17,6 +18,8 @@ const HTTP_METHODS = ["get", "post", "put", "patch", "delete", "head", "options"
 
 /** Описание одной операции OpenAPI */
 interface OpenApiOperation {
+  /** Стабильное имя операции для клиентов OpenAPI. */
+  operationId?: string;
   /** Теги группировки */
   tags?: string[];
   /** Краткое описание */
@@ -107,6 +110,7 @@ function renderOperation(
   if (operation.description) {
     lines.push("", operation.description);
   }
+  if (operation.operationId) lines.push('', `**Operation ID:** \`${operation.operationId}\``);
 
   const jsonBody = operation.requestBody?.content?.["application/json"];
   const bodySchema = schemaRefName(jsonBody?.schema);
@@ -185,7 +189,7 @@ function removeStaleTagMarkdownFiles(outputDir: string, activeTags: Set<string>)
  * @param outputDir - Каталог docs/api
  * @returns Имена удалённых устаревших markdown-файлов тегов
  */
-export function renderOpenApiMarkdownFiles(doc: OpenApiDocForMarkdown, outputDir: string): string[] {
+export async function renderOpenApiMarkdownFiles(doc: OpenApiDocForMarkdown, outputDir: string): Promise<string[]> {
   fs.mkdirSync(outputDir, { recursive: true });
   const byTag = collectByTag(doc);
   const sortedTags = [...byTag.keys()].sort((a, b) => a.localeCompare(b));
@@ -195,6 +199,8 @@ export function renderOpenApiMarkdownFiles(doc: OpenApiDocForMarkdown, outputDir
     const count = byTag.get(tag)?.length ?? 0;
     return `| [${tag}](./${tag}.md) | ${count} |`;
   });
+  /** Число HTTP-операций без повторов при нескольких тегах одной операции. */
+  const operationCount = Object.values(doc.paths).reduce((count, methods) => count + Object.keys(methods).filter(method => HTTP_METHODS.includes(method as typeof HTTP_METHODS[number])).length, 0);
 
   const index = [
     `# ${doc.info.title} — API Reference`,
@@ -204,6 +210,20 @@ export function renderOpenApiMarkdownFiles(doc: OpenApiDocForMarkdown, outputDir
     `**Версия OpenAPI:** ${doc.info.version}`,
     "",
     "> Сгенерировано из OpenAPI spec (`npm run docs:api`). Интерактивная документация: `/admin/docs`.",
+    "",
+    `В снимке ${operationCount} HTTP-операций. Число маршрутов HTTP не равно числу действий основного MCP.`,
+    "",
+    "## Сборка и границы покрытия",
+    "",
+    "`npm run docs:api` (или `npx tsx scripts/generate-api-docs.ts`) собирает контракты из реестра без запуска Express, фоновых задач, Redis и БД. Проверка зависимостей в `lib/api-docs/offline-document.test.ts` запрещает импорт исполняемых маршрутов и модулей хранилища.",
+    "",
+    "[Отчёт покрытия](./offline-coverage.json) содержит неразрешённые ссылки, дубли ID, ответы без схем, намеренно пустые ответы и статические кандидаты маршрутов. Старые runtime-only записи сохраняются с `x-offline-unverified` до описания. Пустой missingCandidates означает покрытие разрешённых AST-литералов, а не доказательство работы всех маршрутов: динамические выражения, условные регистрации и Router mounts требуют отдельной проверки в изолированном приложении.",
+    "",
+    "Основной MCP использует общий реестр действий и полный либо компактный профиль с четырьмя инструментами. [Альтернативный OpenAPI-адаптер](../../tools/mcp-openapi/README.md) публикует только пять проверенных GET-действий чтения и статусов. Он не открывает все API, секреты или управление собственными ключами. Для обновления его подмножества: `node tools/mcp-openapi/prepare-spec.mjs`; старый generated-клиент после изменения политики нужно пересобрать отдельно.",
+    "",
+    "## Повторяемые записи таблиц",
+    "",
+    "Создание таблицы/столбца/строк, импорт строк/таблиц, apply-ops и cells/edit принимают необязательный UUID requestId. Без него действует прежний формат: объект дополнен persistence, массив остаётся массивом и подтверждается JSON-заголовком x-botcraft-persistence. С UUID ответ содержит state:completed, receipt.ids (до 500), idsTruncated и доступное persistence. Повтор UUID с прежними аргументами возвращает квитанцию, с другими — 409. Ответ 202 со state:unknown и retryable:false требует сверки, а не автоматического повтора. Подтверждение БД не означает доставку live-события или применение изменений работающим ботом.",
     "",
     "## Разделы",
     "",
@@ -220,7 +240,7 @@ export function renderOpenApiMarkdownFiles(doc: OpenApiDocForMarkdown, outputDir
     "",
   ].join("\n");
 
-  fs.writeFileSync(path.join(outputDir, "README.md"), index, "utf8");
+  await writeGeneratedFile(path.join(outputDir, 'README.md'), index);
 
   for (const tag of sortedTags) {
     const ops = byTag.get(tag) ?? [];
@@ -231,7 +251,7 @@ export function renderOpenApiMarkdownFiles(doc: OpenApiDocForMarkdown, outputDir
       "",
       ...ops.map((o) => renderOperation(o.method, o.path, o.operation, doc.security)),
     ].join("\n");
-    fs.writeFileSync(path.join(outputDir, `${tag}.md`), body, "utf8");
+    await writeGeneratedFile(path.join(outputDir, `${tag}.md`), body);
   }
 
   return removeStaleTagMarkdownFiles(outputDir, activeTagSet);

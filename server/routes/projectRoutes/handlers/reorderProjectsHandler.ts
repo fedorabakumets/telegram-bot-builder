@@ -32,6 +32,7 @@ export async function reorderProjectsHandler(req: Request, res: Response): Promi
     if (
       !Array.isArray(projectIds) ||
       projectIds.length === 0 ||
+      new Set(projectIds).size !== projectIds.length ||
       projectIds.some((id) => typeof id !== "number" || !Number.isInteger(id) || id <= 0)
     ) {
       res.status(400).json({ message: "Неверный список projectIds" });

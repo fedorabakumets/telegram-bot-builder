@@ -55,7 +55,8 @@ export async function applyCellEdits(db: Queryable, projectId: number, tableId: 
       row.data[edit.columnId] = edit.after;
     }
     for (const row of rows.values()) await db.query('UPDATE bot_table_rows SET data = $2::jsonb WHERE id = $1', [row.id, JSON.stringify(row.data)]);
-    if (content) await db.query('UPDATE bot_projects SET data = $2::jsonb, updated_at = NOW() WHERE id = $1', [projectId, JSON.stringify(scenario)]);
+    /** Изменение контента увеличивает ревизию сценария в той же транзакции для обнаружения конфликтов. */
+    if (content) await db.query('UPDATE bot_projects SET data = $2::jsonb, updated_at = NOW(), revision = revision + 1 WHERE id = $1', [projectId, JSON.stringify(scenario)]);
     await db.query('COMMIT');
     return [...rows.values()];
   } catch (error) { await db.query('ROLLBACK'); throw error; }

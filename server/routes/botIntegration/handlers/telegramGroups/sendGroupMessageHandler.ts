@@ -79,7 +79,8 @@ export async function sendGroupMessageHandler(req: Request, res: Response): Prom
             mediaFiles,
             buttons,
             true,
-            buttonsPerRow
+            buttonsPerRow,
+            projectId
         );
 
         /** ID отправленного сообщения в Telegram */

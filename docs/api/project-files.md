@@ -1,6 +1,6 @@
 # project-files
 
-Эндпоинтов: **4**
+Эндпоинтов: **5**
 
 ### `DELETE` /api/projects/{projectId}/files
 
@@ -17,6 +17,8 @@ curl -s -X DELETE -b cookies.txt -H 'Content-Type: application/json' \
   -d '{"items":[{"id":88,"source":"uploaded"}]}' \
   'http://localhost:5000/api/projects/42/files'
 ```
+
+**Operation ID:** `delete_api_projects_projectId_files_4b31017436b533e3`
 
 **Тело запроса:** `ProjectFilesDeleteRequest`
 
@@ -78,6 +80,8 @@ curl -s -b cookies.txt \
   'http://localhost:5000/api/projects/42/files?category=uploaded&page=1'
 ```
 
+**Operation ID:** `get_api_projects_projectId_files_51726e2038088076`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -129,6 +133,34 @@ curl -s -b cookies.txt \
 }
 ```
 
+### `GET` /api/projects/{projectId}/messages/{messageId}/file-size
+
+Уточнить размер медиа сообщения
+
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+
+Может вызвать Telegram getFile и сохранить размер в истории. null означает отсутствие доступного размера.
+
+**Operation ID:** `get_api_projects_projectId_messages_messageId_file_size_24a96c74ed0ee256`
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `projectId` | path | да | — | — |
+| `messageId` | path | да | — | — |
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Размер в байтах либо null |
+| 400 | Некорректный ID |
+| 401 | Нет авторизации |
+| 403 | Нет доступа к проекту |
+| 404 | Сообщение или бот не найдены |
+| 503 | Telegram временно недоступен |
+
 ### `GET` /api/projects/{projectId}/storage-quota
 
 Квота локального хранилища
@@ -142,6 +174,8 @@ curl -s -b cookies.txt \
 ```bash
 curl -s -b cookies.txt 'http://localhost:5000/api/projects/42/storage-quota'
 ```
+
+**Operation ID:** `get_api_projects_projectId_storage_quota_00a93ff3a70090dc`
 
 #### Параметры
 
@@ -181,6 +215,8 @@ curl -s -b cookies.txt 'http://localhost:5000/api/projects/42/storage-quota'
 curl -s -o out.jpg -b cookies.txt \
   'http://localhost:5000/api/projects/42/telegram-file?fileId=AgAC&tokenId=7'
 ```
+
+**Operation ID:** `get_api_projects_projectId_telegram_file_9bea520d4699cdec`
 
 #### Параметры
 

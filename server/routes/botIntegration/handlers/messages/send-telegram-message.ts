@@ -5,7 +5,8 @@
  */
 
 import { existsSync, readFileSync } from 'fs';
-import { basename, join } from 'path';
+import { basename } from 'path';
+import { resolveOwnedMediaPath, assertRemoteMediaReference } from './media-reference-security';
 import type { SendMediaFile } from "./extract-media";
 import type { InlineButton } from "./extract-buttons";
 import { fetchWithProxy } from "../../../../utils/telegram-proxy";
@@ -99,6 +100,7 @@ export function buildInlineKeyboard(
  * @param buttons - Кнопки
  * @param useHtml - Использовать HTML форматирование
  * @param buttonsPerRow - Кол-во кнопок в ряду (0 или отсутствует = все в один ряд)
+ * @param projectId - Проект для проверки владения локальными медиа
  * @returns Типизированный результат Telegram API с message_id
  */
 export async function sendTelegramMessage(
@@ -108,8 +110,14 @@ export async function sendTelegramMessage(
   mediaFiles: SendMediaFile[],
   buttons: InlineButton[],
   useHtml: boolean,
-  buttonsPerRow?: number
+  buttonsPerRow?: number,
+  projectId?: number
 ): Promise<TelegramSendResult> {
+  /** Проверяем весь пакет до первого внешнего действия. */
+  for (const media of mediaFiles) {
+    if (isLocalPath(media.url)) await resolveOwnedMediaPath(media.url, projectId);
+    else await assertRemoteMediaReference(media.url);
+  }
   const hasMedia = mediaFiles.length > 0;
   const hasButtons = buttons.length > 0;
 
@@ -124,12 +132,12 @@ export async function sendTelegramMessage(
   // Несколько вложений без кнопок — отправляем альбомом (sendMediaGroup),
   // т.к. альбомы Telegram не поддерживают inline-клавиатуру.
   if (mediaFiles.length > 1 && !hasButtons) {
-    return sendTelegramMediaGroup(token, chatId, text, mediaFiles, useHtml);
+    return sendTelegramMediaGroup(token, chatId, text, mediaFiles, useHtml, projectId);
   }
 
   // Отправляем первое медиа
   const firstMedia = mediaFiles[0];
-  return sendMediaMessage(token, chatId, firstMedia, text, useHtml, replyMarkup);
+  return sendMediaMessage(token, chatId, firstMedia, text, useHtml, replyMarkup, projectId);
 }
 
 /**
@@ -205,7 +213,8 @@ async function sendMediaMessage(
   media: SendMediaFile,
   caption: string,
   useHtml: boolean,
-  replyMarkup?: unknown
+  replyMarkup?: unknown,
+  projectId?: number
 ): Promise<TelegramSendResult> {
   const maskedToken = token.length > 12 ? `${token.slice(0, 8)}...${token.slice(-4)}` : '***';
   const endpoints: Record<string, string> = {
@@ -225,7 +234,7 @@ async function sendMediaMessage(
 
     if (isLocalPath(media.url)) {
       // Локальный файл — читаем с диска и отправляем через multipart/form-data
-      const absolutePath = join(process.cwd(), media.url.startsWith('/') ? media.url.slice(1) : media.url);
+      const absolutePath = await resolveOwnedMediaPath(media.url, projectId);
 
       if (!existsSync(absolutePath)) {
         throw new Error(`Файл не найден на диске: ${absolutePath}`);

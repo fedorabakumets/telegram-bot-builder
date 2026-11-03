@@ -24,6 +24,15 @@ describe('MCP графика таблицы', () => {
       expect(chart.isError).not.toBe(true);
       expect(JSON.stringify(chart)).toContain('Фото');
       expect(String(fetchMock.mock.calls[0][0])).toContain('/tables/1/chart?');
+      const filtered = await client.callTool({ name: 'db_get_table_chart', arguments: { project_id: 7, table_id: 1, x_column_id: 2, y_column_id: 3, date_column_id: 4, from: '2026-11-01T00:00:00Z', to: '2026-11-03T00:00:00Z' } });
+      expect(filtered.isError).not.toBe(true);
+      const filteredUrl = new URL(String(fetchMock.mock.calls[1][0]));
+      expect(filteredUrl.searchParams.get('dateColumnId')).toBe('4');
+      expect(filteredUrl.searchParams.get('from')).toBe('2026-11-01T00:00:00Z');
+      expect(filteredUrl.searchParams.get('to')).toBe('2026-11-03T00:00:00Z');
+      const beforeInvalid = fetchMock.mock.calls.length;
+      const invalid = await client.callTool({ name: 'db_get_table_chart', arguments: { project_id: 7, table_id: 1, x_column_id: 2, y_column_id: 3, from: '2026-11-01T00:00:00Z' } });
+      expect(invalid.isError).toBe(true); expect(fetchMock).toHaveBeenCalledTimes(beforeInvalid);
       const suggestion = await client.callTool({ name: 'db_suggest_table_chart', arguments: { project_id: 7, table_id: 1 } });
       expect(JSON.stringify(suggestion)).toContain('type');
       fetchMock.mockImplementation(async () => new Response('secret-table', { status: 403 }));

@@ -4,6 +4,7 @@
  */
 
 import type { Request, Response } from "express";
+import { tableWriteReceipt } from "../write-receipt";
 import { mapTable } from "../../../database/bot-tables/map-records";
 import { parseEntityName } from "../../../database/bot-tables/validate-cells";
 import { fail, positiveId, sqlFailure } from "../http-error";
@@ -30,7 +31,8 @@ export async function createTableHandler(req: Request, res: Response): Promise<v
       `INSERT INTO bot_tables (project_id, name) VALUES ($1, $2) RETURNING id, project_id, name, created_at`,
       [projectId, name],
     );
-    res.status(201).json(mapTable(inserted.rows[0] as never));
+    if (!inserted.rows[0]) { fail(res, 409, 'Таблица не создана'); return; }
+    res.status(201).json(tableWriteReceipt(res, mapTable(inserted.rows[0] as never), projectId, Number(inserted.rows[0].id)));
   } catch (error) {
     const parsed = sqlFailure(error);
     fail(res, parsed.status, "Не удалось создать таблицу");

@@ -26,9 +26,12 @@ export function registerTableChartTools(server: McpServer): void {
       y_column_id: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
       aggregation: z.enum(TABLE_AGGREGATIONS).optional().describe('По умолчанию count. Для нечислового столбца сервер считает количество.'),
       limit: z.number().int().min(1).max(50).optional(),
+      date_column_id: z.number().int().positive().max(Number.MAX_SAFE_INTEGER).optional().describe('������� ����; from/to.'),
+      from: z.string().datetime({ offset: true }).optional(),
+      to: z.string().datetime({ offset: true }).optional(),
     },
-  }, async ({ project_id, table_id, x_column_id, y_column_id, aggregation, limit }) => result(await getTableChartInDb(project_id, {
-    tableId: table_id, xColumnId: x_column_id, yColumnId: y_column_id, aggregation, limit,
+  }, async ({ project_id, table_id, x_column_id, y_column_id, aggregation, limit, date_column_id, from, to }) => result(await getTableChartInDb(project_id, {
+    tableId: table_id, xColumnId: x_column_id, yColumnId: y_column_id, aggregation, limit, dateColumnId: date_column_id, from, to,
   })));
   server.registerTool('db_suggest_table_chart', {
     description: 'Предлагает столбцы, подсчёт и вид графика пользовательской таблицы. Объясняет, если значения категории почти не повторяются или подписи слишком длинные.',

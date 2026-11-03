@@ -9,7 +9,7 @@ import { createAcquisition } from './create';
 import { createExpenses } from './expenses';
 import { updateAcquisition } from './update';
 import { getAcquisitionExchangeRate } from './exchange-rate';
-import { saveLinkBudget } from './link-budget';
+import { saveIdempotentLinkBudget } from './budget-idempotency';
 import { acquisitionReport } from './report';
 /** Исполняет один запрос в транзакции, показывая только безопасные ошибки. */
 async function runRequest(pool: Pool, req: Request, res: Response, work: (client: PoolClient, projectId: number) => Promise<unknown>, write = false) {
@@ -28,7 +28,9 @@ async function runRequest(pool: Pool, req: Request, res: Response, work: (client
     }
     const result = await work(client, projectId);
     await client.query('COMMIT');
-    res.status(write && req.method === 'POST' ? 201 : 200).json(result);
+    /** Подтверждение относится к завершённой транзакции, а не к доставке live-события. */
+    const payload = write && result && typeof result === 'object' ? { ...result, persistence: { confirmed: true, projectId } } : result;
+    res.status(write && req.method === 'POST' ? 201 : 200).json(payload);
   } catch (error) {
     if (client) await client.query('ROLLBACK').catch(() => undefined);
     if (error instanceof ZodError) res.status(400).json({ message: error.issues[0]?.message ?? 'Проверьте поля', issues: error.issues });
@@ -47,7 +49,7 @@ export function setupAcquisitionRoutes(app: Express, pool: Pool, access: Request
   /** Сохраняет бюджет простой ссылки одной транзакцией с общими правами проекта. */
   app.post(`${base}/budgets`, access, (req,res) => void runRequest(pool,req,res,(client,projectId) => {
     const actor=getOwnerIdFromRequest(req);
-    return saveLinkBudget(client,projectId,req.body,actor===null ? null : String(actor));
+    return saveIdempotentLinkBudget(client,projectId,req.body,actor===null ? null : String(actor));
   },true));
   app.get(`${base}/report`, access, (req, res) => void runRequest(pool, req, res, (client, projectId) => acquisitionReport(client, projectId, req.query)));
   app.get(base, access, (req, res) => void runRequest(pool, req, res, async (client, projectId) => {

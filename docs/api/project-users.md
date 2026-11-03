@@ -1,6 +1,6 @@
 # project-users
 
-Эндпоинтов: **12**
+Эндпоинтов: **13**
 
 ### `DELETE` /api/projects/{id}/users
 
@@ -15,6 +15,8 @@ Wipe: DELETE из `bot_users` и `bot_messages` по project_id (и token_id, е
 ```bash
 curl -s -X DELETE 'http://localhost:5000/api/projects/42/users?tokenId=7' -b cookies.txt
 ```
+
+**Operation ID:** `delete_api_projects_id_users_f63ac5e2fbfb0a15`
 
 #### Параметры
 
@@ -59,6 +61,8 @@ curl -s -X DELETE 'http://localhost:5000/api/projects/42/users?tokenId=7' -b coo
 ```bash
 curl -s 'http://localhost:5000/api/projects/42/users?limit=50&tokenId=7' -b cookies.txt
 ```
+
+**Operation ID:** `get_api_projects_id_users_4f1fc875c745ed89`
 
 #### Параметры
 
@@ -130,6 +134,8 @@ curl -s 'http://localhost:5000/api/projects/42/users/activity?granularity=1d&tok
   -b cookies.txt
 ```
 
+**Operation ID:** `get_api_projects_id_users_activity_b57644b2f7aebb54`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -187,6 +193,8 @@ curl -s 'http://localhost:5000/api/projects/42/users/growth?granularity=1d&token
   -b cookies.txt
 ```
 
+**Operation ID:** `get_api_projects_id_users_growth_992c479a0fd064c3`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -236,6 +244,8 @@ curl -s 'http://localhost:5000/api/projects/42/users/growth?granularity=1d&token
 curl -s 'http://localhost:5000/api/projects/42/users/growth-by-source?granularity=1d&tokenId=7' \
   -b cookies.txt
 ```
+
+**Operation ID:** `get_api_projects_id_users_growth_by_source_4c188a374c001e66`
 
 #### Параметры
 
@@ -292,6 +302,8 @@ curl -s 'http://localhost:5000/api/projects/42/users/popular-buttons?granularity
   -b cookies.txt
 ```
 
+**Operation ID:** `get_api_projects_id_users_popular_buttons_a34efe1da5f1ae39`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -341,6 +353,8 @@ curl -s 'http://localhost:5000/api/projects/42/users/popular-buttons?granularity
 ```bash
 curl -s 'http://localhost:5000/api/projects/42/users/stats?tokenId=7' -b cookies.txt
 ```
+
+**Operation ID:** `get_api_projects_id_users_stats_080bdbbdda634b0b`
 
 #### Параметры
 
@@ -396,6 +410,8 @@ curl -s 'http://localhost:5000/api/projects/42/users/stats?tokenId=7' -b cookies
 ```bash
 curl -s 'http://localhost:5000/api/projects/42/users/traffic?tokenId=7' -b cookies.txt
 ```
+
+**Operation ID:** `get_api_projects_id_users_traffic_75eeead714655ccb`
 
 #### Параметры
 
@@ -463,6 +479,8 @@ curl -s 'http://localhost:5000/api/projects/42/users/variables?limit=200&tokenId
   -b cookies.txt
 ```
 
+**Operation ID:** `get_api_projects_id_users_variables_af4b67f8f324a301`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -520,6 +538,8 @@ curl -s -X DELETE 'http://localhost:5000/api/projects/42/users/123456789?tokenId
   -b cookies.txt
 ```
 
+**Operation ID:** `delete_api_projects_projectId_users_userId_5b1cd8490f418d2f`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -548,6 +568,33 @@ curl -s -X DELETE 'http://localhost:5000/api/projects/42/users/123456789?tokenId
 }
 ```
 
+### `GET` /api/projects/{projectId}/users/{userId}
+
+Прочитать пользователя и сохранённые ответы выбранного бота
+
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+
+**Operation ID:** `get_api_projects_projectId_users_userId_7e5da89f9203cbfd`
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `projectId` | path | да | — | — |
+| `userId` | path | да | — | — |
+| `tokenId` | query | нет | — | — |
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Пользователь с JSON userData |
+| 400 | Некорректные параметры |
+| 401 | Нет авторизации |
+| 403 | Нет доступа к проекту |
+| 404 | Бот или пользователь не найдены |
+| 500 | Не удалось прочитать данные |
+
 ### `PUT` /api/projects/{projectId}/users/{userId}
 
 Обновить статус активности пользователя
@@ -562,6 +609,8 @@ curl -s -X DELETE 'http://localhost:5000/api/projects/42/users/123456789?tokenId
 curl -s -X PUT 'http://localhost:5000/api/projects/42/users/123456789?tokenId=7' \
   -b cookies.txt -H 'Content-Type: application/json' -d '{"isActive":1}'
 ```
+
+**Operation ID:** `put_api_projects_projectId_users_userId_c43f2cc46c603623`
 
 **Тело запроса:** `UpdateBotUserRequest`
 
@@ -614,6 +663,8 @@ curl -s -X PUT 'http://localhost:5000/api/projects/42/users/123456789?tokenId=7'
 **Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Люди выбранного бота с is_deleted или is_blocked. Telegram не вызывается, текст сообщений не возвращается.
+
+**Operation ID:** `get_api_projects_projectId_users_unavailable_d17cb702b19d6c95`
 
 #### Параметры
 

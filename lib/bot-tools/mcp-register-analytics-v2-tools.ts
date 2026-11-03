@@ -2,9 +2,9 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { requestAnalyticsV2, analyticsMcpResult } from './analytics-v2-api.ts';
-import { sourceInput, placementInput, linkInput, expenseInput } from '../../server/routes/analytics/acquisition/validation';
-import { placementPatch, expensePatch } from '../../server/routes/analytics/acquisition/update';
-import { reportInput } from '../../server/routes/analytics/acquisition/report';
+import { sourceInput, placementInput, linkInput, expenseInput } from '../../shared/analytics/acquisition/validation';
+import { placementPatch, expensePatch } from '../../shared/analytics/acquisition/update';
+import { reportInput } from '../../shared/analytics/acquisition/report';
 /** Проверенная область проекта для каждого вызова. */
 const projectId = z.number().int().positive().max(Number.MAX_SAFE_INTEGER).describe('ID проекта с доступом текущего агента.');
 /** Общие параметры снимка; сервер проверяет взаимоисключающие варианты периода. */

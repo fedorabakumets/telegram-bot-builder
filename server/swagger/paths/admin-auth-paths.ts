@@ -50,6 +50,7 @@ export function registerAdminAuthPaths(registry: OpenAPIRegistry): void {
         description:
           "Успех → Location `/admin` или `/admin/settings` + Set-Cookie. " +
           "Ошибка ключа → `/admin/login?error=1`",
+        content: { 'text/html': { schema: z.string() }, 'text/plain': { schema: z.string() } },
       },
       503: {
         description: "Admin не настроен (нет ключа)",
@@ -74,7 +75,7 @@ export function registerAdminAuthPaths(registry: OpenAPIRegistry): void {
     security: [],
     request: { cookies: AdminCookiesSchema },
     responses: {
-      302: { description: "Location `/admin/login`, cookie очищена" },
+      302: { description: "Location `/admin/login`, cookie очищена", content: { 'text/html': { schema: z.string() }, 'text/plain': { schema: z.string() } } },
     },
   });
 

@@ -1,20 +1,12 @@
 /** @fileoverview Рекламный отчёт: указанные дневные расходы видны при любом окне, ограничения периода относятся к расчёту цены. */
 import type { PoolClient } from 'pg';
-import { z } from 'zod';
-import { AcquisitionError, timezone } from './validation';
+import { AcquisitionError } from './validation';
 import { ACQUISITION_REPORT_SQL } from './report-query';
 import { unplacedSourceRows } from './unplaced-sources';
 import { acquisitionBot } from './create';
-/** Параметры отчёта; без дат показывается весь срок размещений. */
-export const reportInput = z.object({
-  /** Включить автоматически найденные источники без размещений. */ includeSources: z.enum(['true','false']).optional(),
-  /** Бот либо весь проект. */ tokenId: z.coerce.number().int().positive().optional(),
-  /** Включённая граница. */ from: z.string().datetime({ offset: true }).optional(),
-  /** Исключённая граница. */ to: z.string().datetime({ offset: true }).optional(),
-  /** Пояс отображения. */ timezone: timezone.default('Europe/Moscow'),
-  /** Валюта ручного пересчёта. */ currency: z.enum(['RUB','USD']).default('RUB'),
-  /** Размещение для подробного отчёта. */ placementId: z.coerce.number().int().positive().optional(),
-}).strict();
+/** Общий контракт доступен старым импортам без изменения поведения. */
+import { reportInput } from '../../../../shared/analytics/acquisition/report';
+export { reportInput };
 /** Возвращает объяснение отсутствующей цены, не превращая неизвестное в ноль. */
 function reportReason(row: Record<string, any>, lifetime: boolean): string | null {
   if (!lifetime && !row.whole_days) return 'Для цены выберите полные календарные дни или весь срок размещения';

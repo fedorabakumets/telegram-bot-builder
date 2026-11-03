@@ -20,7 +20,7 @@ import type { AgentCanvasSnapshot } from './parse-agent-canvas-data';
 export function broadcastAgentCanvasUpdate(
   projectId: number,
   data: AgentCanvasSnapshot,
-  agent?: { sessionId?: string; displayName?: string },
+  agent?: { sessionId?: string; displayName?: string; revision?: number },
 ): void {
   const actor = buildAgentCanvasActor({
     sessionId: agent?.sessionId ?? 'mcp',
@@ -34,6 +34,8 @@ export function broadcastAgentCanvasUpdate(
     actor,
     userId: actor.userId,
     timestamp: Date.now(),
+    /** Ревизия относится к сохранённой строке, а не к времени рассылки. */
+    ...(agent?.revision === undefined ? {} : { revision: agent.revision }),
     data: data.data,
   };
 

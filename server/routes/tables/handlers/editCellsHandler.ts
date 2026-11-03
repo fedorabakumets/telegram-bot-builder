@@ -19,7 +19,7 @@ export async function editCellsHandler(req: Request, res: Response): Promise<voi
     if (!parsed.success) { fail(res, 400, 'Проверьте ячейки: допустимо от 1 до 5000 изменений за операцию'); return; }
     const rows = await withClient((db) => applyCellEdits(db, owned.projectId, owned.table.id, parsed.data.edits));
     await notifyTableChange(owned.projectId, owned.table.id, owned.table.name);
-    res.json({ rows });
+    res.json({ rows, persistence: { confirmed: true, projectId: owned.projectId, tableId: owned.table.id } });
   } catch (error) {
     const result = error instanceof TableEditError ? error : sqlFailure(error);
     fail(res, result.status, result.message);

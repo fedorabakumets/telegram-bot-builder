@@ -14,6 +14,8 @@
 curl -s http://localhost:5000/api/support/attachments/1 -b cookies.txt -o screen.png
 ```
 
+**Operation ID:** `get_api_support_attachments_id_dcc7afdc3dddb6f3`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -40,6 +42,8 @@ curl -s http://localhost:5000/api/support/attachments/1 -b cookies.txt -o screen
 ```bash
 curl -s -X POST http://localhost:5000/api/support/messages -b cookies.txt -F text='Не сохраняется сценарий' -F files=@screen.png
 ```
+
+**Operation ID:** `post_api_support_messages_532e2a19e412cb35`
 
 #### Параметры
 
@@ -86,6 +90,8 @@ curl -s -X POST http://localhost:5000/api/support/messages -b cookies.txt -F tex
 curl -s -X POST http://localhost:5000/api/support/read -b cookies.txt
 ```
 
+**Operation ID:** `post_api_support_read_6801be5ee133add1`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -118,6 +124,8 @@ curl -s -X POST http://localhost:5000/api/support/read -b cookies.txt
 ```bash
 curl -s http://localhost:5000/api/support/thread -b cookies.txt
 ```
+
+**Operation ID:** `get_api_support_thread_b57d575ce3b44201`
 
 #### Параметры
 

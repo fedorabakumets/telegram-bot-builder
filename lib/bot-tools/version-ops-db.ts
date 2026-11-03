@@ -8,9 +8,11 @@
  */
 
 import type { BotDataWithSheets } from '@shared/schema';
+import { fetchProjectFromDb } from './project-db-read.ts';
 import { updateProjectInDb, type UpdateProjectInDbResult } from './project-db.ts';
 import type { ReadDbOptions } from './node-query-db.ts';
 import { apiFetch } from './api-fetch.ts';
+import { verifyMutation, type MutationResult } from './mutation-proof.ts';
 
 /** Мета-запись версии проекта (без snapshot) */
 export interface ProjectVersionMeta {
@@ -76,7 +78,7 @@ export async function listVersionsInDb(
 export async function restoreVersionInDb(
   projectId: number,
   versionId: number,
-  options?: { apiBaseUrl?: string; commitMessage?: string; skipValidation?: boolean },
+  options?: { apiBaseUrl?: string; commitMessage?: string; skipValidation?: boolean; expectedRevision?: number },
 ): Promise<UpdateProjectInDbResult> {
   let res: Response;
   try {
@@ -100,7 +102,10 @@ export async function restoreVersionInDb(
   const snapshot = version?.snapshot as BotDataWithSheets | undefined;
   if (!snapshot) return { error: 'В версии нет snapshot' };
 
+  const current = await fetchProjectFromDb(projectId, options);
+  if ('error' in current) return current;
   return updateProjectInDb(projectId, snapshot, {
+    expectedRevision: options?.expectedRevision ?? current.revision,
     apiBaseUrl: options?.apiBaseUrl,
     commitMessage: options?.commitMessage ?? `Откат к версии #${versionId}`,
     skipValidation: options?.skipValidation ?? true,
@@ -118,28 +123,29 @@ export async function deleteVersionInDb(
   projectId: number,
   versionId: number,
   options?: { apiBaseUrl?: string },
-): Promise<{ deleted: boolean } | { error: string }> {
+): Promise<MutationResult<{ deleted: boolean } | { error: string }>> {
   let res: Response;
   try {
     res = await apiFetch(`/api/projects/${projectId}/versions/${versionId}`, { apiBaseUrl: options?.apiBaseUrl, method: 'DELETE' });
   } catch (err) {
-    return { error: `Не удалось соединиться с сервером: ${(err as Error).message}` };
+    return { error: `Связь прервана; перечитайте состояние перед повтором: ${(err as Error).message}`, outcome: "unknown" };
   }
 
   if (!res.ok) {
     const body = await res.text().catch(() => '');
     if (res.status === 404) return { error: `HTTP 404: версия не найдена${body ? `: ${body}` : ''}` };
-    return { error: body ? `HTTP ${res.status}: ${body}` : `HTTP ${res.status}` };
+    return { error: body ? `HTTP ${res.status}: ${body}` : `HTTP ${res.status}`, ...(res.status >= 500 ? { outcome: "unknown" as const } : {}) };
   }
 
   let body: { deleted?: boolean };
   try {
     body = (await res.json()) as { deleted?: boolean };
   } catch (err) {
-    return { error: `Не удалось разобрать ответ сервера: ${(err as Error).message}` };
+    return { error: `Ответ не удалось прочитать; исход действия неизвестен: ${(err as Error).message}`, outcome: "unknown" };
   }
 
-  return { deleted: Boolean(body.deleted) };
+  if (body.deleted !== true) return { error: 'Сервер не подтвердил удаление версии', outcome: 'unknown' };
+  return verifyMutation({ deleted: true }, `/api/projects/${projectId}/versions/${versionId}`, () => false, { ...options, absent: true });
 }
 
 /**
@@ -151,7 +157,7 @@ export async function deleteVersionInDb(
 export async function pruneVersionsInDb(
   projectId: number,
   options?: { apiBaseUrl?: string; keep?: number; kind?: 'auto' | 'manual'; authorKind?: 'agent' | 'user' },
-): Promise<{ deleted: number } | { error: string }> {
+): Promise<MutationResult<{ deleted: number } | { error: string }>> {
   let res: Response;
   try {
     res = await apiFetch(`/api/projects/${projectId}/versions/prune`, {
@@ -161,20 +167,21 @@ export async function pruneVersionsInDb(
       body: JSON.stringify({ keep: options?.keep, kind: options?.kind, authorKind: options?.authorKind }),
     });
   } catch (err) {
-    return { error: `Не удалось соединиться с сервером: ${(err as Error).message}` };
+    return { error: `Связь прервана; перечитайте состояние перед повтором: ${(err as Error).message}`, outcome: "unknown" };
   }
 
   if (!res.ok) {
     const body = await res.text().catch(() => '');
-    return { error: body ? `HTTP ${res.status}: ${body}` : `HTTP ${res.status}` };
+    return { error: body ? `HTTP ${res.status}: ${body}` : `HTTP ${res.status}`, ...(res.status >= 500 ? { outcome: "unknown" as const } : {}) };
   }
 
-  let body: { deleted?: number };
+  let body: { deleted?: number; persistence?: { confirmed?: boolean; affectedRows?: number; projectId?: number } };
   try {
-    body = (await res.json()) as { deleted?: number };
+    body = (await res.json()) as { deleted?: number; persistence?: { confirmed?: boolean; affectedRows?: number; projectId?: number } };
   } catch (err) {
-    return { error: `Не удалось разобрать ответ сервера: ${(err as Error).message}` };
+    return { error: `Ответ не удалось прочитать; исход действия неизвестен: ${(err as Error).message}`, outcome: "unknown" };
   }
 
-  return { deleted: body.deleted ?? 0 };
+  if (!Number.isSafeInteger(body.deleted) || body.deleted! < 0 || body.persistence?.confirmed !== true || body.persistence.projectId !== projectId || body.persistence.affectedRows !== body.deleted) return { error: 'Сервер не подтвердил фактически удалённые версии', outcome: 'unknown' };
+  return { deleted: body.deleted!, effect: 'application', outcome: 'saved', persistence: { confirmed: true, method: 'returning' } };
 }

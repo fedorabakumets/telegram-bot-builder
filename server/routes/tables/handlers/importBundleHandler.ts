@@ -8,6 +8,7 @@ import { importBundleInProject, type BundleTable } from "../../../database/bot-t
 import { fail, positiveId, sqlFailure } from "../http-error";
 import { notifyTableChange } from "../notify-table-change";
 import { withClient } from "../table-db";
+import { tableBundleSchema } from '../../../../shared/table-bundle-schema';
 
 /**
  * Обрабатывает POST /api/projects/:id/tables/import
@@ -40,7 +41,8 @@ export async function importBundleHandler(req: Request, res: Response): Promise<
       res.status(imported.status).json({ message: imported.message, failed_table_index: imported.failed_table_index });
       return;
     }
-    res.status(201).json(imported);
+    /** Импорт возвращает успех только после общего COMMIT всех таблиц. */
+    res.status(201).json({ ...imported, persistence: { confirmed: true, projectId } });
     for (const table of imported.tables) await notifyTableChange(projectId, table.tableId, table.name);
   } catch (error) {
     const parsed = sqlFailure(error);
@@ -54,20 +56,8 @@ export async function importBundleHandler(req: Request, res: Response): Promise<
  * @returns Таблицы или ошибка
  */
 function parseBundle(input: unknown): BundleTable[] | { message: string } {
-  if (!Array.isArray(input) || input.length === 0 || input.length > 50) {
-    return { message: "Нужно от 1 до 50 таблиц" };
-  }
-  const tables: BundleTable[] = [];
-  for (const item of input) {
-    if (!item || typeof item !== "object") return { message: "Таблица должна быть объектом" };
-    const table = item as BundleTable;
-    if (!Array.isArray(table.columns) || !Array.isArray(table.rows)) return { message: "У таблицы нужны columns и rows" };
-    tables.push({
-      name: String(table.name ?? ""),
-      columnSettings: table.columnSettings,
-      columns: table.columns.map(String),
-      rows: table.rows.map((row) => (Array.isArray(row) ? row.map(String) : [])),
-    });
-  }
-  return tables;
+  /** Общая проверка не позволяет двум исходным колонкам записать одну целевую ячейку. */
+  const checked = tableBundleSchema.safeParse({ tables: input });
+  if (!checked.success) return { message: checked.error.issues[0]?.message ?? 'Проверьте таблицы пакета' };
+  return checked.data.tables;
 }

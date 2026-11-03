@@ -64,14 +64,15 @@ export class DatabaseStorage implements IStorage {
    * Обновить проект бота в базе данных
    * @param id - ID проекта
    * @param updateData - Данные для обновления
+   * @param expectedRevision - Ожидаемая ревизия для атомарного сравнения
    * @returns Обновленный проект бота или undefined, если не найден
    */
-  async updateBotProject(id: number, updateData: StorageBotProjectUpdate): Promise<BotProject | undefined> {
-    const { restartOnUpdate: _restartOnUpdate, ...projectUpdate } = updateData;
+  async updateBotProject(id: number, updateData: StorageBotProjectUpdate, expectedRevision?: number): Promise<BotProject | undefined> {
+    const { restartOnUpdate: _restartOnUpdate, revision: _revision, ...projectUpdate } = updateData;
     const [project] = await this.db
       .update(botProjects)
-      .set({ ...projectUpdate, updatedAt: new Date() })
-      .where(eq(botProjects.id, id))
+      .set({ ...projectUpdate, updatedAt: new Date(), revision: sql`${botProjects.revision} + 1` })
+      .where(expectedRevision === undefined ? eq(botProjects.id, id) : and(eq(botProjects.id, id), eq(botProjects.revision, expectedRevision)))
       .returning();
     return project || undefined;
   }
@@ -81,11 +82,16 @@ export class DatabaseStorage implements IStorage {
    * @param projectIds - ID проектов в желаемом порядке
    */
   async reorderBotProjects(projectIds: number[]): Promise<void> {
-    await Promise.all(
-      projectIds.map((id, index) =>
-        this.db.update(botProjects).set({ sortOrder: index }).where(eq(botProjects.id, id))
-      )
-    );
+    if (new Set(projectIds).size !== projectIds.length) throw new Error('Проект повторяется в порядке');
+    await this.db.transaction(async (transaction) => {
+      const locked = await transaction.select({ id: botProjects.id }).from(botProjects)
+        .where(inArray(botProjects.id, projectIds)).orderBy(asc(botProjects.id)).for('update');
+      if (locked.length !== projectIds.length) throw new Error('Один из проектов удалён; порядок не сохранён');
+      for (const [sortOrder, id] of projectIds.entries()) {
+        const rows = await transaction.update(botProjects).set({ sortOrder }).where(eq(botProjects.id, id)).returning({ id: botProjects.id });
+        if (rows.length !== 1) throw new Error('Порядок не сохранён; запись проекта отсутствует');
+      }
+    });
   }
 
   /**
@@ -2424,7 +2430,7 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(projectVersions.createdAt));
     const idsToDelete = versions.slice(options.keep ?? 0).map((v) => v.id);
     if (idsToDelete.length === 0) return 0;
-    await this.db.delete(projectVersions).where(inArray(projectVersions.id, idsToDelete));
-    return idsToDelete.length;
+    const deleted = await this.db.delete(projectVersions).where(inArray(projectVersions.id, idsToDelete)).returning({ id: projectVersions.id });
+    return deleted.length;
   }
 }

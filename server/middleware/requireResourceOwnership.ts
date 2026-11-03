@@ -61,6 +61,13 @@ export function requireResourceOwnership(
             return;
         }
 
+        /** URL проекта обязан совпадать с реальным проектом ресурса до выполнения операции. */
+        const routeProjectId = req.params.projectId ?? (req.params.tokenId !== undefined ? req.params.id : undefined);
+        if (routeProjectId !== undefined && Number(routeProjectId) !== projectId) {
+            res.status(403).json({ message: "Ресурс не принадлежит проекту из URL" });
+            return;
+        }
+
         const hasAccess = await storage.hasProjectAccess(projectId, ownerId);
         if (!hasAccess) {
             res.status(403).json({ message: "Нет прав доступа к проекту" });

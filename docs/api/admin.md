@@ -19,6 +19,8 @@ curl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \
 curl -s http://localhost:5000/admin/api/app-settings -b admin.txt
 ```
 
+**Operation ID:** `get_admin_api_app_settings_b43aac7928edd3f6`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -73,6 +75,8 @@ curl -s -X PUT http://localhost:5000/admin/api/app-settings -b admin.txt \
   -H 'Content-Type: application/json' \
   -d '{"auth":{"loginMode":"dev_login"}}'
 ```
+
+**Operation ID:** `put_admin_api_app_settings_eb4a99e398bbccc3`
 
 **Тело запроса:** `AdminAppSettingsPayload`
 
@@ -143,6 +147,8 @@ curl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \
 curl -s -X POST http://localhost:5000/admin/api/bot-folders/cleanup -b admin.txt
 ```
 
+**Operation ID:** `post_admin_api_bot_folders_cleanup_b96fac5c84f6d7f2`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -188,6 +194,8 @@ curl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \
   -d 'key=YOUR_ADMIN_API_KEY'
 ```
 
+**Operation ID:** `post_admin_api_login_0ebddd5bdba68bb5`
+
 #### Ответы
 
 | Код | Описание |
@@ -209,6 +217,8 @@ curl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \
 curl -s -c admin.txt -b admin.txt -X POST http://localhost:5000/admin/api/logout
 ```
 
+**Operation ID:** `post_admin_api_logout_e17cf342fdbda5c0`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -223,35 +233,55 @@ curl -s -c admin.txt -b admin.txt -X POST http://localhost:5000/admin/api/logout
 
 ### `GET` /admin/api/projects/{id}
 
-Сведения о проекте для административного редактора
+Проект и проекция владельца
 
 **Авторизация:** Admin cookie
 
-Возвращает проект и безопасные сведения о владельце без секретов.
+Возвращает запись проекта из хранилища и безопасную проекцию владельца. Не включается в MCP.
+
+**Operation ID:** `get_admin_api_projects_id_5b1c8f4904fe68fe`
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `id` | path | да | — | — |
 
 #### Ответы
 
 | Код | Описание |
 |-----|----------|
 | 200 | Проект и владелец |
+| 302 | При Accept: text/html перенаправление на /admin/login |
+| 400 | Неверный идентификатор |
 | 401 | Нет административной cookie |
 | 404 | Проект не найден |
 
 ### `GET` /admin/api/projects/{id}/audit
 
-Журнал действий администратора проекта
+Журнал действий проекта
 
 **Авторизация:** Admin cookie
 
-Возвращает последние административные действия проекта. Значения секретов и тело запросов не возвращаются.
+Последние 100 записей без тел запросов и секретов. Для отсутствующего проекта возвращается пустой items, не 404.
+
+**Operation ID:** `get_admin_api_projects_id_audit_8e7da171bd95661a`
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `id` | path | да | — | — |
 
 #### Ответы
 
 | Код | Описание |
 |-----|----------|
 | 200 | Журнал проекта |
+| 302 | При Accept: text/html перенаправление на /admin/login |
+| 400 | Нужен положительный безопасный целый ID |
 | 401 | Нет административной cookie |
-| 404 | Проект не найден |
+| 500 | Ошибка загрузки журнала |
 
 ### `GET` /admin/api/projects/{id}/secrets/bot-token/{tokenId}
 
@@ -259,15 +289,26 @@ curl -s -c admin.txt -b admin.txt -X POST http://localhost:5000/admin/api/logout
 
 **Авторизация:** Admin cookie
 
-Возвращает токен только по отдельному запросу. Значение не записывается в журнал.
+Существующий административный маршрут. Секрет не приводится в примерах; не публикуется в MCP.
+
+**Operation ID:** `get_admin_api_projects_id_secrets_bot_token_tokenId_8708cab661db38be`
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `id` | path | да | — | — |
+| `tokenId` | path | да | — | — |
 
 #### Ответы
 
 | Код | Описание |
 |-----|----------|
-| 200 | Токен проекта |
+| 200 | Секрет проекта |
+| 302 | При Accept: text/html перенаправление на /admin/login |
+| 400 | Неверные идентификаторы |
 | 401 | Нет административной cookie |
-| 404 | Токен не найден |
+| 404 | Токен отсутствует либо принадлежит другому проекту |
 
 ### `GET` /admin/api/runtime-settings/{group}
 
@@ -286,6 +327,8 @@ curl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \
 curl -s http://localhost:5000/admin/api/runtime-settings/backups -b admin.txt
 ```
 
+**Operation ID:** `get_admin_api_runtime_settings_group_f5a7acbfab2e7ed3`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -300,6 +343,7 @@ curl -s http://localhost:5000/admin/api/runtime-settings/backups -b admin.txt
 | 200 | Поля и хранилища |
 | 401 | Нет admin-сессии |
 | 404 | Неизвестный раздел |
+| 500 | Ошибка загрузки |
 
 ### `PUT` /admin/api/runtime-settings/{group}
 
@@ -317,6 +361,8 @@ curl -s -X PUT http://localhost:5000/admin/api/runtime-settings/workers -b admin
   -H 'Content-Type: application/json' -d '{"values":{"USE_WORKER_POOL":"true"}}'
 ```
 
+**Operation ID:** `put_admin_api_runtime_settings_group_4c307abb7d3d4f4e`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -331,6 +377,8 @@ curl -s -X PUT http://localhost:5000/admin/api/runtime-settings/workers -b admin
 | 200 | Сохранено |
 | 400 | Публичное хранилище или неверное тело |
 | 401 | Нет admin-сессии |
+| 404 | Неизвестный раздел |
+| 500 | Ошибка сохранения |
 
 ### `POST` /admin/api/runtime-settings/backups/run
 
@@ -346,6 +394,8 @@ curl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \
   -d 'key=YOUR_ADMIN_API_KEY'
 curl -s -X POST http://localhost:5000/admin/api/runtime-settings/backups/run -b admin.txt
 ```
+
+**Operation ID:** `post_admin_api_runtime_settings_backups_run_626d248dca02de59`
 
 #### Параметры
 
@@ -367,6 +417,8 @@ curl -s -X POST http://localhost:5000/admin/api/runtime-settings/backups/run -b 
 **Авторизация:** Admin cookie
 
 Отправляет небольшой файл по сохранённым DB_BACKUP_TELEGRAM_BOT_TOKEN и DB_BACKUP_TELEGRAM_CHAT_ID. Работает и при выключенной автоматической доставке. Данных базы в файле нет, токен в ответ не возвращается.
+
+**Operation ID:** `post_admin_api_runtime_settings_backups_telegram_test_1197923d63612fbe`
 
 #### Параметры
 
@@ -393,6 +445,8 @@ curl -s -X POST http://localhost:5000/admin/api/runtime-settings/backups/run -b 
 ```bash
 curl -s -b admin.txt http://localhost:5000/admin/api/status
 ```
+
+**Operation ID:** `get_admin_api_status_63886e3755d88cde`
 
 #### Параметры
 
@@ -427,6 +481,8 @@ curl -s -b admin.txt http://localhost:5000/admin/api/status
 curl -s http://localhost:5000/admin/api/support/attachments/1 -b admin.txt -o screen.png
 ```
 
+**Operation ID:** `get_admin_api_support_attachments_id_13b09eb6b1cc4af5`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -458,6 +514,8 @@ curl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \
   -d 'key=YOUR_ADMIN_API_KEY'
 curl -s 'http://localhost:5000/admin/api/support/threads?status=open' -b admin.txt
 ```
+
+**Operation ID:** `get_admin_api_support_threads_f5c1a95880084e8d`
 
 #### Параметры
 
@@ -513,6 +571,8 @@ curl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \
   -d 'key=YOUR_ADMIN_API_KEY'
 curl -s http://localhost:5000/admin/api/support/threads/1 -b admin.txt
 ```
+
+**Operation ID:** `get_admin_api_support_threads_id_dedaaaa96403d20a`
 
 #### Параметры
 
@@ -590,6 +650,8 @@ curl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \
 curl -s -X PATCH http://localhost:5000/admin/api/support/threads/1 -b admin.txt -H 'Content-Type: application/json' -d '{"status":"closed"}'
 ```
 
+**Operation ID:** `patch_admin_api_support_threads_id_36d42c0180e8a6c8`
+
 **Тело запроса:** `SupportStatusBody`
 
 #### Параметры
@@ -643,6 +705,8 @@ curl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \
 curl -s -X POST http://localhost:5000/admin/api/support/threads/1/messages -b admin.txt -F text='Проверьте сохранение ещё раз.' -F files=@screen.png
 ```
 
+**Operation ID:** `post_admin_api_support_threads_id_messages_257611cfccacdc04`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -688,6 +752,8 @@ curl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \
 curl -s -X POST http://localhost:5000/admin/api/support/threads/1/read -b admin.txt
 ```
 
+**Operation ID:** `post_admin_api_support_threads_id_read_e70b4ce269f610e1`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -731,6 +797,8 @@ curl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \
 curl -s http://localhost:5000/admin/api/support/unread -b admin.txt
 ```
 
+**Operation ID:** `get_admin_api_support_unread_ae51d24238a9ce1e`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -769,6 +837,8 @@ curl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \
 curl -s -X PATCH http://localhost:5000/admin/api/templates/12/featured -b admin.txt \
   -H 'Content-Type: application/json' -d '{"featured":1}'
 ```
+
+**Operation ID:** `patch_admin_api_templates_id_featured_73d3d7ea3654a80b`
 
 **Тело запроса:** `AdminSetTemplateFeaturedRequest`
 
@@ -885,6 +955,8 @@ curl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \
 curl -s -X POST http://localhost:5000/admin/api/templates/recreate -b admin.txt
 ```
 
+**Operation ID:** `post_admin_api_templates_recreate_2396575f81d3dfb4`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -925,6 +997,8 @@ curl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \
 curl -s -X POST http://localhost:5000/admin/api/templates/refresh -b admin.txt
 ```
 
+**Operation ID:** `post_admin_api_templates_refresh_e57029e39fa41ef8`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
@@ -964,6 +1038,8 @@ curl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \
   -d 'key=YOUR_ADMIN_API_KEY'
 curl -s 'http://localhost:5000/admin/api/update-check?refresh=1' -b admin.txt
 ```
+
+**Operation ID:** `get_admin_api_update_check_5792142481fe0d92`
 
 #### Параметры
 
@@ -1016,6 +1092,8 @@ curl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \
   -d 'key=YOUR_ADMIN_API_KEY'
 curl -s 'http://localhost:5000/admin/api/users?search=ivan&page=1&perPage=25' -b admin.txt
 ```
+
+**Operation ID:** `get_admin_api_users_fd95868e5685faf1`
 
 #### Параметры
 
@@ -1075,6 +1153,8 @@ curl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \
   -d 'key=YOUR_ADMIN_API_KEY'
 curl -s http://localhost:5000/admin/api/users/123456789 -b admin.txt
 ```
+
+**Operation ID:** `get_admin_api_users_id_261f7afd195fe16f`
 
 #### Параметры
 
@@ -1143,6 +1223,8 @@ curl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \
   -d 'key=YOUR_ADMIN_API_KEY'
 curl -s http://localhost:5000/admin/api/version -b admin.txt
 ```
+
+**Operation ID:** `get_admin_api_version_cf9d69ab8ec9f951`
 
 #### Параметры
 

@@ -4,8 +4,8 @@
  */
 
 import { z } from 'zod';
+import { listKnownDocIds, readKnownDoc, searchKnownDocs } from './mcp-doc-files.ts';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { readFile, readdir } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -124,9 +124,13 @@ const WORKFLOWS = [
   },
 ];
 
-/** Создаёт единый текстовый ответ MCP. */
-function result(data: unknown) {
-  return { content: [{ type: 'text' as const, text: JSON.stringify(data, null, 2) }] };
+/** Создаёт единый текстовый ответ MCP.
+ * @param data - Данные ответа.
+ * @param isError - Признак ошибки вызова.
+ * @returns Текстовый результат с машинно читаемым признаком ошибки.
+ */
+function result(data: unknown, isError = false) {
+  return { ...(isError ? { isError: true } : {}), content: [{ type: 'text' as const, text: JSON.stringify(data, null, 2) }] };
 }
 
 /** Регистрирует read-only инструменты справки для MCP-агента. */
@@ -137,10 +141,11 @@ export function registerToolDocsTools(server: McpServer): void {
   }, async ({ tool_name }) => {
     const doc = TOOL_DOCS.find((item) => item.name === tool_name);
     try {
-      const content = await readFile(join(TOOL_DOCS_DIR, `${tool_name}.md`), 'utf8');
+      const content = await readKnownDoc(TOOL_DOCS_DIR, tool_name);
+      if (content === undefined) throw new Error('Карточка не найдена');
       return result({ tool_name, content });
     } catch {
-      return result(doc ?? { error: 'Карточка не найдена', tool_name, checked: [TOOL_DOCS_DIR, join(process.cwd(), 'docs', 'mcp', 'tools')], next: ['get_prompt_guide', 'get_node_schema', 'get_node_example'] });
+      return result(doc ?? { error: 'Карточка не найдена', tool_name, next: ['get_prompt_guide', 'get_node_schema', 'get_node_example'] }, !doc);
     }
   });
 
@@ -148,10 +153,9 @@ export function registerToolDocsTools(server: McpServer): void {
     description: 'Ищет карточки MCP-инструментов по имени, назначению и ограничениям',
     inputSchema: { query: z.string().min(1).describe('Поисковый запрос') },
   }, async ({ query }) => {
-    const normalized = query.toLowerCase();
-    const files = await readdir(TOOL_DOCS_DIR).catch(() => []);
-    const matches = files.filter((file) => file.endsWith('.md') && file.toLowerCase().includes(normalized)).map((file) => file.replace(/\.md$/, ''));
-    const embeddedMatches = TOOL_DOCS.filter((doc) => JSON.stringify(doc).toLowerCase().includes(normalized)).map((doc) => doc.name);
+    const normalized = query.trim().toLocaleLowerCase('ru');
+    const matches = await searchKnownDocs(TOOL_DOCS_DIR, query);
+    const embeddedMatches = TOOL_DOCS.filter((doc) => normalized && JSON.stringify(doc).toLocaleLowerCase('ru').includes(normalized)).map((doc) => doc.name);
     return result({ query, matches: [...new Set([...matches, ...embeddedMatches])] });
   });
 
@@ -160,9 +164,12 @@ export function registerToolDocsTools(server: McpServer): void {
     inputSchema: { task: z.string().min(1).describe('Описание задачи обычным языком') },
   }, async ({ task }) => {
     const normalized = task.toLowerCase();
-    const workflowFiles = await readdir(WORKFLOW_DOCS_DIR).catch(() => []);
-    const directWorkflow = workflowFiles.find((file) => file.endsWith('.md') && normalized.includes(file.replace('.md', '').replace(/-/g, ' ')));
-    if (directWorkflow) return result({ workflow: directWorkflow.replace('.md', ''), content: await readFile(join(WORKFLOW_DOCS_DIR, directWorkflow), 'utf8') });
+    const workflowFiles = await listKnownDocIds(WORKFLOW_DOCS_DIR);
+    const directWorkflow = workflowFiles.find((id) => normalized.includes(id.replace(/-/g, ' ')));
+    if (directWorkflow) {
+      const content = await readKnownDoc(WORKFLOW_DOCS_DIR, directWorkflow);
+      if (content !== undefined) return result({ workflow: directWorkflow, content });
+    }
     const workflow = WORKFLOWS.find((item) => item.keywords.some((keyword) => normalized.includes(keyword)));
     return result(workflow ?? { error: 'Готовый workflow не найден', next: 'Сначала вызови search_tool_docs, затем get_prompt_guide' });
   });
@@ -172,9 +179,11 @@ export function registerToolDocsTools(server: McpServer): void {
     inputSchema: { node_type: z.string().min(1).describe('Тип ноды, например input или code') },
   }, async ({ node_type }) => {
     try {
-      return result({ node_type, content: await readFile(join(NODE_DOCS_DIR, `${node_type}.md`), 'utf8') });
+      const content = await readKnownDoc(NODE_DOCS_DIR, node_type);
+      if (content === undefined) throw new Error('Документация ноды не найдена');
+      return result({ node_type, content });
     } catch {
-      return result({ error: 'Документация ноды не найдена', node_type, next: ['get_node_schema', 'get_node_example'] });
+      return result({ error: 'Документация ноды не найдена', node_type, next: ['get_node_schema', 'get_node_example'] }, true);
     }
   });
 
@@ -183,9 +192,11 @@ export function registerToolDocsTools(server: McpServer): void {
     inputSchema: { rule_name: z.string().min(1).describe('Имя правила, например variables') },
   }, async ({ rule_name }) => {
     try {
-      return result({ rule_name, content: await readFile(join(RULE_DOCS_DIR, `${rule_name}.md`), 'utf8') });
+      const content = await readKnownDoc(RULE_DOCS_DIR, rule_name);
+      if (content === undefined) throw new Error('Правило не найдено');
+      return result({ rule_name, content });
     } catch {
-      return result({ error: 'Правило не найдено', rule_name });
+      return result({ error: 'Правило не найдено', rule_name }, true);
     }
   });
 
@@ -193,15 +204,10 @@ export function registerToolDocsTools(server: McpServer): void {
     description: 'Ищет по карточкам MCP, руководствам нод, правилам и workflow',
     inputSchema: { query: z.string().min(1).describe('Поисковый запрос') },
   }, async ({ query }) => {
-    const normalized = query.toLowerCase();
     const roots = [TOOL_DOCS_DIR, NODE_DOCS_DIR, RULE_DOCS_DIR, WORKFLOW_DOCS_DIR, REFERENCE_DOCS_DIR];
     const matches: string[] = [];
     for (const root of roots) {
-      for (const file of await readdir(root).catch(() => [])) {
-        if (!file.endsWith('.md')) continue;
-        const content = await readFile(join(root, file), 'utf8').catch(() => '');
-        if (content.toLowerCase().includes(normalized)) matches.push(join(root, file));
-      }
+      for (const id of await searchKnownDocs(root, query)) matches.push(join(root, `${id}.md`));
     }
     return result({ query, matches });
   });

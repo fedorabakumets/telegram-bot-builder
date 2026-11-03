@@ -11,6 +11,7 @@ import {
   type MessagesRetentionDays,
 } from '@shared/messages-retention';
 import { apiFetch } from './api-fetch.ts';
+import { verifyMutation, type MutationResult } from './mutation-proof.ts';
 import type { ReadDbOptions } from './node-query-db.ts';
 
 /**
@@ -30,7 +31,7 @@ export async function setMessagesRetentionInDb(
   messagesRetentionDays: number,
   options?: ReadDbOptions,
 ): Promise<
-  { ok: true; messagesRetentionDays: MessagesRetentionDays } | { error: string }
+  MutationResult<{ ok: true; messagesRetentionDays: MessagesRetentionDays } | { error: string }>
 > {
   if (!isMessagesRetentionDays(messagesRetentionDays)) {
     return {
@@ -79,5 +80,5 @@ export async function setMessagesRetentionInDb(
     return { error: `Сервер вернул недопустимое значение: ${days}` };
   }
 
-  return { ok: true, messagesRetentionDays: days };
+  return verifyMutation({ ok: true as const, messagesRetentionDays: days }, `/api/projects/${projectId}/tokens/list`, value => Array.isArray(value) && value.some(item => item.id === tokenId && item.messagesRetentionDays === messagesRetentionDays), options);
 }

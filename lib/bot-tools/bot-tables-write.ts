@@ -226,10 +226,12 @@ export async function importRows(
  * @returns Ответ или ошибка
  */
 function send(projectId: number, suffix: string, method: string, body: unknown, options?: TableHttpOptions) {
+  /** Новый ключ включает безопасный ответ-квитанцию и постоянную защиту повторов. */
+  const payload = options?.requestId && body && typeof body === 'object' ? { ...body, requestId: options.requestId } : body;
   return tableRequest(`/api/projects/${projectId}/tables${suffix}`, {
     ...options,
     method,
     headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
-    body: body === undefined ? undefined : JSON.stringify(body),
+    body: payload === undefined ? undefined : JSON.stringify(payload),
   });
 }

@@ -23,6 +23,8 @@ curl -s http://localhost:5000/api/bot-logs/42 \
   -H 'Authorization: Bearer mcp_…'
 ```
 
+**Operation ID:** `get_api_bot_logs_logId_89c3536f930b45ff`
+
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |

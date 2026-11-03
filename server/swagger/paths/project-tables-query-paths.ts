@@ -4,6 +4,7 @@
  */
 
 import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
+import { z } from 'zod';
 import { MessageErrorSchema } from "../schemas/common";
 import { DatabaseAuthHeadersSchema, DatabaseCookiesSchema, DatabaseProjectIdParamsSchema } from "../schemas/database";
 import { TableIdParamsSchema } from "../schemas/project-tables-params";
@@ -14,6 +15,8 @@ import {
   QueryTableRowsResultSchema,
 } from "../schemas/project-tables-query";
 import { PROJECT_TABLES_AUTH_ERRORS } from "./project-tables-errors";
+import { BotTableListSchema } from '../schemas/database';
+import { TableDetailSchema, TableOpsResultSchema } from '../schemas/project-tables-results';
 
 /**
  * Регистрирует ограниченные запросы и пакет операций
@@ -32,8 +35,11 @@ export function registerProjectTablesQueryPaths(
     summary: "Найти таблицы по части имени",
     description: "Только пользовательские bot_tables. Параметр q обязателен, limit от 1 до 100.",
     security: cookieSecurity,
-    request: { ...requestBase, params: DatabaseProjectIdParamsSchema },
-    responses: { 200: { description: "Найденные таблицы" }, 400: { description: "Нет q", content: { "application/json": { schema: MessageErrorSchema } } }, ...PROJECT_TABLES_AUTH_ERRORS },
+    request: { ...requestBase, params: DatabaseProjectIdParamsSchema, query: z.object({
+      /** Подстрока имени после удаления пробелов по краям. */ q: z.string().trim().min(1).max(255),
+      /** Максимум от 1 до 100; по умолчанию 50. */ limit: z.coerce.number().int().min(1).max(100).optional(),
+    }) },
+    responses: { 200: { description: "Найденные таблицы", content: { "application/json": { schema: BotTableListSchema } } }, 400: { description: "Нет q", content: { "application/json": { schema: MessageErrorSchema } } }, ...PROJECT_TABLES_AUTH_ERRORS },
   });
   registry.registerPath({
     method: "get",
@@ -43,7 +49,7 @@ export function registerProjectTablesQueryPaths(
     description: "Столбцы содержат числовой id и имя. Чужой tableId даёт 404.",
     security: cookieSecurity,
     request: { ...requestBase, params: TableIdParamsSchema },
-    responses: { 200: { description: "Схема" }, 404: { description: "Таблица не найдена", content: { "application/json": { schema: MessageErrorSchema } } }, ...PROJECT_TABLES_AUTH_ERRORS },
+    responses: { 200: { description: "Схема", content: { "application/json": { schema: TableDetailSchema } } }, 404: { description: "Таблица не найдена", content: { "application/json": { schema: MessageErrorSchema } } }, ...PROJECT_TABLES_AUTH_ERRORS },
   });
   registry.registerPath({
     method: "post",
@@ -76,7 +82,7 @@ export function registerProjectTablesQueryPaths(
       body: { content: { "application/json": { schema: ApplyTableOpsBodySchema } } },
     },
     responses: {
-      200: { description: "Результаты по порядку" },
+      200: { description: "Результаты по порядку", content: { 'application/json': { schema: TableOpsResultSchema } } },
       400: { description: "Откат", content: { "application/json": { schema: ApplyTableOpsErrorSchema } } },
       ...PROJECT_TABLES_AUTH_ERRORS,
     },

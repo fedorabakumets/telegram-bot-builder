@@ -8,10 +8,12 @@
  */
 
 import { apiFetch } from './api-fetch.ts';
+import { verifyMutation, durableMutationUnknown, type MutationResult } from './mutation-proof.ts';
 import type { ReadDbOptions } from './node-query-db.ts';
 import { scaffoldMinimalProject } from './project-mutate.ts';
-import * as fs from 'node:fs/promises';
+import { atomicWriteVerified, type LocalFileReceipt } from './atomic-local-file.ts';
 import * as path from 'node:path';
+import { isDeepStrictEqual } from 'node:util';
 
 /** Лёгкая метаинформация о проекте для агента (whitelist безопасных полей) */
 export interface ProjectMetaDto {
@@ -112,9 +114,15 @@ export async function listProjectsInDb(
  */
 export async function createProjectInDb(
   name: string,
-  options?: ReadDbOptions,
-): Promise<{ ok: true; projectId: number; name: string } | { error: string }> {
+  options?: ReadDbOptions & { requestId?: string },
+): Promise<MutationResult<{ ok: true; projectId: number; name: string } | { error: string }>> {
   const data = scaffoldMinimalProject().project;
+  // Одна заявка должна иметь одинаковый JSON даже после перезапуска процесса.
+  if (options?.requestId) {
+    const sheetId = `mcp-sheet-${options.requestId}`;
+    data.sheets[0].id = sheetId;
+    data.activeSheetId = sheetId;
+  }
 
   let res: Response;
   try {
@@ -122,27 +130,29 @@ export async function createProjectInDb(
       apiBaseUrl: options?.apiBaseUrl,
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, data }),
+      body: JSON.stringify({ name, data, ...(options?.requestId ? { requestId: options.requestId } : {}) }),
     });
   } catch (err) {
-    return { error: `Не удалось соединиться с сервером: ${(err as Error).message}` };
+    return { error: `Связь прервана; перечитайте состояние перед повтором: ${(err as Error).message}`, outcome: "unknown" };
   }
 
   if (!res.ok) {
     const body = await res.text().catch(() => '');
-    return { error: body ? `HTTP ${res.status}: ${body}` : `HTTP ${res.status}` };
+    return { error: body ? `HTTP ${res.status}: ${body}` : `HTTP ${res.status}`, ...(res.status >= 500 ? { outcome: "unknown" as const } : {}) };
   }
 
   let body: { id?: number; name?: string };
   try {
     body = (await res.json()) as { id?: number; name?: string };
   } catch (err) {
-    return { error: `Не удалось разобрать ответ сервера: ${(err as Error).message}` };
+    return { error: `Ответ не удалось прочитать; исход действия неизвестен: ${(err as Error).message}`, outcome: "unknown" };
   }
 
-  if (typeof body.id !== 'number') return { error: 'В ответе сервера нет id нового проекта' };
+  if (res.status === 202) return durableMutationUnknown(body);
 
-  return { ok: true, projectId: body.id, name: body.name ?? name };
+  if (typeof body?.id !== 'number') return { error: 'В ответе сервера нет id нового проекта' };
+
+  return verifyMutation({ ok: true as const, projectId: body.id, name: body.name ?? name }, `/api/projects/${body.id}`, value => value?.id === body.id && value?.name === (body.name ?? name) && isDeepStrictEqual(value?.data, data), options);
 }
 
 /**
@@ -160,7 +170,7 @@ export async function renameProjectInDb(
   projectId: number,
   name: string,
   options?: ReadDbOptions,
-): Promise<{ ok: true; projectId: number; name: string } | { error: string }> {
+): Promise<MutationResult<{ ok: true; projectId: number; name: string } | { error: string }>> {
   let res: Response;
   try {
     res = await apiFetch(`/api/projects/${projectId}`, {
@@ -170,23 +180,23 @@ export async function renameProjectInDb(
       body: JSON.stringify({ name }),
     });
   } catch (err) {
-    return { error: `Не удалось соединиться с сервером: ${(err as Error).message}` };
+    return { error: `Связь прервана; перечитайте состояние перед повтором: ${(err as Error).message}`, outcome: "unknown" };
   }
 
   if (!res.ok) {
     const body = await res.text().catch(() => '');
     if (res.status === 404) return { error: `HTTP 404: проект не найден${body ? `: ${body}` : ''}` };
-    return { error: body ? `HTTP ${res.status}: ${body}` : `HTTP ${res.status}` };
+    return { error: body ? `HTTP ${res.status}: ${body}` : `HTTP ${res.status}`, ...(res.status >= 500 ? { outcome: "unknown" as const } : {}) };
   }
 
   let body: { name?: string };
   try {
     body = (await res.json()) as { name?: string };
   } catch (err) {
-    return { error: `Не удалось разобрать ответ сервера: ${(err as Error).message}` };
+    return { error: `Ответ не удалось прочитать; исход действия неизвестен: ${(err as Error).message}`, outcome: "unknown" };
   }
 
-  return { ok: true, projectId, name: body.name ?? name };
+  return verifyMutation({ ok: true as const, projectId, name: body.name ?? name }, `/api/projects/${projectId}`, value => value?.id === projectId && value?.name === name, options);
 }
 
 /**
@@ -198,8 +208,8 @@ export async function renameProjectInDb(
 export async function reorderProjectsInDb(
   projectIds: number[],
   options?: ReadDbOptions,
-): Promise<{ ok: true } | { error: string }> {
-  if (!Array.isArray(projectIds) || projectIds.length === 0 || !projectIds.every((id) => typeof id === 'number')) {
+): Promise<MutationResult<{ ok: true } | { error: string }>> {
+  if (!Array.isArray(projectIds) || projectIds.length === 0 || !projectIds.every((id) => Number.isSafeInteger(id) && id > 0) || new Set(projectIds).size !== projectIds.length) {
     return { error: 'projectIds должен быть непустым массивом чисел' };
   }
 
@@ -212,15 +222,19 @@ export async function reorderProjectsInDb(
       body: JSON.stringify({ projectIds }),
     });
   } catch (err) {
-    return { error: `Не удалось соединиться с сервером: ${(err as Error).message}` };
+    return { error: `Связь прервана; перечитайте состояние перед повтором: ${(err as Error).message}`, outcome: "unknown" };
   }
 
   if (!res.ok) {
     const body = await res.text().catch(() => '');
-    return { error: body ? `HTTP ${res.status}: ${body}` : `HTTP ${res.status}` };
+    return { error: body ? `HTTP ${res.status}: ${body}` : `HTTP ${res.status}`, ...(res.status >= 500 ? { outcome: "unknown" as const } : {}) };
   }
 
-  return { ok: true };
+  for (const [index, id] of projectIds.entries()) {
+    const check = await verifyMutation({ ok: true as const }, `/api/projects/${id}`, value => value?.id === id && value?.sortOrder === index, options);
+    if ('error' in check) return check;
+  }
+  return { ok: true, effect: 'application', outcome: 'saved', persistence: { confirmed: true, method: 'readback', resource: '/api/projects/reorder' } };
 }
 
 /**
@@ -261,8 +275,8 @@ export async function exportProjectInDb(
   projectId: number,
   options?: { apiBaseUrl?: string; savePath?: string; inline?: boolean },
 ): Promise<
-  | { ok: true; path: string; bytes: number; lines: number; preview: string; code?: string }
-  | { error: string }
+  | ({ ok: true; path: string; bytes: number; lines: number; preview: string; code?: string } & LocalFileReceipt)
+  | { error: string; outcome?: 'unknown' | 'error'; effect?: 'local_file' }
 > {
   const target = resolveBotPyPath(options?.savePath, projectId);
   if ('error' in target) return target;
@@ -290,14 +304,14 @@ export async function exportProjectInDb(
     return { error: `Не удалось разобрать ответ сервера: ${(err as Error).message}` };
   }
 
-  if (typeof body.code !== 'string') return { error: 'В ответе нет кода' };
+  if (typeof body?.code !== 'string') return { error: 'В ответе нет кода' };
   const code = body.code;
 
+  let localReceipt: LocalFileReceipt;
   try {
-    await fs.mkdir(path.dirname(target.resolved), { recursive: true });
-    await fs.writeFile(target.resolved, code, 'utf8');
+    localReceipt = await atomicWriteVerified(target.resolved, code, path.resolve(process.cwd(), 'bots'));
   } catch (err) {
-    return { error: `Не удалось записать файл: ${(err as Error).message}` };
+    return { error: `Не удалось подтвердить локальный файл: ${(err as Error).message}`, effect: "local_file", outcome: (err as { outcome?: "unknown" | "error" }).outcome ?? "unknown" };
   }
 
   const allLines = code.split('\n');
@@ -305,6 +319,7 @@ export async function exportProjectInDb(
 
   return {
     ok: true,
+    ...localReceipt,
     path: target.resolved,
     bytes: Buffer.byteLength(code, 'utf8'),
     lines: allLines.length,
@@ -325,7 +340,7 @@ export async function exportProjectInDb(
 export async function deleteProjectInDb(
   projectId: number,
   options?: { apiBaseUrl?: string; confirm?: boolean },
-): Promise<{ deleted: true; message: string } | { error: string }> {
+): Promise<MutationResult<{ deleted: true; message: string } | { error: string }>> {
   if (options?.confirm !== true) {
     return { error: 'Удаление необратимо. Передайте confirm: true для подтверждения.' };
   }
@@ -337,23 +352,23 @@ export async function deleteProjectInDb(
       method: 'DELETE',
     });
   } catch (err) {
-    return { error: `Не удалось соединиться с сервером: ${(err as Error).message}` };
+    return { error: `Связь прервана; перечитайте состояние перед повтором: ${(err as Error).message}`, outcome: "unknown" };
   }
 
   if (!res.ok) {
     const body = await res.text().catch(() => '');
     if (res.status === 404) return { error: `HTTP 404: проект не найден${body ? `: ${body}` : ''}` };
-    return { error: body ? `HTTP ${res.status}: ${body}` : `HTTP ${res.status}` };
+    return { error: body ? `HTTP ${res.status}: ${body}` : `HTTP ${res.status}`, ...(res.status >= 500 ? { outcome: "unknown" as const } : {}) };
   }
 
   let body: { message?: string };
   try {
     body = (await res.json()) as { message?: string };
   } catch (err) {
-    return { error: `Не удалось разобрать ответ сервера: ${(err as Error).message}` };
+    return { error: `Ответ не удалось прочитать; исход действия неизвестен: ${(err as Error).message}`, outcome: "unknown" };
   }
 
-  return { deleted: true, message: body.message ?? 'Проект удалён' };
+  return verifyMutation({ deleted: true as const, message: body.message ?? 'Проект удалён' }, `/api/projects/${projectId}`, () => false, { ...options, absent: true });
 }
 
 /**
@@ -368,36 +383,38 @@ export async function deleteProjectInDb(
  */
 export async function duplicateProjectInDb(
   sourceProjectId: number,
-  options?: { apiBaseUrl?: string; name?: string },
-): Promise<{ ok: true; projectId: number; name: string; sourceProjectId: number } | { error: string }> {
+  options?: { apiBaseUrl?: string; name?: string; requestId?: string },
+): Promise<MutationResult<{ ok: true; projectId: number; name: string; sourceProjectId: number } | { error: string }>> {
   let res: Response;
   try {
     res = await apiFetch(`/api/projects/${sourceProjectId}/duplicate`, {
       apiBaseUrl: options?.apiBaseUrl,
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: options?.name }),
+      body: JSON.stringify({ name: options?.name, ...(options?.requestId ? { requestId: options.requestId } : {}) }),
     });
   } catch (err) {
-    return { error: `Не удалось соединиться с сервером: ${(err as Error).message}` };
+    return { error: `Связь прервана; перечитайте состояние перед повтором: ${(err as Error).message}`, outcome: "unknown" };
   }
 
   if (!res.ok) {
     const body = await res.text().catch(() => '');
     if (res.status === 404) return { error: `HTTP 404: проект-источник не найден${body ? `: ${body}` : ''}` };
-    return { error: body ? `HTTP ${res.status}: ${body}` : `HTTP ${res.status}` };
+    return { error: body ? `HTTP ${res.status}: ${body}` : `HTTP ${res.status}`, ...(res.status >= 500 ? { outcome: "unknown" as const } : {}) };
   }
 
   let body: { id?: number; name?: string };
   try {
     body = (await res.json()) as { id?: number; name?: string };
   } catch (err) {
-    return { error: `Не удалось разобрать ответ сервера: ${(err as Error).message}` };
+    return { error: `Ответ не удалось прочитать; исход действия неизвестен: ${(err as Error).message}`, outcome: "unknown" };
   }
 
-  if (typeof body.id !== 'number') return { error: 'В ответе сервера нет id копии' };
+  if (res.status === 202) return durableMutationUnknown(body);
 
-  return { ok: true, projectId: body.id, name: body.name ?? '', sourceProjectId };
+  if (typeof body?.id !== 'number') return { error: 'В ответе сервера нет id копии' };
+
+  return verifyMutation({ ok: true as const, projectId: body.id, name: body.name ?? '', sourceProjectId }, `/api/projects/${body.id}`, value => value?.id === body.id && value?.name === body.name, options);
 }
 
 /**
@@ -409,7 +426,7 @@ export async function duplicateProjectInDb(
 export async function archiveProjectInDb(
   projectId: number,
   options?: ReadDbOptions,
-): Promise<{ ok: true; projectId: number; isArchivedForMe: true } | { error: string }> {
+): Promise<MutationResult<{ ok: true; projectId: number; isArchivedForMe: true } | { error: string }>> {
   let res: Response;
   try {
     res = await apiFetch(`/api/projects/${projectId}/archive`, {
@@ -417,16 +434,16 @@ export async function archiveProjectInDb(
       method: 'POST',
     });
   } catch (err) {
-    return { error: `Не удалось соединиться с сервером: ${(err as Error).message}` };
+    return { error: `Связь прервана; перечитайте состояние перед повтором: ${(err as Error).message}`, outcome: "unknown" };
   }
 
   if (!res.ok) {
     const body = await res.text().catch(() => '');
     if (res.status === 404) return { error: `HTTP 404: проект не найден${body ? `: ${body}` : ''}` };
-    return { error: body ? `HTTP ${res.status}: ${body}` : `HTTP ${res.status}` };
+    return { error: body ? `HTTP ${res.status}: ${body}` : `HTTP ${res.status}`, ...(res.status >= 500 ? { outcome: "unknown" as const } : {}) };
   }
 
-  return { ok: true, projectId, isArchivedForMe: true };
+  return verifyMutation({ ok: true as const, projectId, isArchivedForMe: true as const }, '/api/projects/list?archived=true', value => Array.isArray(value) && value.some(item => item.id === projectId && item.isArchivedForMe === true), options);
 }
 
 /**
@@ -438,7 +455,7 @@ export async function archiveProjectInDb(
 export async function unarchiveProjectInDb(
   projectId: number,
   options?: ReadDbOptions,
-): Promise<{ ok: true; projectId: number; isArchivedForMe: false } | { error: string }> {
+): Promise<MutationResult<{ ok: true; projectId: number; isArchivedForMe: false } | { error: string }>> {
   let res: Response;
   try {
     res = await apiFetch(`/api/projects/${projectId}/unarchive`, {
@@ -446,14 +463,14 @@ export async function unarchiveProjectInDb(
       method: 'POST',
     });
   } catch (err) {
-    return { error: `Не удалось соединиться с сервером: ${(err as Error).message}` };
+    return { error: `Связь прервана; перечитайте состояние перед повтором: ${(err as Error).message}`, outcome: "unknown" };
   }
 
   if (!res.ok) {
     const body = await res.text().catch(() => '');
     if (res.status === 404) return { error: `HTTP 404: проект не найден${body ? `: ${body}` : ''}` };
-    return { error: body ? `HTTP ${res.status}: ${body}` : `HTTP ${res.status}` };
+    return { error: body ? `HTTP ${res.status}: ${body}` : `HTTP ${res.status}`, ...(res.status >= 500 ? { outcome: "unknown" as const } : {}) };
   }
 
-  return { ok: true, projectId, isArchivedForMe: false };
+  return verifyMutation({ ok: true as const, projectId, isArchivedForMe: false as const }, '/api/projects/list?archived=false', value => Array.isArray(value) && value.some(item => item.id === projectId && item.isArchivedForMe !== true), options);
 }

@@ -3,6 +3,7 @@
  * @module setupBroadcastRoutes
  */
 
+import { durableProjectAction } from "./durable-project-action";
 import type { Express } from "express";
 import { requireProjectAccess } from "../middleware/requireProjectAccess";
 import {
@@ -27,7 +28,7 @@ import {
  */
 export function setupBroadcastRoutes(app: Express): void {
   app.get("/api/projects/:projectId/broadcasts", requireProjectAccess, getBroadcastsHandler);
-  app.post("/api/projects/:projectId/broadcasts", requireProjectAccess, createBroadcastHandler);
+  app.post("/api/projects/:projectId/broadcasts", requireProjectAccess, durableProjectAction(createBroadcastHandler, "start_broadcast"));
   app.post(
     "/api/projects/:projectId/broadcasts/preview-audience",
     requireProjectAccess,

@@ -8,6 +8,12 @@ import type { TableChartSuggestionPayload } from '../../shared/analytics/table-c
 
 /** Параметры чтения графика. */
 export interface TableChartReadOptions {
+  /** Колонка даты для фильтрации. */
+  dateColumnId?: number;
+  /** Включённая ISO-граница с часовым поясом. */
+  from?: string;
+  /** Исключённая ISO-граница с часовым поясом. */
+  to?: string;
   /** Таблица. */
   tableId?: number;
   /** Столбец групп. */
@@ -32,6 +38,18 @@ function positive(value: number | undefined): value is number {
 }
 
 /**
+ * Проверяет согласованность фильтра периода до обращения к API.
+ * @param options - Параметры графика.
+ * @returns Признак корректности.
+ */
+function validDateFilter(options: TableChartReadOptions): boolean {
+  if (options.dateColumnId === undefined) return options.from === undefined && options.to === undefined;
+  /** Проверяет явный часовой пояс и конечное значение даты. */
+  const explicit = (value: string | undefined) => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?(?:Z|[+-]\d{2}:\d{2})$/.test(value) && Number.isFinite(Date.parse(value));
+  return positive(options.dateColumnId) && explicit(options.from) && explicit(options.to) && Date.parse(options.from!) < Date.parse(options.to!);
+}
+
+/**
  * Проверяет параметры до обращения к API.
  * @param projectId - Проект.
  * @param options - Параметры графика.
@@ -39,7 +57,7 @@ function positive(value: number | undefined): value is number {
  */
 export function validTableChartOptions(projectId: number, options: TableChartReadOptions): boolean {
   return positive(projectId) && positive(options.tableId) && positive(options.xColumnId) && positive(options.yColumnId) &&
-    TABLE_AGGREGATIONS.includes(options.aggregation ?? 'count') &&
+    TABLE_AGGREGATIONS.includes(options.aggregation ?? 'count') && validDateFilter(options) &&
     (options.limit === undefined || (Number.isSafeInteger(options.limit) && options.limit >= 1 && options.limit <= TABLE_CHART_LIMIT));
 }
 
@@ -75,6 +93,7 @@ function validPoint(point: unknown): point is TableChartPoint {
 export async function readTableChart(projectId: number, options: TableChartReadOptions): Promise<TableChartPayload> {
   const params = new URLSearchParams({ xColumnId: String(options.xColumnId), yColumnId: String(options.yColumnId), aggregation: options.aggregation ?? 'count' });
   if (options.limit !== undefined) params.set('limit', String(options.limit));
+  if (options.dateColumnId !== undefined) { params.set('dateColumnId', String(options.dateColumnId)); params.set('from', options.from!); params.set('to', options.to!); }
   const data = await readJson(`/api/projects/${projectId}/tables/${options.tableId}/chart?${params}`, options.apiBaseUrl) as TableChartPayload;
   if (!data || !Array.isArray(data.points) || data.points.length > TABLE_CHART_LIMIT || !data.points.every(validPoint) || !Array.isArray(data.warnings)) {
     throw new Error('Некорректный ответ API графика');
