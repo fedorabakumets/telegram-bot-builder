@@ -7,6 +7,7 @@ import { authorizedFanout } from "./authorized-fanout";
 import { redactSecrets } from "../utils/redactSecrets";
 import { TerminalMessage } from "./TerminalMessage";
 import { persistLogLine } from "./botLogsBuffer";
+import { recordFrozenBotError } from '../bots/frozenBotStatus';
 
 /**
  * Парсит timestamp из строки лога Python-формата: "2026-04-09 11:00:16,191 - ..."
@@ -40,6 +41,7 @@ export async function sendOutputToTerminals(
   launchId?: number
 ): Promise<void> {
   content = redactSecrets(content);
+  recordFrozenBotError(projectId, tokenId, content);
   const timestamp = type === "stdout" || type === "stderr"
     ? parseLogTimestamp(content)
     : new Date().toISOString();

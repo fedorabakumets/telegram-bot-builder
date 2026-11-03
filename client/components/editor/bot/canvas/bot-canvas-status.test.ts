@@ -7,6 +7,10 @@ import { describe, expect, it } from 'vitest';
 import { botCanvasStatusLabel, resolveBotCanvasStatus } from './bot-canvas-status';
 
 describe('resolveBotCanvasStatus', () => {
+  it('показывает заморозку даже при работающем процессе', () => {
+    expect(resolveBotCanvasStatus({ frozen: true, isRunning: true })).toBe('frozen');
+    expect(botCanvasStatusLabel('frozen')).toBe('Заморожен');
+  });
   it('помечает недействительный токен даже если процесс не запущен', () => {
     expect(resolveBotCanvasStatus({ isActive: 0, isRunning: false, hasFailure: true }))
       .toBe('invalid');

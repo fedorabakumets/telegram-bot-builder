@@ -40,6 +40,8 @@ export interface BotInstance {
  * Ответ API со статусом бота (с добавленным tokenId для удобства поиска)
  */
 export interface BotStatusResponse {
+  /** Telegram сообщил о заморозке после запуска панели */
+  frozen?: boolean;
   /** Текущий статус */
   status: BotStatus;
   /** Экземпляр бота или null */

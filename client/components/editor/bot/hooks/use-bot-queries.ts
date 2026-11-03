@@ -106,6 +106,8 @@ export function useBotQueries(options?: UseBotQueriesOptions): BotQueriesResult 
         }>,
       enabled: projects.length > 0,
       staleTime: 0,
+      refetchInterval: 15000,
+      refetchIntervalInBackground: false,
     })),
   });
 
