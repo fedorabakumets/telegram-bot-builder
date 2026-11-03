@@ -28,7 +28,7 @@ import { resolveSelectionMarkSymbols } from './templates/keyboard/selection-mark
 import { generateButtonResponse, generateMultiSelectCallback, generateMultiSelectDone, generateMultiSelectReply, generateReplyButtonHandlers, generateCommandCallbackHandler } from './templates/keyboard-handlers/handlers';
 import { generateInteractiveCallbackHandlers } from './templates/keyboard-handlers/interactive-callback-handlers';
 import { generateGroupHandlers } from './templates/group-handlers/group-handlers.renderer';
-import { generateMediaFunctions } from './templates/media-functions/media-functions.renderer';
+import { generateMediaFunctions, generateMediaOriginal } from './templates/media-functions/media-functions.renderer';
 import { generateContentCode } from './templates/content';
 import { generateMediaInputHandlers } from './templates/media-input-handlers';
 import type { MediaMetadataConfig } from './templates/media-input-handlers';
@@ -366,9 +366,9 @@ function generateCodeSections(
 
   // --- media functions ---
   const mediaFunctions = emitOnce(state, COMPONENT_NAMES.MEDIA_FUNCTIONS, () =>
-    userDatabaseEnabled || flags.hasMediaNodesResult || flags.hasUploadImagesResult
+    [generateMediaOriginal(), userDatabaseEnabled || flags.hasMediaNodesResult || flags.hasUploadImagesResult
       ? generateMediaFunctions()
-      : ''
+      : ''].join('\n')
   );
 
   // --- content (загрузка из _content) ---

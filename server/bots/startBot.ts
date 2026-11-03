@@ -13,6 +13,8 @@ import { isWorkerPoolEnabled } from './isWorkerPoolEnabled';
 import { precompileBotCode } from './precompileBotCode';
 /** Окружение процесса бота без секретов панели */
 import { buildWorkerBaseEnv } from './workerBaseEnv';
+import { buildMediaRuntimeEnv, collectRuntimeMediaUrls } from './mediaRuntimeEnv';
+import { selectedMediaStorageId } from '../storage/selected-media-storage';
 
 /**
  * Модуль для работы с путями к файлам
@@ -408,6 +410,12 @@ export async function startBot(
       });
     }
 
+    // Передаём доступ только конкретному боту, включая повторное использование сборки.
+    const mediaUrls = [...collectRuntimeMediaUrls(project.data)];
+    const mediaRows = mediaUrls.length ? await storage.getMediaFilesByUrls(mediaUrls, projectId) : [];
+    // Новые и динамические вложения также должны читаться через выбранное S3.
+    const storageRequired = Boolean(await selectedMediaStorageId()) || mediaRows.some((media) => media.storageBackend === 's3');
+    botEnv = { ...botEnv, ...buildMediaRuntimeEnv(projectId, project.data, storageRequired) };
     await persistBotBuildForStart({ ...buildContext, mainFile });
     const runnerBuild = await resolveRunnerBuildForStart({ ...buildContext, mainFile });
     if (runnerBuild.error) {

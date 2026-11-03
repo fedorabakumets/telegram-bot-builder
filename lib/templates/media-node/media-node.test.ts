@@ -196,23 +196,23 @@ describe('media-node.py.jinja2 шаблон', () => {
   describe('FSInputFile для /uploads/ путей', () => {
     it('должен использовать FSInputFile для /uploads/ пути', () => {
       const result = generateMediaNode(fixtureUploadPaths);
-      expect(result).toContain('FSInputFile');
+      expect(result).toContain('resolve_media_input');
     });
 
     it('должен использовать get_upload_file_path для /uploads/ пути', () => {
       const result = generateMediaNode(fixtureUploadPaths);
-      expect(result).toContain('get_upload_file_path');
+      expect(result).toContain('resolve_media_input');
     });
 
     it('должен использовать FSInputFile в медиагруппе для /uploads/ путей', () => {
       const result = generateMediaNode(fixtureUploadPaths);
       expect(result).toContain('answer_media_group');
-      expect(result).toContain('FSInputFile');
+      expect(result).toContain('resolve_media_input');
     });
 
     it('должен использовать FSInputFile для одиночного /uploads/ фото', () => {
       const result = generateMediaNode({ nodeId: 'n1', attachedMedia: ['/uploads/photo.jpg'] });
-      expect(result).toContain('FSInputFile');
+      expect(result).toContain('resolve_media_input');
       expect(result).toContain('answer_photo');
     });
   });

@@ -13,6 +13,7 @@ import { BotValidation } from '../types/bot-validation';
 import { CodePanelHeader } from './CodePanelHeader';
 import { CodeFormatTabs } from './CodeFormatTabs';
 import { CodeActions } from './CodeActions';
+import { CodeArchiveAction } from './CodeArchiveAction';
 import { CodeStats } from './CodeStats';
 import { JsonApplyBar } from './JsonApplyBar';
 import { CodeFormat } from '../hooks/use-code-generator';
@@ -263,6 +264,7 @@ export function CodePanel({
                     Открыть код <span aria-hidden="true">→</span>
                   </WorkspaceActionButton>}
                   <CodeActions content={content} selectedFormat={selectedFormat} fileName={safeFileName} isLoading={isLoading} />
+                  <CodeArchiveAction projectId={projectIds?.[index]} />
                   <CodeFormatTabs selectedFormat={selectedFormat} projectName={currentProjectName} onFormatChange={handleFormatChange} />
                   {selectedFormat === 'json' && !editedContent && (
                     <div className="flex items-start gap-2 px-3 py-2 rounded-md bg-muted/40 border border-border/40">

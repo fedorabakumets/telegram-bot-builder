@@ -80,6 +80,10 @@ async def handle_broadcast_{{ safeNodeId }}(callback_query, user_id):
                         if attached_media:
                             for media_var in attached_media:
                                 media_value = all_user_vars.get(media_var)
+                                if not media_value and isinstance(media_var, str) and (await is_registered_media(media_var) or media_var.startswith(("http://", "https://"))):
+                                    media_value = media_var
+                                if not media_value:
+                                    raise ValueError("Не удалось определить вложение рассылки")
                                 if media_value:
                                     media_url_to_use = None
                                     if isinstance(media_value, dict):
@@ -97,43 +101,24 @@ async def handle_broadcast_{{ safeNodeId }}(callback_query, user_id):
                                         media_url_to_use = media_value
                                     if media_url_to_use:
                                         if "audio" in media_var.lower():
-                                            await bot.send_audio(recipient_id, media_url_to_use, caption=message_text)
+                                            await bot.send_audio(recipient_id, (await resolve_media_input(media_url_to_use) if await is_registered_media(media_url_to_use) else media_url_to_use), caption=message_text)
                                         elif "video" in media_var.lower():
-                                            await bot.send_video(recipient_id, media_url_to_use, caption=message_text)
+                                            await bot.send_video(recipient_id, (await resolve_media_input(media_url_to_use) if await is_registered_media(media_url_to_use) else media_url_to_use), caption=message_text)
                                         elif "document" in media_var.lower():
-                                            await bot.send_document(recipient_id, media_url_to_use, caption=message_text)
+                                            await bot.send_document(recipient_id, (await resolve_media_input(media_url_to_use) if await is_registered_media(media_url_to_use) else media_url_to_use), caption=message_text)
                                         else:
-                                            await bot.send_photo(recipient_id, media_url_to_use, caption=message_text)
+                                            await bot.send_photo(recipient_id, (await resolve_media_input(media_url_to_use) if await is_registered_media(media_url_to_use) else media_url_to_use), caption=message_text)
                                         media_sent = True
                         if not media_sent:
-                            if audio_url:
-                                await bot.send_audio(recipient_id, audio_url, caption=message_text)
-                                media_sent = True
-                            elif video_url:
-                                await bot.send_video(recipient_id, video_url, caption=message_text)
-                                media_sent = True
-                            elif document_url:
-                                await bot.send_document(recipient_id, document_url, caption=message_text)
-                                media_sent = True
-                            elif image_url:
-                                await bot.send_photo(recipient_id, image_url, caption=message_text)
-                                media_sent = True
+                            for _kind, _source in (("audio", audio_url), ("video", video_url), ("document", document_url), ("photo", image_url)):
+                                if _source:
+                                    _input = await resolve_media_input(_source) if await is_registered_media(_source) else _source
+                                    await getattr(bot, f"send_{_kind}")(recipient_id, _input, caption=message_text)
+                                    media_sent = True
+                                    break
                     except Exception as media_error:
                         logging.error(f"❌ Ошибка отправки медиа: {media_error}")
-                        # Fallback на статические медиа
-                        if not media_sent:
-                            if audio_url:
-                                await bot.send_audio(recipient_id, audio_url, caption=message_text)
-                                media_sent = True
-                            elif video_url:
-                                await bot.send_video(recipient_id, video_url, caption=message_text)
-                                media_sent = True
-                            elif document_url:
-                                await bot.send_document(recipient_id, document_url, caption=message_text)
-                                media_sent = True
-                            elif image_url:
-                                await bot.send_photo(recipient_id, image_url, caption=message_text)
-                                media_sent = True
+                        raise
                 if not media_sent:
                     await bot.send_message(recipient_id, message_text)
 
@@ -180,6 +165,10 @@ async def handle_broadcast_{{ safeNodeId }}(callback_query, user_id):
                             if next_attached:
                                 for m_var in next_attached:
                                     m_val = next_all_user_vars.get(m_var)
+                                    if not m_val and isinstance(m_var, str) and (await is_registered_media(m_var) or m_var.startswith(("http://", "https://"))):
+                                        m_val = m_var
+                                    if not m_val:
+                                        raise ValueError("Не удалось определить вложение рассылки")
                                     if m_val:
                                         m_url = None
                                         if isinstance(m_val, dict):
@@ -197,26 +186,26 @@ async def handle_broadcast_{{ safeNodeId }}(callback_query, user_id):
                                             m_url = m_val
                                         if m_url:
                                             if "audio" in m_var.lower():
-                                                await bot.send_audio(recipient_id, m_url, caption=next_text)
+                                                await bot.send_audio(recipient_id, (await resolve_media_input(m_url) if await is_registered_media(m_url) else m_url), caption=next_text)
                                             elif "video" in m_var.lower():
-                                                await bot.send_video(recipient_id, m_url, caption=next_text)
+                                                await bot.send_video(recipient_id, (await resolve_media_input(m_url) if await is_registered_media(m_url) else m_url), caption=next_text)
                                             elif "document" in m_var.lower():
-                                                await bot.send_document(recipient_id, m_url, caption=next_text)
+                                                await bot.send_document(recipient_id, (await resolve_media_input(m_url) if await is_registered_media(m_url) else m_url), caption=next_text)
                                             else:
-                                                await bot.send_photo(recipient_id, m_url, caption=next_text)
+                                                await bot.send_photo(recipient_id, (await resolve_media_input(m_url) if await is_registered_media(m_url) else m_url), caption=next_text)
                                             next_media_sent = True
                             if not next_media_sent:
                                 if next_audio:
-                                    await bot.send_audio(recipient_id, next_audio, caption=next_text)
+                                    await bot.send_audio(recipient_id, (await resolve_media_input(next_audio) if await is_registered_media(next_audio) else next_audio), caption=next_text)
                                     next_media_sent = True
                                 elif next_video:
-                                    await bot.send_video(recipient_id, next_video, caption=next_text)
+                                    await bot.send_video(recipient_id, (await resolve_media_input(next_video) if await is_registered_media(next_video) else next_video), caption=next_text)
                                     next_media_sent = True
                                 elif next_document:
-                                    await bot.send_document(recipient_id, next_document, caption=next_text)
+                                    await bot.send_document(recipient_id, (await resolve_media_input(next_document) if await is_registered_media(next_document) else next_document), caption=next_text)
                                     next_media_sent = True
                                 elif next_image:
-                                    await bot.send_photo(recipient_id, next_image, caption=next_text)
+                                    await bot.send_photo(recipient_id, (await resolve_media_input(next_image) if await is_registered_media(next_image) else next_image), caption=next_text)
                                     next_media_sent = True
                             if not next_media_sent:
                                 await bot.send_message(recipient_id, next_text)

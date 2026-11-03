@@ -19,52 +19,32 @@
 {%- set parse_mode_arg = ', parse_mode="HTML"' if formatMode == 'html' else (', parse_mode="Markdown"' if formatMode == 'markdown' else '') %}
 {%- if imageUrl and imageUrl != 'undefined' %}
 {%- if isLocalImageUrl %}
-image_path = get_upload_file_path("{{ imageUrl }}")
-if not os.path.exists(image_path):
-    logging.error(f"❌ Медиафайл не найден: {image_path} (узел {{ nodeId }})")
-    sent_message = await callback_query.message.answer(text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, node_id="{{ nodeId }}")
-else:
-    image_file = FSInputFile(image_path)
-    sent_message = await callback_query.message.answer_photo(image_file, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, node_id="{{ nodeId }}")
+image_file = await resolve_media_input("{{ imageUrl }}")
+sent_message = await callback_query.message.answer_photo(image_file, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, node_id="{{ nodeId }}")
 {%- else %}
 sent_message = await callback_query.message.answer_photo("{{ imageUrl }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, node_id="{{ nodeId }}")
 {%- endif %}
 {%- elif videoUrl %}
 {%- if isLocalVideoUrl %}
-video_path = get_upload_file_path("{{ videoUrl }}")
-if not os.path.exists(video_path):
-    logging.error(f"❌ Медиафайл не найден: {video_path} (узел {{ nodeId }})")
-    sent_message = await callback_query.message.answer(text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, node_id="{{ nodeId }}")
-else:
-    video_file = FSInputFile(video_path)
-    sent_message = await callback_query.message.answer_video(video_file, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, node_id="{{ nodeId }}")
+video_file = await resolve_media_input("{{ videoUrl }}")
+sent_message = await callback_query.message.answer_video(video_file, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, node_id="{{ nodeId }}")
 {%- else %}
 sent_message = await callback_query.message.answer_video("{{ videoUrl }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, node_id="{{ nodeId }}")
 {%- endif %}
 {%- elif audioUrl %}
 {%- if isLocalAudioUrl %}
-audio_path = get_upload_file_path("{{ audioUrl }}")
-if not os.path.exists(audio_path):
-    logging.error(f"❌ Медиафайл не найден: {audio_path} (узел {{ nodeId }})")
-    sent_message = await callback_query.message.answer(text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, node_id="{{ nodeId }}")
-else:
-    audio_file = FSInputFile(audio_path)
-    sent_message = await callback_query.message.answer_audio(audio_file, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, node_id="{{ nodeId }}")
+audio_file = await resolve_media_input("{{ audioUrl }}")
+sent_message = await callback_query.message.answer_audio(audio_file, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, node_id="{{ nodeId }}")
 {%- else %}
 sent_message = await callback_query.message.answer_audio("{{ audioUrl }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, node_id="{{ nodeId }}")
 {%- endif %}
 {%- elif documentUrl %}
 {%- if isLocalDocumentUrl %}
-doc_path = get_upload_file_path("{{ documentUrl }}")
-if not os.path.exists(doc_path):
-    logging.error(f"❌ Медиафайл не найден: {doc_path} (узел {{ nodeId }})")
-    sent_message = await callback_query.message.answer(text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, node_id="{{ nodeId }}")
-else:
-    import re as _re
-    _raw_doc_name = os.path.basename(doc_path)
-    _clean_doc_name = _re.sub(r'^\d+-\d+-', '', _raw_doc_name)
-    doc_file = FSInputFile(doc_path, filename=_clean_doc_name)
-    sent_message = await callback_query.message.answer_document(doc_file, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, node_id="{{ nodeId }}")
+import re as _re
+_raw_doc_name = os.path.basename("{{ documentUrl }}")
+_clean_doc_name = _re.sub(r'^\d+-\d+-', '', _raw_doc_name)
+doc_file = await resolve_media_input("{{ documentUrl }}", filename=_clean_doc_name)
+sent_message = await callback_query.message.answer_document(doc_file, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, node_id="{{ nodeId }}")
 {%- else %}
 sent_message = await callback_query.message.answer_document("{{ documentUrl }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, node_id="{{ nodeId }}")
 {%- endif %}

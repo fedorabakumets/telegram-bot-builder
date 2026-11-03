@@ -1,194 +1,37 @@
-import http from "http";
-import https from "https";
-import { createWriteStream, existsSync, unlinkSync } from "node:fs";
-import { URL } from "node:url";
-
 /**
- * Загружает файл по указанному URL-адресу и сохраняет его в заданное место назначения.
- *
- * @param url - URL-адрес файла для загрузки. Поддерживаются только HTTP и HTTPS протоколы.
- * @param destination - Путь к месту назначения, где будет сохранен загруженный файл.
- *
- * @returns Promise объект с информацией о результате загрузки:
- * - success: флаг успешности операции
- * - filePath: путь к сохраненному файлу (при успехе)
- * - size: размер файла в байтах (при успехе)
- * - mimeType: MIME-тип файла (при успехе)
- * - fileName: имя файла (при успехе)
- * - error: сообщение об ошибке (при неудаче)
- *
- * @description
- * Функция загружает файл по URL с использованием HTTP/HTTPS протоколов.
- * Она автоматически обрабатывает редиректы, проверяет статус ответа сервера,
- * ограничивает размер загружаемого файла (50 МБ для обычных файлов, 200 МБ для видео),
- * эмулирует заголовки браузера для лучшей совместимости,
- * и предоставляет подробную информацию о загруженном файле.
- *
- * @example
- * ```typescript
- * const result = await downloadFileFromUrl('https://example.com/image.jpg', './downloads/image.jpg');
- * if (result.success) {
- *   console.log(`Файл успешно загружен: ${result.filePath}`);
- *   console.log(`Размер: ${result.size} байт`);
- *   console.log(`MIME-тип: ${result.mimeType}`);
- * } else {
- *   console.error(`Ошибка загрузки: ${result.error}`);
- * }
- * ```
+ * @fileoverview Потоковая загрузка внешнего файла с ограничением размера и защитой от SSRF.
  */
-export async function downloadFileFromUrl(url: string, destination: string): Promise<{
-  success: boolean;
-  filePath?: string;
-  size?: number;
-  mimeType?: string;
-  fileName?: string;
-  error?: string;
-}> {
-  return new Promise((resolve) => {
-    try {
-      // Проверяем корректность URL
-      const parsedUrl = new URL(url);
-      if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
-        return resolve({ success: false, error: 'Поддерживаются только HTTP и HTTPS ссылки' });
-      }
+import { createWriteStream } from 'node:fs';
+import { unlink } from 'node:fs/promises';
+import { Transform } from 'node:stream';
+import { pipeline } from 'node:stream/promises';
+import { safeExternalRequest } from '../utils/safe-external-request';
 
-      // Выбираем модуль для загрузки в зависимости от протокола
-      const client = parsedUrl.protocol === 'https:' ? https : http;
-
-      // Создаем запрос с заголовками для эмуляции браузера
-      const request = client.get(url, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
-          'Accept-Language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
-          'Accept-Encoding': 'gzip, deflate, br',
-          'Connection': 'keep-alive',
-          'Sec-Fetch-Dest': 'image',
-          'Sec-Fetch-Mode': 'no-cors',
-          'Sec-Fetch-Site': 'cross-site',
-          'Referer': 'https://www.google.com/',
-          'DNT': '1',
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache'
-        },
-        timeout: 30000 // 30 секунд таймаут
-      }, (response) => {
-        // Обрабатываем редиректы
-        if (response.statusCode && response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
-          const redirectUrl = response.headers.location;
-          console.log(`Редирект с ${url} на ${redirectUrl}`);
-          return downloadFileFromUrl(redirectUrl, destination).then(resolve);
-        }
-
-        // Проверяем статус код
-        if (!response.statusCode || response.statusCode < 200 || response.statusCode >= 400) {
-          return resolve({
-            success: false,
-            error: `Ошибка сервера: ${response.statusCode} ${response.statusMessage}`
-          });
-        }
-
-        // Получаем информацию о файле из заголовков
-        const contentLength = response.headers['content-length'];
-        const contentType = response.headers['content-type'] || 'application/octet-stream';
-        const contentDisposition = response.headers['content-disposition'];
-
-        // Извлекаем имя файла из заголовков или URL
-        let fileName = '';
-        if (contentDisposition && contentDisposition.includes('filename=')) {
-          const match = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
-          if (match && match[1]) {
-            fileName = match[1].replace(/['"]/g, '');
-          }
-        }
-
-        if (!fileName) {
-          fileName = parsedUrl.pathname.split('/').pop() || 'downloaded-file';
-          if (!fileName.includes('.')) {
-            // Добавляем расширение на основе MIME типа
-            const extensions = {
-              'image/jpeg': '.jpg',
-              'image/png': '.png',
-              'image/gif': '.gif',
-              'image/webp': '.webp',
-              'video/mp4': '.mp4',
-              'video/webm': '.webm',
-              'audio/mpeg': '.mp3',
-              'audio/wav': '.wav',
-              'application/pdf': '.pdf',
-              'text/plain': '.txt'
-            };
-            fileName += extensions[contentType as keyof typeof extensions] || '.bin';
-          }
-        }
-
-        // Проверяем размер файла
-        if (contentLength) {
-          const fileSizeBytes = parseInt(contentLength);
-          const maxSize = contentType.startsWith('video/') ? 200 * 1024 * 1024 : 50 * 1024 * 1024;
-          if (fileSizeBytes > maxSize) {
-            return resolve({
-              success: false,
-              error: `Файл слишком большой: ${Math.round(fileSizeBytes / (1024 * 1024))}МБ. Максимальный размер: ${Math.round(maxSize / (1024 * 1024))}МБ`
-            });
-          }
-        }
-
-        // Создаем поток для записи файла
-        const fileStream = createWriteStream(destination);
-        let downloadedBytes = 0;
-
-        response.on('data', (chunk) => {
-          downloadedBytes += chunk.length;
-          // Проверяем размер во время загрузки
-          const maxSize = contentType.startsWith('video/') ? 200 * 1024 * 1024 : 50 * 1024 * 1024;
-          if (downloadedBytes > maxSize) {
-            response.destroy();
-            fileStream.destroy();
-            if (existsSync(destination)) {
-              unlinkSync(destination);
-            }
-            return resolve({
-              success: false,
-              error: `Файл слишком большой: превышен лимит ${Math.round(maxSize / (1024 * 1024))}МБ`
-            });
-          }
-        });
-
-        response.pipe(fileStream);
-
-        fileStream.on('finish', () => {
-          resolve({
-            success: true,
-            filePath: destination,
-            size: downloadedBytes,
-            mimeType: contentType,
-            fileName: fileName
-          });
-        });
-
-        fileStream.on('error', (error) => {
-          if (existsSync(destination)) {
-            unlinkSync(destination);
-          }
-          resolve({ success: false, error: `Ошибка записи файла: ${error.message}` });
-        });
-      });
-
-      request.on('error', (error) => {
-        resolve({ success: false, error: `Ошибка сети: ${error.message}` });
-      });
-
-      request.on('timeout', () => {
-        request.destroy();
-        resolve({ success: false, error: 'Превышено время ожидания (30 секунд)' });
-      });
-
-    } catch (error) {
-      resolve({
-        success: false,
-        error: error instanceof Error ? error.message : 'Неизвестная ошибка'
-      });
+/** Загружает разрешённый внешний файл во временный путь.
+ * @param url - Адрес файла
+ * @param destination - Путь назначения
+ * @returns Размер и тип файла либо ошибка
+ */
+export async function downloadFileFromUrl(url: string, destination: string): Promise<{ success: boolean; filePath?: string; size?: number; mimeType?: string; fileName?: string; error?: string }> {
+  try {
+    const result = await safeExternalRequest(url, 'GET');
+    const response = result.response;
+    if (!response.statusCode || response.statusCode < 200 || response.statusCode >= 300) {
+      response.resume();
+      throw new Error(`Ошибка сервера: ${response.statusCode}`);
     }
-  });
+    const mimeType = response.headers['content-type'] || 'application/octet-stream';
+    const limit = (mimeType.startsWith('video/') ? 200 : 50) * 1024 * 1024;
+    if (Number(response.headers['content-length']) > limit) { response.destroy(); throw new Error('Превышен допустимый размер файла'); }
+    let size = 0;
+    const limiter = new Transform({ transform(chunk, _encoding, callback) {
+      size += chunk.length;
+      callback(size > limit ? new Error('Превышен допустимый размер файла') : null, chunk);
+    }});
+    await pipeline(response, limiter, createWriteStream(destination));
+    return { success: true, filePath: destination, size, mimeType, fileName: result.url.pathname.split('/').pop() || 'file' };
+  } catch (error) {
+    await unlink(destination).catch(() => {});
+    return { success: false, error: error instanceof Error ? error.message : 'Ошибка загрузки' };
+  }
 }

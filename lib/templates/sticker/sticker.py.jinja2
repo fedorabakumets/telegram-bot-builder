@@ -31,24 +31,15 @@ async def handle_callback_{{ nodeId|safe_name }}(callback_query: types.CallbackQ
             sticker="{{ stickerFileId|e }}"{% if disableNotification %},
             disable_notification=True{% endif %}
         )
-        {% elif isLocalStickerUrl %}
-        _sticker_file = FSInputFile(get_upload_file_path("{{ stickerUrl|e }}"))
+        {% elif stickerUrl %}
+        _sticker_source = "{{ stickerUrl|e }}"
+        if await is_registered_media(_sticker_source):
+            _sticker_source = await resolve_media_input(_sticker_source)
         await bot.send_sticker(
             chat_id=_chat_id,
-            sticker=_sticker_file{% if disableNotification %},
+            sticker=_sticker_source{% if disableNotification %},
             disable_notification=True{% endif %}
         )
-        {% elif stickerUrl %}
-        sticker_url = "{{ stickerUrl|e }}"
-        from aiogram.types import BufferedInputFile as _StickerFile
-        async with aiohttp.ClientSession() as session:
-            async with session.get(sticker_url) as resp:
-                sticker_data = await resp.read()
-                await bot.send_sticker(
-                    chat_id=_chat_id,
-                    sticker=_StickerFile(sticker_data, filename="sticker.webp"){% if disableNotification %},
-                    disable_notification=True{% endif %}
-                )
         {% elif stickerSetName %}
         await bot.send_sticker(
             chat_id=_chat_id,
@@ -56,7 +47,7 @@ async def handle_callback_{{ nodeId|safe_name }}(callback_query: types.CallbackQ
             disable_notification=True{% endif %}
         )
         {% else %}
-        logging.warning(f"Стикер не настроен: узел {{ nodeId }}")
+        raise ValueError("Стикер не настроен: узел {{ nodeId }}")
         {% endif %}
         await save_message_to_api(
             user_id=str(user_id),

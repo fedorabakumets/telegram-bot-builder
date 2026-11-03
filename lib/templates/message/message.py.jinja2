@@ -297,11 +297,7 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
 {%- if (attachedMedia and attachedMedia|length > 0) or (imageUrl and imageUrl != 'undefined') or videoUrl or audioUrl or documentUrl %}
 {%- if imageUrl and imageUrl != 'undefined' %}
 {%- if isLocalImageUrl %}
-            image_path = get_upload_file_path("{{ imageUrl }}")
-            if not os.path.exists(image_path):
-                logging.error(f"❌ Медиафайл не найден: {image_path} (узел {{ nodeId }})")
-                return await _b.send_message(_target_chat_id, text{{ parse_mode_arg }}{{ link_preview_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{% if userDatabaseEnabled %}, node_id="{{ nodeId }}"{% endif %})
-            _cached_fid = _media_file_id_cache.get("{{ imageUrl }}")
+            _cached_fid = (_media_file_id_cache.get("{{ imageUrl }}") if _b is bot else None)
             if _cached_fid:
                 logging.info(f"📎 Узел {{ nodeId }}: отправка фото через in-memory file_id (без перегенерации)")
                 try:
@@ -314,10 +310,10 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
                     logging.warning(f"⚠️ Узел {{ nodeId }}: невалидный file_id, переотправка через FSInputFile: {_fid_err}")
                     await _invalidate_media_file_id("{{ imageUrl }}")
             logging.info(f"📤 Узел {{ nodeId }}: отправка фото через FSInputFile")
-            _sent_photo = await _b.send_photo(_target_chat_id, FSInputFile(image_path), caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{% if userDatabaseEnabled %}, node_id="{{ nodeId }}"{% endif %})
+            _sent_photo = await _b.send_photo(_target_chat_id, await resolve_media_input("{{ imageUrl }}"), caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{% if userDatabaseEnabled %}, node_id="{{ nodeId }}"{% endif %})
             if _sent_photo and _sent_photo.photo:
                 _new_fid = _sent_photo.photo[-1].file_id
-                await _save_media_file_id("{{ imageUrl }}", _new_fid, "photo", "image/jpeg")
+                if _b is bot: await _save_media_file_id("{{ imageUrl }}", _new_fid, "photo", "image/jpeg")
                 logging.info(f"✅ Узел {{ nodeId }}: получен file_id={_new_fid[:20]}... для фото {{ imageUrl }}")
             _sent_result = _sent_photo
 {% include 'message/partials/send-extra-file-ids.py.jinja2' %}
@@ -326,7 +322,7 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
             {# imageUrl содержит переменную вида {var.path} — подставляем через replace_variables_in_text #}
             _image_url_resolved = replace_variables_in_text("{{ imageUrl }}", all_user_vars, {})
             if _image_url_resolved and _image_url_resolved != "{{ imageUrl }}":
-                _sent_result = await _b.send_photo(_target_chat_id, _image_url_resolved, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{% if userDatabaseEnabled %}, node_id="{{ nodeId }}"{% endif %})
+                _sent_result = await _b.send_photo(_target_chat_id, await resolve_media_input(_image_url_resolved) if await is_registered_media(_image_url_resolved) else _image_url_resolved, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{% if userDatabaseEnabled %}, node_id="{{ nodeId }}"{% endif %})
 {% include 'message/partials/send-extra-file-ids.py.jinja2' %}
                 return _sent_result
             else:
@@ -335,12 +331,20 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
 {%- else %}
 {%- set _cached_img_fid = (telegramFileIds or {})[imageUrl] if telegramFileIds and imageUrl in telegramFileIds else '' %}
 {%- if _cached_img_fid %}
-            logging.info(f"📎 Узел {{ nodeId }}: отправка фото через кэшированный file_id={{ _cached_img_fid }}...")
-            _sent_result = await _b.send_photo(_target_chat_id, "{{ _cached_img_fid }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{% if userDatabaseEnabled %}, node_id="{{ nodeId }}"{% endif %})
+            _sent_result = None
+            if _b is bot:
+                try:
+                    _sent_result = await _b.send_photo(_target_chat_id, "{{ _cached_img_fid }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{% if userDatabaseEnabled %}, node_id="{{ nodeId }}"{% endif %})
+                except Exception as _fid_err:
+                    if not _is_wrong_file_id_error(_fid_err):
+                        raise
+            if _sent_result is None:
+                _original = await resolve_media_input("{{ imageUrl }}") if await is_registered_media("{{ imageUrl }}") else "{{ imageUrl }}"
+                _sent_result = await _b.send_photo(_target_chat_id, _original, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{% if userDatabaseEnabled %}, node_id="{{ nodeId }}"{% endif %})
 {% include 'message/partials/send-extra-file-ids.py.jinja2' %}
             return _sent_result
 {%- else %}
-            _rt_fid = _media_file_id_cache.get("{{ imageUrl }}")
+            _rt_fid = (_media_file_id_cache.get("{{ imageUrl }}") if _b is bot else None)
             if _rt_fid:
                 logging.info(f"📎 Узел {{ nodeId }}: отправка фото через in-memory file_id (без перегенерации)")
                 try:
@@ -353,10 +357,10 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
                     logging.warning(f"⚠️ Узел {{ nodeId }}: невалидный file_id, переотправка по URL: {_fid_err}")
                     await _invalidate_media_file_id("{{ imageUrl }}")
             logging.info(f"📤 Узел {{ nodeId }}: первая отправка фото по URL, file_id будет получен из ответа")
-            _sent_photo = await _b.send_photo(_target_chat_id, "{{ imageUrl }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{% if userDatabaseEnabled %}, node_id="{{ nodeId }}"{% endif %})
+            _sent_photo = await _b.send_photo(_target_chat_id, await resolve_media_input("{{ imageUrl }}") if await is_registered_media("{{ imageUrl }}") else "{{ imageUrl }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{% if userDatabaseEnabled %}, node_id="{{ nodeId }}"{% endif %})
             if _sent_photo and _sent_photo.photo:
                 _new_fid = _sent_photo.photo[-1].file_id
-                await _save_media_file_id("{{ imageUrl }}", _new_fid, "photo", "image/jpeg")
+                if _b is bot: await _save_media_file_id("{{ imageUrl }}", _new_fid, "photo", "image/jpeg")
                 logging.info(f"✅ Узел {{ nodeId }}: получен file_id={_new_fid[:20]}... для фото {{ imageUrl }}")
             _sent_result = _sent_photo
 {% include 'message/partials/send-extra-file-ids.py.jinja2' %}
@@ -368,20 +372,16 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
 {%- set _vid_thumb_url = (thumbnailUrls or {})[videoUrl] if thumbnailUrls and videoUrl in thumbnailUrls else '' %}
 {%- set _vid_thumb_val = _vid_thumb_fid or _vid_thumb_url %}
 {%- if _vid_thumb_val %}
-  {%- if '/uploads/' in _vid_thumb_val %}
-    {%- set _vid_thumb_arg = ', thumbnail=FSInputFile(get_upload_file_path("' + _vid_thumb_val + '"))' %}
+  {%- if _vid_thumb_fid %}
+    {%- set _vid_thumb_arg = ', thumbnail=("' + _vid_thumb_fid + '" if _b is bot else None)' %}
   {%- else %}
-    {%- set _vid_thumb_arg = ', thumbnail="' + _vid_thumb_val + '"' %}
+    {%- set _vid_thumb_arg = ', thumbnail=(await resolve_media_input("' + _vid_thumb_val + '") if await is_registered_media("' + _vid_thumb_val + '") else "' + _vid_thumb_val + '")' %}
   {%- endif %}
 {%- else %}
   {%- set _vid_thumb_arg = '' %}
 {%- endif %}
 {%- if isLocalVideoUrl %}
-            video_path = get_upload_file_path("{{ videoUrl }}")
-            if not os.path.exists(video_path):
-                logging.error(f"❌ Медиафайл не найден: {video_path} (узел {{ nodeId }})")
-                return await _b.send_message(_target_chat_id, text{{ parse_mode_arg }}{{ link_preview_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{% if userDatabaseEnabled %}, node_id="{{ nodeId }}"{% endif %})
-            _cached_fid = _media_file_id_cache.get("{{ videoUrl }}")
+            _cached_fid = (_media_file_id_cache.get("{{ videoUrl }}") if _b is bot else None)
             if _cached_fid:
                 logging.info(f"📎 Узел {{ nodeId }}: отправка видео через in-memory file_id (без перегенерации)")
 {%- if _vid_thumb_fid %}
@@ -392,7 +392,7 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
                 logging.info(f"🖼 Узел {{ nodeId }}: обложка не установлена")
 {%- endif %}
                 try:
-                    _sent_result = await _b.send_video(_target_chat_id, _cached_fid, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{{ _vid_thumb_arg }}{% if userDatabaseEnabled %}, node_id="{{ nodeId }}"{% endif %})
+                    _sent_result = await _b.send_video(_target_chat_id, _cached_fid, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{% if userDatabaseEnabled %}, node_id="{{ nodeId }}"{% endif %})
 {% include 'message/partials/send-extra-file-ids.py.jinja2' %}
                     return _sent_result
                 except Exception as _fid_err:
@@ -410,16 +410,16 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
 {%- else %}
             logging.info(f"🖼 Узел {{ nodeId }}: обложка не установлена")
 {%- endif %}
-            _sent_video = await _b.send_video(_target_chat_id, FSInputFile(video_path), caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{{ _vid_thumb_arg }}{% if userDatabaseEnabled %}, node_id="{{ nodeId }}"{% endif %})
+            _sent_video = await _b.send_video(_target_chat_id, await resolve_media_input("{{ videoUrl }}"), caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{{ _vid_thumb_arg }}{% if userDatabaseEnabled %}, node_id="{{ nodeId }}"{% endif %})
             if _sent_video and _sent_video.video:
                 _new_fid = _sent_video.video.file_id
-                await _save_media_file_id("{{ videoUrl }}", _new_fid, "video", "video/mp4")
+                if _b is bot: await _save_media_file_id("{{ videoUrl }}", _new_fid, "video", "video/mp4")
                 logging.info(f"✅ Узел {{ nodeId }}: получен file_id={_new_fid[:20]}... для видео {{ videoUrl }}")
 {%- if _vid_thumb_url %}
                 # Сохраняем file_id обложки из ответа Telegram (video.thumbnail.file_id)
                 if _sent_video.video.thumbnail:
                     _thumb_fid = _sent_video.video.thumbnail.file_id
-                    await _save_media_file_id("{{ _vid_thumb_url }}", _thumb_fid, "photo", "image/jpeg")
+                    if _b is bot: await _save_media_file_id("{{ _vid_thumb_url }}", _thumb_fid, "photo", "image/jpeg")
                     logging.info(f"✅ Узел {{ nodeId }}: получен file_id обложки={_thumb_fid[:20]}... для {{ _vid_thumb_url }}")
 {%- endif %}
             _sent_result = _sent_video
@@ -428,12 +428,20 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
 {%- else %}
 {%- set _cached_vid_fid = (telegramFileIds or {})[videoUrl] if telegramFileIds and videoUrl in telegramFileIds else '' %}
 {%- if _cached_vid_fid %}
-            logging.info(f"📎 Узел {{ nodeId }}: отправка видео через кэшированный file_id={{ _cached_vid_fid }}...")
-            _sent_result = await _b.send_video(_target_chat_id, "{{ _cached_vid_fid }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{{ _vid_thumb_arg }}{% if userDatabaseEnabled %}, node_id="{{ nodeId }}"{% endif %})
+            _sent_result = None
+            if _b is bot:
+                try:
+                    _sent_result = await _b.send_video(_target_chat_id, "{{ _cached_vid_fid }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{% if userDatabaseEnabled %}, node_id="{{ nodeId }}"{% endif %})
+                except Exception as _fid_err:
+                    if not _is_wrong_file_id_error(_fid_err):
+                        raise
+            if _sent_result is None:
+                _original = await resolve_media_input("{{ videoUrl }}") if await is_registered_media("{{ videoUrl }}") else "{{ videoUrl }}"
+                _sent_result = await _b.send_video(_target_chat_id, _original, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{{ _vid_thumb_arg }}{% if userDatabaseEnabled %}, node_id="{{ nodeId }}"{% endif %})
 {% include 'message/partials/send-extra-file-ids.py.jinja2' %}
             return _sent_result
 {%- else %}
-            _rt_fid = _media_file_id_cache.get("{{ videoUrl }}")
+            _rt_fid = (_media_file_id_cache.get("{{ videoUrl }}") if _b is bot else None)
             if _rt_fid:
                 logging.info(f"📎 Узел {{ nodeId }}: отправка видео через in-memory file_id (без перегенерации)")
 {%- if _vid_thumb_fid %}
@@ -444,7 +452,7 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
                 logging.info(f"🖼 Узел {{ nodeId }}: обложка не установлена")
 {%- endif %}
                 try:
-                    _sent_result = await _b.send_video(_target_chat_id, _rt_fid, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{{ _vid_thumb_arg }}{% if userDatabaseEnabled %}, node_id="{{ nodeId }}"{% endif %})
+                    _sent_result = await _b.send_video(_target_chat_id, _rt_fid, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{% if userDatabaseEnabled %}, node_id="{{ nodeId }}"{% endif %})
 {% include 'message/partials/send-extra-file-ids.py.jinja2' %}
                     return _sent_result
                 except Exception as _fid_err:
@@ -462,16 +470,16 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
 {%- else %}
             logging.info(f"🖼 Узел {{ nodeId }}: обложка не установлена")
 {%- endif %}
-            _sent_video = await _b.send_video(_target_chat_id, "{{ videoUrl }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{{ _vid_thumb_arg }}{% if userDatabaseEnabled %}, node_id="{{ nodeId }}"{% endif %})
+            _sent_video = await _b.send_video(_target_chat_id, await resolve_media_input("{{ videoUrl }}") if await is_registered_media("{{ videoUrl }}") else "{{ videoUrl }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{{ _vid_thumb_arg }}{% if userDatabaseEnabled %}, node_id="{{ nodeId }}"{% endif %})
             if _sent_video and _sent_video.video:
                 _new_fid = _sent_video.video.file_id
-                await _save_media_file_id("{{ videoUrl }}", _new_fid, "video", "video/mp4")
+                if _b is bot: await _save_media_file_id("{{ videoUrl }}", _new_fid, "video", "video/mp4")
                 logging.info(f"✅ Узел {{ nodeId }}: получен file_id={_new_fid[:20]}... для видео {{ videoUrl }}")
 {%- if _vid_thumb_url %}
                 # Сохраняем file_id обложки из ответа Telegram (video.thumbnail.file_id)
                 if _sent_video.video.thumbnail:
                     _thumb_fid = _sent_video.video.thumbnail.file_id
-                    await _save_media_file_id("{{ _vid_thumb_url }}", _thumb_fid, "photo", "image/jpeg")
+                    if _b is bot: await _save_media_file_id("{{ _vid_thumb_url }}", _thumb_fid, "photo", "image/jpeg")
                     logging.info(f"✅ Узел {{ nodeId }}: получен file_id обложки={_thumb_fid[:20]}... для {{ _vid_thumb_url }}")
 {%- endif %}
             _sent_result = _sent_video
@@ -481,11 +489,7 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
 {%- endif %}
 {%- elif audioUrl %}
 {%- if isLocalAudioUrl %}
-            audio_path = get_upload_file_path("{{ audioUrl }}")
-            if not os.path.exists(audio_path):
-                logging.error(f"❌ Медиафайл не найден: {audio_path} (узел {{ nodeId }})")
-                return await _b.send_message(_target_chat_id, text{{ parse_mode_arg }}{{ link_preview_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{% if userDatabaseEnabled %}, node_id="{{ nodeId }}"{% endif %})
-            _cached_fid = _media_file_id_cache.get("{{ audioUrl }}")
+            _cached_fid = (_media_file_id_cache.get("{{ audioUrl }}") if _b is bot else None)
             if _cached_fid:
                 logging.info(f"📎 Узел {{ nodeId }}: отправка аудио через in-memory file_id (без перегенерации)")
                 try:
@@ -498,10 +502,10 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
                     logging.warning(f"⚠️ Узел {{ nodeId }}: невалидный file_id, переотправка через FSInputFile: {_fid_err}")
                     await _invalidate_media_file_id("{{ audioUrl }}")
             logging.info(f"📤 Узел {{ nodeId }}: отправка аудио через FSInputFile")
-            _sent_audio = await _b.send_audio(_target_chat_id, FSInputFile(audio_path), caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{% if userDatabaseEnabled %}, node_id="{{ nodeId }}"{% endif %})
+            _sent_audio = await _b.send_audio(_target_chat_id, await resolve_media_input("{{ audioUrl }}"), caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{% if userDatabaseEnabled %}, node_id="{{ nodeId }}"{% endif %})
             if _sent_audio and _sent_audio.audio:
                 _new_fid = _sent_audio.audio.file_id
-                await _save_media_file_id("{{ audioUrl }}", _new_fid, "audio", "audio/mpeg")
+                if _b is bot: await _save_media_file_id("{{ audioUrl }}", _new_fid, "audio", "audio/mpeg")
                 logging.info(f"✅ Узел {{ nodeId }}: получен file_id={_new_fid[:20]}... для аудио {{ audioUrl }}")
             _sent_result = _sent_audio
 {% include 'message/partials/send-extra-file-ids.py.jinja2' %}
@@ -509,12 +513,20 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
 {%- else %}
 {%- set _cached_aud_fid = (telegramFileIds or {})[audioUrl] if telegramFileIds and audioUrl in telegramFileIds else '' %}
 {%- if _cached_aud_fid %}
-            logging.info(f"📎 Узел {{ nodeId }}: отправка аудио через кэшированный file_id={{ _cached_aud_fid }}...")
-            _sent_result = await _b.send_audio(_target_chat_id, "{{ _cached_aud_fid }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{% if userDatabaseEnabled %}, node_id="{{ nodeId }}"{% endif %})
+            _sent_result = None
+            if _b is bot:
+                try:
+                    _sent_result = await _b.send_audio(_target_chat_id, "{{ _cached_aud_fid }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{% if userDatabaseEnabled %}, node_id="{{ nodeId }}"{% endif %})
+                except Exception as _fid_err:
+                    if not _is_wrong_file_id_error(_fid_err):
+                        raise
+            if _sent_result is None:
+                _original = await resolve_media_input("{{ audioUrl }}") if await is_registered_media("{{ audioUrl }}") else "{{ audioUrl }}"
+                _sent_result = await _b.send_audio(_target_chat_id, _original, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{% if userDatabaseEnabled %}, node_id="{{ nodeId }}"{% endif %})
 {% include 'message/partials/send-extra-file-ids.py.jinja2' %}
             return _sent_result
 {%- else %}
-            _rt_fid = _media_file_id_cache.get("{{ audioUrl }}")
+            _rt_fid = (_media_file_id_cache.get("{{ audioUrl }}") if _b is bot else None)
             if _rt_fid:
                 logging.info(f"📎 Узел {{ nodeId }}: отправка аудио через in-memory file_id (без перегенерации)")
                 try:
@@ -527,10 +539,10 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
                     logging.warning(f"⚠️ Узел {{ nodeId }}: невалидный file_id, переотправка по URL: {_fid_err}")
                     await _invalidate_media_file_id("{{ audioUrl }}")
             logging.info(f"📤 Узел {{ nodeId }}: первая отправка аудио по URL, file_id будет получен из ответа")
-            _sent_audio = await _b.send_audio(_target_chat_id, "{{ audioUrl }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{% if userDatabaseEnabled %}, node_id="{{ nodeId }}"{% endif %})
+            _sent_audio = await _b.send_audio(_target_chat_id, await resolve_media_input("{{ audioUrl }}") if await is_registered_media("{{ audioUrl }}") else "{{ audioUrl }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{% if userDatabaseEnabled %}, node_id="{{ nodeId }}"{% endif %})
             if _sent_audio and _sent_audio.audio:
                 _new_fid = _sent_audio.audio.file_id
-                await _save_media_file_id("{{ audioUrl }}", _new_fid, "audio", "audio/mpeg")
+                if _b is bot: await _save_media_file_id("{{ audioUrl }}", _new_fid, "audio", "audio/mpeg")
                 logging.info(f"✅ Узел {{ nodeId }}: получен file_id={_new_fid[:20]}... для аудио {{ audioUrl }}")
             _sent_result = _sent_audio
 {% include 'message/partials/send-extra-file-ids.py.jinja2' %}
@@ -539,11 +551,7 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
 {%- endif %}
 {%- elif documentUrl %}
 {%- if isLocalDocumentUrl %}
-            doc_path = get_upload_file_path("{{ documentUrl }}")
-            if not os.path.exists(doc_path):
-                logging.error(f"❌ Медиафайл не найден: {doc_path} (узел {{ nodeId }})")
-                return await _b.send_message(_target_chat_id, text{{ parse_mode_arg }}{{ link_preview_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{% if userDatabaseEnabled %}, node_id="{{ nodeId }}"{% endif %})
-            _cached_fid = _media_file_id_cache.get("{{ documentUrl }}")
+            _cached_fid = (_media_file_id_cache.get("{{ documentUrl }}") if _b is bot else None)
             if _cached_fid:
                 logging.info(f"📎 Узел {{ nodeId }}: отправка документа через in-memory file_id (без перегенерации)")
                 try:
@@ -556,10 +564,10 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
                     logging.warning(f"⚠️ Узел {{ nodeId }}: невалидный file_id, переотправка через FSInputFile: {_fid_err}")
                     await _invalidate_media_file_id("{{ documentUrl }}")
             logging.info(f"📤 Узел {{ nodeId }}: отправка документа через FSInputFile")
-            _sent_doc = await _b.send_document(_target_chat_id, FSInputFile(doc_path), caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{% if userDatabaseEnabled %}, node_id="{{ nodeId }}"{% endif %})
+            _sent_doc = await _b.send_document(_target_chat_id, await resolve_media_input("{{ documentUrl }}"), caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{% if userDatabaseEnabled %}, node_id="{{ nodeId }}"{% endif %})
             if _sent_doc and _sent_doc.document:
                 _new_fid = _sent_doc.document.file_id
-                await _save_media_file_id("{{ documentUrl }}", _new_fid, "document", "application/octet-stream")
+                if _b is bot: await _save_media_file_id("{{ documentUrl }}", _new_fid, "document", "application/octet-stream")
                 logging.info(f"✅ Узел {{ nodeId }}: получен file_id={_new_fid[:20]}... для документа {{ documentUrl }}")
             _sent_result = _sent_doc
 {% include 'message/partials/send-extra-file-ids.py.jinja2' %}
@@ -567,12 +575,20 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
 {%- else %}
 {%- set _cached_doc_fid = (telegramFileIds or {})[documentUrl] if telegramFileIds and documentUrl in telegramFileIds else '' %}
 {%- if _cached_doc_fid %}
-            logging.info(f"📎 Узел {{ nodeId }}: отправка документа через кэшированный file_id={{ _cached_doc_fid }}...")
-            _sent_result = await _b.send_document(_target_chat_id, "{{ _cached_doc_fid }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{% if userDatabaseEnabled %}, node_id="{{ nodeId }}"{% endif %})
+            _sent_result = None
+            if _b is bot:
+                try:
+                    _sent_result = await _b.send_document(_target_chat_id, "{{ _cached_doc_fid }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{% if userDatabaseEnabled %}, node_id="{{ nodeId }}"{% endif %})
+                except Exception as _fid_err:
+                    if not _is_wrong_file_id_error(_fid_err):
+                        raise
+            if _sent_result is None:
+                _original = await resolve_media_input("{{ documentUrl }}") if await is_registered_media("{{ documentUrl }}") else "{{ documentUrl }}"
+                _sent_result = await _b.send_document(_target_chat_id, _original, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{% if userDatabaseEnabled %}, node_id="{{ nodeId }}"{% endif %})
 {% include 'message/partials/send-extra-file-ids.py.jinja2' %}
             return _sent_result
 {%- else %}
-            _rt_fid = _media_file_id_cache.get("{{ documentUrl }}")
+            _rt_fid = (_media_file_id_cache.get("{{ documentUrl }}") if _b is bot else None)
             if _rt_fid:
                 logging.info(f"📎 Узел {{ nodeId }}: отправка документа через in-memory file_id (без перегенерации)")
                 try:
@@ -585,10 +601,10 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
                     logging.warning(f"⚠️ Узел {{ nodeId }}: невалидный file_id, переотправка по URL: {_fid_err}")
                     await _invalidate_media_file_id("{{ documentUrl }}")
             logging.info(f"📤 Узел {{ nodeId }}: первая отправка документа по URL, file_id будет получен из ответа")
-            _sent_doc = await _b.send_document(_target_chat_id, "{{ documentUrl }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{% if userDatabaseEnabled %}, node_id="{{ nodeId }}"{% endif %})
+            _sent_doc = await _b.send_document(_target_chat_id, await resolve_media_input("{{ documentUrl }}") if await is_registered_media("{{ documentUrl }}") else "{{ documentUrl }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{% if userDatabaseEnabled %}, node_id="{{ nodeId }}"{% endif %})
             if _sent_doc and _sent_doc.document:
                 _new_fid = _sent_doc.document.file_id
-                await _save_media_file_id("{{ documentUrl }}", _new_fid, "document", "application/octet-stream")
+                if _b is bot: await _save_media_file_id("{{ documentUrl }}", _new_fid, "document", "application/octet-stream")
                 logging.info(f"✅ Узел {{ nodeId }}: получен file_id={_new_fid[:20]}... для документа {{ documentUrl }}")
             _sent_result = _sent_doc
 {% include 'message/partials/send-extra-file-ids.py.jinja2' %}
@@ -605,7 +621,7 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
                 _fid_data = json.loads("""{{ mediaItem }}""")
                 if _fid_data.get("__type") == "file_id":
                     _fid_map = _fid_data.get("fileIdsByToken", {})
-                    _fid = _fid_map.get(str(TOKEN_ID))
+                    _fid = _fid_map.get(str(TOKEN_ID)) if _b is bot else None
                     if _fid:
                         _media_type = _fid_data.get("mediaType", "photo")
                         logging.info(f"📎 Узел {{ nodeId }}: отправка {_media_type} через file_id={_fid[:20]}... (TOKEN_ID={TOKEN_ID})")
@@ -618,9 +634,9 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
                         else:
                             _sent_result = await _b.send_document(_target_chat_id, _fid, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{% if userDatabaseEnabled %}, node_id="{{ nodeId }}"{% endif %})
                     else:
-                        logging.warning(f"⚠️ Узел {{ nodeId }}: нет file_id для TOKEN_ID={TOKEN_ID} в записи file_id")
-            except (json.JSONDecodeError, AttributeError):
-                pass
+                        raise ValueError("Для вложения отсутствует file_id текущего бота")
+            except (json.JSONDecodeError, AttributeError) as _media_err:
+                raise ValueError("Некорректное вложение") from _media_err
             if locals().get('_sent_result') is not None:
                 return _sent_result
 {%- endif %}
@@ -652,7 +668,7 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
             {# JSON file_id — берём file_id по TOKEN_ID в рантайме #}
             try:
                 _fid_data_{{ loop.index }} = json.loads("""{{ mediaItem }}""")
-                _fid_{{ loop.index }} = _fid_data_{{ loop.index }}.get("fileIdsByToken", {}).get(str(TOKEN_ID))
+                _fid_{{ loop.index }} = _fid_data_{{ loop.index }}.get("fileIdsByToken", {}).get(str(TOKEN_ID)) if _b is bot else None
                 _fid_type_{{ loop.index }} = _fid_data_{{ loop.index }}.get("mediaType", "photo")
                 if _fid_{{ loop.index }}:
                     if _fid_type_{{ loop.index }} == "photo":
@@ -665,44 +681,42 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
                         _mg_items.append(InputMediaDocument(media=_fid_{{ loop.index }}))
                     logging.info(f"📎 Узел {{ nodeId }}: медиагруппа[{{ loop.index0 }}] — file_id={_fid_{{ loop.index }}[:20]}... (TOKEN_ID={TOKEN_ID})")
                 else:
-                    logging.warning(f"⚠️ Узел {{ nodeId }}: нет file_id для TOKEN_ID={TOKEN_ID}")
-            except (json.JSONDecodeError, AttributeError):
-                pass
-{%- elif '/uploads/' in mediaItem %}
+                    raise ValueError("Для элемента альбома отсутствует file_id текущего бота")
+            except (json.JSONDecodeError, AttributeError) as _media_err:
+                raise ValueError("Некорректный элемент альбома") from _media_err
+{%- elif mediaItem.startsWith('/uploads/') %}
             {# Локальный файл из /uploads/ — добавляем через FSInputFile #}
-            _fp_mg_{{ loop.index }} = get_upload_file_path("{{ mediaItem }}")
-            if os.path.exists(_fp_mg_{{ loop.index }}):
+            _mg_media_{{ loop.index }} = (_media_file_id_cache.get("{{ mediaItem }}") if _b is bot else None) or await resolve_media_input("{{ mediaItem }}")
 {%- set _mi_lower = mediaItem | lower %}
 {%- if '.jpg' in _mi_lower or '.jpeg' in _mi_lower or '.png' in _mi_lower or '.gif' in _mi_lower or '.webp' in _mi_lower %}
-                logging.info(f"📤 Узел {{ nodeId }}: медиагруппа[{{ loop.index0 }}] — фото через FSInputFile: {{ mediaItem }}")
-                _mg_items.append(InputMediaPhoto(media=FSInputFile(_fp_mg_{{ loop.index }})))
+            logging.info(f"📤 Узел {{ nodeId }}: медиагруппа[{{ loop.index0 }}] — фото через FSInputFile: {{ mediaItem }}")
+            _mg_items.append(InputMediaPhoto(media=_mg_media_{{ loop.index }}))
 {%- elif '.mp4' in _mi_lower or '.avi' in _mi_lower or '.mov' in _mi_lower or '.webm' in _mi_lower %}
-                logging.info(f"📤 Узел {{ nodeId }}: медиагруппа[{{ loop.index0 }}] — видео через FSInputFile: {{ mediaItem }}")
-                _mg_items.append(InputMediaVideo(media=FSInputFile(_fp_mg_{{ loop.index }})))
+            logging.info(f"📤 Узел {{ nodeId }}: медиагруппа[{{ loop.index0 }}] — видео через FSInputFile: {{ mediaItem }}")
+            _mg_items.append(InputMediaVideo(media=_mg_media_{{ loop.index }}))
 {%- elif '.mp3' in _mi_lower or '.wav' in _mi_lower or '.ogg' in _mi_lower %}
-                logging.info(f"📤 Узел {{ nodeId }}: медиагруппа[{{ loop.index0 }}] — аудио через FSInputFile: {{ mediaItem }}")
-                _mg_items.append(InputMediaAudio(media=FSInputFile(_fp_mg_{{ loop.index }})))
+            logging.info(f"📤 Узел {{ nodeId }}: медиагруппа[{{ loop.index0 }}] — аудио через FSInputFile: {{ mediaItem }}")
+            _mg_items.append(InputMediaAudio(media=_mg_media_{{ loop.index }}))
 {%- else %}
-                logging.info(f"📤 Узел {{ nodeId }}: медиагруппа[{{ loop.index0 }}] — документ через FSInputFile: {{ mediaItem }}")
-                _mg_items.append(InputMediaDocument(media=FSInputFile(_fp_mg_{{ loop.index }})))
+            logging.info(f"📤 Узел {{ nodeId }}: медиагруппа[{{ loop.index0 }}] — документ через FSInputFile: {{ mediaItem }}")
+            _mg_items.append(InputMediaDocument(media=_mg_media_{{ loop.index }}))
 {%- endif %}
-            else:
-                logging.error(f"❌ Медиафайл не найден: {_fp_mg_{{ loop.index }}} (узел {{ nodeId }})")
 {%- else %}
             {# Обычный URL — определяем тип по расширению #}
+            _mg_external_{{ loop.index }} = (_media_file_id_cache.get("{{ mediaItem|e }}") if _b is bot else None) or (await resolve_media_input("{{ mediaItem|e }}") if await is_registered_media("{{ mediaItem|e }}") else "{{ mediaItem|e }}")
 {%- set _mi_lower = mediaItem | lower %}
 {%- if '.jpg' in _mi_lower or '.jpeg' in _mi_lower or '.png' in _mi_lower or '.gif' in _mi_lower or '.webp' in _mi_lower %}
             logging.info(f"📤 Узел {{ nodeId }}: медиагруппа[{{ loop.index0 }}] — фото по URL: {{ mediaItem }}")
-            _mg_items.append(InputMediaPhoto(media="{{ mediaItem|e }}"))
+            _mg_items.append(InputMediaPhoto(media=await resolve_media_input("{{ mediaItem|e }}") if await is_registered_media("{{ mediaItem|e }}") else "{{ mediaItem|e }}"))
 {%- elif '.mp4' in _mi_lower or '.avi' in _mi_lower or '.mov' in _mi_lower or '.webm' in _mi_lower %}
             logging.info(f"📤 Узел {{ nodeId }}: медиагруппа[{{ loop.index0 }}] — видео по URL: {{ mediaItem }}")
-            _mg_items.append(InputMediaVideo(media="{{ mediaItem|e }}"))
+            _mg_items.append(InputMediaVideo(media=await resolve_media_input("{{ mediaItem|e }}") if await is_registered_media("{{ mediaItem|e }}") else "{{ mediaItem|e }}"))
 {%- elif '.mp3' in _mi_lower or '.wav' in _mi_lower or '.ogg' in _mi_lower %}
             logging.info(f"📤 Узел {{ nodeId }}: медиагруппа[{{ loop.index0 }}] — аудио по URL: {{ mediaItem }}")
-            _mg_items.append(InputMediaAudio(media="{{ mediaItem|e }}"))
+            _mg_items.append(InputMediaAudio(media=await resolve_media_input("{{ mediaItem|e }}") if await is_registered_media("{{ mediaItem|e }}") else "{{ mediaItem|e }}"))
 {%- else %}
             logging.info(f"📤 Узел {{ nodeId }}: медиагруппа[{{ loop.index0 }}] — документ по URL: {{ mediaItem }}")
-            _mg_items.append(InputMediaDocument(media="{{ mediaItem|e }}"))
+            _mg_items.append(InputMediaDocument(media=await resolve_media_input("{{ mediaItem|e }}") if await is_registered_media("{{ mediaItem|e }}") else "{{ mediaItem|e }}"))
 {%- endif %}
 {%- endif %}
 {%- endfor %}
@@ -712,7 +726,24 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
                     _first_mg = _mg_items[0]
                     _mg_items[0] = type(_first_mg)(media=_first_mg.media, caption=text{{ parse_mode_arg }})
                 logging.info(f"📤 Узел {{ nodeId }}: отправка медиагруппы из {len(_mg_items)} файлов")
-                _sent_mg = await _b.send_media_group(_target_chat_id, _mg_items, message_thread_id=_thread_id{% if userDatabaseEnabled %}, node_id="{{ nodeId }}"{% endif %})
+                try:
+                    _sent_mg = await _b.send_media_group(_target_chat_id, _mg_items, message_thread_id=_thread_id{% if userDatabaseEnabled %}, node_id="{{ nodeId }}"{% endif %})
+                except Exception as _fid_err:
+                    if not _is_wrong_file_id_error(_fid_err):
+                        raise
+                    _retried = False
+{%- for mediaItem in attachedMedia %}
+{%- if '"__type":"file_id"' not in mediaItem %}
+                    if _b is bot and _media_file_id_cache.get("{{ mediaItem }}"):
+                        await _invalidate_media_file_id("{{ mediaItem }}")
+                        _old = _mg_items[{{ loop.index0 }}]
+                        _mg_items[{{ loop.index0 }}] = _old.model_copy(update={"media": await resolve_media_input("{{ mediaItem }}") if await is_registered_media("{{ mediaItem }}") else "{{ mediaItem }}"})
+                        _retried = True
+{%- endif %}
+{%- endfor %}
+                    if not _retried:
+                        raise
+                    _sent_mg = await _b.send_media_group(_target_chat_id, _mg_items, message_thread_id=_thread_id{% if userDatabaseEnabled %}, node_id="{{ nodeId }}"{% endif %})
 {%- if keyboardType != 'none' %}
                 {# send_media_group не поддерживает reply_markup — клавиатура отправляется отдельным сообщением #}
                 await _b.send_message(_target_chat_id, "​", reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{% if userDatabaseEnabled %}, node_id="{{ nodeId }}"{% endif %})

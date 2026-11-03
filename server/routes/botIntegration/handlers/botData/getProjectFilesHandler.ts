@@ -7,6 +7,7 @@
  */
 
 import type { Request, Response } from "express";
+import { selectedMediaStorageId } from "../../../../storage/selected-media-storage";
 
 import { parseProjectFilesQuery } from "./project-files-query-parse";
 import { queryUploadedFiles } from "./project-files-uploaded-query";
@@ -39,6 +40,20 @@ export async function getProjectFilesHandler(req: Request, res: Response): Promi
     }
 
     const { category, tokenId, filters, page, limit, offset } = parsed.value;
+    let selectedStorage: string | null;
+    try {
+      selectedStorage = await selectedMediaStorageId();
+    } catch {
+      res.status(503).json({ message: "Выбранное хранилище недоступно" });
+      return;
+    }
+    if (selectedStorage) {
+      filters.storageConfigId = selectedStorage;
+      if (category === "incoming" || category === "outgoing") {
+        res.json({ files: [], total: 0, page, limit });
+        return;
+      }
+    }
 
     if (category === "uploaded") {
       const result = await queryUploadedFiles(projectId, filters, limit, offset);

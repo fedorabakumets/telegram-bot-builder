@@ -4,6 +4,27 @@
   Использует closure вместо глобального monkey-patching
 #}
 
+async def _resolve_logged_media(value):
+    """Преобразует управляемый адрес в загруженный файл для отправки."""
+    return await resolve_media_input(value) if await is_registered_media(value) else value
+
+async def _resolve_logged_thumbnail(kwargs):
+    """Подготавливает управляемую миниатюру, не изменяя остальные аргументы."""
+    if await is_registered_media(kwargs.get('thumbnail')):
+        kwargs['thumbnail'] = await resolve_media_input(kwargs['thumbnail'])
+
+async def _resolve_logged_album(media):
+    """Подготавливает все элементы альбома до отправки, сохраняя порядок."""
+    result = []
+    for item in media:
+        updates = {}
+        if await is_registered_media(getattr(item, 'media', None)):
+            updates['media'] = await resolve_media_input(item.media)
+        if await is_registered_media(getattr(item, 'thumbnail', None)):
+            updates['thumbnail'] = await resolve_media_input(item.thumbnail)
+        result.append(item.model_copy(update=updates) if updates else item)
+    return result
+
 def _wrap_bot_send_message(bot_instance):
     """Оборачивает bot.send_message для логирования — вызывается один раз при старте"""
     original_send_message = bot_instance.send_message
@@ -80,6 +101,7 @@ def _wrap_bot_send_sticker(bot_instance):
 
     async def send_sticker_with_logging(chat_id, sticker, *args, node_id=None, **kwargs):
         """Обёртка для bot.send_sticker с поддержкой outgoing_message_trigger"""
+        sticker = await _resolve_logged_media(sticker)
         result = await original_send_sticker(chat_id, sticker, *args, **kwargs)
         # Вызываем обработчики триггеров исходящих сообщений
         try:
@@ -99,6 +121,7 @@ def _wrap_bot_send_voice(bot_instance):
 
     async def send_voice_with_logging(chat_id, voice, *args, caption=None, node_id=None, **kwargs):
         """Обёртка для bot.send_voice с поддержкой outgoing_message_trigger"""
+        voice = await _resolve_logged_media(voice)
         result = await original_send_voice(chat_id, voice, *args, caption=caption, **kwargs)
         # Вызываем обработчики триггеров исходящих сообщений
         try:
@@ -118,6 +141,8 @@ def _wrap_bot_send_animation(bot_instance):
 
     async def send_animation_with_logging(chat_id, animation, *args, caption=None, node_id=None, **kwargs):
         """Обёртка для bot.send_animation с поддержкой outgoing_message_trigger"""
+        animation = await _resolve_logged_media(animation)
+        await _resolve_logged_thumbnail(kwargs)
         result = await original_send_animation(chat_id, animation, *args, caption=caption, **kwargs)
         # Вызываем обработчики триггеров исходящих сообщений
         try:
@@ -137,6 +162,7 @@ def _wrap_bot_send_media_group(bot_instance):
 
     async def send_media_group_with_logging(chat_id, media, *args, node_id=None, **kwargs):
         """Обёртка для bot.send_media_group с поддержкой outgoing_message_trigger"""
+        media = await _resolve_logged_album(media)
         result = await original_send_media_group(chat_id, media, *args, **kwargs)
         # Каждый элемент альбома сохраняет ID блока и собственные данные медиа.
         for _message in result or []:
@@ -173,6 +199,8 @@ def _wrap_bot_send_video(bot_instance):
 
     async def send_video_with_logging(chat_id, video, *args, caption=None, node_id=None, **kwargs):
         """Обёртка для bot.send_video с автоматическим сохранением и регистрацией медиа"""
+        video = await _resolve_logged_media(video)
+        await _resolve_logged_thumbnail(kwargs)
         result = await original_send_video(chat_id, video, *args, caption=caption, **kwargs)
         try:
             message_data_obj = {"message_id": result.message_id if result else None}
@@ -243,6 +271,8 @@ def _wrap_bot_send_audio(bot_instance):
 
     async def send_audio_with_logging(chat_id, audio, *args, caption=None, node_id=None, **kwargs):
         """Обёртка для bot.send_audio с автоматическим сохранением и регистрацией медиа"""
+        audio = await _resolve_logged_media(audio)
+        await _resolve_logged_thumbnail(kwargs)
         result = await original_send_audio(chat_id, audio, *args, caption=caption, **kwargs)
         try:
             message_data_obj = {"message_id": result.message_id if result else None}
@@ -295,6 +325,8 @@ def _wrap_bot_send_document(bot_instance):
 
     async def send_document_with_logging(chat_id, document, *args, caption=None, node_id=None, **kwargs):
         """Обёртка для bot.send_document с автоматическим сохранением и регистрацией медиа"""
+        document = await _resolve_logged_media(document)
+        await _resolve_logged_thumbnail(kwargs)
         result = await original_send_document(chat_id, document, *args, caption=caption, **kwargs)
         try:
             message_data_obj = {"message_id": result.message_id if result else None}

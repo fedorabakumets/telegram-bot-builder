@@ -14,7 +14,7 @@ import path from "path";
 import { type Server } from "http";
 import { nanoid } from "nanoid";
 
-import { createUploadsS3Fallback } from "../../media/uploads-s3-fallback";
+import { createRegisteredUploadsFallback } from "../../media/registered-uploads-fallback";
 
 /**
  * Настраивает Vite сервер и middleware
@@ -62,13 +62,13 @@ export async function setupVite(app: Express, server: Server): Promise<void> {
     app.use(express.static(publicPath));
   }
 
+  // Зарегистрированные файлы читаются из их хранилища до статической раздачи.
+  app.use("/uploads", createRegisteredUploadsFallback());
   // Раздача файлов из uploads в режиме разработки
   const uploadsPath = path.resolve(import.meta.dirname, "..", "..", "..", "..", "uploads");
   if (fs.existsSync(uploadsPath)) {
     app.use("/uploads", express.static(uploadsPath));
   }
-  // Файлов нет на диске — из S3 только ключи, зарегистрированные в media_files
-  app.use("/uploads", createUploadsS3Fallback());
 
   // Раздача файлов из assets в режиме разработки (скриншоты, изображения для UI)
   const assetsPath = path.resolve(import.meta.dirname, "..", "..", "..", "..", "assets");

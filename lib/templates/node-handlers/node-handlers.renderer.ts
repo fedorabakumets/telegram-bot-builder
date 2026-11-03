@@ -58,7 +58,7 @@ export function resolveMediaUrls(data: any): {
     };
   }
 
-  const urlStrings = (rawAttached as string[]).filter(u => typeof u === 'string' && (u.startsWith('http') || u.startsWith('/uploads/') || u.startsWith('{"__type":"file_id"') || (u.startsWith('{') && u.endsWith('}'))));
+  const urlStrings = (rawAttached as string[]).filter(u => typeof u === 'string' && (u.startsWith('http') || u.startsWith('/uploads/') || u.startsWith('/api/storage/proxy/') || u.startsWith('/api/media/s3-proxy/') || u.startsWith('{"__type":"file_id"') || (u.startsWith('{') && u.endsWith('}'))));
 
   // Переменные вида {varName} — всегда остаются в attachedMediaUrls, не разбираются как URL
   const hasVariableItems = urlStrings.some(u => u.startsWith('{') && u.endsWith('}') && !u.startsWith('{"__type"'));
@@ -91,11 +91,9 @@ export function resolveMediaUrls(data: any): {
 
   // Для определения типа медиа используем только обычные URL (не JSON file_id)
   const regularUrls = urlStrings.filter(u => !u.startsWith('{"__type":"file_id"'));
-  const fileIdUrls = urlStrings.filter(u => u.startsWith('{"__type":"file_id"'));
 
-  // Если есть JSON file_id вместе с обычными URL — оставляем всё в attachedMediaUrls
-  // для генерации медиагруппы в шаблоне (не разбиваем на videoUrl/imageUrl)
-  if (fileIdUrls.length > 0 && regularUrls.length > 0) {
+  // Несколько вложений сохраняем вместе для отправки медиагруппой.
+  if (urlStrings.length > 1) {
     return {
       imageUrl: '',
       videoUrl: '',

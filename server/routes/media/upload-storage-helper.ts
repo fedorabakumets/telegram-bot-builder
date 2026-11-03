@@ -3,8 +3,8 @@
  * (`StorageRegistry`). Выносит из основного роутера логику:
  *
  *  - выбора целевого бэкенда для записи (`resolveUploadBackend`): запрошенный
- *    `storageConfigId` применяется только если он доступен для записи
- *    (`listWritable`), иначе берётся активный бэкенд (Req 11.7);
+ *    настройка S3 имеет приоритет, иначе используется запрошенный или активный
+ *    бэкенд; недоступное хранилище вызывает ошибку;
  *  - фактической записи объекта в бэкенд (`persistUploadToBackend`): для
  *    локального дефолта (`local-default`, папка `uploads/`) файл уже лежит на
  *    диске после multer — он остаётся на месте; для S3 и прочих целей буфер
@@ -27,7 +27,6 @@ import { mediaFiles } from "@shared/schema";
 import { db } from "../../database/db";
 import type { StorageBackend, StorageRegistry } from "../../storage/storage-backend";
 import { LOCAL_DEFAULT_ID } from "../../storage/storage-config";
-import { getUploadsStorageId, uploadKeyFromUrl } from "../../storage/uploads-storage";
 
 /** Результат записи загруженного файла в целевой бэкенд */
 export interface UploadPersistResult {
@@ -62,10 +61,8 @@ export class StorageBackendWriteError extends Error {
 /**
  * Выбирает целевой бэкенд для новой загрузки.
  *
- * Если передан `storageConfigId`, он применяется только когда соответствующий
- * бэкенд присутствует среди доступных для записи (`listWritable`) — иначе
- * безопасно используется активный бэкенд (Req 11.7). Пустое/отсутствующее
- * значение всегда даёт активный бэкенд.
+ * Настройка S3 имеет приоритет; недоступный или закрытый для записи бэкенд
+ * вызывает ошибку, не заменяясь локальным хранилищем.
  * @param registry - Реестр хранилищ
  * @param storageConfigId - Запрошенный ID конфигурации хранилища либо null/undefined
  * @returns Бэкенд, в который следует писать загрузку
@@ -74,14 +71,18 @@ export function resolveUploadBackend(
   registry: StorageRegistry,
   storageConfigId: string | null | undefined,
 ): StorageBackend {
-  const requested = typeof storageConfigId === "string" ? storageConfigId.trim() : "";
-  if (requested.length > 0) {
-    const writable = registry.listWritable().find((b) => b.configId === requested);
-    if (writable) {
-      return writable;
-    }
+  const selected = getUploadsStorageId();
+  const requested = selected || (typeof storageConfigId === "string" ? storageConfigId.trim() : "");
+  let backend: StorageBackend;
+  try {
+    backend = requested ? registry.resolveBackend(requested) : registry.getActiveBackend();
+  } catch {
+    throw new StorageBackendWriteError(selected ? "s3" : "unknown", "Хранилище недоступно");
   }
-  return registry.getActiveBackend();
+  if (backend.readOnly || (selected && backend.backend !== "s3")) {
+    throw new StorageBackendWriteError(selected ? "s3" : backend.backend, "Хранилище недоступно для записи");
+  }
+  return backend;
 }
 
 /**
@@ -149,6 +150,7 @@ export async function persistUploadToBackend(
   try {
     stored = await backend.put(key, buffer, file.mimetype);
   } catch (err) {
+    await unlink(file.path).catch(() => undefined);
     throw new StorageBackendWriteError(backend.backend, err);
   }
 
@@ -159,13 +161,10 @@ export async function persistUploadToBackend(
     /* отсутствие временного файла не критично */
   }
 
-  // Хранилище загрузок отдаётся через /uploads (запасное чтение из S3),
-  // поэтому адрес файла остаётся прежним `/uploads/<ключ>`.
-  const keepUploadsUrl = stored.configId === getUploadsStorageId() && uploadKeyFromUrl(defaultUrl) === stored.key;
-
+  // Логический адрес одинаков для всех хранилищ; источник выбирается по записи файла.
   return {
     filePath: stored.key,
-    url: keepUploadsUrl ? defaultUrl : stored.url,
+    url: `/uploads/${key}`,
     storageBackend: stored.backend,
     storageConfigId: stored.configId,
   };

@@ -32,13 +32,8 @@ async def handle_callback_{{ nodeId|safe_name }}(callback_query: types.CallbackQ
     parse_mode = None
     {% if animationUrl %}
     try:
-        {% if isLocalAnimationUrl %}
-        animation_path = get_upload_file_path("{{ animationUrl|e }}")
-        animation_file = FSInputFile(animation_path)
+        animation_file = await resolve_media_input("{{ animationUrl|e }}") if await is_registered_media("{{ animationUrl|e }}") else "{{ animationUrl|e }}"
         await bot.send_animation(_chat_id, animation_file, caption=text, parse_mode=parse_mode)
-        {% else %}
-        await bot.send_animation(_chat_id, "{{ animationUrl|e }}", caption=text, parse_mode=parse_mode)
-        {% endif %}
         await save_message_to_api(
             user_id=str(user_id),
             message_type="bot",

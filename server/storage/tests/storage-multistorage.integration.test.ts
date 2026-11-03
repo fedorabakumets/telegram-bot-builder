@@ -155,7 +155,7 @@ describe("StorageRegistry.reload + resolveBackend (Req 10.3–10.5, 10.7, 10.8)"
     expect(registry.getActiveBackend().configId).toBe("local-a");
   });
 
-  it("null и неизвестный configId откатываются к local-default (Req 10.5)", async () => {
+  it("null сохраняет совместимость, неизвестный configId вызывает ошибку", async () => {
     const rootDefault = await makeTempDir();
     const rootA = await makeTempDir();
     state.storageConfigs = [
@@ -166,7 +166,16 @@ describe("StorageRegistry.reload + resolveBackend (Req 10.3–10.5, 10.7, 10.8)"
     await registry.reload();
 
     expect(registry.resolveBackend(null).configId).toBe(LOCAL_DEFAULT_ID);
-    expect(registry.resolveBackend("does-not-exist").configId).toBe(LOCAL_DEFAULT_ID);
+    expect(() => registry.resolveBackend("does-not-exist")).toThrow();
+  });
+
+  it("недоступная активная конфигурация не переключает запись на local", async () => {
+    const root = await makeTempDir();
+    const unavailable = { ...localConfigRow("broken-s3", root, true), backend: "s3", secretsEnc: null };
+    state.storageConfigs = [localConfigRow(LOCAL_DEFAULT_ID, root, false), unavailable];
+    const registry = new StorageRegistryImpl();
+    await registry.reload();
+    expect(() => registry.getActiveBackend()).toThrow("Активное хранилище недоступно");
   });
 
   it("reload подхватывает новый конфиг без рестарта и не ломает резолв прочих (Req 10.7, 10.8)", async () => {
@@ -177,8 +186,8 @@ describe("StorageRegistry.reload + resolveBackend (Req 10.3–10.5, 10.7, 10.8)"
     const registry = new StorageRegistryImpl();
     await registry.reload();
     expect(registry.resolveBackend("local-a").configId).toBe("local-a");
-    // Нового конфига ещё нет — откат к дефолту.
-    expect(registry.resolveBackend("local-b").configId).toBe(LOCAL_DEFAULT_ID);
+    // Неизвестный конфиг не подменяется локальным.
+    expect(() => registry.resolveBackend("local-b")).toThrow();
 
     // Добавляем второй конфиг и перезагружаем реестр (без пересоздания инстанса).
     const rootB = await makeTempDir();

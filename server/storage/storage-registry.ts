@@ -10,9 +10,9 @@
  *  - каждый бэкенд хранится в независимой записи `Map` по `configId`, поэтому
  *    добавление/удаление одного хранилища не влияет на резолв остальных (Req 10.8);
  *  - `getActiveBackend()` возвращает помеченное `isActive=true` хранилище, с
- *    откатом к локальному дефолту (`local-default`);
+ *    ошибкой при недоступной конфигурации;
  *  - `resolveBackend(null)` → локальный дефолт (обратная совместимость, Req 10.5),
- *    неизвестный `configId` также безопасно откатывается к локальному дефолту;
+ *    неизвестный `configId` вызывает ошибку;
  *  - сбой расшифровки кредов S3 не роняет весь реестр: проблемный бэкенд
  *    пропускается, остальные продолжают работать.
  *
@@ -60,7 +60,7 @@ export class StorageRegistryImpl implements StorageRegistry {
   /**
    * Запасной локальный бэкенд дефолта на случай, если `local-default` отсутствует
    * в БД (например, был удалён). Гарантирует, что резолв null/неизвестного
-   * `configId` и `getActiveBackend()` никогда не падают (Req 10.5).
+   * старых записей без `configId`.
    */
   private fallbackLocal: StorageBackend = new LocalDiskBackend({
     configId: LOCAL_DEFAULT_ID,
@@ -87,14 +87,12 @@ export class StorageRegistryImpl implements StorageRegistry {
     let activeId: string | null = null;
 
     for (const row of rows) {
+      if (row.isActive) activeId = row.id;
       const backend = this.buildBackend(row);
       // Пропускаем строки, для которых бэкенд построить не удалось (например,
       // S3 без валидных кредов): остальные хранилища продолжают работать.
       if (!backend) continue;
       next.set(row.id, backend);
-      if (row.isActive) {
-        activeId = row.id;
-      }
     }
 
     this.backends = next;
@@ -208,21 +206,21 @@ export class StorageRegistryImpl implements StorageRegistry {
 
   /**
    * Возвращает активное хранилище для новых загрузок (`isActive=true`); при
-   * отсутствии активной/доступной записи откатывается к локальному дефолту.
+   * отсутствии активной записи используется локальный дефолт.
    * @returns Бэкенд, выбранный целевым для новых загрузок
    */
   getActiveBackend(): StorageBackend {
     if (this.activeConfigId) {
       const active = this.backends.get(this.activeConfigId);
       if (active) return active;
+      throw new Error("Активное хранилище недоступно");
     }
     return this.getLocalDefault();
   }
 
   /**
    * Резолвит бэкенд по `configId` записи `media_files`. `null` → локальный
-   * дефолт (обратная совместимость, Req 10.5); неизвестный `configId` также
-   * безопасно откатывается к локальному дефолту.
+   * дефолт для старых записей; неизвестный `configId` вызывает ошибку.
    * @param configId - ID конфигурации хранилища либо null
    * @returns Соответствующий бэкенд либо локальный дефолт
    */
@@ -230,7 +228,9 @@ export class StorageRegistryImpl implements StorageRegistry {
     if (configId === null) {
       return this.getLocalDefault();
     }
-    return this.backends.get(configId) ?? this.getLocalDefault();
+    const backend = this.backends.get(configId);
+    if (!backend) throw new Error("Указанное хранилище недоступно");
+    return backend;
   }
 
   /**

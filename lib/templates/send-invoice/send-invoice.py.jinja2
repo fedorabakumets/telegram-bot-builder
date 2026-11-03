@@ -19,6 +19,33 @@
 # Маршруты оплаты: payload → настройки узла счёта / ссылки
 _stars_payment_targets = {}
 {% endif %}
+{% if has_invoices %}
+async def _invoice_photo_url(reference):
+    """Возвращает временный публичный адрес зарегистрированного изображения счёта."""
+    if not reference or not await is_registered_media(reference):
+        return reference
+    base = os.getenv('MEDIA_RUNTIME_BASE_URL', '').rstrip('/')
+    token = os.getenv('MEDIA_RUNTIME_TOKEN', '')
+    if not base or not token:
+        raise MediaAccessError('Для изображения счёта требуется настроенный публичный сервер медиа')
+    import aiohttp
+    timeout = aiohttp.ClientTimeout(total=30, connect=10)
+    try:
+        async with aiohttp.ClientSession(timeout=timeout) as session:
+            async with session.post(base + '/api/runtime/media/invoice-link',
+                                    params={'projectId': os.getenv('MEDIA_RUNTIME_PROJECT_ID', str(PROJECT_ID))},
+                                    headers={'Authorization': 'Bearer ' + token}, json={'url': reference},
+                                    allow_redirects=False) as response:
+                if response.status != 200:
+                    raise MediaStorageError('Не удалось получить публичный адрес изображения счёта')
+                result = await response.json()
+                url = result.get('url', '')
+                if not isinstance(url, str) or not url.startswith('https://'):
+                    raise MediaStorageError('Некорректный публичный адрес изображения счёта')
+                return url
+    except (aiohttp.ClientError, asyncio.TimeoutError, ValueError, TypeError) as error:
+        raise MediaStorageError('Сервер изображения счёта недоступен') from error
+{% endif %}
 {% if hasPreCheckoutRules %}
 {% include 'send-invoice/pre-checkout-guard.py.jinja2' %}
 {% endif %}
@@ -53,15 +80,12 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query: types.Callback
     _payload = str(_payload)[:128]
 {% if entry.photoUrl %}
     _photo_url = replace_variables_in_text({{ entry.photoUrl | tojson }}, _all_vars, {})
-    if isinstance(_photo_url, str) and _photo_url.startswith("/uploads/"):
-        _api_base = (os.getenv("API_BASE_URL") or "").rstrip("/")
-        if _api_base:
-            _photo_url = f"{_api_base}{_photo_url}"
-        else:
-            logging.warning(
-                f"⭐ send_invoice [{{ entry.nodeId }}]: нет API_BASE_URL — картинка /uploads/ пропущена"
-            )
-            _photo_url = ""
+    try:
+        _photo_url = await _invoice_photo_url(_photo_url)
+    except MediaOriginalError as error:
+        logging.error('Не удалось подготовить изображение счёта: %s', error)
+        await callback_query.message.answer('Не удалось подготовить изображение счёта. Проверьте настройки хранилища.')
+        return
 {% else %}
     _photo_url = ""
 {% endif %}
@@ -219,15 +243,12 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query: types.Callback
     _payload = str(_payload)[:128]
 {% if entry.photoUrl %}
     _photo_url = replace_variables_in_text({{ entry.photoUrl | tojson }}, _all_vars, {})
-    if isinstance(_photo_url, str) and _photo_url.startswith("/uploads/"):
-        _api_base = (os.getenv("API_BASE_URL") or "").rstrip("/")
-        if _api_base:
-            _photo_url = f"{_api_base}{_photo_url}"
-        else:
-            logging.warning(
-                f"⭐ create_invoice_link [{{ entry.nodeId }}]: нет API_BASE_URL — картинка /uploads/ пропущена"
-            )
-            _photo_url = ""
+    try:
+        _photo_url = await _invoice_photo_url(_photo_url)
+    except MediaOriginalError as error:
+        logging.error('Не удалось подготовить изображение счёта: %s', error)
+        await callback_query.message.answer('Не удалось подготовить изображение счёта. Проверьте настройки хранилища.')
+        return
 {% else %}
     _photo_url = ""
 {% endif %}

@@ -40,7 +40,7 @@ export function generateUserbotMessageHandlers(nodes: Node[], projectId: number 
       disableLinkPreview: data.disableLinkPreview || false,
       userbotEntity: data.userbotEntity || '',
       userbotRecipients: (data.userbotRecipients || []).filter((r: string) => r.trim()),
-      attachedMedia: (data.attachedMedia || []).filter((m: string) => !m.includes('"__type":"file_id"')),
+      attachedMedia: data.attachedMedia || [],
       saveMessageIdTo: data.saveMessageIdTo || undefined,
       saveResponseIdTo: data.saveResponseIdTo || undefined,
       saveResponseTextTo: data.saveResponseTextTo || undefined,

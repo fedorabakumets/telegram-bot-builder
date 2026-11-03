@@ -140,82 +140,70 @@ def _fire_save_message(user_id: str, message_type: str, message_text: str = None
     task.add_done_callback(_analytics_persistence_tasks.discard)
 
 {% if saveIncomingMedia %}
-async def _save_incoming_photo_to_db(file_id: str, photo_meta: dict):
-    """Скачивает входящее фото с Telegram и сохраняет в media_files + bot_message_media.
-    Вызывается fire-and-forget после сохранения сообщения в БД.
-    Ждёт появления записи сообщения в БД (до 3 секунд).
-    """
+async def _save_incoming_photo_to_db(file_id: str, user_id: str, telegram_message_id: int, chat_type: str, chat_id: str):
+    """Сохраняет входящее фото через ограниченный API проекта и связывает с точным сообщением."""
     if not db_pool:
         return
     try:
-        import aiohttp as _aiohttp
-
-        # Получаем file_path от Telegram
-        _tg_url = f"https://api.telegram.org/bot{BOT_TOKEN}/getFile?file_id={file_id}"
-        async with _aiohttp.ClientSession() as _session:
-            async with _session.get(_tg_url) as _resp:
-                _tg_data = await _resp.json()
-                if not _tg_data.get("ok"):
-                    logging.warning(f"⚠️ Telegram getFile failed: {_tg_data}")
-                    return
-                _file_path = _tg_data["result"]["file_path"]
-                _file_size = _tg_data["result"].get("file_size", 0)
-
-            # Скачиваем файл
-            _download_url = f"https://api.telegram.org/file/bot{BOT_TOKEN}/{_file_path}"
-            async with _session.get(_download_url) as _dl_resp:
-                _file_bytes = await _dl_resp.read()
-
-        # Сохраняем файл на диск
         import os as _os
-        _date_str = __import__('datetime').datetime.now().strftime('%Y-%m-%d')
-        _uploads_dir = _os.path.join(PROJECT_DIR, '..', '..', 'uploads', str(PROJECT_ID), _date_str)
-        _os.makedirs(_uploads_dir, exist_ok=True)
-        _file_name = f"photo_{file_id[-20:].replace('-', '_')}.jpg"
-        _local_path = _os.path.join(_uploads_dir, _file_name)
-        with open(_local_path, 'wb') as _f:
-            _f.write(_file_bytes)
-
-        _rel_path = f"uploads/{PROJECT_ID}/{_date_str}/{_file_name}"
-        _url = f"/{_rel_path}"
-
-        # Ждём появления последнего сообщения от пользователя в БД (до 3 сек)
-        _msg_id = None
+        import aiohttp as _aiohttp
+        _base = _os.getenv('MEDIA_RUNTIME_BASE_URL', '').rstrip('/')
+        _token = _os.getenv('MEDIA_RUNTIME_WRITE_TOKEN', '')
+        if not _base or not _token:
+            logging.warning('Сохранение входящего фото: доступ к хранилищу не настроен')
+            return
         async with db_pool.acquire() as _conn:
-            for _ in range(6):
-                _row = await _conn.fetchrow(
-                    "SELECT id FROM bot_messages WHERE project_id=$1 AND token_id=$2 AND message_type='user' ORDER BY created_at DESC LIMIT 1",
-                    PROJECT_ID, TOKEN_ID
-                )
-                if _row:
-                    _msg_id = _row['id']
-                    break
-                await __import__('asyncio').sleep(0.5)
-
-            if not _msg_id:
-                logging.warning("⚠️ _save_incoming_photo_to_db: сообщение не найдено в БД")
+            _row = await _conn.fetchrow(
+                """SELECT id FROM bot_messages WHERE project_id=$1 AND token_id=$2 AND user_id=$3
+                   AND message_type='user' AND telegram_message_id=$4 AND chat_type=$5
+                   AND chat_id IS NOT DISTINCT FROM $6 ORDER BY id LIMIT 1""",
+                PROJECT_ID, TOKEN_ID, user_id, telegram_message_id, chat_type, chat_id)
+        if not _row:
+            logging.warning('Сохранение входящего фото: сообщение не найдено')
+            return
+        _timeout = _aiohttp.ClientTimeout(total=60)
+        async with _aiohttp.ClientSession(timeout=_timeout) as _session:
+            async with _session.get(f"https://api.telegram.org/bot{BOT_TOKEN}/getFile", params={'file_id': file_id}) as _resp:
+                _data = await _resp.json()
+                if _resp.status != 200 or not _data.get('ok'):
+                    logging.warning('Telegram не предоставил входящее фото')
+                    return
+                _file = _data['result']
+                if _file.get('file_size', 0) > 20 * 1024 * 1024:
+                    logging.warning('Входящее фото превышает допустимый размер')
+                    return
+            _media = None
+            for _attempt in range(3):
+                async with _session.get(f"https://api.telegram.org/file/bot{BOT_TOKEN}/{_file['file_path']}") as _source:
+                    if _source.status != 200:
+                        logging.warning('Не удалось скачать входящее фото из Telegram')
+                        return
+                    async with _session.post(_base + '/api/runtime/media/incoming-photo',
+                            params={'projectId': PROJECT_ID}, data=_source.content,
+                            headers={'Authorization': 'Bearer ' + _token, 'Content-Type': 'image/jpeg'}) as _saved:
+                        if _saved.status == 429:
+                            try:
+                                _wait = min(3600, max(1, int(_saved.headers.get('Retry-After', '60'))))
+                            except ValueError:
+                                _wait = 60
+                            logging.warning('Лимит входящих фото: повтор через %s секунд', _wait)
+                        elif _saved.status != 200:
+                            logging.warning('Не удалось сохранить входящее фото: HTTP %s', _saved.status)
+                            return
+                        else:
+                            _media = await _saved.json()
+                            break
+                if _attempt < 2:
+                    await asyncio.sleep(_wait)
+            if _media is None:
+                logging.error('Входящее фото не сохранено после повторных попыток')
                 return
-
-            # Сохраняем в media_files
-            _media_row = await _conn.fetchrow(
-                """INSERT INTO media_files (project_id, file_name, file_type, file_path, file_size, mime_type, url, is_public, usage_count)
-                   VALUES ($1, $2, 'photo', $3, $4, 'image/jpeg', $5, 0, 0)
-                   RETURNING id""",
-                PROJECT_ID, _file_name, _rel_path, _file_size, _url
-            )
-            _media_id = _media_row['id']
-
-            # Связываем с сообщением
-            await _conn.execute(
-                "INSERT INTO bot_message_media (message_id, media_file_id, media_kind, order_index) VALUES ($1, $2, 'photo', 0)",
-                _msg_id, _media_id
-            )
-            await _conn.execute(
-                "UPDATE bot_messages SET primary_media_id=$1 WHERE id=$2",
-                _media_id, _msg_id
-            )
-            logging.info(f"📸 Фото сохранено: {_url} (message_id={_msg_id})")
-
+            if _media.get('quotaExceeded'):
+                logging.warning('Мягкая квота локального хранилища превышена')
+        async with db_pool.acquire() as _conn:
+            async with _conn.transaction():
+                await _conn.execute("INSERT INTO bot_message_media (message_id, media_file_id, media_kind, order_index) VALUES ($1, $2, 'photo', 0)", _row['id'], _media['id'])
+                await _conn.execute("UPDATE bot_messages SET primary_media_id=$1 WHERE id=$2 AND project_id=$3", _media['id'], _row['id'], PROJECT_ID)
     except Exception as _e:
-        logging.debug(f"⚠️ _save_incoming_photo_to_db не удалось: {_e}")
+        logging.warning('Не удалось сохранить входящее фото: %s', type(_e).__name__)
 {% endif %}

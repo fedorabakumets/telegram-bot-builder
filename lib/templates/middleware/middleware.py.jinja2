@@ -235,7 +235,7 @@ async def message_logging_middleware(handler, event: types.Message, data: dict):
 {% if saveIncomingMedia %}
         # Если включено сохранение фото — скачиваем и сохраняем в фоне (fire-and-forget)
         if photo_file_id:
-            asyncio.create_task(_save_incoming_photo_to_db(photo_file_id, message_data.get("photo", {})))
+            asyncio.create_task(_save_incoming_photo_to_db(photo_file_id, str(user_id), event.message_id, _evt_chat_type, _evt_chat_id))
 {% endif %}
 
     except Exception as e:
