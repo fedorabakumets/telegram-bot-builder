@@ -55,7 +55,6 @@ export function SidePanelsLayout(props: SidePanelsLayoutProps): React.JSX.Elemen
   // Вычисляем order на основе фактически отображаемых панелей
   // order должен быть последовательным: 1, 2, 3...
   const hasLeft = leftContent !== null;
-  const hasRight = rightElements.length > 0;
   
   // Левая панель: order 1 (если есть)
   // Центр: order 1 (если нет левой) или 2 (если есть левая)

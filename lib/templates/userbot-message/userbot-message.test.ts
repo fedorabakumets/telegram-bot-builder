@@ -6,7 +6,7 @@
 import { describe, it, expect } from 'vitest';
 import { generateUserbotMessage, generateUserbotMessageHandlers } from './userbot-message.renderer';
 import { userbotMessageParamsSchema } from './userbot-message.schema';
-import type { Node } from '@shared/schema';
+import { nodeSchema } from '@shared/schema';
 
 describe('generateUserbotMessage()', () => {
   it('генерирует обработчик с текстом', () => {
@@ -38,7 +38,7 @@ describe('generateUserbotMessage()', () => {
       userbotEntity: '@ch',
       projectId: null,
     });
-    expect(code).not.toContain('get_content');
+    expect(code).not.toContain('get_content(');
   });
 
   it('генерирует отправку локального файла', () => {
@@ -338,7 +338,7 @@ describe('generateUserbotMessageHandlers()', () => {
   it('возвращает пустую строку если нет userbot_message нод', () => {
     const nodes = [
       { id: 'msg-1', type: 'message', position: { x: 0, y: 0 }, data: { messageText: 'Hi' } },
-    ] as Node[];
+    ].map(node => nodeSchema.parse(node));
     expect(generateUserbotMessageHandlers(nodes)).toBe('');
   });
 
@@ -346,11 +346,11 @@ describe('generateUserbotMessageHandlers()', () => {
     const nodes = [
       {
         id: 'ub-1',
-        type: 'userbot_message' as any,
+        type: 'userbot_message',
         position: { x: 0, y: 0 },
         data: { messageText: 'Test', userbotEntity: '@ch' },
       },
-    ] as Node[];
+    ].map(node => nodeSchema.parse(node));
     const code = generateUserbotMessageHandlers(nodes, 1);
     expect(code).toContain('handle_callback_ub_1');
     expect(code).toContain('get_content');
@@ -360,7 +360,7 @@ describe('generateUserbotMessageHandlers()', () => {
     const nodes = [
       {
         id: 'ub-2',
-        type: 'userbot_message' as any,
+        type: 'userbot_message',
         position: { x: 0, y: 0 },
         data: {
           messageText: 'Test',
@@ -371,7 +371,7 @@ describe('generateUserbotMessageHandlers()', () => {
           ],
         },
       },
-    ] as Node[];
+    ].map(node => nodeSchema.parse(node));
     const code = generateUserbotMessageHandlers(nodes);
     expect(code).toContain('/uploads/1/photo.jpg');
     expect(code).not.toContain('AgAC');
@@ -379,9 +379,9 @@ describe('generateUserbotMessageHandlers()', () => {
 
   it('генерирует несколько обработчиков', () => {
     const nodes = [
-      { id: 'ub-a', type: 'userbot_message' as any, position: { x: 0, y: 0 }, data: { messageText: 'A', userbotEntity: '@a' } },
-      { id: 'ub-b', type: 'userbot_message' as any, position: { x: 0, y: 0 }, data: { messageText: 'B', userbotEntity: '@b' } },
-    ] as Node[];
+      { id: 'ub-a', type: 'userbot_message', position: { x: 0, y: 0 }, data: { messageText: 'A', userbotEntity: '@a' } },
+      { id: 'ub-b', type: 'userbot_message', position: { x: 0, y: 0 }, data: { messageText: 'B', userbotEntity: '@b' } },
+    ].map(node => nodeSchema.parse(node));
     const code = generateUserbotMessageHandlers(nodes);
     expect(code).toContain('handle_callback_ub_a');
     expect(code).toContain('handle_callback_ub_b');

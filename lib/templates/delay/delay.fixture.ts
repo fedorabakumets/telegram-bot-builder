@@ -3,8 +3,6 @@
  * @module templates/delay/delay.fixture
  */
 
-import type { DelayEntry } from './delay.params';
-
 /** Пустой массив */
 export const validParamsEmpty = { delayEntries: [] };
 

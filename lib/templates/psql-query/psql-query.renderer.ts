@@ -16,16 +16,22 @@ export interface PsqlQueryRenderOptions {
   panelDsnDenied?: boolean;
 }
 
+/** Параметры до проверки формата результата схемой SQL-шаблона. */
+type CollectedPsqlQueryEntry = Omit<PsqlQueryTemplateParams, 'resultFormat'> & {
+  /** Исходный формат из общего поля SQL и таблиц. */
+  resultFormat: Node['data']['resultFormat'];
+};
+
 /**
  * Собирает параметры шаблона для всех узлов типа psql_query.
  * @param nodes - Массив узлов холста
  * @param options - Опции генерации (разрешён ли builtin, запрещён ли DATABASE_URL)
- * @returns Массив PsqlQueryTemplateParams для генерации кода
+ * @returns Собранные параметры до проверки формата результата
  */
 export function collectPsqlQueryEntries(
   nodes: Node[],
   options: PsqlQueryRenderOptions = {},
-): PsqlQueryTemplateParams[] {
+): CollectedPsqlQueryEntry[] {
   const builtinEnabled = options.builtinEnabled ?? true;
   const panelDsnDenied = options.panelDsnDenied ?? false;
   return nodes

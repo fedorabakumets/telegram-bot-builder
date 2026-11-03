@@ -17,7 +17,7 @@ import { MediaManager } from "./media-manager";
 import { MediaFileCard } from "./media-file-card";
 import { apiRequest } from "@/queryClient";
 import type { MediaFile } from "@shared/schema";
-import { validateThumbnailUrl, validateThumbnailFile } from "./use-thumbnail-validation";
+import { validateThumbnailUrl } from "./use-thumbnail-validation";
 import { useMediaFiles } from "../hooks/use-media";
 
 /** Пропсы компонента ThumbnailSelector */
@@ -64,8 +64,6 @@ export function ThumbnailSelector({
 
   /** URL для превью */
   const previewUrl = currentThumbnailUrl;
-  /** Показывать кнопку «Убрать» если есть обложка */
-  const hasThumbnail = !!currentThumbnailUrl;
 
   /**
    * Сбрасывает telegramFileId видео в БД, чтобы бот переотправил его через FSInputFile.

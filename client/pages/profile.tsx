@@ -42,12 +42,13 @@ export default function ProfilePage() {
     queryFn: () => apiRequest('GET', '/api/projects/list?archived=false'),
     enabled: Boolean(telegramUser),
   });
-  const ownedProjects = projects.filter((project) => project.ownerId === Number(telegramUser.id));
-  const memberProjects = projects.filter((project) => project.ownerId !== Number(telegramUser.id));
-
   if (!telegramUser) {
     return <div className="flex min-h-screen items-center justify-center"><Button onClick={handleTelegramLogin}>Войти через Telegram</Button></div>;
   }
+
+  const ownedProjects = projects.filter((project) => project.ownerId === Number(telegramUser.id));
+  const memberProjects = projects.filter((project) => project.ownerId !== Number(telegramUser.id));
+
 
   return (
     <div className="app-viewport flex min-h-screen bg-background">

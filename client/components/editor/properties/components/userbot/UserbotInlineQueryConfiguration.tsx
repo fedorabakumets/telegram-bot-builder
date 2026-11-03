@@ -32,7 +32,6 @@ interface UserbotInlineQueryConfigurationProps {
  */
 export function UserbotInlineQueryConfiguration({
   selectedNode,
-  allNodes,
   availableVariables,
   onNodeUpdate,
 }: UserbotInlineQueryConfigurationProps) {

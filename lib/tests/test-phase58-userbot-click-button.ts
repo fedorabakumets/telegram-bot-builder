@@ -12,6 +12,8 @@
 import fs from 'fs';
 import { execSync } from 'child_process';
 import { generatePythonCode } from '../bot-generator.ts';
+import { nodeSchema } from '@shared/schema';
+import { generateUserbotClickButtonHandlers } from '../templates/userbot-click-button/userbot-click-button.renderer';
 
 // ─── Утилиты ─────────────────────────────────────────────────────────────────
 
@@ -117,6 +119,14 @@ test('A01', 'userbot_click_button → генерируется handle_callback_'
   ok(code.includes('handle_callback_ucb1'), 'handle_callback_ucb1 должен быть в коде');
 });
 
+test('A01a', 'узел после проверки схемой использует последнее сообщение', () => {
+  const node = nodeSchema.parse(makeUserbotClickButtonNode('ub-schema'));
+  const code = generateUserbotClickButtonHandlers([node]);
+  ok(code.includes('handle_callback_ub_schema'), 'Обработчик не сгенерирован');
+  ok(code.includes('get_messages'), 'Поиск последнего сообщения не сгенерирован');
+  syntax(code, 'a01a');
+});
+
 test('A02', 'содержит userbot_client.get_messages', () => {
   const p = makeCleanProject([makeUserbotClickButtonNode('ucb1')]);
   const code = gen(p, 'a02');
@@ -166,7 +176,8 @@ test('A08', 'clickDelivery=await → msg.click с timeout 5с', () => {
     makeMessageNode('msg1'),
   ]);
   const code = gen(p, 'a08');
-  ok(code.includes('_msg.click(text=_click_val)'), 'await должен использовать msg.click');
+  ok(code.includes('_msg.click(data=_btn_click_data)'), 'await должен поддерживать callback_data найденной кнопки');
+  ok(code.includes('_msg.click(text=_btn_click_text)'), 'await должен поддерживать текст найденной кнопки');
   ok(code.includes('timeout=5.0'), 'таймаут Telethon click 5с');
   ok(
     code.includes('Telethon msg.click') || code.includes('[await]'),

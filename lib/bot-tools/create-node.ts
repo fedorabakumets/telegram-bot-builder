@@ -4,7 +4,8 @@
  */
 
 import { nanoid } from 'nanoid';
-import type { Node } from '@shared/schema';
+import type { Node, nodeSchema } from '@shared/schema';
+import type { z } from 'zod';
 import { isMcpAllowedNodeType } from './mcp-allowed-types.ts';
 import { getNodePresetData } from './node-presets.ts';
 import { applyMessageDefaults } from './needs-message-defaults.ts';
@@ -57,7 +58,7 @@ export function createNode(
   type: string,
   partialData?: Record<string, unknown>,
   options: CreateNodeOptions = {},
-): { node: Node; validation: ValidateProjectResult } {
+): { node: z.input<typeof nodeSchema>; validation: ValidateProjectResult } {
   if (!isMcpAllowedNodeType(type)) {
     return {
       node: { id: '', type: 'message', position: { x: 0, y: 0 }, data: {} },

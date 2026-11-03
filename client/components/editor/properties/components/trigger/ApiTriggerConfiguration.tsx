@@ -140,7 +140,8 @@ export function ApiTriggerConfiguration({
         selectedNode={selectedNode}
         getAllNodesFromAllSheets={getAllNodesFromAllSheets}
         formatNodeDisplay={formatNodeDisplay}
-        onUpdateNode={onUpdateNode}
+        autoTransitionTo={selectedNode.data.autoTransitionTo}
+        onNodeUpdate={onUpdateNode}
       />
     </div>
   );

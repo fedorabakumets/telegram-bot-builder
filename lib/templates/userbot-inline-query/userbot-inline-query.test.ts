@@ -6,7 +6,7 @@
 import { describe, it, expect } from 'vitest';
 import { generateUserbotInlineQuery, generateUserbotInlineQueryHandlers } from './userbot-inline-query.renderer';
 import { userbotInlineQueryParamsSchema } from './userbot-inline-query.schema';
-import type { Node } from '@shared/schema';
+import { nodeSchema } from '@shared/schema';
 
 describe('generateUserbotInlineQuery()', () => {
   it('генерирует обработчик с handle_callback_', () => {
@@ -132,15 +132,15 @@ describe('userbotInlineQueryParamsSchema', () => {
 
 describe('generateUserbotInlineQueryHandlers()', () => {
   it('возвращает пустую строку без userbot_inline_query нод', () => {
-    const nodes = [{ id: 'msg-1', type: 'message', position: { x: 0, y: 0 }, data: {} }] as Node[];
+    const nodes = [{ id: 'msg-1', type: 'message', position: { x: 0, y: 0 }, data: {} }].map(node => nodeSchema.parse(node));
     expect(generateUserbotInlineQueryHandlers(nodes)).toBe('');
   });
 
   it('генерирует код для userbot_inline_query нод', () => {
     const nodes = [{
-      id: 'ub-iq-1', type: 'userbot_inline_query' as any, position: { x: 0, y: 0 },
+      id: 'ub-iq-1', type: 'userbot_inline_query', position: { x: 0, y: 0 },
       data: { botUsername: '@bot', query: 'test' },
-    }] as Node[];
+    }].map(node => nodeSchema.parse(node));
     const code = generateUserbotInlineQueryHandlers(nodes, 1);
     expect(code).toContain('handle_callback_ub_iq_1');
     expect(code).toContain('get_content');
@@ -149,9 +149,9 @@ describe('generateUserbotInlineQueryHandlers()', () => {
 
   it('генерирует несколько обработчиков', () => {
     const nodes = [
-      { id: 'iq1', type: 'userbot_inline_query' as any, position: { x: 0, y: 0 }, data: { botUsername: '@a' } },
-      { id: 'iq2', type: 'userbot_inline_query' as any, position: { x: 0, y: 0 }, data: { botUsername: '@b' } },
-    ] as Node[];
+      { id: 'iq1', type: 'userbot_inline_query', position: { x: 0, y: 0 }, data: { botUsername: '@a' } },
+      { id: 'iq2', type: 'userbot_inline_query', position: { x: 0, y: 0 }, data: { botUsername: '@b' } },
+    ].map(node => nodeSchema.parse(node));
     const code = generateUserbotInlineQueryHandlers(nodes);
     expect(code).toContain('handle_callback_iq1');
     expect(code).toContain('handle_callback_iq2');

@@ -56,3 +56,14 @@ it('сохраняет настройки deep link, извлечения отв
   assert.equal(request.data.httpRequestResponseExtractTo, 'item');
   assert.equal(comment.data.commentColor, 'blue');
 });
+
+it('сохраняет расписание триггера после проверки схемы', () => {
+  const node = nodeSchema.parse({
+    id: 'schedule', type: 'schedule_trigger', position: { x: 0, y: 0 },
+    data: { rules: [{ mode: 'interval', intervalMinutes: 7 }], timezone: 'Europe/Moscow', runOnStart: true, enabled: false },
+  });
+  assert.deepEqual(node.data.rules, [{ mode: 'interval', intervalMinutes: 7 }]);
+  assert.equal(node.data.timezone, 'Europe/Moscow');
+  assert.equal(node.data.runOnStart, true);
+  assert.equal(node.data.enabled, false);
+});

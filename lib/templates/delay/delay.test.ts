@@ -4,8 +4,9 @@
  */
 
 import { describe, it, expect } from 'vitest';
+import { nodeSchema } from '@shared/schema';
 import { collectDelayEntries, generateDelayHandlers } from './delay.renderer';
-import { validParamsSingle, validParamsBackground, nodesWithDelay, nodesWithoutDelay } from './delay.fixture';
+import { nodesWithDelay, nodesWithoutDelay } from './delay.fixture';
 
 describe('generateDelayHandlers()', () => {
   it('пустые узлы → пустая строка', () => {
@@ -38,7 +39,7 @@ describe('generateDelayHandlers()', () => {
 
   it('поддерживает дробные секунды (float, не int)', () => {
     const r = generateDelayHandlers([
-      {
+      nodeSchema.parse({
         id: 'delay_frac',
         type: 'delay',
         position: { x: 0, y: 0 },
@@ -49,7 +50,7 @@ describe('generateDelayHandlers()', () => {
           autoTransitionTo: 'msg_1',
           enableAutoTransition: true,
         },
-      },
+      }),
     ]);
     expect(r).toContain('float(_delay_val)');
     expect(r).not.toMatch(/int\(float\(_delay_val\)\)/);

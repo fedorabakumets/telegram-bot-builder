@@ -512,7 +512,7 @@ export default function Editor() {
   }, [activeProject?.id]);
 
   // Загрузка пользователей для вкладки "Пользователи"
-  const { data: users = [] } = useQuery<UserBotData[]>({
+  useQuery<UserBotData[]>({
     queryKey: [`/api/projects/${activeProject?.id}/users`],
     enabled: !!activeProject?.id && currentTab === 'users',
     staleTime: 0,
@@ -570,8 +570,6 @@ export default function Editor() {
   const getCurrentContent = () => generatedCodeContent[selectedFormat] || '';
 
   const content = getCurrentContent();
-  const lines = content.split('\n');
-  const lineCount = lines.length;
 
   // Отображаемый контент (без обрезки)
   const displayContent = useMemo(() => {
@@ -879,7 +877,6 @@ export default function Editor() {
     jsonError,
     handleViewChange: handleViewChangeRaw,
     handleJsonChange: handleJsonChangeRaw,
-    handleApplyJson: handleApplyJsonView,
     handleApplyJsonInPlace,
     handleResetJson,
   } = useCanvasView({

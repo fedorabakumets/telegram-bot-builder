@@ -20,6 +20,8 @@
 import fs from 'fs';
 import { execSync } from 'child_process';
 import { generatePythonCode } from '../bot-generator.ts';
+import { nodeSchema } from '../../shared/schema.ts';
+import { collectPsqlQueryEntries, generatePsqlQueryHandlers } from '../templates/psql-query/psql-query.renderer.ts';
 
 // ─── Вспомогательные узлы ────────────────────────────────────────────────────
 
@@ -1446,6 +1448,15 @@ test('M08', 'флаг включён → своя переменная рядо�
 });
 
 // ─── Итоги ───────────────────────────────────────────────────────────────────
+test('N01', 'неподдерживаемый SQL-формат сохраняется при сборе и отклоняется перед генерацией', () => {
+  const node = nodeSchema.parse(makePsqlQueryNode('invalid_format', { resultFormat: 'count' }));
+  const [entry] = collectPsqlQueryEntries([node]);
+  ok(entry.resultFormat === 'count', 'Сбор не должен подменять исходный формат');
+  let rejected = false;
+  try { generatePsqlQueryHandlers([node]); } catch { rejected = true; }
+  ok(rejected, 'SQL-шаблон должен отклонять формат, доступный только для bot_table');
+});
+
 const passed = results.filter(r => r.passed).length;
 const failed = results.filter(r => !r.passed).length;
 console.log(`\n${'─'.repeat(64)}`);

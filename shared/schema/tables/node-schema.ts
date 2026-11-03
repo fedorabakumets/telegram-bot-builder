@@ -7,6 +7,7 @@ import { z } from "zod";
 import { assignmentSchema } from "./assignment-schema";
 import { buttonSchema } from "./button-schema";
 import { conditionBranchSchema } from "./condition-branch-schema";
+import { nodeUserbotFields } from "./node-userbot-fields";
 
 const forwardMessageTargetRecipientSchema = z.object({
   /** Уникальный ID получателя внутри узла */
@@ -74,6 +75,7 @@ export const nodeSchema = z.object({
   }),
   /** Данные узла */
   data: z.object({
+    ...nodeUserbotFields.shape,
     /** Текст команды, например "/start" или "/help" */
     /** @deprecated Legacy command text for `start`/`command` nodes. New projects should use `command_trigger`. */
     command: z.string().optional(),
@@ -87,6 +89,29 @@ export const nodeSchema = z.object({
     deepLinkVarName: z.string().optional(),
     /** Цвет заметки на холсте. */
     commentColor: z.enum(['yellow', 'blue', 'green', 'pink', 'gray']).optional(),
+    /** Правила расписания фонового триггера. */
+    rules: z.array(z.object({
+      /** Вид расписания. */
+      mode: z.enum(['interval', 'weekday', 'monthday', 'cron']),
+      /** Интервал между запусками в минутах. */
+      intervalMinutes: z.number().optional(),
+      /** Дни недели. */
+      days: z.array(z.string()).optional(),
+      /** Час запуска. */
+      hour: z.number().optional(),
+      /** Минута запуска. */
+      minute: z.number().optional(),
+      /** Дни месяца. */
+      monthDays: z.array(z.number()).optional(),
+      /** Выражение cron. */
+      cronExpression: z.string().optional(),
+    }).passthrough()).optional(),
+    /** Часовой пояс расписания. */
+    timezone: z.string().optional(),
+    /** Запускать расписание при старте бота. */
+    runOnStart: z.boolean().optional(),
+    /** Включено ли расписание. */
+    enabled: z.boolean().optional(),
     /** Описание команды для отображения в меню BotFather */
     description: z.string().optional(),
     /** Текст сообщения, отправляемого пользователю */

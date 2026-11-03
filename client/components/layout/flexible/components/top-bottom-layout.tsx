@@ -29,7 +29,7 @@ interface TopBottomLayoutProps {
  * @returns JSX элемент
  */
 export function TopBottomLayout(props: TopBottomLayoutProps): React.JSX.Element {
-  const { topContent, centerContent, bottomContent, topSize, isMobile } = props;
+  const { topContent, centerContent, bottomContent } = props;
 
   return (
     <div className="h-full flex flex-col">

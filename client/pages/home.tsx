@@ -1,3 +1,4 @@
+/** @fileoverview Главная страница управления проектами. */
 import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link, useLocation } from 'wouter';
@@ -9,7 +10,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Plus, Search, Grid2X2, List, SlidersHorizontal } from 'lucide-react';
+import { Plus, Search, Grid2X2, List, SlidersHorizontal, Bot } from 'lucide-react';
 import { ThemeToggle } from '@/components/editor/header/components/theme-toggle';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/queryClient';

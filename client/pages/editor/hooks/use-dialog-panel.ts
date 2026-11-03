@@ -6,6 +6,7 @@
 
 import { useState, useCallback } from 'react';
 import type { UserBotData } from '@shared/schema';
+import type { UserBotData as DialogUser } from '@/types/bot';
 import type { SimpleLayoutConfig } from '@/components/layout/simple-layout-customizer';
 
 /**
@@ -21,7 +22,7 @@ export interface UseDialogPanelOptions {
  */
 export interface UseDialogPanelResult {
   /** Выбранный пользователь для панели диалога */
-  selectedDialogUser: UserBotData | null;
+  selectedDialogUser: DialogUser | null;
   /** Выбранный пользователь для панели деталей */
   selectedUserDetails: UserBotData | null;
   /** Закрыть панель диалога */
@@ -29,7 +30,7 @@ export interface UseDialogPanelResult {
   /** Закрыть панель деталей пользователя */
   handleCloseUserDetailsPanel: () => void;
   /** Выбрать пользователя для диалога */
-  handleSelectDialogUser: (user: UserBotData) => void;
+  handleSelectDialogUser: (user: DialogUser) => void;
   /** Выбрать пользователя для деталей */
   handleSelectUserDetails: (user: UserBotData) => void;
   /** Открыть/закрыть панель диалога (toggle) */
@@ -45,7 +46,7 @@ export interface UseDialogPanelResult {
  */
 export function useDialogPanel({ setFlexibleLayoutConfig }: UseDialogPanelOptions): UseDialogPanelResult {
   /** Выбранный пользователь для панели диалога */
-  const [selectedDialogUser, setSelectedDialogUser] = useState<UserBotData | null>(null);
+  const [selectedDialogUser, setSelectedDialogUser] = useState<DialogUser | null>(null);
   /** Выбранный пользователь для панели деталей */
   const [selectedUserDetails, setSelectedUserDetails] = useState<UserBotData | null>(null);
 
@@ -74,7 +75,7 @@ export function useDialogPanel({ setFlexibleLayoutConfig }: UseDialogPanelOption
   }, [setFlexibleLayoutConfig]);
 
   /** Выбрать пользователя для панели диалога */
-  const handleSelectDialogUser = useCallback((user: UserBotData) => {
+  const handleSelectDialogUser = useCallback((user: DialogUser) => {
     setSelectedDialogUser(user);
     setFlexibleLayoutConfig(prev => ({
       ...prev,

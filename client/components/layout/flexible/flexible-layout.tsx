@@ -9,7 +9,7 @@ import React from 'react';
 import { useMediaQuery } from '@/components/editor/properties/hooks/use-media-query';
 import { FlexibleLayoutProps } from './types';
 import { useElementContent } from './hooks';
-import { getVisibleElements, getElementsByPosition, isUsersTabLayout } from './utils';
+import { getVisibleElements, getElementsByPosition } from './utils';
 import { EmptyState, SingleElementLayout, TopBottomLayout, SidePanelsLayout, CombinedLayout, CodeMobileLayout } from './components';
 
 /**

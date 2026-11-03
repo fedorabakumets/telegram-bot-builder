@@ -53,7 +53,6 @@ export function MultiMediaSelector({
   onThumbnailsChange,
   sendAsGifUrls = [],
   onSendAsGifUrlsChange,
-  onSwitchToFilesTab,
 }: MultiMediaSelectorProps) {
   // Проверяем, включена ли клавиатура (для определения скрытых файлов)
   const hasKeyboard = keyboardType === 'inline' || keyboardType === 'reply';
@@ -63,7 +62,7 @@ export function MultiMediaSelector({
 
   /** Маппинг URL → объект файла из БД для быстрого доступа к метаданным */
   const dbFileByUrl = useMemo(() => {
-    const map = new Map<string, typeof dbFiles[0]>();
+    const map = new Map<string, MediaFileWithTokens>();
     dbFiles?.forEach((f) => map.set(f.url, f));
     return map;
   }, [dbFiles]);

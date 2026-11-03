@@ -27,7 +27,8 @@ export type EditorTab =
   | 'tables'
   | 'files'
   | 'versions'
-  | 'agent';
+  | 'agent'
+  | 'terminal';
 
 /**
  * Тип предыдущей вкладки

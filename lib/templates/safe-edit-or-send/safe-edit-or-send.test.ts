@@ -119,8 +119,6 @@ describe('safe-edit-or-send.py.jinja2 шаблон', () => {
       });
 
       it('должен использовать ZodDefault для всех полей', () => {
-        const shape = safeEditOrSendParamsSchema.shape;
-
         // Проверяем что поля имеют значения по умолчанию
         const result1 = safeEditOrSendParamsSchema.safeParse({});
         assert.ok(result1.success);

@@ -60,12 +60,10 @@ export function MediaSelector({
   projectId,
   value,
   onChange,
-  fileType,
   placeholder = "Выберите файл или введите URL",
   label = "Медиафайл",
   nodeName = "node",
   nodeId,
-  onSwitchToFilesTab,
 }: MediaSelectorProps) {
   /**
    * Выбранный медиафайл (для карточки превью в текущей сессии)

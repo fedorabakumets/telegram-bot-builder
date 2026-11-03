@@ -6,7 +6,7 @@
 import { describe, it, expect } from 'vitest';
 import { generateUserbotClickButton, generateUserbotClickButtonHandlers } from './userbot-click-button.renderer';
 import { userbotClickButtonParamsSchema } from './userbot-click-button.schema';
-import type { Node } from '@shared/schema';
+import { nodeSchema } from '@shared/schema';
 
 describe('generateUserbotClickButton()', () => {
   it('генерирует обработчик с handle_callback_', () => {
@@ -104,7 +104,8 @@ describe('generateUserbotClickButton()', () => {
       clickMode: 'text',
       clickValue: 'Карта',
     });
-    expect(code).toContain('await asyncio.wait_for(_msg.click(text=_click_val), timeout=5.0)');
+    expect(code).toContain('await asyncio.wait_for(_msg.click(data=_btn_click_data), timeout=5.0)');
+    expect(code).toContain('await asyncio.wait_for(_msg.click(text=_btn_click_text), timeout=5.0)');
     expect(code).toContain('[await]');
     expect(code).not.toContain('await _dispatch_callback_click_ub_c15a()');
   });
@@ -159,15 +160,15 @@ describe('userbotClickButtonParamsSchema', () => {
 
 describe('generateUserbotClickButtonHandlers()', () => {
   it('возвращает пустую строку без userbot_click_button нод', () => {
-    const nodes = [{ id: 'msg-1', type: 'message', position: { x: 0, y: 0 }, data: {} }] as Node[];
+    const nodes = [{ id: 'msg-1', type: 'message', position: { x: 0, y: 0 }, data: {} }].map(node => nodeSchema.parse(node));
     expect(generateUserbotClickButtonHandlers(nodes)).toBe('');
   });
 
   it('генерирует код для userbot_click_button нод', () => {
     const nodes = [{
-      id: 'ub-c1', type: 'userbot_click_button' as any, position: { x: 0, y: 0 },
+      id: 'ub-c1', type: 'userbot_click_button', position: { x: 0, y: 0 },
       data: { userbotEntity: '@bot', messageId: '1', clickValue: 'Go' },
-    }] as Node[];
+    }].map(node => nodeSchema.parse(node));
     const code = generateUserbotClickButtonHandlers(nodes, 1);
     expect(code).toContain('handle_callback_ub_c1');
     expect(code).toContain('get_content');
@@ -175,9 +176,9 @@ describe('generateUserbotClickButtonHandlers()', () => {
 
   it('генерирует несколько обработчиков', () => {
     const nodes = [
-      { id: 'c1', type: 'userbot_click_button' as any, position: { x: 0, y: 0 }, data: { clickValue: 'A' } },
-      { id: 'c2', type: 'userbot_click_button' as any, position: { x: 0, y: 0 }, data: { clickValue: 'B' } },
-    ] as Node[];
+      { id: 'c1', type: 'userbot_click_button', position: { x: 0, y: 0 }, data: { clickValue: 'A' } },
+      { id: 'c2', type: 'userbot_click_button', position: { x: 0, y: 0 }, data: { clickValue: 'B' } },
+    ].map(node => nodeSchema.parse(node));
     const code = generateUserbotClickButtonHandlers(nodes);
     expect(code).toContain('handle_callback_c1');
     expect(code).toContain('handle_callback_c2');

@@ -32,7 +32,6 @@ interface UserbotClickButtonConfigurationProps {
  */
 export function UserbotClickButtonConfiguration({
   selectedNode,
-  allNodes,
   availableVariables,
   onNodeUpdate,
 }: UserbotClickButtonConfigurationProps) {
