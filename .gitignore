@@ -133,3 +133,8 @@ archive/
 
 # Private docs
 docs/bots/referral-funnel-analysis.md
+
+# Локальный импорт TorLink и его тестовые выгрузки
+tools/torlink-import/
+output/torlink-import/
+output/torlink-e2e/
