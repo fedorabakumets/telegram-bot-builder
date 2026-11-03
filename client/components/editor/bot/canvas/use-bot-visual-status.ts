@@ -65,8 +65,8 @@ export function useBotVisualStatus(
   const completed = previous.current;
   const awaitingConfirmation = completed && !commandError && !failure
     && isRunning !== (completed !== 'stopping') ? completed : null;
-  const status = resolveBotCanvasStatus({ isActive, isRunning,
+  const status = resolveBotCanvasStatus({ isActive, isRunning, frozen: server?.frozen,
     hasFailure: failure || (!isRunning && !!commandError),
     operation: operation ?? waiting ?? awaitingConfirmation });
-  return commandError && !operation && !waiting && status !== 'invalid' ? 'error' : status;
+  return commandError && !operation && !waiting && status !== 'invalid' && status !== 'frozen' ? 'error' : status;
 }

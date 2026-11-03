@@ -11,6 +11,7 @@ import { mapProjectBotStatusItems } from '../map-project-bot-status-items';
 import { resolveStoppedErrorMessage } from '../../../bots/resolveStoppedErrorMessage';
 import { isTokenPendingRestore } from '../../../bots/restoreState';
 import { isBotStarting } from '../../../bots/botStartState';
+import { isBotFrozen } from '../../../bots/frozenBotStatus';
 
 /**
  * Запрещает кэш ответа со статусами
@@ -69,7 +70,7 @@ export async function handleBotProjectStatuses(req: Request, res: Response): Pro
         instanceByTokenId,
         (tokenId) => liveByTokenId.get(tokenId) ?? 'stopped',
         (tokenId) => isTokenPendingRestore(tokenId),
-      ),
+      ).map((item) => ({ ...item, frozen: isBotFrozen(projectId, item.tokenId) })),
     });
   } catch (error) {
     console.error('[BotProjectStatuses] Ошибка:', error);

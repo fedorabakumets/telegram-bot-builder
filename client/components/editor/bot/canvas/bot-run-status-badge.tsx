@@ -19,7 +19,7 @@ interface BotRunStatusBadgeProps {
 export function BotRunStatusBadge({ status }: BotRunStatusBadgeProps): React.JSX.Element {
   const invalid = status === 'invalid';
   const online = status === 'online';
-  const failed = status === 'failed' || status === 'error';
+  const failed = status === 'failed' || status === 'error' || status === 'frozen';
   const starting = status === 'starting' || status === 'restarting';
   const stopping = status === 'stopping';
   const neutral = !online && !invalid && !failed && !starting && !stopping;
