@@ -6,7 +6,7 @@
  * @module UseDialogHandlers
  */
 
-import { useCallback, useState, useEffect } from 'react';
+import { useCallback, useState } from 'react';
 import type { UserBotData } from '@shared/schema';
 import type { SimpleLayoutConfig } from '@/components/layout/simple-layout-customizer';
 

@@ -11,8 +11,6 @@ import {
 import {
   validParamsEmpty,
   validParamsSingle,
-  validParamsText,
-  validParamsAffected,
   nodesWithPsqlQuery,
   nodesWithoutPsqlQuery,
   nodesWithNullAndMixed,

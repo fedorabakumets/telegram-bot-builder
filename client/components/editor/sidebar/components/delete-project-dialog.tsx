@@ -4,7 +4,7 @@
  * @module components/editor/sidebar/components/delete-project-dialog
  */
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Save, Trash2, X, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {

@@ -15,6 +15,8 @@
 import fs from 'fs';
 import { execSync } from 'child_process';
 import { generatePythonCode } from '../bot-generator.ts';
+import { nodeSchema } from '../../shared/schema.ts';
+import { collectSetVariableEntries } from '../templates/set-variable/set-variable.renderer.ts';
 
 function makeCleanProject(nodes: any[]) {
   return {
@@ -686,6 +688,13 @@ test('O05', 'array_concat → с другими modes синтаксис OK', ()
 });
 
 // ─── Итоги ───────────────────────────────────────────────────────────────────
+test('P01', 'сборщик сохраняет поддерживаемые режимы поиска, замены и JSON', () => {
+  const modes = ['lookup', 'str_replace', 'json_push', 'json_format'] as const;
+  const node = nodeSchema.parse(makeSV('sv_modes', modes.map(mode => ({ id: mode, variable: 'result', value: 'value', mode }))));
+  const [entry] = collectSetVariableEntries([node]);
+  ok(entry.assignments.map(assignment => assignment.mode).join(',') === modes.join(','), 'Режимы присваиваний потерялись');
+});
+
 const passed = results.filter(r => r.passed).length;
 const failed = results.filter(r => !r.passed).length;
 console.log(`\n${'─'.repeat(64)}`);

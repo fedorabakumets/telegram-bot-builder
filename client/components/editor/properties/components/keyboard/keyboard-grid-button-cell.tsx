@@ -111,7 +111,11 @@ export function KeyboardGridButtonCell({
     >
       {buttonId === DYNAMIC_BUTTONS_PLACEHOLDER_ID ? (
         <div className="space-y-1">
-          {buildDynamicButtonsPreviewItems(dynamicButtonsConfig).slice(0, 2).map((item, i) => (
+          {buildDynamicButtonsPreviewItems(
+            dynamicButtonsConfig && typeof dynamicButtonsConfig === 'object'
+              ? dynamicButtonsConfig as Parameters<typeof buildDynamicButtonsPreviewItems>[0]
+              : null,
+          ).slice(0, 2).map((item, i) => (
             <div
               key={i}
               className={cn(

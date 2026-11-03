@@ -140,7 +140,7 @@ export function KeyboardNodeProperties({
 
   const handleDuplicateButton = (nodeId: string, button: Button) => {
     if (button.action === 'pay') return;
-    const newButton = { ...button, id: generateButtonId(), action: button.action === 'pay' ? 'goto' : button.action };
+    const newButton = { ...button, id: generateButtonId() };
     const index = buttons.findIndex((b: Button) => b.id === button.id);
     const updated = [...buttons];
     updated.splice(index + 1, 0, newButton);

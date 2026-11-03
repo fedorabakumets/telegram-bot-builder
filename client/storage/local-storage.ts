@@ -1,3 +1,4 @@
+/** @fileoverview Локальное хранение проектов, токенов и шаблонов. */
 import type { 
   BotProject, 
   BotToken, 
@@ -38,6 +39,11 @@ type StoredTemplate = Omit<BotTemplate, 'createdAt' | 'updatedAt' | 'lastUsedAt'
 
 // Define partial versions for updates
 type PartialStoredProject = Partial<Pick<StoredProject, 'name' | 'description' | 'data' | 'botToken' | 'userDatabaseEnabled' | 'ownerId' | 'restartOnUpdate'>>;
+
+/** Преобразует дату записи в формат JSON, сохраняя отсутствие значения. */
+function serializeDate(value: Date | string | null | undefined): string | null | undefined {
+  return value instanceof Date ? value.toISOString() : value;
+}
 
 export class LocalStorageService {
   private static getNextId(key: string): number {
@@ -165,6 +171,9 @@ export class LocalStorageService {
       data: data.data,
       botToken: data.botToken || null,
       userDatabaseEnabled: data.userDatabaseEnabled ?? 1,
+      sortOrder: data.sortOrder ?? 0,
+      adminIds: data.adminIds ?? '',
+      sessionId: data.sessionId ?? null,
       createdAt: now,
       updatedAt: now,
     };
@@ -234,13 +243,30 @@ export class LocalStorageService {
       botDescription: data.botDescription || null,
       botShortDescription: data.botShortDescription || null,
       botPhotoUrl: data.botPhotoUrl || null,
-      botCanJoinGroups: data.botCanJoinGroups || null,
-      botCanReadAllGroupMessages: data.botCanReadAllGroupMessages || null,
-      botSupportsInlineQueries: data.botSupportsInlineQueries || null,
-      botHasMainWebApp: data.botHasMainWebApp || null,
+      botCanJoinGroups: data.botCanJoinGroups ?? null,
+      botCanReadAllGroupMessages: data.botCanReadAllGroupMessages ?? null,
+      botSupportsInlineQueries: data.botSupportsInlineQueries ?? null,
+      botHasMainWebApp: data.botHasMainWebApp ?? null,
       lastUsedAt: null,
       trackExecutionTime: data.trackExecutionTime ?? 0,
       totalExecutionSeconds: data.totalExecutionSeconds ?? 0,
+      autoRestart: data.autoRestart ?? 0,
+      maxRestartAttempts: data.maxRestartAttempts ?? 3,
+      logLevel: data.logLevel ?? 'DEBUG',
+      protectContent: data.protectContent ?? 0,
+      saveIncomingMedia: data.saveIncomingMedia ?? 0,
+      messagesRetentionDays: data.messagesRetentionDays ?? 0,
+      catchAllHandlers: data.catchAllHandlers ?? 1,
+      trackUserBlocks: data.trackUserBlocks ?? 1,
+      trackGroupMembership: data.trackGroupMembership ?? 1,
+      contentCache: data.contentCache ?? 0,
+      launchMode: data.launchMode ?? 'polling',
+      webhookBaseUrl: data.webhookBaseUrl ?? null,
+      webhookSecretToken: data.webhookSecretToken ?? null,
+      userbotEnabled: data.userbotEnabled ?? 0,
+      userbotApiId: data.userbotApiId ?? null,
+      userbotApiHash: data.userbotApiHash ?? null,
+      userbotSessionString: data.userbotSessionString ?? null,
       createdAt: now,
       updatedAt: now,
     };
@@ -259,6 +285,8 @@ export class LocalStorageService {
     const updated: StoredToken = {
       ...storedTokens[index],
       ...data,
+      createdAt: serializeDate(data.createdAt) ?? storedTokens[index].createdAt,
+      lastUsedAt: data.lastUsedAt === undefined ? storedTokens[index].lastUsedAt : serializeDate(data.lastUsedAt) ?? null,
       updatedAt: new Date().toISOString(),
     };
     
@@ -337,6 +365,8 @@ export class LocalStorageService {
     const updated: StoredTemplate = {
       ...storedTemplates[index],
       ...data,
+      createdAt: serializeDate(data.createdAt) ?? storedTemplates[index].createdAt,
+      lastUsedAt: data.lastUsedAt === undefined ? storedTemplates[index].lastUsedAt : serializeDate(data.lastUsedAt) ?? null,
       updatedAt: new Date().toISOString(),
     };
     

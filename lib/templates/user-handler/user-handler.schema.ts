@@ -8,7 +8,6 @@ import { z } from 'zod';
 export const userHandlerNodeTypeSchema = z.enum([
   'ban_user',
   'unban_user',
-  'kick_user',
   'mute_user',
   'unmute_user',
   'promote_user',

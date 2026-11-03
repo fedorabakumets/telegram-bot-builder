@@ -2,6 +2,7 @@
  * @fileoverview Панель свойств узлов редактора с нижней секцией linked-input для message.
  */
 
+import type { NodeDataPatch } from '../../types/node-data-patch';
 import { Node, Button } from '@shared/schema';
 import { getCommandSuggestions, STANDARD_COMMANDS } from '@lib/commands';
 import { useState, useMemo, useEffect, useRef } from 'react';
@@ -108,7 +109,7 @@ interface PropertiesPanelProps {
   /** Р’СЃРµ СѓР·Р»С‹ С‚РµРєСѓС‰РµРіРѕ Р»РёСЃС‚Р° */
   allNodes?: Node[] | undefined;
   /** Р¤СѓРЅРєС†РёСЏ РѕР±РЅРѕРІР»РµРЅРёСЏ РґР°РЅРЅС‹С… СѓР·Р»Р° */
-  onNodeUpdate: (nodeId: string, updates: Partial<Node['data']>) => void;
+  onNodeUpdate: (nodeId: string, updates: NodeDataPatch) => void;
   /** Полная замена node.data (JSON-режим панели свойств) */
   onNodeDataReplace: (nodeId: string, newData: Node['data']) => void;
   /** Р¤СѓРЅРєС†РёСЏ РёР·РјРµРЅРµРЅРёСЏ С‚РёРїР° СѓР·Р»Р° */

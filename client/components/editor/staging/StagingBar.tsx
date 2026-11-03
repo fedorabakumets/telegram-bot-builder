@@ -29,7 +29,7 @@ interface StagingBarProps extends UseStagingBarResult {
  */
 export function StagingBar(props: StagingBarProps) {
   const { isVisible, variant, changesCount, onSave, onSaveAndRestart, onDiscard, isSaving,
-    onApplyJson, onResetJson, jsonError, actionHistory, mode, hasLocalChanges, isDirty,
+    onResetJson, jsonError, actionHistory, mode, hasLocalChanges, isDirty,
     remoteSyncActor, onDismissRemoteSync, onSaveWithNote, autosave } = props;
 
   /** Открыто ли модальное окно деталей */

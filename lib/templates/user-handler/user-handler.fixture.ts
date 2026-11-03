@@ -30,22 +30,6 @@ export const fixtureUnbanUser: UserHandlerTemplateParams = {
   synonyms: ['разбан', 'разблокировать'],
 };
 
-export const fixtureKickUser: UserHandlerTemplateParams = {
-  nodeType: 'kick_user',
-  nodeId: 'kick_node_1',
-  safeName: 'kick_node_1',
-  synonyms: ['кик', 'исключить'],
-  reason: 'Нарушение правил',
-};
-
-export const fixtureKickUserTargetGroup: UserHandlerTemplateParams = {
-  nodeType: 'kick_user',
-  nodeId: 'kick_node_2',
-  safeName: 'kick_node_2',
-  synonyms: ['кик'],
-  targetGroupId: '-1001234567890',
-};
-
 export const fixtureMuteUser: UserHandlerTemplateParams = {
   nodeType: 'mute_user',
   nodeId: 'mute_node_1',

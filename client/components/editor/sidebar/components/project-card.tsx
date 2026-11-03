@@ -22,19 +22,12 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 import {
-  Box,
   Calendar,
   ChevronDown,
   ChevronRight,
   Copy,
   FileText,
-  GitBranch,
   GripVertical,
-  Image,
-  LayoutGrid,
-  MessageSquare,
-  Radio,
-  Save,
   Search,
   Share2,
   Trash2,
@@ -175,21 +168,6 @@ export interface ProjectCardProps {
   onUnarchiveProject?: (projectId: number) => void;
   /** Блокировка кнопок архива */
   isArchivePending?: boolean;
-}
-
-/**
- * Иконка для типа узла
- */
-function NodeTypeIcon({ type }: { type: string }) {
-  const cls = 'h-3 w-3 flex-shrink-0';
-  if (type === 'command_trigger' || type === 'text_trigger') return <Zap className={cls} />;
-  if (type === 'message') return <MessageSquare className={cls} />;
-  if (type === 'keyboard') return <LayoutGrid className={cls} />;
-  if (type === 'condition') return <GitBranch className={cls} />;
-  if (type === 'input') return <Save className={cls} />;
-  if (type === 'broadcast') return <Radio className={cls} />;
-  if (['media', 'photo', 'video', 'audio', 'document'].includes(type)) return <Image className={cls} />;
-  return <Box className={cls} />;
 }
 
 /**

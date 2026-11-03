@@ -12,6 +12,8 @@
 import fs from 'fs';
 import { execSync } from 'child_process';
 import { generatePythonCode } from '../bot-generator.ts';
+import { nodeSchema } from '../../shared/schema.ts';
+import { collectScheduleTriggerEntries } from '../templates/schedule-trigger/schedule-trigger.renderer.ts';
 
 function makeCleanProject(nodes: any[]) {
   return {
@@ -556,6 +558,12 @@ test('G08', 'schedule + command_trigger + loop + http → полный прое�
 // ════════════════════════════════════════════════════════════════════════════
 
 console.log('\n══════════════════════════════════════════════════════════════════');
+test('G01', 'отсутствующее расписание использует интервал пять минут', () => {
+  const node = nodeSchema.parse({ id: 'schedule_default', type: 'schedule_trigger', position: { x: 0, y: 0 }, data: { autoTransitionTo: 'message' } });
+  const [entry] = collectScheduleTriggerEntries([node]);
+  ok(entry.rules.length === 1 && entry.rules[0].mode === 'interval' && entry.rules[0].intervalMinutes === 5, 'Не применено расписание по умолчанию');
+});
+
 const passed = results.filter(r => r.passed).length;
 const failed = results.filter(r => !r.passed).length;
 console.log(`\n📊 Итого: ${passed} ✅ / ${failed} ❌ из ${results.length} тестов`);

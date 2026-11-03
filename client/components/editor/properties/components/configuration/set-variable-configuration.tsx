@@ -7,6 +7,7 @@
  * @module components/editor/properties/components/configuration/set-variable-configuration
  */
 
+import type { NodeDataPatch } from '../../types/node-data-patch';
 import { Node } from '@shared/schema';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,7 +23,7 @@ interface SetVariableConfigurationProps {
   /** Выбранный узел set_variable */
   selectedNode: Node;
   /** Функция обновления данных узла */
-  onNodeUpdate: (nodeId: string, updates: Partial<Node['data']>) => void;
+  onNodeUpdate: (nodeId: string, updates: NodeDataPatch) => void;
   /** Все узлы всех листов для выбора следующего узла */
   getAllNodesFromAllSheets: Array<{ node: Node; sheetName: string }>;
   /** Функция форматирования отображения узла */

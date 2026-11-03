@@ -45,7 +45,6 @@ export function useCodePanelHandlers(params: UseCodePanelHandlersParams): UseCod
   const {
     setCodePanelVisible,
     setCodeEditorVisible,
-    currentTab,
     setFlexibleLayoutConfig,
     codeEditorVisible,
   } = params;

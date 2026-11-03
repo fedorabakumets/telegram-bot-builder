@@ -5,7 +5,7 @@
  * Гости и новые пользователи видят пустой экран без проектов.
  */
 
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import type { BotProject } from '@shared/schema';
 import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
 import { apiRequest } from '@/queryClient';
@@ -42,7 +42,6 @@ export function useProjectLoader({
   projectId
 }: UseProjectLoaderOptions): UseProjectLoaderResult {
   const { sessionReady } = useTelegramAuth();
-  const queryClient = useQueryClient();
 
   // Загрузка проекта по ID из URL — ждём сессии
   const { data: currentProject, isError: projectNotFound } = useQuery<BotProjectWithArchive>({

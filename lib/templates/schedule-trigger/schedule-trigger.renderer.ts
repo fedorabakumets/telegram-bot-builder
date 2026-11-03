@@ -32,7 +32,7 @@ export function collectScheduleTriggerEntries(nodes: Node[]): ScheduleTriggerEnt
 
     const safeName = node.id.replace(/[^a-zA-Z0-9_]/g, '_');
 
-    const rules = Array.isArray(node.data.rules) ? node.data.rules : [{ mode: 'interval', intervalMinutes: 5 }];
+    const rules: ScheduleTriggerEntry['rules'] = Array.isArray(node.data.rules) ? node.data.rules : [{ mode: 'interval', intervalMinutes: 5 }];
     const timezone = node.data.timezone ?? 'Europe/Moscow';
     const runOnStart = node.data.runOnStart ?? false;
     const enabled = node.data.enabled ?? true;

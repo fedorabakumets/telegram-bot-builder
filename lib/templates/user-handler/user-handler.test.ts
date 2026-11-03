@@ -12,8 +12,6 @@ import {
   fixtureBanUser,
   fixtureBanUserTimed,
   fixtureUnbanUser,
-  fixtureKickUser,
-  fixtureKickUserTargetGroup,
   fixtureMuteUser,
   fixtureUnmuteUser,
   fixturePromoteUser,
@@ -79,26 +77,6 @@ describe('unban_user', () => {
   it('генерирует command handler /unban_user', () => {
     const r = generateUserHandler(fixtureUnbanUser);
     assert.ok(r.includes('Command("unban_user")'));
-  });
-});
-
-// ─── kick_user ───────────────────────────────────────────────────────────────
-
-describe('kick_user', () => {
-  it('ban + sleep + unban для кика', () => {
-    const r = generateUserHandler(fixtureKickUser);
-    assert.ok(r.includes('bot.ban_chat_member'));
-    assert.ok(r.includes('asyncio.sleep'));
-    assert.ok(r.includes('bot.unban_chat_member'));
-    assert.ok(r.includes('исключен из группы'));
-    assert.ok(r.includes('Нарушение правил'));
-  });
-
-  it('targetGroupId: фильтр по конкретной группе', () => {
-    const r = generateUserHandler(fixtureKickUserTargetGroup);
-    assert.ok(r.includes('-1001234567890'));
-    assert.ok(r.includes('str(message.chat.id)'));
-    assert.ok(!r.includes("message.chat.type in ['group', 'supergroup']"));
   });
 });
 
@@ -232,7 +210,7 @@ describe('userHandlerParamsSchema', () => {
   });
 
   it('принимает все типы узлов', () => {
-    for (const f of [fixtureBanUser, fixtureUnbanUser, fixtureKickUser,
+    for (const f of [fixtureBanUser, fixtureUnbanUser,
                      fixtureMuteUser, fixtureUnmuteUser, fixturePromoteUser, fixtureDemoteUser]) {
       assert.ok(userHandlerParamsSchema.safeParse(f).success, `Провал для ${f.nodeType}`);
     }
@@ -240,6 +218,10 @@ describe('userHandlerParamsSchema', () => {
 
   it('отклоняет неправильный nodeType', () => {
     assert.ok(!userHandlerParamsSchema.safeParse({ ...fixtureBanUser, nodeType: 'admin_rights' }).success);
+  });
+
+  it('не принимает kick_user, который обрабатывается отдельным шаблоном', () => {
+    assert.ok(!userHandlerParamsSchema.safeParse({ ...fixtureBanUser, nodeType: 'kick_user' }).success);
   });
 
   it('отклоняет пустой массив synonyms', () => {
