@@ -4,8 +4,7 @@
  */
 
 import type { Node } from '@shared/schema';
-import type { DelayEntry, DelayTemplateParams } from './delay.params';
-import { delayParamsSchema } from './delay.schema';
+import type { DelayEntry } from './delay.params';
 import { renderPartialTemplate } from '../template-renderer';
 
 /**

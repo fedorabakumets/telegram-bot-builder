@@ -3,7 +3,6 @@
  * @module templates/send-invoice/send-invoice.params
  */
 
-import type { InvoiceCurrencyCode } from '@shared/invoice-currencies';
 import type { InvoicePriceLine } from './invoice-prices-utils';
 
 export type { InvoiceCurrencyCode } from '@shared/invoice-currencies';

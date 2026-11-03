@@ -200,10 +200,11 @@ test('C04', 'background → НЕ содержит прямой await handle_call
 
 console.log('── Блок D: Единицы времени ───────────────────────────────────────');
 
-test('D01', 'unit=seconds → множитель отсутствует (int(float(_delay_val)))', () => {
+test('D01', 'unit=seconds → дробные секунды сохраняются без множителя', () => {
   const p = makeCleanProject([makeDelayNode('delay1', { unit: 'seconds', autoTransitionTo: 'msg1' }), makeMessageNode('msg1')]);
   const code = gen(p, 'D01');
-  ok(code.includes('int(float(_delay_val))'), 'int(float(_delay_val)) должен быть для seconds');
+  ok(code.includes('float(_delay_val)'), 'float(_delay_val) должен быть для seconds');
+  ok(!code.includes('int(float(_delay_val))'), 'дробные секунды не должны округляться');
 });
 
 test('D02', 'unit=minutes → множитель * 60', () => {

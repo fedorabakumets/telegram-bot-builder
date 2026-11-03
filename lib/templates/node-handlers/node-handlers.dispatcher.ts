@@ -35,7 +35,7 @@ import { generateMemberTriggerHandlers } from '../member-trigger/member-trigger.
 import { generateScheduleTriggerHandlers } from '../schedule-trigger/schedule-trigger.renderer';
 import { generateApiTriggerHandlers } from '../api-trigger/api-trigger.renderer';
 import { generateApiResponseHandlers } from '../api-response/api-response.renderer';
-import { generateAnswerCallbackQuery, generateAnswerCallbackQueryHandlers } from '../answer-callback-query/answer-callback-query.renderer';
+import { generateAnswerCallbackQueryHandlers } from '../answer-callback-query/answer-callback-query.renderer';
 import { generateEditMessageHandlers } from '../edit-message';
 import { generateDeleteMessageHandlers } from '../delete-message';
 import { generateKickUserHandlers } from '../kick-user/kick-user.renderer';
@@ -133,10 +133,9 @@ function getSafeAutoTransitionParams(node: Node, nodes: Node[]): {
  * При вызове обновляет inline-кнопки текущего сообщения (editMessageReplyMarkup).
  *
  * @param node - Узел keyboard
- * @param nodes - Все узлы проекта (для resolving targets)
  * @returns Python-код обработчика keyboard-ноды
  */
-function generateKeyboardHandler(node: Node, nodes?: Node[]): string {
+function generateKeyboardHandler(node: Node): string {
   const safeName = node.id.replace(/[^a-zA-Z0-9_]/g, '_');
   const buttons: any[] = node.data?.buttons || [];
 
@@ -378,7 +377,7 @@ export function generateNodeHandlers(
     demote_user: generateUserHandlerFromNode,
     admin_rights: generateAdminRightsFromNode,
     broadcast: (node) => generateBroadcastHandler(node, nodes, botRuntimeRole),
-    keyboard: (node) => generateKeyboardHandler(node, nodes),
+    keyboard: (node) => generateKeyboardHandler(node),
     input: generateUserInputNodeHandler,
     get_managed_bot_token: (node) => {
       const entry = {

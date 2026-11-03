@@ -258,7 +258,7 @@ test('A01', 'message с legacy inline-клавиатурой генерируе�
     'InlineKeyboardBuilder()',
     'InlineKeyboardButton',
     'callback_data="msg_2"',
-    'url="https://example.com"',
+    'url=replace_variables_in_text("https://example.com", all_user_vars',
   ], 'A01');
   syntax(code, 'a01');
 });
@@ -578,7 +578,7 @@ test('C01', 'inline-клавиатура использует InlineKeyboardButt
 
   const code = gen(project, 'c01');
   const msg = block(code, 'msg_1');
-  assertIncludesAll(msg, ['InlineKeyboardButton', 'callback_data="msg_2"', 'url="https://example.com"'], 'C01');
+  assertIncludesAll(msg, ['InlineKeyboardButton', 'callback_data="msg_2"', 'url=replace_variables_in_text("https://example.com", all_user_vars'], 'C01');
   syntax(code, 'c01');
 });
 
@@ -630,7 +630,7 @@ test('C04', 'action=url, action=contact и action=location сохраняютс�
 
   const code = gen(project, 'c04');
   const msg = block(code, 'msg_1');
-  assertIncludesAll(msg, ['url="https://example.org"', 'callback_data="cmd_help"', 'callback_data="msg_2"'], 'C04');
+  assertIncludesAll(msg, ['url=replace_variables_in_text("https://example.org", all_user_vars', 'callback_data="cmd_help"', 'callback_data="msg_2"'], 'C04');
   syntax(code, 'c04');
 });
 
@@ -1661,7 +1661,7 @@ test('L01', 'web_app кнопка генерирует WebAppInfo с URL', () =>
   const code = gen(project, 'l01');
   const msg1 = block(code, 'msg_1');
 
-  assertIncludesAll(msg1, ['WebAppInfo(url="https://example.com")'], 'L01: должен генерировать WebAppInfo с URL');
+  assertIncludesAll(msg1, ['WebAppInfo(url=replace_variables_in_text("https://example.com", all_user_vars'], 'L01: должен генерировать WebAppInfo с URL');
   syntax(code, 'l01');
 });
 
