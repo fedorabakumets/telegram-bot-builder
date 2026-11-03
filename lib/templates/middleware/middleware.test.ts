@@ -9,7 +9,6 @@ import {
   validParamsEnabled,
   validParamsDisabled,
   validParamsNoAutoRegister,
-  validParamsDbOnly,
   invalidParamsWrongType,
 } from './middleware.fixture';
 import { middlewareParamsSchema } from './middleware.schema';

@@ -6,7 +6,7 @@
 import { Label } from '@/components/ui/label';
 import { PropertyCheckbox } from '../common/property-checkbox';
 import { VariableNameInput } from '../variables/variable-name-input';
-import { isStaticStarsCurrency, normalizeInvoiceCurrency } from './invoice-currency-utils';
+import { isStaticStarsCurrency } from './invoice-currency-utils';
 import type { Variable } from '../../../inline-rich/types';
 
 /** Пропсы блока order_info */

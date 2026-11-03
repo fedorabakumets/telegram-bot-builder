@@ -42,7 +42,6 @@ export function MobileMenu({
   isLoading,
   onLogout,
   onLogin,
-  contentClassName,
 }: MobileMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
 

@@ -51,7 +51,6 @@ export function DatabaseHeaderSection(props: DatabaseHeaderSectionProps): React.
     availableTokens,
     onSelectToken,
     isDatabaseEnabled,
-    toggleDatabaseMutation,
     handleRefresh,
     deleteAllUsersMutation,
     allProjects,

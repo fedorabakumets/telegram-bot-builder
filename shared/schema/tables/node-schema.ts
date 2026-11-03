@@ -77,6 +77,16 @@ export const nodeSchema = z.object({
     /** Текст команды, например "/start" или "/help" */
     /** @deprecated Legacy command text for `start`/`command` nodes. New projects should use `command_trigger`. */
     command: z.string().optional(),
+    /** Значение параметра deep link для триггера команды. */
+    deepLinkParam: z.string().optional(),
+    /** Режим сопоставления параметра deep link. */
+    deepLinkMatchMode: z.enum(['exact', 'startsWith']).optional(),
+    /** Сохранять ли параметр deep link в переменную. */
+    deepLinkSaveToVar: z.boolean().optional(),
+    /** Имя переменной для параметра deep link. */
+    deepLinkVarName: z.string().optional(),
+    /** Цвет заметки на холсте. */
+    commentColor: z.enum(['yellow', 'blue', 'green', 'pink', 'gray']).optional(),
     /** Описание команды для отображения в меню BotFather */
     description: z.string().optional(),
     /** Текст сообщения, отправляемого пользователю */
@@ -750,6 +760,10 @@ export const nodeSchema = z.object({
     httpRequestTimeout: z.number().default(30).optional(),
     /** Имя переменной для сохранения ответа */
     httpRequestResponseVariable: z.string().optional(),
+    /** Путь к извлекаемому значению в JSON-ответе. */
+    httpRequestResponseJsonPath: z.string().optional(),
+    /** Переменная для извлечённого значения ответа. */
+    httpRequestResponseExtractTo: z.string().optional(),
     /** Имя переменной для сохранения HTTP статус кода */
     httpRequestStatusVariable: z.string().optional(),
     /** Источник bot_id для get_managed_bot_token */

@@ -32,8 +32,7 @@ export interface VariablesMenuProps {
  */
 export function VariablesMenu({
   availableVariables,
-  insertVariable,
-  applyFilterToVariable
+  insertVariable
 }: VariablesMenuProps) {
   if (availableVariables.length === 0) return null;
 

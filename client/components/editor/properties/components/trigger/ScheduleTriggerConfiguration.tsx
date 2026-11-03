@@ -5,7 +5,6 @@
 
 import type { Node } from '@shared/schema';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import { TriggerTargetSelector } from './TriggerTargetSelector';
 import { formatNodeDisplay as defaultFormatNodeDisplay } from '../../utils/node-formatters';
 import { ScheduleRuleEditor } from './schedule-trigger/ScheduleRuleEditor';

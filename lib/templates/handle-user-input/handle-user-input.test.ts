@@ -233,7 +233,7 @@ describe('generateHandleUserInput()', () => {
     it('переходит к dedicated input-узлу после текстового ответа через fake_callback', () => {
       const r = generateHandleUserInput({
         nodes: [
-          { id: 'input_1', safeName: 'input_1', type: 'input', data: { inputType: 'text' } },
+          { id: 'input_1', safeName: 'input_1', type: 'input', data: {} },
         ],
       });
 

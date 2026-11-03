@@ -6,11 +6,9 @@
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { DatabaseContentProps } from './database-content-props';
 import { DatabaseHeaderSection } from './database-header-section';
-import { DatabaseStatsSection } from './database-stats-section';
 import { DatabaseFiltersSection } from './database-filters-section';
 import { DatabaseTabs } from './database-tabs';
 import { DatabaseDisabled } from '../components/header';
-import { SaveMediaToggle } from '../components/SaveMediaToggle';
 
 /**
  * Компонент контента панели базы данных

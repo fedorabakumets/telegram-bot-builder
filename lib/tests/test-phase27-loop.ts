@@ -13,6 +13,8 @@
 import fs from 'fs';
 import { execSync } from 'child_process';
 import { generatePythonCode } from '../bot-generator.ts';
+import { collectLoopEntries } from '../templates/loop/loop.renderer.ts';
+import type { Node } from '@shared/schema';
 
 // ─── Вспомогательные узлы ────────────────────────────────────────────────────
 
@@ -483,7 +485,7 @@ test('C05', 'Синтаксис OK с afterLoopTo', () => {
 
 console.log('\n── Блок D: Параллельное выполнение ──────────────────────────────');
 
-test('D01', 'parallel: true → asyncio.gather( присутствует', () => {
+test('D01', 'parallel: true → _asyncio_loop.gather присутствует', () => {
   const msgBody = makeMessageNode('msg-body', 'Элемент');
   const p = makeCleanProject([makeStartNode(), makeLoopNode('loop1', {
     parallel: true,
@@ -493,11 +495,11 @@ test('D01', 'parallel: true → asyncio.gather( присутствует', () =>
   const fnIdx = code.indexOf('async def handle_callback_loop1(');
   ok(fnIdx !== -1, 'handle_callback_loop1 не найден');
   const fnBody = code.slice(fnIdx, fnIdx + 4000);
-  ok(fnBody.includes('asyncio.gather('),
-    'asyncio.gather( не найдено при parallel=true');
+  ok(fnBody.includes('_asyncio_loop.gather('),
+    '_asyncio_loop.gather( не найдено при parallel=true');
 });
 
-test('D02', 'parallel: false → asyncio.gather( ОТСУТСТВУЕТ', () => {
+test('D02', 'parallel: false → _asyncio_loop.gather отсутствует', () => {
   const msgBody = makeMessageNode('msg-body', 'Элемент');
   const p = makeCleanProject([makeStartNode(), makeLoopNode('loop1', {
     parallel: false,
@@ -508,8 +510,8 @@ test('D02', 'parallel: false → asyncio.gather( ОТСУТСТВУЕТ', () => 
   ok(fnIdx !== -1, 'handle_callback_loop1 не найден');
   const nextFnIdx = code.indexOf('\nasync def ', fnIdx + 1);
   const fnBody = code.slice(fnIdx, nextFnIdx !== -1 ? nextFnIdx : fnIdx + 4000);
-  ok(!fnBody.includes('asyncio.gather('),
-    'asyncio.gather( найдено при parallel=false — не должно быть');
+  ok(!fnBody.includes('_asyncio_loop.gather('),
+    '_asyncio_loop.gather( найдено при parallel=false — не должно быть');
 });
 
 test('D03', 'parallel: true → async def _loop_iteration( присутствует', () => {
@@ -651,6 +653,13 @@ test('F03', 'loop не генерирует дублирующий обрабо�
   const code = gen(p, 'F03');
   const count = (code.match(/async def handle_callback_loop1\(/g) || []).length;
   ok(count === 1, `handle_callback_loop1 встречается ${count} раз — ожидается ровно 1`);
+});
+
+test('F04', 'loop пропускает пустые записи и находит цель среди остальных узлов', () => {
+  const loop = makeLoopNode('loop_null', { autoTransitionTo: 'body_null' }) as unknown as Node;
+  const body = makeMessageNode('body_null') as unknown as Node;
+  const [entry] = collectLoopEntries([null, loop, undefined, body]);
+  ok(entry?.autoTransitionTargetExists === true, 'Цель цикла должна быть найдена');
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════

@@ -13,7 +13,7 @@
 Генерирует Python middleware для Telegram бота. Включает:
 - `register_user_middleware` — автоматическая инициализация `user_data` при первом обращении пользователя
 - `message_logging_middleware` — логирование входящих сообщений (только при БД)
-- `callback_query_logging_middleware` — логирование нажатий кнопок (только при БД + inline кнопки)
+- `callback_query_logging_middleware` — учёт настоящих callback-событий при включённой БД, независимо от наличия inline-кнопок в текущем сценарии
 
 ## Параметры
 
@@ -95,8 +95,8 @@ dp.message.middleware(register_user_middleware)
 dp.message.middleware(message_logging_middleware)
 dp.message.outer_middleware(BotOutgoingLoggingMiddleware())
 
-# Только при userDatabaseEnabled=true + hasInlineButtons=true
-dp.callback_query.middleware(callback_query_logging_middleware)
+# Только при userDatabaseEnabled=true; внешний middleware видит и необработанные callback
+dp.callback_query.outer_middleware(callback_query_logging_middleware)
 ```
 
 ## Тесты

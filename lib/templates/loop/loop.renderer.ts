@@ -21,9 +21,10 @@ function safeName(nodeId: string): string {
  * @param nodes - Массив всех узлов проекта
  * @returns Массив параметров для генерации кода
  */
-export function collectLoopEntries(nodes: Node[]): LoopEntry[] {
-  const allIds = new Set(nodes.map(n => n.id));
-  return nodes
+export function collectLoopEntries(nodes: Array<Node | null | undefined>): LoopEntry[] {
+  const validNodes = nodes.filter((node): node is Node => node != null);
+  const allIds = new Set(validNodes.map(n => n.id));
+  return validNodes
     .filter(n => (n.type as string) === 'loop')
     .map(node => {
       const data = node.data as any;
@@ -54,7 +55,7 @@ export function collectLoopEntries(nodes: Node[]): LoopEntry[] {
  * @param nodes - Массив всех узлов проекта
  * @returns Сгенерированный Python-код или пустая строка
  */
-export function generateLoopHandlers(nodes: Node[]): string {
+export function generateLoopHandlers(nodes: Array<Node | null | undefined>): string {
   const entries = collectLoopEntries(nodes);
   if (entries.length === 0) return '';
   return entries

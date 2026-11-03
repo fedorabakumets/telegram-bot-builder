@@ -9,7 +9,6 @@ import {
   generateLoopHandlers,
 } from './loop.renderer';
 import {
-  validParamsEmpty,
   validParamsSingle,
   validParamsParallel,
   nodesWithLoop,
@@ -55,7 +54,7 @@ describe('generateLoopHandlers()', () => {
     expect(r).toContain('logging.warning');
   });
 
-  it('содержит asyncio.gather (для parallel)', () => {
+  it('содержит _asyncio_loop.gather (для parallel)', () => {
     const parallelNodes = [
       makeNode('loop_p', 'loop', {
         sourceVariable: 'tasks',
@@ -70,7 +69,7 @@ describe('generateLoopHandlers()', () => {
       makeNode('body_p', 'message', { messageText: 'Задача' }),
     ];
     const r = generateLoopHandlers(parallelNodes);
-    expect(r).toContain('asyncio.gather');
+    expect(r).toContain('await _asyncio_loop.gather(*_tasks)');
   });
 });
 

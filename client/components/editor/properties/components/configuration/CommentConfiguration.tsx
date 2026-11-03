@@ -10,11 +10,11 @@ interface CommentConfigurationProps {
   /** Выбранный узел */
   selectedNode: Node;
   /** Колбэк обновления данных узла */
-  onNodeUpdate: (nodeId: string, updates: Partial<Node>) => void;
+  onNodeUpdate: (nodeId: string, updates: Partial<Node['data']>) => void;
 }
 
 /** Доступные цвета заметки: значение и визуальный класс кружка */
-const COMMENT_COLORS: Array<{ value: string; label: string; swatch: string }> = [
+const COMMENT_COLORS: Array<{ value: 'yellow' | 'blue' | 'green' | 'pink' | 'gray'; label: string; swatch: string }> = [
   { value: 'yellow', label: 'Жёлтый', swatch: 'bg-yellow-400' },
   { value: 'blue', label: 'Синий', swatch: 'bg-blue-400' },
   { value: 'green', label: 'Зелёный', swatch: 'bg-green-400' },
@@ -38,7 +38,7 @@ export function CommentConfiguration({ selectedNode, onNodeUpdate }: CommentConf
   };
 
   /** Обработчик выбора цвета */
-  const handleColorChange = (value: string) => {
+  const handleColorChange = (value: typeof COMMENT_COLORS[number]['value']) => {
     onNodeUpdate(selectedNode.id, { commentColor: value });
   };
 

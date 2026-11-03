@@ -11,7 +11,6 @@ import { VariableNameInput } from '../variables/variable-name-input';
 import { InvoicePhotoField } from './invoice-photo-field';
 import {
   InvoiceCurrencyProviderFields,
-  normalizeInvoiceCurrency,
 } from './invoice-currency-provider-fields';
 import { isStaticStarsCurrency } from './invoice-currency-utils';
 import { InvoiceOrderInfoFields } from './invoice-order-info-fields';
@@ -59,7 +58,6 @@ export function SendInvoiceConfiguration({
 }: SendInvoiceConfigurationProps) {
   const data = selectedNode.data as any;
   const rawCurrency = String(data?.invoiceCurrency ?? 'XTR').trim() || 'XTR';
-  const currency = rawCurrency.includes('{') ? rawCurrency : normalizeInvoiceCurrency(rawCurrency);
   const isStars = isStaticStarsCurrency(rawCurrency);
   const autoTransitionTo: string = data?.autoTransitionTo || '';
   const availableTargets = getAllNodesFromAllSheets.filter(

@@ -3,7 +3,7 @@
  * @module components/editor/properties/components/keyboard/keyboard-layout-editor
  */
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Button } from '@lib/bot-generator';
 import { KeyboardLayout } from '../../types/keyboard-layout';
 import { useKeyboardLayout } from '../../hooks/useKeyboardLayout';

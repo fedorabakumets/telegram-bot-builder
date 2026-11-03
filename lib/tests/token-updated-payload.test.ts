@@ -41,7 +41,7 @@ function testNoSecretsInPayload(): void {
     webhookSecretToken: 'whsec',
     userbotApiHash: 'hash',
     userbotSessionString: 'sess',
-  } as typeof base & Record<string, string>;
+  };
   const payload = toTokenUpdatedPayload(dirty);
   const json = JSON.stringify(payload);
   assert.equal(payload.messagesRetentionDays, 7);

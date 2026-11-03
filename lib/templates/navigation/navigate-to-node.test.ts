@@ -6,7 +6,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { generateNavigateToNode, generateNavigateToNodeCall, generateNavigateToNodeWithText } from './navigate-to-node.renderer';
-import { validParamsEmpty } from './navigate-to-node.fixture';
 import { navigateToNodeParamsSchema } from './navigate-to-node.schema';
 
 describe('generateNavigateToNode()', () => {

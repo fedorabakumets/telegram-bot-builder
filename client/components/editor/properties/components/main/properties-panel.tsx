@@ -29,7 +29,6 @@ import { IncomingCallbackTriggerConfiguration } from '../trigger/IncomingCallbac
 import { OutgoingMessageTriggerConfiguration } from '../trigger/OutgoingMessageTriggerConfiguration';
 import { ManagedBotUpdatedTriggerConfiguration } from '../trigger/ManagedBotUpdatedTriggerConfiguration';
 import { SuccessfulPaymentTriggerConfiguration } from '../trigger/SuccessfulPaymentTriggerConfiguration';
-import { MemberTriggerConfiguration } from '../trigger/MemberTriggerConfiguration';
 import { ScheduleTriggerConfiguration } from '../trigger/ScheduleTriggerConfiguration';
 import { ApiTriggerConfiguration } from '../trigger/ApiTriggerConfiguration';
 import { ConditionNodeConfiguration } from '../condition/ConditionNodeConfiguration';

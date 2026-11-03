@@ -140,9 +140,10 @@ test('A02', 'userDatabaseEnabled: true + inline → ЕСТЬ callback_query_logg
   ok(code.includes('callback_query_logging_middleware'), 'callback_query_logging_middleware должен быть в коде');
 });
 
-test('A03', 'userDatabaseEnabled: true без inline → НЕТ callback_query_logging_middleware', () => {
+test('A03', 'userDatabaseEnabled: true без inline → callback учитывается для аналитики', () => {
   const code = genDB(makeSimpleProject(), 'a03');
-  ok(!code.includes('callback_query_logging_middleware'), 'callback_query_logging_middleware НЕ должен быть в коде без inline');
+  ok(code.includes('async def callback_query_logging_middleware'), 'Обработчик аналитики callback должен быть в коде');
+  ok(code.includes('_analytics_classify_callback(event)'), 'Должны учитываться только настоящие callback');
 });
 
 test('A04', 'userDatabaseEnabled: false → НЕТ message_logging_middleware', () => {
@@ -444,16 +445,16 @@ test('F01', 'userDatabaseEnabled: true → ЕСТЬ dp.message.middleware(messag
   ok(code.includes('dp.message.middleware(message_logging_middleware)'), 'dp.message.middleware(message_logging_middleware) должен быть');
 });
 
-test('F02', 'userDatabaseEnabled: true + inline → ЕСТЬ dp.callback_query.middleware(callback_query_logging_middleware)', () => {
+test('F02', 'userDatabaseEnabled: true + inline → callback учитывается внешним middleware', () => {
   const code = genDB(makeInlineProject(), 'f02');
-  ok(code.includes('dp.callback_query.middleware(callback_query_logging_middleware)'), 'dp.callback_query.middleware должен быть');
+  ok(code.includes('dp.callback_query.outer_middleware(callback_query_logging_middleware)'), 'Внешний middleware callback должен быть зарегистрирован');
 });
 
-test('F03', 'userDatabaseEnabled: true без inline → НЕТ callback_query_logging middleware', () => {
+test('F03', 'userDatabaseEnabled: true без inline → callback учитывается внешним middleware', () => {
   const code = genDB(makeSimpleProject(), 'f03');
   ok(
-    !code.includes('dp.callback_query.middleware(callback_query_logging_middleware)'),
-    'callback_query_logging_middleware НЕ должен регистрироваться без inline'
+    code.includes('dp.callback_query.outer_middleware(callback_query_logging_middleware)'),
+    'Внешний middleware callback должен регистрироваться и без inline-нод'
   );
 });
 
@@ -691,9 +692,9 @@ test('J05', 'command + inline-кнопки + DB → синтаксис OK', () =
   syntax(genDB(p, 'j05'), 'j05');
 });
 
-test('J06', 'start + reply-кнопки + DB → НЕТ callback_query_logging_middleware', () => {
+test('J06', 'start + reply-кнопки + DB → callback учитывается для аналитики', () => {
   const code = genDB(makeReplyProject(), 'j06');
-  ok(!code.includes('callback_query_logging_middleware'), 'callback_query_logging_middleware НЕ должен быть для reply-кнопок');
+  ok(code.includes('dp.callback_query.outer_middleware(callback_query_logging_middleware)'), 'Внешний middleware callback должен быть зарегистрирован');
 });
 
 test('J07', 'start + reply-кнопки + DB → синтаксис OK', () => {
@@ -973,7 +974,7 @@ test('K09', 'message + отдельная inline keyboard-нода + DB → call
   ok(code.includes('InlineKeyboardBuilder'), 'InlineKeyboardBuilder должен быть');
 });
 
-test('K10', 'message + отдельная reply keyboard-нода + DB → callback_query_logging_middleware не нужен, синтаксис OK', () => {
+test('K10', 'message + reply keyboard-нода + DB → callback учитывается, синтаксис OK', () => {
   const p = makeCleanProject([
     { id: 'start1', type: 'start', position: { x: 0, y: 0 }, data: { command: '/start', messageText: 'Привет', keyboardType: 'none', buttons: [] } },
     makeMessageNode('msg1', 'Выбери', { keyboardNodeId: 'kbd1' }),
@@ -985,7 +986,7 @@ test('K10', 'message + отдельная reply keyboard-нода + DB → callb
   ]);
   const code = genDB(p, 'k10');
   syntax(code, 'k10');
-  ok(!code.includes('callback_query_logging_middleware'), 'callback_query_logging_middleware не должен быть для reply keyboard-ноды');
+  ok(code.includes('dp.callback_query.outer_middleware(callback_query_logging_middleware)'), 'Внешний middleware callback должен быть зарегистрирован');
   ok(code.includes('ReplyKeyboardBuilder'), 'ReplyKeyboardBuilder должен быть');
   ok(code.includes('KeyboardButton'), 'KeyboardButton должен быть');
 });
