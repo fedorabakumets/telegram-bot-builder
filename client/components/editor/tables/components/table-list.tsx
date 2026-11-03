@@ -47,12 +47,12 @@ export function TableList({ tables, selectedTableId, onSelect, onCreate, onDelet
   ];
   return (
     <aside aria-label="Список таблиц" className={cn('tables-list flex h-full min-h-0 shrink-0 flex-col', collapsed ? 'hidden' : 'w-full sm:w-64')}>
-      <div className="flex items-center justify-between gap-2 p-2">
-        {!collapsed && <span className="px-1 text-xs font-medium text-muted-foreground">Список таблиц</span>}
+      <div className="tables-list-heading flex items-center justify-between gap-2 px-4 pt-4 pb-1">
+        {!collapsed && <span className="px-1 text-xs font-medium text-muted-foreground">Навигация</span>}
 
       </div>
       <div hidden={collapsed} className={cn('min-h-0 flex-1 flex-col', collapsed ? 'hidden' : 'flex')}>
-      <div className="space-y-3 p-3">
+      <div className="space-y-3 p-4">
         <Button variant="outline" className="tables-control w-full justify-start gap-2 text-sm" onClick={() => setIsCreating(true)}>
           <Plus className="h-4 w-4" />Новая таблица
         </Button>
@@ -62,7 +62,7 @@ export function TableList({ tables, selectedTableId, onSelect, onCreate, onDelet
         </div>
         {isCreating && <TableCreateForm onCreate={onCreate} onCancel={() => setIsCreating(false)} />}
       </div>
-      <nav aria-label="Таблицы проекта" className="min-h-0 flex-1 overflow-y-auto px-3 pb-3 space-y-4">
+      <nav aria-label="Таблицы проекта" className="min-h-0 flex-1 overflow-y-auto px-4 pb-4 space-y-4">
         {groups.map((group) => group.items.length > 0 && (
           <section key={group.label}>
             <div className="flex items-center justify-between gap-2 px-2 py-2">
@@ -76,7 +76,7 @@ export function TableList({ tables, selectedTableId, onSelect, onCreate, onDelet
                 return (
                   <div key={table.id} className={cn('tables-row group flex items-center rounded-md', active && 'is-selected')}>
                     <button type="button" aria-current={active ? 'page' : undefined} title={`${tableLabel(table)}${system ? ' · Только чтение' : ''}`}
-                      onClick={() => onSelect(table.id)} className="tables-control flex min-w-0 flex-1 items-center gap-2 rounded-md px-2 py-1 text-left text-sm">
+                      onClick={() => onSelect(table.id)} className="tables-control flex min-w-0 flex-1 items-center gap-2 rounded-md px-2 py-2 text-left text-sm">
                       {system ? <Lock className="h-4 w-4 shrink-0 text-muted-foreground" /> : <Table2 className="h-4 w-4 shrink-0 text-muted-foreground" />}
                       <span className="min-w-0 flex-1 truncate">{tableLabel(table)}</span>
                       {(system || active) && <span className="text-xs tabular-nums text-muted-foreground">{table.rows.length}</span>}

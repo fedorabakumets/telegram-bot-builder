@@ -41,12 +41,12 @@ export function TableSwitcher({ tables, selectedTable, onSelect }: TableSwitcher
           <ChevronDown className="h-3 w-3 text-muted-foreground" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-48">
+      <DropdownMenuContent align="start" className="table-actions-menu w-48">
         {tables.map((table) => (
           <DropdownMenuItem
             key={table.id}
             className={cn(
-              selectedTable?.id === table.id && 'bg-primary/10 text-primary'
+              selectedTable?.id === table.id && 'bg-muted text-foreground'
             )}
             onClick={() => onSelect(table.id)}
           >

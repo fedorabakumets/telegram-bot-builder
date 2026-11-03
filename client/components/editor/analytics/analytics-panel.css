@@ -13,9 +13,6 @@
   .analytics-header-content .workspace-tab-heading > div:first-child { grid-column: 1; grid-row: 1; }
   .analytics-header-content .workspace-tab-heading > div:first-child > p { display: none; }
   .analytics-header-content .workspace-tab-heading > div:last-child { grid-column: 3; grid-row: 1; }
-  .analytics-header-content .workspace-tab-actions { gap: 4px; }
-  .analytics-header-content .workspace-tab-actions > :is(button, a) { width: 32px; height: 32px; padding: 0; }
-  .analytics-header-content .workspace-tab-actions span { display: none; }
   .analytics-header-content.space-y-4 > .analytics-scope { grid-column: 2; grid-row: 1; min-width: 0; margin: 0; gap: 12px; align-items: center; }
 }
 /** Две группы показателей заменяют мелкий разноцветный текст в одну строку. */
@@ -68,4 +65,16 @@
 @container (max-width: 479px) {
   .analytics-scope :is(.analytics-scope-project, .analytics-scope-bot) [role="combobox"] { font-size: 12px; padding-inline: 6px; gap: 4px; }
   .analytics-scope :is(.analytics-scope-project, .analytics-scope-bot) [role="combobox"] > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
+
+/** Подписи служебных действий раскрываются на просторной панели; в тесной строке остаются иконки. */
+@container (min-width: 800px) and (max-width: 999px) {
+  .analytics-header-content .workspace-tab-actions { gap: 4px; }
+  .analytics-header-content .workspace-tab-actions > :is(button, a) { width: 32px; height: 32px; padding: 0; }
+  .analytics-header-content .workspace-tab-actions span { display: none; }
+}
+
+/** На узкой панели период выбирается в общей шапке, без повторения в каждой карточке. */
+@container analytics (max-width: 479px) {
+  .analytics-page .analytics-card .analytics-choose-period { display: none; }
 }

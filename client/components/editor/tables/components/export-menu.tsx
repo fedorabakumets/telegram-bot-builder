@@ -56,7 +56,7 @@ export function ExportMenu({ table, label = 'Экспорт' }: ExportMenuProps)
           {label}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start">
+      <DropdownMenuContent align="start" className="table-actions-menu">
         <DropdownMenuItem onClick={handleCsv}>
           <Download className="h-4 w-4" />
           Скачать CSV

@@ -1,0 +1,23 @@
+/** @fileoverview Адаптивная одноколоночная лента записей контента сценария. */
+.content-table-grid { width: 100%; }
+.content-table-grid .content-table-heading { display: flex; align-items: center; gap: 8px; padding: 8px 16px; }
+.content-table-grid .table-number { display: inline-flex; align-items: center; gap: 8px; width: auto; min-width: 0; padding: 0; flex-shrink: 0; }
+.content-table-options { padding: 0 16px 12px; font-weight: 400; font-size: 12px; color: var(--muted-foreground); }
+.content-table-options summary { cursor: pointer; width: fit-content; }
+.content-table-options summary:focus-visible { outline: 2px solid var(--ring); outline-offset: 4px; }
+.content-table-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; padding-top: 12px; }
+.content-table-fields label > span { display: block; margin-bottom: 4px; }
+.content-table-grid .content-table-entry { padding: 16px; }
+.content-table-entry-heading { display: flex; align-items: flex-start; gap: 12px; }
+.content-table-entry-heading > .table-number { padding-top: 4px; }
+.table-data-grid.content-table-grid .content-record { padding: 0; }
+.content-table-grid .content-record > div { max-width: 480px; }
+.content-table-metadata { display: flex; flex-wrap: wrap; gap: 4px 16px; padding: 8px 0 12px 44px; font-size: 12px; line-height: 16px; color: var(--muted-foreground); }
+.content-table-grid .table-editable-cell, .content-table-grid .table-static-cell { margin-left: 44px; padding: 12px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; }
+.content-table-grid .table-cell-value { white-space: pre-wrap; overflow-wrap: anywhere; }
+.content-table-grid tr:has(input:checked) td { background: var(--muted); }
+@container (max-width: 440px) {
+  .content-table-grid .content-table-entry { padding: 12px; }
+  .content-table-metadata { padding-left: 0; }
+  .content-table-grid .table-editable-cell, .content-table-grid .table-static-cell { margin-left: 0; }
+}

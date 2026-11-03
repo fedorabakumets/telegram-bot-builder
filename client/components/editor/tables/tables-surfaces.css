@@ -1,0 +1,65 @@
+/**
+ * @fileoverview Единое оформление инструментов, форм и портальных состояний вкладки таблиц.
+ * Визуальный проход по методике unslop Дамира Соколовского, лицензия CC BY 4.0.
+ */
+/** Инструменты образуют компактную полосу над данными без вложенных рамок. */
+.table-view-toolbar { padding: 16px 0 0; gap: 12px; }
+.table-view-actions { padding-inline: 16px; }
+.content-table-filters { padding: 0 16px 12px; gap: 12px; box-shadow: none; }
+.content-table-filters > label { flex: 0 1 240px; font-size: 12px; color: var(--muted-foreground); }
+.content-filter-select { height: 36px; padding-block: 4px; border-radius: 8px; font-size: 14px; }
+.table-view-search > input { height: 36px; }
+.table-view-actions .tables-control { min-height: 36px; padding-block: 4px; }
+.table-zoom-controls { padding: 8px 16px; box-shadow: inset 0 1px var(--border); }
+.table-zoom-controls .tables-control { min-height: 32px; min-width: 32px; height: 32px; padding: 4px 8px; }
+.table-zoom-controls .table-zoom-reset { min-width: 56px; }
+.table-zoom-label { margin-right: 4px; }
+/** Навигация держит одинаковый ритм строк и различимые второстепенные сведения. */
+.tables-list { width: 240px; }
+.tables-row { min-height: 36px; }
+.tables-row.is-selected { background: var(--muted); box-shadow: inset 0 0 0 1px var(--border); }
+.tables-row .text-muted-foreground { color: var(--muted-foreground); }
+.tables-list-heading { color: var(--muted-foreground); }
+.tables-list form { background: var(--card); }
+.tables-list form label { display: flex; flex-wrap: wrap; gap: 4px; }
+.tables-add-rows { padding: 12px 16px; }
+/** Локальные поля и кнопки сохраняют читаемость во всех состояниях темы. */
+.tables-workspace :is(input:not([type="checkbox"]), textarea, select) { background: var(--background); border-color: var(--border); color: var(--foreground); border-radius: 8px; }
+.tables-workspace :is(input, textarea)::placeholder { color: var(--muted-foreground); }
+.tables-workspace :is(input, textarea, select):focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; box-shadow: none; }
+.tables-workspace .tables-control:disabled { opacity: .35; cursor: not-allowed; }
+.tables-workspace :is(input, textarea)[aria-invalid="true"] { border-color: var(--destructive); outline-color: var(--destructive); }
+/** Диалоги находятся в портале и получают собственные нейтральные токены. */
+.table-cell-dialog, .table-actions-menu { font-family: 'Manrope', sans-serif; }
+.table-cell-dialog { padding: 24px; gap: 16px; border-radius: 12px; background: var(--card); border-color: var(--border); }
+.table-cell-dialog h2 { font-size: 20px; line-height: 28px; font-weight: 500; padding-right: 24px; }
+.table-cell-dialog label:not(:has(input[type="checkbox"])) { display: block; color: var(--foreground); }
+.table-cell-dialog :is(input:not([type="checkbox"]), select, textarea) { background: var(--background); color: var(--foreground); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font-size: 14px; line-height: 20px; color-scheme: dark; }
+.table-cell-dialog label > :is(input:not([type="checkbox"]), select, textarea) { display: block; width: 100%; margin-top: 8px; }
+.table-cell-dialog :is(input, select, textarea):focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; box-shadow: none; }
+.table-cell-dialog .tables-control { min-height: 36px; border-radius: 8px; border-color: var(--border); color: var(--foreground); }
+.table-cell-dialog .tables-control:hover:not(:disabled) { background: var(--muted); }
+.table-cell-dialog :is(button, input, textarea, select):disabled { opacity: .4; cursor: not-allowed; }
+.table-cell-dialog [aria-invalid="true"] { border-color: var(--destructive); outline-color: var(--destructive); }
+.table-cell-dialog [role="alert"] { color: var(--destructive); }
+.table-cell-dialog details { background: var(--card); border-color: var(--border); border-radius: 8px; }
+.table-cell-dialog :is(th, td) { padding: 8px 12px; border-bottom: 1px solid var(--border); }
+.table-cell-dialog th { font-weight: 500; color: var(--muted-foreground); }
+.table-actions-menu { padding: 4px; border-radius: 8px; background: var(--card); border-color: var(--border); }
+.table-actions-menu [role^="menuitem"] { min-height: 36px; font-size: 14px; border-radius: 4px; }
+.table-actions-menu [data-disabled] { opacity: .35; }
+.table-actions-menu [data-highlighted] { background: var(--muted); color: var(--foreground); }
+/** Узкая область сохраняет доступ к фильтрам и действиям без уменьшения шрифта. */
+@container (max-width: 640px) {
+  .table-view-actions { gap: 8px; }
+  .table-view-search { flex-basis: 100%; }
+  .content-table-filters > label { flex: 1 1 160px; }
+  .table-cell-dialog { max-width: calc(100vw - 32px); }
+}
+@media (max-width: 639px) { .tables-body .tables-list { width: 100%; } }
+@media (prefers-reduced-motion: reduce) { .table-cell-dialog, .table-actions-menu { animation: none; transition: none; } }
+
+/** Предпросмотр и вложенные разделители используют ту же контрастность, что поля. */
+.table-cell-dialog .border-border { border-color: var(--border); }
+.table-cell-dialog thead { background: var(--card); }
+.tables-workspace .tables-control svg, .table-cell-dialog .tables-control svg { stroke-width: 1.5; }

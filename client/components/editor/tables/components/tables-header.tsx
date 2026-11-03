@@ -1,4 +1,5 @@
 /** @fileoverview Заголовок и контекст рабочей области таблиц. */
+import '../tables-header-controls.css';
 import { Table2, PanelLeftOpen, PanelLeftClose } from 'lucide-react';
 import { useIsFetching, useQueryClient } from '@tanstack/react-query';
 import { WorkspaceCollapsibleHeader } from '@/components/ui/workspace-collapsible-header';

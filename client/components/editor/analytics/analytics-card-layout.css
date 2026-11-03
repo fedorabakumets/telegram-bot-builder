@@ -61,3 +61,19 @@
 .analytics-acquisition-catalog details:is(:hover, :focus-within) > summary .analytics-heading-description { opacity: 1; }
 .analytics-page .analytics-report-card > header:has(> button) { align-items: start; }
 .analytics-page .analytics-report-card > header:has(> button) > button { align-self: start; }
+
+/** На узкой панели пояснение видно постоянно и не оставляет пустое место под заголовком. */
+@container analytics (max-width: 479px) {
+  .analytics-page .analytics-card .analytics-heading-description {
+    display: block;
+    min-height: 0;
+    overflow: visible;
+    opacity: 1;
+    margin-top: 4px;
+    font-size: 12px;
+    line-height: 16px;
+  }
+  /** Скрытая кнопка периода не резервирует вторую колонку заголовка. */
+  .analytics-page .analytics-report-card > header:has(> .analytics-choose-period) { grid-template-columns: minmax(0, 1fr); }
+  .analytics-page .analytics-report-card:not(:has(.analytics-chart-actions:not(.is-expanded))) > header h3 { padding-right: 0; }
+}

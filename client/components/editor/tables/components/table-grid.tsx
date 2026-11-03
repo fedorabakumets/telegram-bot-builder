@@ -1,4 +1,5 @@
 /** @fileoverview Сетка таблицы с закреплёнными столбцами и редактированием ячеек. */
+import { ContentTableGrid } from './content-table-grid';
 import { Fragment } from 'react';
 import { useTableWindow } from '../hooks/use-table-window';
 import { defaultColumnWidth } from '../utils/column-layout';
@@ -9,7 +10,7 @@ import { TableGridHeader } from './table-grid-header';
 import type { TableEditorProps } from '../editor-types';
 import type { TableView } from '../hooks/use-table-view';
 /** Свойства сетки таблицы. */
-interface TableGridProps {
+export interface TableGridProps {
   /** Контракт редактора. */
   editor: TableEditorProps;
   /** Найденные строки и настройки. */
@@ -20,7 +21,15 @@ interface TableGridProps {
  * @param props - Редактор и представление.
  * @returns Сетка данных.
  */
-export function TableGrid({ editor, view }: TableGridProps) {
+export function TableGrid(props: TableGridProps) {
+  return props.editor.isContentTable ? <ContentTableGrid {...props} /> : <StandardTableGrid {...props} />;
+}
+/**
+ * Отображает обычные пользовательские таблицы с независимыми столбцами.
+ * @param props - Редактор и представление таблицы.
+ * @returns Многостолбцовая сетка пользовательских данных.
+ */
+function StandardTableGrid({ editor, view }: TableGridProps) {
   const { table, readOnly, isContentTable, projectId, onUpdateCell, onDeleteRow } = editor;
   const editable = table.columns.map((column, index) => !readOnly && (!isContentTable || column.name === 'value') ? index : -1).filter((index) => index >= 0);
   const windowed = useTableWindow(view.rows, view.activeCell?.rowId, isContentTable ? 80 : 40, JSON.stringify([view.search, view.selectedType, view.selectedSheet, view.columnFilters, view.sort]));

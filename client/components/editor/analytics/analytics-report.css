@@ -278,7 +278,7 @@
   .analytics-chart-view-controls { display: grid; align-items: center; }
   .analytics-chart-view-controls > label:first-child { min-width: 0; }
   .analytics-chart-view-controls > label:first-child select { min-width: 0; padding-inline: 4px; }
-  .analytics-chart-view-controls > label:nth-child(2) { min-width: 0; gap: 3px; font-size: 11px; }
+  .analytics-chart-view-controls > label:nth-child(2) { min-width: 0; gap: 4px; font-size: 12px; }
   .analytics-chart-view-controls > button { grid-column: 1 / -1; justify-self: start; }
 }
 
@@ -443,7 +443,7 @@
   .analytics-chart-dialog .analytics-chart-view-controls { display: grid; grid-template-columns: minmax(96px, 1fr) auto; gap: 4px; align-items: center; }
   .analytics-chart-dialog .analytics-chart-view-controls > label:first-child { min-width: 0; gap: 4px; }
   .analytics-chart-dialog .analytics-chart-view-controls select { min-width: 0; width: 100%; padding-inline: 4px; }
-  .analytics-chart-dialog .analytics-chart-view-controls > label:nth-child(2) { gap: 3px; font-size: 11px; white-space: nowrap; }
+  .analytics-chart-dialog .analytics-chart-view-controls > label:nth-child(2) { gap: 4px; font-size: 12px; white-space: nowrap; }
   .analytics-chart-dialog .analytics-label-full { display: none; }
   .analytics-chart-dialog .analytics-label-short { display: inline; }
 }

@@ -1,22 +1,25 @@
 /** @fileoverview Нейтральные поверхности и адаптация рабочей вкладки таблиц. */
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap');
-.tables-workspace { font-family: 'Manrope', sans-serif; background: #09090b; color: #fafafa; container-type: inline-size; }
-.tables-header { background: #09090b; box-shadow: inset 0 -1px #27272a; }
-.tables-list { background: #09090b; box-shadow: inset -1px 0 #27272a; }
+.tables-workspace { font-family: 'Manrope', sans-serif; background: var(--background); color: var(--foreground); container-type: inline-size; }
+.tables-header { background: var(--background); box-shadow: inset 0 -1px var(--border); }
+.tables-list { background: var(--background); box-shadow: inset -1px 0 var(--border); }
 .tables-workspace .tables-control { transition: color 300ms cubic-bezier(0.22,1,0.36,1), background-color 300ms cubic-bezier(0.22,1,0.36,1); }
-.tables-workspace .tables-control:hover, .tables-row:hover { background: #18181b; }
-.tables-workspace .tables-control:active { background: #27272a; }
-.tables-workspace .tables-control:focus-visible { outline: 2px solid #a1a1aa; outline-offset: 2px; }
-.tables-row.is-selected { background: #18181b; box-shadow: inset 0 0 0 1px #3f3f46; color: #fafafa; }
+.tables-workspace .tables-control:hover, .tables-row:hover { background: var(--muted); }
+.tables-workspace .tables-control:active { background: var(--muted); }
+.tables-workspace .tables-control:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+.tables-row.is-selected { background: var(--muted); box-shadow: inset 0 0 0 1px var(--border); color: var(--foreground); }
 /** Проект и бот повторяют геометрию селекторов вкладки файлов. */
 .tables-context > div { flex: 1 1 240px; max-width: 100%; min-width: 0; }
-.tables-context button[role="combobox"] { width: 100%; max-width: none; min-width: 0; height: 40px; font-size: 14px; line-height: 20px; background: #09090b; border-color: #29292d; }
+.tables-context button[role="combobox"] { width: 100%; max-width: none; min-width: 0; height: 40px; font-size: 14px; line-height: 20px; background: var(--background); border-color: var(--border); }
 .tables-context button[role="combobox"] > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /** На средних панелях оба селектора остаются рядом с названием вкладки. */
 @container (min-width: 800px) and (max-width: 1200px) {
   .tables-header .tables-context { flex-wrap: nowrap; }
+  /** Название проекта получает свободное место между заголовком и действиями. */
+  .tables-workspace .tables-header .workspace-header-content > .space-y-4 > .tables-context { max-width: none; }
   .tables-header .tables-context > div { flex: 0 1 160px; min-width: 0; }
-  .tables-header .tables-context button[role="combobox"] { height: 32px; font-size: 12px; }
+  .tables-header .tables-context > div:first-child { flex: 1 1 320px; }
+  .tables-header .tables-context button[role="combobox"] { height: 36px; font-size: 14px; }
   .tables-header.workspace-tab-frame { padding-block: 4px 12px; }
   /** Действия списка и переноса занимают противоположные края строки. */
   .tables-header-tools .tables-transfer-actions { margin-left: auto; }
@@ -26,8 +29,6 @@
 }
 
 /** Прикладные действия используют те же размеры и нейтральные контуры, что файлы. */
-.tables-header-tools .tables-control { height: 40px; padding: 8px 12px; gap: 8px; font-size: 14px; line-height: 20px; font-weight: 600; border: 1px solid #3f3f46; border-radius: 8px; color: #b4b4bc; background: transparent; }
-.tables-header-tools .tables-control:hover:not(:disabled) { background: #27272a; }
 .tables-header-tools > [role="alert"] { flex-basis: 100%; }
 @container (max-width: 440px) {
   /** Две равные колонки сохраняют проект и бота рядом, как во вкладке файлов. */
@@ -43,11 +44,11 @@
 }
 
 /** Количество листов не увеличивает высоту панели фильтров. */
-.content-table-filters { background: #09090b; box-shadow: inset 0 -1px #27272a; }
+.content-table-filters { background: var(--background); box-shadow: inset 0 -1px var(--border); }
 .content-table-filters > label { flex-basis: 192px; }
-.content-filter-select { background: #09090b; color: #fafafa; border-color: #27272a; color-scheme: dark; text-overflow: ellipsis; }
-.content-filter-select:hover { border-color: #52525b; }
-.content-filter-select:focus-visible { outline: 2px solid #a1a1aa; outline-offset: 2px; }
+.content-filter-select { background: var(--background); color: var(--foreground); border-color: var(--border); color-scheme: dark; text-overflow: ellipsis; }
+.content-filter-select:hover { border-color: var(--muted-foreground); }
+.content-filter-select:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
 /** Поиск использует свободное место рядом с действиями и переносится при нехватке ширины. */
 .table-view-search { flex: 1 1 180px; }
 /** В узкой панели фильтры остаются рядом, полные варианты доступны в списках. */

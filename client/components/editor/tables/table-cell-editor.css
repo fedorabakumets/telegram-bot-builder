@@ -1,0 +1,29 @@
+/**
+ * @fileoverview Редактирование обычной ячейки на одной линии без вложенной формы.
+ * Визуальный проход по методике unslop Дамира Соколовского, лицензия CC BY 4.0.
+ */
+.table-data-grid:not(.content-table-grid) .table-editable-cell[data-editing="true"] {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 4px;
+  min-height: 48px;
+  padding: 8px;
+}
+/** Контур отмечает саму ячейку и сохраняется при переходе к действиям клавиатурой. */
+.table-data-grid:not(.content-table-grid) td:has(.table-editable-cell[data-editing="true"]):focus-within { box-shadow: inset 0 0 0 1px var(--ring); }
+.tables-workspace .table-data-grid:not(.content-table-grid) .table-editable-cell[data-editing="true"] > :is(input, textarea, select) {
+  min-width: 0;
+  padding: 4px;
+  border: 0;
+  border-radius: 0;
+  outline: none;
+  box-shadow: none;
+  background: transparent;
+  resize: none;
+  line-height: 24px;
+}
+.table-data-grid:not(.content-table-grid) .table-cell-actions { min-height: 32px; }
+.table-data-grid:not(.content-table-grid) .table-cell-actions button { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 32px; padding: 4px; }
+/** Ошибка занимает отдельную строку, не сжимая поле и доступные действия. */
+.table-data-grid:not(.content-table-grid) .table-editable-cell > [role="alert"] { grid-column: 1 / -1; }

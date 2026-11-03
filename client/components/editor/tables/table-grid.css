@@ -1,36 +1,61 @@
 /** @fileoverview Вертикальное закрепление заголовков и состояния прокручиваемой сетки данных. */
 .table-data-grid { table-layout: fixed; border-collapse: separate; border-spacing: 0; font-size: 14px; line-height: 20px; }
-.table-data-grid th, .table-data-grid td { border-right: 1px solid #27272a; border-bottom: 1px solid #27272a; padding: 0; vertical-align: top; background: #09090b; }
-.table-data-grid th { position: sticky; top: 0; z-index: 3; background: #09090b; color: #b4b4bc; text-align: left; font-weight: 600; }
-.table-data-grid .table-number { width: 56px; min-width: 56px; padding: 8px; color: #a1a1aa; font-size: 12px; }
-.table-data-grid tr:hover td { background: #101012; }
+.table-data-grid th, .table-data-grid td { border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 0; vertical-align: top; background: var(--background); }
+.table-data-grid th { position: sticky; top: 0; z-index: 3; background: var(--background); color: var(--muted-foreground); text-align: left; font-weight: 600; }
+.table-data-grid .table-number { width: 56px; min-width: 56px; padding: 8px; color: var(--muted-foreground); font-size: 12px; }
+.table-data-grid tr:hover td { background: var(--muted); }
 .table-column-filter { width: calc(100% - 16px); }
 .table-column-resizer { position: absolute; top: 0; right: -4px; bottom: 0; z-index: 5; width: 8px; cursor: col-resize; touch-action: none; }
-.table-column-resizer:hover, .table-column-resizer:focus-visible { background: #71717a; outline: none; }
+.table-column-resizer:hover, .table-column-resizer:focus-visible { background: var(--muted-foreground); outline: none; }
 .table-wrap .table-static-cell, .table-wrap .content-record > a { white-space: pre-wrap; overflow-wrap: anywhere; }
 .table-wrap td > div { white-space: pre-wrap; overflow-wrap: anywhere; }
-.table-data-grid button:focus-visible, .table-data-grid a:focus-visible, .table-data-grid input:focus-visible { outline: 2px solid #a1a1aa; outline-offset: -2px; }
+.table-data-grid button:focus-visible, .table-data-grid a:focus-visible, .table-data-grid input:focus-visible { outline: 2px solid var(--ring); outline-offset: -2px; }
 
 /** Черновики и полноразмерный редактор используют те же поверхности, что и сетка. */
 .table-wrap .table-cell-value { white-space: pre-wrap; overflow-wrap: anywhere; }
 /** Основной текст таблицы повторяет спокойный тон элементов вкладки файлов. */
-.table-data-grid .content-record > a, .table-data-grid .table-cell-value { color: #b4b4bc; }
-.table-data-grid .content-record > a:hover, .table-data-grid .table-cell-value:hover { color: #d4d4d8; }
-.table-cell-dialog { font-family: 'Manrope', sans-serif; background: #09090b; color: #fafafa; border-color: #27272a; }
-.table-cell-dialog button:focus-visible { outline: 2px solid #a1a1aa; outline-offset: 2px; }
+.table-data-grid .content-record > a, .table-data-grid .table-cell-value { color: var(--muted-foreground); }
+.table-data-grid .content-record > a:hover, .table-data-grid .table-cell-value:hover { color: var(--foreground); }
+.table-cell-dialog { font-family: 'Manrope', sans-serif; background: var(--card); color: var(--foreground); border-color: var(--border); }
+.table-cell-dialog button:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
 
 /** Строки-заполнители сохраняют геометрию невидимой части большой таблицы. */
 .table-data-grid .table-spacer td { padding: 0; border: 0; background: transparent; }
-.table-editable-cell:has([aria-invalid="true"]), .table-editable-cell:has([role="alert"]) { box-shadow: inset 0 0 0 1px #dc2626; }
+.table-editable-cell:has([aria-invalid="true"]), .table-editable-cell:has([role="alert"]) { box-shadow: inset 0 0 0 1px var(--destructive); }
 
 /** Выпадающие действия сохраняют нейтральную поверхность вне контейнера таблицы. */
-.table-actions-menu { font-family: 'Manrope', sans-serif; background: #09090b; color: #fafafa; border-color: #27272a; }
-.table-actions-menu [data-highlighted] { background: #181818; color: #fafafa; }
+.table-actions-menu { font-family: 'Manrope', sans-serif; background: var(--card); color: var(--foreground); border-color: var(--border); }
+.table-actions-menu [data-highlighted] { background: var(--muted); color: var(--foreground); }
 
 /** Локальные флажки остаются видимыми при глобальном сбросе нативного оформления. */
-.table-cell-dialog input[type="checkbox"] { appearance: auto; width: 16px; height: 16px; accent-color: #a1a1aa; vertical-align: middle; }
+.table-cell-dialog input[type="checkbox"] { appearance: auto; width: 16px; height: 16px; accent-color: var(--muted-foreground); vertical-align: middle; }
 /** Флажки сетки не имеют серой заливки, выбранное состояние остаётся заметным. */
-.table-data-grid .table-number input[type="checkbox"] { appearance: none; display: inline-grid; place-content: center; width: 16px; height: 16px; margin: 0; vertical-align: middle; border: 1px solid #71717a; border-radius: 3px; background: #09090b; cursor: pointer; }
-.table-data-grid .table-number input[type="checkbox"]:checked { background: #3b82f6; border-color: #3b82f6; }
-.table-data-grid .table-number input[type="checkbox"]:checked::before { content: ''; width: 8px; height: 5px; border-left: 2px solid white; border-bottom: 2px solid white; transform: translateY(-1px) rotate(-45deg); }
-.table-data-grid .table-number input[type="checkbox"]:indeterminate::before { content: ''; width: 8px; border-top: 2px solid #b4b4bc; }
+.table-data-grid .table-number input[type="checkbox"] { appearance: none; display: inline-grid; place-content: center; width: 16px; height: 16px; margin: 0; vertical-align: middle; border: 1px solid var(--muted-foreground); border-radius: 3px; background: var(--background); cursor: pointer; }
+.table-data-grid .table-number input[type="checkbox"]:checked { background: var(--primary); border-color: var(--primary); }
+.table-data-grid .table-number input[type="checkbox"]:checked::before { content: ''; width: 8px; height: 5px; border-left: 2px solid var(--primary-foreground); border-bottom: 2px solid var(--primary-foreground); transform: translateY(-1px) rotate(-45deg); }
+.table-data-grid .table-number input[type="checkbox"]:indeterminate::before { content: ''; width: 8px; border-top: 2px solid var(--muted-foreground); }
+
+/** Заголовки отделены от данных спокойной поверхностью, линии не спорят с текстом. */
+.table-data-grid th { background: var(--card); font-weight: 500; }
+.table-data-grid th > div:first-child { min-height: 44px; }
+.table-data-grid th, .table-data-grid td { border-right-color: var(--border); border-bottom-color: var(--border); }
+.table-data-grid .table-number { font-variant-numeric: tabular-nums; }
+/** Общий флажок и фильтры стоят на одной линии без пустой строки в заголовке. */
+.table-filter-toggle { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 28px; margin-left: 4px; vertical-align: middle; border-radius: 4px; }
+.table-filter-toggle[aria-expanded="true"] { background: var(--muted); color: var(--foreground); }
+.table-column-filter[hidden] { display: none; }
+/** Название ноды ведёт к сценарию, поле и идентификатор остаются вторым уровнем. */
+.table-data-grid .content-record { padding: 12px; }
+.table-data-grid .content-record > a { color: var(--foreground); text-decoration: none; }
+.table-data-grid .content-record > a:hover { text-decoration: underline; }
+.content-record > span { margin-top: 4px; }
+.content-record > div { margin-top: 4px; color: var(--muted-foreground); }
+.content-record > div > span { color: var(--muted-foreground); font-variant-numeric: tabular-nums; }
+.table-data-grid tr:has(.table-number input:checked) td { background: var(--muted); }
+.table-data-grid .table-editable-cell { min-height: 44px; padding: 12px; }
+.table-data-grid .table-static-cell { padding: 12px; }
+.table-data-grid .table-cell-value { color: var(--foreground); min-height: 24px; }
+.table-data-grid tr:not(.table-spacer) > td[colspan]:last-child { padding: 24px; }
+
+/** Заголовок номера не переносит компактные элементы на вторую строку. */
+.table-data-grid th.table-number { white-space: nowrap; }

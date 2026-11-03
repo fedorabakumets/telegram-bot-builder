@@ -1,0 +1,64 @@
+/** @fileoverview Почти чёрная палитра таблиц без серых заливок, включая окна и меню в портале. */
+:is(.tables-workspace, .table-cell-dialog, .table-actions-menu) {
+  --background: #fafafa;
+  --foreground: #202024;
+  --card: #ffffff;
+  --card-foreground: var(--foreground);
+  --muted: #f0f0f2;
+  --muted-foreground: #62626b;
+  --border: #dddde2;
+  --primary: #27272b;
+  --primary-foreground: #fafafa;
+  --secondary: var(--muted);
+  --secondary-foreground: var(--foreground);
+  --popover: var(--card);
+  --popover-foreground: var(--foreground);
+  --accent: var(--muted);
+  --accent-foreground: var(--foreground);
+  --input: var(--border);
+  --ring: #71717a;
+  color: var(--foreground);
+  color-scheme: light;
+}
+.dark :is(.tables-workspace, .table-cell-dialog, .table-actions-menu) {
+  --background: #09090b;
+  --foreground: #ededf0;
+  /** Поверхности и состояния не отличаются серой заливкой от рабочего фона. */
+  --card: var(--background);
+  --muted: var(--background);
+  --muted-foreground: #a1a1aa;
+  --border: #29292e;
+  --primary: #e4e4e7;
+  --primary-foreground: #18181b;
+  color-scheme: dark;
+}
+/** Полупрозрачные утилиты глобальной темы не должны возвращать цветной акцент. */
+:is(.tables-workspace, .table-cell-dialog, .table-actions-menu) .text-muted-foreground { color: var(--muted-foreground); }
+:is(.tables-workspace, .table-cell-dialog, .table-actions-menu) .text-destructive { color: var(--destructive); }
+:is(.tables-workspace, .table-cell-dialog) .border-border { border-color: var(--border); }
+:is(.tables-workspace, .table-cell-dialog) .tables-control { border-color: var(--border); }
+:is(.tables-workspace, .table-cell-dialog) .tables-control:hover:not(:disabled) { background-color: var(--muted); }
+:is(.tables-workspace, .table-cell-dialog) .tables-control:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; box-shadow: none; }
+:is(.tables-workspace, .table-cell-dialog) [aria-invalid='true'] { border-color: var(--destructive); }
+/** Вынесенные меню выбора контекста получают те же значения, что селекторы аналитики. */
+body:has(.tables-context [role='combobox'][data-state='open']) [role='listbox'] { background: #ffffff; color: #202024; border-color: #dddde2; --accent: #f0f0f2; --accent-foreground: #202024; --muted: #f0f0f2; --muted-foreground: #62626b; }
+.dark body:has(.tables-context [role='combobox'][data-state='open']) [role='listbox'] { background: #09090b; color: #ededf0; border-color: #29292e; --accent: #09090b; --accent-foreground: #ededf0; --muted: #09090b; --muted-foreground: #a1a1aa; }
+body:has(.tables-context [role='combobox'][data-state='open']) [role='option'][data-highlighted] { background: var(--accent); color: var(--accent-foreground); }
+/** Ошибки и опасные действия сохраняют смысловой цвет вместо декоративной окраски. */
+:is(.tables-workspace, .table-cell-dialog) [role='alert'] { color: var(--destructive); }
+:is(.tables-workspace, .table-cell-dialog) .hover\:text-destructive:hover { color: var(--destructive); }
+
+/** Наведение обозначается текстом без серой поверхности. */
+:is(.tables-workspace, .table-cell-dialog) .tables-control:hover:not(:disabled) { color: var(--foreground); }
+.table-actions-menu [data-highlighted] { outline: 1px solid var(--muted-foreground); outline-offset: -1px; }
+body:has(.tables-context [role='combobox'][data-state='open']) [role='option'][data-highlighted] { outline: 1px solid currentColor; outline-offset: -1px; }
+
+/** Иконки используют основной цвет текста без отдельного серого оттенка и полупрозрачности. */
+:is(.tables-workspace, .table-cell-dialog, .table-actions-menu) svg.lucide,
+:is(.tables-workspace, .table-cell-dialog, .table-actions-menu) svg.lucide.text-muted-foreground { color: var(--foreground); opacity: 1; }
+/** Опасные действия сохраняют узнаваемый цвет при наведении. */
+:is(.tables-workspace, .table-cell-dialog) .hover\:text-destructive:hover svg.lucide { color: var(--destructive); }
+body:has(.tables-context [role='combobox'][data-state='open']) [role='listbox'] svg.lucide { color: inherit; opacity: 1; }
+
+/** Иконка названия вкладки сохраняет синий акцент раздела. */
+.tables-workspace .tables-header .workspace-tab-heading svg.lucide-table2 { color: #3b82f6; }

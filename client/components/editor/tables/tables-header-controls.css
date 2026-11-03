@@ -1,0 +1,47 @@
+/** @fileoverview Единые размеры и состояния кнопок шапки таблиц без серых заливок. */
+.tables-workspace .tables-header :is(.tables-control, .workspace-tab-actions > a, .workspace-tab-actions > button, button[role="combobox"]) {
+  height: 36px;
+  min-height: 36px;
+  padding: 8px 12px;
+  gap: 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--foreground);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  box-shadow: none;
+}
+/** Служебные действия остаются спокойными ссылками, но совпадают с кнопками по ритму. */
+.tables-workspace .tables-header .workspace-tab-actions > :is(a, button) { border-color: transparent; }
+.tables-workspace .tables-header :is(.tables-control, .workspace-tab-actions > a, .workspace-tab-actions > button, button[role="combobox"]):hover:not(:disabled) {
+  background: transparent;
+  color: var(--foreground);
+  border-color: var(--muted-foreground);
+}
+.tables-workspace .tables-header :is(.tables-control, .workspace-tab-actions > a, .workspace-tab-actions > button, button[role="combobox"]):focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
+  box-shadow: none;
+}
+.tables-workspace .tables-header :is(.tables-control, .workspace-tab-actions > a, .workspace-tab-actions > button, button[role="combobox"]):disabled { opacity: .45; cursor: not-allowed; }
+.tables-workspace .tables-header :is(.tables-control, .workspace-tab-actions) svg { width: 16px; height: 16px; flex-shrink: 0; stroke-width: 1.5; }
+/** В маленькой шапке скрытые подписи не оставляют широкие пустые кнопки. */
+@container (max-width: 719px) {
+  .tables-workspace .tables-header .workspace-tab-actions > :is(a, button) { width: 36px; padding: 8px; }
+}
+/** Узкие кнопки переноса сохраняют прежнюю адаптивную компоновку с иконкой над текстом. */
+@container (max-width: 440px) {
+  .tables-workspace .tables-header .tables-transfer-actions > .tables-control { height: auto; min-height: 48px; padding: 8px 4px; font-size: 12px; line-height: 16px; }
+}
+
+/** Селекторы контекста повторяют измеренные фон и начертание эталонной аналитики. */
+.tables-workspace .tables-header .tables-context button[role="combobox"],
+.tables-workspace .tables-header .tables-context button[role="combobox"]:hover:not(:disabled) {
+  background: var(--background);
+  color: var(--foreground);
+  border-color: var(--border);
+  font-size: 12px;
+  font-weight: 400;
+}

@@ -1,7 +1,7 @@
 /** @fileoverview Заголовки таблицы с сортировкой, фильтрами и изменением ширины. */
 import { defaultColumnWidth } from '../utils/column-layout';
-import { Lock, PencilLine } from 'lucide-react';
-import { useRef } from 'react';
+import { Lock, PencilLine, ListFilter } from 'lucide-react';
+import { useRef, useState } from 'react';
 import { ColumnHeader } from './column-header';
 import { getColumnTitle } from '../utils/display-labels';
 import type { TableEditorProps } from '../editor-types';
@@ -20,6 +20,8 @@ interface TableGridHeaderProps {
  */
 export function TableGridHeader({ editor, view }: TableGridHeaderProps) {
   const { table, readOnly, isContentTable, onDeleteColumn } = editor;
+  /** Дополнительный поиск по столбцам раскрывается отдельно от общего поиска. */
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const drag = useRef<{ start: number; width: number } | null>(null);
   return (
     <thead>
@@ -27,7 +29,7 @@ export function TableGridHeader({ editor, view }: TableGridHeaderProps) {
         <th className="table-number" scope="col"><input type="checkbox" aria-label="Выбрать все найденные строки"
           checked={view.rows.length > 0 && view.rows.every((row) => view.selected.has(row.id))}
           ref={(input) => { if (input) input.indeterminate = view.rows.some((row) => view.selected.has(row.id)) && !view.rows.every((row) => view.selected.has(row.id)); }}
-          onChange={(event) => view.setSelected((previous) => { const next = new Set(previous); view.rows.forEach((row) => event.target.checked ? next.add(row.id) : next.delete(row.id)); return next; })} /> №</th>
+          onChange={(event) => view.setSelected((previous) => { const next = new Set(previous); view.rows.forEach((row) => event.target.checked ? next.add(row.id) : next.delete(row.id)); return next; })} /><span className="sr-only">№</span><button type="button" className="tables-control table-filter-toggle" aria-label="Фильтры столбцов" title="Фильтры столбцов" aria-expanded={filtersOpen} onClick={() => setFiltersOpen((value) => !value)}><ListFilter className="h-3 w-3" /></button></th>
         {table.columns.map((column, index) => (
           <th key={column.id} scope="col" className={index === 0 ? 'table-primary' : ''} style={{ width: view.widths[column.id] ?? defaultColumnWidth(column) }}>
             <div className="flex min-w-0 items-center gap-1 pr-3">
@@ -39,7 +41,7 @@ export function TableGridHeader({ editor, view }: TableGridHeaderProps) {
                 {view.sort?.column === column.id ? view.sort.direction === 1 ? '↑' : '↓' : '↕'}
               </button>
             </div>
-            <input aria-label={isContentTable && column.name === 'key' ? 'Поиск по ID ноды' : `Поиск по столбцу: ${getColumnTitle(column)}`} placeholder={isContentTable && column.name === 'key' ? 'Поиск по ID ноды' : `Поиск: ${getColumnTitle(column)}`}
+            <input hidden={!filtersOpen && !view.columnFilters[column.id]} aria-label={isContentTable && column.name === 'key' ? 'Поиск по ID ноды' : `Поиск по столбцу: ${getColumnTitle(column)}`} placeholder={isContentTable && column.name === 'key' ? 'Поиск по ID ноды' : `Поиск: ${getColumnTitle(column)}`}
               title={isContentTable && column.name === 'key' ? 'Оставляет строки, в ID которых есть введённый текст' : `Оставляет строки, где «${getColumnTitle(column)}» содержит введённый текст`} value={view.columnFilters[column.id] ?? ''}
               onChange={(event) => view.setColumnFilters((previous) => ({ ...previous, [column.id]: event.target.value }))} className="table-column-filter mx-2 mb-2 rounded border border-border bg-transparent px-2 py-1 text-xs font-normal" />
             <div role="separator" aria-label={`Ширина столбца: ${getColumnTitle(column)}`} aria-orientation="vertical" tabIndex={0}
