@@ -36,7 +36,7 @@ export function useUpdateUser(params: UseUpdateUserParams) {
   const qClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ userId, data }: { userId: number; data: Partial<UserBotData> }) => {
+    mutationFn: ({ userId, data }: { userId: string; data: Partial<UserBotData> }) => {
       const normalizedData = {
         ...data,
         ...(data.isActive !== undefined && { isActive: data.isActive ? 1 : 0 }),

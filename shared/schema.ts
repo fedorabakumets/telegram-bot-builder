@@ -24,6 +24,7 @@ export type { MediaFile, InsertMediaFile } from "./schema/tables/media-files";
 
 export { botUsers, insertBotUserSchema } from "./schema/tables/bot-users";
 export type { BotUser, InsertBotUser } from "./schema/tables/bot-users";
+export type { UserBotData } from "./schema/user-bot-data";
 
 export { botGroups, insertBotGroupSchema } from "./schema/tables/bot-groups";
 export { chatAccess } from './schema/tables/chat-access';

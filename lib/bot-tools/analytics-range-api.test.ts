@@ -41,7 +41,7 @@ describe('Маршрут точной аналитики', () => {
     expect(counts[0][1]).toEqual([289, null, '2026-10-01T00:00:00.000Z', '2026-10-03T00:00:00.000Z', 86400000]);
     expect(counts[1][1]).toEqual([289, null, '2026-09-29T00:00:00.000Z', '2026-10-01T00:00:00.000Z', 86400000]);
     expect(result.release).toHaveBeenCalledOnce();
-    expect(queries.at(-1)?.[0]).toBe('COMMIT');
+    expect(queries[queries.length - 1]?.[0]).toBe('COMMIT');
   });
   it('использует сохранённые сообщения для обоих окон при внутридневной базе', async () => {
     const result = await requestRange('metric=messages&from=2026-10-01T00:00:00Z&to=2026-10-03T00:00:00Z&step=1d&comparison=explicit&compare_from=2026-09-01T01:00:00Z&compare_to=2026-09-03T01:00:00Z');

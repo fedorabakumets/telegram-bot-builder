@@ -43,7 +43,7 @@ export function UserDetailsPanel({
   const handleUserStatusToggle = (field: 'isActive') => {
     if (!user) return;
     const currentValue = Boolean(user[field as keyof UserBotData]);
-    updateUserMutation.mutate({ [field]: !currentValue ? 1 : 0 } as Partial<UserBotData>);
+    updateUserMutation.mutate({ [field]: !currentValue });
   };
 
   if (!user) {

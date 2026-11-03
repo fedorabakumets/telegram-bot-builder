@@ -24,14 +24,14 @@ export function MobileUserBadges({ user }: MobileUserBadgesProps): React.JSX.Ele
   return (
     <div className="flex flex-wrap gap-2">
       {/* Активен/Неактивен — скрыто */}
-      {Number(user.isPremium) === 1 && (
+      {user.isPremium && (
         <Badge variant="outline" className="text-yellow-600">
           <Crown className="w-3 h-3 mr-1" />
           Premium
         </Badge>
       )}
       {/* Заблокирован — скрыто */}
-      {Number(user.isBot) === 1 && (
+      {user.isBot && (
         <Badge variant="outline">Бот</Badge>
       )}
     </div>

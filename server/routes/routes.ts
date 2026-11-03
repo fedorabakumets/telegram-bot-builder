@@ -12,7 +12,6 @@ import { existsSync, mkdirSync, unlinkSync } from "fs";
 import { type Server } from "http";
 import multer from "multer";
 import { join } from "path";
-import { Pool } from "pg";
 
 /**
  * Экспортируемый экземпляр session middleware для использования в WebSocket.
@@ -20,18 +19,14 @@ import { Pool } from "pg";
  */
 export let exportedSessionMiddleware: RequestHandler | null = null;
 import { z } from "zod";
-import { eq } from "drizzle-orm";
-import { cleanupBotStates } from "../bots/cleanupBotStates";
-import { stopBot } from "../bots/stopBot";
-import { db, pool as dbPool } from "../database/db";
+import { pool as dbPool } from "../database/db";
 import { initializeDatabaseTables } from "../database/init-db";
 import { enrichDialogAccess } from './dialogs/access-store';
-import { ensureDefaultProject } from "../utils/ensureDefaultProject";
 import { downloadFileFromUrl } from "../files/downloadFileFromUrl";
 import { getFileType } from "../files/getFileType";
 import { seedDefaultTemplates } from "../utils/seed-templates";
 import { storage } from "../storages/storage";
-import { authMiddleware, getOwnerIdFromRequest, requireAuth } from "../telegram/auth-middleware";
+import { authMiddleware, getOwnerIdFromRequest } from "../telegram/auth-middleware";
 import { setupGuard } from "../middleware/setup-guard";
 import { getShareableServerEnvKeys } from "../bots/botEnvPolicy";
 import { identifyAgent } from "../middleware/agentTokenMiddleware";
@@ -51,7 +46,6 @@ import { checkUrlAccessibility } from "../utils/checkUrlAccessibility";
 import { validateExternalUrl } from "../utils/validateExternalUrl";
 import { resolveSessionCookieOptions } from "../utils/resolveSessionCookie";
 import { resolveSessionSecret } from "../utils/resolveSessionSecret";
-import { handleTelegramError } from "../utils/telegram-error-handler";
 import { fetchWithProxy } from "../utils/telegram-proxy";
 import { setupAuthRoutes } from "./setupAuthRoutes";
 import {
@@ -300,7 +294,7 @@ const upload = multer({
  * Middleware для исправления кодировки UTF-8 в именах файлов
  * Применяется только к маршрутам загрузки медиа
  */
-function fixUtf8Encoding(req: any, res: any, next: any) {
+function fixUtf8Encoding(req: any, _res: any, next: any) {
   if (req.file && req.file.originalname) {
     try {
       req.file.originalname = Buffer.from(req.file.originalname, 'latin1').toString('utf-8');
@@ -567,6 +561,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch bot instances" });
     }
+    return;
   });
 
   // Template management endpoints (seed — только /admin/api/templates/*)
@@ -808,6 +803,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         details: errorCause !== 'No cause' ? errorCause : undefined
       });
     }
+    return;
   });
 
   // Update bot information via Telegram API
@@ -893,6 +889,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       console.error(`Failed to update bot ${req.body.field}:`, error);
       res.status(500).json({ message: `Failed to update bot ${req.body.field}` });
     }
+    return;
   });
 
   // Create a new token
@@ -983,6 +980,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       console.error('[routes] createBotToken error:', error);
       res.status(500).json({ message: "Failed to create token" });
     }
+    return;
   });
 
   // Update a token by project and token ID
@@ -1038,6 +1036,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       }
       res.status(500).json({ message: "Failed to update token" });
     }
+    return;
   });
 
   // Delete a token for a specific project (hasProjectAccess + сверка projectId)
@@ -1083,6 +1082,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     } catch (error) {
       res.status(500).json({ message: "Ошибка обновления настроек автоперезапуска" });
     }
+    return;
   });
 
   /**
@@ -1115,6 +1115,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     } catch (error) {
       res.status(500).json({ message: "Ошибка обновления защиты контента" });
     }
+    return;
   });
 
   /**
@@ -1158,6 +1159,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     } catch (error) {
       res.status(500).json({ message: "Ошибка обновления настройки сохранения медиа" });
     }
+    return;
   });
 
   /**
@@ -1194,6 +1196,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     } catch (error) {
       res.status(500).json({ message: "Ошибка обновления настройки catch-all обработчиков" });
     }
+    return;
   });
 
   /** Обновляет автоматическое отслеживание блокировок через my_chat_member. */
@@ -1213,6 +1216,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     } catch {
       res.status(500).json({ message: "Ошибка обновления отслеживания блокировок" });
     }
+    return;
   });
 
   /** Обновляет слежение за добавлением и исключением бота в группах. */
@@ -1232,6 +1236,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     } catch {
       res.status(500).json({ message: "Ошибка обновления отслеживания групп" });
     }
+    return;
   });
 
   /**
@@ -1269,6 +1274,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     } catch (error) {
       res.status(500).json({ message: "Ошибка обновления настройки живого обновления контента" });
     }
+    return;
   });
 
   /**
@@ -1303,6 +1309,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     } catch (error) {
       res.status(500).json({ message: "Ошибка обновления настроек юзербота" });
     }
+    return;
   });
 
   /**
@@ -1340,6 +1347,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     } catch (error: any) {
       res.status(500).json({ ok: false, message: error.message || "Ошибка отправки кода" });
     }
+    return;
   });
 
   /**
@@ -1373,6 +1381,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     } catch (error: any) {
       res.status(500).json({ ok: false, message: error.message || "Ошибка авторизации" });
     }
+    return;
   });
 
   /**
@@ -1400,6 +1409,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     } catch (error: any) {
       res.status(500).json({ ok: false, message: error.message || "Ошибка 2FA авторизации" });
     }
+    return;
   });
 
   /**
@@ -1431,6 +1441,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     } catch (error) {
       res.status(500).json({ message: "Ошибка обновления уровня логирования" });
     }
+    return;
   });
 
   /**
@@ -1489,6 +1500,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     } catch (error) {
       res.status(500).json({ message: "Ошибка обновления настроек запуска" });
     }
+    return;
   });
 
   // Get default/first token for .env generation (raw secret + id)
@@ -1649,6 +1661,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         code: "UPLOAD_ERROR"
       });
     }
+    return;
   });
 
   // Загрузка множественных медиафайлов с улучшенной обработкой
@@ -1782,6 +1795,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       res.status(500).json({ message: "Ошибка при загрузке файлов" });
     }
+    return;
   });
 
   // Проверка доступности URL перед загрузкой
@@ -1850,6 +1864,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         code: "CHECK_ERROR"
       });
     }
+    return;
   });
 
   // Загрузка файла по URL с расширенными возможностями
@@ -1997,6 +2012,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         code: "DOWNLOAD_ERROR"
       });
     }
+    return;
   });
 
   // Пакетная загрузка файлов по URL (множественная загрузка)
@@ -2150,6 +2166,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         code: "BATCH_DOWNLOAD_ERROR"
       });
     }
+    return;
   });
 
   // Получение всех медиафайлов проекта (+ fileIdsByToken из media_file_tokens)
@@ -2187,6 +2204,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       console.error("Ошибка при получении файла:", error);
       res.status(500).json({ message: "Ошибка при получении файла" });
     }
+    return;
   });
 
   // Обно��ление медиафайла
@@ -2206,6 +2224,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       console.error("Ошибка при обновлении файла:", error);
       res.status(500).json({ message: "Ошибка при обновлении файла" });
     }
+    return;
   });
 
   // Удаление медиафайла
@@ -2238,6 +2257,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       console.error("Ошибка при удалении файла:", error);
       res.status(500).json({ message: "Ошибка при удалении файла" });
     }
+    return;
   });
 
   // Поиск медиафайлов
@@ -2256,6 +2276,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       console.error("Оши������ка при п����иске ������������йлов:", error);
       res.status(500).json({ message: "Ошибка при поиске файлов" });
     }
+    return;
   });
 
   // Увеличение счетчика использования файла
@@ -2273,6 +2294,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       console.error("Ошибка при обновлении использования файла:", error);
       res.status(500).json({ message: "Ошибка при обновлении использования файла" });
     }
+    return;
   });
 
   // User Bot Data Management endpoints
@@ -2458,15 +2480,20 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       console.error("Error fetching user data:", error);
       /** Ошибка выборки диалогов не должна возвращать групповых отправителей через запасной список. */
       if (isDialogList) return res.status(500).json({ message: 'Не удалось получить диалоги' });
-      // Fallback: прямой запрос к bot_users если основной запрос не сработал
+      /** Запасная выборка сохраняет формат основного ответа; недоступные статусы остаются неизвестными. */
       try {
         const fallbackResult = await dbPool.query(
-          `SELECT user_id AS "userId", username AS "userName", first_name AS "firstName",
+          `SELECT ROW_NUMBER() OVER (ORDER BY last_interaction DESC) AS id,
+                  user_id::text AS "userId", username AS "userName", first_name AS "firstName",
                   last_name AS "lastName", registered_at AS "registeredAt",
-                  last_interaction AS "lastInteraction", interaction_count AS "interactionCount",
-                  user_data AS "userData", is_active AS "isActive", avatar_url AS "avatarUrl",
-                  is_bot AS "isBot", project_id AS "projectId", token_id AS "tokenId",
-                  is_premium AS "isPremium", language_code AS "languageCode"
+                  registered_at AS "createdAt", last_interaction AS "lastInteraction",
+                  COALESCE(interaction_count, 0)::integer AS "interactionCount",
+                  user_data AS "userData", COALESCE(is_active = 1, FALSE) AS "isActive", avatar_url AS "avatarUrl",
+                  COALESCE(is_bot = 1, FALSE) AS "isBot", project_id AS "projectId", token_id AS "tokenId",
+                  COALESCE(is_premium = 1, FALSE) AS "isPremium", language_code AS "languageCode",
+                  NULL AS "isBlocked", NULL AS "isDeleted", FALSE AS "isGroup",
+                  NULL AS "deepLinkParam", NULL AS "referrerId", NULL AS "chatType",
+                  NULL AS "lastMessageText", NULL AS "lastMessageAt"
            FROM bot_users WHERE project_id = $1 AND token_id = $2
            ORDER BY last_interaction DESC`,
           [parseInt(req.params.id), tokenId]
@@ -2479,6 +2506,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         res.status(500).json({ message: "Failed to fetch user data" });
       }
     }
+    return;
   });
 
   // Get user data stats for a project
@@ -2542,6 +2570,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       console.error("Error fetching user stats:", error);
       res.status(500).json({ message: "Failed to fetch user stats" });
     }
+    return;
   });
 
   /**
@@ -2601,6 +2630,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       console.error("Error fetching traffic data:", error);
       res.status(500).json({ message: "Ошибка при получении данных трафика" });
     }
+    return;
   });
 
   /**
@@ -2622,6 +2652,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
 
     await handleUserActivity(req, res, dbPool, projectId, tokenId);
+    return;
   });
 
   /**
@@ -2736,6 +2767,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       console.error("Error fetching growth data:", error);
       res.status(500).json({ message: "Ошибка при получении данных прироста" });
     }
+    return;
   });
 
   /**
@@ -2843,6 +2875,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       console.error("Error fetching growth by source data:", error);
       res.status(500).json({ message: "Ошибка при получении данных прироста по источникам" });
     }
+    return;
   });
 
   /**
@@ -2893,6 +2926,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       console.error("Error fetching popular buttons data:", error);
       res.status(500).json({ message: "Ошибка при получении популярных кнопок" });
     }
+    return;
   });
 
   /**
@@ -3218,6 +3252,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       console.error("Error fetching messages activity:", error);
       res.status(500).json({ message: "Ошибка при получении данных активности сообщений" });
     }
+    return;
   });
 
   app.put(
@@ -3287,6 +3322,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       console.error("Failed to delete user data:", error);
       res.status(500).json({ message: "Failed to delete user data" });
     }
+    return;
   });
 
   // Bot Messages endpoints
@@ -3395,6 +3431,7 @@ function setupTokenEnvVariableRoutes(app: Express) {
     } catch (error) {
       res.status(500).json({ message: "Ошибка создания переменной окружения" });
     }
+    return;
   });
 
   /**
@@ -3437,6 +3474,7 @@ function setupTokenEnvVariableRoutes(app: Express) {
     } catch (error) {
       res.status(500).json({ message: "Ошибка обновления переменной окружения" });
     }
+    return;
   });
 
   /**
@@ -3457,6 +3495,7 @@ function setupTokenEnvVariableRoutes(app: Express) {
     } catch (error) {
       res.status(500).json({ message: "Ошибка удаления переменной окружения" });
     }
+    return;
   });
 
   /**
@@ -3476,6 +3515,7 @@ function setupTokenEnvVariableRoutes(app: Express) {
     } catch (error) {
       res.status(500).json({ message: "Ошибка получения значения" });
     }
+    return;
   });
 
   /**
@@ -3652,6 +3692,7 @@ function setupTokenEnvVariableRoutes(app: Express) {
       console.error("[env-batch] Ошибка:", error?.message || error);
       res.status(500).json({ message: "Ошибка batch обновления переменных" });
     }
+    return;
   });
 }
 

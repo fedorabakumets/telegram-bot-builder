@@ -60,7 +60,7 @@ function updateUserInCache(
   messageAt?: Date,
   isPrivate = true,
 ): void {
-  const now = messageAt ?? new Date();
+  const now = (messageAt ?? new Date()).toISOString();
   queryClient.setQueriesData<InfiniteData<UsersPageResponse>>(
     { queryKey: ['infinite-users', projectId, normalizedTokenId ?? undefined],
       predicate: (query) => isPrivate || !isDialogListCache(query.queryKey) },
@@ -78,7 +78,7 @@ function updateUserInCache(
             interactionCount: (page.users[userIndex].interactionCount ?? 0) + 1,
             // Обновляем поля превью последнего сообщения для DialogListItem
             ...(messageText !== undefined ? { lastMessageText: messageText } : {}),
-            ...(messageAt !== undefined ? { lastMessageAt: messageAt } : {}),
+            ...(messageAt !== undefined ? { lastMessageAt: messageAt.toISOString() } : {}),
           };
 
           // Убираем пользователя с текущей позиции
@@ -112,34 +112,29 @@ function addNewUserToCache(
 ): void {
   const { data } = event;
   const newUser: UserBotData = {
-    id: Date.now() * -1, // временный отрицательный id до refetch
-    projectId,
-    tokenId: event.tokenId ?? normalizedTokenId ?? 0,
-    userId: Number(data.userId),
+    id: String(-Date.now()),
+    userId: String(data.userId),
     userName: data.username ?? null,
     firstName: data.firstName ?? null,
     lastName: data.lastName ?? null,
     avatarUrl: data.avatarUrl ?? null,
-    isBot: data.isBot ?? 0,
-    isPremium: data.isPremium ?? 0,
-    lastInteraction: new Date(data.registeredAt),
+    isBot: Boolean(data.isBot),
+    isPremium: Boolean(data.isPremium),
+    lastInteraction: data.registeredAt,
+    registeredAt: data.registeredAt,
+    createdAt: data.registeredAt,
     interactionCount: 1,
     userData: {},
-    currentState: null,
-    preferences: {},
-    commandsUsed: {},
-    sessionsCount: 1,
-    totalMessagesSent: 0,
-    totalMessagesReceived: 0,
-    deviceInfo: null,
-    locationData: null,
-    contactData: null,
-    isBlocked: 0,
-    isActive: 1,
-    tags: [],
-    notes: null,
-    createdAt: new Date(data.registeredAt),
-    updatedAt: new Date(data.registeredAt),
+    isBlocked: false,
+    isDeleted: false,
+    isActive: true,
+    languageCode: null,
+    deepLinkParam: null,
+    referrerId: null,
+    lastMessageText: null,
+    lastMessageAt: null,
+    isGroup: false,
+    chatType: null,
   };
 
   queryClient.setQueriesData<InfiniteData<UsersPageResponse>>(

@@ -25,7 +25,7 @@ async function loadActiveUsers(projectId: number, options: ActiveUsersAnalyticsO
   return { points: data.points, summary: {
     project_id: projectId, token_id: options.tokenId ?? null, period, ...window, window_days: windowDays,
     active_users: data.active, newcomers: data.newcomers, returning: data.active - data.newcomers,
-    from: data.points[0]?.date ?? null, to: data.points.at(-1)?.date ?? null,
+    from: data.points[0]?.date ?? null, to: data.points[data.points.length - 1]?.date ?? null,
     timestamp_timezone: 'UTC', bucket_timezone: 'UTC',
     activity_source: windowDays === null ? 'bot_messages' : 'user_activity_daily',
     metric_description: 'Уникальные user_id, отправившие входящие сообщения. При выборе всех ботов один человек учитывается один раз в окне и один раз в каждом слоте. Итоги окна берутся из API, а не из суммы точек.',

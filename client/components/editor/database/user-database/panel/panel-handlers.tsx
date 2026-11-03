@@ -45,8 +45,8 @@ export function useUserDatabasePanelHandlers(
     field: 'isActive' | 'isBlocked' | 'isPremium'
   ) => {
     const currentValue = user[field];
-    const newValue = currentValue === 1 ? 0 : 1;
-    const userId = user.id;
+    const newValue = !currentValue;
+    const userId = user.userId;
 
     if (!userId) {
       console.error('User ID not found');
