@@ -1,9 +1,8 @@
-# Полная проверка типов выполняется GitHub Actions на отдельной ветке и в запросах на слияние.
+# Полная проверка типов выполняется после каждого пуша и в запросах на слияние.
 name: TypeScript check
 
 on:
   push:
-    branches: [main, 'codex/github-full-check']
   pull_request:
     branches: [main]
   workflow_dispatch:
