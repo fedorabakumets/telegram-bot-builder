@@ -29,6 +29,7 @@ import {
   type AgentToken,
 } from "@shared/schema";
 import { EnhancedDatabaseStorage } from "../database/EnhancedDatabaseStorage";
+import type { MessageMedia } from "./message-media";
 import type {
   StorageBotGroupInput,
   StorageBotGroupUpdate,
@@ -675,7 +676,7 @@ export interface IStorage {
    * @param messageType - Тип сообщения: 'user' или 'bot' (опционально)
    * @returns Массив сообщений бота с медиафайлами
    */
-  getBotMessagesWithMedia(projectId: number, userId: string, limit?: number, order?: 'asc' | 'desc', messageType?: 'user' | 'bot', tokenId?: number | null): Promise<(BotMessage & { media?: Array<MediaFile & { mediaKind: string; orderIndex: number }> })[]>;
+  getBotMessagesWithMedia(projectId: number, userId: string, limit?: number, order?: 'asc' | 'desc', messageType?: 'user' | 'bot', tokenId?: number | null): Promise<(BotMessage & { media?: MessageMedia[] })[]>;
 
   /**
    * Получить сообщения группового чата по project_id и chat_id
@@ -690,7 +691,7 @@ export interface IStorage {
     chatId: string,
     limit?: number,
     tokenId?: number | null
-  ): Promise<(BotMessage & { media?: Array<MediaFile & { mediaKind: string; orderIndex: number }> })[]>;
+  ): Promise<(BotMessage & { media?: MessageMedia[] })[]>;
 
   /**
    * Удалить сообщения бота по проекту и пользователю
@@ -720,7 +721,7 @@ export interface IStorage {
    * @param messageId - ID сообщения
    * @returns Массив медиафайлов сообщения
    */
-  getMessageMedia(messageId: number): Promise<Array<MediaFile & { mediaKind: string; orderIndex: number }>>;
+  getMessageMedia(messageId: number): Promise<MessageMedia[]>;
 
   /**
    * Сохранить батч записей логов бота

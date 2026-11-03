@@ -161,7 +161,7 @@ export function registerToolDocsTools(server: McpServer): void {
   }, async ({ task }) => {
     const normalized = task.toLowerCase();
     const workflowFiles = await readdir(WORKFLOW_DOCS_DIR).catch(() => []);
-    const directWorkflow = workflowFiles.find((file) => file.endsWith('.md') && normalized.includes(file.replace('.md', '').replaceAll('-', ' ')));
+    const directWorkflow = workflowFiles.find((file) => file.endsWith('.md') && normalized.includes(file.replace('.md', '').replace(/-/g, ' ')));
     if (directWorkflow) return result({ workflow: directWorkflow.replace('.md', ''), content: await readFile(join(WORKFLOW_DOCS_DIR, directWorkflow), 'utf8') });
     const workflow = WORKFLOWS.find((item) => item.keywords.some((keyword) => normalized.includes(keyword)));
     return result(workflow ?? { error: 'Готовый workflow не найден', next: 'Сначала вызови search_tool_docs, затем get_prompt_guide' });

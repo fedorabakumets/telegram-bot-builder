@@ -26,7 +26,7 @@ interface JsonContentLike {
   /** Один example */
   example?: unknown;
   /** Несколько examples */
-  examples?: Record<string, { summary?: string; value?: unknown }>;
+  examples?: unknown;
 }
 
 /**
@@ -125,6 +125,8 @@ export function renderResponseExample(
 function pickExampleValue(content: JsonContentLike | undefined): unknown {
   if (!content) return undefined;
   if (content.example !== undefined) return content.example;
-  const entries = content.examples ? Object.values(content.examples) : [];
-  return entries[0]?.value;
+  if (!content.examples || typeof content.examples !== 'object') return undefined;
+  const first = Object.values(content.examples)[0];
+  if (!first || typeof first !== 'object' || !('value' in first)) return undefined;
+  return first.value;
 }

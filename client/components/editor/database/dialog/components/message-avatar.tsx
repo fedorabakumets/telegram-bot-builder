@@ -4,16 +4,16 @@
  */
 
 import { UserAvatar } from './user-avatar';
-import { UserBotData } from '@shared/schema';
+import type { UserBotData } from '@/types/bot';
 
 /** Свойства аватара сообщения */
 interface MessageAvatarProps {
   /** Тип сообщения: bot или user */
   messageType: 'bot' | 'user';
   /** Данные пользователя (для аватара user) */
-  user?: UserBotData | null;
+  user?: Pick<UserBotData, 'userId'> | null;
   /** Данные бота (опционально; для фото бота достаточно projectId) */
-  bot?: UserBotData | null;
+  bot?: Pick<UserBotData, 'userId'> | null;
   /** ID проекта для прокси аватара */
   projectId?: number;
   /** ID токена бота (`/users/bot/avatar?tokenId=`) */

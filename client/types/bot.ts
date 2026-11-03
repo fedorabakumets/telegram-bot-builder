@@ -49,7 +49,7 @@ export interface UserBotData {
   /** Пользователь Premium */
   isPremium?: boolean | number;
   /** Пользователь заблокировал бота */
-  isBlocked?: boolean;
+  isBlocked?: boolean | null;
   /** Это бот */
   isBot?: boolean | number;
   /** Код языка */
@@ -59,7 +59,7 @@ export interface UserBotData {
   /** ID реферера */
   referrerId?: string | null;
   /** Произвольные данные пользователя */
-  userData?: Record<string, unknown>;
+  userData?: unknown;
   /** Текст последнего сообщения */
   lastMessageText?: string | null;
   /** Время последнего сообщения */

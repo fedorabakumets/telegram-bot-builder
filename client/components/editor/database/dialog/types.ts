@@ -3,7 +3,8 @@
  * @description Содержит расширенные типы сообщений и свойства компонентов
  */
 
-import { BotMessage, UserBotData } from '@shared/schema';
+import { BotMessage } from '@shared/schema';
+import type { UserBotData } from '@/types/bot';
 
 /**
  * Расширенный тип сообщения бота с медиафайлами

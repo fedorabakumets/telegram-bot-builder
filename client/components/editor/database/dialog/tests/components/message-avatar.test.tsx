@@ -121,7 +121,7 @@ describe('MessageAvatar', () => {
       const { container } = render(
         <MessageAvatar
           messageType="user"
-          user={{ userId: 'user123', firstName: 'User', lastName: null, userName: null }}
+          user={{ userId: 'user123' }}
           bot={null}
         />,
       );
@@ -135,7 +135,7 @@ describe('MessageAvatar', () => {
       render(
         <MessageAvatar
           messageType="bot"
-          bot={{ userId: 'bot123', firstName: 'Bot', lastName: null, userName: null }}
+          bot={{ userId: 'bot123' }}
           user={null}
           projectId={1}
         />,
@@ -151,7 +151,7 @@ describe('MessageAvatar', () => {
       render(
         <MessageAvatar
           messageType="bot"
-          bot={{ userId: 'bot123', firstName: 'Bot', lastName: null, userName: null }}
+          bot={{ userId: 'bot123' }}
           user={null}
           projectId={1}
         />,
@@ -166,7 +166,7 @@ describe('MessageAvatar', () => {
       const { container } = render(
         <MessageAvatar
           messageType="bot"
-          bot={{ userId: 'bot123', firstName: 'Bot', lastName: null, userName: null }}
+          bot={{ userId: 'bot123' }}
           user={null}
         />,
       );

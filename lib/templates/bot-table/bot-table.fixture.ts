@@ -37,6 +37,9 @@ export const validParamsRead: BotTableEntry = {
   orderBy: '',
   orderDirection: 'desc',
   limit: 0,
+  aggregateColumn: '',
+  offset: 0,
+  returnInsertedId: false,
   autoTransitionTo: 'msg_1',
 };
 
@@ -56,6 +59,9 @@ export const validParamsInsert: BotTableEntry = {
   orderBy: '',
   orderDirection: 'desc',
   limit: 0,
+  aggregateColumn: '',
+  offset: 0,
+  returnInsertedId: false,
   autoTransitionTo: 'msg_welcome',
 };
 
@@ -78,6 +84,9 @@ export const validParamsUpdate: BotTableEntry = {
   orderBy: '',
   orderDirection: 'desc',
   limit: 0,
+  aggregateColumn: '',
+  offset: 0,
+  returnInsertedId: false,
   autoTransitionTo: 'msg_rep_done',
 };
 
@@ -97,6 +106,9 @@ export const validParamsUpsert: BotTableEntry = {
   orderBy: '',
   orderDirection: 'desc',
   limit: 0,
+  aggregateColumn: '',
+  offset: 0,
+  returnInsertedId: false,
   autoTransitionTo: 'msg_next',
 };
 
@@ -119,6 +131,9 @@ export const validParamsDelete: BotTableEntry = {
   orderBy: '',
   orderDirection: 'desc',
   limit: 0,
+  aggregateColumn: '',
+  offset: 0,
+  returnInsertedId: false,
   autoTransitionTo: '',
 };
 

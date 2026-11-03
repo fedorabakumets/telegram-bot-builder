@@ -57,9 +57,10 @@ function eventToMessage(
     messageData: event.data.messageData ?? {},
     nodeId: event.data.nodeId ?? null,
     primaryMediaId: null,
+    telegramMessageId: null,
     createdAt: new Date(event.data.createdAt),
     media: [],
-  } as BotMessageWithMedia;
+  };
 }
 
 /**
@@ -118,7 +119,8 @@ export function useDialogLiveMessages(
     const userIdStr = String(userId);
 
     const unsubscribe = liveContext.subscribe((msg) => {
-      /** Любое событие должно принадлежать выбранному проекту и боту. */
+      /** Сообщения и их изменения относятся к выбранному проекту и боту. */
+      if (msg.type !== 'new-message' && msg.type !== 'message-deleted' && msg.type !== 'message-edited') return;
       if (msg.projectId !== projectId || (selectedTokenId && msg.tokenId !== selectedTokenId)) return;
       // Обрабатываем событие удаления сообщения
       if (msg.type === 'message-deleted') {

@@ -6,7 +6,7 @@
 import { X, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { UserBotData } from '@shared/schema';
+import type { UserBotData } from '@/types/bot';
 import { WarningTooltip } from './warning-tooltip';
 
 /**

@@ -3,8 +3,6 @@
  * @module lib/bot-tools/needs-message-defaults
  */
 
-import type { Node } from '@shared/schema';
-
 /** Типы триггеров — без полей сообщения */
 const TRIGGER_TYPES = new Set<string>([
   'command_trigger', 'text_trigger', 'incoming_message_trigger', 'group_message_trigger',

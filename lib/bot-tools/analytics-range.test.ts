@@ -1,6 +1,7 @@
 /** @fileoverview Проверки UTC-границ, нулевой базы, протокола и безопасного доступа. */
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import express from 'express';
+import { get } from 'node:http';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import type { Pool } from 'pg';
@@ -10,6 +11,16 @@ import { setupAnalyticsRangeRoutes } from '../../server/routes/analytics/setup-r
 import { createBotcraftMcpServer } from './mcp-register-tools.ts';
 import { getUsersChartInDb } from './users-analytics-db.ts';
 const now = Date.parse('2026-10-13T12:00:00Z');
+/**
+ * Получает HTTP-статус локального сервера независимо от подмены fetch.
+ * @param url - Адрес проверяемого маршрута.
+ * @returns HTTP-статус ответа.
+ */
+function getStatus(url: string): Promise<number | undefined> {
+  return new Promise((resolve, reject) => {
+    get(url, response => { response.resume(); resolve(response.statusCode); }).on('error', reject);
+  });
+}
 afterEach(() => vi.unstubAllGlobals());
 describe('Точные временные диапазоны', () => {
   it('использует ровно 84 дня и независимый шаг', () => {
@@ -48,12 +59,12 @@ describe('Точные временные диапазоны', () => {
     const server = app.listen(0);
     try {
       const address = server.address() as { port: number };
-      expect((await fetch(`http://127.0.0.1:${address.port}/api/projects/289/analytics/range?metric=active_users`)).status).toBe(403);
+      expect(await getStatus(`http://127.0.0.1:${address.port}/api/projects/289/analytics/range?metric=active_users`)).toBe(403);
       expect(connect).not.toHaveBeenCalled();
     } finally { await new Promise<void>(resolve => server.close(() => resolve())); }
   });
   it('передаёт from/to/step существующего графика и накапливает внутри окна', async () => {
-    const mock = vi.fn(async () => Response.json({ current: { summary: { count: 2, incoming: 0, outgoing: 0, newcomers: 0 }, points: [
+    const mock = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) => Response.json({ current: { summary: { count: 2, incoming: 0, outgoing: 0, newcomers: 0 }, points: [
       { date: '2026-10-01T00:00:00Z', count: 2 }, { date: '2026-10-02T00:00:00Z', count: 0 },
     ] } }));
     vi.stubGlobal('fetch', mock);
@@ -62,7 +73,7 @@ describe('Точные временные диапазоны', () => {
     expect(String(mock.mock.calls[0][0])).toContain('/analytics/range?');
   });
   it('доставляет сравнение и безопасный отказ через MCP SDK', async () => {
-    const mock = vi.fn(async () => Response.json({ current: { points: [], summary: { count: 1 } }, previous: { points: [], summary: { count: 0 } }, change: { count: analyticsChange(1, 0) } }));
+    const mock = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) => Response.json({ current: { points: [], summary: { count: 1 } }, previous: { points: [], summary: { count: 0 } }, change: { count: analyticsChange(1, 0) } }));
     vi.stubGlobal('fetch', mock);
     const server = createBotcraftMcpServer({ enableFileTools: false });
     const client = new Client({ name: 'range-test', version: '1.0.0' });

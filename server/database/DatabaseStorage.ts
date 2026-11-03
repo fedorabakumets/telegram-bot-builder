@@ -5,6 +5,7 @@
 import { type BotGroup, botGroups, type BotInstance, botInstances, type BotMessage, type BotMessageMedia, botMessageMedia, botMessages, type BotProject, botProjects, type BotTemplate, botTemplates, type BotToken, botTokens, botUsers, type GroupMember, groupMembers, type MediaFile, mediaFiles, type TelegramUserDB, telegramUsers, botLogs, type BotLog, botLaunchHistory, type BotLaunchHistory, projectCollaborators, type ProjectCollaborator, userProjectArchives, broadcasts, broadcastResults, broadcastCampaigns, type Broadcast, type BroadcastResult, type BroadcastFilters, type BroadcastCampaign, botEnvVariables, type BotEnvVariable, botTables, botTableColumns, botTableRows, type BotTable, type BotTableColumn, type BotTableRow, workerProcesses, type WorkerProcess, projectVersions, type ProjectVersion, agentTokens, type AgentToken } from "@shared/schema";
 import { and, asc, desc, eq, gte, ilike, lt, inArray, isNull, notInArray, or, sql } from "drizzle-orm";
 import { IStorage } from "../storages/storage";
+import type { MessageMedia } from "../storages/message-media";
 import type { StorageBotGroupInput, StorageBotGroupUpdate, StorageBotInstanceInput, StorageBotInstanceUpdate, StorageBotLaunchHistoryInput, StorageBotLaunchHistoryUpdate, StorageBotLogInput, StorageBotMessageInput, StorageBotMessageMediaInput, StorageBotProjectInput, StorageBotProjectUpdate, StorageBotTemplateInput, StorageBotTemplateUpdate, StorageBotTokenInput, StorageBotTokenUpdate, StorageGroupMemberInput, StorageGroupMemberUpdate, StorageMediaFileInput, StorageMediaFileUpdate, StorageTelegramUserInput, StorageBroadcastInput, StorageBroadcastUpdate, StorageBroadcastResultInput, StorageBroadcastCampaignInput, StorageBroadcastCampaignUpdate, StorageBotEnvVariableInput, StorageBotEnvVariableUpdate, StorageBotTableInput, StorageBotTableColumnInput, StorageBotTableRowInput, StorageWorkerProcessInput } from "../storages/storageTypes";
 import { db } from "./db";
 import { revokeOwnedAgentToken } from "../auth/agent/repository";
@@ -1272,7 +1273,7 @@ export class DatabaseStorage implements IStorage {
    * @param messageId - ID сообщения
    * @returns Массив медиафайлов сообщения
    */
-  async getMessageMedia(messageId: number): Promise<Array<MediaFile & { mediaKind: string; orderIndex: number; }>> {
+  async getMessageMedia(messageId: number): Promise<MessageMedia[]> {
     const result = await this.db
       .select({
         id: mediaFiles.id,
@@ -1316,7 +1317,7 @@ export class DatabaseStorage implements IStorage {
     order: 'asc' | 'desc' = 'asc',
     messageType?: 'user' | 'bot',
     tokenId?: number | null
-  ): Promise<(BotMessage & { media?: Array<MediaFile & { mediaKind: string; orderIndex: number; }> | undefined; })[]> {
+  ): Promise<(BotMessage & { media?: MessageMedia[] | undefined; })[]> {
     const whereConditions = [
       eq(botMessages.projectId, projectId),
       eq(botMessages.userId, userId),
@@ -1365,7 +1366,7 @@ export class DatabaseStorage implements IStorage {
     chatId: string,
     limit: number = 100,
     tokenId?: number | null
-  ): Promise<(BotMessage & { media?: Array<MediaFile & { mediaKind: string; orderIndex: number }> })[]> {
+  ): Promise<(BotMessage & { media?: MessageMedia[] })[]> {
     const whereConditions = [
       eq(botMessages.projectId, projectId),
       eq(botMessages.chatId, chatId),

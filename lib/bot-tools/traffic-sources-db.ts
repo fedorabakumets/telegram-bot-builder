@@ -35,7 +35,7 @@ async function loadTrafficSources(projectId: number, options: TrafficSourcesOpti
     sources: shown.map(([source, count]) => ({ source, count, percentage: total ? Math.round(count / total * 1000) / 10 : 0 })),
     other_count: otherCount, other_percentage: total ? Math.round(otherCount / total * 1000) / 10 : 0,
     granularity: window?.granularity ?? null, step: window?.step ?? null,
-    from: points[0]?.date ?? null, to: points.at(-1)?.date ?? null, timestamp_timezone: 'UTC',
+    from: points[0]?.date ?? null, to: points[points.length - 1]?.date ?? null, timestamp_timezone: 'UTC',
     bucket_timezone: window ? 'UTC' : null,
     metric_description: 'Число записей bot_users по текущему deep_link_param. Отсутствующий параметр обозначается direct. Один человек у разных ботов может учитываться несколько раз. Параметр может меняться; это не история всех переходов по ссылкам.',
     range_description: period === 'all' ? 'Текущая сохранённая аудитория без ограничения по registered_at; временного ряда нет.'

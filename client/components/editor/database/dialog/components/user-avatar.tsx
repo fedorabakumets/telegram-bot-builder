@@ -7,7 +7,7 @@
  */
 
 import { Bot, User } from 'lucide-react';
-import { UserBotData } from '@shared/schema';
+import type { UserBotData } from '@/types/bot';
 import { useState } from 'react';
 import { isAvatarUrlFailed, markAvatarUrlFailed } from '@/lib/avatar-failed-cache';
 
@@ -16,7 +16,7 @@ interface UserAvatarProps {
   /** Тип сообщения: bot или user */
   messageType: 'bot' | 'user';
   /** Данные пользователя */
-  user?: UserBotData | null;
+  user?: Pick<UserBotData, 'userId'> | null;
   /** ID проекта для прокси */
   projectId?: number;
   /** ID токена для резолва file_id аватара */

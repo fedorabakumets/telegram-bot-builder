@@ -61,7 +61,7 @@ async function loadUsersAnalytics(projectId: number, options: UsersAnalyticsOpti
   if (!validUsersCount(summary.newUsers)) throw new Error('Некорректная сумма прироста API');
   return { points, base, growthQuery, snapshot: audienceSnapshot(stats), summary: {
     project_id: projectId, token_id: options.tokenId ?? null, period, ...window,
-    from: points[0]?.date ?? null, to: points.at(-1)?.date ?? null,
+    from: points[0]?.date ?? null, to: points[points.length - 1]?.date ?? null,
     total_users: summary.totalUsers, new_users: summary.newUsers, initial_users: summary.initialUsers,
     timestamp_timezone: 'UTC', bucket_timezone: 'UTC',
     metric_description: 'Количество записей bot_users. Один человек у разных ботов учитывается несколько раз.',
@@ -136,7 +136,7 @@ export async function getUsersChartInDb(projectId: number, options: UsersAnalyti
     } else {
       points = mode === 'cumulative' ? calculateCumulativeGrowth(data.points, data.summary.total_users) : data.points;
     }
-    return { ...data.summary, from: points[0]?.date ?? null, to: points.at(-1)?.date ?? null,
+    return { ...data.summary, from: points[0]?.date ?? null, to: points[points.length - 1]?.date ?? null,
       mode, group_by: groupBy, points,
       accumulation_scope: mode === 'cumulative' ? (groupBy === 'source' ? 'selected_period' : 'all_time') : null,
       chart_description: groupBy === 'source'

@@ -117,11 +117,10 @@ const REWRITABLE_BUTTON_ACTIONS = new Set(['goto', 'command', 'default']);
 /**
  * Вычисляет эффект кнопки.
  * @param action - Действие кнопки
- * @param keyboardType - Тип клавиатуры
  * @param target - Целевая нода
  * @returns Эффект нажатия
  */
-function buttonEffect(action: string, keyboardType: string, target?: Node): ButtonEffect {
+function buttonEffect(action: string, target?: Node): ButtonEffect {
   if (EXTERNAL_ACTIONS.has(action)) return 'external';
   if (!target) return 'missing_target';
   if (SEND_NEW_NODE_TYPES.has(target.type)) return 'send_new';
@@ -168,7 +167,7 @@ export function reportButtonNavigation(project: Record<string, unknown>, sheetId
           keyboardType: group.type,
           targetId,
           targetType: target?.type,
-          effect: buttonEffect(action, group.type, target),
+          effect: buttonEffect(action, target),
         });
       }
     }

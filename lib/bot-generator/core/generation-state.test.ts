@@ -106,7 +106,7 @@ describe('markComponentGenerated / isComponentGenerated', () => {
 // Интеграционные тесты: pipeline использует emitOnce
 // ---------------------------------------------------------------------------
 
-function makeMinimalBotData(): BotData {
+function makeMinimalBotData(): BotData & { connections: [] } {
   return {
     nodes: [
       {

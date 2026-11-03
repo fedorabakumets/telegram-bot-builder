@@ -110,7 +110,7 @@ export async function getGroupsChartInDb(projectId: number, options: GroupsAnaly
     const points = mode === 'cumulative' ? calculateCumulativeGrowth(slots, summary.total_groups) : slots;
     return {
       ...summary, period, granularity: window.granularity, step: window.step, mode,
-      from: points[0]?.date ?? null, to: points.at(-1)?.date ?? null, points,
+      from: points[0]?.date ?? null, to: points[points.length - 1]?.date ?? null, points,
       timestamp_timezone: 'UTC', bucket_timezone: 'UTC',
       accumulation_scope: mode === 'cumulative' ? 'all_time' : null,
       range_description: 'from и to — начало первого и последнего слота. Точка отмечает первое сохранение группы в панели, а не более раннее вступление, если слежение тогда ещё не работало.',

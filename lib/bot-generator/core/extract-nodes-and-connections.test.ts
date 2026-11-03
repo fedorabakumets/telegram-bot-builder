@@ -1,8 +1,15 @@
+/** @fileoverview Проверки восстановления связей между узлами листа. */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import type { BotDataWithSheets, Node } from '@shared/schema';
 import { extractNodesAndConnections } from './extract-nodes-and-connections';
 
+/**
+ * Создаёт минимальный узел сообщения для проверки связей.
+ * @param id - Идентификатор узла.
+ * @param data - Дополнительные поля узла.
+ * @returns Тестовый узел сообщения.
+ */
 function makeMessageNode(id: string, data: Record<string, unknown> = {}): Node {
   return {
     id,
@@ -14,9 +21,15 @@ function makeMessageNode(id: string, data: Record<string, unknown> = {}): Node {
       keyboardType: 'none',
       ...data,
     },
-  } as Node;
+  } as unknown as Node;
 }
 
+/**
+ * Создаёт условный узел с переходом.
+ * @param id - Идентификатор узла.
+ * @param target - Идентификатор целевого узла.
+ * @returns Тестовый условный узел.
+ */
 function makeConditionNode(id: string, target: string): Node {
   return {
     id,
@@ -31,6 +44,11 @@ function makeConditionNode(id: string, target: string): Node {
   } as Node;
 }
 
+/**
+ * Создаёт узел клавиатуры с переходом.
+ * @param id - Идентификатор узла.
+ * @returns Тестовый узел клавиатуры.
+ */
 function makeKeyboardNode(id: string): Node {
   return {
     id,
@@ -58,9 +76,9 @@ describe('extractNodesAndConnections', () => {
           makeKeyboardNode('kbd_1'),
           makeMessageNode('msg_2'),
         ],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        viewState: { zoom: 100, position: { x: 0, y: 0 } },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        viewState: { zoom: 100, pan: { x: 0, y: 0 } },
       }],
       version: 2,
       activeSheetId: 'sheet_1',

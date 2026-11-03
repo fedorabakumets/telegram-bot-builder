@@ -10,7 +10,7 @@ import type { UserBotData } from '@/types/bot';
  * @param userData - Данные пользователя (может быть null)
  * @returns Отформатированное имя (имя + фамилия, или username, или ID)
  */
-export function formatUserName(userData: UserBotData | null): string {
+export function formatUserName(userData: Pick<UserBotData, 'firstName' | 'lastName' | 'userName' | 'userId'> | null): string {
   if (!userData) return '';
   
   const parts: string[] = [];

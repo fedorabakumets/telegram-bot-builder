@@ -14,7 +14,7 @@ export function readFileMessageUser(): UserBotData | null {
   const fromAnalytics = !!analyticsReturnHref();
   if (!userId || !/^-?\d+$/.test(userId) || (!fromAnalytics && (!Number.isSafeInteger(message) || message <= 0))) return null;
   const chatType = params.get('chatType');
-  return { userId, firstName: `Telegram ${userId}`, isGroup: ['group', 'supergroup', 'channel'].includes(chatType ?? ''), chatType } as unknown as UserBotData;
+  return { userId, firstName: `Telegram ${userId}`, isGroup: ['group', 'supergroup', 'channel'].includes(chatType ?? ''), chatType };
 }
 
 /**

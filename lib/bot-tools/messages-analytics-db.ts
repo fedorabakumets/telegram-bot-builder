@@ -38,7 +38,7 @@ async function loadMessagesAnalytics(projectId: number, options: MessagesAnalyti
   const windowDays = ({ '7d': 7, '30d': 30, '12w': 84, '12m': 365 } as Partial<Record<string, number>>)[period] ?? null;
   return { points, summary: {
     project_id: projectId, token_id: options.tokenId ?? null, period, ...window, window_days: windowDays,
-    from: points[0]?.date ?? null, to: points.at(-1)?.date ?? null,
+    from: points[0]?.date ?? null, to: points[points.length - 1]?.date ?? null,
     total_messages: counts.totalMessages, period_messages: counts.periodMessages,
     incoming_messages: counts.incomingMessages, outgoing_messages: counts.outgoingMessages,
     total_users: stats.totalUsers, average_per_user: counts.averagePerUser,
