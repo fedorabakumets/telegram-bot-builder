@@ -100,16 +100,9 @@ async def register_telegram_photo(message_id: int, file_id: str, bot_token: str,
 async def send_photo_with_caption(chat_id: int, photo_source, caption: str = None, **kwargs):
     """Отправляет фото с подписью и сохраняет в базу данных"""
     try:
-        if isinstance(photo_source, str) and photo_source.startswith('/uploads/'):
-            file_path = get_upload_file_path(photo_source)
-            if not os.path.exists(file_path):
-                logging.error(f"❌ Медиафайл не найден: {file_path}")
-                if caption:
-                    return await bot.send_message(chat_id, caption, **kwargs)
-                return None
-            result = await bot.send_photo(chat_id, FSInputFile(file_path), caption=caption, **kwargs)
-        else:
-            result = await bot.send_photo(chat_id, photo_source, caption=caption, **kwargs)
+        if isinstance(photo_source, str) and await is_registered_media(photo_source):
+            photo_source = await resolve_media_input(photo_source)
+        result = await bot.send_photo(chat_id, photo_source, caption=caption, **kwargs)
 
         message_data_obj = {"message_id": result.message_id if result else None}
         if result and hasattr(result, "photo") and result.photo:
@@ -131,5 +124,4 @@ async def send_photo_with_caption(chat_id: int, photo_source, caption: str = Non
         return result
     except Exception as e:
         logging.error(f"Ошибка при отправке фото: {e}")
-        if caption:
-            return await bot.send_message(chat_id, caption, **kwargs)
+        raise

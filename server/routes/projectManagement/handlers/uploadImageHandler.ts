@@ -1,142 +1,65 @@
 /**
- * @fileoverview Обработчик загрузки изображений по URL
- * 
- * API endpoint для загрузки изображений из интернета и сохранения
- * их на сервере для последующего использования в боте.
- * 
- * @module uploadImageHandler
+ * @fileoverview Загрузка изображения в выбранное хранилище проекта.
  */
+import type { Request, Response } from 'express';
+import { mkdir, writeFile, unlink } from 'node:fs/promises';
+import path from 'node:path';
+import { randomUUID } from 'node:crypto';
+import { downloadFileFromUrl } from '../../../files/downloadFileFromUrl';
+import { storage } from '../../../storages/storage';
+import { getOwnerIdFromRequest } from '../../../telegram/auth-middleware';
+import { ensureStorageRegistryLoaded } from '../../../storage/storage-registry';
+import { persistUploadToBackend, resolveUploadBackend, StorageBackendWriteError } from '../../media/upload-storage-helper';
+import { createRegisteredUpload } from '../../media/create-registered-upload';
 
-import { Request, Response } from "express";
-import { downloadImageFromUrl } from "../../../files/downloadImageFromUrl";
-import { mkdirSync } from "node:fs";
-import path from "node:path";
-import { writeFileSync } from "node:fs";
-import { storage } from "../../../storages/storage";
-import { getOwnerIdFromRequest } from "../../../telegram/auth-middleware";
-
-/**
- * Тип данных запроса загрузки изображения
+/** Загружает изображение из base64 или по внешнему адресу.
+ * @param req - Запрос с проектом и изображением
+ * @param res - Ответ с зарегистрированной ссылкой
+ * @returns Результат обработки запроса
  */
-interface UploadImageRequest {
-  /** URL изображения для загрузки */
-  imageUrl: string;
-  /** ID проекта */
-  projectId: number;
-  /** Имя узла для формирования имени файла */
-  nodeName: string;
-  /** Base64 изображение (опционально) */
-  imageBase64?: string;
-}
-
-/**
- * Обработчик POST запроса для загрузки изображения по URL
- * 
- * @param req - Express request объект
- * @param res - Express response объект
- * @returns JSON ответ с результатом загрузки
- * 
- * @example
- * POST /api/media/upload-from-url
- * Body: { imageUrl: 'https://...', projectId: 47, nodeName: 'start' }
- */
-export async function uploadImageHandler(
-  req: Request,
-  res: Response
-): Promise<void> {
+export async function uploadImageHandler(req: Request, res: Response): Promise<void> {
+  let staged: string | undefined;
   try {
-    const { imageUrl, projectId, nodeName, imageBase64 }: UploadImageRequest = req.body;
-
-    // Валидация входных данных
-    if (!projectId || typeof projectId !== 'number') {
-      res.status(400).json({
-        success: false,
-        error: 'Необходимо указать projectId'
-      });
-      return;
+    const { imageUrl, projectId, nodeName, imageBase64, storageConfigId } = req.body;
+    if (!Number.isInteger(projectId) || projectId <= 0 || typeof nodeName !== 'string' || !nodeName) {
+      res.status(400).json({ success: false, error: 'Необходимо указать projectId и nodeName' }); return;
     }
-
     const ownerId = getOwnerIdFromRequest(req);
-    if (ownerId === null) {
-      res.status(401).json({ success: false, error: "UNAUTHORIZED" });
-      return;
-    }
-    const hasAccess = await storage.hasProjectAccess(projectId, ownerId);
-    if (!hasAccess) {
-      res.status(403).json({ success: false, error: "Нет доступа к проекту" });
-      return;
-    }
-
-    if (!nodeName || typeof nodeName !== 'string') {
-      res.status(400).json({
-        success: false,
-        error: 'Необходимо указать nodeName'
-      });
-      return;
-    }
-
-    // Если передан base64, сохраняем его напрямую
-    if (imageBase64) {
-      console.log(`📥 Загрузка изображения из base64`);
-      
-      // Создаём путь в формате uploads/{projectId}/{date}/
-      const date = new Date().toISOString().split('T')[0];
-      const uploadDir = path.join(process.cwd(), 'uploads', String(projectId), date);
-      
-      // Создаём директорию
-      mkdirSync(uploadDir, { recursive: true });
-      console.log(`📁 Директория создана: ${uploadDir}`);
-
-      // Генерируем имя файла
-      const timestamp = Date.now();
-      const safeNodeName = nodeName.replace(/[^a-zA-Z0-9_-]/g, '').substring(0, 20);
-      const fileName = `${timestamp}-${safeNodeName}-image.jpg`;
-      const localFilePath = path.join(uploadDir, fileName);
-      const localPath = `/uploads/${projectId}/${date}/${fileName}`;
-
-      // Декодируем base64 и сохраняем
+    if (ownerId === null) { res.status(401).json({ success: false, error: 'UNAUTHORIZED' }); return; }
+    if (!await storage.hasProjectAccess(projectId, ownerId)) { res.status(403).json({ success: false, error: 'Нет доступа к проекту' }); return; }
+    const backend = resolveUploadBackend(await ensureStorageRegistryLoaded(), storageConfigId);
+    const date = new Date().toISOString().slice(0, 10);
+    const dir = path.join(process.cwd(), 'uploads', String(projectId), date);
+    await mkdir(dir, { recursive: true });
+    const name = `${randomUUID()}-image.jpg`;
+    staged = path.join(dir, name);
+    let size: number;
+    let mime = 'image/jpeg';
+    if (typeof imageBase64 === 'string' && imageBase64) {
+      if (imageBase64.length > 70 * 1024 * 1024) throw new Error('Превышен допустимый размер файла');
       const buffer = Buffer.from(imageBase64, 'base64');
-      writeFileSync(localFilePath, buffer);
-
-      console.log(`✅ Изображение загружено: ${localPath}`);
-
-      res.json({
-        success: true,
-        localPath,
-        message: 'Изображение успешно загружено'
-      });
-      return;
-    }
-
-    // Если base64 не передан, пробуем загрузить по URL
-    if (!imageUrl || typeof imageUrl !== 'string') {
-      res.status(400).json({
-        success: false,
-        error: 'Необходимо указать imageUrl или imageBase64'
-      });
-      return;
-    }
-
-    // Загружаем изображение по URL
-    const result = await downloadImageFromUrl(imageUrl, projectId, nodeName);
-
-    if (result.success && result.localPath) {
-      res.json({
-        success: true,
-        localPath: result.localPath,
-        message: 'Изображение успешно загружено'
-      });
-    } else {
-      res.status(500).json({
-        success: false,
-        error: result.error || 'Ошибка загрузки изображения'
-      });
-    }
-  } catch (error) {
-    console.error('Ошибка в uploadImageHandler:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Внутренняя ошибка сервера'
+      if (!buffer.length || buffer.length > 50 * 1024 * 1024) throw new Error('Недопустимый размер файла');
+      size = buffer.length;
+      await writeFile(staged, buffer);
+    } else if (typeof imageUrl === 'string' && imageUrl) {
+      const result = await downloadFileFromUrl(imageUrl, staged);
+      if (!result.success) throw new Error(result.error || 'Ошибка загрузки');
+      mime = result.mimeType || 'application/octet-stream';
+      if (!mime.startsWith('image/')) throw new Error('Ссылка не содержит изображение');
+      size = result.size || 0;
+    } else { res.status(400).json({ success: false, error: 'Необходимо указать imageUrl или imageBase64' }); return; }
+    const logicalUrl = `/uploads/${projectId}/${date}/${name}`;
+    const persisted = await persistUploadToBackend(backend, { path: staged, mimetype: mime } as Express.Multer.File, staged, logicalUrl);
+    const file = await createRegisteredUpload(backend, persisted, {
+      projectId, fileName: name, fileType: 'photo', filePath: persisted.filePath, fileSize: size,
+      mimeType: mime, url: persisted.url, storageBackend: persisted.storageBackend,
+      storageConfigId: persisted.storageConfigId, description: nodeName, tags: [], isPublic: 0,
+      uploadedBy: ownerId,
     });
+    staged = undefined;
+    res.json({ success: true, localPath: file.url, fileId: file.id, message: 'Изображение успешно загружено' });
+  } catch (error) {
+    if (staged) await unlink(staged).catch(() => {});
+    res.status(error instanceof StorageBackendWriteError ? 502 : 400).json({ success: false, error: error instanceof StorageBackendWriteError ? 'Хранилище недоступно' : 'Не удалось загрузить изображение' });
   }
 }

@@ -223,9 +223,11 @@ describe('saveIncomingMedia', () => {
     expect(r).not.toContain('asyncio.create_task(_save_incoming_photo_to_db');
   });
 
-  it('содержит INSERT INTO media_files при saveIncomingMedia=true', () => {
+  it('сохраняет фото через API проекта и ищет точное сообщение', () => {
     const r = generateMessageLoggingCode(true, false, null, true, true);
-    expect(r).toContain('INSERT INTO media_files');
+    expect(r).toContain('/api/runtime/media/incoming-photo');
+    expect(r).toContain('telegram_message_id=$4');
+    expect(r).not.toContain('INSERT INTO media_files');
   });
 
   it('содержит INSERT INTO bot_message_media при saveIncomingMedia=true', () => {

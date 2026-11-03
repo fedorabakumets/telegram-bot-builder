@@ -3,6 +3,9 @@
  * @module server/index
  */
 
+import { apiLogPath, mayLogApiResponse } from "./utils/api-log-policy";
+
+
 import { captureAgentBody } from "./auth/agent/signature";
 import dotenv from "dotenv";
 import express, { NextFunction, type Request, Response } from "express";
@@ -86,7 +89,7 @@ app.use(express.text({ limit: '50mb', type: 'text/plain' }));
  */
 app.use((req, res, next) => {
   const start = Date.now();
-  const path = req.path;
+  const path = apiLogPath(req.originalUrl);
   let capturedJsonResponse: Record<string, any> | undefined = undefined;
 
   const originalResJson = res.json;
@@ -104,7 +107,7 @@ app.use((req, res, next) => {
       }
 
       let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse && !path.startsWith("/api/auth/agent/")) {
+      if (capturedJsonResponse && mayLogApiResponse(path)) {
         logLine += ` :: ${redactSecrets(JSON.stringify(capturedJsonResponse))}`;
       }
 

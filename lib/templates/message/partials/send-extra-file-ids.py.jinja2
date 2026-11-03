@@ -18,7 +18,7 @@
                 _fid_data = json.loads("""{{ _mediaItem }}""")
                 if _fid_data.get("__type") == "file_id":
                     _fid_map = _fid_data.get("fileIdsByToken", {})
-                    _fid = _fid_map.get(str(TOKEN_ID))
+                    _fid = _fid_map.get(str(TOKEN_ID)) if _b is bot else None
                     if _fid:
                         _media_type = _fid_data.get("mediaType", "photo")
                         logging.info(f"📎 Узел {{ nodeId }}: доп. отправка {_media_type} через file_id={_fid[:20]}... (TOKEN_ID={TOKEN_ID})")
@@ -31,8 +31,8 @@
                         else:
                             await _b.send_document(_target_chat_id, _fid, caption=None, reply_markup=None, message_thread_id=_thread_id{% if userDatabaseEnabled %}, node_id="{{ nodeId }}"{% endif %})
                     else:
-                        logging.warning(f"⚠️ Узел {{ nodeId }}: нет file_id для TOKEN_ID={TOKEN_ID}")
-            except (json.JSONDecodeError, AttributeError):
-                pass
+                        raise ValueError("Для дополнительного вложения отсутствует file_id текущего бота")
+            except (json.JSONDecodeError, AttributeError) as _media_err:
+                raise ValueError("Некорректное дополнительное вложение") from _media_err
 {%- endif %}
 {%- endfor %}

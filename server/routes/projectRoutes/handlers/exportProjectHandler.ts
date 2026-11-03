@@ -14,6 +14,7 @@ import { storage } from "../../../storages/storage";
 import { isPsqlBuiltinEnabled } from "../../../utils/isPsqlBuiltinEnabled";
 import { isPsqlPanelDsnDenied } from "../../../utils/isPsqlPanelDsnDenied";
 import { isBotRuntimeActive } from "../../../bots/resolveBotDatabaseUrl";
+import { exportProjectArchive, prepareArchiveMedia } from "./exportProjectArchive";
 
 /**
  * Обрабатывает запрос на экспорт проекта
@@ -40,14 +41,36 @@ export async function exportProjectHandler(req: Request, res: Response): Promise
 
         const userDatabaseEnabled = project.userDatabaseEnabled === 1;
 
-        const pythonCode = generatePythonCode(project.data as any, {
+        let archiveData: Awaited<ReturnType<typeof prepareArchiveMedia>> | undefined;
+        if (req.query.format === "zip") {
+            try { archiveData = await prepareArchiveMedia(id, project.data); }
+            catch {
+                res.status(422).json({ message: "Не удалось собрать полный архив: проверьте доступность медиафайлов проекта и их общий размер." });
+                return;
+            }
+        }
+        const pythonCode = generatePythonCode((archiveData?.data ?? project.data) as any, {
             botName: project.name,
+            projectId: id,
             userDatabaseEnabled,
             psqlBuiltinEnabled: isPsqlBuiltinEnabled(),
             psqlPanelDsnDenied: isPsqlPanelDsnDenied(),
             botRuntimeRole: isBotRuntimeActive(),
         });
 
+        if (req.query.format === "zip") {
+            let archive: Uint8Array;
+            try {
+                archive = await exportProjectArchive(id, archiveData!.data, pythonCode, archiveData!.sources);
+            } catch {
+                res.status(422).json({ message: "Не удалось собрать полный архив: проверьте доступность медиафайлов проекта и их общий размер." });
+                return;
+            }
+            res.setHeader("Content-Type", "application/zip");
+            res.setHeader("Content-Disposition", `attachment; filename="bot-${id}.zip"`);
+            res.send(Buffer.from(archive));
+            return;
+        }
         res.json({ code: pythonCode });
     } catch (error) {
         console.error("❌ Ошибка генерации кода:", error);

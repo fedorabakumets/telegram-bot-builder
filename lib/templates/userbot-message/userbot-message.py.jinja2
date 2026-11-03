@@ -89,58 +89,26 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
         _target = int(_entity) if _entity.lstrip('-').isdigit() else _entity
 
 {%- if attachedMedia and attachedMedia|length > 0 %}
-{%- if attachedMedia|length == 1 %}
-{%- set mediaItem = attachedMedia[0] %}
-{%- if '{' in mediaItem and '}' in mediaItem %}
-        # Медиа из переменной
-        _media_val = replace_variables_in_text("{{ mediaItem }}", all_user_vars, {})
-        if _media_val and _media_val != "{{ mediaItem }}":
-{%- if '/uploads/' in mediaItem %}
-            _media_path = get_upload_file_path(_media_val)
-            if os.path.exists(_media_path):
-                sent = await userbot_client.send_file(_target, _media_path, caption=text, parse_mode=_parse_mode, link_preview={{ 'False' if disableLinkPreview else 'True' }})
-            else:
-                logging.error(f"❌ Файл не найден: {_media_path}")
-                sent = await userbot_client.send_message(_target, text, parse_mode=_parse_mode, link_preview={{ 'False' if disableLinkPreview else 'True' }})
-{%- else %}
-            sent = await userbot_client.send_file(_target, _media_val, caption=text, parse_mode=_parse_mode, link_preview={{ 'False' if disableLinkPreview else 'True' }})
-{%- endif %}
-        else:
-            sent = await userbot_client.send_message(_target, text, parse_mode=_parse_mode, link_preview={{ 'False' if disableLinkPreview else 'True' }})
-{%- elif '/uploads/' in mediaItem %}
-        # Локальный файл
-        _media_path = get_upload_file_path("{{ mediaItem }}")
-        if os.path.exists(_media_path):
-            sent = await userbot_client.send_file(_target, _media_path, caption=text, parse_mode=_parse_mode, link_preview={{ 'False' if disableLinkPreview else 'True' }})
-        else:
-            logging.error(f"❌ Файл не найден: {_media_path}")
-            sent = await userbot_client.send_message(_target, text, parse_mode=_parse_mode, link_preview={{ 'False' if disableLinkPreview else 'True' }})
-{%- elif 'http' in mediaItem %}
-        # URL медиа
-        sent = await userbot_client.send_file(_target, "{{ mediaItem }}", caption=text, parse_mode=_parse_mode, link_preview={{ 'False' if disableLinkPreview else 'True' }})
-{%- else %}
-        sent = await userbot_client.send_message(_target, text, parse_mode=_parse_mode, link_preview={{ 'False' if disableLinkPreview else 'True' }})
-{%- endif %}
-{%- else %}
-        # Альбом (несколько файлов)
+        # Подготавливаем все вложения до отправки, сохраняя их порядок.
         _album_files = []
 {%- for mediaItem in attachedMedia %}
-{%- if '/uploads/' in mediaItem %}
-        _fp_{{ loop.index }} = get_upload_file_path("{{ mediaItem }}")
-        if os.path.exists(_fp_{{ loop.index }}):
-            _album_files.append(_fp_{{ loop.index }})
-{%- elif 'http' in mediaItem %}
-        _album_files.append("{{ mediaItem }}")
+{%- if '"__type":"file_id"' in mediaItem %}
+        raise ValueError("Telegram file_id бота недоступен для userbot")
+{%- else %}
+        _media_val = replace_variables_in_text("{{ mediaItem|e }}", all_user_vars, {})
+        if not _media_val or (_media_val == "{{ mediaItem|e }}" and _media_val.startswith("{") and _media_val.endswith("}")):
+            raise ValueError("Не удалось определить вложение userbot")
+        if await is_registered_media(_media_val):
+            _media_val = await resolve_media_original(_media_val)
+        _album_files.append(_media_val)
 {%- endif %}
 {%- endfor %}
-        if _album_files:
+        if len(_album_files) == 1:
+            sent = await userbot_client.send_file(_target, _album_files[0], caption=text, parse_mode=_parse_mode, link_preview={{ 'False' if disableLinkPreview else 'True' }})
+        else:
             sent_list = await userbot_client.send_file(_target, _album_files, caption=text, parse_mode=_parse_mode)
             sent = sent_list[0] if isinstance(sent_list, list) and sent_list else sent_list
-        else:
-            sent = await userbot_client.send_message(_target, text, parse_mode=_parse_mode, link_preview={{ 'False' if disableLinkPreview else 'True' }})
-{%- endif %}
 {%- else %}
-        # Только текст
         sent = await userbot_client.send_message(_target, text, parse_mode=_parse_mode, link_preview={{ 'False' if disableLinkPreview else 'True' }})
 {%- endif %}
 
@@ -148,15 +116,11 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
 
       except Exception as _ub_err:
         logging.error(f"❌ Ошибка отправки через userbot (узел {{ nodeId }}) → {_entity}: {_ub_err}")
-        # FloodWait — ждём и пробуем снова
+        # FloodWait — соблюдаем паузу перед следующим получателем
         if "FloodWaitError" in type(_ub_err).__name__ or "flood" in str(_ub_err).lower():
             _wait = getattr(_ub_err, 'seconds', 30)
             logging.warning(f"⏳ FloodWait: ждём {_wait} секунд")
             await asyncio.sleep(_wait)
-            try:
-                sent = await userbot_client.send_message(_target, text, parse_mode=_parse_mode)
-            except Exception as _retry_err:
-                logging.error(f"❌ Повторная ошибка: {_retry_err}")
 
       # Пауза между получателями (защита от FloodWait)
       if len(_recipients) > 1:

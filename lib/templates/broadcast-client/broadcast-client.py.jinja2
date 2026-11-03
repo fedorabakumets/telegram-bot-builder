@@ -109,26 +109,6 @@ async def handle_broadcast_{{ safeNodeId }}(callback_query, user_id):
     import os
     import re
 
-    def get_full_media_path(url_or_path):
-        if not url_or_path:
-            return None
-        if url_or_path.startswith('http://') or url_or_path.startswith('https://'):
-            return url_or_path
-        if os.path.exists(url_or_path):
-            return url_or_path
-        match = re.search(r'[\/](uploads[\/].+)', url_or_path)
-        if match:
-            relative_path = re.sub(r'^uploads[\/]', '', match.group(1))
-        else:
-            relative_path = url_or_path
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        while current_dir != os.path.dirname(current_dir):
-            full_path = os.path.join(current_dir, 'uploads', relative_path)
-            if os.path.exists(full_path):
-                return full_path
-            current_dir = os.path.dirname(current_dir)
-        return url_or_path
-
     api_id = int(client_session["api_id"])
     api_hash = client_session["api_hash"]
     session_string = client_session["session_string"]
@@ -188,17 +168,22 @@ async def handle_broadcast_{{ safeNodeId }}(callback_query, user_id):
                                                 media_url_to_use = media_value.get("videoUrl") or media_value.get("audioUrl") or media_value.get("documentUrl") or media_value.get("photoUrl") or media_value.get("value")
                                             else:
                                                 media_url_to_use = media_value
+                                    if not media_url_to_use and isinstance(media_var, str) and (await is_registered_media(media_var) or media_var.startswith(("http://", "https://"))):
+                                        media_url_to_use = media_var
+                                    if not media_url_to_use:
+                                        raise ValueError("Не удалось определить вложение рассылки")
                                     if media_url_to_use:
-                                        await app.send_file(recipient, get_full_media_path(media_url_to_use), caption=message_text)
+                                        await app.send_file(recipient, (await resolve_media_original(media_url_to_use) if await is_registered_media(media_url_to_use) else media_url_to_use), caption=message_text)
                                         media_sent = True
                             if not media_sent:
                                 for url in [audio_url, video_url, document_url, image_url]:
                                     if url:
-                                        await app.send_file(recipient, get_full_media_path(url), caption=message_text)
+                                        await app.send_file(recipient, (await resolve_media_original(url) if await is_registered_media(url) else url), caption=message_text)
                                         media_sent = True
                                         break
                         except Exception as media_error:
                             logging.error(f"❌ Ошибка отправки медиа: {media_error}")
+                            raise
                     if not media_sent:
                         await app.send_message(recipient, message_text)
 

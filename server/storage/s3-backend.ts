@@ -20,6 +20,7 @@ import {
   GetObjectCommand,
   DeleteObjectCommand,
   HeadObjectCommand,
+  HeadBucketCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
@@ -119,6 +120,20 @@ export class S3Backend implements StorageBackend {
   }
 
   /**
+   * Проверяет доступ к бакету с ограничением времени.
+   * @returns Признак доступности бакета
+   */
+  async checkAvailability(): Promise<void> {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+    try {
+      await this.client.send(new HeadBucketCommand({ Bucket: this.bucket }), { abortSignal: controller.signal });
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  /**
    * Нормализует ключ объекта: убирает ведущие слеши и приводит разделители к
    * POSIX-стилю (S3-ключи всегда используют `/`).
    * @param key - Относительный ключ объекта
@@ -189,6 +204,31 @@ export class S3Backend implements StorageBackend {
       if (isS3NotFound(err)) return null;
       throw err;
     }
+  }
+
+  /** Получает фактическую версию и размер объекта.
+   * @param key - Ключ объекта
+   * @param signal - Сигнал отмены запроса
+   * @returns Размер и версия объекта
+   */
+  async headMetadata(key: string, signal?: AbortSignal): Promise<{ size: number; version: string; etag: string }> {
+    const res = await this.client.send(new HeadObjectCommand({ Bucket: this.bucket, Key: this.normalizeKey(key) }), { abortSignal: signal });
+    if (res.ContentLength == null || !res.ETag) {
+      throw new Error('Хранилище не предоставило версию объекта');
+    }
+    return { size: res.ContentLength, etag: res.ETag, version: `${res.VersionId ?? ''}:${res.ETag}:${res.LastModified?.toISOString() ?? ''}` };
+  }
+
+  /** Читает объект только при совпадении версии.
+   * @param key - Ключ объекта
+   * @param etag - Версия, полученная при проверке объекта
+   * @param signal - Сигнал отмены запроса
+   * @returns Поток объекта
+   */
+  async getIfMatch(key: string, etag: string, signal?: AbortSignal): Promise<NodeJS.ReadableStream> {
+    const res = await this.client.send(new GetObjectCommand({ Bucket: this.bucket, Key: this.normalizeKey(key), IfMatch: etag }), { abortSignal: signal });
+    if (!res.Body) throw new Error('Пустое тело объекта');
+    return res.Body as NodeJS.ReadableStream;
   }
 
   /**

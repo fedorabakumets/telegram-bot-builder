@@ -11,7 +11,7 @@ import express, { type Express } from "express";
 import fs from "fs";
 import path from "path";
 
-import { createUploadsS3Fallback } from "../../media/uploads-s3-fallback";
+import { createRegisteredUploadsFallback } from "../../media/registered-uploads-fallback";
 
 /**
  * Настраивает раздачу статических файлов
@@ -37,6 +37,8 @@ export function serveStatic(app: Express): void {
   // Раздача файлов из dist
   app.use(express.static(distPath));
 
+  // Зарегистрированные файлы читаются из их хранилища до статической раздачи.
+  app.use("/uploads", createRegisteredUploadsFallback());
   // Раздача файлов из основной папки uploads
   const uploadsPath = path.resolve(import.meta.dirname, "..", "..", "..", "..", "uploads");
   if (fs.existsSync(uploadsPath)) {
@@ -68,8 +70,6 @@ export function serveStatic(app: Express): void {
     });
   }
 
-  // Файлов нет на диске — из S3 только ключи, зарегистрированные в media_files
-  app.use("/uploads", createUploadsS3Fallback());
 
   app.use("*", (_req, res) => {
     res.sendFile(path.resolve(distPath, "index.html"));

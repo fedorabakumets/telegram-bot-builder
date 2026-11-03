@@ -34,8 +34,8 @@ describe('sticker.py.jinja2 шаблон', () => {
         const result = generateSticker(validParamsUrl);
 
         assert.ok(result.includes('handle_callback_sticker_2'));
-        assert.ok(result.includes('sticker_url'));
-        assert.ok(result.includes('aiohttp.ClientSession'));
+        assert.ok(result.includes('sticker='));
+        assert.ok(!result.includes('aiohttp.ClientSession'));
         assert.ok(result.includes('bot.send_sticker'));
       });
 

@@ -79,8 +79,8 @@ describe('broadcast-client.py.jinja2', () => {
         assert.ok(r.includes('StringSession'));
       });
 
-      it('содержит get_full_media_path', () => {
-        assert.ok(generateBroadcastClient(validParamsBotUsers).includes('get_full_media_path'));
+      it('использует общий resolver для управляемых файлов', () => {
+        assert.ok(generateBroadcastClient(validParamsBotUsers).includes('await resolve_media_original'));
       });
 
       it('логирует инициализацию Telethon', () => {

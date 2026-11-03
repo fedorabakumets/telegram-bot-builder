@@ -195,11 +195,11 @@ test('A06', 'реальный URL из бага — kpcdn.net с /uploads/ → �
 
 console.log('── Блок B: Локальные /uploads/ пути работают корректно ───────────');
 
-test('B01', 'локальный /uploads/ путь → вызывает get_upload_file_path', () => {
+test('B01', 'локальный /uploads/ путь → использует общий resolver', () => {
   const localPath = '/uploads/116/photo.jpg';
   const p = makeCleanProject([makeMessageWithLocalUpload('msg1', localPath)]);
   const code = gen(p, 'b01');
-  ok(code.includes(`get_upload_file_path("${localPath}")`), 'get_upload_file_path ДОЛЖЕН вызываться для локального пути');
+  ok(code.includes(`resolve_media_input("${localPath}")`), 'общий resolver должен получать ссылку на файл');
 });
 
 test('B02', 'локальный /uploads/ путь → синтаксис Python OK', () => {
@@ -208,11 +208,11 @@ test('B02', 'локальный /uploads/ путь → синтаксис Python
   syntax(gen(p, 'b02'), 'b02');
 });
 
-test('B03', 'локальный /uploads/ путь → содержит os.path.exists проверку', () => {
+test('B03', 'локальный /uploads/ путь → использует общий resolver', () => {
   const localPath = '/uploads/116/photo.jpg';
   const p = makeCleanProject([makeMessageWithLocalUpload('msg1', localPath)]);
   const code = gen(p, 'b03');
-  ok(code.includes('os.path.exists'), 'os.path.exists должен проверяться для локального файла');
+  ok(code.includes('async def resolve_media_original'), 'общий resolver должен быть доступен в коде');
 });
 
 test('B04', 'локальный /uploads/ путь → содержит FSInputFile', () => {
@@ -252,14 +252,14 @@ test('C03', 'внешний documentUrl с /uploads/ → синтаксис OK',
   syntax(gen(p, 'c03'), 'c03');
 });
 
-test('C04', 'локальный videoUrl /uploads/ → вызывает get_upload_file_path', () => {
+test('C04', 'локальный videoUrl /uploads/ → использует общий resolver', () => {
   const localPath = '/uploads/116/video.mp4';
   const p = makeCleanProject([{
     id: 'msg1', type: 'message', position: { x: 0, y: 0 },
     data: { messageText: '', videoUrl: localPath, buttons: [], keyboardType: 'none', formatMode: 'none', markdown: false },
   }]);
   const code = gen(p, 'c04');
-  ok(code.includes(`get_upload_file_path("${localPath}")`), 'get_upload_file_path ДОЛЖЕН вызываться для локального пути');
+  ok(code.includes(`resolve_media_input("${localPath}")`), 'общий resolver должен получать ссылку на файл');
   syntax(code, 'c04');
 });
 
@@ -271,14 +271,14 @@ test('C05', 'animation-нода с внешним URL содержащим /uplo
   syntax(gen(p, 'c05'), 'c05');
 });
 
-test('C06', 'animation-нода с локальным /uploads/ → вызывает get_upload_file_path', () => {
+test('C06', 'animation-нода с локальным /uploads/ → использует общий resolver', () => {
   const localPath = '/uploads/116/anim.gif';
   const p = makeCleanProject([{
     id: 'anim1', type: 'animation', position: { x: 0, y: 0 },
     data: { animationUrl: localPath, buttons: [], keyboardType: 'none' },
   }]);
   const code = gen(p, 'c06');
-  ok(code.includes(`get_upload_file_path("${localPath}")`), 'get_upload_file_path ДОЛЖЕН вызываться для локального пути');
+  ok(code.includes(`resolve_media_input("${localPath}")`), 'общий resolver должен получать ссылку на файл');
   syntax(code, 'c06');
 });
 

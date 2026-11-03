@@ -8,7 +8,7 @@
  */
 
 import fs from 'fs';
-import { execSync } from 'child_process';
+import { execFileSync, execSync } from 'child_process';
 import { generatePythonCode } from '../bot-generator.ts';
 
 /** Результат одного теста */
@@ -319,6 +319,99 @@ test('D06', 'Исходящий file_id сохраняет ID блока при 
   const code = generatePythonCode(project, { botName: 'Origin', userDatabaseEnabled: true });
   ok(code.includes('node_id="origin_test"'), 'Отправка должна передавать ID блока');
   syntax(code, 'node_origin');
+});
+
+// Проверяем фактический вызов Telegram с двумя вложениями, а не только текст шаблона.
+test('D07', 'два обычных файла отправляются одним альбомом в заданном порядке', () => {
+  const node = makeFileIdNode('album_runtime', 'photo', {});
+  node.data.attachedMedia = ['/uploads/first.jpg', '/uploads/second.jpg'];
+  const code = gen(makeProject([node]), 'album_runtime');
+  const tmp = '_tmp_media_album_runtime.py';
+  fs.writeFileSync(tmp, code, 'utf-8');
+  const runner = `
+import ast, asyncio, logging, sys
+source = open(sys.argv[1], encoding='utf-8').read()
+tree = ast.parse(source)
+fn = next(n for n in ast.walk(tree) if isinstance(n, ast.AsyncFunctionDef) and n.name == '_send_to_album_runtime')
+class Media:
+    def __init__(self, media, **kwargs): self.media = media
+class Bot:
+    async def send_media_group(self, chat_id, media, **kwargs):
+        self.items = [x.media for x in media]
+        return [object(), object()]
+async def resolve_media_input(value): return 'file:' + value
+bot = Bot()
+namespace = dict(bot=bot, text='текст', keyboard=None, logging=logging,
+                 InputMediaPhoto=Media, resolve_media_input=resolve_media_input,
+                 _media_file_id_cache={})
+exec(compile(ast.fix_missing_locations(ast.Module(body=[fn], type_ignores=[])), '<test>', 'exec'), namespace)
+asyncio.run(namespace['_send_to_album_runtime'](123))
+assert bot.items == ['file:/uploads/first.jpg', 'file:/uploads/second.jpg'], bot.items
+`;
+  try { execFileSync('python', ['-c', runner, tmp], { stdio: 'pipe' }); }
+  finally { fs.unlinkSync(tmp); }
+});
+
+test('D08', 'старый абсолютный URL и внешний URL разрешаются отдельно', () => {
+  const node = makeFileIdNode('album_legacy', 'photo', {});
+  node.data.attachedMedia = ['https://old.example/first.jpg', 'https://outside.example/uploads/second.jpg'];
+  const code = gen(makeProject([node]), 'album_legacy');
+  const tmp = '_tmp_media_album_legacy.py';
+  fs.writeFileSync(tmp, code, 'utf-8');
+  const runner = `
+import ast, asyncio, logging, sys
+source = open(sys.argv[1], encoding='utf-8').read()
+tree = ast.parse(source)
+fn = next(n for n in ast.walk(tree) if isinstance(n, ast.AsyncFunctionDef) and n.name == '_send_to_album_legacy')
+class Media:
+    def __init__(self, media, **kwargs): self.media = media
+class Bot:
+    async def send_media_group(self, chat_id, media, **kwargs):
+        self.items = [x.media for x in media]
+        return [object(), object()]
+async def resolve_media_input(value): return 'file:' + value
+async def is_registered_media(value): return value == 'https://old.example/first.jpg'
+bot = Bot()
+namespace = dict(bot=bot, text='текст', keyboard=None, logging=logging,
+                 InputMediaPhoto=Media, resolve_media_input=resolve_media_input, is_registered_media=is_registered_media,
+                 _media_file_id_cache={})
+exec(compile(ast.fix_missing_locations(ast.Module(body=[fn], type_ignores=[])), '<test>', 'exec'), namespace)
+asyncio.run(namespace['_send_to_album_legacy'](123))
+assert bot.items == ['file:https://old.example/first.jpg', 'https://outside.example/uploads/second.jpg'], bot.items
+`;
+  try { execFileSync('python', ['-c', runner, tmp], { stdio: 'pipe' }); }
+  finally { fs.unlinkSync(tmp); }
+});
+
+test('D09', 'старые proxy-ссылки сохраняются и отправляются в альбоме', () => {
+  const node = makeFileIdNode('album_proxy', 'photo', {});
+  node.data.attachedMedia = ['/api/storage/proxy/first.jpg', '/api/media/s3-proxy/second.jpg'];
+  const code = gen(makeProject([node]), 'album_proxy');
+  const tmp = '_tmp_media_album_proxy.py';
+  fs.writeFileSync(tmp, code, 'utf-8');
+  const runner = `
+import ast, asyncio, logging, sys
+source = open(sys.argv[1], encoding='utf-8').read()
+tree = ast.parse(source)
+fn = next(n for n in ast.walk(tree) if isinstance(n, ast.AsyncFunctionDef) and n.name == '_send_to_album_proxy')
+class Media:
+    def __init__(self, media, **kwargs): self.media = media
+class Bot:
+    async def send_media_group(self, chat_id, media, **kwargs):
+        self.items = [x.media for x in media]
+        return [object(), object()]
+async def resolve_media_input(value): return 'file:' + value
+async def is_registered_media(value): return True
+bot = Bot()
+namespace = dict(bot=bot, text='текст', keyboard=None, logging=logging,
+                 InputMediaPhoto=Media, resolve_media_input=resolve_media_input, is_registered_media=is_registered_media,
+                 _media_file_id_cache={})
+exec(compile(ast.fix_missing_locations(ast.Module(body=[fn], type_ignores=[])), '<test>', 'exec'), namespace)
+asyncio.run(namespace['_send_to_album_proxy'](123))
+assert bot.items == ['file:/api/storage/proxy/first.jpg', 'file:/api/media/s3-proxy/second.jpg'], bot.items
+`;
+  try { execFileSync('python', ['-c', runner, tmp], { stdio: 'pipe' }); }
+  finally { fs.unlinkSync(tmp); }
 });
 
 const passed = results.filter(r => r.passed).length;

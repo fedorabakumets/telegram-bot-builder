@@ -244,11 +244,11 @@ test('C05', 'get_content для entity при projectId', () => {
 
 console.log('── Блок D: Медиа ─────────────────────────────────────────────────');
 
-test('D01', 'attachedMedia с /uploads/ → содержит send_file и get_upload_file_path', () => {
+test('D01', 'attachedMedia с /uploads/ → использует общий resolver', () => {
   const p = makeCleanProject([makeUserbotMessageNode('ub1', { attachedMedia: ['/uploads/photo.jpg'] })]);
   const code = gen(p, 'd01');
   ok(code.includes('send_file'), 'send_file должен быть в коде');
-  ok(code.includes('get_upload_file_path'), 'get_upload_file_path должен быть в коде');
+  ok(code.includes('await resolve_media_original(_media_val)'), 'общий resolver должен использоваться в обработчике');
 });
 
 test('D02', 'attachedMedia с URL → содержит send_file и https://', () => {

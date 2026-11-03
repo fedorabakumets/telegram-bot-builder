@@ -49,7 +49,7 @@ describe('generateUserbotMessage()', () => {
       attachedMedia: ['/uploads/1/photo.jpg'],
     });
     expect(code).toContain('send_file');
-    expect(code).toContain('get_upload_file_path');
+    expect(code).toContain('await resolve_media_original');
     expect(code).toContain('/uploads/1/photo.jpg');
   });
 
@@ -356,7 +356,7 @@ describe('generateUserbotMessageHandlers()', () => {
     expect(code).toContain('get_content');
   });
 
-  it('фильтрует file_id из attachedMedia', () => {
+  it('явно отклоняет file_id бота в attachedMedia', () => {
     const nodes = [
       {
         id: 'ub-2',
@@ -374,7 +374,7 @@ describe('generateUserbotMessageHandlers()', () => {
     ].map(node => nodeSchema.parse(node));
     const code = generateUserbotMessageHandlers(nodes);
     expect(code).toContain('/uploads/1/photo.jpg');
-    expect(code).not.toContain('AgAC');
+    expect(code).toContain('Telegram file_id бота недоступен для userbot');
   });
 
   it('генерирует несколько обработчиков', () => {

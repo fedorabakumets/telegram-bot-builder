@@ -1,0 +1,226 @@
+{# @fileoverview Асинхронное получение исходного файла управляемого медиа. #}
+import asyncio as _media_asyncio
+import atexit as _media_atexit
+import hashlib as _media_hashlib
+import os as _media_os
+import shutil as _media_shutil
+import tempfile as _media_tempfile
+from pathlib import Path as _MediaPath
+from urllib.parse import urlsplit as _media_urlsplit
+
+_media_download_locks = {}
+_media_cache_directories = {}
+_media_task_leases = {}
+_media_path_leases = {}
+
+def _media_release_task(task):
+    """Освобождает файлы после полного завершения или отмены задачи отправки."""
+    for path in _media_task_leases.pop(task, ()):
+        count = _media_path_leases[path] - 1
+        if count:
+            _media_path_leases[path] = count
+        else:
+            del _media_path_leases[path]
+
+def _media_lease(path):
+    """Удерживает файл до окончания текущей задачи, включая все вложенные отправки."""
+    task = _media_asyncio.current_task()
+    if task is None:
+        raise MediaStorageError('Отсутствует задача отправки медиа')
+    if task not in _media_task_leases:
+        _media_task_leases[task] = set()
+        task.add_done_callback(_media_release_task)
+    if path not in _media_task_leases[task]:
+        _media_task_leases[task].add(path)
+        _media_path_leases[path] = _media_path_leases.get(path, 0) + 1
+
+def _media_evict(directory, limit, incoming):
+    """Удаляет старые неиспользуемые версии, соблюдая предел готового кэша."""
+    files = sorted((p for p in directory.glob('*.media*') if p.is_file()), key=lambda p: p.stat().st_mtime)
+    total = sum(p.stat().st_size for p in files)
+    for path in files:
+        if total + incoming <= limit:
+            return
+        if not _media_path_leases.get(path):
+            size = path.stat().st_size
+            path.unlink()
+            total -= size
+    if total + incoming > limit:
+        raise MediaSizeError('Кэш медиа занят и заполнен')
+
+def _media_private_cache(root):
+    """Создаёт отдельный каталог процесса и удаляет его при завершении."""
+    root.mkdir(mode=0o700, parents=True, exist_ok=True)
+    key = str(root.resolve())
+    if key not in _media_cache_directories:
+        directory = _MediaPath(_media_tempfile.mkdtemp(prefix='process-', dir=root))
+        _media_cache_directories[key] = directory
+        _media_atexit.register(_media_shutil.rmtree, directory, ignore_errors=True)
+    return _media_cache_directories[key]
+
+class MediaOriginalError(Exception):
+    """Ошибка получения исходного файла без раскрытия адресов и секретов."""
+
+class MediaNotFoundError(MediaOriginalError):
+    """Файл не найден."""
+
+class MediaAccessError(MediaOriginalError):
+    """Доступ к файлу запрещён."""
+
+class MediaStorageError(MediaOriginalError):
+    """Хранилище недоступно или вернуло некорректный ответ."""
+
+class MediaTimeoutError(MediaOriginalError):
+    """Истекло время ожидания хранилища."""
+
+class MediaSizeError(MediaOriginalError):
+    """Размер файла превышает разрешённый предел."""
+
+def is_managed_media(reference):
+    """Распознаёт только относительный логический адрес управляемого файла."""
+    if not isinstance(reference, str) or not reference.startswith(('/uploads/', '/api/storage/proxy/', '/api/media/s3-proxy/')):
+        return False
+    parsed = _media_urlsplit(reference)
+    return not parsed.scheme and not parsed.netloc and not parsed.query and not parsed.fragment
+
+async def is_registered_media(reference):
+    """Проверяет относительный адрес или принадлежность HTTP-адреса проекту."""
+    if is_managed_media(reference):
+        return True
+    if not isinstance(reference, str):
+        return False
+    parsed = _media_urlsplit(reference)
+    if parsed.scheme not in ('http', 'https') or not parsed.netloc:
+        return False
+    base = _media_os.getenv('MEDIA_RUNTIME_BASE_URL', '').rstrip('/')
+    if not base:
+        if _media_os.getenv('MEDIA_RUNTIME_REQUIRED', '').lower() in ('1', 'true', 'yes'):
+            raise MediaAccessError('Доступ к хранилищу медиа не настроен')
+        return False
+    token = _media_os.getenv('MEDIA_RUNTIME_TOKEN', '')
+    if not token:
+        raise MediaAccessError('Доступ к хранилищу медиа не настроен')
+    import aiohttp as _media_aiohttp
+    timeout = _media_aiohttp.ClientTimeout(total=float(_media_os.getenv('MEDIA_TIMEOUT_SECONDS', '120')), connect=10, sock_read=30)
+    params = {'url': reference, 'projectId': _media_os.getenv('MEDIA_RUNTIME_PROJECT_ID', str(globals().get('PROJECT_ID', '')))}
+    try:
+        async with _media_aiohttp.ClientSession(timeout=timeout) as session:
+            async with session.head(base + '/api/runtime/media', params=params, headers={'Authorization': 'Bearer ' + token}, allow_redirects=False) as response:
+                if response.status == 404 and response.headers.get('X-Media-Error') == 'MEDIA_NOT_MANAGED':
+                    return False
+                _media_check_response(response)
+                return True
+    except _media_asyncio.TimeoutError as error:
+        raise MediaTimeoutError('Истекло время ожидания медиа') from error
+    except _media_aiohttp.ClientError as error:
+        raise MediaStorageError('Ошибка соединения с хранилищем медиа') from error
+
+def _media_local_path(reference):
+    """Проверяет границы каталога локальных файлов и возвращает путь."""
+    parts = reference[len('/uploads/'):].split('/')
+    if not parts or any(p in ('', '.', '..') or '\\' in p or '%' in p for p in parts):
+        raise MediaAccessError('Недопустимый путь медиа')
+    project_id = str(globals().get('PROJECT_ID', ''))
+    # Старые плоские имена допустимы только в автономном экспорте.
+    if len(parts) > 1 and parts[0] != project_id:
+        raise MediaAccessError('Файл принадлежит другому проекту')
+    adjacent = _MediaPath(__file__).resolve().parent / 'uploads'
+    historical = _MediaPath(__file__).resolve().parent.parent.parent / 'uploads'
+    root = _MediaPath(_media_os.getenv('MEDIA_LOCAL_ROOT', str(adjacent if adjacent.is_dir() else historical))).resolve()
+    path = (root.joinpath(*parts)).resolve()
+    if not path.is_relative_to(root):
+        raise MediaAccessError('Путь медиа выходит за пределы хранилища')
+    if not path.is_file():
+        raise MediaNotFoundError('Медиафайл не найден')
+    return str(path)
+
+def _media_check_response(response):
+    """Преобразует статус сервера в различимые ошибки."""
+    if response.status in (401, 403):
+        raise MediaAccessError('Доступ к медиа запрещён')
+    if response.status == 404:
+        raise MediaNotFoundError('Медиафайл не найден')
+    if response.status != 200:
+        raise MediaStorageError('Хранилище медиа недоступно')
+
+async def resolve_media_original(reference):
+    """Возвращает локальный путь исходника; сетевой доступ разрешён только к серверу проекта."""
+    if not await is_registered_media(reference):
+        raise MediaAccessError('Ожидался относительный адрес управляемого медиа')
+    # Локальный режим предназначен для автономного экспорта без панели.
+    base = _media_os.getenv('MEDIA_RUNTIME_BASE_URL', '').rstrip('/')
+    if not base:
+        if _media_os.getenv('MEDIA_RUNTIME_REQUIRED', '').lower() in ('1', 'true', 'yes'):
+            raise MediaAccessError('Доступ к хранилищу медиа не настроен')
+        if not reference.startswith('/uploads/'):
+            raise MediaAccessError('Доступ к хранилищу медиа не настроен')
+        return _media_local_path(reference)
+    token = _media_os.getenv('MEDIA_RUNTIME_TOKEN', '')
+    if not token:
+        raise MediaAccessError('Не настроен доступ к медиа проекта')
+    import aiohttp as _media_aiohttp
+    limit = int(_media_os.getenv('MEDIA_MAX_FILE_BYTES', str(50 * 1024 * 1024)))
+    cache_limit = int(_media_os.getenv('MEDIA_CACHE_MAX_BYTES', str(512 * 1024 * 1024)))
+    if limit <= 0 or cache_limit < limit:
+        raise MediaSizeError('Некорректный предел размера медиа')
+    directory = _media_private_cache(_MediaPath(_media_os.getenv('MEDIA_CACHE_DIR', _media_os.path.join(_media_tempfile.gettempdir(), 'bot-media-cache'))))
+    key = _media_hashlib.sha256((base + '\0' + token + '\0' + str(globals().get('PROJECT_ID', '')) + '\0' + reference).encode()).hexdigest()
+    lock = _media_download_locks.setdefault(key, _media_asyncio.Lock())
+    timeout = _media_aiohttp.ClientTimeout(total=float(_media_os.getenv('MEDIA_TIMEOUT_SECONDS', '120')), connect=10, sock_read=30)
+    headers = {'Authorization': 'Bearer ' + token}
+    params = {'url': reference, 'projectId': _media_os.getenv('MEDIA_RUNTIME_PROJECT_ID', str(globals().get('PROJECT_ID', '')))}
+    try:
+        async with lock:
+            async with _media_aiohttp.ClientSession(timeout=timeout) as session:
+                async with session.head(base + '/api/runtime/media', params=params, headers=headers, allow_redirects=False) as response:
+                    _media_check_response(response)
+                    version = response.headers.get('ETag')
+                    if not version:
+                        raise MediaStorageError('Хранилище не указало версию файла')
+                    length = response.content_length
+                    if length is not None and length > limit:
+                        raise MediaSizeError('Размер медиа превышает предел')
+                version_key = _media_hashlib.sha256((key + '\0' + version).encode()).hexdigest()
+                suffix = _MediaPath(reference).suffix.lower()
+                if not suffix[1:].isalnum() or len(suffix) > 11:
+                    suffix = ''
+                target = directory / (version_key + '.media' + suffix)
+                if target.is_file():
+                    _media_os.utime(target, None)
+                    _media_lease(target)
+                    return str(target)
+                temporary = None
+                try:
+                    async with session.get(base + '/api/runtime/media', params=params, headers=headers, allow_redirects=False) as response:
+                        _media_check_response(response)
+                        if response.headers.get('ETag') != version:
+                            raise MediaStorageError('Версия медиа изменилась во время загрузки')
+                        if response.content_length is not None and response.content_length > limit:
+                            raise MediaSizeError('Размер медиа превышает предел')
+                        fd, temporary = _media_tempfile.mkstemp(prefix='media-', suffix='.part', dir=directory)
+                        size = 0
+                        with _media_os.fdopen(fd, 'wb') as output:
+                            async for chunk in response.content.iter_chunked(65536):
+                                size += len(chunk)
+                                if size > limit:
+                                    raise MediaSizeError('Размер медиа превышает предел')
+                                output.write(chunk)
+                        if response.content_length is not None and size != response.content_length:
+                            raise MediaStorageError('Загрузка медиа прервалась')
+                    _media_evict(directory, cache_limit, size)
+                    _media_os.replace(temporary, target)
+                    temporary = None
+                    _media_lease(target)
+                    return str(target)
+                finally:
+                    if temporary:
+                        _media_os.unlink(temporary)
+    except _media_asyncio.TimeoutError as error:
+        raise MediaTimeoutError('Истекло время ожидания медиа') from error
+    except _media_aiohttp.ClientError as error:
+        raise MediaStorageError('Ошибка соединения с хранилищем медиа') from error
+
+async def resolve_media_input(reference, filename=None):
+    """Создаёт aiogram FSInputFile из исходника; путь пригоден также для Telethon."""
+    path = await resolve_media_original(reference)
+    return FSInputFile(path, filename=filename or _MediaPath(reference).name)

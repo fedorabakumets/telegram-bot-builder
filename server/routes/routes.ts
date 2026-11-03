@@ -71,6 +71,9 @@ import { setupUserSupportRoutes } from "../support/setup-support-routes";
 import { setupMcpRoutes } from "./mcp/setupMcpRoutes";
 import { setupStorageConfigRoutes } from "./setupStorageConfigRoutes";
 import { setupS3ProxyRoute } from "./media/s3-proxy-route";
+import { setupRuntimeMediaRoute } from "./media/runtime-media-route";
+import { setupRuntimeMediaUploadRoute } from "./media/runtime-media-upload-route";
+import { setupInvoiceMediaRoute } from "./media/invoice-media-route";
 import { deleteMediaObject } from "./media/delete-media-object";
 import type { StorageBotTokenInput, StorageBotTokenUpdate } from "../storages/storageTypes";
 import { ensureStorageRegistryLoaded } from "../storage/storage-registry";
@@ -83,6 +86,9 @@ import {
   StorageBackendWriteError,
 } from "./media/upload-storage-helper";
 import { enrichMediaFilesWithTokens } from "./media/enrich-media-files-with-tokens";
+import { createRegisteredUpload } from "./media/create-registered-upload";
+import { listSelectedMedia } from "./media/selected-media-list";
+import { SelectedStorageUnavailableError } from "../storage/selected-media-storage";
 import { broadcastProjectEvent, emitTokenUpdated } from "../terminal";
 import { getRequestTokenId } from "./utils/resolve-request-token";
 import { getTelegramProxyAgent } from "../utils/telegram-proxy";
@@ -466,8 +472,12 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
   // Auth middleware для всех API роутов (устанавливает req.user если пользователь авторизован)
   // ВАЖНО: должен быть подключен ПОСЛЕ session middleware
+  setupRuntimeMediaRoute(app);
+  setupRuntimeMediaUploadRoute(app);
+  setupInvoiceMediaRoute(app);
   app.use("/api", setupGuard);
   app.use("/api", authMiddleware);
+  app.use("/uploads", authMiddleware);
   app.use("/api", sessionActivityMiddleware);
 
   // Резолвер личности по персональному токену агента (PAT) — Authorization: Bearer.
@@ -1564,7 +1574,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const uploadedBy = getOwnerIdFromRequest(req);
 
       // Сохраняем информацию о файле в базе данных
-      const mediaFile = await storage.createMediaFile({
+      const mediaFile = await createRegisteredUpload(targetBackend, persisted, {
         projectId,
         fileName: file.originalname,
         fileType: fileType,
@@ -1607,6 +1617,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         }
       }
 
+      if (error instanceof StorageBackendWriteError) return res.status(502).json({ message: "Хранилище недоступно, файл не сохранён", code: "STORAGE_UNREACHABLE" });
       const errorMessage = error instanceof Error ? error.message : "Неизвестная ошибка";
       res.status(500).json({
         message: "Ошибка при загрузке файла",
@@ -1623,7 +1634,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const projectId = parseInt(req.params.projectId);
       const files = req.files as Express.Multer.File[];
 
-      const { isPublic, defaultDescription } = req.body;
+      const { isPublic, defaultDescription, storageConfigId } = req.body;
 
       if (!files || files.length === 0) {
         return res.status(400).json({
@@ -1647,6 +1658,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         });
       }
 
+      const targetBackend = resolveUploadBackend(await ensureStorageRegistryLoaded(), storageConfigId);
       const uploadedFiles = [];
       const errors = [];
       const warnings: string[] = [];
@@ -1674,20 +1686,23 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           }
 
           // Создаем URL для доступа к файлу
-          const fileUrl = `/uploads/${file.filename}`;
+          const fileUrl = `/uploads/${projectId}/${file.path.replace(/\\/g, '/').split('/').slice(-2).join('/')}`;
+          const persisted = await persistUploadToBackend(targetBackend, file, file.path, fileUrl);
 
           // Сохраняем информацию о файле в базе данных
-          const mediaFile = await storage.createMediaFile({
+          const mediaFile = await createRegisteredUpload(targetBackend, persisted, {
             projectId,
             fileName: file.originalname,
             fileType: getFileType(file.mimetype),
-            filePath: file.path,
+            filePath: persisted.filePath,
             fileSize: file.size,
             mimeType: file.mimetype,
-            url: fileUrl,
+            url: persisted.url,
+            storageBackend: persisted.storageBackend,
+            storageConfigId: persisted.storageConfigId,
             description: defaultDescription || '',
             tags: [],
-            isPublic: isPublic ? 1 : 0
+            isPublic: isPublic === 'true' || isPublic === true ? 1 : 0
           });
 
           // Обновляем статистику по типам файлов
@@ -1709,7 +1724,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
           errors.push({
             fileName: file.originalname,
-            error: "Ошибка при сохранении файла"
+            error: fileError instanceof StorageBackendWriteError ? "Хранилище недоступно, файл не сохранён" : "Ошибка при сохранении файла"
           });
         }
       }
@@ -1746,7 +1761,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         });
       }
 
-      res.status(500).json({ message: "Ошибка при загрузке файлов" });
+      res.status(error instanceof StorageBackendWriteError ? 502 : 500).json({ message: error instanceof StorageBackendWriteError ? "Хранилище недоступно, файлы не сохранены" : "Ошибка при загрузке файлов", code: error instanceof StorageBackendWriteError ? "STORAGE_UNREACHABLE" : "UPLOAD_ERROR" });
     }
     return;
   });
@@ -1824,7 +1839,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   app.post("/api/media/download-url/:projectId", requireProjectAccess, async (req, res) => {
     try {
       const projectId = parseInt(req.params.projectId);
-      const { url, description, tags, isPublic, customFileName } = req.body;
+      const { url, description, tags, isPublic, customFileName, storageConfigId } = req.body;
 
       if (!url || typeof url !== 'string') {
         return res.status(400).json({
@@ -1841,6 +1856,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           code: "PROJECT_NOT_FOUND"
         });
       }
+
+      const targetBackend = resolveUploadBackend(await ensureStorageRegistryLoaded(), storageConfigId);
 
       // Сначала проверяем доступность файла
       const urlCheck = await checkUrlAccessibility(url);
@@ -1905,6 +1922,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       // Создаем URL для доступа к файлу
       const fileUrl = `/uploads/${projectId}/${date}/${fileName}`;
 
+      const persisted = await persistUploadToBackend(targetBackend, { path: filePath, mimetype: downloadResult.mimeType || 'application/octet-stream' } as Express.Multer.File, filePath, fileUrl);
+
       // Обрабатываем теги
       const processedTags = tags
         ? tags
@@ -1929,14 +1948,16 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const finalTags = Array.from(new Set([...processedTags, ...autoTags]));
 
       // Сохраняем информацию о файле в базе данных
-      const mediaFile = await storage.createMediaFile({
+      const mediaFile = await createRegisteredUpload(targetBackend, persisted, {
         projectId,
         fileName: originalFileName,
         fileType: getFileType(downloadResult.mimeType || 'application/octet-stream'),
-        filePath: filePath,
+        filePath: persisted.filePath,
         fileSize: downloadResult.size || 0,
         mimeType: downloadResult.mimeType || 'application/octet-stream',
-        url: fileUrl,
+        url: persisted.url,
+        storageBackend: persisted.storageBackend,
+        storageConfigId: persisted.storageConfigId,
         description: description || `Файл загружен по ссылке: ${originalFileName}`,
         tags: finalTags,
         isPublic: isPublic === 'true' || isPublic === true ? 1 : 0
@@ -1958,6 +1979,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     } catch (error) {
       console.error('Ошибка при загрузке файла по URL:', error);
 
+      if (error instanceof StorageBackendWriteError) return res.status(502).json({ message: 'Хранилище недоступно, файл не сохранён', code: 'STORAGE_UNREACHABLE' });
       const errorMessage = error instanceof Error ? error.message : "Неизвестная ошибка";
       res.status(500).json({
         message: "Ошибка при загрузке файла по URL",
@@ -1972,7 +1994,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   app.post("/api/media/download-urls/:projectId", requireProjectAccess, async (req, res) => {
     try {
       const projectId = parseInt(req.params.projectId);
-      const { urls, isPublic, defaultDescription } = req.body;
+      const { urls, isPublic, defaultDescription, storageConfigId } = req.body;
 
       if (!urls || !Array.isArray(urls) || urls.length === 0) {
         return res.status(400).json({
@@ -1997,6 +2019,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         });
       }
 
+      const targetBackend = resolveUploadBackend(await ensureStorageRegistryLoaded(), storageConfigId);
       const downloadedFiles = [];
       const errors = [];
 
@@ -2071,18 +2094,22 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           // Создаем URL для доступа
           const fileUrl = `/uploads/${projectId}/${date}/${fileName}`;
 
+          const persisted = await persistUploadToBackend(targetBackend, { path: filePath, mimetype: downloadResult.mimeType || 'application/octet-stream' } as Express.Multer.File, filePath, fileUrl);
+
           // Сохраняем в базе данных
-          const mediaFile = await storage.createMediaFile({
+          const mediaFile = await createRegisteredUpload(targetBackend, persisted, {
             projectId,
             fileName: originalFileName,
             fileType: getFileType(downloadResult.mimeType || 'application/octet-stream'),
-            filePath: filePath,
+            filePath: persisted.filePath,
             fileSize: downloadResult.size || 0,
             mimeType: downloadResult.mimeType || 'application/octet-stream',
-            url: fileUrl,
+            url: persisted.url,
+            storageBackend: persisted.storageBackend,
+            storageConfigId: persisted.storageConfigId,
             description: customDescription || defaultDescription || `Файл загружен по ссылке: ${originalFileName}`,
             tags: ['загружено_по_url', validation.category || 'файл'],
-            isPublic: isPublic ? 1 : 0
+            isPublic: isPublic === 'true' || isPublic === true ? 1 : 0
           });
 
           downloadedFiles.push({
@@ -2094,7 +2121,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           console.error(`Ошибка обработки URL ${url}:`, error);
           errors.push({
             url: url,
-            error: error instanceof Error ? error.message : 'Неизвестная ошибка'
+            error: error instanceof StorageBackendWriteError ? 'Хранилище недоступно, файл не сохранён' : 'Ошибка обработки ссылки'
           });
         }
       }
@@ -2114,8 +2141,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
     } catch (error) {
       console.error('Ошибка пакетной загрузки по URL:', error);
-      res.status(500).json({
-        message: "Ошибка при пакетной загрузке файлов по URL",
+      res.status(error instanceof StorageBackendWriteError ? 502 : 500).json({
+        message: error instanceof StorageBackendWriteError ? 'Хранилище недоступно' : "Ошибка при пакетной загрузке файлов по URL",
         code: "BATCH_DOWNLOAD_ERROR"
       });
     }
@@ -2128,15 +2155,11 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const projectId = parseInt(req.params.projectId);
       const fileType = req.query.type as string;
 
-      let mediaFiles;
-      if (fileType && ['photo', 'video', 'audio', 'document'].includes(fileType)) {
-        mediaFiles = await storage.getMediaFilesByType(projectId, fileType);
-      } else {
-        mediaFiles = await storage.getMediaFilesByProject(projectId);
-      }
-
+      const validType = fileType && ['photo', 'video', 'audio', 'document'].includes(fileType) ? fileType : undefined;
+      const mediaFiles = await listSelectedMedia(projectId, validType);
       res.json(await enrichMediaFilesWithTokens(mediaFiles));
     } catch (error) {
+      if (error instanceof SelectedStorageUnavailableError) return res.status(503).json({ message: error.message });
       console.error("Ошибка при получении медиафайлов:", error);
       res.status(500).json({ message: "Ошибка при получении медиафайлов" });
     }
@@ -2225,9 +2248,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         return res.status(400).json({ message: "Поисковый запрос не может быть пустым" });
       }
 
-      const mediaFiles = await storage.searchMediaFiles(projectId, query);
+      const mediaFiles = await listSelectedMedia(projectId, undefined, query);
       res.json(mediaFiles);
     } catch (error) {
+      if (error instanceof SelectedStorageUnavailableError) return res.status(503).json({ message: error.message });
       console.error("Оши������ка при п����иске ������������йлов:", error);
       res.status(500).json({ message: "Ошибка при поиске файлов" });
     }

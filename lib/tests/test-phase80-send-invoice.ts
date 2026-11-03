@@ -322,14 +322,14 @@ test('C04', 'синтаксис с двумя счетами OK', () => {
   syntax(gen(p, 'c04'), 'c04');
 });
 
-test('C05', 'картинка /uploads/ → API_BASE_URL', () => {
+test('C05', 'картинка /uploads/ → временная ссылка runtime', () => {
   const p = makeCleanProject([
     makeInvoiceNode('inv1', 'msg1', { invoicePhotoUrl: '/uploads/1/cover.jpg' }),
     makeMessageNode('msg1'),
   ]);
   const code = gen(p, 'c05');
   ok(code.includes('/uploads/1/cover.jpg'), 'путь uploads в коде');
-  ok(code.includes('API_BASE_URL'), 'склейка с API_BASE_URL');
+  ok(code.includes('/api/runtime/media/invoice-link'), 'получение временной ссылки');
   syntax(code, 'c05');
 });
 

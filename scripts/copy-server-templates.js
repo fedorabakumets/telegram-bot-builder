@@ -11,6 +11,10 @@ const rootDir = process.cwd();
 const sourceDir = resolve(rootDir, "server", "templates");
 /** Целевая директория шаблонов внутри серверной сборки */
 const targetDir = resolve(rootDir, "dist", "server", "templates");
+/** Каталог скрипта безопасного чтения медиа в собранном сервере */
+const mediaTargetDir = resolve(rootDir, "dist", "server", "server", "storage");
+mkdirSync(mediaTargetDir, { recursive: true });
+cpSync(resolve(rootDir, "server", "storage", "windows-media-read.ps1"), resolve(mediaTargetDir, "windows-media-read.ps1"));
 
 if (!existsSync(sourceDir)) {
   console.log("ℹ️ Директория server/templates не найдена, копирование пропущено");

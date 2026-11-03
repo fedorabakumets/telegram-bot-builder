@@ -206,12 +206,12 @@ describe('Property 5: сохранность чтения из нужного х
     );
   });
 
-  it('неизвестный configId безопасно откатывается к local-default', () => {
+  it('неизвестный configId вызывает ошибку', () => {
     fc.assert(
       fc.property(configIdsArb(), fc.string({ minLength: 1, maxLength: 20 }), (ids, unknown) => {
         fc.pre(!ids.includes(unknown));
         const registry = buildRegistry(ids, null);
-        expect(registry.resolveBackend(unknown).configId).toBe(LOCAL_DEFAULT_ID);
+        expect(() => registry.resolveBackend(unknown)).toThrow();
       }),
     );
   });

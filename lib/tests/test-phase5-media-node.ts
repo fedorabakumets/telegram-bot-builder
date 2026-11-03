@@ -303,9 +303,9 @@ test('B03', '.png → answer_photo', () => {
   ok(gen(p, 'b03').includes('answer_photo'), 'answer_photo для .png');
 });
 
-test('B04', '.gif → answer_photo', () => {
+test('B04', '.gif → answer_animation', () => {
   const p = makeProject([makeMediaNode('m1', ['https://cdn.example.com/anim.gif'])]);
-  ok(gen(p, 'b04').includes('answer_photo'), 'answer_photo для .gif');
+  ok(gen(p, 'b04').includes('answer_animation'), 'answer_animation для .gif');
 });
 
 test('B05', '.webp → answer_photo', () => {
@@ -473,10 +473,10 @@ test('D02', '/uploads/ путь → get_upload_file_path в коде', () => {
   ok(gen(p, 'd02').includes('get_upload_file_path'), 'get_upload_file_path должен быть в коде');
 });
 
-test('D03', 'https:// URL → НЕТ FSInputFile', () => {
+test('D03', 'https:// URL проверяется в реестре', () => {
   const p = makeProject([makeMediaNode('m1', ['https://example.com/photo.jpg'])]);
   const handler = getHandlerBlock(gen(p, 'd03'), 'm1');
-  ok(!handler.includes('FSInputFile'), 'FSInputFile НЕ должен быть для https:// URL внутри media-handler');
+  ok(handler.includes('is_registered_media'), 'URL должен проверяться в реестре');
 });
 
 test('D04', '/uploads/ путь → синтаксис OK', () => {
@@ -854,7 +854,7 @@ test('I05', 'смешанная группа remote + uploads + userDatabaseEnab
   syntax(genDB(p, 'i05'), 'i05');
 });
 
-test('I06', 'одиночное remote audio + автопереход → answer_audio без FSInputFile', () => {
+test('I06', 'одиночное remote audio + автопереход → проверка в реестре', () => {
   const p = makeProject([
     makeMediaNode('m1', ['https://ex.com/track.mp3'], { enableAutoTransition: true, autoTransitionTo: 'msg1' }),
     makeMessageNode('msg1'),
@@ -862,7 +862,7 @@ test('I06', 'одиночное remote audio + автопереход → answer
   const code = gen(p, 'i06');
   const handler = getHandlerBlock(code, 'm1');
   ok(code.includes('answer_audio'), 'answer_audio должен быть для mp3');
-  ok(!handler.includes('FSInputFile'), 'FSInputFile не должен быть для remote URL внутри media-handler');
+  ok(handler.includes('is_registered_media'), 'URL должен проверяться в реестре');
   ok(code.includes('FakeCallbackQuery'), 'FakeCallbackQuery должен быть при автопереходе');
 });
 
@@ -1070,11 +1070,11 @@ test('M03', '10 trigger + 10 media-нод → синтаксис OK', () => {
   syntax(gen(makeProject(nodes), 'm03'), 'm03');
 });
 
-test('M04', 'медиагруппа из 12 /uploads/ файлов → много FSInputFile и синтаксис OK', () => {
+test('M04', 'медиагруппа из 12 /uploads/ файлов → много resolve_media_input и синтаксис OK', () => {
   const urls = Array.from({ length: 12 }, (_, i) => `/uploads/photo_${i + 1}.jpg`);
   const code = gen(makeProject([makeMediaNode('m1', urls)]), 'm04');
-  const count = (code.match(/FSInputFile/g) || []).length;
-  ok(count >= 12, `FSInputFile должен встречаться минимум 12 раз, найдено: ${count}`);
+  const count = (code.match(/resolve_media_input/g) || []).length;
+  ok(count >= 12, `resolve_media_input должен встречаться минимум 12 раз, найдено: ${count}`);
   syntax(code, 'm04');
 });
 
@@ -1217,14 +1217,14 @@ test('P01', 'handler m1 не содержит URL из m2', () => {
   ok(!h1.includes('https://ex.com/b.mp4'), 'handler m1 не должен содержать URL из m2');
 });
 
-test('P02', 'handler remote media не содержит upload helper даже если другой узел использует /uploads/', () => {
+test('P02', 'handler remote media проверяет URL в реестре независимо от других узлов', () => {
   const code = gen(makeProject([
     makeMediaNode('m1', ['https://ex.com/a.jpg']),
     makeMediaNode('m2', ['/uploads/b.jpg']),
   ]), 'p02');
   const h1 = getHandlerBlock(code, 'm1');
   ok(!h1.includes('get_upload_file_path'), 'remote handler не должен содержать get_upload_file_path');
-  ok(!h1.includes('FSInputFile'), 'remote handler не должен содержать FSInputFile');
+  ok(h1.includes('is_registered_media'), 'remote handler должен проверять URL в реестре');
 });
 
 test('P03', 'для двух media-нод каждая имеет свой @@NODE_START и @@NODE_END ровно по одному разу', () => {
@@ -1415,13 +1415,13 @@ test('R01', 'кэшированный file_id используется вмес�
   ok(code.includes('CAACAgQAAxkBAAIC'), 'кэшированный file_id должен быть в коде');
 });
 
-test('R02', 'при наличии file_id НЕТ прямого URL в answer_photo', () => {
+test('R02', 'при неверном file_id доступен исходный URL', () => {
   const p = makeProject([makeMediaNodeWithFileIds('m1',
     ['https://ex.com/photo.jpg'],
     { 'https://ex.com/photo.jpg': 'CAACAgQAAxkBAAIC' }
   )]);
   const code = gen(p, 'r02');
-  ok(!code.includes('"https://ex.com/photo.jpg"'), 'URL не должен быть в answer_photo при наличии file_id');
+  ok(code.includes('https://ex.com/photo.jpg') && code.includes('_is_wrong_file_id_error'), 'исходный URL доступен при ошибке file_id');
 });
 
 test('R03', 'без file_id — URL используется напрямую', () => {
@@ -1598,6 +1598,16 @@ test('S08', 'thumbnail для URL-видео (не /uploads/)', () => {
   });
   ok(code.includes('thumbnail=') || code.includes('AgACBQADthumbURL'), 'thumbnail должен быть для URL-видео');
   syntax(code, 's08');
+});
+
+// Проверяем обращение к общему асинхронному загрузчику и порядок элементов альбома.
+test('T01', 'альбом управляемых файлов использует общий загрузчик в исходном порядке', () => {
+  const p = makeProject([makeMediaNode('media_order', ['/uploads/a.jpg', '/uploads/b.jpg'])]);
+  const code = generatePythonCode(p as any, { botName: 'MediaOrder', userDatabaseEnabled: false });
+  const first = code.indexOf('resolve_media_input("/uploads/a.jpg")');
+  const second = code.indexOf('resolve_media_input("/uploads/b.jpg")');
+  ok(first >= 0 && second > first, 'файлы должны разрешаться в исходном порядке');
+  syntax(code, 't01');
 });
 
 const passed = results.filter(r => r.passed).length;const failed = results.filter(r => !r.passed).length;

@@ -13,3 +13,11 @@ import { renderPartialTemplate } from '../template-renderer';
 export function generateMediaFunctions(): string {
   return renderPartialTemplate('media-functions/media-functions.py.jinja2', {});
 }
+
+/**
+ * Создаёт общий асинхронный загрузчик оригиналов медиа.
+ * @returns Python-код загрузчика
+ */
+export function generateMediaOriginal(): string {
+  return renderPartialTemplate('media-functions/media-original.py.jinja2', {});
+}

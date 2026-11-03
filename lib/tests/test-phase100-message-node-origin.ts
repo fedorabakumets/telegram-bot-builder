@@ -23,7 +23,13 @@ for index, path in enumerate(sys.argv[2:]):
         else:
             assert origin is None, 'При выключенной БД служебный аргумент не должен попадать в Telegram'
 saved = []
-namespace = {'logging': logging, '_fire_save_message': lambda **kw: saved.append(kw)}
+async def is_registered_media(value):
+    """Распознаёт обычные идентификаторы как готовые значения Telegram."""
+    return False
+async def _resolve_logged_album(value):
+    """Возвращает уже подготовленные элементы тестового альбома."""
+    return value
+namespace = {'logging': logging, '_fire_save_message': lambda **kw: saved.append(kw), 'is_registered_media': is_registered_media, '_resolve_logged_album': _resolve_logged_album}
 tree = ast.parse(middleware)
 for node in tree.body:
     if isinstance(node, ast.FunctionDef) and node.name in ('_wrap_bot_send_photo', '_wrap_bot_send_media_group'):
@@ -35,7 +41,7 @@ async def main():
         return NS(message_id=1, photo=[photo], chat=NS(type='private'))
     async def send_media_group(*args, **kwargs):
         assert 'node_id' not in kwargs
-        return [NS(message_id=i, photo=[photo], caption='Фото') for i in (2, 3)]
+        return [NS(message_id=i, photo=[photo], caption='Фото', chat=NS(type='private', id=1)) for i in (2, 3)]
     bot = NS(send_photo=send_photo, send_media_group=send_media_group)
     namespace['_wrap_bot_send_photo'](bot)
     namespace['_wrap_bot_send_media_group'](bot)

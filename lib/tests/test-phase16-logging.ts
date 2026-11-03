@@ -18,6 +18,7 @@
 import fs from 'fs';
 import { execSync } from 'child_process';
 import { generatePythonCode } from '../bot-generator.ts';
+import { generateMessageLoggingCode } from '../templates/middleware/middleware.renderer.ts';
 
 function makeCleanProject(nodes: any[]) {
   return {
@@ -1070,6 +1071,14 @@ test('N12', 'userDatabaseEnabled: true + inline → Redis publish есть, си
   const code = genDB(makeInlineProject(), 'n12');
   ok(code.includes('_redis_client.publish'), '_redis_client.publish должен быть');
   syntax(code, 'n12');
+});
+
+test('N13', 'входящее фото использует API и точный идентификатор сообщения', () => {
+  const code = generateMessageLoggingCode(true, false, 42, true, true);
+  ok(code.includes('/api/runtime/media/incoming-photo'), 'нет API загрузки');
+  ok(code.includes('telegram_message_id=$4'), 'нет точного поиска сообщения');
+  ok(!code.includes('INSERT INTO media_files'), 'обнаружена запись в обход хранилища');
+  syntax(code, 'incoming-photo');
 });
 
 const passed = results.filter(r => r.passed).length;
