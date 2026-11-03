@@ -31,7 +31,7 @@
       "bot-json-prompt"
     ],
     "folder_titles": {},
-    "updated_at": "2026-11-03T07:33:45+03:00",
+    "updated_at": "2026-11-03T21:14:03+03:00",
     "tags": [],
     "author": ""
   },
@@ -1303,7 +1303,7 @@
     "folder_titles": {
       "deployment": "🚀 Деплой"
     },
-    "updated_at": "2026-10-05T19:18:06Z",
+    "updated_at": "2026-11-03T21:14:03+03:00",
     "tags": [],
     "author": ""
   },
@@ -1483,7 +1483,7 @@
     "folder_titles": {
       "features": "🧩 Возможности"
     },
-    "updated_at": "2026-11-03T07:33:45+03:00",
+    "updated_at": "2026-11-03T21:14:03+03:00",
     "tags": [],
     "author": ""
   },
@@ -1649,6 +1649,21 @@
       "features": "🧩 Возможности"
     },
     "updated_at": "2026-06-24T05:17:33+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "features/runtime-media-storage",
+    "title": "Доступ бота к медиа из хранилища",
+    "excerpt": "Сервер выдаёт зарегистрированные файлы проекта через `/api/runtime/media` по отдельному токену проекта. Токен вычисляется из `MEDIA_RUNTIME_",
+    "parts": [
+      "features",
+      "runtime-media-storage"
+    ],
+    "folder_titles": {
+      "features": "🧩 Возможности"
+    },
+    "updated_at": "2026-11-03T21:14:03+03:00",
     "tags": [],
     "author": ""
   },
@@ -3272,7 +3287,7 @@
     "folder_titles": {
       "mcp": "🤖 MCP-конструктор"
     },
-    "updated_at": "2026-11-03T07:33:45+03:00",
+    "updated_at": "2026-11-03T21:14:03+03:00",
     "tags": [],
     "author": ""
   },
