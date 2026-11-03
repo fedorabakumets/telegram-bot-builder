@@ -32,6 +32,7 @@ import { redactSecrets } from "../utils/redactSecrets";
 import type { WorkerChannel } from "./workerChannel";
 import type { BotBuildLink } from "./builds/botBuildLink";
 import { openWorkerChannel } from "./openWorkerChannel";
+import { workerReadyTimeout } from "./workerReadyTimeout";
 
 /** Задержка перед killWorker когда activeBots пуст (мс) */
 const WORKER_DRAIN_MS = 2_000;
@@ -335,8 +336,8 @@ class BotWorkerManager extends EventEmitter {
 
       this.workers.set(projectId, worker);
 
-      // Контейнеру и исполнителю нужно больше времени: старт docker, сеть, загрузка образа
-      const readyTimeoutMs = launch.docker || remote ? 60_000 : 10_000;
+      // Учитываем холодный импорт Python на Windows, старт контейнера и сеть исполнителя.
+      const readyTimeoutMs = workerReadyTimeout({ docker: launch.docker, remote });
       const timeout = setTimeout(() => {
         if (worker.status === "starting") {
           worker.status = "error";
@@ -421,7 +422,7 @@ class BotWorkerManager extends EventEmitter {
       const timeout = setTimeout(() => {
         this.removeListener("worker-ready", handler);
         reject(new Error(`Таймаут ожидания воркера проекта ${projectId}`));
-      }, this.workers.get(projectId)?.docker || this.workers.get(projectId)?.remote ? 60_000 : 10_000);
+      }, workerReadyTimeout(this.workers.get(projectId)));
 
       const handler = (readyProjectId: number) => {
         if (readyProjectId === projectId) {

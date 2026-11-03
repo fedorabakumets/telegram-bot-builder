@@ -7,8 +7,7 @@
 
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { buildBotEnvContent, getBotEnvSource, parseBotEnv, retireBotEnvFile } from "./botEnv";
-import { isRemoteProject } from "../bots/botPlacement";
+import { prepareBotEnv } from "./prepareBotEnv";
 
 /** Пути к папке и основному файлу бота */
 export interface BotPaths {
@@ -74,30 +73,6 @@ export function createBotFile(botCode: string, projectId: number, tokenId?: numb
 }
 
 /**
- * Готовит переменные бота: в режиме file пишет .env, в режиме inline возвращает
- * словарь для команды start_bot и удаляет старый .env из папки.
- * @param botDir - Папка бота
- * @param projectId - ID проекта
- * @param tokenId - ID токена
- * @returns Путь к .env (file) или словарь переменных (inline)
- */
-async function prepareBotEnv(
-  botDir: string,
-  projectId: number,
-  tokenId: number,
-): Promise<{ envPath?: string; env?: Record<string, string> }> {
-  const content = await buildBotEnvContent(botDir, projectId, tokenId);
-  // У исполнителя на другой машине нет папки бота, переменные идут только в команде
-  if (getBotEnvSource() === 'inline' || isRemoteProject(projectId)) {
-    await retireBotEnvFile(botDir, projectId);
-    return { env: parseBotEnv(content) };
-  }
-  const envPath = join(botDir, '.env');
-  writeFileSync(envPath, content, 'utf8');
-  return { envPath };
-}
-
-/**
  * Создает полный набор файлов для бота (основной файл + сопутствующие)
  *
  * @param botCode - Код бота на Python
@@ -107,7 +82,7 @@ async function prepareBotEnv(
  * @param tokenId - Идентификатор токена
  * @param customFileName - Необязательное кастомное имя файла (без расширения .py)
  * @param options - skipCodeAndData: только .env, не трогать .py
- * @returns Путь к основному файлу, сопутствующие файлы и переменные бота (в режиме inline)
+ * @returns Путь к основному файлу, сопутствующие файлы и полный словарь переменных бота
  */
 export async function createCompleteBotFiles(
   botCode: string,
