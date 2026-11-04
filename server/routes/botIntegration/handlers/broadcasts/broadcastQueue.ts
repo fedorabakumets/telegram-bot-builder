@@ -1,14 +1,16 @@
 /**
- * @fileoverview Очередь отправки рассылок с throttle 25 msg/sec и обработкой ошибок Telegram
+ * @fileoverview Очередь отправки рассылок с ограничением скорости и обработкой ошибок Telegram
  * @module botIntegration/handlers/broadcasts/broadcastQueue
  */
 
 import { storage } from "../../../../storages/storage";
 import { broadcastProjectEvent } from "../../../../terminal/broadcastProjectEvent";
 import { replaceVariablesInText } from "../messages/replace-variables";
+import { pauseTelegramMessages } from "../messages/telegram-message-limiter";
 import { sendTelegramMessage } from "../messages/send-telegram-message";
 import { buildMediaFiles } from "../messages/build-media-files";
 import { extractButtonsFromNode } from "../messages/extract-buttons";
+import { parseBroadcastSendError } from "./parse-broadcast-send-error";
 import { syncCampaignAggregates } from "./sync-campaign-aggregates";
 import {
   markUserAfterBroadcastError,
@@ -21,12 +23,6 @@ import type { SendMediaFile } from "../messages/extract-media";
 
 /** Размер батча пользователей для обработки */
 const BATCH_SIZE = 100;
-
-/** Максимальное количество сообщений в секунду */
-const MESSAGES_PER_SECOND = 25;
-
-/** Пауза между сообщениями в батче (мс) */
-const DELAY_BETWEEN_MESSAGES = Math.floor(1000 / MESSAGES_PER_SECOND);
 
 /**
  * Карта активных рассылок: broadcastId → статус ('running' | 'stopped')
@@ -84,13 +80,7 @@ async function sendBroadcastMessage(
 
     return { ok: true, messageId: result?.result?.message_id ?? undefined };
   } catch (error: unknown) {
-    // Сетевая ошибка (timeout, DNS и т.д.)
-    const err = error as Record<string, unknown>;
-    return {
-      ok: false,
-      errorCode: typeof err?.error_code === "number" ? err.error_code : undefined,
-      description: typeof err?.message === "string" ? err.message : "Сетевая ошибка",
-    };
+    return parseBroadcastSendError(error);
   }
 }
 
@@ -140,7 +130,7 @@ async function emitProgress(
 
 /**
  * Запускает очередь отправки рассылки.
- * Загружает пользователей батчами, отправляет сообщения с throttle 25 msg/sec,
+ * Загружает пользователей батчами, отправляет сообщения с ограничением скорости,
  * поддерживает медиафайлы, обрабатывает ошибки Telegram, проверяет флаг остановки.
  * @param broadcastId - ID рассылки
  * @param token - Токен бота для отправки
@@ -220,7 +210,7 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
         let retries = 0;
         let sent = false;
 
-        while (retries < 3 && !sent) {
+        while (retries < 3 && !sent && activeBroadcasts.get(broadcastId) !== "stopped") {
           const result = await sendBroadcastMessage(token, user.userId, text, mediaFiles, inlineButtons, buttonsPerRow, projectId);
 
           if (result.ok) {
@@ -268,9 +258,9 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
             }
             tokenInvalid = true;
             sent = true;
-          } else if (result.errorCode === 429 && result.retryAfter) {
-            // Rate limit — ждём retry_after секунд
-            await sleep(result.retryAfter * 1000);
+          } else if (result.errorCode === 429) {
+            // Следующая попытка ожидает общую паузу бота в ограничителе.
+            await pauseTelegramMessages(token, result.retryAfter ?? 1);
           } else {
             const status = resolveBroadcastErrorStatus(result.errorCode, result.description);
             if (status === "blocked" || status === "not_found") {
@@ -311,7 +301,6 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
           void emitProgress(projectId, broadcastId, snapshotCounts(), users.length, "running", campaignId);
         }
 
-        await sleep(DELAY_BETWEEN_MESSAGES);
       }
 
       if (tokenInvalid) break;
@@ -335,11 +324,16 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
     if (groupIds && groupIds.length > 0 && !tokenInvalid && activeBroadcasts.get(broadcastId) !== "stopped") {
       for (const groupId of groupIds) {
         try {
-          const groupResult = await sendTelegramMessage(token, groupId, broadcast.messageText, mediaFiles, inlineButtons, true, buttonsPerRow, projectId) as {
-            ok?: boolean;
-            result?: { message_id?: number };
-          };
-          const groupMsgId = groupResult?.result?.message_id ?? null;
+          let groupResult = await sendBroadcastMessage(token, groupId, broadcast.messageText, mediaFiles, inlineButtons, buttonsPerRow, projectId);
+          while (groupResult.errorCode === 429 && activeBroadcasts.get(broadcastId) !== "stopped") {
+            await pauseTelegramMessages(token, groupResult.retryAfter ?? 1);
+            groupResult = await sendBroadcastMessage(token, groupId, broadcast.messageText, mediaFiles, inlineButtons, buttonsPerRow, projectId);
+          }
+          if (!groupResult.ok) {
+            await storage.createBroadcastResult({ broadcastId, userId: groupId, status: "failed", errorMessage: groupResult.description });
+            continue;
+          }
+          const groupMsgId = groupResult.messageId ?? null;
           // Сохраняем результат с telegram_message_id для возможности редактирования/удаления
           await storage.createBroadcastResult({
             broadcastId,

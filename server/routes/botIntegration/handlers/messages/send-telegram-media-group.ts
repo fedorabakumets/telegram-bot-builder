@@ -11,6 +11,7 @@ import { resolveOwnedMediaPath, assertRemoteMediaReference } from './media-refer
 import type { SendMediaFile } from "./extract-media";
 import type { TelegramSendResult, TelegramMessage } from "./send-telegram-message";
 import { sendTelegramMessage } from "./send-telegram-message";
+import { waitForTelegramMessages } from "./telegram-message-limiter";
 import { fetchWithProxy } from "../../../../utils/telegram-proxy";
 import { isLocalPath, buildMultipartBody, type MultipartFile } from "./media-multipart";
 
@@ -93,6 +94,7 @@ export async function sendTelegramMediaGroup(
   }
 
   try {
+    await waitForTelegramMessages(token, supported.length);
     const url = `https://api.telegram.org/bot${token}/sendMediaGroup`;
     let response: Response;
 
