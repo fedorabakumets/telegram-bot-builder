@@ -48,10 +48,6 @@ export function UserResponses({ user }: UserResponsesProps): React.JSX.Element |
 
   const hasUserData = Object.keys(userData).length > 0;
 
-  if (!hasUserData) {
-    return null;
-  }
-
   const entries = Object.entries(userData);
   const totalCount = entries.length;
   const totalPages = Math.ceil(totalCount / itemsPerPage);
@@ -62,6 +58,10 @@ export function UserResponses({ user }: UserResponsesProps): React.JSX.Element |
     const start = (currentPage - 1) * itemsPerPage;
     return entries.slice(start, start + itemsPerPage);
   }, [entries, currentPage, itemsPerPage]);
+
+  if (!hasUserData) {
+    return null;
+  }
 
   const goToPage = (page: number) => {
     setCurrentPage(Math.max(1, Math.min(page, totalPages)));

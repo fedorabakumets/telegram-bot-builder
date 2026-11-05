@@ -47,18 +47,18 @@ function normalizeNewlines(value: string): string {
  * @returns JSX-элемент с форматированным текстом или null
  */
 export function FormattedText({ value, className = '', lineClamp, enableMarkdown }: FormattedTextProps) {
-  if (!value) return null;
-
   /**
    * Мемоизируем результат парсинга для предотвращения лишних вычислений.
    * Если включён Markdown — сначала конвертируем в HTML, затем парсим.
    * Перед парсингом конвертируем \n → <br>, чтобы DOMParser не потерял переносы.
    */
-  // eslint-disable-next-line react-hooks/rules-of-hooks
   const parsed = useMemo(() => {
+    if (!value) return null;
     const html = enableMarkdown ? valueToHtml(value, true) : normalizeNewlines(value);
     return parseHTML(html);
   }, [value, enableMarkdown]);
+
+  if (!value) return null;
 
   const lineClampClass = lineClamp ? `line-clamp-${lineClamp}` : '';
 
