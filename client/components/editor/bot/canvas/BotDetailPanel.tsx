@@ -160,7 +160,7 @@ export function BotDetailPanel({
           projectId={project.id}
           isRunning={isRunning}
           pending={deleteBotMutation.isPending}
-          onConfirm={() => deleteBotMutation.mutate(token.id)}
+          onConfirm={() => deleteBotMutation.mutateAsync(token.id)}
         />
       </div>
     </BotDetailTabProvider>

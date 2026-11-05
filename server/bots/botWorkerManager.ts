@@ -715,30 +715,49 @@ class BotWorkerManager extends EventEmitter {
       const worker = this.workers.get(workerKey);
       if (!worker) return true;
 
-      const confirmed = waitForWorkerBotStop(
-        this,
-        projectId,
-        tokenId,
-        WORKER_STOP_CONFIRM_TIMEOUT_MS,
-      );
-
-      const sent = this.sendCommand(workerKey, {
-        cmd: "stop_bot",
-        token_id: tokenId,
-      });
-      if (!sent) {
-        this.emit("bot-exited", projectId, tokenId, "stopped", undefined, false);
-        return true;
-      }
-
-      const ok = await confirmed;
-      if (!ok) {
-        // До подтверждения выхода процесс может работать и должен учитываться воркером.
+      // Нельзя направлять подтверждение в другой проект даже при устаревшем соответствии.
+      const knownProject = this.tokenProjects.get(tokenId);
+      if (knownProject !== undefined && knownProject !== projectId) {
         if (lastStart) this.startArgs.set(tokenId, lastStart);
-        console.warn(`[WorkerPool:${workerKey}] stop timeout token=${tokenId} — состояние процесса неизвестно`);
+        console.warn(`[WorkerPool:${workerKey}] проект токена ${tokenId} не совпадает с запросом остановки`);
+        return false;
       }
-      if (ok && worker.docker && lastStart) unstageBotFile(workerKey, lastStart.botFile);
-      return ok;
+      // Общий воркер не содержит ID проекта в своём ключе: временно связываем ответ с запросом.
+      const temporaryProject = knownProject === undefined;
+      if (temporaryProject) this.tokenProjects.set(tokenId, projectId);
+
+      try {
+        const abortWait = new AbortController();
+        const confirmed = waitForWorkerBotStop(
+          this,
+          projectId,
+          tokenId,
+          WORKER_STOP_CONFIRM_TIMEOUT_MS,
+          abortWait.signal,
+        );
+
+        const sent = this.sendCommand(workerKey, {
+          cmd: "stop_bot",
+          token_id: tokenId,
+        });
+        if (!sent) {
+          abortWait.abort();
+          if (lastStart) this.startArgs.set(tokenId, lastStart);
+          console.warn(`[WorkerPool:${workerKey}] команда остановки token=${tokenId} не отправлена — состояние процесса неизвестно`);
+          return false;
+        }
+
+        const ok = await confirmed;
+        if (!ok) {
+          // До подтверждения выхода процесс может работать и должен учитываться воркером.
+          if (lastStart) this.startArgs.set(tokenId, lastStart);
+          console.warn(`[WorkerPool:${workerKey}] stop timeout token=${tokenId} — состояние процесса неизвестно`);
+        }
+        if (ok && worker.docker && lastStart) unstageBotFile(workerKey, lastStart.botFile);
+        return ok;
+      } finally {
+        if (temporaryProject) this.tokenProjects.delete(tokenId);
+      }
     });
   }
 

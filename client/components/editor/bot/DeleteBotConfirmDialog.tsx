@@ -19,6 +19,7 @@ import { useTokenUserCounts } from '@/components/editor/database/user-database/c
 import { BotAvatar } from './card/BotAvatar';
 import { listDeleteBotImpact } from './delete-bot-impact';
 import type { BotToken } from '@shared/schema';
+import { useState } from 'react';
 
 /** Пропсы диалога удаления */
 interface DeleteBotConfirmDialogProps {
@@ -35,7 +36,7 @@ interface DeleteBotConfirmDialogProps {
   /** Идёт удаление */
   pending?: boolean;
   /** Подтверждение */
-  onConfirm: () => void;
+  onConfirm: () => Promise<unknown>;
 }
 
 /**
@@ -52,6 +53,7 @@ export function DeleteBotConfirmDialog({
   pending = false,
   onConfirm,
 }: DeleteBotConfirmDialogProps): React.JSX.Element {
+  const [error, setError] = useState<string | null>(null);
   const title = token.botFirstName || token.name || `Бот ${token.id}`;
   const counts = useTokenUserCounts(open ? projectId : 0, open ? [token.id] : []);
   const items = listDeleteBotImpact({
@@ -60,7 +62,10 @@ export function DeleteBotConfirmDialog({
   });
 
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
+    <AlertDialog open={open} onOpenChange={(nextOpen) => {
+      if (!nextOpen) setError(null);
+      onOpenChange(nextOpen);
+    }}>
       <AlertDialogContent className="max-w-[400px] gap-0 overflow-hidden rounded-xl border-border/70 bg-card p-0 shadow-lg">
         <AlertDialogHeader className="space-y-0 p-0 text-left">
           <div className="flex items-center gap-3 px-4 pt-4 pb-3">
@@ -97,6 +102,9 @@ export function DeleteBotConfirmDialog({
             ))}
           </ul>
         </div>
+        {error && (
+          <p role="alert" className="px-4 py-3 text-sm text-destructive">{error}</p>
+        )}
         <AlertDialogFooter className="border-t border-border/50 bg-muted/10 px-4 py-3 sm:space-x-2">
           <AlertDialogCancel className="h-8 rounded-md text-xs" disabled={pending}>
             Отмена
@@ -104,9 +112,15 @@ export function DeleteBotConfirmDialog({
           <AlertDialogAction
             className={buttonVariants({ variant: 'destructive', size: 'sm' }) + ' h-8 text-xs'}
             disabled={pending}
-            onClick={() => {
-              onOpenChange(false);
-              onConfirm();
+            onClick={async (event) => {
+              event.preventDefault();
+              setError(null);
+              try {
+                await onConfirm();
+                onOpenChange(false);
+              } catch (cause) {
+                setError(cause instanceof Error ? cause.message : 'Не удалось удалить бота');
+              }
             }}
           >
             {pending ? 'Удаление…' : 'Удалить бота'}

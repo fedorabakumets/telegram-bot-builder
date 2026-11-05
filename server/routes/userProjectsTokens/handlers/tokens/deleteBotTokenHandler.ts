@@ -11,6 +11,8 @@
 import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
 import { getBotActorId } from "../../../../middleware/bot-api-actor";
+import { stopBot } from "../../../../bots/stopBot";
+import { broadcastProjectEvent } from "../../../../terminal/broadcastProjectEvent";
 
 /**
  * Обрабатывает DELETE-запрос на удаление токена бота через Telegram-бота.
@@ -53,7 +55,22 @@ export async function deleteBotTokenHandler(req: Request, res: Response): Promis
             return;
         }
 
-        await storage.deleteBotToken(tokenId);
+        // Не удаляем токен, пока завершение процесса не подтверждено.
+        const stopped = await stopBot(token.projectId, tokenId);
+        if (!stopped.success) {
+            res.status(409).json({ error: "Остановка не подтверждена; токен не удалён", outcome: "unknown" });
+            return;
+        }
+
+        if (!await storage.deleteBotToken(tokenId)) {
+            res.status(404).json({ error: "Токен не найден" });
+            return;
+        }
+
+        void broadcastProjectEvent(token.projectId, {
+            type: "token-deleted", projectId: token.projectId, tokenId,
+            data: { tokenId, tokenName: token.name }, timestamp: new Date().toISOString(),
+        }).catch((error) => console.error("[DeleteToken] Ошибка уведомления:", error));
 
         res.json({ success: true });
     } catch (error: any) {

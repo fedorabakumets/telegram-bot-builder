@@ -365,7 +365,9 @@ class BotWorker:
             return
         ctx = self.bots.get(token_id)
         if not ctx:
-            emit_log(token_id, "Бот не найден в воркере", "stderr")
+            emit_log(token_id, "Бот уже остановлен и отсутствует в воркере", "stdout")
+            # Отсутствие задачи подтверждается самим воркером, а не состоянием базы.
+            emit_system(f"bot_stopped:{token_id}")
             return
 
         # 1) Graceful: ставит _stop_event → main делает stop_polling

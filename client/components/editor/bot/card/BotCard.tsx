@@ -180,7 +180,7 @@ export function BotCard({
         projectId={project.id}
         isRunning={isThisTokenRunning}
         pending={deletePending}
-        onConfirm={() => deleteBotMutation.mutate(token.id)}
+        onConfirm={() => deleteBotMutation.mutateAsync(token.id)}
       />
     </>
   );

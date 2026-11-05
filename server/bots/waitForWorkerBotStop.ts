@@ -14,6 +14,7 @@ export const WORKER_STOP_CONFIRM_TIMEOUT_MS = 20_000;
  * @param projectId - ID проекта
  * @param tokenId - ID токена
  * @param timeoutMs - Таймаут ожидания
+ * @param signal - Сигнал отмены ожидания при неотправленной команде
  * @returns true если воркер подтвердил выход, false при таймауте
  */
 export function waitForWorkerBotStop(
@@ -21,12 +22,14 @@ export function waitForWorkerBotStop(
   projectId: number,
   tokenId: number,
   timeoutMs: number = WORKER_STOP_CONFIRM_TIMEOUT_MS,
+  signal?: AbortSignal,
 ): Promise<boolean> {
   return new Promise((resolve) => {
     let settled = false;
 
     const cleanup = () => {
       emitter.off('bot-exited', onExit);
+      signal?.removeEventListener('abort', onAbort);
       clearTimeout(timer);
     };
 
@@ -42,8 +45,11 @@ export function waitForWorkerBotStop(
         finish(true);
       }
     };
+    const onAbort = () => finish(false);
 
     const timer = setTimeout(() => finish(false), timeoutMs);
     emitter.on('bot-exited', onExit);
+    signal?.addEventListener('abort', onAbort, { once: true });
+    if (signal?.aborted) finish(false);
   });
 }
