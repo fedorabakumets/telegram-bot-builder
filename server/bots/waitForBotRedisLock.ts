@@ -25,7 +25,7 @@ export interface LockWaitDeps {
 export async function waitForBotRedisLock(token: string, deps?: LockWaitDeps, waitForExpiry = true, isCancelled = () => false): Promise<boolean> {
   const redis = deps ? null : getRedisPublisher();
   if (!deps && !redis) return true;
-  const exists = deps?.exists ?? ((key: string) => redis!.exists(key));
+  const exists = deps?.exists ?? (async (key: string) => (await redis!.get(key)) === null ? 0 : 1);
   const wait = deps?.wait ?? ((ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms)));
   const checks = deps?.checks ?? (waitForExpiry ? 66 : 1);
   try {
