@@ -63,6 +63,8 @@ interface BotControlContextValue {
     isPending: boolean;
     variables?: number;
     mutate: (tokenId: number) => void;
+    /** Удаляет бота и возвращает результат запроса или ошибку. */
+    mutateAsync: (tokenId: number) => Promise<unknown>;
   };
   /** Мутация переключения базы данных */
   toggleDatabaseMutation: {
