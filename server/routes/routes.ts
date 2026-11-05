@@ -75,7 +75,7 @@ import { setupRuntimeMediaRoute } from "./media/runtime-media-route";
 import { setupRuntimeMediaUploadRoute } from "./media/runtime-media-upload-route";
 import { setupInvoiceMediaRoute } from "./media/invoice-media-route";
 import { deleteMediaObject } from "./media/delete-media-object";
-import type { StorageBotTokenInput, StorageBotTokenUpdate } from "../storages/storageTypes";
+import type { StorageBotTokenInput } from "../storages/storageTypes";
 import { ensureStorageRegistryLoaded } from "../storage/storage-registry";
 import { readStorageLimitBytes } from "../storage/storage-config";
 import {
@@ -2149,7 +2149,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     return;
   });
 
-  // Получение всех медиафайлов проекта (+ fileIdsByToken из media_file_tokens)
+  /** Возвращает медиафайлы проекта вместе с идентификаторами токенов. */
   app.get("/api/media/project/:projectId", requireProjectAccess, async (req, res) => {
     try {
       const projectId = parseInt(req.params.projectId);
@@ -2159,7 +2159,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const mediaFiles = await listSelectedMedia(projectId, validType);
       res.json(await enrichMediaFilesWithTokens(mediaFiles));
     } catch (error) {
-      if (error instanceof SelectedStorageUnavailableError) return res.status(503).json({ message: error.message });
+      if (error instanceof SelectedStorageUnavailableError) {
+        res.status(503).json({ message: error.message });
+        return;
+      }
       console.error("Ошибка при получении медиафайлов:", error);
       res.status(500).json({ message: "Ошибка при получении медиафайлов" });
     }

@@ -11,7 +11,7 @@ describe('Монотонность кеша проектов', () => {
     const current = { id: 1, revision: 6, data: 'agent' };
     expect(preferNewerProject(current, { id: 1, revision: 5, data: 'late' })).toBe(current);
     expect(rollbackProjectList([current], [{ id: 1, revision: 4, data: 'before' }])[0]).toBe(current);
-    expect(preferNewerProject(current, { id: 1, data: 'old API' })).toBe(current);
+    expect(preferNewerProject<{ id: number; revision?: number; data: string }>(current, { id: 1, data: 'old API' })).toBe(current);
   });
   it('разрешает откат своей оптимистичной ревизии и не удаляет новые проекты списка', () => {
     const previous = { id: 1, revision: 5, data: 'saved' };

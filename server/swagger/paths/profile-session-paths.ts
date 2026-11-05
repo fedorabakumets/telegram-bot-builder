@@ -6,7 +6,8 @@ import { ProfileSessionsSchema, SessionRevokedSchema, OtherSessionsRevokedSchema
 function json(description: string, schema: z.ZodTypeAny) { return { description, content: { 'application/json': { schema } } }; }
 /** Регистрирует сессии после базовых auth-маршрутов. @param registry - Реестр. @returns Завершение регистрации. */
 export function registerProfileSessionPaths(registry: OpenAPIRegistry): void {
-  const security = [{ cookieAuth: [] }, { agentToken: [] }];
+  /** Альтернативные способы авторизации для операций с сессиями. */
+  const security: Record<string, string[]>[] = [{ cookieAuth: [] }, { agentToken: [] }];
   const errors = { 401: json('Требуется авторизация', SessionUnauthorizedSchema), 503: json('Реестр сессий недоступен', SessionRegistryErrorSchema) };
   registry.registerPath({ method: 'get', path: '/api/profile/sessions', tags: ['auth'], summary: 'Список активных сессий',
     description: 'Сессии текущего пользователя; внутренний sessionId/connect.sid исключён.', security,

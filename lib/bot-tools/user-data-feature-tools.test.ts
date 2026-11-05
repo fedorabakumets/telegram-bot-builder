@@ -60,6 +60,6 @@ describe('Новые действия пользовательских разд�
     const value = await deleteUserDataAtomically({ connect: vi.fn().mockResolvedValue({ query, release: vi.fn() }) } as never, 12, 9, '45');
     expect(value).toMatchObject({ deleted: true, deletedCount: 3, deletedUsers: 1 });
     expect(query.mock.calls[1][1]).toEqual([12, 9, '45']);
-    expect(query.mock.calls.at(-1)![0]).toBe('COMMIT');
+    expect(query.mock.calls[query.mock.calls.length - 1]![0]).toBe('COMMIT');
   });
 });

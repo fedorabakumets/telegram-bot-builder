@@ -119,6 +119,8 @@ export class LocalStorageService {
   private static reviveProject(stored: StoredProject): BotProject {
     return {
       ...stored,
+      /** Ревизия старых локальных проектов до её появления в схеме. */
+      revision: stored.revision ?? 0,
       createdAt: new Date(stored.createdAt),
       updatedAt: new Date(stored.updatedAt),
       lastExportedAt: null,
@@ -165,6 +167,8 @@ export class LocalStorageService {
 
     const stored: StoredProject = {
       id: this.getNextId(STORAGE_KEYS.NEXT_PROJECT_ID),
+      /** Начальная ревизия нового локального проекта. */
+      revision: data.revision ?? 0,
       ownerId: null,
       name: data.name,
       description: data.description || null,

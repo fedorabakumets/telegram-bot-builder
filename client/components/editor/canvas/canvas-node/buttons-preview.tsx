@@ -1,3 +1,4 @@
+/** @fileoverview Предпросмотр кнопок и портов клавиатуры на холсте. */
 import { useMemo } from 'react';
 import { Node } from '@/types/bot';
 import { ButtonsPreviewHeader } from './buttons-preview-header';
@@ -13,13 +14,23 @@ import { resolveKeyboardPreviewParams } from '../utils/resolve-keyboard-preview-
 import { isInvoicePayKeyboard, findPayButtonOnKeyboard } from '@/components/editor/properties/utils/invoice-pay-connection';
 
 interface ButtonsPreviewProps {
+  /** Узел с настройками клавиатуры */
   node: Node;
+  /** Узлы проекта для проверки связи с оплатой */
   allNodes?: Node[];
+  /** Обработчик начала соединения порта */
   onPortMouseDown?: (e: React.MouseEvent, portType: PortType, buttonId?: string, portCenter?: { x: number; y: number }) => void;
+  /** Является ли узел источником соединения */
   isConnectionSource?: boolean;
+  /** Обработчик регистрации положения порта кнопки */
   onButtonPortMount?: (buttonId: string, offset: { x: number; y: number }) => void;
 }
 
+/**
+ * Показывает клавиатуру узла и доступные порты соединений.
+ * @param props - Свойства предпросмотра
+ * @returns Предпросмотр клавиатуры или null
+ */
 export function ButtonsPreview({ node, allNodes, onPortMouseDown, isConnectionSource, onButtonPortMount }: ButtonsPreviewProps) {
   const previewParams = useMemo(() => resolveKeyboardPreviewParams(node), [node]);
   /**
@@ -57,12 +68,6 @@ export function ButtonsPreview({ node, allNodes, onPortMouseDown, isConnectionSo
     radioSelectedSymbol: (node.data as any).radioSelectedSymbol,
     radioUnselectedSymbol: (node.data as any).radioUnselectedSymbol,
   };
-
-  const completeButton = useMemo(
-    () => (isMultiSelect ? staticButtons.find((button: any) => button.action === 'complete') : undefined),
-    [isMultiSelect, staticButtons]
-  );
-  void completeButton;
 
   const dynamicSummary = enableDynamicButtons ? getDynamicButtonsSummary(dynamicButtons) : '';
 

@@ -69,7 +69,7 @@ it('добавление строк откатывает неполный RETURN
     return { rows: [] };
   });
   const result = await createRowsLocked({ query } as never, 7, 9, [{ data: { '4': '1' } }, { data: { '4': '2' } }]);
-  expect(result).toHaveProperty('status', 409); expect(query.mock.calls.at(-1)?.[0]).toBe('ROLLBACK');
+  expect(result).toHaveProperty('status', 409); expect(query.mock.calls[query.mock.calls.length - 1]?.[0]).toBe('ROLLBACK');
   query.mockClear();
   expect(await createRowsLocked({ query } as never, 7, 9, [{ data: { '4': 'не число' } }])).toHaveProperty('status', 400);
   expect(query.mock.calls.some(([sql]) => sql.startsWith('INSERT'))).toBe(false);

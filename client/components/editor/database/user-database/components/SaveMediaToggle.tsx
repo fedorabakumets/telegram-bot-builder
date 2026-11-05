@@ -58,13 +58,11 @@ export function SaveMediaToggle({ projectId, tokenId, saveIncomingMedia }: SaveM
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  if (tokenId === null) {
-    return null;
-  }
-
   const mutation = useMutation({
-    mutationFn: (enabled: boolean) =>
-      updateSaveIncomingMedia(projectId, tokenId, enabled ? 1 : 0),
+    mutationFn: (enabled: boolean) => {
+      if (tokenId === null) throw new Error('Не выбран токен бота');
+      return updateSaveIncomingMedia(projectId, tokenId, enabled ? 1 : 0);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/tokens`] });
       toast({
@@ -81,6 +79,10 @@ export function SaveMediaToggle({ projectId, tokenId, saveIncomingMedia }: SaveM
       });
     },
   });
+
+  if (tokenId === null) {
+    return null;
+  }
 
   return (
     <div className="flex items-center gap-3 px-4 py-2.5 border-b border-border/50">

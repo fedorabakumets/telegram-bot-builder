@@ -5,7 +5,7 @@ import { registerBotSettingsTools } from './mcp-register-bot-settings-tools';
 import { registerTemplateTools } from './mcp-register-template-tools';
 import { registerVersionLogExtraTools } from './mcp-register-version-log-extra-tools';
 import { z } from 'zod';
-import { setBotSettings, botEnvRequest, setBotProfile } from './bot-settings-db';
+import { setBotSettings, botEnvRequest } from './bot-settings-db';
 import { projectFilesRequest, uploadProjectBytes } from './project-files-db';
 import { templatesRequest } from './templates-db';
 import { createVersionCheckpoint } from './version-log-extra-db';

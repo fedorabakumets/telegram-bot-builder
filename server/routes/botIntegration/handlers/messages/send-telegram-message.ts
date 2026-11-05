@@ -11,6 +11,7 @@ import type { SendMediaFile } from "./extract-media";
 import type { InlineButton } from "./extract-buttons";
 import { fetchWithProxy } from "../../../../utils/telegram-proxy";
 import { isLocalPath, buildMultipartBody } from "./media-multipart";
+import { waitForTelegramMessages } from "./telegram-message-limiter";
 import { sendTelegramMediaGroup } from "./send-telegram-media-group";
 
 /**
@@ -126,6 +127,7 @@ export async function sendTelegramMessage(
   const replyMarkup = hasButtons ? buildInlineKeyboard(buttons, buttonsPerRow) : undefined;
 
   if (!hasMedia) {
+    await waitForTelegramMessages(token);
     return sendTextMessage(token, chatId, text, useHtml, replyMarkup);
   }
 
@@ -137,6 +139,7 @@ export async function sendTelegramMessage(
 
   // Отправляем первое медиа
   const firstMedia = mediaFiles[0];
+  await waitForTelegramMessages(token);
   return sendMediaMessage(token, chatId, firstMedia, text, useHtml, replyMarkup, projectId);
 }
 

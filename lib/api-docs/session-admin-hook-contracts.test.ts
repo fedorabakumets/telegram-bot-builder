@@ -39,7 +39,10 @@ describe('контракты сессий, административного ж
     const doc = document();
     for (const method of ['get', 'post', 'put', 'patch', 'delete'] as const) {
       const route = doc.paths['/api/hooks/{projectId}/{path}'][method]!;
-      expect(route.responses.default.content['*/*']).toBeDefined();
+      const fallback = route.responses.default;
+      expect(fallback).toBeDefined();
+      expect(fallback && '$ref' in fallback).toBe(false);
+      expect(fallback && !('$ref' in fallback) && fallback.content?.['*/*']).toBeDefined();
       expect(route.responses['200'].content['application/json'].schema).toBeDefined();
       expect(route.responses['502'].description).toContain('35 секунд'); expect(route.responses['504'].description).toContain('30 секунд');
     }

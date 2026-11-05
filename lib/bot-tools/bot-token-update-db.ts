@@ -6,7 +6,7 @@
  */
 
 import { apiFetch } from './api-fetch.ts';
-import { verifyMutation, type MutationReceipt } from './mutation-proof.ts';
+import type { MutationReceipt } from './mutation-proof.ts';
 import { isTelegramBotTokenFormat } from './bot-token-create-db.ts';
 import type { ReadDbOptions } from './node-query-db.ts';
 

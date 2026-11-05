@@ -34,13 +34,13 @@ it('импорт перечитывает ограничения после бл
   expect(result).toHaveProperty('status', 400);
   const sql = db.query.mock.calls.map(([value]) => value);
   expect(sql.findIndex(value => value.includes('FOR UPDATE'))).toBeLessThan(sql.findIndex(value => value.startsWith('SELECT c.id')));
-  expect(sql.at(-1)).toBe('ROLLBACK'); expect(sql.some(value => /^(INSERT|UPDATE|DELETE)/.test(value))).toBe(false);
+  expect(sql[sql.length - 1]).toBe('ROLLBACK'); expect(sql.some(value => /^(INSERT|UPDATE|DELETE)/.test(value))).toBe(false);
 });
 it('legacy patch применяет актуальные ограничения в транзакции до UPDATE', async () => {
   const db = changingSchema();
   expect(await patchRowLocked(db as never, 7, 9, 11, { '4': '10' })).toHaveProperty('status', 400);
   const sql = db.query.mock.calls.map(([value]) => value);
-  expect(sql.at(-1)).toBe('ROLLBACK'); expect(sql.some(value => value.startsWith('UPDATE'))).toBe(false);
+  expect(sql[sql.length - 1]).toBe('ROLLBACK'); expect(sql.some(value => value.startsWith('UPDATE'))).toBe(false);
   const missing = changingSchema(true);
   expect(await patchRowLocked(missing as never, 7, 9, 11, { '4': '100' })).toHaveProperty('status', 404);
   expect(missing.query.mock.calls.some(([value]) => value.startsWith('UPDATE'))).toBe(false);

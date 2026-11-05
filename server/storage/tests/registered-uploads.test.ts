@@ -13,7 +13,14 @@ import { authMiddleware } from '../../telegram/auth-middleware';
 describe('публичный просмотр /uploads', () => {
   it('читает S3 из записи, без зависимости от активного хранилища', async () => {
     const calls: string[] = [];
-    const backend = (id: string) => ({ configId: id, backend: 's3', get: async (key: string) => { calls.push(`${id}:${key}`); return Readable.from(['jpeg']); } }) as StorageBackend;
+    /** Создаёт тестовое хранилище для проверки выбора конфигурации. @param id - Идентификатор конфигурации. @returns Тестовый бэкенд. */
+    const backend = (id: string): StorageBackend => ({
+      configId: id, backend: 's3', name: id, readOnly: true,
+      put: async () => { throw new Error('Запись не поддерживается'); },
+      get: async (key: string) => { calls.push(`${id}:${key}`); return Readable.from(['jpeg']); },
+      delete: async () => { throw new Error('Удаление не поддерживается'); },
+      getUrl: key => key,
+    });
     const app = express();
     app.use(session({ secret: 'test-session-secret', resave: false, saveUninitialized: false }));
     app.get('/login', (req, res) => { req.session.telegramUser = { id: 12 } as never; res.send('ok'); });

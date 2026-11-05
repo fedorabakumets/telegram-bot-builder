@@ -27,7 +27,7 @@ describe('актуальный контент под PostgreSQL lock', () => {
   expect(await syncCurrentProjectContent(db.connection as never, 1)).toBe(12);
   expect(db.value()).toBe('актуальная');
   expect(db.commands[0]).toBe('BEGIN'); expect(db.commands[1]).toContain('FOR UPDATE');
-  expect(db.commands.at(-1)).toBe('COMMIT');
+  expect(db.commands[db.commands.length - 1]).toBe('COMMIT');
   expect(db.commands.filter((sql) => sql.startsWith('SELECT data, revision'))).toHaveLength(2);
  });
  it('запоздалый postcommit старой revision не возвращает старый контент', async () => {
@@ -42,6 +42,6 @@ describe('актуальный контент под PostgreSQL lock', () => {
   const db = database(); const query = db.connection.query;
   db.connection.query = vi.fn(async (sql, args) => { if (sql.startsWith('UPDATE bot_table_rows')) throw new Error('write error'); return query(sql, args); });
   await expect(syncCurrentProjectContent(db.connection as never, 1)).rejects.toThrow('write error');
-  expect(db.commands.at(-1)).toBe('ROLLBACK'); expect(db.commands).not.toContain('COMMIT');
+  expect(db.commands[db.commands.length - 1]).toBe('ROLLBACK'); expect(db.commands).not.toContain('COMMIT');
  });
 });
