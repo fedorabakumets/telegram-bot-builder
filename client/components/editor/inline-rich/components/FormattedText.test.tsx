@@ -1,5 +1,4 @@
 /** @fileoverview Проверка смены состояния форматированного текста. */
-import React from 'react';
 import { render } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { FormattedText } from './FormattedText';

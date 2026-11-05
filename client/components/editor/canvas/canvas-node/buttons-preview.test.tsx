@@ -1,5 +1,4 @@
 /** @fileoverview Проверка смены состояния предпросмотра клавиатуры. */
-import React from 'react';
 import { render } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { ButtonsPreview } from './buttons-preview';
