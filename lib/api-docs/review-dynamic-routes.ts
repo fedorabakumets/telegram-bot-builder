@@ -37,7 +37,7 @@ export function reviewDynamicRoutes(candidates: SourceRouteCandidate[], paths: R
         '`${base}/${resource}`': '',
         '`${base}/${resource}/:resourceId`': '/{resourceId}',
       };
-      if (Object.hasOwn(suffixes, candidate.expression)) {
+      if (Object.prototype.hasOwnProperty.call(suffixes, candidate.expression)) {
         routes = ['sources', 'placements', 'links', 'expenses'].map(resource => `/api/projects/{id}/analytics/acquisition/${resource}${suffixes[candidate.expression]}`);
         reason = 'Проверены base и четыре ключа RESOURCE_TABLES; схемы используют те же общие валидаторы.';
       }

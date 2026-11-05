@@ -23,7 +23,7 @@ async function send(allowed: boolean, body: Uint8Array): Promise<number> {
   try {
     const port = (server.address() as AddressInfo).port;
     const res = await fetch(`http://127.0.0.1:${port}/api/runtime/media/incoming-photo?projectId=17`, {
-      method: 'POST', headers: { Authorization: `Bearer ${'a'.repeat(64)}`, 'Content-Type': 'image/jpeg' }, body,
+      method: 'POST', headers: { Authorization: `Bearer ${'a'.repeat(64)}`, 'Content-Type': 'image/jpeg' }, body: new Uint8Array(body).buffer,
     });
     return res.status;
   } finally { await new Promise<void>(resolve => server.close(() => resolve())); }

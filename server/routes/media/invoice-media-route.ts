@@ -46,6 +46,7 @@ export function setupInvoiceMediaRoute(app: Express, deps: InvoiceMediaDeps = { 
         return res.json({ url: url.toString(), expiresAt: expires });
       } finally { await object.close?.().catch(() => undefined); }
     } catch { if (!res.destroyed) return res.status(503).json({ error: 'MEDIA_UNAVAILABLE' }); }
+    return undefined;
   });
 
   app.get('/api/runtime/media/invoice/:projectId/:mediaId', async (req, res) => {
@@ -67,6 +68,7 @@ export function setupInvoiceMediaRoute(app: Express, deps: InvoiceMediaDeps = { 
         const limiter = new Transform({ transform(chunk, _encoding, callback) { bytes += chunk.length; callback(bytes > object.size || bytes > MAX_BYTES ? new Error('Превышен размер') : null, chunk); } });
         await pipeline(await object.stream(), limiter, res);
       } finally { await object.close?.().catch(() => undefined); }
-    } catch { if (res.destroyed) return; if (res.headersSent) res.destroy(); else res.status(503).end(); }
+    } catch { if (res.destroyed) return undefined; if (res.headersSent) res.destroy(); else res.status(503).end(); }
+    return undefined;
   });
 }

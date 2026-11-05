@@ -18,7 +18,7 @@ export function buildMediaRuntimeEnv(projectId: number, projectData: unknown, st
   const base = (process.env.MEDIA_RUNTIME_BASE_URL || process.env.API_BASE_URL || `http://localhost:${process.env.PORT || 5000}`).trim();
   const remote = getProjectPlacement(projectId).runnerId !== null;
   const required = storageRequired || remote;
-  const fallback = required ? { MEDIA_RUNTIME_REQUIRED: '1' } : {};
+  const fallback: Record<string, string> = required ? { MEDIA_RUNTIME_REQUIRED: '1' } : {};
   let url: URL;
   try {
     url = new URL(base);

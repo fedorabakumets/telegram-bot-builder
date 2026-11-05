@@ -59,10 +59,10 @@ it('HTTP проверяет доступ до соединения, коммит
     const request = { projectId: 7, endpoint: 'acquisition/budgets', method: 'POST' as const, body };
     denied = true; expect(await requestAnalyticsV2(request)).toHaveProperty('status', 403); expect(connect).not.toHaveBeenCalled();
     denied = false;
-    const saved = await requestAnalyticsV2(request); expect(saved).toMatchObject({ item: { id: 55 }, persistence: { confirmed: true, projectId: 7 } }); expect(sql.at(-1)).toBe('COMMIT');
+    const saved = await requestAnalyticsV2(request); expect(saved).toMatchObject({ item: { id: 55 }, persistence: { confirmed: true, projectId: 7 } }); expect(sql[sql.length - 1]).toBe('COMMIT');
     await requestAnalyticsV2(request); expect(save).toHaveBeenCalledTimes(1);
     failReceipt = true;
     const failed = await requestAnalyticsV2({ ...request, body: { ...body, requestId: '413c936b-d07a-40b8-b07f-c3bb17249516' } });
-    expect(failed).toHaveProperty('status', 503); expect(JSON.stringify(failed)).not.toContain('Секрет SQL'); expect(sql.at(-1)).toBe('ROLLBACK');
+    expect(failed).toHaveProperty('status', 503); expect(JSON.stringify(failed)).not.toContain('Секрет SQL'); expect(sql[sql.length - 1]).toBe('ROLLBACK');
   } finally { await new Promise<void>(resolve => server.close(() => resolve())); }
 });

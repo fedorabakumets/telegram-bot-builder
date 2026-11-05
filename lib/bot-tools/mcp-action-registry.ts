@@ -34,7 +34,7 @@ export function createMcpActionRegistry(server: McpServer) {
     const wrapped = (async (...args: unknown[]) => normalizeMcpActionResult(await invoke(...args), policy, !config.outputSchema)) as typeof callback;
     const tool = server.registerTool(name, { ...config,
       /** Существующий точный контракт не подменяется общей оболочкой. */
-      outputSchema: config.outputSchema ?? actionOutputSchema,
+      outputSchema: (config.outputSchema ?? actionOutputSchema) as typeof config.outputSchema,
       annotations: { readOnlyHint: ['read', 'prepare'].includes(policy.effect), destructiveHint: policy.destructive,
         openWorldHint: policy.effect === 'external', ...config.annotations },
       _meta: { ...config._meta, botcraft: policy } }, wrapped);

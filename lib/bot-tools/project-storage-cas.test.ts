@@ -21,7 +21,7 @@ describe('атомарный SQL revision CAS', () => {
  it('старый клиент без токена также увеличивает ревизию', async () => {
   await new DatabaseStorage().updateBotProject(1, { name: 'Новое' });
   expect(state.query).toMatch(/"revision" = "bot_projects"\."revision" \+ 1/);
-  expect(state.params.at(-1)).toBe(1);
+  expect(state.params[state.params.length - 1]).toBe(1);
  });
  it('очистка версий возвращает реально удалённые строки, а не плановый размер', async () => {
   state.rows = [[[10], [11]], [[10]]];

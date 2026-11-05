@@ -48,7 +48,7 @@ describe('Настройки таблиц MCP → HTTP → сохранение'
       const result = await calls.get('db_set_table_column_settings')!({ project_id: 7, table_id: 9, column_id: 4, data: { dataType: 'number', min: 0, required: true } });
       expect(result.isError).not.toBe(true);
       expect(state.settings).toMatchObject({ dataType: 'number', min: 0, required: true });
-      expect(state.writes).toBe(1); expect(state.queries.at(-1)).toBe('COMMIT');
+      expect(state.writes).toBe(1); expect(state.queries[state.queries.length - 1]).toBe('COMMIT');
       expect(JSON.parse(result.content[0].text).settings).toEqual(state.settings);
       expect(JSON.parse(result.content[0].text).persistence).toEqual({ confirmed: true, projectId: 7, tableId: 9 });
     });
@@ -69,10 +69,10 @@ describe('Настройки таблиц MCP → HTTP → сохранение'
       expect(saved.isError).not.toBe(true); expect(state.data['4']).toBe('новое');
       expect(JSON.parse(saved.content[0].text).rows[0].data['4']).toBe('новое');
       expect(JSON.parse(saved.content[0].text).persistence.confirmed).toBe(true);
-      expect(state.queries.at(-1)).toBe('COMMIT');
+      expect(state.queries[state.queries.length - 1]).toBe('COMMIT');
       const conflict = await calls.get('db_edit_table_cells')!(args);
       expect(conflict.isError).toBe(true); expect(conflict.content[0].text).toContain('409');
-      expect(state.writes).toBe(1); expect(state.queries.at(-1)).toBe('ROLLBACK');
+      expect(state.writes).toBe(1); expect(state.queries[state.queries.length - 1]).toBe('ROLLBACK');
     });
   });
   it('conditional patch подтверждает COMMIT и не выдаёт квитанцию при конфликте', async () => {
@@ -80,9 +80,9 @@ describe('Настройки таблиц MCP → HTTP → сохранение'
       const args = { project_id: 7, table_id: 9, row_id: 11, data: { '4': 'новое' }, expected: { '4': 'старое' } };
       const saved = await calls.get('db_patch_table_row_expected')!(args);
       expect(saved.isError).not.toBe(true); expect(JSON.parse(saved.content[0].text)).toMatchObject({ data: { '4': 'новое' }, persistence: { confirmed: true } });
-      expect(state.queries.at(-1)).toBe('COMMIT');
+      expect(state.queries[state.queries.length - 1]).toBe('COMMIT');
       const conflict = await calls.get('db_patch_table_row_expected')!(args);
-      expect(conflict.isError).toBe(true); expect(JSON.parse(conflict.content[0].text)).not.toHaveProperty('persistence'); expect(state.queries.at(-1)).toBe('ROLLBACK');
+      expect(conflict.isError).toBe(true); expect(JSON.parse(conflict.content[0].text)).not.toHaveProperty('persistence'); expect(state.queries[state.queries.length - 1]).toBe('ROLLBACK');
     });
   });
 });

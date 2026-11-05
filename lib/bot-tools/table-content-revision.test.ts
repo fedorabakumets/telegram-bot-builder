@@ -15,6 +15,6 @@ it('обновляет контент и ревизию до COMMIT одной �
   const updateIndex = query.mock.calls.findIndex(([sql]) => sql.startsWith('UPDATE bot_projects'));
   expect(query.mock.calls[updateIndex][0]).toContain('revision = revision + 1');
   expect(JSON.parse(String(query.mock.calls[updateIndex][1]?.[1])).sheets[0].nodes[0].data.messageText).toBe('новое');
-  expect(query.mock.calls.at(-1)?.[0]).toBe('COMMIT');
+  expect(query.mock.calls[query.mock.calls.length - 1]?.[0]).toBe('COMMIT');
   expect(updateIndex).toBeLessThan(query.mock.calls.length - 1);
 });

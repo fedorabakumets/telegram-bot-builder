@@ -49,7 +49,7 @@ it('legacy patch подтверждает RETURNING и не подтвержда
     const request = { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data: { '4': '12' } }) };
     const saved = await nodeFetch(`${base}/api/projects/7/tables/9/rows/11`, request);
     expect(await saved.json()).toMatchObject({ id: 11, data: { '4': '12' }, persistence: { confirmed: true } });
-    expect(state.queries.some(sql => sql.includes('RETURNING'))).toBe(true); expect(state.queries.at(-1)).toBe('COMMIT');
+    expect(state.queries.some(sql => sql.includes('RETURNING'))).toBe(true); expect(state.queries[state.queries.length - 1]).toBe('COMMIT');
     state.missing = true;
     const missing = await nodeFetch(`${base}/api/projects/7/tables/9/rows/11`, request);
     expect(missing.status).toBe(404); expect(await missing.json()).not.toHaveProperty('persistence');
@@ -60,11 +60,11 @@ it('bundle подтверждает COMMIT результата и не подт
     const request = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode: 'create', tables: [{ name: 'Товары', columns: ['Цена'], rows: [['12']] }] }) };
     const saved = await nodeFetch(`${base}/api/projects/7/tables/import`, request);
     expect(saved.status).toBe(201); expect(await saved.json()).toMatchObject({ ok: true, persistence: { confirmed: true, projectId: 7 } });
-    expect(state.queries.at(-1)).toBe('COMMIT');
+    expect(state.queries[state.queries.length - 1]).toBe('COMMIT');
     state.bundleFails = true;
     const failed = await nodeFetch(`${base}/api/projects/7/tables/import`, request);
     expect(failed.status).toBe(409); const body = await failed.json(); expect(body).toHaveProperty('failed_table_index', 0); expect(body).not.toHaveProperty('persistence');
-    expect(state.queries.at(-1)).toBe('ROLLBACK');
+    expect(state.queries[state.queries.length - 1]).toBe('ROLLBACK');
   });
 });
 it('HTTP отклоняет повторные нормализованные колонки до записи пакета', async () => {
@@ -78,9 +78,9 @@ it('apply-ops подтверждает общий COMMIT и не выдаёт pr
     const request = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ops: [{ op: 'reindex' }] }) };
     const saved = await nodeFetch(`${base}/api/projects/7/tables/9/apply-ops`, request);
     expect(await saved.json()).toMatchObject({ results: [{ op: 'reindex' }], persistence: { confirmed: true, projectId: 7, tableId: 9 } });
-    expect(state.queries.at(-1)).toBe('COMMIT');
+    expect(state.queries[state.queries.length - 1]).toBe('COMMIT');
     state.bundleFails = true;
     const failed = await nodeFetch(`${base}/api/projects/7/tables/9/apply-ops`, request);
-    expect(failed.status).toBe(409); expect(await failed.json()).not.toHaveProperty('persistence'); expect(failed.headers.get('x-botcraft-persistence')).toBeNull(); expect(state.queries.at(-1)).toBe('ROLLBACK');
+    expect(failed.status).toBe(409); expect(await failed.json()).not.toHaveProperty('persistence'); expect(failed.headers.get('x-botcraft-persistence')).toBeNull(); expect(state.queries[state.queries.length - 1]).toBe('ROLLBACK');
   });
 });
