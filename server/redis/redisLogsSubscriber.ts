@@ -39,13 +39,14 @@ interface RedisLogMessage {
  * @param channel - Имя канала Redis
  * @returns Объект с projectId и tokenId или null при ошибке
  */
-function parseLogsChannel(channel: string): { projectId: number; tokenId: number } | null {
+export function parseLogsChannel(channel: string): { projectId: number; tokenId: number } | null {
   const parts = channel.split(':');
-  if (parts.length < 4) return null;
+  if (parts.length !== 4 || parts[0] !== 'bot' || parts[1] !== 'logs') return null;
 
-  const projectId = parseInt(parts[2], 10);
-  const tokenId = parseInt(parts[3], 10);
-  if (isNaN(projectId) || isNaN(tokenId)) return null;
+  if (!/^[1-9]\d*$/.test(parts[2]) || !/^[1-9]\d*$/.test(parts[3])) return null;
+  const projectId = Number(parts[2]);
+  const tokenId = Number(parts[3]);
+  if (!Number.isSafeInteger(projectId) || !Number.isSafeInteger(tokenId)) return null;
 
   return { projectId, tokenId };
 }

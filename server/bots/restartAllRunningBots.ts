@@ -3,7 +3,7 @@
  * @module server/bots/restartAllRunningBots
  */
 
-import { startBot } from './startBot';
+import { startBotAfterStop } from './startBotAfterStop';
 import { stopBot } from './stopBot';
 import {
   RESTART_ALL_BATCH_COOLDOWN_MS,
@@ -91,7 +91,7 @@ export async function restartAllRunningBots(
   for (let i = 0; i < stopped.length; i++) {
     const { tokenId, token } = stopped[i];
     if (i > 0) await sleepMs(START_STAGGER_MS);
-    const startResult = await startBot(projectId, token, tokenId);
+    const startResult = await startBotAfterStop(projectId, token, tokenId);
     if (startResult.success) {
       results.push({ tokenId, success: true, processId: startResult.processId });
     } else {

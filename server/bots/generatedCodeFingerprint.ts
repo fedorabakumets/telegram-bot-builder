@@ -5,6 +5,9 @@
 
 import { createHash } from 'node:crypto';
 
+/** Версия контракта готовности сгенерированного бота и воркера. */
+export const BOT_RUNTIME_PROTOCOL_VERSION = 1;
+
 /** Поля, влияющие на generatePythonCode при запуске бота */
 export interface GeneratedCodeInput {
   /** sha256(JSON.stringify(project.data)) */
@@ -47,6 +50,7 @@ export function checksumProjectData(projectData: unknown): string {
  */
 export function buildGeneratedCodeFingerprint(input: GeneratedCodeInput): string {
   const payload = JSON.stringify({
+    runtimeProtocolVersion: BOT_RUNTIME_PROTOCOL_VERSION,
     projectDataChecksum: input.projectDataChecksum,
     projectName: input.projectName,
     userDatabaseEnabled: input.userDatabaseEnabled,

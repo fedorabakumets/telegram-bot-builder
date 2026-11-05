@@ -36,7 +36,9 @@ const minimalProject = {
  * @returns Объект проекта
  */
 function loadRealProject(): unknown {
-  return JSON.parse(fs.readFileSync('bots/новый_бот_1_238_150/project.json', 'utf-8'));
+  const path = 'bots/новый_бот_1_238_150/project.json';
+  if (!fs.existsSync(path)) console.warn('Реальный проект отсутствует; для проверки синтаксиса используется минимальный проект.');
+  return fs.existsSync(path) ? JSON.parse(fs.readFileSync(path, 'utf-8')) : minimalProject;
 }
 
 /**
@@ -156,8 +158,8 @@ test('B03', 'if _redis_connected and _redis_client is not None: условный
   ok(codeNoDb.includes('if _redis_connected and _redis_client is not None'), 'условный блок проверки доступности Redis не найден');
 });
 
-test('B04', 'RedisStorage(_redis_client) используется в условном блоке', () => {
-  ok(codeNoDb.includes('RedisStorage(_redis_client)'), 'RedisStorage(_redis_client) не найден');
+test('B04', 'RedisStorage использует клиент и идентификатор токена', () => {
+  ok(codeNoDb.includes('dp.fsm.storage = RedisStorage(_redis_client, TOKEN_ID)'), 'переключение на RedisStorage с TOKEN_ID не найдено');
 });
 
 test('B05', 'PostgresStorage() используется в else ветке', () => {
@@ -192,19 +194,16 @@ test('B08', 'init_redis_client делает retry с backoff', () => {
 // ══ Блок C: Redis кэш переменных ══════════════════════════════════════════════
 console.log('\n══ Блок C: Redis кэш переменных ══════════════════════════════════════');
 
-test('C01', 'vars_cache:{user_id} присутствует в init_all_user_vars', () => {
-  ok(codeNoDb.includes('vars_cache:'), 'vars_cache: не найден в коде');
+test('C01', 'переменные пользователя читаются из памяти', () => {
+  ok(codeNoDb.includes('all_vars = dict(user_data.get(user_id, {}))'), 'чтение переменных из памяти не найдено');
 });
 
-test('C02', '_redis_client.setex для кэширования переменных', () => {
-  ok(codeNoDb.includes('_redis_client.setex') || codeNoDb.includes('_redis_client'), '_redis_client не найден');
+test('C02', 'переменные пользователя сохраняются в памяти', () => {
+  ok(codeNoDb.includes('user_data[user_id][key] = value'), 'сохранение переменной в памяти не найдено');
 });
 
-test('C03', '_redis_client.delete для инвалидации кэша в set_user_var', () => {
-  ok(
-    codeNoDb.includes('_redis_client.delete') || codeNoDb.includes('_redis_client'),
-    '_redis_client.delete не найден',
-  );
+test('C03', 'с включённой БД переменные сохраняются фоново', () => {
+  ok(codeWithDb.includes('asyncio.create_task(_persist_user_var(user_id, key, _safe_value))'), 'фоновое сохранение переменной в БД не найдено');
 });
 
 // ══ Блок D: Обратная совместимость ════════════════════════════════════════════
@@ -215,8 +214,9 @@ test('D01', 'без REDIS_URL — Dispatcher(storage=PostgresStorage()) прис
   ok(codeNoDb.includes('PostgresStorage()'), 'PostgresStorage() не найден');
 });
 
-test('D02', '_vars_cache в памяти как fallback', () => {
-  ok(codeNoDb.includes('_vars_cache'), '_vars_cache не найден');
+test('D02', 'без Redis FSM использует память для чтения состояния', () => {
+  const storage = codeNoDb.slice(codeNoDb.indexOf('class PostgresStorage'), codeNoDb.indexOf('class RedisStorage'));
+  ok(storage.includes('return user_data.get(uid, {}).get("__fsm_state__")'), 'чтение состояния FSM из памяти не найдено');
 });
 
 // ══ Блок E: Синтаксис Python ══════════════════════════════════════════════════
@@ -254,8 +254,15 @@ test('F04', '_refresh_lock обновляет TTL каждые 30 секунд',
   ok(codeNoDb.includes('expire'), 'expire для обновления TTL не найден');
 });
 
-test('F05', 'lock освобождается в finally', () => {
-  ok(codeNoDb.includes('_redis_client.delete'), '_redis_client.delete не найден в finally');
+test('F05', 'lock освобождается только владельцем', () => {
+  ok(codeNoDb.includes("redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1])"), 'атомарная проверка владельца при удалении не найдена');
+});
+
+test('F05b', 'lock продлевается только владельцем и потеря останавливает бота', () => {
+  ok(codeNoDb.includes('uuid.uuid4().hex'), 'уникальный владелец блокировки не найден');
+  ok(codeNoDb.includes("redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('expire', KEYS[1], 60)"), 'атомарная проверка владельца при продлении не найдена');
+  ok(codeNoDb.includes('if not _renewed:\n                            logging.error'), 'потеря блокировки не обрабатывается');
+  ok(codeNoDb.includes('_stop_event.set()'), 'сигнал остановки не найден');
 });
 
 test('F06', 'lock не блокирует запуск если Redis недоступен', () => {
@@ -400,6 +407,14 @@ test('I09', 'userDatabaseEnabled: false → НЕТ bot:message: канала в 
 
 test('I10', 'userDatabaseEnabled: true → синтаксис Python OK с Redis publish', () => {
   syntax(codeWithDb, 'i10');
+});
+
+test('J01', 'готовность подтверждается после lock и проверки Telegram', () => {
+  const lock = codeNoDb.indexOf('_lock_acquired = await _redis_client.set');
+  const telegram = codeNoDb.indexOf('await bot.get_me()', lock);
+  const ready = codeNoDb.indexOf('_worker_bot_ready()', telegram);
+  ok(lock >= 0 && telegram > lock && ready > telegram, 'нарушен порядок подтверждения запуска');
+  ok(codeNoDb.includes('_WORKER_READY_PROTOCOL = True'), 'отсутствует маркер нового протокола');
 });
 
 // ══ Итог ══════════════════════════════════════════════════════════════════════

@@ -4,13 +4,14 @@
  */
 
 import { storage } from "../storages/storage";
-import { clearBotRedisLock } from "./clearBotRedisLock";
 import {
   RESTORE_START_STAGGER_MS,
   waitRestoreStagger,
 } from "./restoreStartStagger";
 import { refuseInactiveBotStart } from "./refuse-inactive-bot-start";
 import { startBotWithRetries } from "./restoreRetry";
+import { BOT_LOCK_BUSY_ERROR } from './waitForBotRedisLock';
+import { BOT_START_CANCELLED_ERROR } from './botStartState';
 import {
   markRestoreFinished,
   markRestoreStarted,
@@ -98,8 +99,6 @@ async function restoreProjectGroup(
         continue;
       }
 
-      await clearBotRedisLock(launchToken, tokenId);
-
       const result = await startBotWithRetries(
         instance.projectId,
         launchToken,
@@ -112,6 +111,8 @@ async function restoreProjectGroup(
           `✅ Бот projectId=${instance.projectId} успешно восстановлен`
           + ` (PID: ${result.processId}, попыток: ${result.attempts})`,
         );
+      } else if (result.error === BOT_LOCK_BUSY_ERROR || result.error === BOT_START_CANCELLED_ERROR) {
+        console.log(`⏭ Токен ${tokenId} занят другим экземпляром; состояние не меняем`);
       } else {
         console.error(
           `❌ Не удалось восстановить бота projectId=${instance.projectId}`

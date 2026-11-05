@@ -7,11 +7,12 @@ import { storage } from '../storages/storage';
 import { workerManager } from './botWorkerManager';
 import { isWorkerPoolEnabled } from './isWorkerPoolEnabled';
 import { findActiveProcessForToken } from '../utils/findActiveProcessForToken';
-import { clearBotRedisLock } from './clearBotRedisLock';
 import { refuseInactiveBotStart } from './refuse-inactive-bot-start';
 import { isExpectedStop } from './expectedStops';
 import { isServerShuttingDown } from './serverShutdownState';
 import { startBotWithRetries } from './restoreRetry';
+import { BOT_LOCK_BUSY_ERROR } from './waitForBotRedisLock';
+import { BOT_START_CANCELLED_ERROR } from './botStartState';
 import {
   selectSweepCandidates,
   SERVER_RESTART_MARKER,
@@ -138,7 +139,6 @@ export async function runRestoreSweep(
         `[RestoreSweep] token=${inst.tokenId} ${reason} — поднимаю`,
       );
 
-      await clearBotRedisLock(launchToken, inst.tokenId);
       const result = await startBotWithRetries(
         inst.projectId,
         launchToken,
@@ -150,6 +150,8 @@ export async function runRestoreSweep(
         console.log(
           `[RestoreSweep] token=${inst.tokenId} поднят (попыток: ${result.attempts})`,
         );
+      } else if (result.error === BOT_LOCK_BUSY_ERROR || result.error === BOT_START_CANCELLED_ERROR) {
+        console.log(`[RestoreSweep] token=${inst.tokenId} занят другим экземпляром; состояние не меняем`);
       } else {
         console.error(
           `[RestoreSweep] token=${inst.tokenId} не поднялся: ${result.error}`,

@@ -462,7 +462,13 @@ class BotWorkerManager extends EventEmitter {
         const preview = content.replace(/^\[\d{2}:\d{2}:\d{2}\]\s*/, "").split("\n")[0];
         console.error(`🏭 [WorkerPool:${projectId}] бот ${msg.token_id} ошибка: ${preview}`);
       }
-      this.emit("bot-log", this.projectOf(msg.token_id, projectId), msg.token_id, msg.type, content);
+      // Ключ общего воркера не является ID проекта и не подходит для маршрутизации логов.
+      const botProjectId = this.tokenProjects.get(msg.token_id);
+      if (botProjectId === undefined) {
+        console.warn(`[WorkerPool:${projectId}] Неизвестен проект токена ${msg.token_id}; лог не маршрутизирован`);
+        return;
+      }
+      this.emit("bot-log", botProjectId, msg.token_id, msg.type, content);
     } else if (msg.token_id !== undefined && msg.token_id === 0) {
       // Системные asyncio-логи без контекста бота — не маршрутизируем
     } else {
@@ -598,10 +604,12 @@ class BotWorkerManager extends EventEmitter {
         WORKER_STOP_CONFIRM_TIMEOUT_MS,
       );
       this.sendCommand(workerKey, { cmd: "stop_bot", token_id: tokenId });
-      await stopWait;
-      worker.activeBots.delete(tokenId);
-      if (worker.activeBots.size === 0) {
-        this.scheduleWorkerDrain(workerKey);
+      const stopped = await stopWait;
+      if (stopped) {
+        worker.activeBots.delete(tokenId);
+        if (worker.activeBots.size === 0) this.scheduleWorkerDrain(workerKey);
+      } else {
+        console.warn(`[WorkerPool:${workerKey}] остановка token=${tokenId} не подтверждена; процесс остаётся в учёте`);
       }
       throw new Error(`Таймаут bot_started project=${projectId} token=${tokenId}`);
     }
@@ -625,7 +633,11 @@ class BotWorkerManager extends EventEmitter {
       ...(args.env ? { env: args.env } : {}),
       ...(args.build ? { build: toCommandBuild(args.build) } : {}),
     });
-    if (!sent) return null;
+    if (!sent) {
+      // Ожидание уже подписано на события и может завершиться ошибкой позже.
+      void started.catch(() => undefined);
+      return null;
+    }
     worker.activeBots.add(args.tokenId);
     return started;
   }
@@ -721,16 +733,9 @@ class BotWorkerManager extends EventEmitter {
 
       const ok = await confirmed;
       if (!ok) {
-        const w = this.workers.get(workerKey);
-        if (w?.activeBots.has(tokenId)) {
-          console.warn(
-            `[WorkerPool:${workerKey}] stop timeout token=${tokenId} — снимаем из activeBots без fake exit`,
-          );
-          w.activeBots.delete(tokenId);
-          if (w.activeBots.size === 0 && w.status === "ready") {
-            this.scheduleWorkerDrain(workerKey);
-          }
-        }
+        // До подтверждения выхода процесс может работать и должен учитываться воркером.
+        if (lastStart) this.startArgs.set(tokenId, lastStart);
+        console.warn(`[WorkerPool:${workerKey}] stop timeout token=${tokenId} — состояние процесса неизвестно`);
       }
       if (ok && worker.docker && lastStart) unstageBotFile(workerKey, lastStart.botFile);
       return ok;

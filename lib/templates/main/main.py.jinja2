@@ -155,6 +155,8 @@ async def track_group_bot_membership(update):
 
 {% endif %}
 
+_WORKER_READY_PROTOCOL = True
+
 async def main():
     """Главная функция запуска бота"""
     global db_pool, dp, _redis_client, _redis_connected, _bot_stop_event
@@ -190,23 +192,51 @@ async def main():
         # Distributed lock через Redis — защита от двойного запуска (только в polling режиме)
         # В webhook режиме двойной запуск невозможен — Telegram шлёт апдейты на один URL
         if not WEBHOOK_URL and _redis_connected and _redis_client is not None:
+            import uuid
+            import time as _lock_time
             _lock_key = f"bot:lock:{BOT_TOKEN[-10:]}"
-            _lock_acquired = await _redis_client.set(_lock_key, "1", nx=True, ex=60)
+            _lock_owner = uuid.uuid4().hex
+            _lock_deadline = _lock_time.monotonic() + 50
+            _lock_acquired = await _redis_client.set(_lock_key, _lock_owner, nx=True, ex=60)
             if not _lock_acquired:
                 logging.warning(
                     f"⚠️ Бот уже запущен (Redis lock занят, TOKEN_ID={TOKEN_ID}). Завершаем дублирующий процесс."
                 )
                 return
+            if _lock_time.monotonic() >= _lock_deadline:
+                logging.error("Получение Redis lock заняло слишком много времени — запуск отменён")
+                return
             logging.info("🔒 Redis lock получен — бот запускается")
 
             # Фоновая задача: обновляем lock каждые 30 секунд пока бот работает
             async def _refresh_lock():
+                """Продлевает блокировку и останавливает бот до истечения подтверждённого срока."""
+                _deadline = _lock_deadline
+                _delay = 30
                 while True:
-                    await asyncio.sleep(30)
+                    await asyncio.sleep(min(_delay, max(0, _deadline - _lock_time.monotonic())))
+                    _remaining = _deadline - _lock_time.monotonic()
+                    if _remaining <= 0:
+                        logging.error("Redis lock не подтверждён вовремя — останавливаем бота")
+                        _stop_event.set()
+                        return
                     try:
-                        await _redis_client.expire(_lock_key, 60)
+                        _attempt_started = _lock_time.monotonic()
+                        _renewed = await asyncio.wait_for(
+                            _redis_client.eval(
+                                "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('expire', KEYS[1], 60) else return 0 end",
+                                1, _lock_key, _lock_owner,
+                            ),
+                            timeout=min(5, _remaining),
+                        )
+                        if not _renewed:
+                            logging.error("Redis lock потерян — останавливаем бота")
+                            _stop_event.set()
+                            return
+                        _deadline = _attempt_started + 50
+                        _delay = 30
                     except Exception:
-                        pass
+                        _delay = 5
 
             _background_tasks.append(asyncio.create_task(_refresh_lock()))
 
@@ -300,6 +330,18 @@ async def main():
             _background_tasks.append(asyncio.create_task(_content_subscribe_redis()))
 {%- endif %}
 
+        # Проверяем доступ Telegram до подтверждения запуска воркеру.
+        await bot.get_me()
+        if _stop_event.is_set():
+            raise RuntimeError("Запуск прерван до готовности бота")
+
+        async def _notify_worker_ready(**_kwargs):
+            """Подтверждает запуск только пока не запрошена остановка."""
+            if _stop_event.is_set():
+                raise RuntimeError("Запуск прерван до готовности бота")
+            if callable(globals().get('_worker_bot_ready')):
+                _worker_bot_ready()
+
         # Выбор режима запуска: webhook или polling
         if WEBHOOK_URL:
             # Webhook режим — запускаем aiohttp сервер
@@ -328,6 +370,7 @@ async def main():
             _webhook_runner = runner
 
             logging.info(f"✅ Webhook сервер запущен на порту {WEBHOOK_PORT}")
+            await _notify_worker_ready()
             await _stop_event.wait()
 
             await runner.cleanup()
@@ -349,12 +392,26 @@ async def main():
 {%- endif %}
             _conflict_attempt = 0
             _max_conflict_retries = 6
+            # Startup вызывается aiogram после подготовки диспетчера, до получения обновлений.
+            dp.startup.register(_notify_worker_ready)
             while _conflict_attempt < _max_conflict_retries:
                 try:
                     _polling_task = asyncio.create_task(dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types()))
                     _background_tasks.append(_polling_task)
-                    await _stop_event.wait()
-                    await dp.stop_polling()
+                    _stop_wait = asyncio.create_task(_stop_event.wait())
+                    try:
+                        _done, _ = await asyncio.wait(
+                            {_polling_task, _stop_wait}, return_when=asyncio.FIRST_COMPLETED
+                        )
+                        if _polling_task in _done:
+                            await _polling_task
+                            if not _stop_event.is_set():
+                                raise RuntimeError("Polling неожиданно завершился")
+                        else:
+                            await dp.stop_polling()
+                    finally:
+                        _stop_wait.cancel()
+                        await asyncio.gather(_stop_wait, return_exceptions=True)
                     try:
                         await _polling_task
                     except Exception:
@@ -433,8 +490,12 @@ async def main():
         # Освобождаем Redis lock при завершении (только в polling режиме — в webhook lock не устанавливался)
         if not WEBHOOK_URL and _redis_connected and _redis_client is not None and _lock_acquired:
             try:
-                await _redis_client.delete(f"bot:lock:{BOT_TOKEN[-10:]}")
-                logging.info("🔓 Redis lock освобождён")
+                _released = await _redis_client.eval(
+                    "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end",
+                    1, _lock_key, _lock_owner,
+                )
+                if _released:
+                    logging.info("🔓 Redis lock освобождён")
             except Exception:
                 pass
 

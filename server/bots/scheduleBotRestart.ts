@@ -4,14 +4,14 @@
  */
 
 import { storage } from '../storages/storage';
-import { clearBotRedisLock } from './clearBotRedisLock';
 import { refuseInactiveBotStart } from './refuse-inactive-bot-start';
 import {
   getRestartDelay,
   incrementRestartCounter,
   getRestartCounter,
 } from './botRestartManager';
-import { startBot } from './startBot';
+import { startBotAfterStop } from './startBotAfterStop';
+import { getBotStartRevision } from './botStartState';
 
 /**
  * Если токен с autoRestart=1 и выход неожиданный — ставит backoff и вызывает startBot.
@@ -71,9 +71,11 @@ export async function scheduleBotRestart(
         `reason=${reason} → restart in ${delay / 1000}s (attempt ${attempt}/${maxAttempts})`,
     );
 
+    const revision = getBotStartRevision(tokenId);
     setTimeout(() => {
       void (async () => {
         try {
+          if (getBotStartRevision(tokenId) !== revision) return;
           const current = await storage.getBotInstanceByToken(tokenId);
           if (current?.status === 'running') {
             console.log(
@@ -90,10 +92,9 @@ export async function scheduleBotRestart(
             return;
           }
 
-          await clearBotRedisLock(fresh.token, tokenId);
-          const result = await startBot(projectId, fresh.token, tokenId, {
-            clearLogs: false,
-          });
+          if (getBotStartRevision(tokenId) !== revision) return;
+
+          const result = await startBotAfterStop(projectId, fresh.token, tokenId, false);
           if (!result.success) {
             console.error(
               `[AutoRestart] Не удалось поднять token=${tokenId}: ${result.error}`,

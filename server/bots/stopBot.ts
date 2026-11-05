@@ -34,9 +34,8 @@ import { storage } from '../storages/storage';
 import { flushBuffer } from '../terminal/botLogsBuffer';
 import { broadcastProjectEvent } from '../terminal/broadcastProjectEvent';
 import { clearActiveLaunchId } from '../terminal/activeLaunchIds';
-import { clearBotRedisLockByTokenId } from './clearBotRedisLock';
-import { POST_STOP_COOLDOWN_MS, sleepMs } from './restartTiming';
 import { markExpectedStop, clearExpectedStop } from './expectedStops';
+import { cancelBotStart } from './botStartState';
 
 /**
  * Останавливает запущенный экземпляр Telegram-бота по идентификатору проекта и токена
@@ -69,6 +68,7 @@ import { markExpectedStop, clearExpectedStop } from './expectedStops';
  * ```
  */
 export async function stopBot(projectId: number, tokenId: number): Promise<{ success: boolean; error?: string; }> {
+  cancelBotStart(tokenId);
   // Чтобы WorkerPool не принял stop за OOM и не автоперезапустил
   markExpectedStop(tokenId);
   try {
@@ -79,8 +79,7 @@ export async function stopBot(projectId: number, tokenId: number): Promise<{ suc
         console.error(
           `[stopBot] Таймаут подтверждения остановки project=${projectId} token=${tokenId}`,
         );
-        // Orphan: снимаем Redis lock чтобы не блокировать следующий старт навсегда
-        await clearBotRedisLockByTokenId((id) => storage.getBotToken(id), tokenId);
+        // Блокировка остаётся у процесса до его выхода или истечения TTL.
         return {
           success: false,
           error: 'Таймаут остановки бота в воркере — процесс мог не завершиться',
@@ -94,11 +93,6 @@ export async function stopBot(projectId: number, tokenId: number): Promise<{ suc
       });
       clearActiveLaunchId(tokenId);
       await storage.stopBotInstanceByToken(tokenId);
-      // Lock чистит finally в main; Node — safety после cooldown
-      void (async () => {
-        await sleepMs(POST_STOP_COOLDOWN_MS);
-        await clearBotRedisLockByTokenId((id) => storage.getBotToken(id), tokenId);
-      })();
 
       void broadcastProjectEvent(projectId, {
         type: 'bot-stopped',
@@ -208,9 +202,7 @@ export async function stopBot(projectId: number, tokenId: number): Promise<{ suc
 
     await storage.stopBotInstanceByToken(tokenId);
 
-    // Удаляем Redis lock чтобы следующий запуск не блокировался
-    // (finally в Python может не выполниться при SIGKILL)
-    await clearBotRedisLockByTokenId((id) => storage.getBotToken(id), tokenId);
+    // При принудительном завершении блокировка истечёт по TTL.
 
     // Рассылаем событие об остановке бота всем клиентам проекта
     void broadcastProjectEvent(projectId, {

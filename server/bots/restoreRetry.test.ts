@@ -45,7 +45,6 @@ describe('startBotWithRetries', () => {
       waitFn: async (ms) => {
         waits.push(ms);
       },
-      clearLockFn: async () => true,
       startBotFn: async () => {
         calls += 1;
         if (calls === 1) return { success: false, error: 'tmp' };
@@ -64,7 +63,6 @@ describe('startBotWithRetries', () => {
     let calls = 0;
     const result = await startBotWithRetries(1, 'tok', 7, {
       waitFn: async () => {},
-      clearLockFn: async () => true,
       startBotFn: async () => {
         calls += 1;
         return { success: false, error: `fail-${calls}` };
@@ -81,7 +79,6 @@ describe('startBotWithRetries', () => {
     let receivedOpts: { clearLogs?: boolean; reuseGeneratedCode?: boolean } | undefined;
     await startBotWithRetries(1, 'tok', 7, {
       waitFn: async () => {},
-      clearLockFn: async () => true,
       startBotFn: async (_p, _t, _id, opts) => {
         receivedOpts = opts;
         return { success: true, processId: 'worker_1' };
@@ -91,6 +88,7 @@ describe('startBotWithRetries', () => {
     assert.deepStrictEqual(receivedOpts, {
       clearLogs: false,
       reuseGeneratedCode: true,
+      waitForExistingLock: true,
     });
   });
 });

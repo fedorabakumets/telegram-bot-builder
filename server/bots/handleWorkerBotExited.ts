@@ -7,7 +7,6 @@
 import { storage } from '../storages/storage';
 import { broadcastProjectEvent } from '../terminal/broadcastProjectEvent';
 import { getActiveLaunchId, clearActiveLaunchId } from '../terminal/activeLaunchIds';
-import { clearBotRedisLockByTokenId } from './clearBotRedisLock';
 import { isWorkerCleanExit } from './isWorkerCleanExit';
 import { formatBotRuntimeError, formatBotRuntimeErrorShort } from './formatBotRuntimeError';
 import { isBotUnauthorized } from '@shared/broadcast-unauthorized';
@@ -95,7 +94,7 @@ export async function handleWorkerBotExited(
         await markBotTokenUnauthorized(projectId, tokenId);
       }
 
-      await clearBotRedisLockByTokenId((id) => storage.getBotToken(id), tokenId);
+      // Не удаляем общий ключ: его уже мог получить другой запуск этого токена.
     }
   } catch (err) {
     console.error(`[WorkerExit] Ошибка обновления БД project=${projectId} token=${tokenId}:`, err);

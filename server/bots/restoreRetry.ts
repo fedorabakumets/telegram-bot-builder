@@ -2,8 +2,8 @@
  * @fileoverview Повторные попытки startBot при восстановлении после рестарта.
  * @module server/bots/restoreRetry
  */
-
-import { clearBotRedisLock } from './clearBotRedisLock';
+import { BOT_LOCK_BUSY_ERROR } from './waitForBotRedisLock';
+import { BOT_START_CANCELLED_ERROR, getBotStartRevision } from './botStartState';
 
 /** Паузы перед 2-й и 3-й попыткой (мс). Первая попытка без паузы. */
 export const RESTORE_RETRY_DELAYS = [2000, 5000, 15000] as const;
@@ -22,18 +22,15 @@ export type StartBotFn = (
   projectId: number,
   token: string,
   tokenId: number,
-  options?: { clearLogs?: boolean; reuseGeneratedCode?: boolean },
+  options?: { clearLogs?: boolean; reuseGeneratedCode?: boolean; waitForExistingLock?: boolean },
 ) => Promise<{ success: boolean; error?: string; processId?: string }>;
 
-export type ClearLockFn = (
-  token: string | null | undefined,
-  tokenId?: number,
-) => Promise<boolean>;
-
 export interface StartBotWithRetriesDeps {
+  /** Функция запуска для повторных попыток. */
   startBotFn?: StartBotFn;
-  clearLockFn?: ClearLockFn;
+  /** Ожидание перед следующей попыткой. */
   waitFn?: (ms: number) => Promise<void>;
+  /** Предельное количество попыток. */
   maxAttempts?: number;
 }
 
@@ -58,7 +55,7 @@ export function delayBeforeAttempt(attempt: number): number {
 
 /**
  * Вызывает startBot с повторами при неудаче.
- * Перед каждой попыткой снимает Redis-lock.
+ * Не снимает Redis-lock: он может принадлежать другому работающему экземпляру.
  * startBot грузится динамически, чтобы unit-тесты не тянули БД.
  * @param projectId - ID проекта
  * @param token - Секрет токена Telegram
@@ -75,9 +72,10 @@ export async function startBotWithRetries(
     const { startBot } = await import('./startBot');
     return startBot(pid, tok, tid, opts);
   });
-  const clearLock = deps.clearLockFn ?? clearBotRedisLock;
   const wait = deps.waitFn ?? waitRestoreRetry;
   const maxAttempts = deps.maxAttempts ?? RESTORE_MAX_ATTEMPTS;
+  const revision = getBotStartRevision(tokenId);
+
 
   let lastError: string | undefined;
 
@@ -90,10 +88,13 @@ export async function startBotWithRetries(
       await wait(delay);
     }
 
-    await clearLock(token, tokenId);
+    if (getBotStartRevision(tokenId) !== revision) {
+      return { success: false, error: BOT_START_CANCELLED_ERROR, attempts: attempt - 1 };
+    }
     const result = await start(projectId, token, tokenId, {
       clearLogs: false,
       reuseGeneratedCode: true,
+      waitForExistingLock: true,
     });
 
     if (result.success) {
@@ -105,6 +106,9 @@ export async function startBotWithRetries(
     }
 
     lastError = result.error ?? 'Неизвестная ошибка startBot';
+    if (lastError === BOT_LOCK_BUSY_ERROR || lastError === BOT_START_CANCELLED_ERROR) {
+      return { success: false, error: lastError, attempts: attempt };
+    }
     console.error(
       `[Restore] token=${tokenId} попытка ${attempt}/${maxAttempts} не удалась: ${lastError}`,
     );

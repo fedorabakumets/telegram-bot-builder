@@ -6,6 +6,7 @@
 import type { Request, Response } from "express";
 import { startBot } from "../../../bots/startBot";
 import { storage } from "../../../storages/storage";
+import { botStartErrorStatus } from "./botStartErrorStatus";
 
 /**
  * Нормализует tokenId из тела (число, "42", "token_42").
@@ -87,12 +88,12 @@ export async function handleBotStart(req: Request, res: Response): Promise<void>
     if (result.success) {
       await storage.markTokenAsUsed(actualTokenId);
       res.json({
-        message: "Бот успешно запущен",
+        message: "Команда запуска бота принята",
         processId: result.processId,
         tokenUsed: true,
       });
     } else {
-      res.status(500).json({ message: result.error || "Не удалось запустить бота" });
+      res.status(botStartErrorStatus(result.error)).json({ message: result.error || "Не удалось запустить бота" });
     }
   } catch {
     res.status(500).json({ message: "Не удалось запустить бота" });

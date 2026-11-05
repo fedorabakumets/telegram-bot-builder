@@ -53,8 +53,8 @@ export async function persistLogLine(
 ): Promise<number | undefined> {
   if (globalThis.__dbPoolActive === false) return undefined;
 
-  // Логи без реального token_id (0) не сохраняем — нет FK в bot_tokens
-  if (tokenId <= 0) return undefined;
+  // Не отправляем в БД записи без действительных идентификаторов проекта и токена.
+  if (!Number.isSafeInteger(projectId) || projectId <= 0 || !Number.isSafeInteger(tokenId) || tokenId <= 0) return undefined;
 
   try {
     const [row] = await db.insert(botLogs).values({
@@ -98,6 +98,8 @@ export function addToBuffer(
   launchId?: number,
   timestamp?: string
 ): void {
+  // Некорректная запись не должна приводить к отклонению всего пакета логов.
+  if (!Number.isSafeInteger(projectId) || projectId <= 0 || !Number.isSafeInteger(tokenId) || tokenId <= 0) return;
   const key = `${projectId}_${tokenId}`;
   if (!buffer.has(key)) {
     buffer.set(key, { entries: [], launchId });

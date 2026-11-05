@@ -5,6 +5,7 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
+import { createHash } from 'node:crypto';
 import {
   buildGeneratedCodeFingerprint,
   canReuseGeneratedCode,
@@ -92,6 +93,13 @@ describe('buildGeneratedCodeFingerprint', () => {
       generatorVersion: 'gen-v2',
     });
     assert.notStrictEqual(a, b);
+  });
+
+  it('не использует локальную или сохранённую сборку старого протокола', () => {
+    const oldFingerprint = createHash('sha256').update(JSON.stringify(baseInput)).digest('hex');
+    const fingerprint = buildGeneratedCodeFingerprint(baseInput);
+    assert.notStrictEqual(fingerprint, oldFingerprint);
+    assert.strictEqual(canReuseGeneratedCode(oldFingerprint, fingerprint, true), false);
   });
 });
 

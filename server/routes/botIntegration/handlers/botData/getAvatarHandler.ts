@@ -107,9 +107,12 @@ export async function getAvatarHandler(req: Request, res: Response): Promise<voi
                 } else {
                     // file_id есть — резолвим в свежий URL
                     if (!avatarUrl.startsWith('http')) {
+                        // Сохраняем идентификатор отдельно: при ошибке Telegram он не является URL.
+                        const storedFileId = avatarUrl;
+                        avatarUrl = null;
                         const fileResp = await fetchWithProxy(
                             `https://api.telegram.org/bot${tokenToUse.token}/getFile`,
-                            { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ file_id: avatarUrl }) }
+                            { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ file_id: storedFileId }) }
                         );
                         const fileData = await fileResp.json();
                         if (fileResp.ok && fileData.result?.file_path) {

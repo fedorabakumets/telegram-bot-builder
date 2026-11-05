@@ -313,16 +313,24 @@ class BotWorker:
                 alias_prev = {}
                 dotenv_guard.close()
 
-            ctx.status = "running"
-            ctx.started_at = datetime.now()
-            emit_system(f"bot_started:{token_id}")
+            def bot_ready() -> None:
+                """Подтверждает готовность нового бота после его проверок запуска."""
+                if ctx.status != "running":
+                    ctx.status = "running"
+                    ctx.started_at = datetime.now()
+                    emit_system(f"bot_started:{token_id}")
+
+            module._worker_bot_ready = bot_ready
 
             if hasattr(module, "main"):
+                if not getattr(module, "_WORKER_READY_PROTOCOL", False):
+                    emit_log(token_id, "Старый код бота: запуск подтверждается без проверки блокировки и Telegram", "stderr")
+                    bot_ready()
                 emit_log(token_id, "Вызов main()...", "stdout")
                 await module.main()
                 emit_log(token_id, "main() завершился", "stdout")
                 # Старые bot.py глотали CancelledError → статус оставался running
-                if ctx.status == "running":
+                if ctx.status in ("starting", "running"):
                     ctx.status = "stopped"
             else:
                 emit_log(token_id, "Функция main() не найдена в bot.py", "stderr")

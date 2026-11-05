@@ -6,7 +6,7 @@
 import { botProcesses } from "../routes/routes";
 import { storage } from "../storages/storage";
 import { findActiveProcessForProject } from "../utils/findActiveProcessForProject";
-import { startBot } from "./startBot";
+import { startBotAfterStop } from "./startBotAfterStop";
 import { isWorkerPoolEnabled } from "./isWorkerPoolEnabled";
 import { stopBot } from "./stopBot";
 import { POST_STOP_COOLDOWN_MS, sleepMs } from "./restartTiming";
@@ -42,7 +42,7 @@ export async function restartBotIfRunning(projectId: number): Promise<{ success:
         return { success: false, error: stopResult.error };
       }
       await sleepMs(POST_STOP_COOLDOWN_MS);
-      return await startBot(projectId, launchToken, tokenId);
+      return await startBotAfterStop(projectId, launchToken, tokenId);
     }
 
     const stopResult = await stopBot(projectId, tokenId);
@@ -59,7 +59,7 @@ export async function restartBotIfRunning(projectId: number): Promise<{ success:
       botProcesses.delete(activeProcessInfo.processKey);
     }
 
-    return await startBot(projectId, launchToken, tokenId);
+    return await startBotAfterStop(projectId, launchToken, tokenId);
   } catch (error) {
     console.error('Ошибка перезапуска бота:', error);
     return { success: false, error: error instanceof Error ? error.message : 'Неизвестная ошибка' };

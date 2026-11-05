@@ -21,7 +21,8 @@ import { selectedMediaStorageId } from '../storage/selected-media-storage';
  * @external path
  */
 import { dirname, join } from "node:path";
-import { fetchWithProxy } from "../utils/telegram-proxy";
+import { checkTelegramBeforeStart } from './check-telegram-before-start';
+import { BOT_LOCK_BUSY_ERROR, waitForBotRedisLock } from './waitForBotRedisLock';
 import { isPsqlBuiltinEnabled } from "../utils/isPsqlBuiltinEnabled";
 import { isPsqlPanelDsnDenied } from "../utils/isPsqlPanelDsnDenied";
 import { isBotRuntimeActive } from "./resolveBotDatabaseUrl";
@@ -62,7 +63,7 @@ import { normalizeProjectNameToFile } from "../files/normalizeFileName";
 import { storage } from "../storages/storage";
 import { broadcastProjectEvent } from '../terminal/broadcastProjectEvent';
 import { pendingLaunchIds } from '../terminal/setupBotProcessListeners';
-import { beginBotStart, finishBotStart } from './botStartState';
+import { beginBotStart, finishBotStart, getBotStartRevision, BOT_START_CANCELLED_ERROR } from './botStartState';
 import { clearBotLogs } from '../terminal/botLogsBuffer';
 import { setActiveLaunchId, clearActiveLaunchId } from '../terminal/activeLaunchIds';
 import { closeActiveLaunchHistory } from './closeActiveLaunchHistory';
@@ -75,7 +76,6 @@ import {
 } from './botRestartManager';
 import { refuseInactiveBotStart } from './refuse-inactive-bot-start';
 import { markBotTokenUnauthorized } from './mark-bot-token-unauthorized';
-import { isTelegramMethodUnauthorized } from './telegram-method-unauthorized';
 import { BOT_UNAUTHORIZED_HINT } from '@shared/broadcast-unauthorized';
 import { existsSync } from 'node:fs';
 import {
@@ -133,16 +133,54 @@ export async function startBot(
   projectId: number,
   token: string,
   tokenId: number,
-  options?: { clearLogs?: boolean; reuseGeneratedCode?: boolean },
+  options?: { clearLogs?: boolean; reuseGeneratedCode?: boolean; waitForExistingLock?: boolean },
 ): Promise<{ success: boolean; error?: string; processId?: string | undefined; }> {
   const shouldClearLogs = options?.clearLogs !== false; // по умолчанию true
   if (!beginBotStart(tokenId)) return { success: false, error: 'Бот уже запускается' };
+  const startRevision = getBotStartRevision(tokenId);
   try {
     const tokenRecord = await storage.getBotToken(tokenId);
     const inactiveError = refuseInactiveBotStart(tokenRecord?.isActive);
     if (inactiveError) {
       console.log(`⏭ Пропуск запуска: токен ${tokenId} недействителен (isActive=0)`);
       return { success: false, error: inactiveError };
+    }
+
+    // Проверяем Telegram до остановки существующего процесса и подготовки файлов.
+    const launchMode = tokenRecord?.launchMode ?? 'polling';
+    const webhookBaseUrl = tokenRecord?.webhookBaseUrl ?? null;
+    const effectiveWebhookUrl = launchMode === 'webhook'
+      ? (webhookBaseUrl || process.env.WEBHOOK_URL || null)
+      : null;
+    const telegramCheck = await checkTelegramBeforeStart(token, 'getMe');
+    if (!telegramCheck.ok) {
+      if (telegramCheck.unauthorized) {
+        await markBotTokenUnauthorized(projectId, tokenId);
+        return { success: false, error: BOT_UNAUTHORIZED_HINT };
+      }
+      return { success: false, error: telegramCheck.error };
+    }
+
+    // Polling использует общий Redis lock; webhook его не устанавливает.
+    const lockAvailable = effectiveWebhookUrl || await waitForBotRedisLock(
+      token, undefined, options?.waitForExistingLock === true,
+      () => getBotStartRevision(tokenId) !== startRevision,
+    );
+    if (getBotStartRevision(tokenId) !== startRevision) {
+      return { success: false, error: BOT_START_CANCELLED_ERROR };
+    }
+    if (!lockAvailable) return { success: false, error: BOT_LOCK_BUSY_ERROR };
+
+    const project = await storage.getBotProject(projectId);
+    if (!project) {
+      return { success: false, error: "Проект не найден" };
+    }
+
+    const disabledTypes = await getDisabledNodeTypes();
+    const disabledHits = findDisabledNodesInProject(project.data, disabledTypes);
+    const disabledError = buildStartBlockedByDisabledTypesError(disabledHits);
+    if (disabledError) {
+      return { success: false, error: disabledError };
     }
 
     const processKey = `${projectId}_${tokenId}`;
@@ -232,49 +270,6 @@ export async function startBot(
       console.log(`🗑️ Удалили старый процесс из памяти для токена ${tokenId}`);
     }
 
-    // Читаем настройки запуска из БД токена
-    const tokenSettings = await storage.getBotToken(tokenId);
-    const launchMode = tokenSettings?.launchMode ?? 'polling';
-    const webhookBaseUrl = tokenSettings?.webhookBaseUrl ?? null;
-    // Webhook активен только если режим явно webhook
-    const effectiveWebhookUrl = launchMode === 'webhook'
-      ? (webhookBaseUrl || process.env.WEBHOOK_URL || null)
-      : null;
-
-    // В polling режиме сбрасываем webhook чтобы избежать конфликтов
-    // В webhook режиме — Python сам установит webhook при старте
-    if (!effectiveWebhookUrl) {
-      try {
-        const webhookUrl = `https://api.telegram.org/bot${token}/deleteWebhook?drop_pending_updates=false`;
-        const webhookRes = await fetchWithProxy(webhookUrl);
-        const webhookBody = await webhookRes.json().catch(() => null) as {
-          ok?: boolean;
-          error_code?: number;
-          description?: string;
-        } | null;
-        if (isTelegramMethodUnauthorized(webhookRes.status, webhookBody)) {
-          await markBotTokenUnauthorized(projectId, tokenId);
-          console.log(`⏭ Токен ${tokenId} отклонён Telegram при deleteWebhook — воркер не запускаем`);
-          return { success: false, error: BOT_UNAUTHORIZED_HINT };
-        }
-        console.log(`🧹 Webhook сброшен для токена ${tokenId} (апдейты сохранены)`);
-      } catch (webhookError) {
-        console.log(`Не удалось сбросить webhook:`, webhookError);
-      }
-    }
-
-    const project = await storage.getBotProject(projectId);
-    if (!project) {
-      return { success: false, error: "Проект не найден" };
-    }
-
-    const disabledTypes = await getDisabledNodeTypes();
-    const disabledHits = findDisabledNodesInProject(project.data, disabledTypes);
-    const disabledError = buildStartBlockedByDisabledTypesError(disabledHits);
-    if (disabledError) {
-      return { success: false, error: disabledError };
-    }
-
     console.log(`📊 Проект ${projectId} загружен из БД:`);
     console.log(`   project.userDatabaseEnabled:`, project.userDatabaseEnabled);
     console.log(`   typeof project.userDatabaseEnabled:`, typeof project.userDatabaseEnabled);
@@ -297,12 +292,12 @@ export async function startBot(
       projectDataChecksum: checksumProjectData(project.data),
       projectName: project.name,
       userDatabaseEnabled,
-      saveIncomingMedia: tokenSettings?.saveIncomingMedia === 1,
-      catchAllHandlers: tokenSettings?.catchAllHandlers !== 0,
-      trackUserBlocks: tokenSettings?.trackUserBlocks !== 0,
-      trackGroupMembership: tokenSettings?.trackGroupMembership !== 0,
-      protectContent: tokenSettings?.protectContent === 1,
-      contentCache: tokenSettings?.contentCache === 1,
+      saveIncomingMedia: tokenRecord?.saveIncomingMedia === 1,
+      catchAllHandlers: tokenRecord?.catchAllHandlers !== 0,
+      trackUserBlocks: tokenRecord?.trackUserBlocks !== 0,
+      trackGroupMembership: tokenRecord?.trackGroupMembership !== 0,
+      protectContent: tokenRecord?.protectContent === 1,
+      contentCache: tokenRecord?.contentCache === 1,
       psqlBuiltinEnabled: isPsqlBuiltinEnabled(),
       psqlPanelDsnDenied: isPsqlPanelDsnDenied(),
       botRuntimeRole: isBotRuntimeActive(),
@@ -374,12 +369,12 @@ export async function startBot(
         enableLogging: false,
         enableGroupHandlers: false,
         groups: [],
-        saveIncomingMedia: tokenSettings?.saveIncomingMedia === 1,
-        catchAllHandlers: tokenSettings?.catchAllHandlers !== 0,
-        trackUserBlocks: tokenSettings?.trackUserBlocks !== 0,
-        trackGroupMembership: tokenSettings?.trackGroupMembership !== 0,
-        protectContent: tokenSettings?.protectContent === 1,
-        contentCache: tokenSettings?.contentCache === 1,
+        saveIncomingMedia: tokenRecord?.saveIncomingMedia === 1,
+        catchAllHandlers: tokenRecord?.catchAllHandlers !== 0,
+        trackUserBlocks: tokenRecord?.trackUserBlocks !== 0,
+        trackGroupMembership: tokenRecord?.trackGroupMembership !== 0,
+        protectContent: tokenRecord?.protectContent === 1,
+        contentCache: tokenRecord?.contentCache === 1,
         thumbnailUrls,
         psqlBuiltinEnabled: isPsqlBuiltinEnabled(),
         psqlPanelDsnDenied: isPsqlPanelDsnDenied(),
@@ -452,6 +447,21 @@ export async function startBot(
     }
     }
 
+    // Сбрасываем webhook только после подготовки и повторной проверки блокировки.
+    if (!effectiveWebhookUrl) {
+      if (!(await waitForBotRedisLock(token, undefined, false))) {
+        return { success: false, error: BOT_LOCK_BUSY_ERROR };
+      }
+      const webhookReset = await checkTelegramBeforeStart(token, 'deleteWebhook');
+      if (!webhookReset.ok) {
+        if (webhookReset.unauthorized) {
+          await markBotTokenUnauthorized(projectId, tokenId);
+          return { success: false, error: BOT_UNAUTHORIZED_HINT };
+        }
+        return { success: false, error: webhookReset.error };
+      }
+    }
+
     // Закрываем предыдущий незавершённый запуск перед стартом нового
     await closeActiveLaunchHistory(tokenId);
 
@@ -483,6 +493,7 @@ export async function startBot(
       await precompileBotCode(mainFile);
 
       try {
+        if (getBotStartRevision(tokenId) !== startRevision) throw new Error(BOT_START_CANCELLED_ERROR);
         await workerManager.startBot(projectId, token, tokenId, mainFile, {
           webhook: { webhookUrl: effectiveWebhookUrl ?? undefined, webhookPort: 9000 + tokenId },
           env: botEnv,
@@ -541,6 +552,7 @@ export async function startBot(
     // Запускаем бота
     const pythonPath = process.env.PYTHON_PATH ||
       (process.platform === 'win32' ? 'python' : 'python3');
+    if (getBotStartRevision(tokenId) !== startRevision) return { success: false, error: BOT_START_CANCELLED_ERROR };
     const botProcess = spawn(pythonPath, [mainFile], {
       stdio: ['pipe', 'pipe', 'pipe'],
       detached: false,
