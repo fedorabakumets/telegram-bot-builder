@@ -3,6 +3,7 @@
  * @module server/admin/setup-runtime-settings-routes
  */
 
+import { handleTestTelegramConnection } from "./telegram-connection-test";
 import type { Express } from "express";
 import { requireAdminAuth } from "./admin-auth-middleware";
 import {
@@ -21,6 +22,7 @@ import { handleTestBackupTelegram } from "./runtime-backup-telegram-handler";
 export function setupRuntimeSettingsRoutes(app: Express): void {
   app.get("/admin/api/runtime-settings/:group", requireAdminAuth, handleGetRuntimeSettings);
   app.put("/admin/api/runtime-settings/:group", requireAdminAuth, handlePutRuntimeSettings);
+  app.post("/admin/api/runtime-settings/platform/telegram/test", requireAdminAuth, handleTestTelegramConnection);
   app.post("/admin/api/runtime-settings/backups/run", requireAdminAuth, handleRunRuntimeBackup);
   app.post("/admin/api/runtime-settings/backups/telegram/test", requireAdminAuth, handleTestBackupTelegram);
   setupRuntimeGuideRoutes(app);

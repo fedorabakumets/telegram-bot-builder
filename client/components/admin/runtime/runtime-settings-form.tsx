@@ -3,7 +3,7 @@
  * @module components/admin/runtime/runtime-settings-form
  */
 
-import { useEffect } from 'react';
+import { useEffect, Fragment } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2 } from 'lucide-react';
@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { RuntimeFieldControl, type RuntimeFormShape } from './runtime-field-control';
 import { runtimeFormValue, type RuntimeGroupView } from './runtime-types';
 import { useRunRuntimeBackup, useSaveRuntimeSettings } from './use-runtime-settings';
+import { TelegramConnectionTest } from './telegram-connection-test';
 import { BackupTelegramTestButton } from './backup-telegram-test-button';
 
 /** Схема словаря строк */
@@ -74,7 +75,10 @@ export function RuntimeSettingsForm({ data }: { data: RuntimeGroupView }) {
       <form onSubmit={form.handleSubmit(onSubmit)}>
         <CardContent className="grid gap-5 pt-6 sm:grid-cols-2">
           {data.fields.map((field) => (
-            <RuntimeFieldControl key={field.env} field={field} storages={data.storages} register={form.register} />
+            <Fragment key={field.env}>
+              <RuntimeFieldControl field={field} storages={data.storages} register={form.register} />
+              {field.env === 'TELEGRAM_PROXY_URL' ? <TelegramConnectionTest mode={form.watch('values.TELEGRAM_CONNECTION_MODE') ?? ''} proxy={form.watch('values.TELEGRAM_PROXY_URL') ?? ''} disabled={save.isPending} /> : null}
+            </Fragment>
           ))}
         </CardContent>
         <CardFooter className="flex flex-wrap gap-3">

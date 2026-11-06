@@ -1,82 +1,43 @@
 /**
- * @fileoverview Утилита для выполнения HTTP-запросов к Telegram API через прокси или напрямую.
- * Если TELEGRAM_PROXY_URL задан — использует его. Иначе подключается напрямую,
- * явно игнорируя системный прокси Windows (WinInet/реестр).
- * @module server/utils/telegram-proxy
+ * @fileoverview HTTP-запросы Telegram с выбранным соединением.
  */
-
 import { ProxyAgent, Agent, fetch as undiciFetch } from 'undici';
-import { runtimeEnv } from '../services/runtime-overlay';
+import { getTelegramConnection } from './telegram-connection';
+import { createTelegramSocksAgent } from './telegram-socks-agent';
 
-/** Агент для прямого подключения (без системного прокси) */
+/** Агент прямого соединения. */
 const directAgent = new Agent();
+/** Кэш агента прокси. */
+let proxyAgent: ProxyAgent | Agent | null = null;
+/** Адрес, для которого создан агент. */
+let cachedProxy: string | undefined;
 
-/** Агент для подключения через прокси (если задан TELEGRAM_PROXY_URL) */
-let proxyAgent: ProxyAgent | null = null;
-
-/** Флаг однократной инициализации */
-let proxyInitialized = false;
+/** Сбрасывает кэш соединения после изменения настроек. */
+export function resetTelegramProxy(): void { proxyAgent = null; cachedProxy = undefined; }
 
 /**
- * Инициализирует прокси-агент из переменной окружения TELEGRAM_PROXY_URL.
- * Вызывается один раз при первом обращении.
+ * Возвращает агент выбранного прокси.
+ * @returns Агент или null для прямого соединения
  */
-function initProxy(): void {
-  if (proxyInitialized) return;
-  proxyInitialized = true;
-
-  const proxyUrl = runtimeEnv('TELEGRAM_PROXY_URL');
-  if (!proxyUrl) return;
-
-  try {
-    proxyAgent = new ProxyAgent(proxyUrl);
-    console.log(`[Proxy] Прокси инициализирован: ${proxyUrl}`);
-  } catch (error) {
-    console.error(
-      `[Proxy] Ошибка создания ProxyAgent:`,
-      error instanceof Error ? error.message : error,
-    );
+export function getProxyAgent(): ProxyAgent | Agent | null {
+  const { proxy } = getTelegramConnection();
+  if (!proxy) return null;
+  if (!proxyAgent || proxy !== cachedProxy) {
+    proxyAgent = /^socks5h?:/i.test(proxy) ? createTelegramSocksAgent(proxy) : new ProxyAgent(proxy);
+    cachedProxy = proxy;
   }
-}
-
-/**
- * Сбрасывает кэш агента, чтобы следующее обращение взяло адрес из админки
- * @returns void
- */
-export function resetTelegramProxy(): void {
-  proxyInitialized = false;
-  proxyAgent = null;
-}
-
-/**
- * Возвращает текущий прокси-агент или null, если прокси не настроен.
- * @returns ProxyAgent или null
- */
-export function getProxyAgent(): ProxyAgent | null {
-  initProxy();
   return proxyAgent;
 }
 
-/** @deprecated Используйте getProxyAgent() */
+/** Устаревшее имя функции получения агента. */
 export const getTelegramProxyAgent = getProxyAgent;
 
 /**
- * Выполняет HTTP-запрос через настроенный прокси или напрямую.
- * Явно использует undici Agent, чтобы обойти системный прокси Windows.
- * @param url - URL для запроса
- * @param options - Опции fetch (метод, заголовки, тело и т.д.)
+ * Выполняет запрос через выбранное соединение.
+ * @param url - Адрес запроса
+ * @param options - Параметры запроса
  * @returns Ответ сервера
  */
 export async function fetchWithProxy(url: string, options?: RequestInit): Promise<Response> {
-  initProxy();
-
-  const dispatcher = proxyAgent ?? directAgent;
-
-  try {
-    return await undiciFetch(url, { ...options, dispatcher } as any) as unknown as Response;
-  } catch (error) {
-    const label = proxyAgent ? 'через прокси' : 'напрямую (без прокси)';
-    console.error(`[Proxy] fetch ${label} не удался:`, error instanceof Error ? error.message : error);
-    throw error;
-  }
+  return await undiciFetch(url, { ...options, dispatcher: getProxyAgent() ?? directAgent } as any) as unknown as Response;
 }

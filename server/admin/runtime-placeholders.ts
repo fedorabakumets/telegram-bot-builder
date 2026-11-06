@@ -43,6 +43,7 @@ export const RUNTIME_PLACEHOLDERS: Record<string, string> = {
   BOT_ARTIFACT_SOURCE: "storage",
   BOT_BUILDS_DIR: ".bot-builds",
   BOT_BUILDS_KEEP: "3",
+  TELEGRAM_CONNECTION_MODE: "direct",
   TELEGRAM_PROXY_URL: "http://127.0.0.1:8080",
   SUPPORT_BOT_TOKEN: "123456:AA...",
   SUPPORT_ADMIN_CHAT_IDS: "123456789",

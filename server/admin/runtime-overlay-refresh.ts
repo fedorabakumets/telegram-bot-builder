@@ -7,6 +7,7 @@ import { like } from "drizzle-orm";
 import { appSettings } from "@shared/schema";
 import { db } from "../database/db";
 import { runtimeEnv, setRuntimeOverlay } from "../services/runtime-overlay";
+import { captureTelegramEnvironmentProxy } from "../utils/telegram-connection";
 import { RUNTIME_SETTING_PREFIX } from "./runtime-field";
 
 /**
@@ -31,6 +32,7 @@ export async function refreshRuntimeOverlay(): Promise<void> {
  * @returns void
  */
 export function applyRuntimeProxyEnv(): void {
+  captureTelegramEnvironmentProxy();
   const proxy = runtimeEnv("TELEGRAM_PROXY_URL");
   if (!proxy) return;
   process.env.HTTP_PROXY = proxy;

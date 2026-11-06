@@ -6,6 +6,7 @@
 import { deleteSetting, setSetting } from "../services/app-settings.service";
 import { restartDbBackupScheduler } from "../database/backups/dbBackupScheduler";
 import { runDbBackupNow } from "../database/backups/runDbBackupNow";
+import { validateTelegramProxy } from "../utils/telegram-connection";
 import { resetTelegramProxy } from "../utils/telegram-proxy";
 import { applyStorageFromSettings } from "./apply-storage-from-settings";
 import { findRuntimeGroup } from "./runtime-groups";
@@ -61,6 +62,15 @@ async function assertStorageAllowed(groupId: string, id: string): Promise<void> 
 export async function saveRuntimeGroup(groupId: string, input: Record<string, unknown>): Promise<string[]> {
   const group = findRuntimeGroup(groupId);
   if (!group) throw new RuntimeSettingsError("Раздел не найден", 404);
+  if (groupId === "platform") {
+    const mode = input.TELEGRAM_CONNECTION_MODE;
+    const proxy = input.TELEGRAM_PROXY_URL;
+    if (mode != null && !["", "direct", "proxy", "auto"].includes(String(mode))) throw new RuntimeSettingsError("Неизвестный режим подключения Telegram", 400);
+    if (typeof proxy === "string" && proxy.trim()) {
+      try { validateTelegramProxy(proxy.trim()); } catch (error) { throw new RuntimeSettingsError((error as Error).message, 400); }
+    }
+    if (mode === "proxy" && typeof proxy === "string" && !proxy.trim()) throw new RuntimeSettingsError("Укажите адрес прокси Telegram", 400);
+  }
   const decisions = group.fields.map((field) => ({ field, decision: decideRuntimeSave(field.kind, input[field.env]) }));
   for (const { field, decision } of decisions) {
     if (field.kind === "storage" && decision.action === "set" && decision.value) {

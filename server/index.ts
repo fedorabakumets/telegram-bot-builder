@@ -40,9 +40,11 @@ import { redactSecrets } from "./utils/redactSecrets";
 import { startDbBackupScheduler } from "./database/backups/dbBackupScheduler";
 import { applyRuntimeProxyEnv, refreshRuntimeOverlay } from "./admin/runtime-overlay-refresh";
 import { isWorkerPoolEnabled } from "./bots/isWorkerPoolEnabled";
+import { captureTelegramEnvironmentProxy } from "./utils/telegram-connection";
 
 // Настраиваем прокси для Telegram API ДО всех импортов
 dotenv.config({ debug: false });
+captureTelegramEnvironmentProxy();
 if (process.env.TELEGRAM_PROXY_URL && process.env.TELEGRAM_PROXY_URL.trim() !== '') {
   process.env.HTTP_PROXY = process.env.TELEGRAM_PROXY_URL;
   process.env.HTTPS_PROXY = process.env.TELEGRAM_PROXY_URL;

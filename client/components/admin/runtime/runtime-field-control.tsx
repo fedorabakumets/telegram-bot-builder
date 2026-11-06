@@ -41,9 +41,18 @@ function inputPlaceholder(field: RuntimeFieldView): string | undefined {
  */
 export function RuntimeFieldControl({ field, storages, register }: RuntimeFieldControlProps) {
   const name = `values.${field.env}` as const;
+  const descriptionId = field.hint ? `${field.env}-hint` : undefined;
   return (
     <div className="space-y-2">
       <Label htmlFor={field.env}>{field.label}</Label>
+      {field.env === 'TELEGRAM_CONNECTION_MODE' ? (
+        <select id={field.env} aria-describedby={descriptionId} className={selectClass} {...register(name)}>
+          <option value="">По прежним настройкам</option>
+          <option value="direct">Напрямую</option>
+          <option value="proxy">Через прокси</option>
+          <option value="auto">Авто</option>
+        </select>
+      ) : null}
       {field.kind === 'bool' ? (
         <select id={field.env} className={selectClass} {...register(name)}>
           <option value="">не задано</option>
@@ -61,9 +70,10 @@ export function RuntimeFieldControl({ field, storages, register }: RuntimeFieldC
           ))}
         </select>
       ) : null}
-      {field.kind !== 'bool' && field.kind !== 'storage' ? (
+      {field.env !== 'TELEGRAM_CONNECTION_MODE' && field.kind !== 'bool' && field.kind !== 'storage' ? (
         <Input
           id={field.env}
+          aria-describedby={descriptionId}
           type={field.kind === 'secret' ? 'password' : field.kind === 'number' ? 'number' : 'text'}
           autoComplete={field.kind === 'secret' ? 'new-password' : undefined}
           placeholder={inputPlaceholder(field)}
@@ -73,7 +83,7 @@ export function RuntimeFieldControl({ field, storages, register }: RuntimeFieldC
       {field.kind === 'secret' && field.configured ? (
         <p className="text-xs text-muted-foreground">уже задан — пустое поле не стирает</p>
       ) : null}
-      {field.hint ? <p className="text-xs text-muted-foreground">{field.hint}</p> : null}
+      {field.hint ? <p id={descriptionId} className="text-xs text-muted-foreground">{field.hint}</p> : null}
     </div>
   );
 }

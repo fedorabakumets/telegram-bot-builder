@@ -73,7 +73,8 @@ const builds: RuntimeField[] = [
 
 /** Прочие настройки площадки */
 const platform: RuntimeField[] = [
-  { env: "TELEGRAM_PROXY_URL", label: "Прокси Telegram", kind: "text" },
+  { env: "TELEGRAM_CONNECTION_MODE", label: "Подключение Telegram", kind: "text", hint: "Авто использует указанный адрес или HTTP_PROXY и HTTPS_PROXY. Системный прокси Windows не определяется." },
+  { env: "TELEGRAM_PROXY_URL", label: "Прокси Telegram", kind: "text", hint: "Адрес HTTP, HTTPS или SOCKS5 прокси" },
   { env: "SUPPORT_BOT_TOKEN", label: "Токен бота поддержки", kind: "secret" },
   { env: "SUPPORT_ADMIN_CHAT_IDS", label: "Чаты администраторов", kind: "text" },
   { env: "MCP_HTTP_ENABLED", label: "HTTP MCP", kind: "bool" },

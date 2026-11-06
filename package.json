@@ -245,6 +245,7 @@
     "redoc-express-maintained": "^2.1.1",
     "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.1",
+    "socks": "^2.8.10",
     "socks-proxy-agent": "^9.0.0",
     "swagger-ui-express": "^5.0.1",
     "tailwind-merge": "^2.6.0",

@@ -52,6 +52,7 @@ import { validateExternalUrl } from "../utils/validateExternalUrl";
 import { resolveSessionCookieOptions } from "../utils/resolveSessionCookie";
 import { resolveSessionSecret } from "../utils/resolveSessionSecret";
 import { fetchWithProxy } from "../utils/telegram-proxy";
+import { describeTelegramError } from "../admin/telegram-connection-test";
 import { setupAuthRoutes } from "./setupAuthRoutes";
 import {
   resolveDialogKind,
@@ -650,7 +651,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       // Get bot information via Telegram Bot API
       const telegramApiUrl = `https://api.telegram.org/bot${token}/getMe`;
       const startTime = Date.now();
-      console.log(`[📋 Routes] URL запроса: ${telegramApiUrl}`);
+      console.log(`[📋 Routes] Запрос getMe для ${maskedToken}`);
       console.log(`[📋 Routes] Таймаут: 10000ms`);
 
       let response;
@@ -676,17 +677,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         console.error(`  - Error: ${errorMessage}`);
         console.error(`  - Cause: ${errorCause}`);
         console.error(`  - Time: ${Date.now() - startTime}ms`);
-        console.error(`  - Possible reasons:`);
-        console.error(`    • Telegram API is blocked in your network/region`);
-        console.error(`    • DNS resolution failed`);
-        console.error(`    • Firewall/antivirus blocking connection`);
-        console.error(`    • Network connectivity issues`);
-        console.error(`  - Solution: Set TELEGRAM_PROXY_URL in .env file`);
-
-        return res.status(500).json({
-          message: "Failed to connect to Telegram API",
-          error: errorMessage,
-          details: "Telegram API may be blocked in your network. Set TELEGRAM_PROXY_URL in .env file.",
+        return res.status(502).json({
+          message: "Не удалось подключиться к Telegram",
+          details: describeTelegramError(fetchError),
           tokenMasked: maskedToken
         });
       }
