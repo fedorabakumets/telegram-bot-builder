@@ -2,6 +2,7 @@
  * @fileoverview Хендлер getMe профиля бота проекта
  * @module botIntegration/handlers/botInfo/getBotInfoHandler
  */
+import { getTelegramApiBaseUrl } from '../../../../utils/telegram-api-url';
 
 import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
@@ -50,7 +51,7 @@ export async function getBotInfoHandler(req: Request, res: Response): Promise<vo
       return;
     }
 
-    const telegramApiUrl = `https://api.telegram.org/bot${botToken.token}/getMe?_t=${Date.now()}`;
+    const telegramApiUrl = `${getTelegramApiBaseUrl()}/bot${botToken.token}/getMe?_t=${Date.now()}`;
     const response = await fetchWithProxy(telegramApiUrl, {
       method: "GET",
       headers: {
@@ -76,7 +77,7 @@ export async function getBotInfoHandler(req: Request, res: Response): Promise<vo
     if (!hasPhoto) {
       try {
         const photoResp = await fetchWithProxy(
-          `https://api.telegram.org/bot${botToken.token}/getUserProfilePhotos`,
+          `${getTelegramApiBaseUrl()}/bot${botToken.token}/getUserProfilePhotos`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },

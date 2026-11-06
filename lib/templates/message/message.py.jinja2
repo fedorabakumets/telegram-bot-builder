@@ -804,7 +804,7 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
         _rchat_id = int(_rchat) if _rchat.lstrip('-').isdigit() else _rchat
         {%- if recipient.botToken %}
         _rbot_token = replace_variables_in_text("{{ recipient.botToken }}", all_user_vars, {})
-        _rbot = Bot(token=_rbot_token) if _rbot_token and _rbot_token.strip() else None
+        _rbot = Bot(token=_rbot_token, session=_telegram_bot_session()) if _rbot_token and _rbot_token.strip() else None
         _rsent = await _send_to_{{ nodeId|replace('-', '_') }}(_rchat_id, _rthread_int, _bot=_rbot)
         {%- else %}
         _rsent = await _send_to_{{ nodeId|replace('-', '_') }}(_rchat_id, _rthread_int)

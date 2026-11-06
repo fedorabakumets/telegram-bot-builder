@@ -2,6 +2,7 @@
  * @fileoverview Резолв username бота через Telegram getMe API
  * @module server/services/telegram-bot-username
  */
+import { getTelegramApiBaseUrl } from '../utils/telegram-api-url';
 
 import { fetchWithProxy } from "../utils/telegram-proxy";
 
@@ -26,7 +27,7 @@ export async function fetchBotUsernameFromToken(
 
   try {
     const response = await fetchWithProxy(
-      `https://api.telegram.org/bot${token}/getMe`,
+      `${getTelegramApiBaseUrl()}/bot${token}/getMe`,
     );
     const data = (await response.json()) as TelegramGetMeResult;
     if (!response.ok || !data.ok || !data.result?.username) {

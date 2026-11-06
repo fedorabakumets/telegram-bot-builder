@@ -163,7 +163,7 @@ async def _save_incoming_photo_to_db(file_id: str, user_id: str, telegram_messag
             return
         _timeout = _aiohttp.ClientTimeout(total=60)
         async with _aiohttp.ClientSession(timeout=_timeout) as _session:
-            async with _session.get(f"https://api.telegram.org/bot{BOT_TOKEN}/getFile", params={'file_id': file_id}) as _resp:
+            async with _session.get(f"{TELEGRAM_BOT_API_URL or 'https://api.telegram.org'}/bot{BOT_TOKEN}/getFile", params={'file_id': file_id}) as _resp:
                 _data = await _resp.json()
                 if _resp.status != 200 or not _data.get('ok'):
                     logging.warning('Telegram не предоставил входящее фото')
@@ -174,7 +174,7 @@ async def _save_incoming_photo_to_db(file_id: str, user_id: str, telegram_messag
                     return
             _media = None
             for _attempt in range(3):
-                async with _session.get(f"https://api.telegram.org/file/bot{BOT_TOKEN}/{_file['file_path']}") as _source:
+                async with _session.get(f"{TELEGRAM_BOT_API_URL or 'https://api.telegram.org'}/file/bot{BOT_TOKEN}/{_file['file_path']}") as _source:
                     if _source.status != 200:
                         logging.warning('Не удалось скачать входящее фото из Telegram')
                         return

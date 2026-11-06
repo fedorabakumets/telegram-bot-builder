@@ -6,6 +6,7 @@
  *
  * @module botIntegration/handlers/messages/deleteSingleMessageHandler
  */
+import { getTelegramApiBaseUrl } from '../../../../utils/telegram-api-url';
 
 import type { Request, Response } from "express";
 import { eq } from "drizzle-orm";
@@ -31,7 +32,7 @@ async function callTelegramDeleteMessage(
   chatId: string,
   telegramMessageId: number
 ): Promise<{ success: boolean; error?: string }> {
-  const url = `https://api.telegram.org/bot${token}/deleteMessage`;
+  const url = `${getTelegramApiBaseUrl()}/bot${token}/deleteMessage`;
 
   const response = await fetchWithProxy(url, {
     method: "POST",

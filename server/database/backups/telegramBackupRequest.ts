@@ -1,6 +1,7 @@
 /**
  * @fileoverview Отправка файлов бэкапа в Telegram без раскрытия токена в ошибках.
  */
+import { getTelegramApiBaseUrl } from '../../utils/telegram-api-url';
 import { Agent, FormData as TelegramFormData, fetch as undiciFetch } from "undici";
 import { getProxyAgent } from "../../utils/telegram-proxy";
 import { assertTelegramBackupConfig, type TelegramBackupConfig } from "./telegramBackupConfig";
@@ -42,7 +43,7 @@ export async function sendTelegramBackupDocument(
   let response: Response;
   let body: { ok?: boolean; error_code?: number; result?: { message_id?: number } };
   try {
-    response = await request(`https://api.telegram.org/bot${config.token}/sendDocument`, {
+    response = await request(`${getTelegramApiBaseUrl()}/bot${config.token}/sendDocument`, {
       method: "POST", body: form as unknown as BodyInit, signal: AbortSignal.timeout(120_000),
     });
     body = await response.json() as typeof body;

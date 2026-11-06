@@ -2,6 +2,7 @@
  * @fileoverview Синхронизация группы из Telegram с привязкой к token_id
  * @module botIntegration/handlers/groups/syncGroupHandler
  */
+import { getTelegramApiBaseUrl } from '../../../../utils/telegram-api-url';
 
 import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
@@ -55,7 +56,7 @@ export async function syncGroupHandler(req: Request, res: Response): Promise<voi
     selected = { projectId, tokenId: botToken.id, chatId: telegramGroupId };
 
     const chatResponse = await fetchWithProxy(
-      `https://api.telegram.org/bot${botToken.token}/getChat`,
+      `${getTelegramApiBaseUrl()}/bot${botToken.token}/getChat`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },

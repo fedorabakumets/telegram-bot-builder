@@ -2,6 +2,7 @@
  * @fileoverview Вызовы Telegram API для edit/delete сообщений рассылки
  * @module botIntegration/handlers/broadcasts/broadcast-telegram-ops
  */
+import { getTelegramApiBaseUrl } from '../../../../utils/telegram-api-url';
 
 import { fetchWithProxy } from "../../../../utils/telegram-proxy";
 
@@ -20,7 +21,7 @@ export async function editTelegramBroadcastMessage(
   newText: string,
 ): Promise<boolean> {
   try {
-    const url = `https://api.telegram.org/bot${token}/editMessageText`;
+    const url = `${getTelegramApiBaseUrl()}/bot${token}/editMessageText`;
     const response = await fetchWithProxy(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -52,7 +53,7 @@ export async function deleteTelegramBroadcastMessage(
   messageId: number,
 ): Promise<void> {
   try {
-    const url = `https://api.telegram.org/bot${token}/deleteMessage`;
+    const url = `${getTelegramApiBaseUrl()}/bot${token}/deleteMessage`;
     await fetchWithProxy(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

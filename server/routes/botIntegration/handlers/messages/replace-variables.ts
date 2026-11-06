@@ -5,6 +5,7 @@
  * из данных пользователя и Telegram.
  * Поддерживает формат хранения {value: "..."} как в Python-боте.
  */
+import { getTelegramApiBaseUrl } from '../../../../utils/telegram-api-url';
 
 /**
  * Параметры для замены переменных
@@ -86,7 +87,7 @@ export async function replaceVariablesInText(
       try {
         // Получаем информацию о боте
         const response = await fetch(
-          `https://api.telegram.org/bot${botToken.token}/getMe`
+          `${getTelegramApiBaseUrl()}/bot${botToken.token}/getMe`
         );
         const result = await response.json();
         if (result.ok) {

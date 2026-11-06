@@ -2,6 +2,7 @@
  * @fileoverview Сервис для скачивания фото из Telegram
  * @module server/telegram/services/photo-service
  */
+import { getTelegramApiBaseUrl } from '../../../utils/telegram-api-url';
 
 import { join } from 'path';
 import type { DownloadedMedia } from '../../types/index.js';
@@ -50,7 +51,7 @@ export async function downloadPhoto(
     validateFilePath(uploadDir, localFilePath);
 
     // Шаг 6: Скачиваем файл
-    const downloadUrl = `https://api.telegram.org/file/bot${botToken}/${filePath}`;
+    const downloadUrl = `${getTelegramApiBaseUrl()}/file/bot${botToken}/${filePath}`;
     await downloadFile(downloadUrl, localFilePath);
 
     // Шаг 7: Возвращаем относительный путь

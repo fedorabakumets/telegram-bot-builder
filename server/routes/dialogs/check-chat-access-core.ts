@@ -2,6 +2,7 @@
  * @fileoverview Проверка одного личного чата через sendChatAction и запись статусов.
  * @module server/routes/dialogs/check-chat-access-core
  */
+import { getTelegramApiBaseUrl } from '../../utils/telegram-api-url';
 import { pool } from '../../database/db';
 import { storage } from '../../storages/storage';
 import { fetchWithProxy } from '../../utils/telegram-proxy';
@@ -16,7 +17,7 @@ import { classifyChatAction, type ChatAccessProbe } from './check-chat-access-cl
  */
 export async function probePrivateChatAccess(botToken: string, chatId: string): Promise<ChatAccessProbe> {
   try {
-    const response = await fetchWithProxy(`https://api.telegram.org/bot${botToken}/sendChatAction`, {
+    const response = await fetchWithProxy(`${getTelegramApiBaseUrl()}/bot${botToken}/sendChatAction`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ chat_id: chatId, action: 'typing' }),

@@ -4,6 +4,7 @@
  * внешние URL и file_id. Пограничные случаи (0/1 элемент) делегируются
  * одиночной отправке через sendTelegramMessage.
  */
+import { getTelegramApiBaseUrl } from '../../../../utils/telegram-api-url';
 
 import { existsSync, readFileSync } from 'fs';
 import { basename } from 'path';
@@ -95,7 +96,7 @@ export async function sendTelegramMediaGroup(
 
   try {
     await waitForTelegramMessages(token, supported.length);
-    const url = `https://api.telegram.org/bot${token}/sendMediaGroup`;
+    const url = `${getTelegramApiBaseUrl()}/bot${token}/sendMediaGroup`;
     let response: Response;
 
     if (hasLocal) {

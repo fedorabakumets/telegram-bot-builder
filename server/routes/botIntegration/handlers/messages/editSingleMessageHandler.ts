@@ -6,6 +6,7 @@
  *
  * @module botIntegration/handlers/messages/editSingleMessageHandler
  */
+import { getTelegramApiBaseUrl } from '../../../../utils/telegram-api-url';
 
 import type { Request, Response } from "express";
 import { eq } from "drizzle-orm";
@@ -53,7 +54,7 @@ async function callTelegramEditMessage(
 ): Promise<{ success: boolean; error?: string }> {
   const method = isMedia ? "editMessageCaption" : "editMessageText";
   const textField = isMedia ? "caption" : "text";
-  const url = `https://api.telegram.org/bot${token}/${method}`;
+  const url = `${getTelegramApiBaseUrl()}/bot${token}/${method}`;
 
   const response = await fetchWithProxy(url, {
     method: "POST",

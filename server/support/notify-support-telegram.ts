@@ -2,6 +2,7 @@
  * @fileoverview Личное уведомление пользователю об ответе поддержки в Telegram
  * @module server/support/notify-support-telegram
  */
+import { getTelegramApiBaseUrl } from '../utils/telegram-api-url';
 
 import type { SupportMessageDto } from "@shared/support/support.types";
 import { getSetting } from "../services/app-settings.service";
@@ -82,7 +83,7 @@ export async function callTelegram(
   userId: number,
   init: RequestInit,
 ): Promise<void> {
-  const response = await fetchWithProxy(`https://api.telegram.org/bot${token}/${method}`, init);
+  const response = await fetchWithProxy(`${getTelegramApiBaseUrl()}/bot${token}/${method}`, init);
   const data = (await response.json()) as TelegramApiResult;
   if (data.ok) return;
   console.warn(

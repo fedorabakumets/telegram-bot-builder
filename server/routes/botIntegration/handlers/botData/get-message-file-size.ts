@@ -1,4 +1,5 @@
 /** @fileoverview Уточнение отсутствующего размера старого медиа через Telegram getFile с кэшированием в истории. */
+import { getTelegramApiBaseUrl } from '../../../../utils/telegram-api-url';
 import type { Request, Response } from 'express';
 import { and, eq, sql } from 'drizzle-orm';
 import { botMessages } from '@shared/schema';
@@ -28,7 +29,7 @@ export async function getMessageFileSize(req: Request, res: Response): Promise<v
     const bot = await resolveProjectBotToken(projectId, message.tokenId);
     if (!bot || bot.id !== message.tokenId) { res.status(404).json({ message: 'Бот сообщения не найден' }); return; }
     const token = await resolveDevMediaToken(projectId, bot.id) ?? bot.token;
-    const response = await fetchWithProxy(`https://api.telegram.org/bot${token}/getFile`, {
+    const response = await fetchWithProxy(`${getTelegramApiBaseUrl()}/bot${token}/getFile`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ file_id: media.file_id }), signal: AbortSignal.timeout(8000),
     });

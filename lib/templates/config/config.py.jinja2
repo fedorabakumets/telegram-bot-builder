@@ -33,8 +33,18 @@ if os.getenv("DISABLE_ASYNC_LOG", "true").lower() == "true":
     logging.getLogger("asyncpg").setLevel(logging.CRITICAL)
 
 {# Создание бота #}
-# Создание бота
-bot = Bot(token=BOT_TOKEN)
+# Адрес локального Bot API; пустое значение оставляет официальный сервер Telegram.
+TELEGRAM_BOT_API_URL = os.getenv("TELEGRAM_BOT_API_URL", "").strip().rstrip("/")
+
+def _telegram_bot_session():
+    """Создаёт отдельную сессию для локального сервера или возвращает None."""
+    if not TELEGRAM_BOT_API_URL:
+        return None
+    from aiogram.client.session.aiohttp import AiohttpSession
+    from aiogram.client.telegram import TelegramAPIServer
+    return AiohttpSession(api=TelegramAPIServer.from_base(TELEGRAM_BOT_API_URL, is_local=True))
+
+bot = Bot(token=BOT_TOKEN, session=_telegram_bot_session()) if TELEGRAM_BOT_API_URL else Bot(token=BOT_TOKEN)
 
 {%- if protectContent %}
 # Глобальная защита контента от копирования/пересылки

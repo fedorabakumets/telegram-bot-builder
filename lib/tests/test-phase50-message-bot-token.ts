@@ -155,6 +155,7 @@ test('A01', 'при botToken генерируется Bot(token=...)', () => {
   ])]);
   const code = gen(p, 'a01');
   ok(code.includes('_rbot = Bot(token='), '_rbot = Bot(token=...) должен быть в коде при наличии botToken');
+  ok(code.includes('session=_telegram_bot_session()'), 'Дополнительный бот должен использовать выбранный Bot API');
 });
 
 test('A02', 'при botToken вызывается replace_variables_in_text для токена', () => {

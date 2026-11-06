@@ -6,6 +6,7 @@
 import { deleteSetting, setSetting } from "../services/app-settings.service";
 import { restartDbBackupScheduler } from "../database/backups/dbBackupScheduler";
 import { runDbBackupNow } from "../database/backups/runDbBackupNow";
+import { getTelegramApiBaseUrl, validateTelegramApiUrl } from "../utils/telegram-api-url";
 import { validateTelegramProxy } from "../utils/telegram-connection";
 import { resetTelegramProxy } from "../utils/telegram-proxy";
 import { applyStorageFromSettings } from "./apply-storage-from-settings";
@@ -63,6 +64,13 @@ export async function saveRuntimeGroup(groupId: string, input: Record<string, un
   const group = findRuntimeGroup(groupId);
   if (!group) throw new RuntimeSettingsError("Раздел не найден", 404);
   if (groupId === "platform") {
+    const apiMode = input.TELEGRAM_BOT_API_MODE;
+    const apiUrl = input.TELEGRAM_BOT_API_URL;
+    try {
+      if (apiMode != null && !["", "official", "local"].includes(String(apiMode))) throw new Error("Неизвестный режим Telegram Bot API");
+      if (typeof apiUrl === "string" && apiUrl.trim()) validateTelegramApiUrl(apiUrl.trim());
+      if (apiMode === "local") getTelegramApiBaseUrl({ apiMode: "local", apiUrl: typeof apiUrl === "string" ? apiUrl : "" });
+    } catch (error) { throw new RuntimeSettingsError((error as Error).message, 400); }
     const mode = input.TELEGRAM_CONNECTION_MODE;
     const proxy = input.TELEGRAM_PROXY_URL;
     if (mode != null && !["", "direct", "proxy", "auto"].includes(String(mode))) throw new RuntimeSettingsError("Неизвестный режим подключения Telegram", 400);

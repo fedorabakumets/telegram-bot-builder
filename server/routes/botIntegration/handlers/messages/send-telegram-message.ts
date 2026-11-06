@@ -3,6 +3,7 @@
  * Отправляет сообщения с поддержкой медиа (локальные файлы и URL) и кнопок.
  * Возвращает типизированный результат с message_id для сохранения в БД.
  */
+import { getTelegramApiBaseUrl } from '../../../../utils/telegram-api-url';
 
 import { existsSync, readFileSync } from 'fs';
 import { basename } from 'path';
@@ -165,7 +166,7 @@ async function sendTextMessage(
   console.log(`[Telegram API] Sending message to chat ${chatId}, token: ${maskedToken}`);
   
   try {
-    const response = await fetchWithProxy(`https://api.telegram.org/bot${token}/sendMessage`, {
+    const response = await fetchWithProxy(`${getTelegramApiBaseUrl()}/bot${token}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       signal: AbortSignal.timeout(10000),
@@ -257,7 +258,7 @@ async function sendMediaMessage(
         { field: media.type, fileName, buffer: fileBuffer },
       ]);
 
-      response = await fetchWithProxy(`https://api.telegram.org/bot${token}/${endpoint}`, {
+      response = await fetchWithProxy(`${getTelegramApiBaseUrl()}/bot${token}/${endpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': `multipart/form-data; boundary=${boundary}`,
@@ -276,7 +277,7 @@ async function sendMediaMessage(
         reply_markup: replyMarkup,
       };
 
-      response = await fetchWithProxy(`https://api.telegram.org/bot${token}/${endpoint}`, {
+      response = await fetchWithProxy(`${getTelegramApiBaseUrl()}/bot${token}/${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         signal: AbortSignal.timeout(15000),

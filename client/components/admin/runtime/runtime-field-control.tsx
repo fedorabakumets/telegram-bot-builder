@@ -45,6 +45,12 @@ export function RuntimeFieldControl({ field, storages, register }: RuntimeFieldC
   return (
     <div className="space-y-2">
       <Label htmlFor={field.env}>{field.label}</Label>
+      {field.env === 'TELEGRAM_BOT_API_MODE' ? (
+        <select id={field.env} aria-describedby={descriptionId} className={selectClass} {...register(name)}>
+          <option value="official">Официальный</option>
+          <option value="local">Локальный</option>
+        </select>
+      ) : null}
       {field.env === 'TELEGRAM_CONNECTION_MODE' ? (
         <select id={field.env} aria-describedby={descriptionId} className={selectClass} {...register(name)}>
           <option value="">По прежним настройкам</option>
@@ -70,7 +76,7 @@ export function RuntimeFieldControl({ field, storages, register }: RuntimeFieldC
           ))}
         </select>
       ) : null}
-      {field.env !== 'TELEGRAM_CONNECTION_MODE' && field.kind !== 'bool' && field.kind !== 'storage' ? (
+      {field.env !== 'TELEGRAM_BOT_API_MODE' && field.env !== 'TELEGRAM_CONNECTION_MODE' && field.kind !== 'bool' && field.kind !== 'storage' ? (
         <Input
           id={field.env}
           aria-describedby={descriptionId}

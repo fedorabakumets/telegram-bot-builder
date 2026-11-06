@@ -4,6 +4,7 @@
  * Поддерживает Range-запросы — браузер может перематывать видео/аудио без полной загрузки.
  * @module botIntegration/handlers/botData/getTelegramFileHandler
  */
+import { getTelegramApiBaseUrl } from '../../../../utils/telegram-api-url';
 
 import { resolveDevMediaToken } from './dev-media-token';
 import { Readable } from "node:stream";
@@ -42,7 +43,7 @@ export async function getTelegramFileHandler(req: Request, res: Response): Promi
     const mediaToken = await resolveDevMediaToken(projectId, botToken.id) ?? botToken.token;
     // Запрашиваем у Telegram путь к файлу
     const getFileResp = await fetchWithProxy(
-      `https://api.telegram.org/bot${mediaToken}/getFile`,
+      `${getTelegramApiBaseUrl()}/bot${mediaToken}/getFile`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -62,7 +63,7 @@ export async function getTelegramFileHandler(req: Request, res: Response): Promi
     }
 
     // Пробрасываем Range-заголовок напрямую в Telegram CDN
-    const fileUrl = `https://api.telegram.org/file/bot${mediaToken}/${fileData.result.file_path}`;
+    const fileUrl = `${getTelegramApiBaseUrl()}/file/bot${mediaToken}/${fileData.result.file_path}`;
     const upstreamHeaders: Record<string, string> = {};
     if (req.headers["range"]) {
       upstreamHeaders["Range"] = req.headers["range"] as string;

@@ -7,6 +7,7 @@
  *
  * @module botManagement/handlers/getBotTokenPhotoHandler
  */
+import { getTelegramApiBaseUrl } from '../../../utils/telegram-api-url';
 
 import type { Request, Response } from 'express';
 import { storage } from '../../../storages/storage';
@@ -71,7 +72,7 @@ export async function getBotTokenPhotoHandler(req: Request, res: Response): Prom
         }
 
         const token = tokenRecord.token;
-        const baseUrl = `https://api.telegram.org/bot${token}`;
+        const baseUrl = `${getTelegramApiBaseUrl()}/bot${token}`;
 
         // Шаг 1: getMe — получаем id бота
         const getMeResp = await fetchWithProxy(`${baseUrl}/getMe`, {
@@ -137,7 +138,7 @@ export async function getBotTokenPhotoHandler(req: Request, res: Response): Prom
             return;
         }
 
-        const telegramFileUrl = `https://api.telegram.org/file/bot${token}/${fileData.result.file_path}`;
+        const telegramFileUrl = `${getTelegramApiBaseUrl()}/file/bot${token}/${fileData.result.file_path}`;
 
         // Шаг 4: скачиваем файл в uploads/{projectId}/bot_photos/
         const projectId = tokenRecord.projectId;

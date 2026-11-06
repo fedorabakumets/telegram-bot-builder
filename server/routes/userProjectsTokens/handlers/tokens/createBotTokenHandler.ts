@@ -8,6 +8,7 @@
  *
  * @module userProjectsTokens/handlers/tokens/createBotTokenHandler
  */
+import { getTelegramApiBaseUrl } from '../../../../utils/telegram-api-url';
 
 import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
@@ -74,7 +75,7 @@ export async function createBotTokenHandler(req: Request, res: Response): Promis
         let botUsername: string | null = null;
         try {
             const resp = await fetchWithProxy(
-                `https://api.telegram.org/bot${tokenValue}/getMe`,
+                `${getTelegramApiBaseUrl()}/bot${tokenValue}/getMe`,
                 { signal: AbortSignal.timeout(8000) },
             );
             if (resp.ok) {

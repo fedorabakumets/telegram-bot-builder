@@ -76,8 +76,8 @@ export function RuntimeSettingsForm({ data }: { data: RuntimeGroupView }) {
         <CardContent className="grid gap-5 pt-6 sm:grid-cols-2">
           {data.fields.map((field) => (
             <Fragment key={field.env}>
-              <RuntimeFieldControl field={field} storages={data.storages} register={form.register} />
-              {field.env === 'TELEGRAM_PROXY_URL' ? <TelegramConnectionTest mode={form.watch('values.TELEGRAM_CONNECTION_MODE') ?? ''} proxy={form.watch('values.TELEGRAM_PROXY_URL') ?? ''} disabled={save.isPending} /> : null}
+              {field.env !== 'TELEGRAM_BOT_API_URL' || form.watch('values.TELEGRAM_BOT_API_MODE') === 'local' ? <RuntimeFieldControl field={field} storages={data.storages} register={form.register} /> : null}
+              {field.env === 'TELEGRAM_PROXY_URL' ? <TelegramConnectionTest apiMode={form.watch('values.TELEGRAM_BOT_API_MODE') ?? ''} apiUrl={form.watch('values.TELEGRAM_BOT_API_URL') ?? ''} mode={form.watch('values.TELEGRAM_CONNECTION_MODE') ?? ''} proxy={form.watch('values.TELEGRAM_PROXY_URL') ?? ''} disabled={save.isPending} /> : null}
             </Fragment>
           ))}
         </CardContent>

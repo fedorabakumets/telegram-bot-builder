@@ -2,6 +2,7 @@
  * @fileoverview Остановка бота в пуле воркеров или в отдельном процессе
  * @module server/bots/stopBot
  */
+import { getTelegramApiBaseUrl } from '../utils/telegram-api-url';
 
 /**
  * Модуль для выполнения системных команд
@@ -113,7 +114,7 @@ export async function stopBot(projectId: number, tokenId: number): Promise<{ suc
       try {
         const tokenRecord = await storage.getBotToken(tokenId);
         if (tokenRecord?.token) {
-          const deleteUrl = `https://api.telegram.org/bot${tokenRecord.token}/deleteWebhook`;
+          const deleteUrl = `${getTelegramApiBaseUrl()}/bot${tokenRecord.token}/deleteWebhook`;
           await fetch(deleteUrl, { signal: AbortSignal.timeout(5000) });
           console.log(`🔗 Webhook удалён для токена ${tokenId}`);
         }

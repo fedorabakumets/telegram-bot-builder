@@ -1,6 +1,7 @@
 /**
  * @fileoverview Основной роутер HTTP API для проектов, токенов, интеграций и базы пользователей
  */
+import { getTelegramApiBaseUrl } from '../utils/telegram-api-url';
 
 import { requireBotSettingBody, requireBotProfileBody } from "../middleware/require-bot-setting-body";
 import { updateMediaMetadataSchema } from "../../shared/schema/media-metadata-contracts";
@@ -649,7 +650,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       console.log(`[📋 Routes] Вызываем fetchWithProxy для getMe...`);
 
       // Get bot information via Telegram Bot API
-      const telegramApiUrl = `https://api.telegram.org/bot${token}/getMe`;
+      const telegramApiUrl = `${getTelegramApiBaseUrl()}/bot${token}/getMe`;
       const startTime = Date.now();
       console.log(`[📋 Routes] Запрос getMe для ${maskedToken}`);
       console.log(`[📋 Routes] Таймаут: 10000ms`);
@@ -717,7 +718,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       try {
         // Get full description
         const descStartTime = Date.now();
-        const descResponse = await fetchWithProxy(`https://api.telegram.org/bot${token}/getMyDescription`, {
+        const descResponse = await fetchWithProxy(`${getTelegramApiBaseUrl()}/bot${token}/getMyDescription`, {
           signal: AbortSignal.timeout(5000),
         });
         console.log(`[Telegram API] Description response: ${descResponse.status} (${Date.now() - descStartTime}ms)`);
@@ -732,7 +733,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
         // Get short description
         const shortDescStartTime = Date.now();
-        const shortDescResponse = await fetchWithProxy(`https://api.telegram.org/bot${token}/getMyShortDescription`, {
+        const shortDescResponse = await fetchWithProxy(`${getTelegramApiBaseUrl()}/bot${token}/getMyShortDescription`, {
           signal: AbortSignal.timeout(5000),
         });
         console.log(`[Telegram API] Short description response: ${shortDescResponse.status} (${Date.now() - shortDescStartTime}ms)`);
@@ -754,7 +755,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       if (botInfo.photo && botInfo.photo.big_file_id) {
         try {
           const photoStartTime = Date.now();
-          const fileResponse = await fetchWithProxy(`https://api.telegram.org/bot${token}/getFile`, {
+          const fileResponse = await fetchWithProxy(`${getTelegramApiBaseUrl()}/bot${token}/getFile`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -769,7 +770,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           console.log(`[Telegram API] Photo file response: ${fileResponse.status} (${Date.now() - photoStartTime}ms)`);
 
           if (fileResponse.ok && fileResult.result && fileResult.result.file_path) {
-            photoUrl = `https://api.telegram.org/file/bot${token}/${fileResult.result.file_path}`;
+            photoUrl = `${getTelegramApiBaseUrl()}/file/bot${token}/${fileResult.result.file_path}`;
             console.log(`[Telegram API] Bot photo URL obtained`);
           }
         } catch (photoError) {
@@ -853,7 +854,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       }
 
       // Call Telegram API
-      const telegramApiUrl = `https://api.telegram.org/bot${token.token}/${telegramApiMethod}`;
+      const telegramApiUrl = `${getTelegramApiBaseUrl()}/bot${token.token}/${telegramApiMethod}`;
 
       if (getTelegramProxyAgent()) {
         console.log(`[Telegram API] Using proxy for update ${field}`);
@@ -937,7 +938,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       let enrichedTokenData: StorageBotTokenInput = { ...tokenData };
       if (!tokenData.botUsername && tokenData.token) {
         try {
-          const tgRes = await fetchWithProxy(`https://api.telegram.org/bot${tokenData.token}/getMe`, {
+          const tgRes = await fetchWithProxy(`${getTelegramApiBaseUrl()}/bot${tokenData.token}/getMe`, {
             signal: AbortSignal.timeout(8000),
           });
           if (tgRes.ok) {
@@ -1435,7 +1436,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       // чтобы не было конфликта между активным webhook и polling
       if (previousMode === 'webhook' && launchMode === 'polling' && currentToken?.token) {
         try {
-          const deleteUrl = `https://api.telegram.org/bot${currentToken.token}/deleteWebhook`;
+          const deleteUrl = `${getTelegramApiBaseUrl()}/bot${currentToken.token}/deleteWebhook`;
           await fetchWithProxy(deleteUrl, { signal: AbortSignal.timeout(5000) });
           console.log(`🔗 Webhook удалён при смене режима на polling для токена ${tokenId}`);
         } catch (webhookError) {

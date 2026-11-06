@@ -171,7 +171,10 @@ describe('config.py.jinja2 шаблон', () => {
         assert.ok(result.includes('load_dotenv()'));
         assert.ok(result.includes('BOT_TOKEN = os.getenv'));
         assert.ok(result.includes('TOKEN_ID = int(os.getenv("TOKEN_ID", "0"))'));
-        assert.ok(result.includes('bot = Bot(token=BOT_TOKEN)'));
+        assert.ok(result.includes('else Bot(token=BOT_TOKEN)'));
+        assert.ok(result.includes('TELEGRAM_BOT_API_URL = os.getenv'));
+        assert.ok(result.includes('TelegramAPIServer.from_base(TELEGRAM_BOT_API_URL, is_local=True)'));
+        assert.ok(result.includes('session=_telegram_bot_session()'));
         assert.ok(result.includes('dp = Dispatcher(storage=PostgresStorage())'));
       });
 

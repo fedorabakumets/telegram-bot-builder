@@ -2,6 +2,7 @@
  * @fileoverview Сервис для скачивания документов из Telegram
  * @module server/telegram/services/document-service
  */
+import { getTelegramApiBaseUrl } from '../../../utils/telegram-api-url';
 
 import { join } from 'path';
 import type { DownloadedMedia } from '../../types/index.js';
@@ -49,7 +50,7 @@ export async function downloadDocument(
 
     validateFilePath(uploadDir, localFilePath);
 
-    const downloadUrl = `https://api.telegram.org/file/bot${botToken}/${filePath}`;
+    const downloadUrl = `${getTelegramApiBaseUrl()}/file/bot${botToken}/${filePath}`;
     await downloadFile(downloadUrl, localFilePath);
 
     const relativeFilePath = join('uploads', String(projectId), date, fileName);

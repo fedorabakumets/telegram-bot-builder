@@ -44,6 +44,8 @@ export const RUNTIME_PLACEHOLDERS: Record<string, string> = {
   BOT_BUILDS_DIR: ".bot-builds",
   BOT_BUILDS_KEEP: "3",
   TELEGRAM_CONNECTION_MODE: "direct",
+  TELEGRAM_BOT_API_MODE: "official",
+  TELEGRAM_BOT_API_URL: "http://127.0.0.1:8081",
   TELEGRAM_PROXY_URL: "http://127.0.0.1:8080",
   SUPPORT_BOT_TOKEN: "123456:AA...",
   SUPPORT_ADMIN_CHAT_IDS: "123456789",

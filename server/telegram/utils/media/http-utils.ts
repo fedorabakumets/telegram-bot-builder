@@ -2,6 +2,7 @@
  * @fileoverview Утилиты для HTTP-запросов к Telegram API
  * @module server/telegram/utils/http-utils
  */
+import { getTelegramApiBaseUrl } from '../../../utils/telegram-api-url';
 
 import https from 'https';
 import type { TelegramFileInfo } from '../../types/media/telegram-file-info.js';
@@ -52,7 +53,7 @@ export async function getTelegramFileInfo(
   
   console.log(`[Telegram Media] Getting file info for ${fileId}, token: ${maskedToken}`);
   
-  const getFileUrl = `https://api.telegram.org/bot${botToken}/getFile?file_id=${fileId}`;
+  const getFileUrl = `${getTelegramApiBaseUrl()}/bot${botToken}/getFile?file_id=${fileId}`;
 
   try {
     const response = await httpsGet<any>({ url: getFileUrl, timeout: 10000 });

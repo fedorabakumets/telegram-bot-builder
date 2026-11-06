@@ -2,6 +2,7 @@
  * @fileoverview HTTP-запросы Telegram с выбранным соединением.
  */
 import { ProxyAgent, Agent, fetch as undiciFetch } from 'undici';
+import { getTelegramApiBaseUrl, OFFICIAL_TELEGRAM_API } from './telegram-api-url';
 import { getTelegramConnection } from './telegram-connection';
 import { createTelegramSocksAgent } from './telegram-socks-agent';
 
@@ -20,6 +21,7 @@ export function resetTelegramProxy(): void { proxyAgent = null; cachedProxy = un
  * @returns Агент или null для прямого соединения
  */
 export function getProxyAgent(): ProxyAgent | Agent | null {
+  if (getTelegramApiBaseUrl() !== OFFICIAL_TELEGRAM_API) return null;
   const { proxy } = getTelegramConnection();
   if (!proxy) return null;
   if (!proxyAgent || proxy !== cachedProxy) {

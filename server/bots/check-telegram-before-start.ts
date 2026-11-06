@@ -2,6 +2,7 @@
  * @fileoverview Проверка ответа Telegram перед запуском бота
  * @module server/bots/check-telegram-before-start
  */
+import { getTelegramApiBaseUrl } from '../utils/telegram-api-url';
 import { fetchWithProxy } from '../utils/telegram-proxy';
 import { isTelegramMethodUnauthorized } from './telegram-method-unauthorized';
 
@@ -39,7 +40,7 @@ export async function checkTelegramBeforeStart(
 ): Promise<TelegramStartCheck> {
   const path = method === 'getMe' ? method : 'deleteWebhook?drop_pending_updates=false';
   try {
-    const response = await request(`https://api.telegram.org/bot${token}/${path}`, {
+    const response = await request(`${getTelegramApiBaseUrl()}/bot${token}/${path}`, {
       signal: AbortSignal.timeout(15_000),
     });
     const body = await response.json().catch(() => null) as TelegramStartResponse | null;

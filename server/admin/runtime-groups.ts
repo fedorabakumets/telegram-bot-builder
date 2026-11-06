@@ -73,6 +73,8 @@ const builds: RuntimeField[] = [
 
 /** Прочие настройки площадки */
 const platform: RuntimeField[] = [
+  { env: "TELEGRAM_BOT_API_MODE", label: "Telegram Bot API", kind: "text", hint: "При переносе существующего бота выполните logOut на прежнем сервере и перезапустите бота. Перенос не выполняется автоматически." },
+  { env: "TELEGRAM_BOT_API_URL", label: "Адрес локального Bot API", kind: "text", hint: "Адрес должен быть доступен панели и исполнителям. Для локального API прокси не используется." },
   { env: "TELEGRAM_CONNECTION_MODE", label: "Подключение Telegram", kind: "text", hint: "Авто использует указанный адрес или HTTP_PROXY и HTTPS_PROXY. Системный прокси Windows не определяется." },
   { env: "TELEGRAM_PROXY_URL", label: "Прокси Telegram", kind: "text", hint: "Адрес HTTP, HTTPS или SOCKS5 прокси" },
   { env: "SUPPORT_BOT_TOKEN", label: "Токен бота поддержки", kind: "secret" },

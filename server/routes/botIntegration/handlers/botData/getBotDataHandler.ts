@@ -6,6 +6,7 @@
  *
  * @module botIntegration/handlers/botData/getBotDataHandler
  */
+import { getTelegramApiBaseUrl } from '../../../../utils/telegram-api-url';
 
 import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
@@ -62,7 +63,7 @@ export async function getBotDataHandler(req: Request, res: Response): Promise<vo
         if (shouldSync) {
             try {
                 // Получаем информацию из Telegram API через прокси
-                const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/getMe`;
+                const telegramApiUrl = `${getTelegramApiBaseUrl()}/bot${defaultToken.token}/getMe`;
                 const response = await fetchWithProxy(telegramApiUrl);
                 const result = await response.json();
 
@@ -73,7 +74,7 @@ export async function getBotDataHandler(req: Request, res: Response): Promise<vo
                     // Получаем фото бота через getUserProfilePhotos через прокси
                     try {
                         const photoResponse = await fetchWithProxy(
-                            `https://api.telegram.org/bot${defaultToken.token}/getUserProfilePhotos`,
+                            `${getTelegramApiBaseUrl()}/bot${defaultToken.token}/getUserProfilePhotos`,
                             {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },

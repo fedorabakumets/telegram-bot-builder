@@ -6,6 +6,7 @@
  *
  * @module userProjectsTokens/handlers/users/getBotTokenUserHandler
  */
+import { getTelegramApiBaseUrl } from '../../../../utils/telegram-api-url';
 
 import type { Request, Response } from "express";
 import { Pool } from "pg";
@@ -76,7 +77,7 @@ async function fetchUserPhotoUrl(
     projectId: number,
 ): Promise<string | null> {
     try {
-        const baseUrl = `https://api.telegram.org/bot${token}`;
+        const baseUrl = `${getTelegramApiBaseUrl()}/bot${token}`;
 
         const photosResp = await fetchWithProxy(
             `${baseUrl}/getUserProfilePhotos?user_id=${userId}&limit=1`,
@@ -105,7 +106,7 @@ async function fetchUserPhotoUrl(
         const fileData = await fileResp.json() as { ok: boolean; result?: { file_path: string } };
         if (!fileData.ok || !fileData.result?.file_path) return null;
 
-        const telegramFileUrl = `https://api.telegram.org/file/bot${token}/${fileData.result.file_path}`;
+        const telegramFileUrl = `${getTelegramApiBaseUrl()}/file/bot${token}/${fileData.result.file_path}`;
 
         const uploadDir = join(process.cwd(), "uploads", String(projectId), "user_photos");
         if (!existsSync(uploadDir)) mkdirSync(uploadDir, { recursive: true });
