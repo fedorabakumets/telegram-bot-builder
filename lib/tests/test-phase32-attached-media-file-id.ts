@@ -10,6 +10,7 @@
 import fs from 'fs';
 import { execFileSync, execSync } from 'child_process';
 import { generatePythonCode } from '../bot-generator.ts';
+import { generateMessage } from '../templates/message/message.renderer';
 
 /** Результат одного теста */
 type TestResult = { id: string; name: string; passed: boolean; note: string };
@@ -412,6 +413,26 @@ assert bot.items == ['file:/api/storage/proxy/first.jpg', 'file:/api/media/s3-pr
 `;
   try { execFileSync('python', ['-c', runner, tmp], { stdio: 'pipe' }); }
   finally { fs.unlinkSync(tmp); }
+});
+
+/** Проверяет резервную доставку текста на настоящем сгенерированном Python без сети. */
+test('D10', 'Отсутствующий исходник: текст без медиа, без дублей и подмены ошибок', () => {
+  for (const extension of ['jpg', 'mp4', 'mp3', 'pdf', 'album', 'extra']) {
+    const node = makeFileIdNode('fallback_runtime', 'photo', {});
+    node.data.attachedMedia = extension === 'album'
+      ? ['/uploads/first.jpg', '/uploads/second.jpg'] : [`/uploads/main.${extension}`];
+    node.data.formatMode = 'html';
+    const code = extension === 'extra' ? generateMessage({
+      nodeId: 'fallback_runtime', messageText: 'Тест', imageUrl: '/uploads/main.jpg', isLocalImageUrl: true,
+      formatMode: 'html', userDatabaseEnabled: true,
+      attachedMedia: [JSON.stringify({ __type: 'file_id', mediaType: 'document', fileIdsByToken: { '1': 'extra' } })],
+    }) : generatePythonCode(makeProject([node]), { botName: 'Fallback', userDatabaseEnabled: true });
+    const tmp = `_tmp_media_fallback_${extension}.py`;
+    fs.writeFileSync(tmp, code, 'utf-8');
+    try {
+      execFileSync('python', ['lib/tests/test-message-media-fallback.py', tmp, extension], { stdio: 'pipe' });
+    } finally { fs.unlinkSync(tmp); }
+  }
 });
 
 const passed = results.filter(r => r.passed).length;
