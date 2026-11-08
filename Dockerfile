@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 # @fileoverview Сборка конструктора; документация открывается с внешнего сайта.
 # Dockerfile для конструктора Telegram-ботов
-# Многоэтапная сборка: build-stage собирает клиент, runtime-stage содержит только необходимое
+# Многоэтапная сборка: build-stage собирает клиент и серверный JavaScript
 # Кэш npm/pip хранится в BuildKit cache mounts. Railway требует id с префиксом
 # s/<ID сервиса>-, обычный buildx (GitHub Actions) принимает такой id как есть.
 
@@ -16,9 +16,9 @@ COPY package*.json .npmrc ./
 RUN --mount=type=cache,id=s/a8481b49-5ca6-45bc-a1a5-3e1e8b80a79b-/root/.npm,target=/root/.npm \
     npm ci --ignore-scripts --prefer-offline --no-audit --no-fund
 
-# Копируем исходный код и собираем клиент без генерации сайта документации
+# Копируем исходный код и собираем клиент и сервер без генерации сайта документации
 COPY . .
-RUN npm run build:client
+RUN npm run build
 
 # ── Runtime stage ─────────────────────────────────────────────────────────────
 FROM node:22-alpine
@@ -29,6 +29,9 @@ FROM node:22-alpine
 RUN apk add --no-cache python3 py3-pip procps postgresql18-client
 
 WORKDIR /app
+
+# Прямой запуск Node.js не использует cross-env из команды npm start.
+ENV NODE_ENV=production
 
 # Python-зависимости пользовательских ботов ставим до копирования кода,
 # чтобы слой не пересобирался при каждом изменении исходников
@@ -41,7 +44,7 @@ COPY package*.json .npmrc ./
 RUN --mount=type=cache,id=s/a8481b49-5ca6-45bc-a1a5-3e1e8b80a79b-/root/.npm,target=/root/.npm \
     npm ci --omit=dev --ignore-scripts --prefer-offline --no-audit --no-fund
 
-# Копируем предсобранный клиент из build-stage
+# Копируем предсобранные клиент и сервер из build-stage
 COPY --from=builder /app/dist ./dist
 
 # Копируем серверный код и конфигурацию
@@ -61,4 +64,4 @@ COPY assets ./assets
 EXPOSE 5000
 
 # Стартуем приложение: SQL- и служебные миграции сервер применяет сам при старте
-CMD ["npm", "start"]
+CMD ["node", "dist/server/index.js"]

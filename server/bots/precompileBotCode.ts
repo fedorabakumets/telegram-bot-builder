@@ -4,14 +4,13 @@
  */
 
 import { execFile } from "node:child_process";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { appPath } from "../utils/app-root";
 import { promisify } from "node:util";
 
 const execFileAsync = promisify(execFile);
 
 /** Каталог с worker.py и bot_code_cache.py */
-const PYTHON_DIR = join(dirname(fileURLToPath(import.meta.url)), "..", "python");
+const PYTHON_DIR = appPath("server", "python");
 
 /** Таймаут предкомпиляции (мс) */
 const PRECOMPILE_TIMEOUT_MS = 60_000;

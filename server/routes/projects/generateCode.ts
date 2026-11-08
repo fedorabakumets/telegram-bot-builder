@@ -9,32 +9,10 @@
 
 import type { Request, Response } from 'express';
 import { storage } from '../../storages/storage';
-import { fileURLToPath } from 'url';
-import { resolve, dirname } from 'path';
+import { loadBotGenerator } from '../../utils/load-bot-generator';
 import { isPsqlBuiltinEnabled } from '../../utils/isPsqlBuiltinEnabled';
 import { isPsqlPanelDsnDenied } from '../../utils/isPsqlPanelDsnDenied';
 import { isBotRuntimeActive } from '../../bots/resolveBotDatabaseUrl';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-const isDev = process.env.NODE_ENV === 'development';
-
-/**
- * Загружает generatePythonCode.
- * В dev режиме использует динамический импорт с cache-busting timestamp,
- * чтобы изменения в renderer файлах подхватывались без перезапуска сервера.
- */
-async function loadGenerator(): Promise<(data: any, opts: any) => string> {
-  if (isDev) {
-    const generatorPath = resolve(__dirname, '../../../lib/bot-generator.ts');
-    const modUrl = new URL(`file://${generatorPath}`);
-    modUrl.searchParams.set('t', Date.now().toString());
-    const mod = await import(modUrl.href);
-    return mod.generatePythonCode;
-  }
-  const { generatePythonCode } = await import('../../../lib/bot-generator.js');
-  return generatePythonCode;
-}
 
 /**
  * Генерирует Python код для проекта
@@ -239,7 +217,7 @@ export async function handleGenerateCode(req: Request, res: Response): Promise<v
     }
 
     // Генерируем код
-    const generatePythonCode = await loadGenerator();
+    const generatePythonCode = await loadBotGenerator();
     const code = generatePythonCode(botDataForGenerator, {
       botName: project.name,
       userDatabaseEnabled,

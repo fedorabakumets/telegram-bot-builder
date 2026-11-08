@@ -5,8 +5,7 @@
  */
 
 import { spawn, ChildProcess } from 'node:child_process';
-import { join, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { appPath } from '../utils/app-root';
 import { redactSecrets } from '../utils/redactSecrets';
 
 /** Активные сессии авторизации (ключ — tokenId) */
@@ -20,8 +19,7 @@ const pendingResolvers = new Map<number, (value: any) => void>();
  * @returns Абсолютный путь к userbotAuth.py
  */
 function getAuthScriptPath(): string {
-  const currentDir = dirname(fileURLToPath(import.meta.url));
-  return join(currentDir, 'userbotAuth.py');
+  return appPath('server', 'bots', 'userbotAuth.py');
 }
 
 /**

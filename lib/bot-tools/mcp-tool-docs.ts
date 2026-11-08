@@ -6,11 +6,10 @@
 import { z } from 'zod';
 import { listKnownDocIds, readKnownDoc, searchKnownDocs } from './mcp-doc-files.ts';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join, resolve } from 'node:path';
 
-/** Абсолютный каталог Markdown-карточек относительно этого модуля. */
-const MCP_DOCS_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'generated', 'mcp-docs');
+/** Каталог Markdown-карточек в исходниках, сохраняемый и при запуске бандла. */
+const MCP_DOCS_DIR = resolve(process.env.BOTCRAFT_APP_ROOT?.trim() || process.cwd(), 'lib', 'generated', 'mcp-docs');
 const TOOL_DOCS_DIR = join(MCP_DOCS_DIR, 'tools');
 /** Каталог подробных руководств по нодам. */
 const NODE_DOCS_DIR = join(MCP_DOCS_DIR, 'nodes');

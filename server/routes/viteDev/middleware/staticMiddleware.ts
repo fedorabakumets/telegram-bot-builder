@@ -10,6 +10,8 @@
 import express, { type Express } from "express";
 import fs from "fs";
 import path from "path";
+import { appPath } from "../../../utils/app-root";
+import { protectServerBundle } from "../../../utils/protect-server-bundle";
 
 import { createRegisteredUploadsFallback } from "../../media/registered-uploads-fallback";
 
@@ -20,8 +22,8 @@ import { createRegisteredUploadsFallback } from "../../media/registered-uploads-
  * @param {Express} app - Приложение Express
  */
 export function serveStatic(app: Express): void {
-  const distPath = path.resolve(import.meta.dirname, "..", "..", "..", "..", "dist");
-  const publicPath = path.resolve(import.meta.dirname, "..", "..", "..", "..", "public");
+  const distPath = appPath("dist");
+  const publicPath = appPath("public");
 
   if (!fs.existsSync(distPath)) {
     throw new Error(
@@ -34,25 +36,28 @@ export function serveStatic(app: Express): void {
     app.use(express.static(publicPath));
   }
 
+  // Серверный бандл хранится в dist/server и не должен раздаваться браузеру.
+  app.use(protectServerBundle);
+
   // Раздача файлов из dist
   app.use(express.static(distPath));
 
   // Зарегистрированные файлы читаются из их хранилища до статической раздачи.
   app.use("/uploads", createRegisteredUploadsFallback());
   // Раздача файлов из основной папки uploads
-  const uploadsPath = path.resolve(import.meta.dirname, "..", "..", "..", "..", "uploads");
+  const uploadsPath = appPath("uploads");
   if (fs.existsSync(uploadsPath)) {
     app.use("/uploads", express.static(uploadsPath));
   }
 
   // Раздача файлов из assets (скриншоты, изображения для UI)
-  const assetsPath = path.resolve(import.meta.dirname, "..", "..", "..", "..", "assets");
+  const assetsPath = appPath("assets");
   if (fs.existsSync(assetsPath)) {
     app.use("/assets", express.static(assetsPath));
   }
 
   // Раздача файлов из папок uploads в директории bots/
-  const botsPath = path.resolve(import.meta.dirname, "..", "..", "..", "..", "bots");
+  const botsPath = appPath("bots");
   if (fs.existsSync(botsPath)) {
     const botProjects = fs.readdirSync(botsPath);
     botProjects.forEach(project => {

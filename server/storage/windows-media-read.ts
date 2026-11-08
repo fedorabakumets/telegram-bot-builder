@@ -2,6 +2,7 @@
 import { spawn } from 'node:child_process';
 import { Readable } from 'node:stream';
 import path from 'node:path';
+import { appPath } from '../utils/app-root';
 
 /** Метаданные и поток открытого объекта. */
 interface WindowsMedia {
@@ -23,7 +24,7 @@ interface WindowsMedia {
 export async function openWindowsMedia(root: string, target: string, mode: 'head' | 'read', expected = '', signal?: AbortSignal): Promise<WindowsMedia> {
   if (signal?.aborted) throw new Error('Чтение файла отменено');
   const executable = path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe');
-  const script = path.join(import.meta.dirname, 'windows-media-read.ps1');
+  const script = appPath('server', 'storage', 'windows-media-read.ps1');
   const child = spawn(executable, ['-NoLogo', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', script,
     '-RootPath', root, '-TargetPath', target, ...(expected ? ['-ExpectedVersion', expected] : []), '-Mode', mode], { stdio: ['ignore', 'pipe', 'ignore'], windowsHide: true });
   child.on('error', error => child.stdout.destroy(error));

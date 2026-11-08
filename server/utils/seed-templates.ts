@@ -7,7 +7,7 @@
 
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
+import { appPath } from "./app-root";
 import { join } from "node:path";
 
 import { type BotTemplate, type InsertBotTemplate, insertBotTemplateSchema } from "@shared/schema";
@@ -24,7 +24,7 @@ type TemplateFile = {
 };
 
 /** Абсолютный путь к директории с JSON-файлами шаблонов */
-const TEMPLATE_DIR = fileURLToPath(new URL("../templates/", import.meta.url));
+const TEMPLATE_DIR = appPath("server", "templates");
 
 /** Список системных шаблонов, которые нужно инициализировать */
 const SYSTEM_TEMPLATE_FILES: readonly TemplateFile[] = [

@@ -4,14 +4,13 @@
  */
 
 import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { appPath } from "../../utils/app-root";
 import { Client } from "pg";
 import { resolveBotDatabaseUrl, warnBotRuntimeIfNeeded } from "../../bots/resolveBotDatabaseUrl";
 import { passwordFromDatabaseUrl, quoteRolePassword } from "./quote-role-password";
 
-/** Текст политик рядом с этим модулем */
-const SQL_PATH = join(dirname(fileURLToPath(import.meta.url)), "bot-runtime-role.sql");
+/** SQL-политики из исходного каталога приложения, включая запуск бандла. */
+const SQL_PATH = appPath("server", "database", "bot-runtime", "bot-runtime-role.sql");
 
 /**
  * Создаёт роль, права и политики, если флаг включён и BOT_DATABASE_URL задан.

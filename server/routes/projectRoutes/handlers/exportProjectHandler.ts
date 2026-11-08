@@ -9,7 +9,7 @@
  */
 
 import type { Request, Response } from "express";
-import { URL } from "node:url";
+import { loadBotGenerator } from "../../../utils/load-bot-generator";
 import { storage } from "../../../storages/storage";
 import { isPsqlBuiltinEnabled } from "../../../utils/isPsqlBuiltinEnabled";
 import { isPsqlPanelDsnDenied } from "../../../utils/isPsqlPanelDsnDenied";
@@ -35,9 +35,7 @@ export async function exportProjectHandler(req: Request, res: Response): Promise
             return;
         }
 
-        const modUrl = new URL("../../../../lib/bot-generator.ts", import.meta.url);
-        modUrl.searchParams.set("t", Date.now().toString());
-        const { generatePythonCode } = await import(modUrl.href);
+        const generatePythonCode = await loadBotGenerator();
 
         const userDatabaseEnabled = project.userDatabaseEnabled === 1;
 

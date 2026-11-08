@@ -7,8 +7,7 @@
  * @module server/bots/botWorkerManager
  */
 
-import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+import { appPath } from "../utils/app-root";
 import { EventEmitter } from "node:events";
 import { parseWorkerSystemMessage } from "./parseWorkerSystemMessage";
 import {
@@ -36,10 +35,6 @@ import { workerReadyTimeout } from "./workerReadyTimeout";
 
 /** Задержка перед killWorker когда activeBots пуст (мс) */
 const WORKER_DRAIN_MS = 2_000;
-
-/** Эквивалент __dirname для ES modules */
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 /** Сообщение от воркера (stdout JSON) */
 interface WorkerMessage {
@@ -208,7 +203,7 @@ class BotWorkerManager extends EventEmitter {
 
   constructor() {
     super();
-    this.workerScript = join(__dirname, "..", "python", "worker.py");
+    this.workerScript = appPath("server", "python", "worker.py");
     this.pythonPath =
       process.env.PYTHON_PATH ||
       (process.platform === "win32" ? "python" : "python3");
