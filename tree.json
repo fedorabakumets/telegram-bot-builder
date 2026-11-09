@@ -31,7 +31,7 @@
       "bot-json-prompt"
     ],
     "folder_titles": {},
-    "updated_at": "2026-11-09T08:54:03Z",
+    "updated_at": "2026-11-09T09:16:45Z",
     "tags": [],
     "author": ""
   },
@@ -1498,7 +1498,7 @@
     "folder_titles": {
       "features": "🧩 Возможности"
     },
-    "updated_at": "2026-11-09T08:54:03Z",
+    "updated_at": "2026-11-09T09:19:40Z",
     "tags": [],
     "author": ""
   },
@@ -3935,7 +3935,7 @@
   {
     "path": "mcp/nodes/keyboard",
     "title": "Keyboard-нода",
-    "excerpt": "Keyboard хранит кнопки и их действия. `goto` ведёт на `target`, `url` открывает ссылку, а `callback`-ввод можно направить на `input` с `inpu",
+    "excerpt": "<!-- @fileoverview Настройки keyboard-ноды и скрытие inline-клавиатуры после выбора. -->",
     "parts": [
       "mcp",
       "nodes",
@@ -3945,7 +3945,7 @@
       "mcp": "🤖 MCP-конструктор",
       "nodes": "Nodes"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-09T09:19:40Z",
     "tags": [],
     "author": ""
   },
@@ -5295,7 +5295,7 @@
   {
     "path": "mcp/reference/055-кнопки-button",
     "title": "Кнопки (Button)",
-    "excerpt": "Кнопки задаются в `data.buttons[]` узла. Тип клавиатуры задаётся в `data.keyboardType`:",
+    "excerpt": "<!-- @fileoverview Общие поля кнопок и поведение флага hideAfterClick. -->",
     "parts": [
       "mcp",
       "reference",
@@ -5305,7 +5305,7 @@
       "mcp": "🤖 MCP-конструктор",
       "reference": "Reference"
     },
-    "updated_at": "2026-10-25T19:50:00+03:00",
+    "updated_at": "2026-11-09T09:19:40Z",
     "tags": [],
     "author": ""
   },
