@@ -119,6 +119,9 @@ async def save_user_data_to_db(user_id: int, variable_name: str, variable_value)
     return await update_user_variable_in_db(user_id, variable_name, variable_value)
 {% endmacro %}
 
+{# Время ответа используется обработчиками ввода независимо от БД и логирования. #}
+{{ get_moscow_time_macro() }}
+
 {%- if userDatabaseEnabled %}
 async def init_database():
     """Инициализация подключения к базе данных и создание таблиц"""
@@ -371,7 +374,6 @@ async def update_user_data_in_db(user_id: int, data_key: str, data_value):
 
 {# Вспомогательные функции — генерируются только если используются #}
 {% if hasMessageLogging %}
-{{ get_moscow_time_macro() }}
 {{ log_message_function() }}
 {% endif %}
 {% if hasUserDataAccess %}

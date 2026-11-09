@@ -18,6 +18,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { execFileSync, execSync } from 'child_process';
 import { generateDatabase } from '../templates/database/database.renderer.ts';
+import { generatePythonCode } from '../bot-generator.ts';
 import { generateDatabaseVariablesCode } from '../templates/database/database-variables.renderer.ts';
 import { generateBroadcastClient } from '../templates/broadcast-client/broadcast-client.renderer.ts';
 import { generateGroupHandlers } from '../templates/group-handlers/group-handlers.renderer.ts';
@@ -192,6 +193,33 @@ test('B06', 'group_activity пишется только без роли', () => 
   const on = generateGroupHandlers(groups, true);
   ok(off.includes('INSERT INTO group_activity'), 'без роли запись в шаблоне остаётся');
   ok(!on.includes('group_activity'), 'с ролью запись не генерируется');
+});
+
+/** Проверяет доступность и выполнение функции времени в полном боте со сбором ответа. */
+test('C00', 'ввод без БД и без логирования имеет исполняемую функцию времени', () => {
+  for (const userDatabaseEnabled of [false, true]) {
+    const code = generatePythonCode({
+      nodes: [{
+        id: 'password_input', type: 'input', position: { x: 0, y: 0 },
+        data: { inputType: 'text', inputVariable: 'password', saveToDatabase: false },
+      }],
+      connections: [],
+    } as any, { botName: 'Password', userDatabaseEnabled });
+    ok(code.includes('timestamp = get_moscow_time()'), 'должен генерироваться вызов из обработчика ввода');
+    const output = execFileSync('python', ['-c', [
+      'import ast, re, sys',
+      'source = sys.stdin.read()',
+      'compile(source, "bot.py", "exec")',
+      'tree = ast.parse(source)',
+      'helpers = [n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == "get_moscow_time"]',
+      'assert len(helpers) == 1, "Ожидалось одно определение get_moscow_time"',
+      'scope = {}',
+      'exec(compile(ast.Module(body=helpers, type_ignores=[]), "helper.py", "exec"), scope)',
+      String.raw`assert re.fullmatch(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}", scope["get_moscow_time"]())`,
+      'print("OK")',
+    ].join('\n')], { input: code, encoding: 'utf8' });
+    ok(output.includes('OK'), 'функция времени должна выполняться без зависимостей от БД');
+  }
 });
 
 /** Проверяет запись и восстановление на исполняемых сгенерированных функциях Python. */

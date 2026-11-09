@@ -19,7 +19,8 @@ export function generateDatabaseCode(
   botRuntimeRole = false,
 ): string {
   if (!userDatabaseEnabled) {
-    return '';
+    /** Обработчикам ввода нужна функция времени даже без подключения к БД. */
+    return generateDatabase({ userDatabaseEnabled: false });
   }
 
   const hasMessageLogging = nodes.some(n => n.type === NODE_TYPES.MESSAGE);
