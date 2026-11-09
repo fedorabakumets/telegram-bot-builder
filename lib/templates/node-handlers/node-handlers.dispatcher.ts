@@ -335,7 +335,8 @@ export function generateNodeHandlers(
         conditionalMessages: node.data?.conditionalMessages || [],
         fallbackMessage: node.data?.fallbackMessage,
         synonymEntries: collectSynonymEntries([node]),
-        hasHideAfterClickIncoming: nodes.some((n: Node) =>
+        /** Inline-кнопки скрываются общим middleware; здесь нужен только ReplyKeyboardRemove. */
+        hasHideAfterClickIncoming: nodes.some((n: Node) => n.data?.keyboardType === 'reply' &&
           (n.data?.buttons || []).some((btn: any) => btn.hideAfterClick === true && btn.target === node.id)
         ),
         // callbackPattern: удалён — виртуальные триггеры теперь генерируются через collectVirtualCallbackTriggerEntries

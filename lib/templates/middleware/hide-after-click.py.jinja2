@@ -1,0 +1,35 @@
+{#
+  @fileoverview Снимает inline-клавиатуру при нажатии кнопки с hideAfterClick.
+  @param {array} rules — шаблоны callback и текста исходных кнопок
+#}
+
+async def hide_after_click_middleware(handler, event: types.CallbackQuery, data: dict):
+    """Обрабатывает флаг исходной кнопки до запуска любого целевого узла."""
+    import re
+    try:
+        if not getattr(event, "_is_fake", False):
+            callback_data = event.data or ""
+            markup = getattr(event.message, "reply_markup", None)
+            clicked_texts = [button.text for row in getattr(markup, "inline_keyboard", [])
+                             for button in row if button.callback_data == callback_data]
+            rules = {{ rules | tojson }}
+            matches = [rule for rule in rules if re.fullmatch(rule["callbackPattern"], callback_data)]
+            # Текст различает кнопки с общим callback, но не мешает обновлению контента
+            # у кнопок, для которых политика скрытия однозначна.
+            should_hide = bool(clicked_texts) and any(rule["hide"] for rule in matches) and (
+                all(rule["hide"] for rule in matches) or
+                any(rule["hide"] and any(re.fullmatch(rule["textPattern"], text) for text in clicked_texts)
+                    for rule in matches)
+            )
+            if should_hide:
+                await event.message.edit_reply_markup(reply_markup=None)
+                # Сохраняем текст кнопки в исходном markup, но помечаем его как снятый.
+                # Копия сообщения передаётся и через промежуточные ноды/триггеры.
+                event = event.model_copy(update={"message": event.message.model_copy(
+                    update={"_hide_after_click_removed": True}
+                )})
+    except Exception as error:
+        logging.warning(f"Не удалось скрыть inline-клавиатуру после нажатия: {error}")
+    return await handler(event, data)
+
+dp.callback_query.middleware(hide_after_click_middleware)
