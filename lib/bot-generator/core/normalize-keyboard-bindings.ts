@@ -71,13 +71,21 @@ function isKeyboardHostType(nodeType: string): boolean {
  * Создаёт карту входящих соединений по целевому узлу.
  *
  * @param connections - Соединения графа
+ * @param nodeMap - Исходные узлы для различения привязки клавиатуры и перехода по кнопке
  * @returns Карта `targetId -> sourceId[]`
  */
-function buildIncomingMap(connections: GraphConnection[]): Map<string, string[]> {
+function buildIncomingMap(connections: GraphConnection[], nodeMap: Map<string, Node>): Map<string, string[]> {
   const incoming = new Map<string, string[]>();
 
   for (const connection of connections || []) {
     if (!connection || !connection.target || !connection.source) continue;
+    /** Переход по кнопке запускается после выбора и не задаёт владельца следующего меню. */
+    const source = nodeMap.get(connection.source);
+    const isButtonTransition = (source?.data?.buttons || []).some(button =>
+      button.target === connection.target &&
+      (!button.action || ['goto', 'command', 'complete'].includes(button.action))
+    );
+    if (isButtonTransition && connection.sourceHandle !== 'keyboard-link') continue;
     const list = incoming.get(connection.target) || [];
     list.push(connection.source);
     incoming.set(connection.target, list);
@@ -159,6 +167,9 @@ function findKeyboardHostByGraph(
 
     const currentNode = nodeMap.get(currentId);
     if (!currentNode) continue;
+
+    /** Вложенное меню обновляет клавиатуру после выбора и не принадлежит предыдущему сообщению. */
+    if (currentNode.type === NODE_TYPES.KEYBOARD) continue;
 
     if (isKeyboardHostType(currentNode.type)) {
       return currentNode.id;
@@ -310,7 +321,7 @@ export function normalizeKeyboardBindings(nodes: Node[], connections: GraphConne
     .map(cloneNode);
 
   const nodeMap = new Map<string, Node>(normalizedNodes.map(node => [node.id, node]));
-  const incomingMap = buildIncomingMap(connections || []);
+  const incomingMap = buildIncomingMap(connections || [], nodeMap);
   const processedKeyboardNodes = new Set<string>();
 
   // Собираем ID keyboard-нод, на которые ссылаются edit_message-ноды
