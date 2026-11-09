@@ -93,6 +93,63 @@ function makeConnection(source: string, target: string) {
 }
 
 describe('normalizeKeyboardBindings', () => {
+  /** Проверяет, что вложенное меню не заменяет исходную клавиатуру при подготовке кода. */
+  it('не переносит вложенную клавиатуру через переход по кнопке или предыдущую keyboard-ноду', () => {
+    for (const reverse of [false, true]) {
+      const message = makeMessageNode('greeting', { keyboardNodeId: 'main_menu' });
+      const menus = [
+        makeKeyboardNode('main_menu', {
+          buttons: [{ id: 'status', text: 'Статус коннектора', action: 'goto', target: 'connectors' }],
+        }),
+        makeKeyboardNode('connectors', {
+          buttons: [{ id: 'connector_1', text: 'Коннектор 1', action: 'goto', target: 'next' }],
+        }),
+      ];
+      const normalized = normalizeKeyboardBindings([message, ...(reverse ? menus.reverse() : menus)], [
+        makeConnection('greeting', 'main_menu'),
+        makeConnection('main_menu', 'connectors'),
+      ]);
+      assert.equal(normalized.find(node => node.id === 'greeting')?.data.buttons[0].text, 'Статус коннектора');
+      assert.equal(normalized.find(node => node.id === 'connectors')?.data.buttons[0].text, 'Коннектор 1');
+      assert.equal(menus.find(node => node.id === 'main_menu')?.data.buttons[0].text, 'Статус коннектора');
+    }
+  });
+
+  /** Проверяет границу выбора, если кнопки находятся непосредственно в message. */
+  it('не подменяет встроенное меню клавиатурой, на которую ведёт его кнопка', () => {
+    const normalized = normalizeKeyboardBindings([
+      makeMessageNode('greeting', {
+        keyboardType: 'inline',
+        buttons: [{ id: 'status', text: 'Статус коннектора', action: 'goto', target: 'connectors' }],
+      }),
+      makeKeyboardNode('connectors', {
+        buttons: [{ id: 'connector_1', text: 'Коннектор 1', action: 'goto', target: 'next' }],
+      }),
+    ], [makeConnection('greeting', 'connectors')]);
+    assert.equal(normalized[0].data.buttons[0].text, 'Статус коннектора');
+    assert.equal(normalized[1].data.buttons[0].text, 'Коннектор 1');
+  });
+
+  /** Проверяет остановку поиска на клавиатуре даже у старого ребра без привязки к кнопке. */
+  it('не ищет владельца вложенного меню за другой keyboard-нодой', () => {
+    const normalized = normalizeKeyboardBindings([
+      makeMessageNode('greeting', { keyboardNodeId: 'main_menu' }),
+      makeKeyboardNode('main_menu', {
+        buttons: [{ id: 'status', text: 'Статус', action: 'goto', target: 'other_action' }],
+      }),
+      makeConditionNode('condition', 'main_menu'),
+      makeKeyboardNode('connectors', {
+        buttons: [{ id: 'connector', text: 'Коннектор', action: 'goto', target: 'next' }],
+      }),
+    ], [
+      makeConnection('greeting', 'main_menu'),
+      makeConnection('main_menu', 'condition'),
+      makeConnection('condition', 'connectors'),
+    ]);
+    assert.equal(normalized[0].data.buttons[0].text, 'Статус');
+    assert.equal(normalized[3].data.buttons[0].text, 'Коннектор');
+  });
+
   it('сохраняет legacy-клавиатуру внутри message без изменений семантики', () => {
     const nodes = [
       makeMessageNode('msg_1', {
