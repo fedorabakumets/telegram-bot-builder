@@ -134,7 +134,8 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query: types.Callback
         _edit_markup = _edit_builder.as_markup()
         {% endif %}
         {% elif entry.editKeyboardMode == 'keep' %}
-        _edit_markup = callback_query.message.reply_markup if hasattr(callback_query, 'message') and callback_query.message else None
+        # Не восстанавливаем меню, снятое общим обработчиком hideAfterClick.
+        _edit_markup = callback_query.message.reply_markup if (hasattr(callback_query, 'message') and callback_query.message and not getattr(callback_query.message, '_hide_after_click_removed', False)) else None
         {% else %}
         _edit_markup = None
         {% endif %}

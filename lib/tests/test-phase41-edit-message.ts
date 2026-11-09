@@ -521,13 +521,14 @@ test('B08', 'текст с эмодзи и кириллицей → синтак
 
 console.log('── Блок C: Источник сообщения ────────────────────────────────────');
 
-test('C01', 'editMessageIdSource=last_bot_message → использует last_bot_message_id', () => {
+/** Проверяет существующее системное имя переменной последнего отправленного сообщения. */
+test('C01', 'editMessageIdSource=last_bot_message → использует _last_sent_msg_id', () => {
   const p = makeCleanProject([
     makeEditMessageNode('em_1', 'msg1', { editMessageIdSource: 'last_bot_message' }),
     makeMessageNode('msg1'),
   ]);
   const code = gen(p, 'c01');
-  ok(code.includes('last_bot_message_id'), 'last_bot_message_id должен быть в коде');
+  ok(code.includes('_last_sent_msg_id'), '_last_sent_msg_id должен быть в коде');
   syntax(code, 'c01');
 });
 

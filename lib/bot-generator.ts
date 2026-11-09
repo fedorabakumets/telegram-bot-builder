@@ -33,6 +33,7 @@ import { generateContentCode } from './templates/content';
 import { generateMediaInputHandlers } from './templates/media-input-handlers';
 import type { MediaMetadataConfig } from './templates/media-input-handlers';
 import { generateMessageLoggingCode } from './templates/middleware/middleware.renderer';
+import { generateHideAfterClickMiddleware } from './templates/middleware/hide-after-click.renderer';
 import type { NodeItem } from './templates/handle-user-input/handle-user-input.params';
 import { generateDockerfile, generateReadme, generateRequirementsTxt, generateEnvFile } from './scaffolding';
 import { addAutoTransitionNodes } from './bot-generator/core/add-auto-transition-nodes';
@@ -344,7 +345,7 @@ function generateCodeSections(
       context.projectId,
       autoRegisterUsers,
       !!context.options.saveIncomingMedia
-    )
+    ) + generateHideAfterClickMiddleware(nodes)
   );
 
   // --- database ---

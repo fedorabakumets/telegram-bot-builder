@@ -14,10 +14,7 @@
 
 {% set ind = indentLevel or '    ' %}
 
-{% if hasHideAfterClick %}
-{{ ind }}await callback_query.message.edit_reply_markup(reply_markup=None)
-{{ ind }}
-{% endif %}
+{# Скрытие inline-клавиатуры выполняется общим middleware по флагу нажатой кнопки. #}
 {{ ind }}# Пытаемся ответить на callback (игнорируем ошибку если уже обработан)
 {{ ind }}try:
 {{ ind }}    await callback_query.answer()

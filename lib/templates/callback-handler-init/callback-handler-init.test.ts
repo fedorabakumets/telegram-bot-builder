@@ -26,9 +26,9 @@ describe('generateCallbackHandlerInit()', () => {
     assert.ok(result.includes('await init_user_variables(user_id, callback_query.from_user)'));
   });
 
-  it('генерирует edit_reply_markup при hasHideAfterClick', () => {
+  it('оставляет скрытие клавиатуры общему middleware при hasHideAfterClick', () => {
     const result = generateCallbackHandlerInit(validParamsWithHide);
-    assert.ok(result.includes('edit_reply_markup(reply_markup=None)'));
+    assert.ok(!result.includes('edit_reply_markup'));
   });
 
   it('не генерирует edit_reply_markup без hasHideAfterClick', () => {

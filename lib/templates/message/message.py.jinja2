@@ -95,13 +95,7 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
     except Exception:
         pass
 
-    {%- if hasHideAfterClickIncoming %}
-    # Скрываем клавиатуру предыдущего сообщения (hideAfterClick)
-    try:
-        await callback_query.message.edit_reply_markup(reply_markup=None)
-    except Exception:
-        pass
-    {%- endif %}
+    {# hideAfterClick для inline-кнопок обрабатывается общим middleware до навигации. #}
 
     {# Проверки безопасности #}
     {%- if adminOnly %}
