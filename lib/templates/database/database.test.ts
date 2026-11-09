@@ -21,17 +21,19 @@ describe('database.py.jinja2 шаблон', () => {
         assert.ok(result.includes('async def update_user_data_in_db'));
       });
 
-      it('должен генерировать пустую строку при userDatabaseEnabled=false', () => {
+      it('должен генерировать функцию времени без функций БД при userDatabaseEnabled=false', () => {
         const result = generateDatabase({ userDatabaseEnabled: false });
 
-        assert.ok(result.trim() === '');
+        assert.ok(result.includes('def get_moscow_time()'));
+        assert.ok(!result.includes('async def init_database()'));
       });
 
       it('должен включать CREATE TABLE для bot_users', () => {
         const result = generateDatabase({ userDatabaseEnabled: true });
 
         assert.ok(result.includes('CREATE TABLE IF NOT EXISTS bot_users'));
-        assert.ok(result.includes('user_id BIGINT PRIMARY KEY'));
+        /** Пользователь изолирован по проекту и токену составным ключом. */
+        assert.ok(result.includes('PRIMARY KEY (user_id, project_id, token_id)'));
       });
 
       it('должен включать CREATE TABLE для bot_messages', () => {
@@ -87,7 +89,8 @@ describe('database.py.jinja2 шаблон', () => {
         const result = generateDatabase({ userDatabaseEnabled: true, hasUserDataAccess: true });
 
         assert.ok(result.includes('async def update_user_variable_in_db'));
-        assert.ok(result.includes('user_data[variable_name] = variable_value'));
+        /** Значение проходит существующую обработку приватных данных перед записью. */
+        assert.ok(result.includes('user_data[variable_name] = globals().get("_analytics_safe_value", lambda item: item)(variable_value)'));
       });
 
       it('должен включать save_user_data_to_db', () => {
@@ -183,13 +186,14 @@ describe('database.py.jinja2 шаблон', () => {
       it('должен включать ON CONFLICT для upsert', () => {
         const result = generateDatabase({ userDatabaseEnabled: true });
 
-        assert.ok(result.includes('ON CONFLICT (user_id) DO UPDATE'));
+        assert.ok(result.includes('ON CONFLICT (user_id, project_id, token_id) DO UPDATE'));
       });
 
-      it('должен возвращать пустую строку при false', () => {
+      it('должен оставлять только функцию времени при отключённой БД', () => {
         const result = generateDatabase({ userDatabaseEnabled: false });
 
-        assert.ok(result.trim().length === 0);
+        assert.ok(result.includes('def get_moscow_time()'));
+        assert.ok(!result.includes('async def '));
       });
 
       it('должен включать новые поля схемы', () => {
