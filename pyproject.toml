@@ -1,12 +1,13 @@
+# @fileoverview Метаданные локальной Python-среды и версии общих зависимостей.
 [project]
 name = "repl-nix-workspace"
 version = "0.1.0"
 description = "Add your description here"
 requires-python = ">=3.11"
 dependencies = [
-    "aiogram>=3.21.0",
-    "aiohttp>=3.12.13",
-    "asyncpg>=0.30.0",
-    "nanoid>=2.0.0",
-    "requests>=2.32.4",
+    "aiogram==3.31.0",
+    "aiohttp==3.14.5",
+    "asyncpg==0.32.0",
+    "nanoid==2.0.0",
+    "requests==2.34.2",
 ]
