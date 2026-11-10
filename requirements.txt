@@ -4,6 +4,6 @@ aiohttp==3.14.5
 asyncpg==0.32.0
 telethon==1.45.0
 python-dotenv==1.2.4
-redis==7.4.1
+redis==8.1.0
 pytz==2026.6
 croniter==7.0.0
