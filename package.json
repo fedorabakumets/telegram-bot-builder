@@ -164,7 +164,7 @@
     "@aws-sdk/s3-request-presigner": "3.1076.0",
     "@hookform/resolvers": "^5.2.2",
     "@jridgewell/trace-mapping": "^0.3.31",
-    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@modelcontextprotocol/sdk": "^1.32.2",
     "@monaco-editor/react": "^4.7.0",
     "@octokit/rest": "^22.0.1",
     "@radix-ui/react-accordion": "^1.2.12",
