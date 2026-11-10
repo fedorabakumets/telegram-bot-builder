@@ -53,7 +53,7 @@ test('последняя страница не выдаёт следующий �
 });
 
 test('курсор проверяет область проекта, формат и ID', () => {
-  for (const value of ['oops', cursor(8), cursor(7, 'bad'), cursor(7, '2026-99-99 99:99:99'), cursor(7, '2026-02-30 12:00:00'), cursor(7, null, -1)]) {
+  for (const value of [null, [], {}, ['oops'], 'oops', cursor(8), cursor(7, 'bad'), cursor(7, '0000-01-01 12:00:00'), cursor(7, '2026-99-99 99:99:99'), cursor(7, '2026-02-30 12:00:00'), cursor(7, null, -1)]) {
     assert.throws(() => decodeVersionCursor(value, 7));
   }
   assert.equal(decodeVersionCursor(cursor(), 7).timestamp, '2026-11-10 12:00:00.123456');

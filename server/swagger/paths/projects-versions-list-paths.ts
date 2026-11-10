@@ -29,7 +29,7 @@ export function registerProjectsVersionsListPaths(
       "Метаданные снимков **без** чтения `snapshot` из БД. " +
       "Без query-параметров возвращается прежний массив. `limit=1..100` включает " +
       "постраничный ответ `{items,nextCursor,total}`; `cursor` берётся из предыдущего ответа " +
-      "и используется вместе с `limit` для того же проекта. " +
+      "для того же проекта; при одном `cursor` размер страницы равен 20. " +
       "Порядок: createdAt DESC NULLS LAST, затем id DESC. " +
       "`authorName` — из Telegram или «ИИ-агент» при `authorKind=agent`.\n\n" +
       "**Auth:** cookie / Bearer PAT + `requireProjectAccess`.\n\n" +

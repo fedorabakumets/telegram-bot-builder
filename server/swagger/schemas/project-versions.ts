@@ -9,7 +9,7 @@ import { ProjectVersionMetaSchema } from "./projects";
 
 /** Параметры постраничной загрузки; без них сохраняется прежний массив метаданных. */
 export const ProjectVersionPageQuerySchema = z.object({
-  /** Размер страницы; обязателен для постраничного режима. */
+  /** Размер страницы; при передаче одного курсора используется 20. */
   limit: z.coerce.number().int().min(1).max(100).optional(),
   /** Непрозрачный курсор следующей страницы, полученный от сервера. */
   cursor: z.string().max(512).optional(),

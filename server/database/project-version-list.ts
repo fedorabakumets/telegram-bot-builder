@@ -25,13 +25,13 @@ export interface ProjectVersionPage {
 export const { snapshot: omittedSnapshot, ...versionMetadataColumns } = getTableColumns(projectVersions);
 
 /** Проверяет и декодирует курсор, сохраняя микросекунды и область проекта. */
-export function decodeVersionCursor(cursor: string, projectId: number): { id: number; timestamp: string | null } {
+export function decodeVersionCursor(cursor: unknown, projectId: number): { id: number; timestamp: string | null } {
   try {
-    if (cursor.length > 512) throw new Error();
+    if (typeof cursor !== 'string' || cursor.length > 512) throw new Error();
     const value = JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8'));
     if (value.projectId !== projectId || !Number.isSafeInteger(value.id) || value.id <= 0
       || !(value.timestamp === null || (typeof value.timestamp === 'string'
-        && /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,6})?$/.test(value.timestamp)))) throw new Error();
+        && /^(?!0000)\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,6})?$/.test(value.timestamp)))) throw new Error();
     if (typeof value.timestamp === 'string') {
       const instant = new Date(value.timestamp.replace(' ', 'T') + 'Z');
       if (!Number.isFinite(instant.getTime()) || instant.toISOString().slice(0, 19)
@@ -66,7 +66,7 @@ export async function selectProjectVersionList(database: typeof db, projectId: n
   const visible = options ? rows.slice(0, options.limit) : rows;
   const items = visible.map(({ cursorTimestamp, ...metadata }) => metadata);
   if (!options) return items;
-  const last = visible.at(-1);
+  const last = visible[visible.length - 1];
   const nextCursor = rows.length > options.limit && last
     ? Buffer.from(JSON.stringify({ projectId, id: last.id, timestamp: last.cursorTimestamp })).toString('base64url') : null;
   const [aggregate] = await database.select({ total: count() }).from(projectVersions)
