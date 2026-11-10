@@ -185,7 +185,7 @@
       {
         "candidate": {
           "file": "server/routes/routes.ts",
-          "line": 470,
+          "line": 471,
           "method": "USE",
           "expression": "sessionMiddleware"
         },
@@ -195,7 +195,7 @@
       {
         "candidate": {
           "file": "server/routes/viteDev/middleware/staticMiddleware.ts",
-          "line": 34,
+          "line": 36,
           "method": "USE",
           "expression": "express.static(publicPath)"
         },
@@ -205,7 +205,17 @@
       {
         "candidate": {
           "file": "server/routes/viteDev/middleware/staticMiddleware.ts",
-          "line": 38,
+          "line": 40,
+          "method": "USE",
+          "expression": "protectServerBundle"
+        },
+        "routes": [],
+        "reason": "Middleware или статический mount, не отдельная HTTP-операция; не доказательство отсутствия вложенных Router."
+      },
+      {
+        "candidate": {
+          "file": "server/routes/viteDev/middleware/staticMiddleware.ts",
+          "line": 43,
           "method": "USE",
           "expression": "express.static(distPath)"
         },
@@ -215,7 +225,7 @@
       {
         "candidate": {
           "file": "server/routes/viteDev/middleware/staticMiddleware.ts",
-          "line": 67,
+          "line": 72,
           "method": "USE",
           "expression": "`/uploads/${projectId}`"
         },
@@ -740,16 +750,9 @@
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 470,
+      "line": 471,
       "method": "USE",
       "expression": "sessionMiddleware"
-    },
-    {
-      "file": "server/routes/routes.ts",
-      "line": 479,
-      "method": "USE",
-      "expression": "\"/api\"",
-      "resolvedPath": "/api"
     },
     {
       "file": "server/routes/routes.ts",
@@ -762,26 +765,26 @@
       "file": "server/routes/routes.ts",
       "line": 481,
       "method": "USE",
-      "expression": "\"/uploads\"",
-      "resolvedPath": "/uploads"
+      "expression": "\"/api\"",
+      "resolvedPath": "/api"
     },
     {
       "file": "server/routes/routes.ts",
       "line": 482,
       "method": "USE",
-      "expression": "\"/api\"",
-      "resolvedPath": "/api"
+      "expression": "\"/uploads\"",
+      "resolvedPath": "/uploads"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 486,
+      "line": 483,
       "method": "USE",
       "expression": "\"/api\"",
       "resolvedPath": "/api"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 490,
+      "line": 487,
       "method": "USE",
       "expression": "\"/api\"",
       "resolvedPath": "/api"
@@ -795,406 +798,413 @@
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 500,
+      "line": 492,
       "method": "USE",
       "expression": "\"/api\"",
       "resolvedPath": "/api"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 511,
+      "line": 501,
+      "method": "USE",
+      "expression": "\"/api\"",
+      "resolvedPath": "/api"
+    },
+    {
+      "file": "server/routes/routes.ts",
+      "line": 512,
       "method": "GET",
       "expression": "\"/api/health\"",
       "resolvedPath": "/api/health"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 519,
+      "line": 520,
       "method": "HEAD",
       "expression": "\"/api/health\"",
       "resolvedPath": "/api/health"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 563,
+      "line": 564,
       "method": "GET",
       "expression": "\"/api/bots\"",
       "resolvedPath": "/api/bots"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 590,
+      "line": 591,
       "method": "GET",
       "expression": "\"/api/projects/:id/tokens\"",
       "resolvedPath": "/api/projects/{id}/tokens"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 625,
+      "line": 626,
       "method": "POST",
       "expression": "\"/api/projects/:id/tokens/parse\"",
       "resolvedPath": "/api/projects/{id}/tokens/parse"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 818,
+      "line": 819,
       "method": "PUT",
       "expression": "\"/api/projects/:id/tokens/:tokenId/bot-info\"",
       "resolvedPath": "/api/projects/{id}/tokens/{tokenId}/bot-info"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 904,
+      "line": 905,
       "method": "POST",
       "expression": "\"/api/projects/:id/tokens\"",
       "resolvedPath": "/api/projects/{id}/tokens"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 995,
+      "line": 996,
       "method": "PUT",
       "expression": "\"/api/projects/:id/tokens/:tokenId\"",
       "resolvedPath": "/api/projects/{id}/tokens/{tokenId}"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 998,
+      "line": 999,
       "method": "DELETE",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 1008,
+      "line": 1009,
       "method": "PUT",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId/auto-restart\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/auto-restart"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 1047,
+      "line": 1048,
       "method": "PUT",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId/protect-content\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/protect-content"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 1081,
+      "line": 1082,
       "method": "PUT",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId/messages-retention\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/messages-retention"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 1091,
+      "line": 1092,
       "method": "PUT",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId/save-incoming-media\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/save-incoming-media"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 1128,
+      "line": 1129,
       "method": "PUT",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId/catch-all-handlers\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/catch-all-handlers"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 1158,
+      "line": 1159,
       "method": "PUT",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId/track-user-blocks\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/track-user-blocks"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 1178,
+      "line": 1179,
       "method": "PUT",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId/track-group-membership\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/track-group-membership"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 1206,
+      "line": 1207,
       "method": "PUT",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId/content-cache\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/content-cache"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 1239,
+      "line": 1240,
       "method": "PUT",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId/userbot\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/userbot"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 1274,
+      "line": 1275,
       "method": "POST",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId/userbot/send-code\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/userbot/send-code"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 1312,
+      "line": 1313,
       "method": "POST",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId/userbot/sign-in\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/userbot/sign-in"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 1346,
+      "line": 1347,
       "method": "POST",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId/userbot/sign-in-2fa\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/userbot/sign-in-2fa"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 1374,
+      "line": 1375,
       "method": "PUT",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId/log-level\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/log-level"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 1406,
+      "line": 1407,
       "method": "PUT",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId/launch-settings\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/launch-settings"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 1463,
+      "line": 1464,
       "method": "GET",
       "expression": "\"/api/projects/:id/tokens/first\"",
       "resolvedPath": "/api/projects/{id}/tokens/first"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 1472,
+      "line": 1473,
       "method": "POST",
       "expression": "\"/api/media/upload/:projectId\"",
       "resolvedPath": "/api/media/upload/{projectId}"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 1625,
+      "line": 1626,
       "method": "POST",
       "expression": "\"/api/media/upload-multiple/:projectId\"",
       "resolvedPath": "/api/media/upload-multiple/{projectId}"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 1763,
+      "line": 1764,
       "method": "POST",
       "expression": "\"/api/media/check-url\"",
       "resolvedPath": "/api/media/check-url"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 1832,
+      "line": 1833,
       "method": "POST",
       "expression": "\"/api/media/download-url/:projectId\"",
       "resolvedPath": "/api/media/download-url/{projectId}"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 1987,
+      "line": 1988,
       "method": "POST",
       "expression": "\"/api/media/download-urls/:projectId\"",
       "resolvedPath": "/api/media/download-urls/{projectId}"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 2146,
+      "line": 2147,
       "method": "GET",
       "expression": "\"/api/media/project/:projectId\"",
       "resolvedPath": "/api/media/project/{projectId}"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 2165,
+      "line": 2166,
       "method": "GET",
       "expression": "\"/api/media/:id\"",
       "resolvedPath": "/api/media/{id}"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 2183,
+      "line": 2184,
       "method": "PUT",
       "expression": "\"/api/media/:id\"",
       "resolvedPath": "/api/media/{id}"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 2205,
+      "line": 2206,
       "method": "DELETE",
       "expression": "\"/api/media/:id\"",
       "resolvedPath": "/api/media/{id}"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 2238,
+      "line": 2239,
       "method": "GET",
       "expression": "\"/api/media/search/:projectId\"",
       "resolvedPath": "/api/media/search/{projectId}"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 2258,
+      "line": 2259,
       "method": "POST",
       "expression": "\"/api/media/:id/use\"",
       "resolvedPath": "/api/media/{id}/use"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 2278,
+      "line": 2279,
       "method": "GET",
       "expression": "\"/api/projects/:id/users\"",
       "resolvedPath": "/api/projects/{id}/users"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 2488,
+      "line": 2489,
       "method": "GET",
       "expression": "\"/api/projects/:id/users/stats\"",
       "resolvedPath": "/api/projects/{id}/users/stats"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 2557,
+      "line": 2558,
       "method": "GET",
       "expression": "\"/api/projects/:id/users/traffic\"",
       "resolvedPath": "/api/projects/{id}/users/traffic"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 2617,
+      "line": 2618,
       "method": "GET",
       "expression": "\"/api/projects/:id/users/activity\"",
       "resolvedPath": "/api/projects/{id}/users/activity"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 2641,
+      "line": 2642,
       "method": "GET",
       "expression": "\"/api/projects/:id/users/growth\"",
       "resolvedPath": "/api/projects/{id}/users/growth"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 2756,
+      "line": 2757,
       "method": "GET",
       "expression": "\"/api/projects/:id/users/growth-by-source\"",
       "resolvedPath": "/api/projects/{id}/users/growth-by-source"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 2864,
+      "line": 2865,
       "method": "GET",
       "expression": "\"/api/projects/:id/users/popular-buttons\"",
       "resolvedPath": "/api/projects/{id}/users/popular-buttons"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 2912,
+      "line": 2913,
       "method": "GET",
       "expression": "\"/api/projects/:id/logs/all\"",
       "resolvedPath": "/api/projects/{id}/logs/all"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 2939,
+      "line": 2940,
       "method": "GET",
       "expression": "\"/api/projects/:id/launches/all\"",
       "resolvedPath": "/api/projects/{id}/launches/all"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 2966,
+      "line": 2967,
       "method": "GET",
       "expression": "\"/api/projects/:id/users/variables\"",
       "resolvedPath": "/api/projects/{id}/users/variables"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 3027,
+      "line": 3028,
       "method": "GET",
       "expression": "\"/api/projects/:id/messages/all\"",
       "resolvedPath": "/api/projects/{id}/messages/all"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 3061,
+      "line": 3062,
       "method": "GET",
       "expression": "\"/api/projects/:id/messages/activity\"",
       "resolvedPath": "/api/projects/{id}/messages/activity"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 3233,
+      "line": 3234,
       "method": "PUT",
       "expression": "\"/api/projects/:projectId/users/:userId\"",
       "resolvedPath": "/api/projects/{projectId}/users/{userId}"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 3238,
+      "line": 3239,
       "method": "DELETE",
       "expression": "\"/api/projects/:projectId/users/:userId\"",
       "resolvedPath": "/api/projects/{projectId}/users/{userId}"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 3246,
+      "line": 3247,
       "method": "DELETE",
       "expression": "\"/api/projects/:id/users\"",
       "resolvedPath": "/api/projects/{id}/users"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 3312,
+      "line": 3313,
       "method": "GET",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId/env-variables\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/env-variables"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 3330,
+      "line": 3331,
       "method": "POST",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId/env-variables\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/env-variables"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 3361,
+      "line": 3362,
       "method": "PUT",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId/env-variables/:id\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/env-variables/{id}"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 3404,
+      "line": 3405,
       "method": "DELETE",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId/env-variables/:id\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/env-variables/{id}"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 3425,
+      "line": 3426,
       "method": "GET",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId/env-variables/:id/reveal\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/env-variables/{id}/reveal"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 3446,
+      "line": 3447,
       "method": "GET",
       "expression": "\"/api/server/env-keys\"",
       "resolvedPath": "/api/server/env-keys"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 3467,
+      "line": 3468,
       "method": "PUT",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId/env-batch\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/env-batch"
@@ -2342,46 +2352,52 @@
     },
     {
       "file": "server/routes/viteDev/middleware/staticMiddleware.ts",
-      "line": 34,
+      "line": 36,
       "method": "USE",
       "expression": "express.static(publicPath)"
     },
     {
       "file": "server/routes/viteDev/middleware/staticMiddleware.ts",
-      "line": 38,
+      "line": 40,
+      "method": "USE",
+      "expression": "protectServerBundle"
+    },
+    {
+      "file": "server/routes/viteDev/middleware/staticMiddleware.ts",
+      "line": 43,
       "method": "USE",
       "expression": "express.static(distPath)"
     },
     {
       "file": "server/routes/viteDev/middleware/staticMiddleware.ts",
-      "line": 41,
+      "line": 46,
       "method": "USE",
       "expression": "\"/uploads\"",
       "resolvedPath": "/uploads"
     },
     {
       "file": "server/routes/viteDev/middleware/staticMiddleware.ts",
-      "line": 45,
+      "line": 50,
       "method": "USE",
       "expression": "\"/uploads\"",
       "resolvedPath": "/uploads"
     },
     {
       "file": "server/routes/viteDev/middleware/staticMiddleware.ts",
-      "line": 51,
+      "line": 56,
       "method": "USE",
       "expression": "\"/assets\"",
       "resolvedPath": "/assets"
     },
     {
       "file": "server/routes/viteDev/middleware/staticMiddleware.ts",
-      "line": 67,
+      "line": 72,
       "method": "USE",
       "expression": "`/uploads/${projectId}`"
     },
     {
       "file": "server/routes/viteDev/middleware/staticMiddleware.ts",
-      "line": 74,
+      "line": 79,
       "method": "USE",
       "expression": "\"*\"",
       "resolvedPath": "*"
