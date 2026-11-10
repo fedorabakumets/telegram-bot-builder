@@ -74,16 +74,16 @@ export function generateCallbackTriggers(params: CallbackTriggerTemplateParams):
 
 /**
  * Типы нод, которые сами слушают динамический customCallbackData (startswith).
- * Для них виртуальный триггер с `{переменной}` не нужен — иначе будет двойной handler.
+ * Остальные ноды получают отдельный виртуальный триггер для такого перехода.
  */
-const SELF_HANDLING_DYNAMIC_CALLBACK = new Set(['message', 'edit_message', 'start', 'command']);
+const SELF_HANDLING_DYNAMIC_CALLBACK = new Set(['edit_message']);
 
 /**
  * Собирает виртуальные записи триггеров из кнопок с customCallbackData.
  * Для каждой кнопки с customCallbackData и target генерируется виртуальный
  * CallbackTriggerEntry — как если бы пользователь создал callback_trigger ноду.
  * Если customCallbackData содержит `{переменную}`, matchType=startswith по префиксу
- * (кроме message/edit_message/start/command — они ловят callback сами).
+ * (кроме edit_message — она ловит callback сама).
  * @param nodes - Массив всех узлов проекта
  * @returns Массив виртуальных записей триггеров
  */

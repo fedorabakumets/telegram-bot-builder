@@ -400,7 +400,7 @@ describe('Виртуальные callback_trigger из customCallbackData', () =
     expect(r).toContain('handle_callback_name_in');
   });
 
-  it('динамический customCallbackData на message → виртуальный триггер не дублируется', () => {
+  it('динамический customCallbackData на message → отдельный виртуальный триггер', () => {
     const nodes = [
       makeNode('src', 'keyboard', {
         buttons: [{
@@ -414,7 +414,27 @@ describe('Виртуальные callback_trigger из customCallbackData', () =
       makeNode('hint', 'message', { messageText: 'фото' }),
     ];
     const entries = collectVirtualCallbackTriggerEntries(nodes as any);
-    expect(entries).toHaveLength(0);
+    expect(entries).toHaveLength(1);
+    expect(entries[0].callbackData).toBe('profile:avatar:');
+    expect(entries[0].matchType).toBe('startswith');
+    expect(generateCallbackTriggerHandlers(nodes as any)).toContain('handle_callback_hint');
+  });
+
+  it('динамический customCallbackData на start и command → виртуальные триггеры', () => {
+    const nodes = [
+      makeNode('src', 'keyboard', { buttons: [
+        { id: 'btn_start', action: 'goto', target: 'entry_start', customCallbackData: 'open:start:{user_id}' },
+        { id: 'btn_command', action: 'goto', target: 'entry_command', customCallbackData: 'open:command:{user_id}' },
+      ] }),
+      makeNode('entry_start', 'start', { command: 'start' }),
+      makeNode('entry_command', 'command', { command: 'help' }),
+    ];
+    const entries = collectVirtualCallbackTriggerEntries(nodes as any);
+    expect(entries.map(entry => entry.callbackData)).toEqual(['open:start:', 'open:command:']);
+    expect(entries.every(entry => entry.matchType === 'startswith')).toBe(true);
+    const code = generateCallbackTriggerHandlers(nodes as any);
+    expect(code).toContain('handle_callback_entry_start');
+    expect(code).toContain('handle_callback_entry_command');
   });
 });
 

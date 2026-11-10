@@ -1247,7 +1247,7 @@ test('Q01', 'кнопка profile:name:{user_id} → input генерирует 
   ok(code.includes('handle_callback_name_in'), 'нет вызова handle_callback_name_in');
 });
 
-test('Q02', 'кнопка profile:avatar:{user_id} → message не дублирует виртуальный startswith', () => {
+test('Q02', 'кнопка profile:avatar:{user_id} → message получает ровно один виртуальный startswith', () => {
   const p = makeCleanProject([
     makeMessageNodeWithButtons('card', 'Профиль', [
       { id: 'btn_av', text: 'Аватар', action: 'goto', target: 'hint', customCallbackData: 'profile:avatar:{user_id}' },
@@ -1256,7 +1256,25 @@ test('Q02', 'кнопка profile:avatar:{user_id} → message не дублир
   ]);
   const code = gen(p, 'q02');
   const virtual = (code.match(/startswith\("profile:avatar:"\)/g) || []).length;
-  ok(virtual <= 1, `startswith profile:avatar дублируется: ${virtual}`);
+  ok(virtual === 1, `Нужен ровно один обработчик startswith profile:avatar, найдено: ${virtual}`);
+  ok(code.includes('await handle_callback_hint(mock_callback, state=state)'), 'Виртуальный триггер не вызывает целевую message-ноду');
+});
+
+test('Q03', 'динамические кнопки переходят к start и command через виртуальные триггеры', () => {
+  const p = makeCleanProject([
+    makeMessageNodeWithButtons('card', 'Меню', [
+      { id: 'btn_start', text: 'Начать', action: 'goto', target: 'entry_start', customCallbackData: 'open:start:{user_id}' },
+      { id: 'btn_command', text: 'Помощь', action: 'goto', target: 'entry_command', customCallbackData: 'open:command:{user_id}' },
+    ]),
+    { id: 'entry_start', type: 'start', position: { x: 0, y: 0 }, data: { command: 'start', messageText: 'Старт', buttons: [] } },
+    { id: 'entry_command', type: 'command', position: { x: 0, y: 0 }, data: { command: 'help', messageText: 'Помощь', buttons: [] } },
+  ]);
+  const code = gen(p, 'q03');
+  ok(code.includes('startswith("open:start:")'), 'Нет виртуального перехода к start');
+  ok(code.includes('startswith("open:command:")'), 'Нет виртуального перехода к command');
+  ok(code.includes('await handle_callback_entry_start(mock_callback, state=state)'), 'Нет вызова start');
+  ok(code.includes('await handle_callback_entry_command(mock_callback, state=state)'), 'Нет вызова command');
+  syntax(code, 'q03');
 });
 
 // ─── Итоги ───────────────────────────────────────────────────────────────────
