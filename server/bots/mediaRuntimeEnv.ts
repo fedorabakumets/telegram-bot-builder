@@ -32,7 +32,11 @@ export function buildMediaRuntimeEnv(projectId: number, projectData: unknown, st
     if (needsMedia) console.warn('[MediaRuntime] Для удалённого исполнителя требуется HTTPS или явно разрешённый доверенный канал');
     return fallback;
   }
-  if ((remote || dockerIsolated) && ['localhost', '127.0.0.1', '::1', '[::1]'].includes(url.hostname)) {
+  /** Разрешает loopback только для явно настроенного локального исполнителя разработки. */
+  const localRunnerLoopback = remote && process.env.NODE_ENV === 'development'
+    && process.env.MEDIA_RUNTIME_ALLOW_LOCAL_LOOPBACK === 'true'
+    && getProjectPlacement(projectId).railwayProjectId === null;
+  if ((remote || dockerIsolated) && !localRunnerLoopback && ['localhost', '127.0.0.1', '::1', '[::1]'].includes(url.hostname)) {
     if (needsMedia) console.warn('[MediaRuntime] Локальный адрес панели недоступен удалённому исполнителю или контейнеру; задайте MEDIA_RUNTIME_BASE_URL');
     return fallback;
   }

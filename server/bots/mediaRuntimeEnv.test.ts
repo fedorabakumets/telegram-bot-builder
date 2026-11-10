@@ -49,6 +49,20 @@ describe('окружение доступа к медиа', () => {
   it('находит старые и абсолютные адреса для проверки записей хранилища', () => {
     assert.deepEqual([...collectRuntimeMediaUrls({ proxy: '/api/storage/proxy/a', s3: 'https://bucket.test/file' })], ['/api/storage/proxy/a', 'https://bucket.test/file']);
   });
+  it('разрешает loopback только локальному исполнителю в режиме разработки', () => {
+    const old = { ...process.env };
+    try {
+      process.env.MEDIA_RUNTIME_SECRET = 'x'.repeat(40);
+      process.env.MEDIA_RUNTIME_BASE_URL = 'http://127.0.0.1:5001';
+      process.env.MEDIA_RUNTIME_ALLOW_INSECURE_REMOTE = 'true';
+      process.env.MEDIA_RUNTIME_ALLOW_LOCAL_LOOPBACK = 'true';
+      process.env.WORKER_RUNTIME = 'remote';
+      process.env.NODE_ENV = 'development';
+      assert.equal(validateMediaRuntimeEnv(buildMediaRuntimeEnv(1, {})), null);
+      process.env.NODE_ENV = 'production';
+      assert.match(validateMediaRuntimeEnv(buildMediaRuntimeEnv(1, {})) ?? '', /недоступны медиа/);
+    } finally { process.env = old; }
+  });
 });
 
 /** Проверяет отказ от передачи токена при обязательном доступе к медиа. */
