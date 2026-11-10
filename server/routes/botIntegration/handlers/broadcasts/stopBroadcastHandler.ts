@@ -36,7 +36,7 @@ export async function stopBroadcastHandler(req: Request, res: Response): Promise
       return;
     }
 
-    if (broadcast.status !== "running") {
+    if (broadcast.status !== "running" && broadcast.status !== "pending") {
       res.status(400).json({ message: "Рассылка не запущена" });
       return;
     }

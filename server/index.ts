@@ -200,6 +200,11 @@ app.use((req, res, next) => {
   applyRuntimeProxyEnv();
   assertBotRuntimeMode(botRuntimeMode, getWorkerRuntime(), process.env.REDIS_URL, runtimeEnv('WORKER_RAILWAY_PROJECTS'));
   startDbBackupScheduler();
+  if (botRuntimeMode === 'combined') {
+    /** Совместный процесс исполняет рассылки до выделения отдельного runtime. */
+    const stopBroadcastRuntime = startBroadcastRuntime();
+    httpServer.once('close', stopBroadcastRuntime);
+  }
 
   // Важно настраивать Vite только в режиме разработки и после
   // настройки всех остальных маршрутов, чтобы маршрут catch-all

@@ -9,6 +9,7 @@ on:
       - 'shared/**'
       - 'lib/**'
       - 'Dockerfile.*'
+      - 'docker-compose.yml'
       - 'railway.*.toml'
       - 'scripts/*split*'
       - 'scripts/build-server.mjs'
@@ -37,8 +38,15 @@ jobs:
         options: >-
           --health-cmd pg_isready --health-interval 10s
           --health-timeout 5s --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping" --health-interval 10s
+          --health-timeout 5s --health-retries 5
     env:
       LOCAL_DATABASE_TEST_URL: postgres://postgres:postgres@127.0.0.1:5432/postgres
+      LOCAL_REDIS_TEST_URL: redis://127.0.0.1:6379
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -57,9 +65,11 @@ jobs:
       - run: node --import tsx --test server/bots/lazyAiogram.test.ts
       - run: node --import tsx --test shared/schema/zod-migration.test.ts
       - run: npm run build
+      - run: npm run build:runtime
       - run: node --test frontend/*.test.mjs
       - run: node --import tsx --test scripts/vite-split.test.ts
       - run: npx vitest run --config server/runtime/vitest.config.ts
+      - run: node --import tsx --test server/redis/workerStreams.integration.test.ts
       - run: node scripts/smoke-split-build.mjs
       - run: node scripts/smoke-split-build.mjs --dev
   images:
@@ -67,7 +77,7 @@ jobs:
     timeout-minutes: 25
     strategy:
       matrix:
-        service: [frontend, backend]
+        service: [frontend, backend, runner]
     steps:
       - uses: actions/checkout@v4
       # Образы только собираются локально на runner, без публикации и деплоя.

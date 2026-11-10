@@ -54,6 +54,8 @@ vercel.env
 # Build outputs
 dist/*
 !dist/README.md
+# Собранный локально исполнитель ботов.
+dist-runner/
 build/
 
 # Logs

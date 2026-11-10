@@ -5,7 +5,6 @@
 
 import type { BotToken, BroadcastFilters } from "@shared/schema";
 import { storage } from "../../../../storages/storage";
-import { runBroadcastQueue } from "./broadcastQueue";
 import { countBroadcastRecipients, normalizeBroadcastGroupIds } from "./broadcast-recipient-total";
 import { resolveGroupIdsForToken } from "./validate-groups-by-token";
 
@@ -74,8 +73,7 @@ export async function startBroadcastCampaign(
     buttonsPerRow,
     filters: campaignFilters,
     tokenIds: tokens.map((token) => token.id),
-    status: "running",
-    startedAt: new Date(),
+    status: "pending",
   });
 
   const broadcastIds: number[] = [];
@@ -102,21 +100,14 @@ export async function startBroadcastCampaign(
       buttons: buttons as any[],
       buttonsPerRow,
       filters: childFilters,
-      status: "running",
+      status: "pending",
       totalCount: childTotalCount,
-      startedAt: new Date(),
     });
 
     broadcastIds.push(broadcast.id);
   }
 
   await storage.updateBroadcastCampaign(campaign.id, { totalCount });
-
-  tokens.forEach((token, index) => {
-    runBroadcastQueue(broadcastIds[index], token.token).catch((err) => {
-      console.error(`[campaign] Ошибка очереди рассылки ${broadcastIds[index]}:`, err);
-    });
-  });
 
   return { campaignId: campaign.id, broadcastIds };
 }

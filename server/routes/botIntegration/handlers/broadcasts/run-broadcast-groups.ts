@@ -21,7 +21,7 @@ export interface GroupSendResult {
 /** Зависимости групповой очереди, отделённые для проверки без реальной отправки. */
 export interface GroupQueueActions {
   /** Проверяет запрос остановки. */
-  stopped: () => boolean;
+  stopped: () => boolean | Promise<boolean>;
   /** Отправляет сообщение одной группе. */
   send: (groupId: string) => Promise<GroupSendResult>;
   /** Устанавливает общую паузу токена. */
@@ -45,7 +45,7 @@ export interface GroupQueueActions {
  */
 export async function runBroadcastGroups(groupIds: readonly string[], actions: GroupQueueActions): Promise<void> {
   for (const groupId of groupIds) {
-    if (actions.stopped()) break;
+    if (await actions.stopped()) break;
     let result: GroupSendResult;
     while (true) {
       try {
@@ -54,9 +54,9 @@ export async function runBroadcastGroups(groupIds: readonly string[], actions: G
         result = parseBroadcastSendError(error);
       }
       if (result.ok || result.errorCode !== 429) break;
-      if (actions.stopped()) return;
+      if (await actions.stopped()) return;
       await actions.pause(result.retryAfter ?? 1);
-      if (actions.stopped()) return;
+      if (await actions.stopped()) return;
     }
     // Отзыв токена прекращает очередь, а не отмечает остальные группы ошибочными.
     if (!result.ok && isBotUnauthorized(result.errorCode, result.description)) {

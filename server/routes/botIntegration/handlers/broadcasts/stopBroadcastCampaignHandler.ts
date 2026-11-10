@@ -22,7 +22,7 @@ export async function stopBroadcastCampaignHandler(req: Request, res: Response):
     if (!loaded) return;
 
     const children = await storage.getBroadcastsByCampaignId(loaded.campaign.id);
-    const running = children.filter((child) => child.status === "running");
+    const running = children.filter((child) => child.status === "running" || child.status === "pending");
 
     for (const child of running) {
       // Флаг читает очередь между батчами, затем фиксируем статус в БД

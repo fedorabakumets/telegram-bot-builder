@@ -20,6 +20,7 @@ import {
   resolveBroadcastErrorStatus,
 } from "./mark-user-delivery-status";
 import { recordBroadcastUnauthorized } from "./record-broadcast-unauthorized";
+import { isBroadcastStopped } from "./is-broadcast-stopped";
 import { isBotUnauthorized } from "@shared/broadcast-unauthorized";
 import type { InlineButton } from "../messages/extract-buttons";
 import type { SendMediaFile } from "../messages/extract-media";
@@ -160,6 +161,10 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
     const buttonsPerRow = (broadcast.buttonsPerRow as number) ?? 0;
 
     const users = await storage.getUsersForBroadcast(projectId, tokenId, filters as Parameters<typeof storage.getUsersForBroadcast>[2]);
+    const completed = Array.from(new Map(
+      (await storage.getBroadcastResults(broadcastId)).map((result) => [result.userId, result]),
+    ).values());
+    const delivered = new Set(completed.map((result) => result.userId));
 
     /** Уникальные группы включаются в общий прогресс наравне с пользователями. */
     const groupIds = normalizeBroadcastGroupIds((filters as { groupIds?: string[] })?.groupIds);
@@ -175,11 +180,11 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
     await emitProgress(projectId, broadcastId, emptyCounts, totalCount, "running", campaignId);
     await syncCampaignAggregates(campaignId);
 
-    let sentCount = 0;
-    let deliveredCount = 0;
-    let failedCount = 0;
-    let blockedCount = 0;
-    let deletedCount = 0;
+    let sentCount = completed.length;
+    let deliveredCount = completed.filter((result) => result.status === "sent").length;
+    let failedCount = completed.filter((result) => result.status === "failed").length;
+    let blockedCount = completed.filter((result) => result.status === "blocked").length;
+    let deletedCount = completed.filter((result) => result.status === "not_found").length;
     /** Токен бота отозван — дальше слать бессмысленно */
     let tokenInvalid = false;
 
@@ -195,13 +200,16 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
     // Обрабатываем пользователей батчами
     for (let i = 0; i < users.length; i += BATCH_SIZE) {
       // Проверяем флаг остановки перед каждым батчем
+      if (await isBroadcastStopped(broadcastId)) activeBroadcasts.set(broadcastId, "stopped");
       if (activeBroadcasts.get(broadcastId) === "stopped") break;
 
       const batch: any[] = users.slice(i, i + BATCH_SIZE);
 
       for (const user of batch) {
         // Проверяем флаг остановки внутри батча
+        if (await isBroadcastStopped(broadcastId)) activeBroadcasts.set(broadcastId, "stopped");
         if (activeBroadcasts.get(broadcastId) === "stopped") break;
+        if (delivered.has(user.userId)) continue;
 
         const userData = (user.userData as Record<string, unknown>) || {};
         const telegramUser = {
@@ -326,8 +334,12 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
     }
 
     // Группы используют те же общие счётчики, что и пользователи.
-    if (!tokenInvalid) await runBroadcastGroups(groupIds, {
-      stopped: () => activeBroadcasts.get(broadcastId) === "stopped",
+    if (await isBroadcastStopped(broadcastId)) activeBroadcasts.set(broadcastId, "stopped");
+    if (!tokenInvalid && activeBroadcasts.get(broadcastId) !== "stopped") await runBroadcastGroups(groupIds.filter(id => !delivered.has(id)), {
+      stopped: async () => {
+        if (await isBroadcastStopped(broadcastId)) activeBroadcasts.set(broadcastId, "stopped");
+        return activeBroadcasts.get(broadcastId) === "stopped";
+      },
       send: groupId => sendBroadcastMessage(token, groupId, messageText, mediaFiles, inlineButtons, buttonsPerRow, projectId),
       pause: seconds => pauseTelegramMessages(token, seconds),
       unauthorized: async description => {
@@ -353,6 +365,7 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
     });
 
     // Определяем финальный статус
+    if (await isBroadcastStopped(broadcastId)) activeBroadcasts.set(broadcastId, "stopped");
     const finalStatus = tokenInvalid
       ? "failed"
       : activeBroadcasts.get(broadcastId) === "stopped"

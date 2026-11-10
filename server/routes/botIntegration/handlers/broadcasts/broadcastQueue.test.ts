@@ -1,7 +1,7 @@
 /** @fileoverview Проверки общих счётчиков реальной очереди с подменой внешних зависимостей. */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
-  storage: { getBroadcastById: vi.fn(), getUsersForBroadcast: vi.fn(), updateBroadcast: vi.fn(),
+  storage: { getBroadcastById: vi.fn(), getBroadcastResults: vi.fn(), getUsersForBroadcast: vi.fn(), updateBroadcast: vi.fn(),
     createBroadcastResult: vi.fn(), createBotMessage: vi.fn() },
   event: vi.fn(), send: vi.fn(), pause: vi.fn(), sync: vi.fn(), unauthorized: vi.fn(),
 }));
@@ -30,6 +30,7 @@ describe("Общие счётчики пользователей и групп",
     mocks.storage.getBroadcastById.mockResolvedValue({ id: 1, projectId: 4, tokenId: 2,
       messageText: "Текст", filters: { groupIds: ["-1", "-1", "-2"] }, campaignId: 9 });
     mocks.storage.getUsersForBroadcast.mockResolvedValue([]);
+    mocks.storage.getBroadcastResults.mockResolvedValue([]);
     mocks.send.mockResolvedValue({ ok: true, result: { message_id: 5 } });
     mocks.storage.createBotMessage.mockResolvedValue(undefined);
     mocks.storage.createBroadcastResult.mockResolvedValue(undefined);
@@ -73,5 +74,22 @@ describe("Общие счётчики пользователей и групп",
     await runBroadcastQueue(1, "test-token");
     expect(finalUpdate()).toMatchObject({ status: "stopped", sentCount: 1, deliveredCount: 1 });
     expect(mocks.send).toHaveBeenCalledTimes(1);
+  });
+  it("учитывает остановку, записанную другим процессом в БД", async () => {
+    mocks.storage.getBroadcastById.mockResolvedValueOnce({ id: 1, projectId: 4, tokenId: 2,
+      messageText: "Текст", filters: { groupIds: ["-1"] }, campaignId: 9, status: "running" });
+    mocks.storage.getBroadcastById.mockResolvedValue({ id: 1, status: "stopped" });
+    await runBroadcastQueue(1, "test-token");
+    expect(finalUpdate()).toMatchObject({ status: "stopped", sentCount: 0 });
+    expect(mocks.send).not.toHaveBeenCalled();
+  });
+  it("после восстановления не повторяет получателей с сохранённым результатом", async () => {
+    mocks.storage.getUsersForBroadcast.mockResolvedValue([{ userId: "42" }, { userId: "43" }]);
+    mocks.storage.getBroadcastResults.mockResolvedValue([
+      { userId: "42", status: "sent" }, { userId: "-1", status: "failed" },
+    ]);
+    await runBroadcastQueue(1, "test-token");
+    expect(mocks.send).toHaveBeenCalledTimes(2);
+    expect(finalUpdate()).toMatchObject({ status: "done", sentCount: 4, deliveredCount: 3, failedCount: 1 });
   });
 });
