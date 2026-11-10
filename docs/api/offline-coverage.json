@@ -63,7 +63,7 @@
       {
         "candidate": {
           "file": "server/index.ts",
-          "line": 80,
+          "line": 88,
           "method": "USE",
           "expression": "express.json({ limit: '50mb', verify: captureAgentBody })"
         },
@@ -73,7 +73,7 @@
       {
         "candidate": {
           "file": "server/index.ts",
-          "line": 81,
+          "line": 89,
           "method": "USE",
           "expression": "express.urlencoded({ extended: false, limit: '50mb' })"
         },
@@ -83,7 +83,7 @@
       {
         "candidate": {
           "file": "server/index.ts",
-          "line": 83,
+          "line": 91,
           "method": "USE",
           "expression": "express.text({ limit: '50mb', type: 'text/plain' })"
         },
@@ -93,7 +93,7 @@
       {
         "candidate": {
           "file": "server/index.ts",
-          "line": 97,
+          "line": 105,
           "method": "USE",
           "expression": "(req, res, next) => {\n  const start = Date.now();\n  const path = apiLogPath(req.originalUrl);\n  let capturedJsonResponse: Record<string, any> | undefined = undefined;\n\n  const originalResJson = res.json;\n  res.json = function (bodyJson, ...args) {\n    capturedJsonResponse = bodyJson;\n    return orig…"
         },
@@ -103,7 +103,7 @@
       {
         "candidate": {
           "file": "server/index.ts",
-          "line": 164,
+          "line": 172,
           "method": "USE",
           "expression": "apiErrorHandler"
         },
@@ -556,44 +556,44 @@
     },
     {
       "file": "server/index.ts",
-      "line": 80,
+      "line": 88,
       "method": "USE",
       "expression": "express.json({ limit: '50mb', verify: captureAgentBody })"
     },
     {
       "file": "server/index.ts",
-      "line": 81,
+      "line": 89,
       "method": "USE",
       "expression": "express.urlencoded({ extended: false, limit: '50mb' })"
     },
     {
       "file": "server/index.ts",
-      "line": 83,
+      "line": 91,
       "method": "USE",
       "expression": "express.text({ limit: '50mb', type: 'text/plain' })"
     },
     {
       "file": "server/index.ts",
-      "line": 97,
+      "line": 105,
       "method": "USE",
       "expression": "(req, res, next) => {\n  const start = Date.now();\n  const path = apiLogPath(req.originalUrl);\n  let capturedJsonResponse: Record<string, any> | undefined = undefined;\n\n  const originalResJson = res.json;\n  res.json = function (bodyJson, ...args) {\n    capturedJsonResponse = bodyJson;\n    return orig…"
     },
     {
       "file": "server/index.ts",
-      "line": 150,
+      "line": 158,
       "method": "USE",
       "expression": "\"/api\"",
       "resolvedPath": "/api"
     },
     {
       "file": "server/index.ts",
-      "line": 164,
+      "line": 172,
       "method": "USE",
       "expression": "apiErrorHandler"
     },
     {
       "file": "server/index.ts",
-      "line": 200,
+      "line": 209,
       "method": "GET",
       "expression": "\"env\"",
       "resolvedPath": "env"
