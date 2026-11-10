@@ -2,10 +2,6 @@
 aiogram==3.31.0
 aiohttp==3.14.5
 asyncpg==0.32.0
-nanoid==2.0.0
-requests==2.34.2
-google-auth==2.62.1
-gspread==6.2.1
 telethon==1.45.0
 python-dotenv==1.2.4
 redis==7.4.1

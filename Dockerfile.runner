@@ -5,14 +5,14 @@
 
 # ── Сборка исполнителя в один JS-файл ────────────────────────────────────────
 # Бандл не зависит от архитектуры, поэтому собирается на платформе сборщика
-FROM --platform=$BUILDPLATFORM node:20-bookworm-slim AS builder
+FROM --platform=$BUILDPLATFORM node:24-bookworm-slim AS builder
 
 WORKDIR /app
 RUN --mount=type=cache,target=/root/.npm \
     npm init -y >/dev/null \
  && npm install --no-save --ignore-scripts --no-audit --no-fund esbuild@0.27 ioredis@5.10 dotenv@17
 COPY server ./server
-RUN npx esbuild server/runner/index.ts --bundle --platform=node --target=node20 \
+RUN npx esbuild server/runner/index.ts --bundle --platform=node --target=node24 \
     --format=cjs --log-level=error --outfile=dist-runner/runner.cjs
 
 # ── Исполнитель ──────────────────────────────────────────────────────────────
@@ -22,7 +22,7 @@ RUN apt-get update \
  && apt-get install -y --no-install-recommends libstdc++6 \
  && rm -rf /var/lib/apt/lists/*
 # node берётся из образа целевой архитектуры, а не из сборщика
-COPY --from=node:20-bookworm-slim /usr/local/bin/node /usr/local/bin/node
+COPY --from=node:24-bookworm-slim /usr/local/bin/node /usr/local/bin/node
 
 WORKDIR /app
 COPY requirements.txt ./

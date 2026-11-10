@@ -25,7 +25,7 @@
     "nodejs"
   ],
   "engines": {
-    "node": ">=22.0.0"
+    "node": ">=24.0.0"
   },
   "scripts": {
     "dev": "cross-env NODE_ENV=development tsx watch --tsconfig tsconfig.node.json server/index.ts",
@@ -208,7 +208,6 @@
     "cross-env": "^10.1.0",
     "date-fns": "^3.6.0",
     "dotenv": "^17.2.3",
-    "dotenv-cli": "^11.0.0",
     "drizzle-orm": "^0.45.1",
     "drizzle-zod": "^0.8.3",
     "embla-carousel-react": "^8.6.0",
@@ -224,14 +223,11 @@
     "input-otp": "^1.4.2",
     "ioredis": "^5.10.1",
     "lucide-react": "^0.563.0",
-    "memorystore": "^1.6.7",
     "multer": "^2.0.1",
     "nanoid": "^5.1.6",
     "next-themes": "^0.4.6",
-    "node-fetch": "^3.3.2",
     "nunjucks": "^3.2.4",
     "passport": "^0.7.0",
-    "passport-local": "^1.0.0",
     "pg": "^8.17.2",
     "qrcode": "^1.5.4",
     "react": "^18.3.1",
@@ -280,7 +276,6 @@
     "@types/node": "^25.0.10",
     "@types/nunjucks": "^3.2.6",
     "@types/passport": "^1.0.16",
-    "@types/passport-local": "^1.0.38",
     "@types/qrcode": "^1.5.6",
     "@types/react": "^18.3.27",
     "@types/react-dnd-html5-backend": "^3.0.2",
@@ -289,8 +284,8 @@
     "@types/ws": "^8.18.1",
     "@typescript-eslint/parser": "^8.72.1",
     "@vitejs/plugin-react": "^4.6.0",
-    "@vitest/coverage-v8": "^2.1.9",
-    "@vitest/ui": "^2.1.9",
+    "@vitest/coverage-v8": "^5.0.0",
+    "@vitest/ui": "^5.0.0",
     "autoprefixer": "^10.4.23",
     "c8": "^11.0.0",
     "caniuse-lite": "^1.0.30001814",
@@ -309,7 +304,7 @@
     "typescript": "^5.9.3",
     "vite": "^6.2.0",
     "vite-tsconfig-paths": "^6.1.0",
-    "vitest": "^2.1.9"
+    "vitest": "^5.0.0"
   },
   "optionalDependencies": {
     "bufferutil": "^4.1.0"
