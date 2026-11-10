@@ -346,7 +346,7 @@ test('A04', 'middleware содержит class MockCallback', () => {
 test('A05', 'middleware вызывает handle_callback_<targetId>', () => {
   const p = makeCleanProject([makeIncomingCallbackTriggerNode('ict1', 'msg_target'), makeMessageNode('msg_target')]);
   const code = gen(p, 'a05');
-  ok(code.includes('await handle_callback_msg_target(mock_callback)'), 'вызов handle_callback_msg_target должен быть в коде');
+  ok(code.includes('await handle_callback_msg_target(mock_callback, state=_state_for_target)'), 'вызов handle_callback_msg_target с FSM-контекстом должен быть в коде');
 });
 
 test('A06', 'middleware содержит logging.info с user_id', () => {

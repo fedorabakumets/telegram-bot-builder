@@ -152,10 +152,10 @@ test('A05', 'содержит mock_callback = MockCallback(', () => {
   ok(code.includes('mock_callback = MockCallback('), 'mock_callback = MockCallback( должен быть в коде');
 });
 
-test('A06', 'содержит await handle_callback_<targetId>(mock_callback)', () => {
+test('A06', 'вызывает целевой обработчик с FSM-контекстом', () => {
   const p = makeCleanProject([makeIncomingTriggerNode('imt1', 'msg1'), makeMessageNode('msg1')]);
   const code = gen(p, 'a06');
-  ok(code.includes('await handle_callback_msg1(mock_callback)'), 'await handle_callback_msg1(mock_callback) должен быть в коде');
+  ok(code.includes('await handle_callback_msg1(mock_callback, state=_state)'), 'await handle_callback_msg1 с FSM-контекстом должен быть в коде');
 });
 
 test('A07', 'содержит logging.info(', () => {
@@ -237,7 +237,7 @@ test('B03', 'каждый триггер имеет уникальное имя 
   ok(unique.size === fns.length, `Все имена функций должны быть уникальными, дублей: ${fns.length - unique.size}`);
 });
 
-test('B04', 'каждый вызывает свой handle_callback_<targetId>', () => {
+test('B04', 'каждый вызывает свой handle_callback_<targetId> с FSM-контекстом', () => {
   const p = makeCleanProject([
     makeIncomingTriggerNode('imt1', 'msg1'),
     makeIncomingTriggerNode('imt2', 'msg2'),
@@ -245,8 +245,8 @@ test('B04', 'каждый вызывает свой handle_callback_<targetId>',
     makeMessageNode('msg2', 'Ответ 2'),
   ]);
   const code = gen(p, 'b04');
-  ok(code.includes('await handle_callback_msg1(mock_callback)'), 'handle_callback_msg1 должен быть');
-  ok(code.includes('await handle_callback_msg2(mock_callback)'), 'handle_callback_msg2 должен быть');
+  ok(code.includes('await handle_callback_msg1(mock_callback, state=_state)'), 'handle_callback_msg1 должен быть');
+  ok(code.includes('await handle_callback_msg2(mock_callback, state=_state)'), 'handle_callback_msg2 должен быть');
 });
 
 test('B05', '5 триггеров → синтаксис OK', () => {
@@ -314,7 +314,7 @@ test('C01', 'command_trigger + incoming_message_trigger → оба в коде',
     makeMessageNode('msg1'),
   ]);
   const code = gen(p, 'c01');
-  ok(code.includes('@dp.message(Command('), 'command_trigger должен быть в коде');
+  ok(code.includes('@dp.message(CommandStart(deep_link=False))'), 'command_trigger /start должен быть в коде');
   ok(code.includes('incoming_message_trigger_imt1_middleware'), 'incoming_message_trigger должен быть в коде');
 });
 
@@ -337,19 +337,19 @@ test('C03', 'command_trigger + text_trigger + incoming_message_trigger → вс�
     makeMessageNode('msg1'),
   ]);
   const code = gen(p, 'c03');
-  ok(code.includes('@dp.message(Command('), 'command_trigger должен быть');
+  ok(code.includes('@dp.message(CommandStart(deep_link=False))'), 'command_trigger /start должен быть');
   ok(code.includes('@dp.message(lambda'), 'text_trigger должен быть');
   ok(code.includes('incoming_message_trigger_imt1_middleware'), 'incoming_message_trigger должен быть');
 });
 
-test('C04', 'incoming_message_trigger не мешает генерации command_trigger (@dp.message(Command(...)))', () => {
+test('C04', 'incoming_message_trigger не мешает генерации /start через CommandStart', () => {
   const p = makeCleanProject([
     makeCommandTriggerNode('cmd1', '/start', 'msg1'),
     makeIncomingTriggerNode('imt1', 'msg1'),
     makeMessageNode('msg1'),
   ]);
   const code = gen(p, 'c04');
-  ok(code.includes('@dp.message(Command("start")'), '@dp.message(Command("start")) должен быть в коде');
+  ok(code.includes('@dp.message(CommandStart(deep_link=False))'), '@dp.message(CommandStart(deep_link=False)) должен быть в коде');
 });
 
 test('C05', 'incoming_message_trigger не мешает генерации text_trigger (@dp.message(lambda...))', () => {
@@ -746,14 +746,14 @@ test('H05', 'два incoming_message_trigger → оба dp.message.middleware в
   ok(code.includes('dp.message.middleware(incoming_message_trigger_imt2_middleware)'), 'dp.message.middleware(imt2) должен быть');
 });
 
-test('H06', 'incoming_message_trigger + command_trigger → @dp.message(Command(...)) есть в коде', () => {
+test('H06', 'incoming_message_trigger + command_trigger → CommandStart есть в коде', () => {
   const p = makeCleanProject([
     makeIncomingTriggerNode('imt1', 'msg1'),
     makeCommandTriggerNode('cmd1', '/start', 'msg1'),
     makeMessageNode('msg1'),
   ]);
   const code = gen(p, 'h06');
-  ok(code.includes('@dp.message(Command('), '@dp.message(Command(...)) должен быть в коде');
+  ok(code.includes('@dp.message(CommandStart(deep_link=False))'), '@dp.message(CommandStart(deep_link=False)) должен быть в коде');
 });
 
 test('H07', 'incoming_message_trigger + text_trigger → @dp.message(lambda есть в коде', () => {
