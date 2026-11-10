@@ -421,7 +421,7 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
                 _new_fid = _sent_video.video.file_id
                 if _b is bot: await _save_media_file_id("{{ videoUrl }}", _new_fid, "video", "video/mp4")
                 logging.info(f"✅ Узел {{ nodeId }}: получен file_id={_new_fid[:20]}... для видео {{ videoUrl }}")
-{%- if _vid_thumb_url %}
+{%- if _vid_thumb_url and not _vid_thumb_fid %}
                 # Сохраняем file_id обложки из ответа Telegram (video.thumbnail.file_id)
                 if _sent_video.video.thumbnail:
                     _thumb_fid = _sent_video.video.thumbnail.file_id
@@ -485,7 +485,7 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
                 _new_fid = _sent_video.video.file_id
                 if _b is bot: await _save_media_file_id("{{ videoUrl }}", _new_fid, "video", "video/mp4")
                 logging.info(f"✅ Узел {{ nodeId }}: получен file_id={_new_fid[:20]}... для видео {{ videoUrl }}")
-{%- if _vid_thumb_url %}
+{%- if _vid_thumb_url and not _vid_thumb_fid %}
                 # Сохраняем file_id обложки из ответа Telegram (video.thumbnail.file_id)
                 if _sent_video.video.thumbnail:
                     _thumb_fid = _sent_video.video.thumbnail.file_id
