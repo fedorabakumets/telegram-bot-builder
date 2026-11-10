@@ -26,7 +26,7 @@ import type { BotToken } from '@shared/schema';
 /** Свойства заголовка карточки бота */
 interface BotCardHeaderProps {
   /** Данные токена бота */
-  token: Pick<BotToken, 'id' | 'botFirstName' | 'name' | 'botUsername' | 'botPhotoUrl' | 'isDefault' | 'isActive'>;
+  token: Pick<BotToken, 'id' | 'botFirstName' | 'name' | 'botUsername' | 'botPhotoUrl' | 'isDefault' | 'isActive' | 'authorizationError'>;
   /** Информация о боте из Telegram API */
   projectBotInfo: { photoUrl?: string; id?: number } | null | undefined;
   /** Редактируемое поле */
@@ -42,7 +42,7 @@ interface BotCardHeaderProps {
   /** Начать редактирование поля */
   handleStartEdit: (tokenId: number, field: string, currentValue: string) => void;
   /** Получить бейдж статуса */
-  getStatusBadge: (token: Pick<BotToken, 'id' | 'botFirstName' | 'name' | 'botUsername' | 'botPhotoUrl' | 'isDefault' | 'isActive'>) => JSX.Element;
+  getStatusBadge: (token: Pick<BotToken, 'id' | 'botFirstName' | 'name' | 'botUsername' | 'botPhotoUrl' | 'isDefault' | 'isActive' | 'authorizationError'>) => JSX.Element;
   /** Запущен ли бот */
   isBotRunning: boolean;
   /** Мутация запуска бота */
@@ -124,6 +124,9 @@ export function BotCardHeader({
         <div className="sm:hidden flex items-center gap-1 flex-wrap">
           {CollapseButton}
           <BotActions
+          startBlockedReason={token.authorizationError === 'unauthorized'
+            ? 'Замените недействительный токен из @BotFather'
+            : token.isActive === 0 ? 'Бот отключён' : undefined}
             isBotRunning={isBotRunning} startBotMutation={startBotMutation}
             stopBotMutation={stopBotMutation}
             onRequestDelete={onRequestDelete}
@@ -189,6 +192,9 @@ export function BotCardHeader({
       <div className="hidden sm:flex items-center gap-1 flex-wrap">
         {CollapseButton}
         <BotActions
+          startBlockedReason={token.authorizationError === 'unauthorized'
+            ? 'Замените недействительный токен из @BotFather'
+            : token.isActive === 0 ? 'Бот отключён' : undefined}
           isBotRunning={isBotRunning} startBotMutation={startBotMutation}
           stopBotMutation={stopBotMutation}
           onRequestDelete={onRequestDelete}

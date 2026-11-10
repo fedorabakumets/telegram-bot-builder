@@ -93,6 +93,8 @@ export async function getBotProjectTokensHandler(req: Request, res: Response): P
             botFirstName: t.botFirstName ?? null,
             isDefault: t.isDefault,
             isActive: t.isActive,
+            /** Подтверждённый отказ Telegram, отдельно от ручного отключения. */
+            authorizationError: t.authorizationError ?? null,
             botStatus: getBotStatusEmoji(instances[i]?.status),
             token: t.token, // на этапе разработки
             userStats: {

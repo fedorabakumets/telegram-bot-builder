@@ -9,7 +9,7 @@ import { broadcastProjectEvent } from '../terminal/broadcastProjectEvent';
 import { getActiveLaunchId, clearActiveLaunchId } from '../terminal/activeLaunchIds';
 import { isWorkerCleanExit } from './isWorkerCleanExit';
 import { formatBotRuntimeError, formatBotRuntimeErrorShort } from './formatBotRuntimeError';
-import { isBotUnauthorized } from '@shared/broadcast-unauthorized';
+import { isRuntimeTokenUnauthorized } from './is-runtime-token-unauthorized';
 import { markBotTokenUnauthorized } from './mark-bot-token-unauthorized';
 import { isUnexpectedBotExit } from './isUnexpectedBotExit';
 import { isExpectedStop } from './expectedStops';
@@ -34,6 +34,7 @@ function isProcessDeathExit(exitStatus: string | number): boolean {
  * @param exitStatus - Статус из worker (`error` / `stopped` / код)
  * @param runtimeError - Последняя stderr-ошибка бота (опционально)
  * @param processDeathUnexpected - true если умер весь python-воркер не от killWorker
+ * @param observedToken - Секрет завершившегося запуска для защиты от запоздалого 401
  */
 export async function handleWorkerBotExited(
   projectId: number,
@@ -41,6 +42,7 @@ export async function handleWorkerBotExited(
   exitStatus: string | number,
   runtimeError?: string,
   processDeathUnexpected = false,
+  observedToken?: string,
 ): Promise<void> {
   // Снимаем флаги синхронно ДО любых await — иначе stopBot.finally
   // успеет clearExpectedStop до проверки autoRestart
@@ -90,8 +92,8 @@ export async function handleWorkerBotExited(
         });
       }
 
-      if (isBotUnauthorized(undefined, runtimeError)) {
-        await markBotTokenUnauthorized(projectId, tokenId);
+      if (observedToken && isRuntimeTokenUnauthorized(runtimeError)) {
+        await markBotTokenUnauthorized(projectId, tokenId, observedToken);
       }
 
       // Не удаляем общий ключ: его уже мог получить другой запуск этого токена.

@@ -21,6 +21,8 @@ function backend(configId: string, url: string): StorageBackend {
     name: configId,
     readOnly: false,
     getUrl: () => url,
+    /** Потоковая запись не нужна проверке приватности. */
+    putFile: async () => { throw new Error("putFile не вызывается"); },
     put: async () => {
       throw new Error("put не вызывается");
     },

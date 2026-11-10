@@ -9,6 +9,7 @@ import { getOwnerIdFromRequest } from '../../../telegram/auth-middleware';
 import { isMaskedOrPlaceholderToken, toPublicBotToken } from '../to-public-bot-token';
 import { botTokenWriteReceipt } from '../token-write-receipt';
 import { emitTokenUpdated } from '../../../terminal';
+import { resetRestartCounter } from '../../../bots/botRestartManager';
 /**
  * Запрещает массовое присваивание служебных полей до любых запросов к хранилищу.
  * @param req - Запрос с проектом и токеном
@@ -28,8 +29,15 @@ export async function updateProjectTokenHandler(req: Request, res: Response): Pr
   const token = await storage.getBotToken(tokenId);
   if (!token || token.projectId !== projectId) { res.status(404).json({ message: 'Токен не найден в проекте' }); return; }
   if (updateData.token && isMaskedOrPlaceholderToken(updateData.token)) delete updateData.token;
-  if (updateData.token) updateData.isActive = 1;
-  const updated = await storage.updateBotToken(tokenId, updateData);
+  /** Только замена секрета снимает подтверждённый отказ; повторное сохранение не обходит блокировку. */
+  const changedToken = Boolean(updateData.token && updateData.token !== token.token);
+  if (token.authorizationError === 'unauthorized' && !changedToken && updateData.isActive === 1) {
+    res.status(400).json({ message: 'Замените недействительный токен перед включением бота' }); return;
+  }
+  const updated = await storage.updateBotToken(tokenId, changedToken
+    ? { ...updateData, isActive: 1, authorizationError: null }
+    : updateData);
+  if (changedToken) resetRestartCounter(tokenId);
   if (!updated) { res.status(404).json({ message: 'Токен не найден' }); return; }
   // Отказ уведомления не отменяет уже выполненную запись.
   void emitTokenUpdated({ projectId, tokenId, before: undefined, source: 'api' }).catch(() => undefined);

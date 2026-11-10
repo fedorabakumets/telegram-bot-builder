@@ -118,7 +118,7 @@ export async function runRestoreSweep(
         continue;
       }
 
-      const inactiveError = refuseInactiveBotStart(tokenRecord.isActive);
+      const inactiveError = refuseInactiveBotStart(tokenRecord.isActive, tokenRecord.authorizationError);
       if (inactiveError) {
         console.log(`[RestoreSweep] Пропуск token=${inst.tokenId}: ${inactiveError}`);
         continue;

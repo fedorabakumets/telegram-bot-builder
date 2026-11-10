@@ -17,6 +17,8 @@ describe('публичный просмотр /uploads', () => {
     const backend = (id: string): StorageBackend => ({
       configId: id, backend: 's3', name: id, readOnly: true,
       put: async () => { throw new Error('Запись не поддерживается'); },
+      /** Тестовый бэкенд доступен только для чтения. */
+      putFile: async () => { throw new Error('Запись не поддерживается'); },
       get: async (key: string) => { calls.push(`${id}:${key}`); return Readable.from(['jpeg']); },
       delete: async () => { throw new Error('Удаление не поддерживается'); },
       getUrl: key => key,

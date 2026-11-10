@@ -6,7 +6,7 @@ import { getTelegramApiBaseUrl } from '../../../../utils/telegram-api-url';
 
 import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
-import { fetchWithProxy } from "../../../../utils/telegram-proxy";
+import { createBotTokenFetch } from "../../../../services/bot-token-fetch";
 import {
   analyzeTelegramError,
   getErrorStatusCode,
@@ -51,6 +51,16 @@ export async function getBotInfoHandler(req: Request, res: Response): Promise<vo
       return;
     }
 
+    /** Сохранённый отказ не вызывает повторный getMe до замены токена. */
+    if (botToken.authorizationError === 'unauthorized') {
+      res.status(400).json({ message: 'Токен недействителен. Замените его в настройках бота.', errorType: 'unauthorized', tokenId: botToken.id, isActive: false });
+      return;
+    }
+    if (botToken.isActive === 0) {
+      res.status(400).json({ message: 'Бот отключён', errorType: 'inactive', tokenId: botToken.id, isActive: false });
+      return;
+    }
+    const fetchWithProxy = createBotTokenFetch([botToken]);
     const telegramApiUrl = `${getTelegramApiBaseUrl()}/bot${botToken.token}/getMe?_t=${Date.now()}`;
     const response = await fetchWithProxy(telegramApiUrl, {
       method: "GET",
@@ -67,6 +77,7 @@ export async function getBotInfoHandler(req: Request, res: Response): Promise<vo
       res.status(400).json({
         message: "Не удалось получить информацию о боте",
         error: result.description || "Неизвестная ошибка",
+        ...(response.status === 401 ? { errorType: "unauthorized", tokenId: botToken.id, isActive: false } : {}),
       });
       return;
     }
@@ -91,7 +102,7 @@ export async function getBotInfoHandler(req: Request, res: Response): Promise<vo
           hasPhoto = true;
         }
       } catch (e) {
-        console.warn("[getBotInfo] failed to fetch bot photo:", e);
+        console.warn("[getBotInfo] Не удалось получить фото бота");
       }
     }
 
@@ -102,12 +113,12 @@ export async function getBotInfoHandler(req: Request, res: Response): Promise<vo
     });
   } catch (error) {
     const errorInfo = analyzeTelegramError(error);
-    console.error("Ошибка получения информации о боте:", errorInfo);
+    console.error("Ошибка получения информации о боте:", { type: errorInfo.type });
     const statusCode = getErrorStatusCode(errorInfo.type);
     res.status(statusCode).json({
       message: errorInfo.userFriendlyMessage,
       errorType: errorInfo.type,
-      details: process.env.NODE_ENV === "development" ? errorInfo.message : undefined,
+
     });
   }
 }

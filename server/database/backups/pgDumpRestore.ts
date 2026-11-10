@@ -1,5 +1,5 @@
 /**
- * @fileoverview Запуск `pg_dump` и `pg_restore` с дампом в памяти
+ * @fileoverview Создание дампа в файле и совместимое восстановление PostgreSQL
  *
  * Пароль передаётся через `PGPASSWORD`, а не в аргументах: аргументы
  * процесса видны всем пользователям машины через `ps`.
@@ -35,23 +35,24 @@ export function splitConnectionPassword(databaseUrl: string): SplitConnection {
  * @param args - Аргументы без строки подключения
  * @param databaseUrl - Строка подключения или null, если утилите база не нужна
  * @param input - Данные для stdin или null
+ * @param captureOutput - Собирать вывод восстановления; для файлового дампа отключено
  * @returns Содержимое stdout
  * @throws С текстом stderr, если утилита завершилась с ошибкой
  */
-function runTool(command: string, args: string[], databaseUrl: string | null, input: Buffer | null): Promise<Buffer> {
+function runTool(command: string, args: string[], databaseUrl: string | null, input: Buffer | null, captureOutput = true): Promise<Buffer> {
   const split = databaseUrl ? splitConnectionPassword(databaseUrl) : null;
   const env = { ...process.env, ...(split?.password != null ? { PGPASSWORD: split.password } : {}) };
   const fullArgs = split ? [...args, `--dbname=${split.url}`] : args;
   return new Promise((resolve, reject) => {
     const child = spawn(command, fullArgs, { stdio: ["pipe", "pipe", "pipe"], env });
     const out: Buffer[] = [];
-    const err: Buffer[] = [];
-    child.stdout.on("data", (chunk: Buffer) => out.push(chunk));
-    child.stderr.on("data", (chunk: Buffer) => err.push(chunk));
+    let err = Buffer.alloc(0);
+    child.stdout.on("data", (chunk: Buffer) => { if (captureOutput) out.push(chunk); });
+    child.stderr.on("data", (chunk: Buffer) => { err = Buffer.concat([err, chunk]).subarray(-16_384); });
     child.on("error", reject);
     child.on("close", (code) => {
       if (code === 0) return resolve(Buffer.concat(out));
-      const message = Buffer.concat(err).toString("utf8").trim().split("\n").slice(-5).join("\n");
+      const message = captureOutput ? err.toString("utf8").trim().split("\n").slice(-5).join("\n") : "не удалось создать дамп";
       reject(new Error(`${command.split("/").pop()} завершился с кодом ${code}: ${message}`));
     });
     child.stdin.on("error", () => undefined);
@@ -63,13 +64,14 @@ function runTool(command: string, args: string[], databaseUrl: string | null, in
  * Снимает дамп базы в формате custom (`-Fc`, сжатый) без владельцев и прав.
  * @param databaseUrl - Строка подключения к базе
  * @param snapshot - Имя экспортированного снимка (`pg_export_snapshot()`) или null
- * @returns Содержимое дампа
+ * @param filePath - Путь временного файла для записи дампа
+ * @returns Завершение записи дампа
  */
-export function runPgDump(databaseUrl: string, snapshot: string | null): Promise<Buffer> {
+export async function runPgDump(databaseUrl: string, snapshot: string | null, filePath: string): Promise<void> {
   const { pgDump } = findPgBinaries();
-  const args = ["--format=custom", "--no-owner", "--no-privileges"];
+  const args = ["--format=custom", "--no-owner", "--no-privileges", `--file=${filePath}`];
   if (snapshot) args.push(`--snapshot=${snapshot}`);
-  return runTool(pgDump, args, databaseUrl, null);
+  await runTool(pgDump, args, databaseUrl, null, false);
 }
 
 /** Параметры восстановления */

@@ -39,6 +39,14 @@ export interface StorageBackend {
    */
   put(key: string, data: Buffer, mime: string): Promise<StoredObject>;
   /**
+   * Сохраняет файл с ограниченным потреблением памяти.
+   * @param key - Ключ объекта в хранилище
+   * @param filePath - Путь исходного файла
+   * @param mime - MIME-тип объекта
+   * @returns Метаданные сохранённого объекта
+   */
+  putFile(key: string, filePath: string, mime: string): Promise<StoredObject>;
+  /**
    * Прочитать объект как поток
    * @param key - Относительный путь/ключ объекта в хранилище
    * @returns Читаемый поток с содержимым объекта

@@ -5,18 +5,20 @@
 
 import { storage } from "../../../../storages/storage";
 import { BOT_UNAUTHORIZED_RESULT_USER_ID } from "@shared/broadcast-unauthorized";
-import { emitTokenUpdated } from "../../../../terminal/emitTokenUpdated";
+import { markBotTokenUnauthorized } from "../../../../bots/mark-bot-token-unauthorized";
 
 /**
  * Пишет результат «токен недействителен» и помечает токен неактивным
  * @param broadcastId - Идентификатор рассылки
  * @param tokenId - Идентификатор токена бота
  * @param description - Сырое описание Telegram
+ * @param expectedToken - Токен фактической попытки отправки, защищающий заменённые реквизиты
  */
 export async function recordBroadcastUnauthorized(
   broadcastId: number,
   tokenId: number,
   description?: string,
+  expectedToken?: string,
 ): Promise<void> {
   await storage.createBroadcastResult({
     broadcastId,
@@ -25,12 +27,6 @@ export async function recordBroadcastUnauthorized(
     errorMessage: description ?? "Unauthorized",
   });
   const before = await storage.getBotToken(tokenId);
-  await storage.updateBotToken(tokenId, { isActive: 0 });
-  if (!before?.projectId) return;
-  void emitTokenUpdated({
-    projectId: before.projectId,
-    tokenId,
-    before,
-    source: "api",
-  }).catch((err) => console.error("[broadcast] emitTokenUpdated:", err));
+  if (!before?.projectId || !expectedToken) return;
+  await markBotTokenUnauthorized(before.projectId, tokenId, expectedToken);
 }

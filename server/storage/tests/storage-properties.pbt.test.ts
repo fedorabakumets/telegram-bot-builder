@@ -130,6 +130,8 @@ function fakeBackend(configId: string, backend: 'local' | 's3' = 'local'): Stora
     name: `fake:${configId}`,
     readOnly: false,
     put: async () => ({ backend, configId, key: '', url: '', size: 0 }),
+    /** Проверяется маршрутизация, запись не вызывается. */
+    putFile: async () => ({ backend, configId, key: '', url: '', size: 0 }),
     get: async () => {
       throw new Error('not used');
     },

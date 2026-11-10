@@ -85,7 +85,7 @@ async function restoreProjectGroup(
         continue;
       }
 
-      const inactiveError = refuseInactiveBotStart(tokenRecord.isActive);
+      const inactiveError = refuseInactiveBotStart(tokenRecord.isActive, tokenRecord.authorizationError);
       if (inactiveError) {
         console.log(
           `⏭ Пропуск восстановления: токен ${tokenId} недействителен (isActive=0)`,

@@ -12,6 +12,7 @@ import { getTelegramApiBaseUrl } from '../../../utils/telegram-api-url';
 import type { Request, Response } from 'express';
 import { storage } from '../../../storages/storage';
 import { fetchWithProxy } from '../../../utils/telegram-proxy';
+import { createBotTokenFetch } from '../../../services/bot-token-fetch';
 import { existsSync, mkdirSync, createWriteStream } from 'fs';
 import { join } from 'path';
 import { pipeline } from 'stream/promises';
@@ -31,9 +32,10 @@ function parseTokenId(raw: string): number {
  * Скачивает файл по URL и сохраняет на диск
  * @param url - URL для скачивания
  * @param destPath - Путь для сохранения файла
+ * @param transport - Транспорт с проверкой активности токена
  */
-async function downloadFile(url: string, destPath: string): Promise<void> {
-    const resp = await fetchWithProxy(url, { signal: AbortSignal.timeout(15000) });
+async function downloadFile(url: string, destPath: string, transport: typeof fetchWithProxy): Promise<void> {
+    const resp = await transport(url, { signal: AbortSignal.timeout(15000) });
     if (!resp.ok) throw new Error(`Ошибка скачивания: ${resp.status}`);
     const dest = createWriteStream(destPath);
     await pipeline(Readable.fromWeb(resp.body as any), dest);
@@ -71,6 +73,7 @@ export async function getBotTokenPhotoHandler(req: Request, res: Response): Prom
             return;
         }
 
+        const fetchWithProxy = createBotTokenFetch([tokenRecord]);
         const token = tokenRecord.token;
         const baseUrl = `${getTelegramApiBaseUrl()}/bot${token}`;
 
@@ -151,11 +154,11 @@ export async function getBotTokenPhotoHandler(req: Request, res: Response): Prom
         const localFilePath = join(uploadDir, fileName);
         const localUrlPath = `/uploads/${projectId}/bot_photos/${fileName}`;
 
-        await downloadFile(telegramFileUrl, localFilePath);
+        await downloadFile(telegramFileUrl, localFilePath, fetchWithProxy);
 
         res.json({ photoUrl: localUrlPath, total_count: totalCount });
     } catch (error: any) {
-        console.error('[BotTokenPhoto] Ошибка:', error.message);
+        console.error('[BotTokenPhoto] Не удалось получить фото бота');
         res.status(500).json({ error: 'Не удалось получить аватарку', photoUrl: null });
     }
 }

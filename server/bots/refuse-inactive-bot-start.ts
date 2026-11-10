@@ -10,10 +10,12 @@ import {
 
 /**
  * Текст ошибки запуска при недействительном токене, иначе null
- * @param isActive - Флаг isActive токена (0 — Telegram отклонил)
+ * @param isActive - Флаг активности токена (0 — отключён)
+ * @param authorizationError - Подтверждённый отказ Telegram
  * @returns Подсказка для UI или null, если токен можно стартовать
  */
-export function refuseInactiveBotStart(isActive?: number | null): string | null {
+export function refuseInactiveBotStart(isActive?: number | null, authorizationError?: string | null): string | null {
+  if (authorizationError === 'unauthorized') return BOT_UNAUTHORIZED_HINT;
   if (isTokenActiveForBroadcast(isActive)) return null;
-  return BOT_UNAUTHORIZED_HINT;
+  return 'Бот отключён. Включите его в настройках перед запуском.';
 }

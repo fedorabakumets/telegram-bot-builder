@@ -6,7 +6,7 @@
  * @module server/database/backups/createDbBackup
  */
 
-import { createHash } from "crypto";
+import { inspectDumpFile, withTemporaryDump } from "./temporaryDump";
 import { Client } from "pg";
 import type { StorageBackend } from "../../storage/storage-backend";
 import {
@@ -14,7 +14,7 @@ import {
 } from "./dbBackupIndex";
 import { runPgDump } from "./pgDumpRestore";
 import { countTableRows } from "./tableRowCounts";
-import { deliverTelegramBackup } from "./telegramBackupDelivery";
+import { deliverTelegramBackupFile } from "./telegramBackupFile";
 
 /** Параметры создания бэкапа */
 export interface CreateDbBackupOptions {
@@ -44,8 +44,6 @@ export interface CreateDbBackupResult {
 
 /** Снятый дамп с проверочными данными */
 interface SnapshotDump {
-  /** Содержимое дампа */
-  dump: Buffer;
   /** Версия сервера */
   serverVersion: string;
   /** Строки по таблицам */
@@ -55,19 +53,20 @@ interface SnapshotDump {
 /**
  * Снимает дамп и считает строки внутри одного снимка базы.
  * @param databaseUrl - Строка подключения
- * @returns Дамп, версия сервера и числа строк
+ * @param filePath - Путь временного дампа
+ * @returns Версия сервера и числа строк
  */
-async function dumpWithinSnapshot(databaseUrl: string): Promise<SnapshotDump> {
+async function dumpWithinSnapshot(databaseUrl: string, filePath: string): Promise<SnapshotDump> {
   const client = new Client({ connectionString: databaseUrl });
-  await client.connect();
   try {
+    await client.connect();
     await client.query("BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY");
     const snapshot = (await client.query<{ s: string }>("SELECT pg_export_snapshot() AS s")).rows[0].s;
     const serverVersion = (await client.query<{ v: string }>("SELECT current_setting('server_version') AS v")).rows[0].v.split(" ")[0];
     const tables = await countTableRows(client);
-    const dump = await runPgDump(databaseUrl, snapshot);
+    await runPgDump(databaseUrl, snapshot, filePath);
     await client.query("COMMIT");
-    return { dump, serverVersion, tables };
+    return { serverVersion, tables };
   } finally {
     await client.end().catch(() => undefined);
   }
@@ -79,33 +78,36 @@ async function dumpWithinSnapshot(databaseUrl: string): Promise<SnapshotDump> {
  * @returns Созданный бэкап и число удалённых
  */
 export async function createDbBackup(options: CreateDbBackupOptions): Promise<CreateDbBackupResult> {
-  const { backend, label, log = () => undefined } = options;
-  log(`снимаем дамп базы (метка ${label})`);
-  const { dump, serverVersion, tables } = await dumpWithinSnapshot(options.databaseUrl);
+  return withTemporaryDump(async (filePath) => {
+    const { backend, label, log = () => undefined } = options;
+    log(`снимаем дамп базы (метка ${label})`);
+    const { serverVersion, tables } = await dumpWithinSnapshot(options.databaseUrl, filePath);
+    const { size, sha256 } = await inspectDumpFile(filePath);
 
-  const index = await readBackupIndex(backend, label);
-  let id = backupIdFromDate(options.now ?? new Date());
-  if (index.entries.some((entry) => entry.id === id)) id = `${id}-${index.entries.length}`;
-  const entry: DbBackupEntry = {
-    id,
-    key: backupKey(label, id),
-    size: dump.length,
-    sha256: createHash("sha256").update(dump).digest("hex"),
-    createdAt: (options.now ?? new Date()).toISOString(),
-    serverVersion,
-    tables,
-  };
-  await backend.put(entry.key, dump, "application/octet-stream");
-  log(`дамп ${entry.key}: ${dump.length} байт, ${Object.keys(tables).length} таблиц, PostgreSQL ${serverVersion}`);
+    const index = await readBackupIndex(backend, label);
+    let id = backupIdFromDate(options.now ?? new Date());
+    if (index.entries.some((entry) => entry.id === id)) id = `${id}-${index.entries.length}`;
+    const entry: DbBackupEntry = {
+      id,
+      key: backupKey(label, id),
+      size,
+      sha256,
+      createdAt: (options.now ?? new Date()).toISOString(),
+      serverVersion,
+      tables,
+    };
+    await backend.putFile(entry.key, filePath, "application/octet-stream");
+    log(`дамп ${entry.key}: ${size} байт, ${Object.keys(tables).length} таблиц, PostgreSQL ${serverVersion}`);
 
-  const { kept, dropped } = splitForRetention([entry, ...index.entries], options.keep);
-  await writeBackupIndex(backend, { label, entries: kept });
-  for (const old of dropped) {
-    await backend.delete(old.key).catch((error) => log(`не удалён старый бэкап ${old.key}: ${String(error)}`));
-  }
-  if (dropped.length > 0) log(`удалено старых бэкапов: ${dropped.length}`);
-  // Отправляем только после сохранения дампа и индекса, не отменяя бэкап при сбое Telegram
-  const telegramWarning = await deliverTelegramBackup(dump, label, entry);
-  if (telegramWarning) log(telegramWarning);
-  return { entry, dropped: dropped.length, telegramWarning };
+    const { kept, dropped } = splitForRetention([entry, ...index.entries], options.keep);
+    await writeBackupIndex(backend, { label, entries: kept });
+    for (const old of dropped) {
+      await backend.delete(old.key).catch((error) => log(`не удалён старый бэкап ${old.key}: ${String(error)}`));
+    }
+    if (dropped.length > 0) log(`удалено старых бэкапов: ${dropped.length}`);
+    // Отправляем только после сохранения дампа и индекса, не отменяя бэкап при сбое Telegram
+    const telegramWarning = await deliverTelegramBackupFile(filePath, label, entry);
+    if (telegramWarning) log(telegramWarning);
+    return { entry, dropped: dropped.length, telegramWarning };
+  });
 }

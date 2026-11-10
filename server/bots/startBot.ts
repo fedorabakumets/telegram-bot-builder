@@ -140,7 +140,7 @@ export async function startBot(
   const startRevision = getBotStartRevision(tokenId);
   try {
     const tokenRecord = await storage.getBotToken(tokenId);
-    const inactiveError = refuseInactiveBotStart(tokenRecord?.isActive);
+    const inactiveError = refuseInactiveBotStart(tokenRecord?.isActive, tokenRecord?.authorizationError);
     if (inactiveError) {
       console.log(`⏭ Пропуск запуска: токен ${tokenId} недействителен (isActive=0)`);
       return { success: false, error: inactiveError };
@@ -155,7 +155,7 @@ export async function startBot(
     const telegramCheck = await checkTelegramBeforeStart(token, 'getMe');
     if (!telegramCheck.ok) {
       if (telegramCheck.unauthorized) {
-        await markBotTokenUnauthorized(projectId, tokenId);
+        await markBotTokenUnauthorized(projectId, tokenId, token);
         return { success: false, error: BOT_UNAUTHORIZED_HINT };
       }
       return { success: false, error: telegramCheck.error };
@@ -455,7 +455,7 @@ export async function startBot(
       const webhookReset = await checkTelegramBeforeStart(token, 'deleteWebhook');
       if (!webhookReset.ok) {
         if (webhookReset.unauthorized) {
-          await markBotTokenUnauthorized(projectId, tokenId);
+          await markBotTokenUnauthorized(projectId, tokenId, token);
           return { success: false, error: BOT_UNAUTHORIZED_HINT };
         }
         return { success: false, error: webhookReset.error };

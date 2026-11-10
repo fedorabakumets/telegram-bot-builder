@@ -13,11 +13,12 @@ async function loadHandler(name) {
       name: 'isolated-handler-dependencies',
       /** Заменяет только окружение обработчика; его собственная логика остаётся настоящей. */
       setup(builder) {
-        builder.onResolve({ filter: /database\/db|storages\/storage|telegram-proxy|resolve-request-token|telegram-api-url|set-private-media-cache/ }, args => ({ path: args.path, namespace: 'mock' }));
+        builder.onResolve({ filter: /database\/db|storages\/storage|telegram-proxy|resolve-request-token|telegram-api-url|set-private-media-cache|mark-bot-token-unauthorized/ }, args => ({ path: args.path, namespace: 'mock' }));
         builder.onLoad({ filter: /.*/, namespace: 'mock' }, () => ({
-          contents: `export const pool = globalThis.__handlerTest.pool;
+          contents: `export const markBotTokenUnauthorized = (...args) => globalThis.__handlerTest.mark(...args);
+            export const pool = globalThis.__handlerTest.pool;
             export const storage = globalThis.__handlerTest.storage;
-            export const fetchWithProxy = globalThis.__handlerTest.fetch;
+            export const fetchWithProxy = (...args) => globalThis.__handlerTest.fetch(...args);
             export const getRequestTokenId = () => 7;
             export const resolveProjectBotToken = async () => null;
             export const getTelegramApiBaseUrl = () => 'https://invalid.test';
@@ -73,6 +74,25 @@ try {
   }
 } finally {
   console.error = originalError;
-  delete globalThis.__handlerTest;
+
 }
-console.log('4 проверки: успех и отказ БД в обоих обработчиках; общий пул не закрывается.');
+fail = false;
+let networkRequests = 0;
+let observedToken;
+const revoked = { id: 7, projectId: 12, token: '123:fake', isActive: 1, lastUsedAt: null };
+globalThis.__handlerTest.storage.getDefaultBotToken = async () => revoked;
+globalThis.__handlerTest.storage.getBotTokensByProject = async () => [revoked];
+globalThis.__handlerTest.fetch = async () => { networkRequests++; return Response.json({}, { status: 401 }); };
+globalThis.__handlerTest.mark = async (projectId, tokenId, token) => {
+  observedToken = token;
+  revoked.isActive = 0;
+  revoked.authorizationError = 'unauthorized';
+};
+await bot(req, response());
+assert.equal(networkRequests, 1);
+assert.equal(observedToken, revoked.token);
+await bot(req, response());
+await avatar({ params: { projectId: '12', userId: 'bot' } }, response());
+assert.equal(networkRequests, 1, 'Повторные обращения не достигают Telegram после сохранённого401');
+delete globalThis.__handlerTest;
+console.log('6 проверок: общий пул, отказ БД, фиксация401 и отсутствие повторных запросов обработчиков.');

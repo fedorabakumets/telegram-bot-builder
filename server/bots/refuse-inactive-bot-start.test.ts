@@ -5,7 +5,6 @@
 
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { BOT_UNAUTHORIZED_HINT } from '@shared/broadcast-unauthorized';
 import { refuseInactiveBotStart } from './refuse-inactive-bot-start';
 
 describe('refuseInactiveBotStart', () => {
@@ -16,6 +15,6 @@ describe('refuseInactiveBotStart', () => {
   });
 
   it('отказывает при isActive=0 без воркера', () => {
-    assert.equal(refuseInactiveBotStart(0), BOT_UNAUTHORIZED_HINT);
+    assert.match(refuseInactiveBotStart(0) ?? '', /Бот отключён/);
   });
 });

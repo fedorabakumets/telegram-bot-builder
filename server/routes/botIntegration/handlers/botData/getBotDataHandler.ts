@@ -12,7 +12,7 @@ import { getTelegramApiBaseUrl } from '../../../../utils/telegram-api-url';
 import { pool } from "../../../../database/db";
 import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
-import { fetchWithProxy } from "../../../../utils/telegram-proxy";
+import { createBotTokenFetch } from "../../../../services/bot-token-fetch";
 
 /**
  * Обрабатывает запрос на получение данных бота
@@ -37,6 +37,7 @@ export async function getBotDataHandler(req: Request, res: Response): Promise<vo
             return;
         }
 
+        const fetchWithProxy = createBotTokenFetch([defaultToken]);
         const botId = defaultToken.token.split(':')[0];
 
         // Получаем текущие данные из базы
@@ -60,7 +61,7 @@ export async function getBotDataHandler(req: Request, res: Response): Promise<vo
         const now = Date.now();
         const shouldSync = !botData?.avatarUrl || (now - lastSyncTime > 5 * 60 * 1000);
 
-        if (shouldSync) {
+        if (shouldSync && defaultToken.isActive !== 0 && defaultToken.authorizationError !== 'unauthorized') {
             try {
                 // Получаем информацию из Telegram API через прокси
                 const telegramApiUrl = `${getTelegramApiBaseUrl()}/bot${defaultToken.token}/getMe`;
@@ -91,7 +92,7 @@ export async function getBotDataHandler(req: Request, res: Response): Promise<vo
                             photoUrl = photoResult.result.photos[0][photoResult.result.photos[0].length - 1].file_id;
                         }
                     } catch (photoError) {
-                        console.warn("Не удалось получить фото бота:", photoError);
+                        console.warn("Не удалось получить фото бота:");
                     }
 
                     // Обновляем данные в базе
@@ -119,7 +120,7 @@ export async function getBotDataHandler(req: Request, res: Response): Promise<vo
                     botData = updateResult.rows[0] || botData;
                 }
             } catch (syncError) {
-                console.warn("Не удалось синхронизировать данные бота из Telegram:", syncError);
+                console.warn("Не удалось синхронизировать данные бота из Telegram:");
                 // Используем кэшированные данные
             }
         }
@@ -138,7 +139,7 @@ export async function getBotDataHandler(req: Request, res: Response): Promise<vo
             firstName: botData.firstName,
             lastName: null,
             userData: null,
-            isActive: true,
+            isActive: defaultToken.isActive !== 0 && defaultToken.authorizationError !== 'unauthorized',
             isPremium: false,
             isBlocked: false,
             isBot: true,
@@ -148,7 +149,7 @@ export async function getBotDataHandler(req: Request, res: Response): Promise<vo
             interactionCount: 0
         });
     } catch (error) {
-        console.error("Ошибка получения данных бота:", error);
+        console.error("Ошибка получения данных бота:");
         res.status(500).json({ message: "Не удалось получить данные бота" });
     }
 }

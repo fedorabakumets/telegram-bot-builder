@@ -21,6 +21,8 @@ import { Play, Square, MoreHorizontal, Trash2 } from 'lucide-react';
 interface BotActionsProps {
   /** Запущен ли бот */
   isBotRunning: boolean;
+  /** Причина запрета запуска; остановка остаётся доступной */
+  startBlockedReason?: string;
   /** Мутация запуска бота */
   startBotMutation: {
     isPending: boolean;
@@ -52,6 +54,7 @@ interface BotActionsProps {
  */
 export function BotActions({
   isBotRunning,
+  startBlockedReason,
   startBotMutation,
   stopBotMutation,
   onRequestDelete,
@@ -68,7 +71,8 @@ export function BotActions({
         <Button
           size="sm"
           onClick={() => startBotMutation.mutate({ tokenId, projectId })}
-          disabled={startBotMutation.isPending && isStartingThisBot}
+          disabled={!!startBlockedReason || (startBotMutation.isPending && isStartingThisBot)}
+          title={startBlockedReason}
           aria-label={startBotMutation.isPending && isStartingThisBot ? 'Запуск бота...' : 'Запустить бота'}
           className="h-8 gap-1 sm:gap-2 px-2 sm:px-3 text-xs bg-green-600 hover:bg-green-700"
         >

@@ -21,12 +21,14 @@ export const botTokens = pgTable("bot_tokens", {
   ownerId: bigint("owner_id", { mode: "number" }).references(() => telegramUsers.id, { onDelete: "cascade" }),
   /** Пользовательское имя для токена */
   name: text("name").notNull(),
-  /** Токен бота (хранится в зашифрованном виде) */
+  /** Секрет Telegram Bot API; сохраняется в БД и входит в резервную копию */
   token: text("token").notNull(),
   /** Флаг токена по умолчанию (0 = нет, 1 = да) */
   isDefault: integer("is_default").default(0),
   /** Флаг активности токена (0 = неактивен, 1 = активен) */
   isActive: integer("is_active").default(1),
+  /** Подтверждённая ошибка авторизации Telegram; null — токен не отклонён */
+  authorizationError: text("authorization_error"),
   /** Описание токена */
   description: text("description"),
   /** Имя бота из Telegram API */

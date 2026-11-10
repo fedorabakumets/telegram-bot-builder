@@ -12,8 +12,13 @@ describe('resolveBotCanvasStatus', () => {
     expect(botCanvasStatusLabel('frozen')).toBe('Заморожен');
   });
   it('помечает недействительный токен даже если процесс не запущен', () => {
-    expect(resolveBotCanvasStatus({ isActive: 0, isRunning: false, hasFailure: true }))
+    expect(resolveBotCanvasStatus({ isActive: 0, authorizationError: 'unauthorized', isRunning: false, hasFailure: true }))
       .toBe('invalid');
+  });
+
+  it('ручное отключение не называет ошибкой токена', () => {
+    expect(resolveBotCanvasStatus({ isActive: 0, isRunning: false })).toBe('inactive');
+    expect(botCanvasStatusLabel('inactive')).toBe('Отключён');
   });
 
   it('онлайн только у живого токена с запущенным процессом', () => {
@@ -27,7 +32,7 @@ describe('resolveBotCanvasStatus', () => {
 });
 
 describe('botCanvasStatusLabel', () => {
-  it('пишет «Токен недействителен»', () => {
-    expect(botCanvasStatusLabel('invalid')).toBe('Токен недействителен');
+  it('пишет «Недействительный токен»', () => {
+    expect(botCanvasStatusLabel('invalid')).toBe('Недействительный токен');
   });
 });

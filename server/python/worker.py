@@ -77,6 +77,11 @@ _ERROR_HINTS: list[tuple[str, str, str]] = [
 
 def format_bot_error(exc: BaseException) -> str:
     """Форматирует исключение для терминала: заголовок, подсказка, тех. деталь."""
+    # Проверяем настоящий тип уже загруженного aiogram, без импорта для остальных ботов.
+    exceptions = sys.modules.get("aiogram.exceptions")
+    unauthorized = getattr(exceptions, "TelegramUnauthorizedError", None)
+    if isinstance(unauthorized, type) and isinstance(exc, unauthorized):
+        return "TelegramUnauthorizedError: Telegram отклонил токен. Обновите его в настройках."
     msg = str(exc).strip()
     first_line = msg.splitlines()[0] if msg else type(exc).__name__
     lower = msg.lower()

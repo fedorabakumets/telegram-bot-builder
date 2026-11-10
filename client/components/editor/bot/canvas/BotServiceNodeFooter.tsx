@@ -15,7 +15,9 @@ interface BotServiceNodeFooterProps {
   isRunning: boolean;
   /** Последний failed запуск */
   failure?: BotServiceFailure | null;
-  /** isActive токена: 0 — Telegram отклонил */
+  /** Подтверждённая ошибка авторизации Telegram */
+  authorizationError?: string | null;
+  /** Флаг активности: 0 — токен отключён */
   isActive?: number | null;
   /** Общий статус операции и процесса */
   visualStatus?: BotCanvasStatus;
@@ -30,10 +32,12 @@ export function BotServiceNodeFooter({
   isRunning,
   failure,
   isActive,
+  authorizationError,
   visualStatus,
 }: BotServiceNodeFooterProps) {
   const status = visualStatus ?? resolveBotCanvasStatus({
     isActive,
+    authorizationError,
     isRunning,
     hasFailure: !!failure,
   });
@@ -46,7 +50,7 @@ export function BotServiceNodeFooter({
       >
         <KeyRound className="h-3.5 w-3.5 shrink-0 text-red-500" aria-hidden />
         <span className="min-w-0 truncate text-[11px] font-medium text-red-500">
-          Токен недействителен
+          Недействительный токен
         </span>
       </div>
     );

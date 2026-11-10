@@ -82,3 +82,15 @@ describe('получение имени бота', () => {
     expect(mocks.fetch).toHaveBeenCalledTimes(102);
   });
 });
+
+/** Подтверждённый 401 не повторяется по короткому таймеру сетевых ошибок. */
+it('сохраняет отказ401 и разрешает новое значение токена', async () => {
+  mocks.fetch.mockResolvedValueOnce({ status: 401, ok: false });
+  const resolve = await resolver();
+  expect(await resolve('revoked-token')).toBeUndefined();
+  await vi.advanceTimersByTimeAsync(600_000);
+  expect(await resolve('revoked-token')).toBeUndefined();
+  expect(mocks.fetch).toHaveBeenCalledTimes(1);
+  mocks.fetch.mockResolvedValue(response('new_bot'));
+  expect(await resolve('replacement-token')).toBe('new_bot');
+});

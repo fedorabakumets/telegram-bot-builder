@@ -59,8 +59,8 @@ export function BotDetailHeader({
   /** Подписи профиля с поддержкой имени старого формата. */
   const profile = getBotProfileLabels(token);
   const title = profile.title || fallbackTitle;
-  const tokenOk = isTokenActiveForBroadcast(token.isActive);
-  const status = useBotVisualStatus(token.id, projectId, token.isActive, isRunning);
+  const tokenOk = isTokenActiveForBroadcast(token.isActive) && token.authorizationError !== 'unauthorized';
+  const status = useBotVisualStatus(token.id, projectId, token.isActive, isRunning, token.authorizationError);
   const busy = controlPending || ['starting', 'stopping', 'restarting'].includes(status);
   return (
     <div className="flex items-center gap-3 border-b border-border/60 bg-background px-4 py-3.5 shrink-0">
@@ -95,9 +95,9 @@ export function BotDetailHeader({
         ) : (
           <p className="mt-0.5 truncate text-xs text-muted-foreground">Telegram Bot</p>
         )}
-        {!tokenOk && (
+        {token.authorizationError === 'unauthorized' && (
           <p className="mt-1 text-[11px] leading-snug text-red-500">
-            Вставьте новый токен из @BotFather во вкладке «Переменные» или удалите бота.
+            Telegram отклонил токен. Замените его токеном из @BotFather во вкладке «Переменные».
           </p>
         )}
       </div>
@@ -107,10 +107,10 @@ export function BotDetailHeader({
           size="icon"
           variant="ghost"
           className={ACTION_BTN}
-          disabled={busy || !tokenOk}
+          disabled={busy || (!isRunning && !tokenOk)}
           onClick={onToggleRun}
           aria-label={isRunning ? 'Остановить' : 'Запустить'}
-          title={!tokenOk ? 'Сначала обновите токен' : undefined}
+          title={!isRunning && !tokenOk ? (token.authorizationError === 'unauthorized' ? 'Сначала замените токен' : 'Бот отключён') : undefined}
         >
           {isRunning ? <Square className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
         </Button>

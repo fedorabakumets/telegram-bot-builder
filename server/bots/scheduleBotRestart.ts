@@ -40,7 +40,7 @@ export async function scheduleBotRestart(
       return;
     }
 
-    const inactiveError = refuseInactiveBotStart(tokenRecord.isActive);
+    const inactiveError = refuseInactiveBotStart(tokenRecord.isActive, tokenRecord.authorizationError);
     if (inactiveError) {
       console.log(
         `[AutoRestart] Пропуск token=${tokenId}: ${inactiveError}`,

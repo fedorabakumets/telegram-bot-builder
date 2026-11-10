@@ -35,6 +35,8 @@ function invalidateProjectTokens(
   queryClient.invalidateQueries({
     queryKey: [`/api/projects/${projectId}/tokens`],
   });
+  /** Замена токена снимает ошибку профиля без перезагрузки страницы. */
+  queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/bot/info`] });
   queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
 }
 

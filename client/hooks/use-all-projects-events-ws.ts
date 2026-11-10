@@ -51,6 +51,8 @@ function handleTokenEvent(
   onTokenCreated?: UseAllProjectsEventsWsOptions['onTokenCreated'],
 ): void {
   queryClient.invalidateQueries({ queryKey: [`/api/projects/${msg.projectId}/tokens`] });
+  /** Новый токен должен повторно загрузить профиль после прежнего отказа Telegram. */
+  queryClient.invalidateQueries({ queryKey: [`/api/projects/${msg.projectId}/bot/info`] });
   queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
   if (msg.type === 'token-created' && msg.tokenId) {
     const tokenName = (msg.data as { tokenName?: string } | undefined)?.tokenName ?? '';

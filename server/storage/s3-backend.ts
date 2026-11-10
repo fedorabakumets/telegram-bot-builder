@@ -25,6 +25,7 @@ import {
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 import type { StorageBackend, StoredObject } from "./storage-backend";
+import { uploadS3File } from "./upload-s3-file";
 
 /** Несекретные параметры S3-хранилища (поле config.s3 в storage_configs) */
 export interface S3BackendParams {
@@ -168,6 +169,20 @@ export class S3Backend implements StorageBackend {
       url: this.getUrl(normKey),
       size: data.length,
     };
+  }
+
+  /**
+   * Сохраняет файл последовательными частями без буфера размером со весь файл.
+   * @param key - Ключ назначения
+   * @param filePath - Путь исходного файла
+   * @param mime - MIME-тип объекта
+   * @returns Метаданные сохранённого объекта
+   */
+  async putFile(key: string, filePath: string, mime: string): Promise<StoredObject> {
+    if (this.readOnly) throw new Error("Хранилище доступно только для чтения");
+    const normKey = this.normalizeKey(key);
+    const size = await uploadS3File(this.client, this.bucket, normKey, filePath, mime || "application/octet-stream");
+    return { backend: this.backend, configId: this.configId, key: normKey, url: this.getUrl(normKey), size };
   }
 
   /**

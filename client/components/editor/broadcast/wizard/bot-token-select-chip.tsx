@@ -32,14 +32,16 @@ interface BotTokenSelectChipProps {
  * @returns JSX элемент чипа
  */
 export function BotTokenSelectChip({ projectId, token, frozen, selected, count, onToggle }: BotTokenSelectChipProps) {
-  const inactive = !!frozen || !isTokenActiveForBroadcast(token.isActive);
+  /** Ошибка токена не равна ручному отключению бота. */
+  const unauthorized = token.authorizationError === 'unauthorized';
+  const inactive = !!frozen || unauthorized || !isTokenActiveForBroadcast(token.isActive);
 
   return (
     <button
       type="button"
       disabled={inactive}
       aria-pressed={selected}
-      title={frozen ? 'Бот заморожен Telegram' : inactive ? 'Токен недействителен. Обновите в настройках проекта.' : undefined}
+      title={frozen ? 'Бот заморожен Telegram' : unauthorized ? 'Недействительный токен. Замените токен из @BotFather в настройках бота.' : inactive ? 'Бот отключён' : undefined}
       onClick={() => onToggle(token.id)}
       className={cn(
         'inline-flex items-center gap-2 rounded-md border px-3 py-2 text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
@@ -62,7 +64,7 @@ export function BotTokenSelectChip({ projectId, token, frozen, selected, count, 
       </span>
       <UserAvatar messageType="bot" projectId={projectId} tokenId={token.id} size={24} />
       <span className="truncate max-w-[160px]">{formatBotShortLabel(token, token.id)}</span>
-      {inactive && <span className="text-[10px] text-destructive">{frozen ? 'заморожен' : 'токен недействителен'}</span>}
+      {inactive && <span className="text-[10px] text-destructive">{frozen ? 'заморожен' : unauthorized ? 'недействительный токен' : 'отключён'}</span>}
       {!inactive && selected && count != null && (
         <span className="font-semibold text-foreground tabular-nums">
           {count.toLocaleString('ru-RU')}

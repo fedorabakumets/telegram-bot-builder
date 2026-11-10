@@ -210,14 +210,16 @@ export function BotControl({ projectId, onBotStarted, onBotStopped, onBotDeleted
     }
   };
 
-  const getStatusBadge = (token: Pick<BotToken, 'id' | 'isDefault' | 'isActive'>) => {
-    if (token.isActive === 0) {
+  const getStatusBadge = (token: Pick<BotToken, 'id' | 'isDefault' | 'isActive' | 'authorizationError'>) => {
+    /** Только подтверждённая ошибка Telegram означает недействительный токен. */
+    if (token.authorizationError === 'unauthorized') {
       return (
         <Badge variant="destructive">
-          Токен недействителен
+          Недействительный токен
         </Badge>
       );
     }
+    if (token.isActive === 0) return <Badge variant="outline">Отключён</Badge>;
     // Ищем по tokenId (добавлен при маппинге) или через instance
     const status = allBotStatuses.find(
       s => s.tokenId === token.id || s.instance?.tokenId === token.id,

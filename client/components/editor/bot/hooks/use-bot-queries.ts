@@ -22,6 +22,7 @@ import type { BotStatusResponse } from '../bot-types';
 import type { BotInfo } from '../bot-types';
 import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
 import { isTelegramUser } from '@/types/telegram-user';
+import { botInfoQueryPolicy } from './bot-info-query-policy';
 import { projectBotStatusesQueryKey } from '../project-bot-statuses-query';
 
 /**
@@ -114,17 +115,21 @@ export function useBotQueries(options?: UseBotQueriesOptions): BotQueriesResult 
   const allBotStatuses = statusResults.flatMap((q) => q.data?.statuses ?? []);
 
   const botInfoResults = useQueries({
-    queries: projects.map((project, idx) => ({
-      queryKey: [`/api/projects/${project.id}/bot/info`],
-      queryFn: () => apiRequest('GET', `/api/projects/${project.id}/bot/info`),
-      enabled: includeBotInfo && projects.length > 0 && allTokens[idx].length > 0,
-      refetchInterval:
-        includeBotInfo && allBotStatuses.some(s => s?.status === 'running') ? 60000 : false,
-      refetchIntervalInBackground: false,
-      staleTime: 30000,
-      // Сохраняем предыдущие данные при рефетче — аватарки не мигают
-      placeholderData: (prev: BotInfo | undefined) => prev,
-    })),
+    queries: projects.map((project, idx) => {
+      /** Точный tokenId связывает разрешение запроса с токеном, который проверит сервер. */
+      const policy = botInfoQueryPolicy(allTokens[idx], allBotStatuses, includeBotInfo);
+      return {
+        queryKey: [`/api/projects/${project.id}/bot/info`, policy.tokenId],
+        queryFn: () => apiRequest('GET', `/api/projects/${project.id}/bot/info?tokenId=${policy.tokenId}`),
+        enabled: policy.enabled,
+        refetchInterval: policy.refetchInterval,
+        retry: false,
+        refetchIntervalInBackground: false,
+        staleTime: 30000,
+        // Сохраняем предыдущие данные при рефетче — аватарки не мигают
+        placeholderData: (prev: BotInfo | undefined) => prev,
+      };
+    }),
   });
 
   // Не фильтруем undefined — сохраняем индексы в соответствии с projects

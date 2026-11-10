@@ -27,6 +27,8 @@ export interface TokenUpdatedPayload {
   isDefault: number | null;
   /** Активность */
   isActive: number | null;
+  /** Подтверждённый отказ авторизации Telegram */
+  authorizationError?: string | null;
   /** Срок хранения сообщений (дни), 0 = безлимит */
   messagesRetentionDays: number;
   /** Автоперезапуск */
@@ -272,6 +274,7 @@ export const TOKEN_UPDATED_FIELD_KEYS = [
   'botFirstName',
   'isDefault',
   'isActive',
+  'authorizationError',
   'messagesRetentionDays',
   'autoRestart',
   'maxRestartAttempts',
@@ -301,6 +304,8 @@ export type TokenLikeForUpdatedPayload = {
   botFirstName?: string | null;
   isDefault?: number | null;
   isActive?: number | null;
+  /** Подтверждённый отказ авторизации Telegram */
+  authorizationError?: string | null;
   messagesRetentionDays?: number | null;
   autoRestart?: number | null;
   maxRestartAttempts?: number | null;
@@ -331,6 +336,7 @@ export function toTokenUpdatedPayload(token: TokenLikeForUpdatedPayload): TokenU
     botFirstName: token.botFirstName ?? null,
     isDefault: token.isDefault ?? null,
     isActive: token.isActive ?? null,
+    authorizationError: token.authorizationError ?? null,
     messagesRetentionDays: token.messagesRetentionDays ?? 0,
     autoRestart: token.autoRestart ?? null,
     maxRestartAttempts: token.maxRestartAttempts ?? null,

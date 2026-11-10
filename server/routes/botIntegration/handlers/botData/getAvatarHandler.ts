@@ -12,7 +12,7 @@ import { getTelegramApiBaseUrl } from '../../../../utils/telegram-api-url';
 import { pool } from "../../../../database/db";
 import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
-import { fetchWithProxy } from "../../../../utils/telegram-proxy";
+import { createBotTokenFetch } from "../../../../services/bot-token-fetch";
 import { getRequestTokenId, resolveProjectBotToken } from "../../../utils/resolve-request-token";
 import { setPrivateMediaCacheHeaders } from "./set-private-media-cache";
 
@@ -39,6 +39,7 @@ export async function getAvatarHandler(req: Request, res: Response): Promise<voi
 
         // Проверяем, это аватарка бота — ищем по userId среди всех токенов проекта
         const allTokens = await storage.getBotTokensByProject(projectId);
+        const fetchWithProxy = createBotTokenFetch(allTokens);
         const botToken = allTokens.find(t => t.token.split(':')[0] === userId);
         const isBotAvatar = userId === 'bot' || !!botToken;
 
@@ -85,7 +86,7 @@ export async function getAvatarHandler(req: Request, res: Response): Promise<voi
                         await pool.query('UPDATE bot_tokens SET bot_photo_url = NULL WHERE id = $1', [tokenToUse.id]);
                         return null;
                     } catch (e) {
-                        console.warn('[avatar] failed to fetch bot profile photos:', e);
+                        console.warn('[avatar] failed to fetch bot profile photos:');
                         return null;
                     }
                 };
@@ -167,7 +168,7 @@ export async function getAvatarHandler(req: Request, res: Response): Promise<voi
                             console.log(`[avatar] fetched fresh file_id from Telegram for user_id=${userId}`);
                         }
                     } catch (e) {
-                        console.warn('[avatar] failed to fetch user profile photos from Telegram:', e);
+                        console.warn('[avatar] failed to fetch user profile photos from Telegram:');
                     }
                 }
             }
@@ -235,7 +236,7 @@ export async function getAvatarHandler(req: Request, res: Response): Promise<voi
                     }
                 }
             } catch (e) {
-                console.warn('[avatar] failed to resolve file_id to URL:', e);
+                console.warn('[avatar] failed to resolve file_id to URL:');
                 res.status(404).json({ message: "Не удалось получить аватарку" });
                 return;
             }
@@ -337,7 +338,7 @@ export async function getAvatarHandler(req: Request, res: Response): Promise<voi
                     }
                 }
             } catch (e) {
-                console.warn('[avatar] failed to refresh expired URL:', e);
+                console.warn('[avatar] failed to refresh expired URL:');
             }
         }
 
@@ -352,7 +353,7 @@ export async function getAvatarHandler(req: Request, res: Response): Promise<voi
         const buffer = await response.arrayBuffer();
         res.send(Buffer.from(buffer));
     } catch (error) {
-        console.error("Ошибка получения аватарки:", error);
+        console.error("Ошибка получения аватарки:");
         res.status(500).json({ message: "Не удалось получить аватарку" });
     }
 }

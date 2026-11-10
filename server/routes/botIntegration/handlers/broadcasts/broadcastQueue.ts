@@ -260,7 +260,7 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
             sent = true;
           } else if (isBotUnauthorized(result.errorCode, result.description)) {
             if (tokenId != null) {
-              await recordBroadcastUnauthorized(broadcastId, tokenId, result.description);
+              await recordBroadcastUnauthorized(broadcastId, tokenId, result.description, token);
             }
             tokenInvalid = true;
             sent = true;
@@ -332,7 +332,7 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
       pause: seconds => pauseTelegramMessages(token, seconds),
       unauthorized: async description => {
         tokenInvalid = true;
-        if (tokenId != null) await recordBroadcastUnauthorized(broadcastId, tokenId, description);
+        if (tokenId != null) await recordBroadcastUnauthorized(broadcastId, tokenId, description, token);
       },
       record: async (groupId, result) => {
         sentCount++;

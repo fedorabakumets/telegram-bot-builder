@@ -16,10 +16,11 @@ type Operation = 'starting' | 'stopping' | 'restarting';
  * @param projectId - Идентификатор проекта
  * @param isActive - Действительность токена
  * @param isRunning - Подтверждённое состояние процесса
+ * @param authorizationError - Сохранённая ошибка авторизации Telegram
  * @returns Статус для бейджа и анимации
  */
 export function useBotVisualStatus(
-  tokenId: number, projectId: number, isActive: number | null, isRunning: boolean,
+  tokenId: number, projectId: number, isActive: number | null, isRunning: boolean, authorizationError?: string | null,
 ): BotCanvasStatus {
   const { startBotMutation: start, stopBotMutation: stop, restartAllBotsMutation: restart,
     startOfflineAllMutation: bulk, allBotStatuses } = useBotControl();
@@ -65,8 +66,8 @@ export function useBotVisualStatus(
   const completed = previous.current;
   const awaitingConfirmation = completed && !commandError && !failure
     && isRunning !== (completed !== 'stopping') ? completed : null;
-  const status = resolveBotCanvasStatus({ isActive, isRunning, frozen: server?.frozen,
+  const status = resolveBotCanvasStatus({ isActive, authorizationError, isRunning, frozen: server?.frozen,
     hasFailure: failure || (!isRunning && !!commandError),
     operation: operation ?? waiting ?? awaitingConfirmation });
-  return commandError && !operation && !waiting && status !== 'invalid' && status !== 'frozen' ? 'error' : status;
+  return commandError && !operation && !waiting && status !== 'invalid' && status !== 'inactive' && status !== 'frozen' ? 'error' : status;
 }

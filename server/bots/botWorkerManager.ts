@@ -507,7 +507,9 @@ class BotWorkerManager extends EventEmitter {
       } else {
         console.log(`🏭 [WorkerPool:${projectId}] бот ${ev.tokenId} остановлен`);
       }
-      this.emit("bot-exited", this.projectOf(ev.tokenId, projectId), ev.tokenId, status, runtimeError, false);
+      /** Передаём секрет завершившегося запуска, чтобы его поздний 401 не отключил замену. */
+      this.emit("bot-exited", this.projectOf(ev.tokenId, projectId), ev.tokenId, status, runtimeError, false,
+        this.startArgs.get(ev.tokenId)?.token);
       // Drain: не убиваем воркер мгновенно (гонка с restart)
       if (worker && worker.activeBots.size === 0 && worker.status === "ready") {
         this.scheduleWorkerDrain(projectId);

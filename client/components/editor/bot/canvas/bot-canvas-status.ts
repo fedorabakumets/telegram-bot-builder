@@ -6,13 +6,15 @@
 import { isTokenActiveForBroadcast } from '@shared/broadcast-unauthorized';
 
 /** Статус, который видит пользователь на карточке и в шапке */
-export type BotCanvasStatus = 'online' | 'offline' | 'invalid' | 'frozen' | 'failed' | 'error' | 'starting' | 'stopping' | 'restarting';
+export type BotCanvasStatus = 'online' | 'offline' | 'inactive' | 'invalid' | 'frozen' | 'failed' | 'error' | 'starting' | 'stopping' | 'restarting';
 
 /** Входные данные для статуса */
 export interface BotCanvasStatusInput {
   /** Telegram подтвердил ограничение бота */
   frozen?: boolean;
-  /** Флаг isActive токена (0 — Telegram отклонил) */
+  /** Подтверждённая Telegram ошибка авторизации, отдельно от ручного отключения */
+  authorizationError?: string | null;
+  /** Флаг активности токена (0 — отключён) */
   isActive?: number | null;
   /** Процесс бота запущен */
   isRunning: boolean;
@@ -29,7 +31,8 @@ export interface BotCanvasStatusInput {
  */
 export function resolveBotCanvasStatus(input: BotCanvasStatusInput): BotCanvasStatus {
   if (input.frozen) return 'frozen';
-  if (!isTokenActiveForBroadcast(input.isActive)) return 'invalid';
+  if (input.authorizationError === 'unauthorized') return 'invalid';
+  if (!isTokenActiveForBroadcast(input.isActive)) return 'inactive';
   if (input.operation) return input.operation;
   if (input.isRunning) return 'online';
   if (input.hasFailure) return 'failed';
@@ -48,7 +51,8 @@ export function botCanvasStatusLabel(status: BotCanvasStatus): string {
   if (status === 'restarting') return 'Перезапускается…';
   if (status === 'error') return 'Ошибка операции';
   if (status === 'online') return 'Онлайн';
-  if (status === 'invalid') return 'Токен недействителен';
+  if (status === 'invalid') return 'Недействительный токен';
+  if (status === 'inactive') return 'Отключён';
   if (status === 'failed') return 'Запуск с ошибкой';
   return 'Офлайн';
 }

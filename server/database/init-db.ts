@@ -648,6 +648,11 @@ export async function initializeDatabaseTables() {
       console.log('⚠️ Ошибка при проверке/добавлении колонки messages_retention_days в bot_tokens:', error);
     }
 
+    /** Служебный признак подтверждённого отказа Telegram, отдельно от ручного отключения. */
+    await executeWithRetry(db, sql`
+      ALTER TABLE bot_tokens ADD COLUMN IF NOT EXISTS authorization_error TEXT;
+    `, "Миграция: ошибка авторизации токена");
+
     // Миграция: добавить project_id в bot_users и обновить первичный ключ
     try {
       const columnCheck = await db.execute(sql`

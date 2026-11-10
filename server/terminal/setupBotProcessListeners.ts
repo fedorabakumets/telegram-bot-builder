@@ -103,6 +103,7 @@ export function setupBotProcessListeners() {
         exitStatus: string | number,
         runtimeError?: string,
         processDeathUnexpected?: boolean,
+        observedToken?: string,
       ) => {
         const prev = stableUptimeTimers.get(tokenId);
         if (prev) {
@@ -115,6 +116,7 @@ export function setupBotProcessListeners() {
           exitStatus,
           runtimeError,
           processDeathUnexpected === true,
+          observedToken,
         );
       });
 

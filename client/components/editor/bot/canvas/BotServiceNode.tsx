@@ -64,7 +64,7 @@ export function BotServiceNode({
     top: number;
     moved: boolean;
   } | null>(null);
-  const canvasStatus = useBotVisualStatus(token.id, projectId, token.isActive, isRunning);
+  const canvasStatus = useBotVisualStatus(token.id, projectId, token.isActive, isRunning, token.authorizationError);
   const alertBorder = ['invalid', 'failed', 'error'].includes(canvasStatus);
 
   return (

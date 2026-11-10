@@ -15,6 +15,7 @@ import { mkdir, writeFile, unlink, stat } from "fs/promises";
 import path from "path";
 
 import type { StorageBackend, StoredObject } from "./storage-backend";
+import { copyFileAtomically } from "./copy-file-atomically";
 
 /** Несекретные параметры локального бэкенда (поле config.local) */
 export interface LocalDiskBackendOptions {
@@ -114,6 +115,19 @@ export class LocalDiskBackend implements StorageBackend {
       url: this.getUrl(key),
       size: data.length,
     };
+  }
+
+  /**
+   * Потоково сохраняет файл; при ошибке прежний объект остаётся нетронутым.
+   * @param key - Ключ объекта
+   * @param sourcePath - Путь исходного файла
+   * @param _mime - MIME-тип, сохраняемый отдельно от файла
+   * @returns Метаданные сохранённого объекта
+   */
+  async putFile(key: string, sourcePath: string, _mime: string): Promise<StoredObject> {
+    if (this.readOnly) throw new Error("Хранилище доступно только для чтения");
+    const size = await copyFileAtomically(sourcePath, this.absPath(key));
+    return { backend: this.backend, configId: this.configId, key, url: this.getUrl(key), size };
   }
 
   /**
