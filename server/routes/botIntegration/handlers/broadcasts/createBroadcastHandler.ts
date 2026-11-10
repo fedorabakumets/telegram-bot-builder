@@ -12,6 +12,7 @@ import { getRequestTokenId, resolveEffectiveProjectToken } from "../../../utils/
 import { buildBroadcastDefaultName } from "./build-broadcast-default-name";
 import { createBroadcastBodySchema } from "./broadcast-body-schemas";
 import { runBroadcastQueue } from "./broadcastQueue";
+import { countBroadcastRecipients, normalizeBroadcastGroupIds } from "./broadcast-recipient-total";
 import { startSelectedTokensBroadcast } from "./start-selected-tokens-broadcast";
 import {
   assertGroupsBelongToToken,
@@ -75,7 +76,7 @@ export async function createBroadcastHandler(req: Request, res: Response): Promi
       return;
     }
 
-    const groupIds = resolveGroupIdsForToken(effectiveTokenId, groupsByToken, filters.groupIds);
+    const groupIds = normalizeBroadcastGroupIds(resolveGroupIdsForToken(effectiveTokenId, groupsByToken, filters.groupIds));
     const belongErr = await assertGroupsBelongToToken(projectId, effectiveTokenId, groupIds);
     if (belongErr) {
       res.status(400).json({ message: belongErr });
@@ -97,7 +98,8 @@ export async function createBroadcastHandler(req: Request, res: Response): Promi
       buttonsPerRow,
       filters: childFilters,
       status: "running",
-      totalCount: users.length,
+      /** Все запланированные доставки: пользователи и уникальные группы. */
+      totalCount: countBroadcastRecipients(users.length, groupIds),
       startedAt: new Date(),
     });
     runBroadcastQueue(broadcast.id, selectedToken.token).catch((err) => {

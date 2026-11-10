@@ -3,6 +3,9 @@
  * @module botIntegration/handlers/broadcasts/broadcastQueue
  */
 
+import { normalizeBroadcastGroupIds, countBroadcastRecipients } from "./broadcast-recipient-total";
+import { runBroadcastGroups } from "./run-broadcast-groups";
+import { saveBroadcastGroupMessage } from "./save-broadcast-group-message";
 import { storage } from "../../../../storages/storage";
 import { broadcastProjectEvent } from "../../../../terminal/broadcastProjectEvent";
 import { replaceVariablesInText } from "../messages/replace-variables";
@@ -158,7 +161,10 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
 
     const users = await storage.getUsersForBroadcast(projectId, tokenId, filters as Parameters<typeof storage.getUsersForBroadcast>[2]);
 
-    await storage.updateBroadcast(broadcastId, { totalCount: users.length });
+    /** Уникальные группы включаются в общий прогресс наравне с пользователями. */
+    const groupIds = normalizeBroadcastGroupIds((filters as { groupIds?: string[] })?.groupIds);
+    const totalCount = countBroadcastRecipients(users.length, groupIds);
+    await storage.updateBroadcast(broadcastId, { totalCount });
     const emptyCounts = {
       sentCount: 0,
       deliveredCount: 0,
@@ -166,7 +172,7 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
       blockedCount: 0,
       deletedCount: 0,
     };
-    await emitProgress(projectId, broadcastId, emptyCounts, users.length, "running", campaignId);
+    await emitProgress(projectId, broadcastId, emptyCounts, totalCount, "running", campaignId);
     await syncCampaignAggregates(campaignId);
 
     let sentCount = 0;
@@ -298,7 +304,7 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
         if (tokenInvalid) break;
 
         if (sentCount % 10 === 0) {
-          void emitProgress(projectId, broadcastId, snapshotCounts(), users.length, "running", campaignId);
+          void emitProgress(projectId, broadcastId, snapshotCounts(), totalCount, "running", campaignId);
         }
 
       }
@@ -312,73 +318,39 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
         projectId,
         broadcastId,
         snapshotCounts(),
-        users.length,
+        totalCount,
         isStopped ? "stopped" : "running",
         campaignId,
       );
       await syncCampaignAggregates(campaignId);
     }
 
-    // Отправка в выбранные группы (текст + медиа)
-    const groupIds = (broadcast.filters as Record<string, unknown>)?.groupIds as string[] | undefined;
-    if (groupIds && groupIds.length > 0 && !tokenInvalid && activeBroadcasts.get(broadcastId) !== "stopped") {
-      for (const groupId of groupIds) {
-        try {
-          let groupResult = await sendBroadcastMessage(token, groupId, broadcast.messageText, mediaFiles, inlineButtons, buttonsPerRow, projectId);
-          while (groupResult.errorCode === 429 && activeBroadcasts.get(broadcastId) !== "stopped") {
-            await pauseTelegramMessages(token, groupResult.retryAfter ?? 1);
-            groupResult = await sendBroadcastMessage(token, groupId, broadcast.messageText, mediaFiles, inlineButtons, buttonsPerRow, projectId);
-          }
-          if (!groupResult.ok) {
-            await storage.createBroadcastResult({ broadcastId, userId: groupId, status: "failed", errorMessage: groupResult.description });
-            continue;
-          }
-          const groupMsgId = groupResult.messageId ?? null;
-          // Сохраняем результат с telegram_message_id для возможности редактирования/удаления
-          await storage.createBroadcastResult({
-            broadcastId,
-            userId: groupId,
-            status: "sent",
-            telegramMessageId: groupMsgId,
-          });
-          // Записываем сообщение в историю группового диалога
-          await storage.createBotMessage({
-            projectId,
-            tokenId,
-            userId: groupId,
-            chatId: groupId,
-            messageType: "bot",
-            messageText: broadcast.messageText,
-            messageData: {
-              sentFromBroadcast: true,
-              broadcastId,
-              chatId: groupId,
-              // Инлайн-кнопки для отображения в истории группового диалога
-              ...(rawButtons.length > 0 ? { buttons: rawButtons } : {}),
-            },
-          });
-          // Публикуем WS-событие чтобы диалог группы обновился
-          await broadcastProjectEvent(projectId, {
-            type: "new-message",
-            projectId,
-            tokenId,
-            data: {
-              id: 0,
-              userId: groupId,
-              chatId: groupId,
-              messageType: "bot",
-              messageText: broadcast.messageText,
-              messageData: { sentFromBroadcast: true, broadcastId },
-              nodeId: null,
-              createdAt: new Date().toISOString(),
-            },
-            timestamp: new Date().toISOString(),
-          });
-        } catch (err) {
-          console.error(`[broadcastQueue] Ошибка отправки в группу ${groupId}:`, err);
-        }
-      }
-    }
+    // Группы используют те же общие счётчики, что и пользователи.
+    if (!tokenInvalid) await runBroadcastGroups(groupIds, {
+      stopped: () => activeBroadcasts.get(broadcastId) === "stopped",
+      send: groupId => sendBroadcastMessage(token, groupId, messageText, mediaFiles, inlineButtons, buttonsPerRow, projectId),
+      pause: seconds => pauseTelegramMessages(token, seconds),
+      unauthorized: async description => {
+        tokenInvalid = true;
+        if (tokenId != null) await recordBroadcastUnauthorized(broadcastId, tokenId, description);
+      },
+      record: async (groupId, result) => {
+        sentCount++;
+        if (result.ok) deliveredCount++;
+        else failedCount++;
+        await storage.createBroadcastResult({ broadcastId, userId: groupId,
+          status: result.ok ? "sent" : "failed", telegramMessageId: result.messageId ?? null,
+          errorMessage: result.ok ? undefined : result.description });
+      },
+      history: groupId => saveBroadcastGroupMessage(projectId, tokenId, broadcastId, groupId, messageText, rawButtons),
+      progress: async () => {
+        await storage.updateBroadcast(broadcastId, snapshotCounts());
+        await emitProgress(projectId, broadcastId, snapshotCounts(), totalCount,
+          activeBroadcasts.get(broadcastId) === "stopped" ? "stopped" : "running", campaignId);
+        await syncCampaignAggregates(campaignId);
+      },
+      log: error => console.error(`[broadcastQueue] Ошибка групповой рассылки ${broadcastId}:`, error),
+    });
 
     // Определяем финальный статус
     const finalStatus = tokenInvalid
@@ -399,7 +371,7 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
       projectId,
       broadcastId,
       { sentCount, deliveredCount, failedCount, blockedCount, deletedCount },
-      users.length,
+      totalCount,
       finalStatus,
       campaignId,
     );

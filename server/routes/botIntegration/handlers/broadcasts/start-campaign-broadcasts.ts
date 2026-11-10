@@ -6,6 +6,7 @@
 import type { BotToken, BroadcastFilters } from "@shared/schema";
 import { storage } from "../../../../storages/storage";
 import { runBroadcastQueue } from "./broadcastQueue";
+import { countBroadcastRecipients, normalizeBroadcastGroupIds } from "./broadcast-recipient-total";
 import { resolveGroupIdsForToken } from "./validate-groups-by-token";
 
 /** Общее содержимое кампании, копируемое во все дочерние рассылки */
@@ -82,8 +83,10 @@ export async function startBroadcastCampaign(
 
   for (const token of tokens) {
     const users = await storage.getUsersForBroadcast(projectId, token.id, filters);
-    totalCount += users.length;
-    const groupIds = resolveGroupIdsForToken(token.id, groupsByToken, filters.groupIds);
+    const groupIds = normalizeBroadcastGroupIds(resolveGroupIdsForToken(token.id, groupsByToken, filters.groupIds));
+    /** В кампании одна группа учитывается отдельно для каждого отправляющего бота. */
+    const childTotalCount = countBroadcastRecipients(users.length, groupIds);
+    totalCount += childTotalCount;
     const childFilters: BroadcastFilters = {
       ...filters,
       ...(groupIds.length ? { groupIds } : { groupIds: undefined }),
@@ -100,7 +103,7 @@ export async function startBroadcastCampaign(
       buttonsPerRow,
       filters: childFilters,
       status: "running",
-      totalCount: users.length,
+      totalCount: childTotalCount,
       startedAt: new Date(),
     });
 
