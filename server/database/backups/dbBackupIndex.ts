@@ -97,6 +97,23 @@ export function isNotFoundError(error: unknown): boolean {
 }
 
 /**
+ * Проверяет поля записи, необходимые для расписания, ротации и восстановления.
+ * @param value - Непроверенная запись из хранилища
+ * @returns Признак корректной записи бэкапа
+ */
+function isValidBackupEntry(value: unknown): value is DbBackupEntry {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const entry = value as Partial<DbBackupEntry>;
+  return typeof entry.id === "string" && entry.id.length > 0
+    && typeof entry.key === "string" && entry.key.length > 0
+    && typeof entry.createdAt === "string" && Number.isFinite(Date.parse(entry.createdAt))
+    && typeof entry.size === "number" && Number.isFinite(entry.size) && entry.size >= 0
+    && typeof entry.sha256 === "string" && typeof entry.serverVersion === "string"
+    && !!entry.tables && typeof entry.tables === "object" && !Array.isArray(entry.tables)
+    && Object.values(entry.tables).every((count) => typeof count === "number" && Number.isFinite(count) && count >= 0);
+}
+
+/**
  * Читает список бэкапов метки; если его ещё нет — пустой список.
  * @param backend - Хранилище
  * @param label - Метка базы
@@ -106,8 +123,8 @@ export async function readBackupIndex(backend: StorageBackend, label: string): P
   try {
     const raw = await readStreamToBuffer(await backend.get(`${backupPrefix(label)}/index.json`));
     const parsed = JSON.parse(raw.toString("utf8")) as Partial<DbBackupIndex> | null;
-    if (!parsed || !Array.isArray(parsed.entries)) {
-      throw new Error(`Индекс бэкапов ${label} повреждён: отсутствует список копий`);
+    if (!parsed || !Array.isArray(parsed.entries) || !parsed.entries.every(isValidBackupEntry)) {
+      throw new Error(`Индекс бэкапов ${label} повреждён: некорректный список копий`);
     }
     return { label, entries: parsed.entries };
   } catch (error) {

@@ -23,7 +23,7 @@ import { runDueDbBackup } from "./dbBackupDue";
  * @returns Запись бэкапа
  */
 function entry(id: string): DbBackupEntry {
-  return { id, key: backupKey("panel", id), size: 1, sha256: "x", createdAt: "", serverVersion: "16", tables: {} };
+  return { id, key: backupKey("panel", id), size: 1, sha256: "x", createdAt: "2026-01-01T00:00:00Z", serverVersion: "16", tables: {} };
 }
 
 describe("dbBackups", () => {
@@ -71,9 +71,11 @@ describe("dbBackups", () => {
     const dir = mkdtempSync(path.join(tmpdir(), "db-backups-bad-index-"));
     try {
       const backend = new LocalDiskBackend({ configId: "t", name: "t", readOnly: false, rootPath: dir });
-      await backend.put("db-backups/panel/index.json", Buffer.from('{"entries":null}'), "application/json");
       let created = false;
-      await assert.rejects(runDueDbBackup(backend, "panel", 24, async () => { created = true; }), /повреждён/);
+      for (const entries of [null, [null], ["str"], [{ ...entry("a"), createdAt: "invalid" }], [{ ...entry("a"), id: 4 }]]) {
+        await backend.put("db-backups/panel/index.json", Buffer.from(JSON.stringify({ entries })), "application/json");
+        await assert.rejects(runDueDbBackup(backend, "panel", 24, async () => { created = true; }), /повреждён/);
+      }
       assert.strictEqual(created, false);
     } finally {
       rmSync(dir, { recursive: true, force: true });
