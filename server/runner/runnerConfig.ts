@@ -5,8 +5,7 @@
  */
 
 import { homedir } from "node:os";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join } from "node:path";
 
 /** Настройки исполнителя */
 export interface RunnerConfig {
@@ -22,16 +21,16 @@ export interface RunnerConfig {
   cacheDir: string;
   /** Сколько сборок держать в кеше */
   buildsKeep: number;
+  /** Требовать версию намерения из БД для каждой команды бота */
+  requireFence?: boolean;
 }
 
 /**
- * Путь к worker.py рядом с исходниками исполнителя
+ * Путь к worker.py при запуске из корня репозитория.
  * @returns путь к `server/python/worker.py`
- * @throws Error в бандле без `import.meta.url` (образ исполнителя задаёт RUNNER_WORKER_SCRIPT)
  */
 function defaultWorkerScript(): string {
-  if (!import.meta.url) throw new Error("Задайте RUNNER_WORKER_SCRIPT — путь к worker.py");
-  return join(dirname(fileURLToPath(import.meta.url)), "..", "python", "worker.py");
+  return join(process.cwd(), "server", "python", "worker.py");
 }
 
 /**
@@ -50,5 +49,6 @@ export function loadRunnerConfig(env: NodeJS.ProcessEnv = process.env): RunnerCo
     workerScript: env.RUNNER_WORKER_SCRIPT?.trim() || defaultWorkerScript(),
     cacheDir: env.RUNNER_CACHE_DIR?.trim() || join(homedir(), ".tbb-runner", "builds"),
     buildsKeep: Math.max(1, Number.parseInt(env.RUNNER_BUILDS_KEEP ?? "", 10) || 20),
+    requireFence: env.RUNNER_REQUIRE_FENCE === "true",
   };
 }
