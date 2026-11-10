@@ -88,7 +88,7 @@ curl -s -b cookies.txt \
 |-----|-----|--------------|----------|--------|
 | `projectId` | path | да | ID проекта | `"42"` |
 | `category` | query | нет | all | incoming | outgoing | uploaded | `"uploaded"` |
-| `source` | query | нет | — | `"uploaded"` |
+| `source` | query | нет | Алиас category | `"uploaded"` |
 | `fileName` | query | нет | — | `"photo"` |
 | `dateFrom` | query | нет | — | `"2026-08-01"` |
 | `dateTo` | query | нет | — | `"2026-08-12"` |

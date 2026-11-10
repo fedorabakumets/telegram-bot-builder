@@ -142,7 +142,7 @@ curl -s 'http://localhost:5000/api/projects/42/users/activity?granularity=1d&tok
 |-----|-----|--------------|----------|--------|
 | `id` | path | да | Числовой ID проекта | `"42"` |
 | `tokenId` | query | нет | Опциональный ID токена бота. Без него — все токены проекта. | `"7"` |
-| `granularity` | query | нет | — | `"1d"` |
+| `granularity` | query | нет | Окно и шаг: 1m|5m|1h|1w|1d|7d|30d. Короткие (1m/5m/1h) — из bot_messages; длинные — из user_activity_daily. По умолчанию 1d. | `"1d"` |
 | `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
 | `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
@@ -201,8 +201,8 @@ curl -s 'http://localhost:5000/api/projects/42/users/growth?granularity=1d&token
 |-----|-----|--------------|----------|--------|
 | `id` | path | да | Числовой ID проекта | `"42"` |
 | `tokenId` | query | нет | Опциональный ID токена бота. Без него — все токены проекта. | `"7"` |
-| `granularity` | query | нет | — | `"1d"` |
-| `period` | query | нет | — | `"30d"` |
+| `granularity` | query | нет | 1m|5m|1h|1w|1d|7d|30d | `"1d"` |
+| `period` | query | нет | Обратная совместимость; игнорируется при granularity | `"30d"` |
 | `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
 | `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
@@ -253,7 +253,7 @@ curl -s 'http://localhost:5000/api/projects/42/users/growth-by-source?granularit
 |-----|-----|--------------|----------|--------|
 | `id` | path | да | Числовой ID проекта | `"42"` |
 | `tokenId` | query | нет | Опциональный ID токена бота. Без него — все токены проекта. | `"7"` |
-| `granularity` | query | да | — | `"1d"` |
+| `granularity` | query | да | Обязательный: 1m|5m|1h|1w|1d|7d|30d; all — вся история по месяцам или годам. | `"1d"` |
 | `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
 | `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
@@ -310,7 +310,7 @@ curl -s 'http://localhost:5000/api/projects/42/users/popular-buttons?granularity
 |-----|-----|--------------|----------|--------|
 | `id` | path | да | Числовой ID проекта | `"42"` |
 | `tokenId` | query | нет | Опциональный ID токена бота. Без него — все токены проекта. | `"7"` |
-| `granularity` | query | нет | — | `"1d"` |
+| `granularity` | query | нет | 1m|5m|1h|1w|1d|7d|30d; без параметра — как 1d | `"1d"` |
 | `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
 | `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
@@ -487,7 +487,7 @@ curl -s 'http://localhost:5000/api/projects/42/users/variables?limit=200&tokenId
 |-----|-----|--------------|----------|--------|
 | `id` | path | да | Числовой ID проекта | `"42"` |
 | `tokenId` | query | нет | Опциональный ID токена бота. Без него — все токены проекта. | `"7"` |
-| `limit` | query | нет | — | `"200"` |
+| `limit` | query | нет | Максимум пользователей с непустым user_data | `"200"` |
 | `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
 | `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 

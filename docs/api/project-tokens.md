@@ -1075,9 +1075,9 @@ curl -s 'http://localhost:5000/api/projects/42/tokens/7/logs?limit=100' -b cooki
 |-----|-----|--------------|----------|--------|
 | `projectId` | path | да | Числовой ID проекта | `"42"` |
 | `tokenId` | path | да | Числовой ID токена бота | `"7"` |
-| `from` | query | нет | — | — |
-| `to` | query | нет | — | — |
-| `beforeId` | query | нет | — | — |
+| `from` | query | нет | Начало периода ISO; требуется вместе с to | — |
+| `to` | query | нет | Конец периода ISO; должен быть позже from | — |
+| `beforeId` | query | нет | Загрузить id меньше курсора; только при заданном периоде | — |
 | `limit` | query | нет | Максимум строк логов: 1–1000 (по умолчанию 500) | `"500"` |
 | `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
 | `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |

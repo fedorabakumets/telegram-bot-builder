@@ -418,8 +418,8 @@ curl -s -b cookies.txt \
 |-----|-----|--------------|----------|--------|
 | `projectId` | path | да | ID проекта | `"42"` |
 | `tokenId` | query | нет | ID токена бота | `"7"` |
-| `page` | query | нет | — | `"1"` |
-| `limit` | query | нет | — | `"20"` |
+| `page` | query | нет | Номер страницы (default 1) | `"1"` |
+| `limit` | query | нет | Размер страницы (1..100, default 20) | `"20"` |
 | `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
 | `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
