@@ -63,7 +63,7 @@
       {
         "candidate": {
           "file": "server/index.ts",
-          "line": 75,
+          "line": 76,
           "method": "USE",
           "expression": "express.json({ limit: '50mb', verify: captureAgentBody })"
         },
@@ -73,7 +73,7 @@
       {
         "candidate": {
           "file": "server/index.ts",
-          "line": 76,
+          "line": 77,
           "method": "USE",
           "expression": "express.urlencoded({ extended: false, limit: '50mb' })"
         },
@@ -83,7 +83,7 @@
       {
         "candidate": {
           "file": "server/index.ts",
-          "line": 78,
+          "line": 79,
           "method": "USE",
           "expression": "express.text({ limit: '50mb', type: 'text/plain' })"
         },
@@ -93,7 +93,7 @@
       {
         "candidate": {
           "file": "server/index.ts",
-          "line": 92,
+          "line": 93,
           "method": "USE",
           "expression": "(req, res, next) => {\n  const start = Date.now();\n  const path = apiLogPath(req.originalUrl);\n  let capturedJsonResponse: Record<string, any> | undefined = undefined;\n\n  const originalResJson = res.json;\n  res.json = function (bodyJson, ...args) {\n    capturedJsonResponse = bodyJson;\n    return orig…"
         },
@@ -103,9 +103,9 @@
       {
         "candidate": {
           "file": "server/index.ts",
-          "line": 159,
+          "line": 160,
           "method": "USE",
-          "expression": "(err: any, _req: Request, res: Response, _next: NextFunction) => {\n    const status = err.status || err.statusCode || 500;\n    const message = err.message || \"Внутренняя ошибка сервера\";\n\n    if (!res.headersSent) {\n      res.status(status).json({ message });\n    }\n    throw err;\n  }"
+          "expression": "apiErrorHandler"
         },
         "routes": [],
         "reason": "Middleware или статический mount, не отдельная HTTP-операция; не доказательство отсутствия вложенных Router."
@@ -543,44 +543,44 @@
     },
     {
       "file": "server/index.ts",
-      "line": 75,
+      "line": 76,
       "method": "USE",
       "expression": "express.json({ limit: '50mb', verify: captureAgentBody })"
     },
     {
       "file": "server/index.ts",
-      "line": 76,
+      "line": 77,
       "method": "USE",
       "expression": "express.urlencoded({ extended: false, limit: '50mb' })"
     },
     {
       "file": "server/index.ts",
-      "line": 78,
+      "line": 79,
       "method": "USE",
       "expression": "express.text({ limit: '50mb', type: 'text/plain' })"
     },
     {
       "file": "server/index.ts",
-      "line": 92,
+      "line": 93,
       "method": "USE",
       "expression": "(req, res, next) => {\n  const start = Date.now();\n  const path = apiLogPath(req.originalUrl);\n  let capturedJsonResponse: Record<string, any> | undefined = undefined;\n\n  const originalResJson = res.json;\n  res.json = function (bodyJson, ...args) {\n    capturedJsonResponse = bodyJson;\n    return orig…"
     },
     {
       "file": "server/index.ts",
-      "line": 145,
+      "line": 146,
       "method": "USE",
       "expression": "\"/api\"",
       "resolvedPath": "/api"
     },
     {
       "file": "server/index.ts",
-      "line": 159,
+      "line": 160,
       "method": "USE",
-      "expression": "(err: any, _req: Request, res: Response, _next: NextFunction) => {\n    const status = err.status || err.statusCode || 500;\n    const message = err.message || \"Внутренняя ошибка сервера\";\n\n    if (!res.headersSent) {\n      res.status(status).json({ message });\n    }\n    throw err;\n  }"
+      "expression": "apiErrorHandler"
     },
     {
       "file": "server/index.ts",
-      "line": 201,
+      "line": 194,
       "method": "GET",
       "expression": "\"env\"",
       "resolvedPath": "env"
