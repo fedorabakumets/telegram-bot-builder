@@ -13,6 +13,10 @@ import { startBot } from '../../../bots/startBot';
 import { stopBot } from '../../../bots/stopBot';
 import { POST_STOP_COOLDOWN_MS, sleepMs } from '../../../bots/restartTiming';
 import { storage } from '../../../storages/storage';
+import { setBotDesiredStatus } from '../../../bots/setBotDesiredStatus';
+
+/** Токены, уже выполняющие явный перезапуск в этом процессе. */
+const restartingTokens = new Set<number>();
 
 /**
  * Нормализует tokenId из тела запроса.
@@ -106,6 +110,21 @@ export async function handleBotRestart(req: Request, res: Response): Promise<voi
             return;
         }
 
+        if (restartingTokens.has(target.tokenId)) {
+            res.status(409).json({ message: 'Бот уже перезапускается' });
+            return;
+        }
+        restartingTokens.add(target.tokenId);
+
+        try {
+            let instance = await storage.getBotInstanceByToken(target.tokenId);
+            if (!instance) {
+                instance = await storage.createBotInstance({
+                    projectId, tokenId: target.tokenId, token: target.token, status: 'stopped',
+                });
+            }
+            const generation = await setBotDesiredStatus(instance.id, 'running');
+
         const stopResult = await stopBot(projectId, target.tokenId);
         if (!stopResult.success) {
             res.status(500).json({ message: stopResult.error || "Не удалось остановить бота" });
@@ -114,6 +133,12 @@ export async function handleBotRestart(req: Request, res: Response): Promise<voi
 
         await sleepMs(POST_STOP_COOLDOWN_MS);
 
+        const current = await storage.getBotInstanceByToken(target.tokenId);
+        if (!current || current.desiredStatus !== 'running' || current.desiredGeneration !== generation) {
+            res.status(409).json({ message: 'Перезапуск отменён новым запросом' });
+            return;
+        }
+
         const startResult = await startBot(projectId, target.token, target.tokenId);
         if (startResult.success) {
             res.json({
@@ -121,7 +146,13 @@ export async function handleBotRestart(req: Request, res: Response): Promise<voi
                 processId: startResult.processId,
             });
         } else {
+            await storage.updateBotInstance(instance.id, {
+                status: 'error', errorMessage: startResult.error || 'Не удалось перезапустить бота',
+            });
             res.status(500).json({ message: startResult.error || "Не удалось запустить бота после перезапуска" });
+        }
+        } finally {
+            restartingTokens.delete(target.tokenId);
         }
     } catch (error) {
         console.error('Ошибка перезапуска бота:', error);

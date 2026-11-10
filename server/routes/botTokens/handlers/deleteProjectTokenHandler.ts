@@ -7,6 +7,7 @@ import type { Request, Response } from 'express';
 import { storage } from '../../../storages/storage';
 import { stopBot } from '../../../bots/stopBot';
 import { broadcastProjectEvent } from '../../../terminal/broadcastProjectEvent';
+import { setBotDesiredStatus } from '../../../bots/setBotDesiredStatus';
 
 /**
  * DELETE /api/projects/:projectId/tokens/:tokenId
@@ -31,6 +32,8 @@ export async function deleteProjectTokenHandler(req: Request, res: Response): Pr
     }
 
     try {
+      const instance = await storage.getBotInstanceByToken(tokenId);
+      if (instance) await setBotDesiredStatus(instance.id, 'stopped');
       const stopped = await stopBot(projectId, tokenId);
       if (!stopped.success) {
         res.status(409).json({ message: 'Остановка не подтверждена; токен не удалён', outcome: 'unknown', sideEffects: { runtimeApply: 'unknown' } }); return;

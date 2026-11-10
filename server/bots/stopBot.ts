@@ -10,6 +10,7 @@ import { getTelegramApiBaseUrl } from '../utils/telegram-api-url';
  */
 import { execSync } from "node:child_process";
 import { workerManager } from './botWorkerManager';
+import { resolveBotCommandFence } from './resolveBotCommandFence';
 import { isWorkerPoolEnabled } from './isWorkerPoolEnabled';
 
 /**
@@ -73,9 +74,11 @@ export async function stopBot(projectId: number, tokenId: number): Promise<{ suc
   // Чтобы WorkerPool не принял stop за OOM и не автоперезапустил
   markExpectedStop(tokenId);
   try {
+    /** Версия намерения защищает от запоздавшей остановки после нового запуска. */
+    const commandFence = await resolveBotCommandFence(tokenId, 'stop');
     // ─── Режим воркера: остановка бота через worker pool ───
     if (isWorkerPoolEnabled()) {
-      const confirmed = await workerManager.stopBot(projectId, tokenId);
+      const confirmed = await workerManager.stopBot(projectId, tokenId, commandFence);
       if (!confirmed) {
         console.error(
           `[stopBot] Таймаут подтверждения остановки project=${projectId} token=${tokenId}`,

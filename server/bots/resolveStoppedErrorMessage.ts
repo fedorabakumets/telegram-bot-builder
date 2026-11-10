@@ -46,6 +46,10 @@ export function formatBotStatusLabel(
   if (status === 'running') {
     return '🟢 Работает';
   }
+  if (status === 'requested') return '🟡 Запуск запрошен';
+  if (status === 'starting') return '🟡 Запускается';
+  if (status === 'unknown') return '⚪ Исполнитель недоступен';
+  if (status === 'error') return '🔴 Ошибка запуска';
   if (status === 'stopped') {
     return '🔴 Остановлен';
   }

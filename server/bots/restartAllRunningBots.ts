@@ -56,7 +56,7 @@ export async function restartAllRunningBots(
     await Promise.all(
       tokens.map(async (token) => {
         const instance = await storage.getBotInstanceByToken(token.id);
-        return instance?.status === 'running' ? token : null;
+        return instance?.status === 'running' && instance.desiredStatus !== 'stopped' ? token : null;
       }),
     )
   ).filter((token): token is (typeof tokens)[number] => token != null);
@@ -65,12 +65,13 @@ export async function restartAllRunningBots(
     return { ok: true, restarted: 0, failed: 0, results: [], message: 'Нет запущенных ботов' };
   }
 
-  const stopped: Array<{ tokenId: number; token: string }> = [];
+  const stopped: Array<{ tokenId: number; token: string; generation: number }> = [];
   const stopFailed: TokenRestartResult[] = [];
   for (const token of runningTokens) {
     const stopResult = await stopBot(projectId, token.id);
     if (stopResult.success) {
-      stopped.push({ tokenId: token.id, token: token.token });
+      const instance = await storage.getBotInstanceByToken(token.id);
+      stopped.push({ tokenId: token.id, token: token.token, generation: instance?.desiredGeneration ?? 0 });
     } else {
       stopFailed.push({
         tokenId: token.id,
@@ -89,8 +90,13 @@ export async function restartAllRunningBots(
 
   const results: TokenRestartResult[] = [...stopFailed];
   for (let i = 0; i < stopped.length; i++) {
-    const { tokenId, token } = stopped[i];
+    const { tokenId, token, generation } = stopped[i];
     if (i > 0) await sleepMs(START_STAGGER_MS);
+    const current = await storage.getBotInstanceByToken(tokenId);
+    if (!current || current.desiredStatus === 'stopped' || current.desiredGeneration !== generation) {
+      results.push({ tokenId, success: false, error: 'Перезапуск отменён новым запросом' });
+      continue;
+    }
     const startResult = await startBotAfterStop(projectId, token, tokenId);
     if (startResult.success) {
       results.push({ tokenId, success: true, processId: startResult.processId });

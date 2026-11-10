@@ -9,7 +9,8 @@ import { findBotProcessPid } from '../utils/processChecker';
 import { getOwnerIdFromRequest } from '../../../telegram/auth-middleware';
 import { toPublicBotInstance } from '../../botTokens/to-public-bot-token';
 import { reconcileLaunchHistoryForToken } from '../../../bots/reconcileLaunchHistory';
-import { computeLiveBotStatus } from '../compute-live-bot-status';
+import { resolveActualBotStatus } from '../resolve-actual-bot-status';
+import { isRemoteProject } from '../../../bots/botPlacement';
 import { isBotStarting } from '../../../bots/botStartState';
 
 /**
@@ -47,10 +48,10 @@ export async function handleBotStatusByToken(req: Request, res: Response): Promi
       return;
     }
 
-    let actualStatus = computeLiveBotStatus(instance.projectId, tokenId, instance, true);
+    let actualStatus = await resolveActualBotStatus(instance.projectId, tokenId, instance, true);
     const isWorkerPid =
       typeof instance.processId === 'string' && instance.processId.startsWith('worker_');
-    if (!isWorkerPid && actualStatus === 'stopped') {
+    if (!isRemoteProject(instance.projectId) && !isWorkerPid && actualStatus === 'stopped') {
       const realPid = findBotProcessPid(instance.projectId);
       if (realPid) {
         await storage.updateBotInstance(instance.id, { processId: realPid.toString() });
@@ -58,13 +59,15 @@ export async function handleBotStatusByToken(req: Request, res: Response): Promi
       }
     }
 
-    if (instance.status !== actualStatus && !isBotStarting(tokenId)) {
+    if ((actualStatus === 'running' || actualStatus === 'stopped') && instance.status !== actualStatus && !isBotStarting(tokenId)) {
       await storage.updateBotInstance(instance.id, {
         status: actualStatus,
         errorMessage: actualStatus === 'stopped' ? 'Процесс завершен' : null,
       });
     }
-    await reconcileLaunchHistoryForToken(tokenId, actualStatus === 'running');
+    if (actualStatus === 'running' || actualStatus === 'stopped') {
+      await reconcileLaunchHistoryForToken(tokenId, actualStatus === 'running');
+    }
     const payload = instance.status === actualStatus
       ? instance
       : { ...instance, status: actualStatus };

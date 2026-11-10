@@ -11,6 +11,7 @@
 import type { Request, Response } from 'express';
 import { stopBot } from '../../../bots/stopBot';
 import { storage } from '../../../storages/storage';
+import { setBotDesiredStatus } from '../../../bots/setBotDesiredStatus';
 
 /**
  * Нормализует tokenId из тела запроса.
@@ -63,6 +64,8 @@ export async function handleBotStop(req: Request, res: Response): Promise<void> 
             return;
         }
 
+        const instance = await storage.getBotInstanceByToken(tokenId);
+        if (instance) await setBotDesiredStatus(instance.id, 'stopped');
         const result = await stopBot(projectId, tokenId);
         if (result.success) {
             res.json({ message: "Бот успешно остановлен" });

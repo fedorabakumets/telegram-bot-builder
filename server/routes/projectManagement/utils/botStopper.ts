@@ -3,6 +3,7 @@
  */
 import { stopBot } from '../../../bots/stopBot';
 import { storage } from '../../../storages/storage';
+import { setBotDesiredStatus } from '../../../bots/setBotDesiredStatus';
 /**
  * Останавливает все токены, включая queued/starting/offline, и известные orphan-экземпляры.
  * Отказ любого stop/cancel прерывает последующее удаление данных проекта.
@@ -23,6 +24,8 @@ export async function stopProjectBot(projectId: number): Promise<void> {
  }
  for (const tokenId of tokenIds) {
   // Backend под token lock удаляет pending startArgs и ждёт подтверждения остановки.
+  const instance = instances.find((row) => row.tokenId === tokenId);
+  if (instance) await setBotDesiredStatus(instance.id, 'stopped');
   const result = await stopBot(projectId, tokenId);
   if (!result.success) throw new Error('Остановка или отмена запуска не подтверждена; данные проекта не удалены');
  }

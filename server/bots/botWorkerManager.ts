@@ -32,6 +32,11 @@ import type { WorkerChannel } from "./workerChannel";
 import type { BotBuildLink } from "./builds/botBuildLink";
 import { openWorkerChannel } from "./openWorkerChannel";
 import { workerReadyTimeout } from "./workerReadyTimeout";
+import { RemoteRunnerHub } from "./remoteRunnerHub";
+import { RemoteWorkerChannel } from "./remoteWorkerChannel";
+import { getWorkerRunnerId } from "./workerRuntime";
+import { resolveRunnerRedisUrl } from "./resolveRunnerRedisUrl";
+import { storage } from "../storages/storage";
 
 /** Задержка перед killWorker когда activeBots пуст (мс) */
 const WORKER_DRAIN_MS = 2_000;
@@ -66,6 +71,18 @@ interface WorkerCommand {
   env?: Record<string, string>;
   /** Сборка, которую исполнитель скачивает сам и подставляет вместо bot_file (WORKER_RUNTIME=remote) */
   build?: { url: string; sha256: string; size: number; fingerprint: string; file_name: string };
+  /** ID записи бота для проверки актуальности команды исполнителем */
+  instance_id?: number;
+  /** Версия желаемого состояния для проверки актуальности команды */
+  desired_generation?: number;
+}
+
+/** Версия намерения пользователя для защиты от запоздавших команд. */
+export interface BotCommandFence {
+  /** ID записи работающего бота. */
+  instanceId: number;
+  /** Версия желаемого состояния. */
+  desiredGeneration: number;
 }
 
 /** Необязательные параметры запуска бота */
@@ -76,6 +93,8 @@ export interface BotStartOptions {
   env?: Record<string, string>;
   /** Сборка в S3 для удалённого исполнителя */
   build?: BotBuildLink;
+  /** Версия намерения запуска для удалённого исполнителя. */
+  fence?: BotCommandFence;
 }
 
 /** Контекст воркера проекта */
@@ -125,6 +144,8 @@ interface BotStartArgs {
   env?: Record<string, string>;
   /** Сборка в S3 для удалённого исполнителя */
   build?: BotBuildLink;
+  /** Версия намерения запуска для удалённого исполнителя. */
+  fence?: BotCommandFence;
 }
 
 /**
@@ -134,6 +155,39 @@ interface BotStartArgs {
 class BotWorkerManager extends EventEmitter {
   /** Карта воркеров: projectId → ProjectWorker */
   private workers = new Map<number, ProjectWorker>();
+
+  /**
+   * Привязывает API к живым воркерам исполнителя до восстановления ботов.
+   * При недоступном исполнителе выбрасывает ошибку, чтобы исключить второй запуск.
+   * @returns Число вновь привязанных воркеров.
+   */
+  async reattachRemoteWorkers(): Promise<number> {
+    const hub = await RemoteRunnerHub.get(getWorkerRunnerId(), resolveRunnerRedisUrl());
+    const snapshot = await hub.inspect(5_000);
+    const instances = await storage.getAllBotInstances();
+    const byToken = new Map(instances.filter((item) => item.tokenId != null).map((item) => [item.tokenId, item]));
+    let attached = 0;
+    for (const item of snapshot.workers) {
+      if (this.workers.has(item.workerKey)) continue;
+      const channel = RemoteWorkerChannel.attach(hub, item.workerKey, item.instance);
+      const launch: WorkerLaunch = {
+        command: '', args: [], env: {}, projects: null, docker: false,
+        runnerId: getWorkerRunnerId(),
+      };
+      const ready = this.createWorker(item.workerKey, launch, channel);
+      channel.emit('line', JSON.stringify({ type: 'system', content: 'worker_ready' }));
+      const worker = await ready;
+      for (const tokenId of [...item.tokenIds, ...item.pendingTokenIds]) {
+        const instance = byToken.get(tokenId);
+        if (!instance) continue;
+        if (item.tokenIds.includes(tokenId)) worker.activeBots.add(tokenId);
+        this.tokenProjects.set(tokenId, instance.projectId);
+        this.projectWorkerKeys.set(instance.projectId, item.workerKey);
+      }
+      attached++;
+    }
+    return attached;
+  }
 
   /** Очередь lifecycle per projectId:tokenId */
   private tokenLocks = new Map<string, Promise<unknown>>();
@@ -600,7 +654,10 @@ class BotWorkerManager extends EventEmitter {
         tokenId,
         WORKER_STOP_CONFIRM_TIMEOUT_MS,
       );
-      this.sendCommand(workerKey, { cmd: "stop_bot", token_id: tokenId });
+      this.sendCommand(workerKey, {
+        cmd: "stop_bot", token_id: tokenId,
+        ...(args.fence ? { instance_id: args.fence.instanceId, desired_generation: args.fence.desiredGeneration } : {}),
+      });
       const stopped = await stopWait;
       if (stopped) {
         worker.activeBots.delete(tokenId);
@@ -629,6 +686,7 @@ class BotWorkerManager extends EventEmitter {
       ...(args.webhook ? { webhook_url: args.webhook.webhookUrl, webhook_port: args.webhook.webhookPort } : {}),
       ...(args.env ? { env: args.env } : {}),
       ...(args.build ? { build: toCommandBuild(args.build) } : {}),
+      ...(args.fence ? { instance_id: args.fence.instanceId, desired_generation: args.fence.desiredGeneration } : {}),
     });
     if (!sent) {
       // Ожидание уже подписано на события и может завершиться ошибкой позже.
@@ -702,9 +760,10 @@ class BotWorkerManager extends EventEmitter {
    * Останавливает бота в воркере и ждёт bot_exited/bot_stopped.
    * @param projectId - ID проекта
    * @param tokenId - ID токена
+   * @param fence - Версия намерения остановки для удалённого исполнителя
    * @returns true если Python подтвердил выход, false при таймауте
    */
-  async stopBot(projectId: number, tokenId: number): Promise<boolean> {
+  async stopBot(projectId: number, tokenId: number, fence?: BotCommandFence): Promise<boolean> {
     return this.withTokenLock(projectId, tokenId, async () => {
       const lastStart = this.startArgs.get(tokenId);
       this.startArgs.delete(tokenId);
@@ -736,6 +795,7 @@ class BotWorkerManager extends EventEmitter {
         const sent = this.sendCommand(workerKey, {
           cmd: "stop_bot",
           token_id: tokenId,
+          ...(fence ? { instance_id: fence.instanceId, desired_generation: fence.desiredGeneration } : {}),
         });
         if (!sent) {
           abortWait.abort();

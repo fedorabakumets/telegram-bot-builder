@@ -13,6 +13,7 @@ import { storage } from "../../../../storages/storage";
 import { getBotActorId } from "../../../../middleware/bot-api-actor";
 import { stopBot } from "../../../../bots/stopBot";
 import { broadcastProjectEvent } from "../../../../terminal/broadcastProjectEvent";
+import { setBotDesiredStatus } from '../../../../bots/setBotDesiredStatus';
 
 /**
  * Обрабатывает DELETE-запрос на удаление токена бота через Telegram-бота.
@@ -56,6 +57,8 @@ export async function deleteBotTokenHandler(req: Request, res: Response): Promis
         }
 
         // Не удаляем токен, пока завершение процесса не подтверждено.
+        const instance = await storage.getBotInstanceByToken(tokenId);
+        if (instance) await setBotDesiredStatus(instance.id, 'stopped');
         const stopped = await stopBot(token.projectId, tokenId);
         if (!stopped.success) {
             res.status(409).json({ error: "Остановка не подтверждена; токен не удалён", outcome: "unknown" });

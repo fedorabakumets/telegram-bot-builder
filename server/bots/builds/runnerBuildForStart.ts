@@ -4,7 +4,6 @@
  * @module server/bots/builds/runnerBuildForStart
  */
 
-import { getWorkerRunnerCodeSource } from "../workerRuntime";
 import { getProjectPlacement } from "../botPlacement";
 import { isBotBuildStorageEnabled } from "./botBuildConfig";
 import { createDefaultBotBuildDeps, type BotBuildDeps } from "./botBuildDeps";
@@ -31,15 +30,12 @@ export async function resolveRunnerBuildForStart(
 ): Promise<RunnerBuildForStart> {
   const placement = getProjectPlacement(ctx.projectId);
   if (!placement.runnerId) return {};
-  // Сервис Railway папку bots/ панели не видит никогда
-  if (placement.railwayProjectId === null && getWorkerRunnerCodeSource() === "path") return {};
-  const fallback = "или WORKER_RUNNER_CODE=path, если исполнитель видит папку bots/ панели";
   if (!isBotBuildStorageEnabled()) {
-    return { error: `Исполнителю нужен код из S3: включите BOT_ARTIFACT_SOURCE=storage и BOT_BUILDS_STORAGE_ID (${fallback})` };
+    return { error: "Исполнителю нужен код из S3: включите BOT_ARTIFACT_SOURCE=storage и BOT_BUILDS_STORAGE_ID" };
   }
   try {
     const link = await getBotBuildLink(ctx.tokenId, ctx.fingerprint, deps ?? (await createDefaultBotBuildDeps()));
-    if ("error" in link) return { error: `Нет сборки для исполнителя: ${link.error} (${fallback})` };
+    if ("error" in link) return { error: `Нет сборки для исполнителя: ${link.error}` };
     return { build: link };
   } catch (error) {
     return { error: `Не удалось выдать ссылку на сборку: ${error instanceof Error ? error.message : String(error)}` };

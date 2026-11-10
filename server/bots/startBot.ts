@@ -13,7 +13,8 @@ import { isWorkerPoolEnabled } from './isWorkerPoolEnabled';
 import { precompileBotCode } from './precompileBotCode';
 /** Окружение процесса бота без секретов панели */
 import { buildWorkerBaseEnv } from './workerBaseEnv';
-import { buildMediaRuntimeEnv, collectRuntimeMediaUrls } from './mediaRuntimeEnv';
+import { buildMediaRuntimeEnv, collectRuntimeMediaUrls, validateMediaRuntimeEnv } from './mediaRuntimeEnv';
+import { resolveBotCommandFence } from './resolveBotCommandFence';
 import { selectedMediaStorageId } from '../storage/selected-media-storage';
 
 /**
@@ -139,6 +140,8 @@ export async function startBot(
   if (!beginBotStart(tokenId)) return { success: false, error: 'Бот уже запускается' };
   const startRevision = getBotStartRevision(tokenId);
   try {
+    /** Версия намерения фиксируется до подготовки сборки бота. */
+    const commandFence = await resolveBotCommandFence(tokenId, 'start');
     const tokenRecord = await storage.getBotToken(tokenId);
     const inactiveError = refuseInactiveBotStart(tokenRecord?.isActive, tokenRecord?.authorizationError);
     if (inactiveError) {
@@ -411,6 +414,9 @@ export async function startBot(
     // Новые и динамические вложения также должны читаться через выбранное S3.
     const storageRequired = Boolean(await selectedMediaStorageId()) || mediaRows.some((media) => media.storageBackend === 's3');
     botEnv = { ...botEnv, ...buildMediaRuntimeEnv(projectId, project.data, storageRequired) };
+    /** Удалённый исполнитель не должен подтверждать запуск без доступа к медиа. */
+    const mediaError = validateMediaRuntimeEnv(botEnv);
+    if (mediaError) return { success: false, error: mediaError };
     await persistBotBuildForStart({ ...buildContext, mainFile });
     const runnerBuild = await resolveRunnerBuildForStart({ ...buildContext, mainFile });
     if (runnerBuild.error) {
@@ -495,6 +501,7 @@ export async function startBot(
       try {
         if (getBotStartRevision(tokenId) !== startRevision) throw new Error(BOT_START_CANCELLED_ERROR);
         await workerManager.startBot(projectId, token, tokenId, mainFile, {
+          fence: commandFence,
           webhook: { webhookUrl: effectiveWebhookUrl ?? undefined, webhookPort: 9000 + tokenId },
           env: botEnv,
           build: runnerBuild.build,
@@ -723,6 +730,9 @@ export async function startBot(
         try {
           const tokenRecord = await storage.getBotToken(tokenId);
           if (tokenRecord?.autoRestart === 1) {
+            /** Запоминает намерение, чтобы поздний таймер не отменил ручную остановку. */
+            const restartInstance = await storage.getBotInstanceByToken(tokenId);
+            const restartGeneration = restartInstance?.desiredGeneration;
             const maxAttempts = tokenRecord.maxRestartAttempts ?? 3;
             const delay = getRestartDelay(tokenId, maxAttempts);
             if (delay !== null) {
@@ -732,7 +742,8 @@ export async function startBot(
               setTimeout(async () => {
                 // Проверяем что бот не был запущен вручную за это время
                 const currentInstance = await storage.getBotInstanceByToken(tokenId);
-                if (currentInstance?.status !== 'running') {
+                if (currentInstance?.status !== 'running' && currentInstance?.desiredStatus !== 'stopped' &&
+                    (restartGeneration === undefined || currentInstance?.desiredGeneration === restartGeneration)) {
                   await startBot(projectId, token, tokenId);
                 }
               }, delay);

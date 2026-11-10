@@ -43,12 +43,20 @@ import { applyRuntimeProxyEnv, refreshRuntimeOverlay } from "./admin/runtime-ove
 import { isWorkerPoolEnabled } from "./bots/isWorkerPoolEnabled";
 import { captureTelegramEnvironmentProxy } from "./utils/telegram-connection";
 import { resolveAppMode } from './runtime/app-mode';
+import { assertBotRuntimeMode, resolveBotRuntimeMode } from './runtime/bot-runtime-mode';
+import { getWorkerRuntime } from './bots/workerRuntime';
+import { runtimeEnv } from './services/runtime-overlay';
+import { reconcileBotDesiredState, scheduleRuntimeReconcile } from './bots/runtime-reconcile';
+import { startBroadcastRuntime } from './routes/botIntegration/handlers/broadcasts/broadcast-runtime';
 import { serveBackendMedia } from './routes/viteDev/middleware/backendMediaMiddleware';
 
 // Настраиваем прокси для Telegram API ДО всех импортов
 dotenv.config({ debug: false });
 /** Режим проверяется до запуска базы данных и восстановления ботов. */
 const appMode = resolveAppMode();
+/** В отдельном API ботами владеет только удалённый исполнитель. */
+const botRuntimeMode = resolveBotRuntimeMode();
+assertBotRuntimeMode(botRuntimeMode, getWorkerRuntime(), process.env.REDIS_URL, runtimeEnv('WORKER_RAILWAY_PROJECTS'));
 captureTelegramEnvironmentProxy();
 if (process.env.TELEGRAM_PROXY_URL && process.env.TELEGRAM_PROXY_URL.trim() !== '') {
   process.env.HTTP_PROXY = process.env.TELEGRAM_PROXY_URL;
@@ -190,6 +198,7 @@ app.use((req, res, next) => {
   // Оверлей админки, затем расписание бэкапов (интервал из админки или env)
   await refreshRuntimeOverlay();
   applyRuntimeProxyEnv();
+  assertBotRuntimeMode(botRuntimeMode, getWorkerRuntime(), process.env.REDIS_URL, runtimeEnv('WORKER_RAILWAY_PROJECTS'));
   startDbBackupScheduler();
 
   // Важно настраивать Vite только в режиме разработки и после
@@ -216,7 +225,7 @@ app.use((req, res, next) => {
     process.on('SIGTERM', async () => {
       await stopMonitoringOnExit();
       log('получен сигнал SIGTERM: закрытие HTTP-сервера');
-      await shutdownAllBots();
+      if (botRuntimeMode === 'combined') await shutdownAllBots();
       stopCleanup();
       httpServer.close(() => {
         log('HTTP-сервер закрыт');
@@ -226,7 +235,7 @@ app.use((req, res, next) => {
     process.on('SIGINT', async () => {
       await stopMonitoringOnExit();
       log('получен сигнал SIGINT (Ctrl+C): закрытие HTTP-сервера');
-      await shutdownAllBots();
+      if (botRuntimeMode === 'combined') await shutdownAllBots();
       stopCleanup();
       httpServer.close(() => {
         log('HTTP-сервер закрыт');
@@ -238,7 +247,7 @@ app.use((req, res, next) => {
     process.on('SIGHUP', async () => {
       await stopMonitoringOnExit();
       log('получен сигнал SIGHUP: закрытие HTTP-сервера');
-      await shutdownAllBots();
+      if (botRuntimeMode === 'combined') await shutdownAllBots();
       stopCleanup();
       httpServer.close(() => {
         log('HTTP-сервер закрыт');
@@ -257,6 +266,13 @@ app.use((req, res, next) => {
   // Используем 0.0.0.0 в dev чтобы слушать на всех интерфейсах включая IPv4.
   /** Railway допускает HOST=:: для доступа по внутренней IPv6-сети. */
   const host = process.env.HOST?.trim() || '0.0.0.0';
+  if (botRuntimeMode === 'api') {
+    const attached = await workerManager.reattachRemoteWorkers();
+    log(`API привязан к ${attached} работающим воркерам исполнителя`);
+    /** Повторяет сверку после временной недоступности исполнителя или потери команды. */
+    const stopReconcile = scheduleRuntimeReconcile();
+    httpServer.once('close', stopReconcile);
+  }
   httpServer.listen(Number(port), host, () => {
     // Отображаем localhost в логах даже при привязке к 0.0.0.0 для внешних подключений
     const displayHost = host === '0.0.0.0' || host === '::' ? 'localhost' : host;
@@ -266,8 +282,16 @@ app.use((req, res, next) => {
       log(`OpenAPI docs (dev): http://${displayHost}:${port}/docs`);
     }
 
+    if (botRuntimeMode === 'api') {
+      void reconcileBotDesiredState().then((result) => {
+        log(`Сверка ботов: запущено ${result.started}, остановлено ${result.stopped}, ошибок ${result.failed}`);
+      }).catch((error: unknown) => {
+        log(`Сверка ботов отложена: ${error instanceof Error ? error.message : String(error)}`);
+      });
+    }
+
     // Восстанавливаем боты после готовности Redis (боты используют Redis для FSM/lock/pubsub)
-    void (async () => {
+    if (botRuntimeMode === 'combined') void (async () => {
       try {
         if (process.env.REDIS_URL?.trim()) {
           await waitForRedisInit();
@@ -303,7 +327,7 @@ app.use((req, res, next) => {
   // Корректное завершение работы
   process.on('SIGTERM', async () => {
     log('получен сигнал SIGTERM: закрытие HTTP-сервера');
-    await shutdownAllBots();
+    if (botRuntimeMode === 'combined') await shutdownAllBots();
     stopCleanup();
     httpServer.close(() => {
       log('HTTP-сервер закрыт');
@@ -315,7 +339,7 @@ app.use((req, res, next) => {
 
   process.on('SIGINT', async () => {
     log('получен сигнал SIGINT (Ctrl+C): закрытие HTTP-сервера');
-    await shutdownAllBots();
+    if (botRuntimeMode === 'combined') await shutdownAllBots();
     stopCleanup();
     httpServer.close(() => {
       log('HTTP-сервер закрыт');
@@ -326,7 +350,7 @@ app.use((req, res, next) => {
   // Обработка SIGHUP (часто используется в терминалах)
   process.on('SIGHUP', async () => {
     log('получен сигнал SIGHUP: закрытие HTTP-сервера');
-    await shutdownAllBots();
+    if (botRuntimeMode === 'combined') await shutdownAllBots();
     stopCleanup();
     httpServer.close(() => {
       log('HTTP-сервер закрыт');

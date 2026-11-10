@@ -8,12 +8,12 @@ import { storage } from '../../../storages/storage';
 import { checkProcessExists, isPythonProcess, findBotProcessPid } from '../utils/processChecker';
 import { restoreProcessTracking } from '../utils/processRestorer';
 import { findActiveProcessForToken } from '../../../utils/findActiveProcessForToken';
-import { workerManager } from '../../../bots/botWorkerManager';
-import { isWorkerPoolEnabled } from '../../../bots/isWorkerPoolEnabled';
 import { reconcileLaunchHistoryForToken } from '../../../bots/reconcileLaunchHistory';
 import { isBotStarting } from '../../../bots/botStartState';
 import { resolveStoppedErrorMessage, formatBotStatusLabel } from '../../../bots/resolveStoppedErrorMessage';
 import { isTokenPendingRestore } from '../../../bots/restoreState';
+import { resolveActualBotStatus } from '../resolve-actual-bot-status';
+import { isRemoteProject } from '../../../bots/botPlacement';
 
 /**
  * Нормализует tokenId — срезает префикс `token_` если он есть
@@ -136,11 +136,7 @@ export async function getBotTokenStatusHandler(req: Request, res: Response): Pro
 
         const projectId = instance.projectId;
         const activeProcessInfo = findActiveProcessForToken(projectId, tokenId);
-        // В режиме воркера статус проверяется через workerManager (как в handleBotStatusByToken),
-        // иначе воркерные боты ошибочно числятся остановленными.
-        const isRunningInWorker = isWorkerPoolEnabled()
-            && workerManager.isBotRunning(projectId, tokenId);
-        let actualStatus = (activeProcessInfo || isRunningInWorker) ? 'running' : 'stopped';
+        let actualStatus = await resolveActualBotStatus(projectId, tokenId, instance);
 
         // Получаем статистику пользователей
         let userStats = {
@@ -162,19 +158,19 @@ export async function getBotTokenStatusHandler(req: Request, res: Response): Pro
         }
 
         // Проверяем существование процесса в системе
-        if (!activeProcessInfo && instance.processId && checkProcessExists(instance.processId)) {
+        if (!isRemoteProject(projectId) && !activeProcessInfo && instance.processId && checkProcessExists(instance.processId)) {
             restoreProcessTracking(projectId, instance.tokenId, parseInt(instance.processId));
             actualStatus = 'running';
         }
 
         // Дополнительная проверка для Python-процессов
-        if (!activeProcessInfo && instance.processId && actualStatus === 'stopped' && isPythonProcess(instance.processId)) {
+        if (!isRemoteProject(projectId) && !activeProcessInfo && instance.processId && actualStatus === 'stopped' && isPythonProcess(instance.processId)) {
             restoreProcessTracking(projectId, instance.tokenId, parseInt(instance.processId));
             actualStatus = 'running';
         }
 
         // Поиск PID если не найден
-        if (!activeProcessInfo && actualStatus === 'stopped') {
+        if (!isRemoteProject(projectId) && !activeProcessInfo && actualStatus === 'stopped') {
             const realPid = findBotProcessPid(projectId);
             if (realPid) {
                 await storage.updateBotInstance(instance.id, { processId: realPid.toString() });
@@ -184,14 +180,16 @@ export async function getBotTokenStatusHandler(req: Request, res: Response): Pro
 
         // Обновляем статус в БД если изменился
         const restorePending = isTokenPendingRestore(tokenId);
-        if (instance.status !== actualStatus && !isBotStarting(tokenId)) {
+        if ((actualStatus === 'running' || actualStatus === 'stopped') && instance.status !== actualStatus && !isBotStarting(tokenId)) {
             await storage.updateBotInstance(instance.id, {
                 status: actualStatus,
                 errorMessage: resolveStoppedErrorMessage(instance.errorMessage, actualStatus),
             });
         }
 
-        await reconcileLaunchHistoryForToken(tokenId, actualStatus === 'running');
+        if (actualStatus === 'running' || actualStatus === 'stopped') {
+            await reconcileLaunchHistoryForToken(tokenId, actualStatus === 'running');
+        }
 
         res.json({
             status: actualStatus,

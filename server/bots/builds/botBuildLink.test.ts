@@ -80,12 +80,12 @@ describe("resolveRunnerBuildForStart", () => {
     assert.match((await resolveRunnerBuildForStart(ctx, deps(s3))).error ?? "", /BOT_ARTIFACT_SOURCE=storage/);
   });
 
-  it("remote со сборкой в S3 — ссылка; WORKER_RUNNER_CODE=path — без неё", async () => {
+  it("remote всегда получает сборку из S3, даже если задан общий путь", async () => {
     process.env.WORKER_RUNTIME = "remote";
     process.env.BOT_ARTIFACT_SOURCE = "storage";
     assert.strictEqual((await resolveRunnerBuildForStart(ctx, deps(s3))).build?.fileName, "bot.py");
     process.env.WORKER_RUNNER_CODE = "path";
-    assert.deepStrictEqual(await resolveRunnerBuildForStart(ctx, deps(s3)), {});
+    assert.strictEqual((await resolveRunnerBuildForStart(ctx, deps(s3))).build?.fileName, "bot.py");
   });
 
   it("проект на Railway получает ссылку даже при WORKER_RUNNER_CODE=path", async () => {

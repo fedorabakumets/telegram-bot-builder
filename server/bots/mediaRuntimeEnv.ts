@@ -45,6 +45,17 @@ export function buildMediaRuntimeEnv(projectId: number, projectData: unknown, st
 }
 
 /**
+ * Проверяет, что удалённый бот получил доступ к медиа до отправки команды запуска.
+ * @param env - Окружение бота после добавления переменных медиа
+ * @returns Причина отказа или null при готовом доступе
+ */
+export function validateMediaRuntimeEnv(env: Record<string, string>): string | null {
+  if (env.MEDIA_RUNTIME_REQUIRED !== '1') return null;
+  if (env.MEDIA_RUNTIME_BASE_URL && env.MEDIA_RUNTIME_PROJECT_ID && env.MEDIA_RUNTIME_TOKEN && env.MEDIA_RUNTIME_WRITE_TOKEN) return null;
+  return 'Удалённому боту недоступны медиа: проверьте MEDIA_RUNTIME_BASE_URL и MEDIA_RUNTIME_SECRET';
+}
+
+/**
  * Собирает логические ссылки медиа в данных проекта.
  * @param value - Данные проекта
  * @param urls - Множество найденных ссылок

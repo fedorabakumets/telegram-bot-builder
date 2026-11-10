@@ -18,6 +18,7 @@ import {
   markTokenRestored,
 } from "./restoreState";
 import { groupRestoreInstancesByProject } from "./restoreGrouping";
+import { workerManager } from './botWorkerManager';
 
 export interface RestoreRunningBotsResult {
   /** Сколько ботов пытались поднять */
@@ -163,10 +164,11 @@ export async function restoreRunningBots(): Promise<RestoreRunningBotsResult> {
     const allInstances = await storage.getAllBotInstances();
     const runningInstances = allInstances.filter(
       (i) =>
-        i.status === "running" ||
-        i.errorMessage === "__server_restart__" ||
-        (i.status === "stopped" && !i.stoppedAt) ||
-        (i.status === "stopped" && isAbruptShutdown(i.errorMessage)),
+        (i.status === "running" ||
+          i.errorMessage === "__server_restart__" ||
+          (i.status === "stopped" && !i.stoppedAt) ||
+          (i.status === "stopped" && isAbruptShutdown(i.errorMessage))) &&
+        !(i.tokenId != null && workerManager.isBotRunning(i.projectId, i.tokenId)),
     );
 
     if (runningInstances.length === 0) {
