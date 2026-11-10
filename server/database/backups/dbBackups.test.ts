@@ -15,6 +15,7 @@ import {
 } from "./dbBackupIndex";
 import { adaptScriptForServer, splitConnectionPassword } from "./pgDumpRestore";
 import { compareRowCounts } from "./tableRowCounts";
+import { runDueDbBackup } from "./dbBackupDue";
 
 /**
  * Создаёт запись бэкапа для тестов.
@@ -61,6 +62,19 @@ describe("dbBackups", () => {
       assert.strictEqual(findBackup(index, "latest")?.id, "b");
       assert.strictEqual(findBackup(index, "a")?.key, "db-backups/panel/a.dump");
       assert.strictEqual(findBackup(index, "zzz"), null);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("повреждённый индекс не запускает повторный дамп", async () => {
+    const dir = mkdtempSync(path.join(tmpdir(), "db-backups-bad-index-"));
+    try {
+      const backend = new LocalDiskBackend({ configId: "t", name: "t", readOnly: false, rootPath: dir });
+      await backend.put("db-backups/panel/index.json", Buffer.from('{"entries":null}'), "application/json");
+      let created = false;
+      await assert.rejects(runDueDbBackup(backend, "panel", 24, async () => { created = true; }), /повреждён/);
+      assert.strictEqual(created, false);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

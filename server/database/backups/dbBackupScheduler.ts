@@ -24,6 +24,9 @@ let firstTimer: ReturnType<typeof setTimeout> | undefined;
 /** Повтор расписания */
 let repeatTimer: ReturnType<typeof setInterval> | undefined;
 
+/** Хранилище, для которого предупреждение уже выведено. */
+let warnedLocalBackend: string | undefined;
+
 /**
  * Бэкапит одну базу; при ошибке предупреждает, если последний удачный бэкап устарел
  * @param target - База и метка
@@ -56,6 +59,10 @@ export async function runScheduledBackup(intervalHours: number): Promise<void> {
   running = true;
   try {
     const backend = await resolveDbBackupsBackend();
+    if (process.env.RAILWAY_ENVIRONMENT_ID && backend.backend === "local" && warnedLocalBackend !== backend.configId) {
+      console.warn("⚠️ [DbBackup] Локальная папка может быть временной на Railway: проверьте постоянный том для дампов и индекса.");
+      warnedLocalBackend = backend.configId;
+    }
     for (const target of getDbBackupTargets()) await backupTarget(target, backend, intervalHours);
   } catch (error) {
     console.error("❌ [DbBackup] расписание бэкапов:", error instanceof Error ? error.message : error);

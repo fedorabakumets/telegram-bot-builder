@@ -105,8 +105,11 @@ export function isNotFoundError(error: unknown): boolean {
 export async function readBackupIndex(backend: StorageBackend, label: string): Promise<DbBackupIndex> {
   try {
     const raw = await readStreamToBuffer(await backend.get(`${backupPrefix(label)}/index.json`));
-    const parsed = JSON.parse(raw.toString("utf8")) as DbBackupIndex;
-    return { label, entries: Array.isArray(parsed.entries) ? parsed.entries : [] };
+    const parsed = JSON.parse(raw.toString("utf8")) as Partial<DbBackupIndex> | null;
+    if (!parsed || !Array.isArray(parsed.entries)) {
+      throw new Error(`Индекс бэкапов ${label} повреждён: отсутствует список копий`);
+    }
+    return { label, entries: parsed.entries };
   } catch (error) {
     if (isNotFoundError(error)) return { label, entries: [] };
     throw error;
