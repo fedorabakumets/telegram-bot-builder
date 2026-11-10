@@ -147,7 +147,7 @@ test('A05', 'содержит mock_callback = MockCallback', () => {
 test('A06', 'содержит await handle_callback_<targetId>(mock_callback)', () => {
   const p = makeCleanProject([makeCallbackTriggerNode('t1', 'confirm', 'exact', 'msg1'), makeMessageNode('msg1')]);
   const code = gen(p, 'a06');
-  ok(code.includes('await handle_callback_msg1(mock_callback)'), 'await handle_callback_msg1(mock_callback) должен быть в коде');
+  ok(code.includes('await handle_callback_msg1(mock_callback, state=state)'), 'Целевой обработчик должен получить callback и FSM state');
 });
 
 test('A07', 'содержит logging.info с user_id', () => {
@@ -648,7 +648,7 @@ test('I04', 'middleware содержит MockCallback', () => {
 test('I05', 'middleware вызывает handle_callback_<targetId>', () => {
   const p = makeCleanProject([makeIncomingCallbackTriggerNode('ict1', 'msg_target'), makeMessageNode('msg_target')]);
   const code = gen(p, 'i05');
-  ok(code.includes('await handle_callback_msg_target(mock_callback)'), 'вызов handle_callback_msg_target должен быть в коде');
+  ok(code.includes('await handle_callback_msg_target(mock_callback, state=_state_for_target)'), 'Целевой обработчик должен получить callback и FSM state');
 });
 
 test('I06', 'middleware содержит logging.info с user_id', () => {

@@ -24,6 +24,7 @@ function gen(project: unknown, label: string, withContent = true): string {
     botName: `Phase30_${label}`,
     userDatabaseEnabled: withContent,
     projectId: withContent ? 245 : null,
+    contentCache: withContent,
   });
 }
 
