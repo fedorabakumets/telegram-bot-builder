@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { cn } from '@/utils/utils';
+import { isRetryAudienceReady } from '../utils/validate-retry-audience';
 import { useAudiencePreview } from '../hooks/use-audience-preview';
 import { useFrozenBots } from '../hooks/use-frozen-bots';
 import { useDefaultTokenIds } from '../hooks/use-default-token-ids';
@@ -74,8 +75,9 @@ export function StepAudience({ projectId, tokenId, formData, onChange, onNext, o
         if (prev[tid]) nextGroups[tid] = prev[tid];
       }
       onChange({
+        retryAudience: undefined,
         tokenIds: nextTokenIds,
-        groupsByTokenId: nextGroups,
+        groupsByTokenId: formData.filters.audienceType === 'retry' ? {} : nextGroups,
         filters: { ...formData.filters, groupIds: undefined, ...(formData.filters.audienceType === 'retry' ? { retryBroadcastId: undefined, userIds: [] } : {}) },
       });
     },
@@ -97,7 +99,9 @@ export function StepAudience({ projectId, tokenId, formData, onChange, onNext, o
   );
 
   /** Сервер учитывает доступность пользователей для каждого выбранного бота. */
-  const recipientCount = tokenIds.length > 0 && (audienceType !== 'retry' || !!formData.filters.userIds?.length) ? count : 0;
+  const retryReady = isRetryAudienceReady(formData);
+  const retryGroups = audienceType === 'retry' && retryReady ? formData.retryAudience?.groupIds.length ?? 0 : 0;
+  const recipientCount = tokenIds.length > 0 && (audienceType !== 'retry' || retryReady) ? count + retryGroups : 0;
 
   /** Обработчик добавления тега */
   const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -155,8 +159,9 @@ export function StepAudience({ projectId, tokenId, formData, onChange, onNext, o
         <RadioGroup
           value={audienceType}
           onValueChange={(v) => onChange({
+            retryAudience: undefined,
             filters: { ...formData.filters, audienceType: v as NewBroadcastFormData['filters']['audienceType'], retryBroadcastId: undefined, userIds: undefined, ...(v === 'retry' ? { groupIds: undefined } : {}) },
-            ...(v === 'retry' ? { groupsByTokenId: {} } : {}),
+            ...((v === 'retry' || audienceType === 'retry') ? { groupsByTokenId: {} } : {}),
           })}
           className="grid grid-cols-1 min-[420px]:grid-cols-2 gap-2"
         >
@@ -231,7 +236,7 @@ export function StepAudience({ projectId, tokenId, formData, onChange, onNext, o
         <Button variant="ghost" onClick={onCancel}>Отмена</Button>
         <Button
           onClick={onNext}
-          disabled={statuses.isLoading || statuses.isError || tokenIds.length === 0 || tokenIds.some((id) => frozenTokenIds.includes(id)) || (audienceType === 'retry' && (!formData.filters.retryBroadcastId || !formData.filters.userIds?.length || isLoading || count === 0))}
+          disabled={statuses.isLoading || statuses.isError || tokenIds.length === 0 || tokenIds.some((id) => frozenTokenIds.includes(id)) || (audienceType === 'retry' && (!retryReady || isLoading || recipientCount === 0))}
           className="bg-primary text-primary-foreground hover:bg-primary/90"
         >
           Далее →

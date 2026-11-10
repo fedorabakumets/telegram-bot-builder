@@ -7,6 +7,7 @@ import { useMemo } from 'react';
 import { Tag, Users, Clock, MessageSquare, Send, Layers, Bot } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useProjectTokens } from '@/hooks/use-project-tokens';
+import { isRetryAudienceReady } from '../utils/validate-retry-audience';
 import { useAudiencePreview } from '../hooks/use-audience-preview';
 import { BroadcastMessagePreview } from '../components/broadcast-message-preview';
 import { BroadcastValidationAlerts } from '../components/broadcast-validation-alerts';
@@ -69,14 +70,16 @@ export function StepConfirm({ projectId, tokenId, formData, isLoading, onConfirm
   );
 
   /** Сервер исключает недоступные аккаунты и учитывает каждого выбранного бота. */
-  const recipientCount = count;
+  const retryReady = isRetryAudienceReady(formData);
+  const retryGroups = audienceType === 'retry' && retryReady ? formData.retryAudience?.groupIds.length ?? 0 : 0;
+  const recipientCount = audienceType === 'retry' && !retryReady ? 0 : count + retryGroups;
 
   /**
    * Боты отправляют параллельно, поэтому время оценивается по самому
    * загруженному боту, а не по сумме всех получателей.
    */
   const slowestBotCount = perBot.length > 0
-    ? Math.max(...perBot.map((item) => item.count))
+    ? Math.max(...perBot.map((item) => item.count)) + retryGroups
     : recipientCount;
   const estimatedSeconds = slowestBotCount > 0 ? Math.ceil(slowestBotCount / SEND_RATE) : 0;
   const validation = useMemo(() => validateBroadcastMessage(formData), [formData]);

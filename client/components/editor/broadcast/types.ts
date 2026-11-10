@@ -77,6 +77,17 @@ export interface NewBroadcastFormData {
   tokenIds: number[];
   /** Группы по ботам: tokenId → Telegram chat_id[] */
   groupsByTokenId?: Record<number, string[]>;
+  /** Проверенная аудитория исходной рассылки; сбрасывается при смене источника. */
+  retryAudience?: {
+    /** Бот исходной рассылки. */
+    tokenId: number;
+    /** Исходная рассылка. */
+    broadcastId: number;
+    /** Пользователи с прочими ошибками. */
+    userIds: string[];
+    /** Принадлежащие боту группы с прочими ошибками. */
+    groupIds: string[];
+  };
   /** Фильтры аудитории */
   filters: {
     /** Тип аудитории */

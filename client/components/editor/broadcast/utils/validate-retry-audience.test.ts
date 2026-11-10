@@ -8,7 +8,7 @@ import type { NewBroadcastFormData } from '../types';
  * @returns Форма для проверки ограничений отправки
  */
 function form(): NewBroadcastFormData {
-  return { tokenIds: [11], filters: { audienceType: 'retry', retryBroadcastId: 7, userIds: ['123'] } } as NewBroadcastFormData;
+  return { retryAudience: { tokenId: 11, broadcastId: 7, userIds: ['123'], groupIds: [] }, tokenIds: [11], filters: { audienceType: 'retry', retryBroadcastId: 7, userIds: ['123'] } } as NewBroadcastFormData;
 }
 
 describe('Повторная аудитория', () => {

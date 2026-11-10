@@ -69,8 +69,8 @@ export function useCreateBroadcast({
           activeTo: filterFields.activeTo,
         };
 
-      /** Повторная отправка адресована только пользователям с ошибками. */
-      const groupsByTokenId = audienceType === 'retry' ? {} : formData.groupsByTokenId ?? {};
+      /** Повторная отправка использует только проверенные группы исходного бота. */
+      const groupsByTokenId = formData.groupsByTokenId ?? {};
       const groupsByTokenPayload: Record<string, string[]> = {};
       for (const [tid, ids] of Object.entries(groupsByTokenId)) {
         if (ids?.length) groupsByTokenPayload[String(tid)] = ids;
