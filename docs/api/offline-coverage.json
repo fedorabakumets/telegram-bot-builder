@@ -95,7 +95,7 @@
           "file": "server/index.ts",
           "line": 105,
           "method": "USE",
-          "expression": "(req, res, next) => {\n  const start = Date.now();\n  const path = apiLogPath(req.originalUrl);\n  let capturedJsonResponse: Record<string, any> | undefined = undefined;\n\n  const originalResJson = res.json;\n  res.json = function (bodyJson, ...args) {\n    capturedJsonResponse = bodyJson;\n    ret…"
+          "expression": "(req, res, next) => {\n  const start = Date.now();\n  const path = apiLogPath(req.originalUrl);\n  let capturedJsonResponse: Record<string, any> | undefined = undefined;\n\n  const originalResJson = res.json;\n  res.json = function (bodyJson, ...args) {\n    capturedJsonResponse = bodyJson;\n    return orig…"
         },
         "routes": [],
         "reason": "Middleware или статический mount, не отдельная HTTP-операция; не доказательство отсутствия вложенных Router."
@@ -590,7 +590,7 @@
       "file": "server/index.ts",
       "line": 105,
       "method": "USE",
-      "expression": "(req, res, next) => {\n  const start = Date.now();\n  const path = apiLogPath(req.originalUrl);\n  let capturedJsonResponse: Record<string, any> | undefined = undefined;\n\n  const originalResJson = res.json;\n  res.json = function (bodyJson, ...args) {\n    capturedJsonResponse = bodyJson;\n    ret…"
+      "expression": "(req, res, next) => {\n  const start = Date.now();\n  const path = apiLogPath(req.originalUrl);\n  let capturedJsonResponse: Record<string, any> | undefined = undefined;\n\n  const originalResJson = res.json;\n  res.json = function (bodyJson, ...args) {\n    capturedJsonResponse = bodyJson;\n    return orig…"
     },
     {
       "file": "server/index.ts",
