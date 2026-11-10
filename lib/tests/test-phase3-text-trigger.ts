@@ -153,10 +153,10 @@ test('A05', 'содержит mock_callback = MockCallback(', () => {
   ok(code.includes('mock_callback = MockCallback('), 'mock_callback = MockCallback( должен быть в коде');
 });
 
-test('A06', 'содержит await handle_callback_<targetId>(mock_callback)', () => {
+test('A06', 'передаёт FSMContext в handle_callback_<targetId>(mock_callback, state=state)', () => {
   const p = makeCleanProject([makeTriggerNode('t1', ['привет'], 'msg1'), makeMessageNode('msg1')]);
   const code = gen(p, 'a06');
-  ok(code.includes('await handle_callback_msg1(mock_callback)'), 'await handle_callback_msg1(mock_callback) должен быть в коде');
+  ok(code.includes('await handle_callback_msg1(mock_callback, state=state)'), 'await handle_callback_msg1(mock_callback, state=state) должен быть в коде');
 });
 
 test('A07', 'содержит logging.info(', () => {
@@ -548,8 +548,8 @@ test('H03', 'триггеры с разными targetNodeId → каждый в
     makeMessageNode('msg2', 'Ответ 2'),
   ]);
   const code = gen(p, 'h03');
-  ok(code.includes('await handle_callback_msg1(mock_callback)'), 'handle_callback_msg1 должен быть');
-  ok(code.includes('await handle_callback_msg2(mock_callback)'), 'handle_callback_msg2 должен быть');
+  ok(code.includes('await handle_callback_msg1(mock_callback, state=state)'), 'handle_callback_msg1 должен быть');
+  ok(code.includes('await handle_callback_msg2(mock_callback, state=state)'), 'handle_callback_msg2 должен быть');
 });
 
 test('H04', 'триггеры с разными флагами → флаги независимы', () => {

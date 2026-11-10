@@ -742,7 +742,7 @@ test('G01', 'command_trigger вызывает handle_callback_forward через
     makeCommandTriggerNode('cmd_fwd', '/forward', 'fwd1'),
     makeForwardMessageNode('fwd1'),
   ]), 'g01');
-  ok(code.includes('await handle_callback_fwd1(mock_callback)'), 'command_trigger должен вести в forward_message через mock_callback');
+  ok(code.includes('await handle_callback_fwd1(mock_callback, state=state)'), 'command_trigger должен вести в forward_message с передачей FSMContext');
 });
 
 test('G02', 'несколько command_trigger могут вести в один forward_message без дублирования обработчика', () => {
@@ -760,7 +760,7 @@ test('G03', 'command_trigger и forward_message с linked source node сосущ
     makeMessageNode('msg_source', 'Источник'),
     makeForwardMessageNode('fwd1', { sourceMessageNodeId: 'msg_source' }),
   ]), 'g03');
-  ok(code.includes('await handle_callback_fwd1(mock_callback)'), 'Переход command_trigger -> forward_message должен сохраниться');
+  ok(code.includes('await handle_callback_fwd1(mock_callback, state=state)'), 'Переход command_trigger -> forward_message должен сохраниться');
   ok(code.includes("linked_source_node_id = 'msg_source'"), 'Lookup привязанного источника должен сохраниться');
 });
 
@@ -782,7 +782,7 @@ test('H01', 'text_trigger exact вызывает handle_callback_forward чер�
     makeTextTriggerNode('txt_fwd', ['перешли'], 'fwd1', { matchType: 'exact' }),
     makeForwardMessageNode('fwd1'),
   ]), 'h01');
-  ok(code.includes('await handle_callback_fwd1(mock_callback)'), 'text_trigger exact должен вести в forward_message');
+  ok(code.includes('await handle_callback_fwd1(mock_callback, state=state)'), 'text_trigger exact должен вести в forward_message');
 });
 
 test('H02', 'text_trigger contains может вести в forward_message', () => {
@@ -790,7 +790,7 @@ test('H02', 'text_trigger contains может вести в forward_message', ()
     makeTextTriggerNode('txt_fwd', ['перешли'], 'fwd1', { matchType: 'contains' }),
     makeForwardMessageNode('fwd1'),
   ]), 'h02');
-  ok(code.includes('await handle_callback_fwd1(mock_callback)'), 'text_trigger contains должен вести в forward_message');
+  ok(code.includes('await handle_callback_fwd1(mock_callback, state=state)'), 'text_trigger contains должен вести в forward_message');
 });
 
 test('H03', 'несколько text_trigger могут вести в один forward_message без дублирования обработчика', () => {
@@ -838,7 +838,7 @@ test('I02', 'start может сосуществовать с condition, вед�
     makeMessageNode('msg1', 'Финал'),
   ]), 'i02');
   ok(code.includes('async def handle_callback_cond1'), 'Condition должен быть сгенерирован');
-  ok(code.includes('await handle_callback_fwd1(callback_query)'), 'Condition должен уметь вести в forward_message');
+  ok(code.includes('await handle_callback_fwd1(callback_query, state=state)'), 'Condition должен уметь вести в forward_message');
 });
 
 test('I03', 'start и forward_message с sourceMessageNodeId на message-узел не ломают генерацию', () => {
@@ -871,7 +871,7 @@ test('J01', 'message с autoTransitionTo на forward_message вызывает h
     makeMessageNode('msg1', 'Шаг 1', { enableAutoTransition: true, autoTransitionTo: 'fwd1' }),
     makeForwardMessageNode('fwd1'),
   ]), 'j01');
-  ok(code.includes('await handle_callback_fwd1(fake_callback)'), 'Автопереход message -> forward_message должен идти через fake_callback');
+  ok(code.includes('await handle_callback_fwd1(fake_callback, state=state)'), 'Автопереход message -> forward_message должен идти через fake_callback');
 });
 
 test('J02', 'message с inline-кнопкой на forward_message содержит callback_data целевого узла', () => {
@@ -908,7 +908,7 @@ test('J05', 'message -> forward_message с source-link сохраняет и а�
     makeForwardMessageNode('fwd1', { sourceMessageNodeId: 'msg1' }),
   ]), 'j05');
   const messageHandler = handlerBlock(code, 'msg1');
-  ok(messageHandler.includes('await handle_callback_fwd1(fake_callback)'), 'Автопереход должен запускать forward_message и при source-link');
+  ok(messageHandler.includes('await handle_callback_fwd1(fake_callback, state=state)'), 'Автопереход должен запускать forward_message и при source-link');
   ok(messageHandler.includes('⚡ Автопереход от узла msg1 к узлу fwd1'), 'В обработчике message должен остаться автопереход в forward_message');
   ok(code.includes("linked_source_node_id = 'msg1'"), 'Привязка sourceMessageNodeId должна остаться в генерации');
 });
@@ -941,7 +941,7 @@ test('J07', 'message без явного autoTransitionTo запускает lin
     makeForwardMessageNode('fwd1', { sourceMessageNodeId: 'msg_source' }),
   ]), 'j07');
   const messageHandler = handlerBlock(code, 'msg_source');
-  ok(messageHandler.includes('await handle_callback_fwd1(fake_callback)'), 'Связанный forward_message должен запускаться и без явного autoTransitionTo в source node');
+  ok(messageHandler.includes('await handle_callback_fwd1(fake_callback, state=state)'), 'Связанный forward_message должен запускаться и без явного autoTransitionTo в source node');
 });
 
 // ════════════════════════════════════════════════════════════════════════════════
@@ -956,7 +956,7 @@ test('K01', 'condition filled может вести в forward_message', () => {
     makeForwardMessageNode('fwd1'),
   ]), 'k01');
   const condition = handlerBlock(code, 'cond1');
-  ok(condition.includes('await handle_callback_fwd1(callback_query)'), 'Condition filled должен вести в forward_message');
+  ok(condition.includes('await handle_callback_fwd1(callback_query, state=state)'), 'Condition filled должен вести в forward_message');
 });
 
 test('K02', 'condition else может вести в forward_message', () => {
@@ -965,7 +965,7 @@ test('K02', 'condition else может вести в forward_message', () => {
     makeForwardMessageNode('fwd1'),
   ]), 'k02');
   const condition = handlerBlock(code, 'cond1');
-  ok(condition.includes('await handle_callback_fwd1(callback_query)'), 'Condition else должен вести в forward_message');
+  ok(condition.includes('await handle_callback_fwd1(callback_query, state=state)'), 'Condition else должен вести в forward_message');
 });
 
 test('K03', 'condition с несколькими ветками сохраняет и forward_message, и message-цели', () => {
@@ -978,8 +978,8 @@ test('K03', 'condition с несколькими ветками сохраняе
     makeMessageNode('msg1', 'Финал'),
   ]), 'k03');
   const condition = handlerBlock(code, 'cond1');
-  ok(condition.includes('await handle_callback_fwd1(callback_query)'), 'Ветка condition должна вести в forward_message');
-  ok(condition.includes('await handle_callback_msg1(callback_query)'), 'Ветка condition должна вести и в message');
+  ok(condition.includes('await handle_callback_fwd1(callback_query, state=state)'), 'Ветка condition должна вести в forward_message');
+  ok(condition.includes('await handle_callback_msg1(callback_query, state=state)'), 'Ветка condition должна вести и в message');
 });
 
 test('K04', 'integration condition + forward_message синтаксически корректна', () => {
@@ -1000,7 +1000,7 @@ test('L01', 'media с autoTransitionTo на forward_message вызывает han
     makeMediaNode('media1', ['https://ex.com/a.jpg'], { enableAutoTransition: true, autoTransitionTo: 'fwd1' }),
     makeForwardMessageNode('fwd1'),
   ]), 'l01');
-  ok(code.includes('await handle_callback_fwd1(fake_cb)'), 'Автопереход media -> forward_message должен идти через fake_cb');
+  ok(code.includes('await handle_callback_fwd1(fake_cb, state=state)'), 'Автопереход media -> forward_message должен идти через fake_cb');
 });
 
 test('L02', 'forward_message может использовать media-узел как sourceMessageNodeId', () => {
@@ -1040,7 +1040,7 @@ test('L05', 'media -> forward_message с source-link сохраняет и ав�
     makeMediaNode('media1', ['https://ex.com/a.jpg'], { enableAutoTransition: true, autoTransitionTo: 'fwd1' }),
     makeForwardMessageNode('fwd1', { sourceMessageNodeId: 'media1' }),
   ]), 'l05');
-  ok(code.includes('await handle_callback_fwd1(fake_cb)'), 'Автопереход media -> forward_message должен генерироваться и при source-link');
+  ok(code.includes('await handle_callback_fwd1(fake_cb, state=state)'), 'Автопереход media -> forward_message должен генерироваться и при source-link');
   ok(code.includes("linked_source_node_id = 'media1'"), 'Привязка media-источника должна остаться в генерации');
 });
 
@@ -1049,7 +1049,7 @@ test('L06', 'media без явного autoTransitionTo запускает linke
     makeMediaNode('media1', ['https://ex.com/a.jpg']),
     makeForwardMessageNode('fwd1', { sourceMessageNodeId: 'media1' }),
   ]), 'l06');
-  ok(code.includes('await handle_callback_fwd1(fake_cb)'), 'Связанный forward_message должен запускаться и без явного autoTransitionTo у media-узла');
+  ok(code.includes('await handle_callback_fwd1(fake_cb, state=state)'), 'Связанный forward_message должен запускаться и без явного autoTransitionTo у media-узла');
 });
 
 // ════════════════════════════════════════════════════════════════════════════════
@@ -1209,9 +1209,9 @@ test('P01', 'command_trigger → condition → forward_message + message ген�
     makeForwardMessageNode('fwd1'),
     makeMessageNode('msg1', 'Фолбэк'),
   ]), 'p01');
-  ok(code.includes('await handle_callback_cond1(mock_callback)'), 'Command trigger должен вести в condition');
-  ok(code.includes('await handle_callback_fwd1(callback_query)'), 'Condition должен уметь вести в forward_message');
-  ok(code.includes('await handle_callback_msg1(callback_query)'), 'Condition должен уметь вести и в message');
+  ok(code.includes('await handle_callback_cond1(mock_callback, state=state)'), 'Command trigger должен вести в condition');
+  ok(code.includes('await handle_callback_fwd1(callback_query, state=state)'), 'Condition должен уметь вести в forward_message');
+  ok(code.includes('await handle_callback_msg1(callback_query, state=state)'), 'Condition должен уметь вести и в message');
 });
 
 test('P02', 'text_trigger → message(auto) → forward_message работает как единая цепочка', () => {
@@ -1220,8 +1220,8 @@ test('P02', 'text_trigger → message(auto) → forward_message работает
     makeMessageNode('msg1', 'Подготовка', { enableAutoTransition: true, autoTransitionTo: 'fwd1' }),
     makeForwardMessageNode('fwd1'),
   ]), 'p02');
-  ok(code.includes('await handle_callback_msg1(mock_callback)'), 'Text trigger должен вести в message');
-  ok(code.includes('await handle_callback_fwd1(fake_callback)'), 'Message должен автопереходить в forward_message');
+  ok(code.includes('await handle_callback_msg1(mock_callback, state=state)'), 'Text trigger должен вести в message');
+  ok(code.includes('await handle_callback_fwd1(fake_callback, state=state)'), 'Message должен автопереходить в forward_message');
 });
 
 test('P03', 'media(auto) → condition → forward_message/manual recipient работает как единая цепочка', () => {
@@ -1230,8 +1230,8 @@ test('P03', 'media(auto) → condition → forward_message/manual recipient ра
     makeConditionNode('cond1', 'step', [makeConditionBranch('else', { target: 'fwd1' })]),
     makeForwardMessageNode('fwd1', { targetChatId: '@channel_name' }),
   ]), 'p03');
-  ok(code.includes('await handle_callback_cond1(fake_cb)'), 'Media должен автопереходить в condition');
-  ok(code.includes('await handle_callback_fwd1(callback_query)'), 'Condition должен вести в forward_message');
+  ok(code.includes('await handle_callback_cond1(fake_cb, state=state)'), 'Media должен автопереходить в condition');
+  ok(code.includes('await handle_callback_fwd1(callback_query, state=state)'), 'Condition должен вести в forward_message');
   ok(code.includes('@channel_name'), 'Manual recipient должен сохраняться в сложной цепочке');
 });
 
@@ -1883,7 +1883,7 @@ test('X04', 'полный сценарий: /close → condition → msg-closed 
 
 test('X05', 'полный сценарий: два command_trigger (/start и /close) оба присутствуют', () => {
   const code = gen(makeSupportDemoProject(), 'x05');
-  ok(code.includes('Command("start")'), '/start handler должен быть в коде');
+  ok(code.includes('CommandStart(deep_link=False)'), '/start handler должен быть в коде');
   ok(code.includes('Command("close")'), '/close handler должен быть в коде');
 });
 
