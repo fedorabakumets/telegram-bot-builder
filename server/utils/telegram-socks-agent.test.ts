@@ -12,7 +12,9 @@ test('запрос проходит через SOCKS5 и передаёт имя
   let destination = '';
   const server = createServer((socket) => {
     let step = 0;
-    socket.on('data', (data) => {
+    /** Нормализует данные сокета для разбора байтов SOCKS5. */
+    socket.on('data', (chunk) => {
+      const data = typeof chunk === 'string' ? Buffer.from(chunk) : chunk;
       if (step++ === 0) socket.write(Buffer.from([5, 0]));
       else if (step === 2) {
         destination = data.subarray(5, 5 + data[4]).toString();

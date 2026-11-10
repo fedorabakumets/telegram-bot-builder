@@ -7,7 +7,7 @@ import { broadcastProjectEvent } from "../../../../terminal/broadcastProjectEven
 /**
  * Сохраняет историю и уведомляет групповой диалог после успешной доставки.
  * @param projectId - Идентификатор проекта.
- * @param tokenId - Идентификатор бота.
+ * @param tokenId - Идентификатор бота; отсутствие передаётся как undefined.
  * @param broadcastId - Идентификатор рассылки.
  * @param groupId - Идентификатор группового чата.
  * @param messageText - Доставленный текст.
@@ -21,7 +21,7 @@ export async function saveBroadcastGroupMessage(
   // Записываем сообщение в историю группового диалога
   await storage.createBotMessage({
     projectId,
-    tokenId,
+    tokenId: tokenId ?? undefined,
     userId: groupId,
     chatId: groupId,
     messageType: "bot",
@@ -38,7 +38,7 @@ export async function saveBroadcastGroupMessage(
   await broadcastProjectEvent(projectId, {
     type: "new-message",
     projectId,
-    tokenId,
+    tokenId: tokenId ?? undefined,
     data: {
       id: 0,
       userId: groupId,

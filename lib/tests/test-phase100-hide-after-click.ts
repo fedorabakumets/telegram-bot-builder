@@ -58,7 +58,7 @@ describe('Фаза 100: hideAfterClick независимо от целевой 
   }
 
   it('не добавляет middleware, если флаг не включён', () => {
-    const code = generatePythonCode({ nodes: [node('plain', 'message', { messageText: 'Текст' })], connections: [] }, {});
+    const code = generatePythonCode({ nodes: [node('plain', 'message', { messageText: 'Текст' })] }, {});
     assert.ok(!code.includes('async def hide_after_click_middleware'));
   });
 });

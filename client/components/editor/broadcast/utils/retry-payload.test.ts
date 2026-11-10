@@ -1,6 +1,6 @@
 /** @fileoverview Проверка реального POST повторной рассылки только проверенным группам. */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { useCreateBroadcast } from '../hooks/use-create-broadcast';
+import { useCreateBroadcast as createBroadcastForTest } from '../hooks/use-create-broadcast';
 import type { NewBroadcastFormData } from '../types';
 
 const mocks = vi.hoisted(() => ({ request: vi.fn() }));
@@ -20,11 +20,11 @@ function form(): NewBroadcastFormData {
 }
 
 /**
- * Получает функцию отправки из хука с подменённым транспортом.
+ * Получает функцию отправки из хука с подменёнными React-хуками и транспортом.
  * @returns Функция создания рассылки
  */
 function mutation() {
-  return (useCreateBroadcast({ projectId: 12 }) as unknown as {
+  return (createBroadcastForTest({ projectId: 12 }) as unknown as {
     /** Обработчик отправки формы. */
     mutationFn: (data: NewBroadcastFormData) => Promise<unknown>;
   }).mutationFn;

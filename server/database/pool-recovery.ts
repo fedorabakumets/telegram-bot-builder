@@ -1,5 +1,5 @@
 /** @fileoverview Ограниченная проверка восстановления PostgreSQL без потери клиентов и шторма таймеров. */
-import type { Pool } from 'pg';
+import type { ClientConfig, Pool, QueryConfig } from 'pg';
 /**
  * Проверяет соединение и уничтожает непригодного клиента даже при ошибке SELECT.
  * @param pool - Проверяемый пул PostgreSQL
@@ -8,7 +8,9 @@ import type { Pool } from 'pg';
 export async function probePool(pool: Pick<Pool, 'connect'>): Promise<void> {
   const client = await pool.connect();
   let failed = false;
-  try { await client.query({ text: 'SELECT 1', query_timeout: 5000 }); }
+  /** Таймаут поддерживается драйвером pg, но отсутствует в базовом QueryConfig. */
+  const query: QueryConfig & Pick<ClientConfig, 'query_timeout'> = { text: 'SELECT 1', query_timeout: 5000 };
+  try { await client.query(query); }
   catch (error) { failed = true; throw error; }
   finally { client.release(failed); }
 }

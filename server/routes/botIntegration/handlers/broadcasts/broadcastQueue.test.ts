@@ -19,7 +19,8 @@ import { activeBroadcasts, runBroadcastQueue } from "./broadcastQueue";
 
 /** Возвращает сохранённый итог очереди. */
 function finalUpdate() {
-  return mocks.storage.updateBroadcast.mock.calls.at(-1)?.[1];
+  const calls = mocks.storage.updateBroadcast.mock.calls;
+  return calls[calls.length - 1]?.[1];
 }
 
 describe("Общие счётчики пользователей и групп", () => {

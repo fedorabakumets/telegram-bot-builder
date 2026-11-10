@@ -76,7 +76,7 @@ export function RetryAudienceSelect({ projectId, formData, onChange }: RetryAudi
       <select id="retry-broadcast" value={broadcastId ?? ''} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         onChange={(event) => onChange({ retryAudience: undefined, groupsByTokenId: {}, filters: { ...formData.filters, retryBroadcastId: Number(event.target.value) || undefined, userIds: [], groupIds: undefined } })}>
         <option value="">Выберите рассылку</option>
-        {history.data.map((item) => <option key={item.id} value={item.id}>{item.name || `Рассылка №${item.id}`} · {new Date(item.createdAt).toLocaleDateString('ru-RU')}</option>)}
+        {history.data.map((item) => <option key={item.id} value={item.id}>{item.name || `Рассылка №${item.id}`} · {item.createdAt ? new Date(item.createdAt).toLocaleDateString('ru-RU') : 'Дата неизвестна'}</option>)}
       </select>
       <p className="text-xs leading-relaxed text-muted-foreground">Повторим отправку только пользователям и группам с прочими ошибками. Заблокированные и удалённые аккаунты, а также недоступные группы исключаются.</p>
       {detail.data && <p className="text-sm text-muted-foreground">Пользователей: {detail.data.userIds.length} · групп: {detail.data.groupIds.length}</p>}
