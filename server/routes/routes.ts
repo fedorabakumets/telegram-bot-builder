@@ -97,6 +97,7 @@ import { getTelegramProxyAgent } from "../utils/telegram-proxy";
 import { sessionActivityMiddleware } from "../auth/session-registry";
 import { attachAdminAudit } from "../admin/admin-audit";
 import { setupSwagger } from "../swagger/setup-swagger";
+import { cookieCsrf } from '../middleware/cookie-csrf';
 import {
   CHART_WINDOW_INTERVAL,
   getChartSeriesGranularity,
@@ -469,6 +470,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   app.use(sessionMiddleware);
+  /** Проверяет источник изменений через cookie до API и административных обработчиков. */
+  app.use(['/api', '/admin/api'], cookieCsrf);
   // Экспортируем для использования в WebSocket (прикрепление сессии к WS запросам)
   exportedSessionMiddleware = sessionMiddleware;
 

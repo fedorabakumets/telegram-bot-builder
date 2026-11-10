@@ -94,10 +94,11 @@ async function websocket(base, cookie, projectId) {
 /** Проверяет реальные пользовательские и административные запросы через единый публичный адрес. */
 async function exercise(base, mode) {
   const cookies = new Map();
-  /** Сохраняет несколько независимых cookie и запрещает автоматическое следование редиректам. */
+  /** Сохраняет cookie, передаёт Origin браузера для изменений и запрещает автоматические редиректы. */
   async function request(path, options = {}, status = 200) {
+    const browserOrigin = ['GET', 'HEAD', 'OPTIONS'].includes(options.method || 'GET') ? {} : { Origin: base };
     const response = await fetch(base + path, { ...options, redirect: 'manual', signal: AbortSignal.timeout(30000),
-      headers: { cookie: [...cookies.values()].filter(item => path.startsWith(item.path)).map(item => item.pair).join('; '), ...options.headers } });
+      headers: { cookie: [...cookies.values()].filter(item => path.startsWith(item.path)).map(item => item.pair).join('; '), ...browserOrigin, ...options.headers } });
     for (const value of response.headers.getSetCookie()) {
       const pair = value.split(';')[0], name = pair.slice(0, pair.indexOf('='));
       const cookiePath = value.match(/;\s*Path=([^;]+)/i)?.[1] || '/';

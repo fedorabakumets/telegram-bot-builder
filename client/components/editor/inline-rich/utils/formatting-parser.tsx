@@ -7,6 +7,7 @@
  */
 
 import { decodeHtmlEntities } from './html-entities';
+import { safeRichUrl } from './safe-rich-html';
 
 /**
  * Ссылка на счётчик ключей JSX — избегает глобального состояния
@@ -134,7 +135,8 @@ function nodeToJsx(node: Node, keyRef: KeyRef): JSX.Element | null {
     }
 
     case 'A': {
-      const href = (el as HTMLAnchorElement).getAttribute('href') ?? '#';
+      const href = safeRichUrl(el.getAttribute('href') ?? '');
+      if (!href) return <span key={keyRef.current++}>{children}</span>;
       return (
         <a
           key={keyRef.current++}

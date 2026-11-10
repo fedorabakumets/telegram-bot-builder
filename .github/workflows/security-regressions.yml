@@ -1,0 +1,31 @@
+# @fileoverview Проверяет защиту административного входа, cookie-запросов и HTML редактора.
+name: Security regressions
+
+on:
+  push:
+    paths:
+      - 'server/**'
+      - 'client/components/editor/inline-rich/**'
+      - 'package*.json'
+      - '.github/workflows/security-regressions.yml'
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx vitest run --config server/admin/admin-login-rate-limit.vitest.config.ts
+      - run: npx vitest run --config server/middleware/cookie-csrf.vitest.config.ts
+      - run: npx vitest run --config client/components/editor/inline-rich/vitest.security.config.ts

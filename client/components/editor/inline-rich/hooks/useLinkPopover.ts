@@ -4,6 +4,7 @@
  */
 
 import { useRef, useState, useCallback } from 'react';
+import { safeRichUrl } from '../utils/safe-rich-html';
 
 /**
  * Результат работы хука useLinkPopover
@@ -105,7 +106,11 @@ export function useLinkPopover(onInput: () => void): UseLinkPopoverReturn {
       return;
     }
 
-    const normalizedUrl = normalizeUrl(url);
+    const normalizedUrl = safeRichUrl(normalizeUrl(url));
+    if (!normalizedUrl) {
+      setIsOpen(false);
+      return;
+    }
 
     // Восстанавливаем выделение
     const selection = window.getSelection();
