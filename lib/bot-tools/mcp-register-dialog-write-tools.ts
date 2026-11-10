@@ -21,7 +21,7 @@ export function registerDialogWriteTools(server: McpServer): void {
   }, async ({ project_id, token_id, user_id, ...body }) => result(await writeDialogMessage(project_id, token_id, user_id, 'send-message', body)));
   server.registerTool('db_send_node_message', {
     description: 'Отправляет пользователю реальное сообщение из ноды. Не является предпросмотром; после неизвестного исхода не повторять автоматически.',
-    inputSchema: { ...base, requestId: actionRequestIdSchema, user_id: z.string().regex(/^[1-9]\d{0,19}$/), nodeId: z.string().min(1).max(200), userData: z.record(z.unknown()).optional() },
+    inputSchema: { ...base, requestId: actionRequestIdSchema, user_id: z.string().regex(/^[1-9]\d{0,19}$/), nodeId: z.string().min(1).max(200), userData: z.record(z.string(), z.unknown()).optional() },
     annotations: { readOnlyHint: false, idempotentHint: false, openWorldHint: true },
     _meta: { botcraft: { section: 'dialogs', effect: 'external' } },
   }, async ({ project_id, token_id, user_id, ...body }) => result(await writeDialogMessage(project_id, token_id, user_id, 'send-node-message', body)));

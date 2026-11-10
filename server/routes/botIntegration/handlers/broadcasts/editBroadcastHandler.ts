@@ -29,7 +29,7 @@ export async function editBroadcastHandler(req: Request, res: Response): Promise
 
     const validation = editBroadcastBodySchema.safeParse(req.body);
     if (!validation.success) {
-      res.status(400).json({ message: "Неверное тело запроса", errors: validation.error.errors });
+      res.status(400).json({ message: "Неверное тело запроса", errors: validation.error.issues });
       return;
     }
 

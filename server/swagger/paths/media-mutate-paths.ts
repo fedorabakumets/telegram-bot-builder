@@ -37,7 +37,7 @@ export function registerMediaMutatePaths(
     request: {
       cookies: MediaCookiesSchema,
       params: MediaIdParamsSchema,
-      body: { content: { "application/json": { schema: z.record(z.unknown()) } } },
+      body: { content: { "application/json": { schema: z.record(z.string(), z.unknown()) } } },
     },
     responses: {
       200: {
@@ -108,7 +108,7 @@ export function registerMediaMutatePaths(
       },
     },
     responses: {
-      200: { description: "file_id сохранён", content: { "application/json": { schema: z.record(z.unknown()) } } },
+      200: { description: "file_id сохранён", content: { "application/json": { schema: z.record(z.string(), z.unknown()) } } },
       401: { description: "Не авторизован", content: { "application/json": { schema: UnauthorizedSchema } } },
       403: { description: "Нет доступа", content: { "application/json": { schema: MediaErrorSchema } } },
     },

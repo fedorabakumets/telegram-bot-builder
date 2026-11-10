@@ -55,6 +55,7 @@ jobs:
       - run: python -m unittest discover -s server/python -p 'test_polling_lifecycle.py' -v
       - run: python -m unittest discover -s lib/tests -p 'test_redis_lock_runtime.py' -v
       - run: node --import tsx --test server/bots/lazyAiogram.test.ts
+      - run: node --import tsx --test shared/schema/zod-migration.test.ts
       - run: npm run build
       - run: node --test frontend/*.test.mjs
       - run: node --import tsx --test scripts/vite-split.test.ts

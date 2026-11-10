@@ -51,7 +51,7 @@ export async function updateProjectHandler(req: Request, res: Response): Promise
   res.json({ ...project, effect: "application", outcome: "saved",
    persistence: { confirmed: true, projectId, revision: project.revision }, sideEffects });
  } catch (error) {
-  if (error instanceof z.ZodError) res.status(400).json({ message: "Неверные данные", errors: error.errors });
+  if (error instanceof z.ZodError) res.status(400).json({ message: "Неверные данные", errors: error.issues });
   else res.status(500).json({ message: "Не удалось обновить проект", error: (error as Error).message });
  }
 }

@@ -65,7 +65,7 @@ export const AcquisitionHistorySchema = z.object({
   /** Изменения от новых к старым. */ items: z.array(z.object({
     /** ID аудита. */ id: z.union([z.string(),z.number()]), /** Проект. */ projectId: z.number(),
     /** Ресурс. */ resource: z.string(), /** Объект. */ resourceId: z.number(),
-    /** Автор. */ actorId: z.string().nullable(), /** До изменения. */ beforeData: z.record(z.unknown()).nullable(),
-    /** После изменения. */ afterData: z.record(z.unknown()), /** Когда. */ createdAt: z.string(),
+    /** Автор. */ actorId: z.string().nullable(), /** До изменения. */ beforeData: z.record(z.string(), z.unknown()).nullable(),
+    /** После изменения. */ afterData: z.record(z.string(), z.unknown()), /** Когда. */ createdAt: z.string(),
   })),
 }).openapi('AnalyticsAcquisitionHistory');

@@ -43,7 +43,7 @@ export async function updateProjectTokenHandler(req: Request, res: Response): Pr
   void emitTokenUpdated({ projectId, tokenId, before: undefined, source: 'api' }).catch(() => undefined);
   res.json({ ...toPublicBotToken(updated), ...botTokenWriteReceipt(updated, projectId, updateData.token) });
  } catch (error) {
-  if (error instanceof z.ZodError) { res.status(400).json({ message: 'Недопустимые поля или значения токена', errors: error.errors }); return; }
+  if (error instanceof z.ZodError) { res.status(400).json({ message: 'Недопустимые поля или значения токена', errors: error.issues }); return; }
   res.status(500).json({ message: 'Не удалось обновить токен' });
  }
 }

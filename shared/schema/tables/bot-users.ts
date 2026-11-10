@@ -69,7 +69,7 @@ export const insertBotUserSchema = z.object({
   /** Количество взаимодействий */
   interactionCount: z.number().min(0).default(0),
   /** Пользовательские данные */
-  userData: z.record(z.any()).default({}),
+  userData: z.record(z.string(), z.any()).default({}),
   /** Флаг активности: 0 - неактивен, 1 - активен */
   isActive: z.number().min(0).max(1).default(1),
   /** Заблокировал бота: 0 — нет, 1 — да */

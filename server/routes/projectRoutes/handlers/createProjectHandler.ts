@@ -67,7 +67,7 @@ export async function createProjectHandler(req: Request, res: Response): Promise
         });
     } catch (error) {
         if (error instanceof z.ZodError) {
-            res.status(400).json({ message: "Неверные данные", errors: error.errors });
+            res.status(400).json({ message: "Неверные данные", errors: error.issues });
         } else {
             res.status(500).json({ message: "Не удалось создать проект" });
         }

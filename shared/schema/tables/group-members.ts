@@ -69,11 +69,11 @@ export const insertGroupMemberSchema = z.object({
   /** Флаг активности (0 = неактивен, 1 = активен) */
   isActive: z.number().min(0).max(1).default(1),
   /** Права администратора */
-  adminRights: z.record(z.any()).default({}),
+  adminRights: z.record(z.string(), z.any()).default({}),
   /** Кастомный титул администратора */
   customTitle: z.string().nullable().optional(),
   /** Ограничения участника */
-  restrictions: z.record(z.any()).default({}),
+  restrictions: z.record(z.string(), z.any()).default({}),
   /** Дата окончания ограничения */
   restrictedUntil: z.date().nullable().optional(),
   /** Дата вступления в группу */

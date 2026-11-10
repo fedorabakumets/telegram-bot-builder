@@ -33,7 +33,7 @@ const nodeDataSchema = z.object({
   collectUserInput: z.boolean().optional(),
   autoTransition: z.boolean().optional(),
   autoTransitionTarget: z.string().optional(),
-  variableFilters: z.record(z.any()).optional(),
+  variableFilters: z.record(z.string(), z.any()).optional(),
 }).passthrough();
 
 const nodeItemSchema = z.object({

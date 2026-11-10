@@ -987,7 +987,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       res.status(201).json({ ...toPublicBotToken(token), ...botTokenWriteReceipt(token, projectId, enrichedTokenData.token ?? undefined) });
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+        return res.status(400).json({ message: "Invalid data", errors: error.issues });
       }
       console.error('[routes] createBotToken error:', error);
       res.status(500).json({ message: "Failed to create token" });

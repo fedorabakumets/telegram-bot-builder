@@ -8,6 +8,6 @@ google-auth==2.62.1
 gspread==6.2.1
 telethon==1.45.0
 python-dotenv==1.2.4
-redis==8.1.0
+redis==7.4.1
 pytz==2026.6
 croniter==7.0.0

@@ -32,7 +32,7 @@ export const sendMessageSchema = z.object({
   /** ID узла для отправки */
   nodeId: z.string().optional(),
   /** Данные пользователя для замены переменных */
-  userData: z.record(z.unknown()).optional(),
+  userData: z.record(z.string(), z.unknown()).optional(),
 });
 
 /** Тип для отправки сообщения */
