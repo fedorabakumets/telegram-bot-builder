@@ -36,8 +36,8 @@ const backups: RuntimeField[] = [
 
 /** Запуск ботов */
 const workers: RuntimeField[] = [
-  { env: "USE_WORKER_POOL", label: "Пул воркеров", kind: "bool", hint: "Выключенный false возвращает отдельные процессы" },
-  { env: "WORKER_GROUPING", label: "Группировка", kind: "text", hint: "project, owner или shared" },
+  { env: "USE_WORKER_POOL", label: "Пул воркеров", kind: "bool", hint: "При выключении боты будут запускаться отдельными процессами. Для уже работающих ботов нужен перезапуск." },
+  { env: "WORKER_GROUPING", label: "Группировка", kind: "text", hint: "project, owner или shared. Для применения к уже работающим ботам нужен перезапуск." },
   { env: "WORKER_RUNTIME", label: "Среда", kind: "text", hint: "process, docker или remote" },
   { env: "WORKER_DOCKER_IMAGE", label: "Образ Docker", kind: "text" },
   { env: "WORKER_DOCKER_NETWORK", label: "Сеть Docker", kind: "text" },
