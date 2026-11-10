@@ -215,9 +215,12 @@ export function followCommandStream(
     let pending = true;
     while (!stopped) {
       try {
-        const entries = await redis.xreadgroup("GROUP", group, consumer, "COUNT", 1,
-          ...(pending ? [] : ["BLOCK", READ_BLOCK_MS]), "STREAMS", stream, pending ? "0" : ">");
-        if (!entries?.length) { pending = false; continue; }
+        const raw = pending
+          ? await redis.call("XREADGROUP", "GROUP", group, consumer, "COUNT", 1, "STREAMS", stream, "0")
+          : await redis.call("XREADGROUP", "GROUP", group, consumer, "COUNT", 1,
+            "BLOCK", READ_BLOCK_MS, "STREAMS", stream, ">");
+        const entries = raw as Array<[string, Array<[string, string[]]>]> | null;
+        if (!entries?.some(([, messages]) => messages.length > 0)) { pending = false; continue; }
         for (const [, messages] of entries) for (const [id, flat] of messages) {
           await onEntry({ ...decodeFields(flat), __id: id });
           await redis.xack(stream, group, id);
