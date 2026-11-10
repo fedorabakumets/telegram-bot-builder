@@ -42,9 +42,13 @@ import { startDbBackupScheduler } from "./database/backups/dbBackupScheduler";
 import { applyRuntimeProxyEnv, refreshRuntimeOverlay } from "./admin/runtime-overlay-refresh";
 import { isWorkerPoolEnabled } from "./bots/isWorkerPoolEnabled";
 import { captureTelegramEnvironmentProxy } from "./utils/telegram-connection";
+import { resolveAppMode } from './runtime/app-mode';
+import { serveBackendMedia } from './routes/viteDev/middleware/backendMediaMiddleware';
 
 // Настраиваем прокси для Telegram API ДО всех импортов
 dotenv.config({ debug: false });
+/** Режим проверяется до запуска базы данных и восстановления ботов. */
+const appMode = resolveAppMode();
 captureTelegramEnvironmentProxy();
 if (process.env.TELEGRAM_PROXY_URL && process.env.TELEGRAM_PROXY_URL.trim() !== '') {
   process.env.HTTP_PROXY = process.env.TELEGRAM_PROXY_URL;
@@ -191,7 +195,9 @@ app.use((req, res, next) => {
   // Важно настраивать Vite только в режиме разработки и после
   // настройки всех остальных маршрутов, чтобы маршрут catch-all
   // не мешал работе других маршрутов
-  if (app.get("env") === "development") {
+  if (appMode === 'backend') {
+    serveBackendMedia(app);
+  } else if (app.get("env") === "development") {
     await setupVite(app, httpServer);
   } else {
     serveStatic(app);
@@ -249,11 +255,12 @@ app.use((req, res, next) => {
   const port = process.env.PORT || 5000;
   // На Windows 'localhost' резолвится в ::1 (IPv6), а браузер коннектится к 127.0.0.1 (IPv4).
   // Используем 0.0.0.0 в dev чтобы слушать на всех интерфейсах включая IPv4.
-  const host = process.env.NODE_ENV === 'production' ? '0.0.0.0' : '0.0.0.0';
+  /** Railway допускает HOST=:: для доступа по внутренней IPv6-сети. */
+  const host = process.env.HOST?.trim() || '0.0.0.0';
   httpServer.listen(Number(port), host, () => {
     // Отображаем localhost в логах даже при привязке к 0.0.0.0 для внешних подключений
-    const displayHost = host === '0.0.0.0' ? 'localhost' : host;
-    log(`сервер запущен на http://${displayHost}:${port}`);
+    const displayHost = host === '0.0.0.0' || host === '::' ? 'localhost' : host;
+    log(`сервер запущен на http://${displayHost}:${port} (${appMode})`);
     log(`Admin panel: http://${displayHost}:${port}/admin`);
     if (process.env.NODE_ENV !== "production") {
       log(`OpenAPI docs (dev): http://${displayHost}:${port}/docs`);

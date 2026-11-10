@@ -1,0 +1,13 @@
+# @fileoverview Неактивный по умолчанию конфиг отдельного API и ботов.
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile.backend"
+# Экспорт генератора использует две утилиты client/: исключать весь client нельзя.
+watchPatterns = ["/server/**", "/lib/**", "/shared/**", "/client/utils/**", "/client/components/editor/sidebar/parsePythonCodeToJson.ts", "/scripts/**", "/migrations/**", "/assets/**", "/requirements.txt", "/package.json", "/package-lock.json", "/.npmrc", "/.dockerignore", "/tsconfig*.json", "/drizzle.config.ts", "/version.json", "/Dockerfile.backend", "/railway.backend.toml"]
+
+[deploy]
+startCommand = "node dist/server/index.js"
+healthcheckPath = "/api/health"
+healthcheckTimeout = 60
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10

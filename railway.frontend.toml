@@ -1,0 +1,12 @@
+# @fileoverview Неактивный по умолчанию конфиг отдельного frontend-сервиса.
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile.frontend"
+watchPatterns = ["/client/**", "/frontend/**", "/shared/**", "/lib/**", "/assets/**", "/attached_assets/**", "/scripts/vite*.ts", "/package.json", "/package-lock.json", "/.npmrc", "/.dockerignore", "/vite.config.ts", "/tailwind.config.ts", "/postcss.config.js", "/tsconfig*.json", "/Dockerfile.frontend", "/railway.frontend.toml"]
+
+[deploy]
+startCommand = "node frontend/index.mjs"
+healthcheckPath = "/api/health"
+healthcheckTimeout = 60
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10

@@ -1,4 +1,8 @@
-import { defineConfig, type Plugin } from "vite";
+/**
+ * @fileoverview Общая сборка интерфейса и настройки встроенного либо отдельного Vite-сервера.
+ */
+import { defineConfig, loadEnv, type Plugin } from "vite";
+import { createSplitViteServer } from "./scripts/vite-split-config";
 import react from "@vitejs/plugin-react";
 import path from "path";
 import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
@@ -10,6 +14,7 @@ const cryptoPolyfill: Plugin = {
     if (id === 'crypto') {
       return id;
     }
+    return undefined;
   },
   load(id: string) {
     if (id === 'crypto') {
@@ -38,6 +43,7 @@ const cryptoPolyfill: Plugin = {
         export default { randomBytes, getRandomValues };
       `;
     }
+    return undefined;
   }
 };
 
@@ -68,10 +74,14 @@ const serverOnlyModules: Plugin = {
       // Возвращаем пустой модуль для браузера
       return { id, external: true };
     }
+    return undefined;
   }
 };
 
-export default defineConfig(async () => {
+export default defineConfig(async ({ mode }) => {
+  /** Серверные настройки читаются без переноса в браузерный define. */
+  const env = { ...loadEnv(mode, process.cwd(), ""), ...process.env };
+  const splitServer = env.SPLIT_FRONTEND === "1" ? createSplitViteServer(env) : {};
   const cartographer = process.env.NODE_ENV !== "production" && process.env.REPL_ID !== undefined
     ? await import("@replit/vite-plugin-cartographer").then((m) => m.cartographer())
     : [];
@@ -112,8 +122,9 @@ export default defineConfig(async () => {
       hmr: {
         // Плашка ошибки: после исправления Vite сам перезагружает вкладку
         overlay: true,
-        clientPort: 5000
+        clientPort: Number(env.PORT || 5000)
       },
+      ...splitServer,
     },
     define: {
       global: 'globalThis',
