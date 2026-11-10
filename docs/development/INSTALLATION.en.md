@@ -1,4 +1,3 @@
-<!-- @fileoverview Требования, установка и запуск проекта BotCraft. -->
 # Installation Guide
 
 [🇷🇺 Русский](INSTALLATION.md) | **🇬🇧 English**

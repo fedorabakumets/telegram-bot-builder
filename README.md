@@ -1,4 +1,3 @@
-<!-- @fileoverview Требования, установка и запуск проекта BotCraft. -->
 <div align="center">
 
   **🇷🇺 Русский** | [🇬🇧 English](README.en.md)
