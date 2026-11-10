@@ -418,7 +418,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-11-03T07:33:45+03:00",
+    "updated_at": "2026-11-10T12:12:01+03:00",
     "tags": [],
     "author": ""
   },
@@ -1243,7 +1243,7 @@
     "folder_titles": {
       "deployment": "🚀 Деплой"
     },
-    "updated_at": "2026-10-08T08:53:27+03:00",
+    "updated_at": "2026-11-10T12:12:01+03:00",
     "tags": [],
     "author": ""
   },
@@ -1499,6 +1499,21 @@
       "development": "🛠️ Разработка"
     },
     "updated_at": "2026-11-10T06:30:06+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "development/project-history-loading",
+    "title": "Загрузка истории проектов",
+    "excerpt": "Список истории получает из PostgreSQL только метаданные: идентификатор, метку,",
+    "parts": [
+      "development",
+      "project-history-loading"
+    ],
+    "folder_titles": {
+      "development": "🛠️ Разработка"
+    },
+    "updated_at": "2026-11-10T12:12:01+03:00",
     "tags": [],
     "author": ""
   },
