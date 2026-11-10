@@ -12,9 +12,10 @@
 | project_id | integer | - | NO | - | [bot_projects.id](./bot_projects.md) | Идентификатор проекта (ссылка на bot_projects.id) |
 | owner_id | bigint | - | YES | - | [telegram_users.id](./telegram_users.md) | Идентификатор владельца токена (наследуется от проекта) |
 | name | text | - | NO | - | - | Пользовательское имя для токена |
-| token | text | - | NO | - | - | Токен бота (хранится в зашифрованном виде) |
+| token | text | - | NO | - | - | Секрет Telegram Bot API; сохраняется в БД и входит в резервную копию |
 | is_default | integer | `0` | YES | - | - | Флаг токена по умолчанию (0 = нет, 1 = да) |
 | is_active | integer | `1` | YES | - | - | Флаг активности токена (0 = неактивен, 1 = активен) |
+| authorization_error | text | - | YES | - | - | Подтверждённая ошибка авторизации Telegram; null — токен не отклонён |
 | description | text | - | YES | - | - | Описание токена |
 | bot_first_name | text | - | YES | - | - | Имя бота из Telegram API |
 | bot_username | text | - | YES | - | - | Имя пользователя бота (@username) из Telegram API |
