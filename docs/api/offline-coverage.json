@@ -1909,35 +1909,35 @@
     },
     {
       "file": "server/routes/setupStorageConfigRoutes.ts",
-      "line": 25,
+      "line": 28,
       "method": "GET",
       "expression": "\"/api/storage-configs\"",
       "resolvedPath": "/api/storage-configs"
     },
     {
       "file": "server/routes/setupStorageConfigRoutes.ts",
-      "line": 26,
+      "line": 29,
       "method": "POST",
       "expression": "\"/api/storage-configs\"",
       "resolvedPath": "/api/storage-configs"
     },
     {
       "file": "server/routes/setupStorageConfigRoutes.ts",
-      "line": 27,
+      "line": 30,
       "method": "PATCH",
       "expression": "\"/api/storage-configs/:id\"",
       "resolvedPath": "/api/storage-configs/{id}"
     },
     {
       "file": "server/routes/setupStorageConfigRoutes.ts",
-      "line": 28,
+      "line": 31,
       "method": "DELETE",
       "expression": "\"/api/storage-configs/:id\"",
       "resolvedPath": "/api/storage-configs/{id}"
     },
     {
       "file": "server/routes/setupStorageConfigRoutes.ts",
-      "line": 29,
+      "line": 32,
       "method": "POST",
       "expression": "\"/api/storage-configs/:id/test\"",
       "resolvedPath": "/api/storage-configs/{id}/test"
