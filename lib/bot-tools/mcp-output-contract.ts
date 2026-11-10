@@ -21,7 +21,7 @@ export const actionExecutionSchema = z.object({
   persistence: z.object({ confirmed: z.boolean(), projectId: z.number().int().positive().optional(),
     revision: z.number().int().nonnegative().optional() }),
   /** Дополнительные статусы сервера без объявления их успешными по умолчанию. */
-  sideEffects: z.record(z.unknown()).optional(),
+  sideEffects: z.record(z.string(), z.unknown()).optional(),
 });
 
 /** Общая оболочка: точная схема execution и исходный неоднородный payload. */

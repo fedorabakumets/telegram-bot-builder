@@ -11,17 +11,13 @@ export default defineConfig({
   plugins: [react() as any],
   test: {
     globals: true,
-    environment: 'jsdom',
-    environmentMatchGlobs: [
-      ['lib/**', 'node'],
+    projects: [
+      { extends: true, test: { name: 'client', environment: 'jsdom', include: ['client/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'] } },
+      { extends: true, test: { name: 'lib', environment: 'node', include: ['lib/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'] } },
     ],
     setupFiles: [
       './client/components/editor/database/dialog/tests/setup-tests.ts',
       './client/utils/tests/setup-tests.ts'
-    ],
-    include: [
-      'client/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
-      'lib/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
     ],
     exclude: ['node_modules/**'],
     coverage: {

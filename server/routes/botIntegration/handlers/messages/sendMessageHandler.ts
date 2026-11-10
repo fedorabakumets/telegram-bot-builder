@@ -42,7 +42,7 @@ export async function sendMessageHandler(req: Request, res: Response): Promise<v
     if (!validationResult.success) {
       res.status(400).json({
         message: "Неверное тело запроса",
-        errors: validationResult.error.errors,
+        errors: validationResult.error.issues,
       });
       return;
     }

@@ -126,7 +126,7 @@ export const SendNodeMessageRequestSchema = z
     /** ID узла на канвасе */
     nodeId: z.string().min(1).openapi({ example: "welcome-msg" }),
     /** Доп. user_data для подстановки переменных */
-    userData: z.record(z.unknown()).optional().openapi({
+    userData: z.record(z.string(), z.unknown()).optional().openapi({
       example: { order_id: "A-100" },
     }),
   })

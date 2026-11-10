@@ -253,7 +253,7 @@ async def handle_callback_{{ nodeId|safe_name }}(callback_query: types.CallbackQ
         if _new_file_id:
             await _save_media_file_id("{{ url }}", _new_file_id, "{{ mtype }}", "application/octet-stream")
             logging.info(f"✅ Узел {{ nodeId }}: получен file_id={_new_file_id[:20]}... для файла {{ url }}")
-{%- if _thumb_url and mtype == 'video' %}
+{%- if _thumb_url and not _thumb_fid and mtype == 'video' %}
         # Сохраняем file_id обложки из ответа Telegram (video.thumbnail.file_id)
         if _sent_msg and _sent_msg.video and _sent_msg.video.thumbnail:
             _thumb_new_fid = _sent_msg.video.thumbnail.file_id

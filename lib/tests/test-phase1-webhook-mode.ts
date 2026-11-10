@@ -105,13 +105,15 @@ console.log('╚═════════════════════�
 
 console.log('── Блок A: Polling режим (без webhookUrl) ────────────────────────');
 
-test('A01', 'без webhookUrl → dp.start_polling(bot) присутствует в коде', () => {
+/** Проверяет запуск polling как управляемой фоновой задачи. */
+test('A01', 'без webhookUrl → polling запускается как фоновая задача', () => {
   const p = makeCleanProject(makeMinimalNodes());
   const code = generatePythonCode(p as any, {
     botName: 'PollingBot',
     userDatabaseEnabled: false,
     });
-  ok(code.includes('dp.start_polling(bot)'), 'dp.start_polling(bot) должен быть в коде');
+  ok(code.includes('asyncio.create_task(dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types()))'),
+    'polling должен запускаться как управляемая задача с разрешёнными обновлениями');
 });
 
 test('A02', 'без webhookUrl → set_webhook находится только внутри if WEBHOOK_URL блока', () => {
@@ -226,7 +228,8 @@ test('B05', 'с webhookUrl → WEBHOOK_PORT = int(os.getenv присутству
   ok(code.includes('WEBHOOK_PORT = int(os.getenv("WEBHOOK_PORT"'), 'WEBHOOK_PORT должен читаться из env');
 });
 
-test('B06', 'с webhookUrl → dp.start_polling находится в else ветке', () => {
+/** Проверяет, что polling выполняется только в ветке без webhook. */
+test('B06', 'с webhookUrl → polling находится в else ветке', () => {
   const p = makeCleanProject(makeMinimalNodes());
   const code = generatePythonCode(p as any, {
     botName: 'WebhookBot',
@@ -235,11 +238,12 @@ test('B06', 'с webhookUrl → dp.start_polling находится в else ве�
     webhookPort: 9123,
     projectId: 42,
   });
-  // polling должен быть в else ветке — после else:
-  const elseIdx = code.indexOf('else:');
-  const pollingIdx = code.indexOf('dp.start_polling(bot)');
-  ok(elseIdx !== -1, 'else: должен быть в коде');
-  ok(pollingIdx > elseIdx, 'dp.start_polling должен быть ПОСЛЕ else:');
+  const webhookEndIdx = code.indexOf('await bot.delete_webhook()');
+  const pollingBranchIdx = code.indexOf('        else:\n            # Polling режим', webhookEndIdx);
+  const pollingIdx = code.indexOf('asyncio.create_task(dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types()))');
+  ok(webhookEndIdx !== -1, 'завершение webhook должно быть в коде');
+  ok(pollingBranchIdx > webhookEndIdx, 'ветка polling должна следовать за webhook');
+  ok(pollingIdx > pollingBranchIdx, 'polling должен запускаться внутри else ветки');
 });
 
 // ════════════════════════════════════════════════════════════════════════════

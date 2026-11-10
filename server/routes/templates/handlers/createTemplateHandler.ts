@@ -32,7 +32,7 @@ export async function createTemplateHandler(req: Request, res: Response): Promis
     res.status(201).json(template);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      res.status(400).json({ message: "Invalid data", errors: error.errors });
+      res.status(400).json({ message: "Invalid data", errors: error.issues });
       return;
     }
     console.error("Ошибка создания шаблона:", error);

@@ -8,7 +8,7 @@ import { CONDITION_OPERATOR_VALUES } from '@shared/schema/tables/condition-branc
 import { nodeSchema } from '@shared/schema/tables/node-schema';
 
 /** Все допустимые типы нод из zod-схемы */
-export const NODE_TYPES = nodeSchema.shape.type._def.values as readonly string[];
+export const NODE_TYPES: readonly string[] = nodeSchema.shape.type.options;
 
 /** Операторы condition-ноды — тот же список, что в zod-схеме ветки */
 export const CONDITION_OPERATORS = CONDITION_OPERATOR_VALUES;
@@ -18,15 +18,15 @@ export const CONDITION_OPERATORS = CONDITION_OPERATOR_VALUES;
  * @param schema - Zod-схема, возможно с .default()
  * @returns Внутренняя схема без default
  */
-function unwrapZodDefault(schema: z.ZodTypeAny): z.ZodTypeAny {
-  return schema instanceof z.ZodDefault ? schema._def.innerType : schema;
+function unwrapZodDefault(schema: z.core.$ZodType): z.core.$ZodType {
+  return schema instanceof z.ZodDefault ? schema.unwrap() : schema;
 }
 
 /**
  * Извлекает enum операторов из zod-схемы branches в node-schema
  * @returns ZodEnum операторов или null
  */
-function getBranchOperatorEnum(): z.ZodEnum<[string, ...string[]]> | null {
+function getBranchOperatorEnum(): z.ZodEnum | null {
   const branches = unwrapZodDefault(nodeSchema.shape.data.shape.branches);
   if (!(branches instanceof z.ZodArray)) return null;
   const branchObj = branches.element;
@@ -36,4 +36,5 @@ function getBranchOperatorEnum(): z.ZodEnum<[string, ...string[]]> | null {
 }
 
 /** Операторы, принятые zod-схемой node-schema (может быть уже полного списка) */
-export const ZOD_CONDITION_OPERATORS = (getBranchOperatorEnum()?._def.values ?? []) as readonly string[];
+export const ZOD_CONDITION_OPERATORS: readonly string[] = (getBranchOperatorEnum()?.options ?? [])
+  .filter((value): value is string => typeof value === 'string');

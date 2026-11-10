@@ -171,7 +171,8 @@ test('A03', 'saveMessageIdTo → сохраняет в user_data', () => {
 test('A04', 'без saveMessageIdTo → нет кода сохранения ID', () => {
   const p = makeCleanProject([makeMessageNode('msg1', 'Привет')]);
   const code = gen(p, 'a04');
-  ok(!code.includes('hasattr(sent_message'), 'код сохранения ID не должен генерироваться');
+  // Системная переменная последнего сообщения сохраняется независимо от настройки ноды.
+  ok(!code.includes('ID сообщения сохранён в переменную'), 'код пользовательской переменной не должен генерироваться');
 });
 
 test('A05', 'saveMessageIdTo → синтаксис Python OK', () => {

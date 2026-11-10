@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 # Исполнитель Cursor Cloud Agents (My Machines) для Railway: агент работает в клоне
 # репозитория на томе /data. Подробно: docs/deployment/CURSOR_WORKER_RAILWAY.md
-FROM node:22-bookworm
+FROM node:24-bookworm
 
 # git, Python для ботов, клиенты PostgreSQL 18 и Redis, gh и ripgrep для агента
 RUN apt-get update \

@@ -883,6 +883,7 @@ test('D09', 'после текстового ответа можно перей�
 
 console.log('══ Блок E: hideAfterClick ═══════════════════════════════════════════');
 
+/** Проверяет, что скрытие исходной клавиатуры выполняет общий callback middleware. */
 test('E01', 'inline hideAfterClick скрывает клавиатуру предыдущего сообщения', () => {
   const project = makeProject([
     makeMessageNode('msg_1', 'Меню', {
@@ -895,11 +896,11 @@ test('E01', 'inline hideAfterClick скрывает клавиатуру пре�
   ]);
 
   const code = gen(project, 'e01');
-  const b = block(code, 'msg_2');
-  assertIncludesAll(b, ['edit_reply_markup(reply_markup=None)', 'hideAfterClick'], 'E01');
+  assertIncludesAll(code, ['async def hide_after_click_middleware', 'await event.message.edit_reply_markup(reply_markup=None)', 'dp.callback_query.middleware(hide_after_click_middleware)'], 'E01');
   syntax(code, 'e01');
 });
 
+/** Проверяет, что обе кнопки обслуживаются одним middleware. */
 test('E02', 'несколько hideAfterClick-кнопок всё равно оставляют общий hide-блок', () => {
   const project = makeProject([
     makeMessageNode('msg_1', 'Меню', {
@@ -914,15 +915,13 @@ test('E02', 'несколько hideAfterClick-кнопок всё равно о
   ]);
 
   const code = gen(project, 'e02');
-  const msg2 = block(code, 'msg_2');
-  const msg3 = block(code, 'msg_3');
-  ok(
-    msg2.includes('edit_reply_markup(reply_markup=None)') || msg3.includes('edit_reply_markup(reply_markup=None)'),
-    'E02: hideAfterClick-блок должен присутствовать'
-  );
+  ok(code.match(/async def hide_after_click_middleware/g)?.length === 1, 'E02: один общий middleware');
+  const middleware = code.match(/async def hide_after_click_middleware[\s\S]*?dp\.callback_query\.middleware/)?.[0] || '';
+  assertIncludesAll(middleware, ['Первый', 'Второй'], 'E02');
   syntax(code, 'e02');
 });
 
+/** Проверяет отсутствие middleware, когда скрытие кнопок не требуется. */
 test('E03', 'без hideAfterClick не появляется edit_reply_markup', () => {
   const project = makeProject([
     makeMessageNode('msg_1', 'Меню', {
@@ -935,11 +934,11 @@ test('E03', 'без hideAfterClick не появляется edit_reply_markup',
   ]);
 
   const code = gen(project, 'e03');
-  const b = block(code, 'msg_1');
-  assertExcludes(b, ['edit_reply_markup(reply_markup=None)'], 'E03');
+  assertExcludes(code, ['async def hide_after_click_middleware'], 'E03');
   syntax(code, 'e03');
 });
 
+/** Проверяет скрытие исходной клавиатуры до перехода к целевому узлу. */
 test('E04', 'hideAfterClick не ломает переходы goto', () => {
   const project = makeProject([
     makeMessageNode('msg_1', 'Меню', {
@@ -952,8 +951,7 @@ test('E04', 'hideAfterClick не ломает переходы goto', () => {
   ]);
 
   const code = gen(project, 'e04');
-  const b = block(code, 'msg_2');
-  assertIncludesAll(b, ['edit_reply_markup(reply_markup=None)'], 'E04');
+  assertIncludesAll(code, ['await event.message.edit_reply_markup(reply_markup=None)', 'async def handle_callback_msg_2'], 'E04');
   syntax(code, 'e04');
 });
 
@@ -1480,9 +1478,8 @@ test('J04', 'selection и complete не затрагиваются customCallbac
   syntax(code, 'j04');
 });
 
-test('J05', 'обработчик целевого узла регистрируется по customCallbackData, а не по nodeId', () => {
-  // Кнопка с customCallbackData ведёт к msg_2.
-  // Декоратор handle_callback_msg_2 должен слушать "confirm_order", а не "msg_2".
+/** Проверяет маршрутизацию кастомного callback через виртуальный триггер. */
+test('J05', 'customCallbackData вызывает целевой узел через виртуальный триггер', () => {
   const project = makeProject([
     makeMessageNode('msg_1', 'Подтвердите заказ', {
       keyboardType: 'inline',
@@ -1497,16 +1494,12 @@ test('J05', 'обработчик целевого узла регистриру
   ]);
 
   const code = gen(project, 'j05');
-  const b = block(code, 'msg_2');
-  assertIncludesAll(b, ['lambda c: c.data == "confirm_order"'], 'J05: декоратор должен использовать customCallbackData');
-  assertExcludes(b, ['lambda c: c.data == "msg_2"'], 'J05: декоратор не должен использовать nodeId как паттерн');
+  assertIncludesAll(code, ['lambda c: c.data == "confirm_order"', 'mock_callback = MockCallback("msg_2"', 'await handle_callback_msg_2(mock_callback'], 'J05');
   syntax(code, 'j05');
 });
 
+/** Проверяет сохранение customCallbackData после нормализации отдельной keyboard-ноды. */
 test('J06', 'кнопка в keyboard-ноде с customCallbackData использует его в кнопке и обработчике', () => {
-  // Кнопка находится в отдельной keyboard-ноде (не в message напрямую).
-  // После нормализации кнопка переносится в msg_1, но customCallbackData должен сохраниться.
-  // Обработчик msg_2 должен слушать "go_to_msg2", а не "msg_2".
   const project = makeProject([
     makeMessageNode('msg_1', 'Меню', { keyboardNodeId: 'kbd_1' }),
     makeKeyboardNode('kbd_1', 'inline', [
@@ -1520,15 +1513,12 @@ test('J06', 'кнопка в keyboard-ноде с customCallbackData испол�
 
   const code = gen(project, 'j06');
   const msg1 = block(code, 'msg_1');
-  const msg2 = block(code, 'msg_2');
 
   // Кнопка использует кастомный callback
   assertIncludesAll(msg1, ['callback_data="go_to_msg2"'], 'J06: кнопка должна использовать customCallbackData');
   assertExcludes(msg1, ['callback_data="msg_2"'], 'J06: target не должен использоваться');
 
-  // Обработчик целевого узла слушает кастомный callback
-  assertIncludesAll(msg2, ['lambda c: c.data == "go_to_msg2"'], 'J06: обработчик должен слушать customCallbackData');
-  assertExcludes(msg2, ['lambda c: c.data == "msg_2"'], 'J06: обработчик не должен слушать nodeId');
+  assertIncludesAll(code, ['lambda c: c.data == "go_to_msg2"', 'mock_callback = MockCallback("msg_2"', 'await handle_callback_msg_2(mock_callback'], 'J06: виртуальный триггер должен вести к целевому узлу');
 
   syntax(code, 'j06');
 });
@@ -1587,7 +1577,8 @@ test('K02', 'copy_text кнопка без copyText фоллбэчит на call
   syntax(code, 'k02');
 });
 
-test('K03', 'copy_text с hideAfterClick скрывает клавиатуру у целевого узла', () => {
+/** Кнопка копирования не отправляет callback и потому не может вызвать скрытие. */
+test('K03', 'copy_text с hideAfterClick не создаёт недостижимый обработчик', () => {
   const project = makeProject([
     makeMessageNode('msg_1', 'Меню', {
       keyboardType: 'inline',
@@ -1608,9 +1599,8 @@ test('K03', 'copy_text с hideAfterClick скрывает клавиатуру �
   ]);
 
   const code = gen(project, 'k03');
-  const msg2 = block(code, 'msg_2');
-
-  assertIncludesAll(msg2, ['edit_reply_markup(reply_markup=None)'], 'K03: hideAfterClick должен добавлять edit_reply_markup в целевом узле');
+  assertIncludesAll(code, ['CopyTextButton'], 'K03');
+  assertExcludes(code, ['async def hide_after_click_middleware'], 'K03');
   syntax(code, 'k03');
 });
 

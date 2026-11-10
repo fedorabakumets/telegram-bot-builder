@@ -23,9 +23,11 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
-          node-version: '22'
+          node-version: '24'
           cache: npm
       - run: npm ci
       - run: npx vitest run --config server/admin/admin-login-rate-limit.vitest.config.ts
       - run: npx vitest run --config server/middleware/cookie-csrf.vitest.config.ts
       - run: npx vitest run --config client/components/editor/inline-rich/vitest.security.config.ts
+      - run: npx vitest run lib/bot-tools/constants.test.ts
+      - run: node --import tsx --test lib/api-docs/durable-table-contracts.test.ts

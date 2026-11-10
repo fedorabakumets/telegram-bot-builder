@@ -77,7 +77,7 @@ export function registerBotApiProjectIoPaths(
     security: cookieSecurity,
     request: {
       ...req,
-      body: { content: { "application/json": { schema: z.record(z.unknown()) } } },
+      body: { content: { "application/json": { schema: z.record(z.string(), z.unknown()) } } },
     },
     responses: {
       200: {

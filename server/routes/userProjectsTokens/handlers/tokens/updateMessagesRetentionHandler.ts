@@ -46,7 +46,7 @@ export async function updateMessagesRetentionHandler(
     if (!parsed.success) {
       res.status(400).json({
         message: "Неверные данные",
-        errors: parsed.error.errors,
+        errors: parsed.error.issues,
       });
       return;
     }

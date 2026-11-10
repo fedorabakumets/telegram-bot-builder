@@ -31,7 +31,8 @@ beforeAll(async () => {
 
 afterAll(async () => { client?.release(); await db.cleanup(); });
 
-describe.sequential('Границы расчёта рекламной цены', () => {
+/** Проверки изменяют общие данные и выполняются последовательно по умолчанию. */
+describe('Границы расчёта рекламной цены', () => {
   it('отличает отсутствие расхода от явно указанной нулевой оплаты', async () => {
     const before = (await acquisitionReport(client, 1, range)).rows.find(row => row.placementId === 7)!;
     expect(before).toMatchObject({ newUsers: 1, spend: { RUB: null, USD: null }, costPerUser: null, reason: 'Расход не указан' });

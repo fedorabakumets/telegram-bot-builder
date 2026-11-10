@@ -147,7 +147,7 @@ test('A05', 'содержит mock_callback = MockCallback', () => {
 test('A06', 'содержит await handle_callback_<targetId>(mock_callback)', () => {
   const p = makeCleanProject([makeCallbackTriggerNode('t1', 'confirm', 'exact', 'msg1'), makeMessageNode('msg1')]);
   const code = gen(p, 'a06');
-  ok(code.includes('await handle_callback_msg1(mock_callback)'), 'await handle_callback_msg1(mock_callback) должен быть в коде');
+  ok(code.includes('await handle_callback_msg1(mock_callback, state=state)'), 'Целевой обработчик должен получить callback и FSM state');
 });
 
 test('A07', 'содержит logging.info с user_id', () => {
@@ -648,7 +648,7 @@ test('I04', 'middleware содержит MockCallback', () => {
 test('I05', 'middleware вызывает handle_callback_<targetId>', () => {
   const p = makeCleanProject([makeIncomingCallbackTriggerNode('ict1', 'msg_target'), makeMessageNode('msg_target')]);
   const code = gen(p, 'i05');
-  ok(code.includes('await handle_callback_msg_target(mock_callback)'), 'вызов handle_callback_msg_target должен быть в коде');
+  ok(code.includes('await handle_callback_msg_target(mock_callback, state=_state_for_target)'), 'Целевой обработчик должен получить callback и FSM state');
 });
 
 test('I06', 'middleware содержит logging.info с user_id', () => {
@@ -1247,7 +1247,7 @@ test('Q01', 'кнопка profile:name:{user_id} → input генерирует 
   ok(code.includes('handle_callback_name_in'), 'нет вызова handle_callback_name_in');
 });
 
-test('Q02', 'кнопка profile:avatar:{user_id} → message не дублирует виртуальный startswith', () => {
+test('Q02', 'кнопка profile:avatar:{user_id} → message получает ровно один виртуальный startswith', () => {
   const p = makeCleanProject([
     makeMessageNodeWithButtons('card', 'Профиль', [
       { id: 'btn_av', text: 'Аватар', action: 'goto', target: 'hint', customCallbackData: 'profile:avatar:{user_id}' },
@@ -1256,7 +1256,25 @@ test('Q02', 'кнопка profile:avatar:{user_id} → message не дублир
   ]);
   const code = gen(p, 'q02');
   const virtual = (code.match(/startswith\("profile:avatar:"\)/g) || []).length;
-  ok(virtual <= 1, `startswith profile:avatar дублируется: ${virtual}`);
+  ok(virtual === 1, `Нужен ровно один обработчик startswith profile:avatar, найдено: ${virtual}`);
+  ok(code.includes('await handle_callback_hint(mock_callback, state=state)'), 'Виртуальный триггер не вызывает целевую message-ноду');
+});
+
+test('Q03', 'динамические кнопки переходят к start и command через виртуальные триггеры', () => {
+  const p = makeCleanProject([
+    makeMessageNodeWithButtons('card', 'Меню', [
+      { id: 'btn_start', text: 'Начать', action: 'goto', target: 'entry_start', customCallbackData: 'open:start:{user_id}' },
+      { id: 'btn_command', text: 'Помощь', action: 'goto', target: 'entry_command', customCallbackData: 'open:command:{user_id}' },
+    ]),
+    { id: 'entry_start', type: 'start', position: { x: 0, y: 0 }, data: { command: 'start', messageText: 'Старт', buttons: [] } },
+    { id: 'entry_command', type: 'command', position: { x: 0, y: 0 }, data: { command: 'help', messageText: 'Помощь', buttons: [] } },
+  ]);
+  const code = gen(p, 'q03');
+  ok(code.includes('startswith("open:start:")'), 'Нет виртуального перехода к start');
+  ok(code.includes('startswith("open:command:")'), 'Нет виртуального перехода к command');
+  ok(code.includes('await handle_callback_entry_start(mock_callback, state=state)'), 'Нет вызова start');
+  ok(code.includes('await handle_callback_entry_command(mock_callback, state=state)'), 'Нет вызова command');
+  syntax(code, 'q03');
 });
 
 // ─── Итоги ───────────────────────────────────────────────────────────────────

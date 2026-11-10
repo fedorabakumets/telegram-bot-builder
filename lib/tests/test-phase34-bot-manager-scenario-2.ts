@@ -15,11 +15,11 @@
 import fs from 'fs';
 import { execSync } from 'child_process';
 import { generatePythonCode } from '../bot-generator.ts';
+import { makeBotManagerScenario } from './fixtures/bot-manager-scenario.ts';
 
 /** Загружает project.json сценария управляющего бота */
 function loadProject() {
-  const raw = fs.readFileSync('bots/импортированный_проект_2316_157_131/project.json', 'utf-8');
-  return JSON.parse(raw);
+  return makeBotManagerScenario();
 }
 
 /**

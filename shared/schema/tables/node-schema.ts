@@ -457,7 +457,7 @@ export const nodeSchema = z.object({
     /** Кастомные имена переменных метаданных: ключ — суффикс, значение — имя */
     mediaMetadataCustomNames: z.record(z.string(), z.string()).optional().default({}),
     /** Фильтры переменных (ключ — имя переменной, значение — фильтр) */
-    variableFilters: z.record(z.string()).default({}),
+    variableFilters: z.record(z.string(), z.string()).default({}),
     /** Включить обработку действий пользователей */
     enableUserActions: z.boolean().default(false),
     /** Триггер действия: "join", "leave", "message", "button_click", "custom" */

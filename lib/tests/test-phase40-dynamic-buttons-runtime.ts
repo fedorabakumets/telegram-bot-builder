@@ -82,13 +82,15 @@ class _Markup:
 
 class InlineKeyboardBuilder:
     def __init__(self):
-        self._buttons = []
+        self._rows = []
     def add(self, btn):
-        self._buttons.append(btn)
+        self._rows.append([btn])
+    def row(self, *buttons):
+        self._rows.append(list(buttons))
     def adjust(self, *args):
         pass
     def as_markup(self):
-        return _Markup([self._buttons])
+        return _Markup(self._rows)
 
 def InlineKeyboardButton(text, callback_data, **kw):
     return _Button(text, callback_data)
@@ -175,8 +177,8 @@ test('A04', 'callbackTemplate "project_{id}" присутствует в код�
   ok(code.includes('project_{id}'), 'шаблон "project_{id}" не найден');
 });
 
-test('A05', 'builder.adjust(1) — одна колонка', () => {
-  ok(code.includes('builder.adjust(1)'), 'builder.adjust(1) не найдено');
+test('A05', 'builder.row сохраняет отдельные строки при одной колонке', () => {
+  ok(code.includes('builder.row(*_dynamic_row)'), 'builder.row(*_dynamic_row) не найдено');
 });
 
 // ══ Блок B: Рантайм — чтение projects из user_data ════════════════════════════

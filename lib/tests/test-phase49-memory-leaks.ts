@@ -807,7 +807,8 @@ test('F05', 'finally èä¸ò ÏÎÑËÅ except áëîêîâ (ïîðÿäîê è�
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')]);
   const code = gen(p, 'F05');
   const exceptIdx = code.indexOf('except KeyboardInterrupt:');
-  const finallyIdx = code.indexOf('finally:');
+  // Проверяем внешний finally функции main, так как внутри polling есть свой finally.
+  const finallyIdx = code.indexOf('    finally:\n        _bot_stop_event = None');
   ok(exceptIdx !== -1, 'except KeyboardInterrupt: íå íàéäåíî');
   ok(finallyIdx !== -1, 'finally: íå íàéäåíî');
   ok(finallyIdx > exceptIdx, 'finally äîëæåí èäòè ïîñëå except');

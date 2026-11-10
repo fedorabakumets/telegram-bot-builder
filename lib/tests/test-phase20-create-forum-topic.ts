@@ -630,7 +630,8 @@ test('F02', 'saveThreadIdTo: пустая строка → нет set_user_var �
   const code = gen(makeCleanProject([
     makeCreateForumTopicNode('cft1', { saveThreadIdTo: '' }),
   ]), 'f02');
-  ok(!code.includes('await set_user_var('), 'set_user_var не должен быть в коде при пустом saveThreadIdTo');
+  // Общая функция записи переменных применяется и вне узла создания топика.
+  ok(!/await set_user_var\(user_id, [^\n]*str\(_thread_id\)\)/.test(code), 'thread_id не должен сохраняться при пустом saveThreadIdTo');
 });
 
 test('F03', 'saveThreadIdTo: логирование сохранения thread_id', () => {
@@ -752,7 +753,7 @@ test('H01', 'command_trigger → create_forum_topic: вызывает handle_cal
     makeCommandTriggerNode('cmd1', '/create_topic', 'cft1'),
     makeCreateForumTopicNode('cft1'),
   ]), 'h01');
-  ok(code.includes('await handle_callback_cft1(mock_callback)'), 'command_trigger должен вести в create_forum_topic через mock_callback');
+  ok(code.includes('await handle_callback_cft1(mock_callback, state=state)'), 'command_trigger должен вести в create_forum_topic через mock_callback');
 });
 
 test('H02', 'command_trigger → create_forum_topic: синтаксис OK', () => {
@@ -771,7 +772,7 @@ test('H03', 'несколько command_trigger → один create_forum_topic:
     makeCommandTriggerNode('cmd2', '/create_topic2', 'cft1'),
     makeCreateForumTopicNode('cft1'),
   ]), 'h03');
-  ok(code.includes('await handle_callback_cft1(mock_callback)'), 'Оба command_trigger должны вести в handle_callback_cft1');
+  ok(code.includes('await handle_callback_cft1(mock_callback, state=state)'), 'Оба command_trigger должны вести в handle_callback_cft1');
   ok(code.includes('async def handle_callback_cft1('), 'Обработчик handle_callback_cft1 должен быть в коде');
 });
 
@@ -821,7 +822,7 @@ test('I01', 'text_trigger exact → create_forum_topic: вызывает handle_
     makeTextTriggerNode('txt1', ['создать топик'], 'cft1', { matchType: 'exact' }),
     makeCreateForumTopicNode('cft1'),
   ]), 'i01');
-  ok(code.includes('await handle_callback_cft1(mock_callback)'), 'text_trigger exact должен вести в create_forum_topic');
+  ok(code.includes('await handle_callback_cft1(mock_callback, state=state)'), 'text_trigger exact должен вести в create_forum_topic');
 });
 
 test('I02', 'text_trigger contains → create_forum_topic: синтаксис OK', () => {
@@ -840,7 +841,7 @@ test('I03', 'несколько text_trigger → один create_forum_topic: о
     makeTextTriggerNode('txt2', ['новый топик'], 'cft1'),
     makeCreateForumTopicNode('cft1'),
   ]), 'i03');
-  ok(code.includes('await handle_callback_cft1(mock_callback)'), 'Оба text_trigger должны вести в handle_callback_cft1');
+  ok(code.includes('await handle_callback_cft1(mock_callback, state=state)'), 'Оба text_trigger должны вести в handle_callback_cft1');
   ok(code.includes('async def handle_callback_cft1('), 'Обработчик handle_callback_cft1 должен быть в коде');
 });
 
@@ -875,7 +876,7 @@ test('J01', 'condition → create_forum_topic: ветка ведёт в handle_c
     makeCreateForumTopicNode('cft1'),
     makeMessageNode('msg1', 'Фолбэк'),
   ]), 'j01');
-  ok(code.includes('await handle_callback_cft1(callback_query)'), 'Condition должен уметь вести в create_forum_topic');
+  ok(code.includes('await handle_callback_cft1(callback_query, state=state)'), 'Condition должен уметь вести в create_forum_topic');
 });
 
 test('J02', 'condition → create_forum_topic: синтаксис OK', () => {
@@ -1178,7 +1179,8 @@ test('N02', 'saveThreadIdTo: "" → нет set_user_var в коде', () => {
   const code = gen(makeCleanProject([
     makeCreateForumTopicNode('cft1', { saveThreadIdTo: '' }),
   ]), 'n02');
-  ok(!code.includes('await set_user_var('), 'set_user_var не должен быть в коде при пустом saveThreadIdTo');
+  // Проверяем запись thread_id, поскольку общие обработчики сохраняют другие переменные.
+  ok(!/await set_user_var\(user_id, [^\n]*str\(_thread_id\)\)/.test(code), 'thread_id не должен сохраняться при пустом saveThreadIdTo');
 });
 
 test('N03', 'forumChatIdSource: manual с простым названием → init_all_user_vars внутри if-блока', () => {
@@ -1223,7 +1225,7 @@ test('O01', 'incoming_message_trigger → create_forum_topic: вызывает h
     },
     makeCreateForumTopicNode('cft1'),
   ]), 'o01');
-  ok(code.includes('await handle_callback_cft1(mock_callback)'), 'incoming_message_trigger должен вести в create_forum_topic через mock_callback');
+  ok(code.includes('await handle_callback_cft1(mock_callback, state=_state)'), 'incoming_message_trigger должен вести в create_forum_topic через mock_callback');
 });
 
 test('O02', 'incoming_message_trigger → create_forum_topic: синтаксис OK', () => {
@@ -1735,7 +1737,8 @@ test('P11', 'регрессия: bot.create_forum_topic вызывается Д�
 
   // 3. Автопереход должен идти ПОСЛЕ bot.create_forum_topic
   const createTopicPos = code.indexOf('await bot.create_forum_topic(');
-  const autoTransitionPos = code.indexOf('handle_callback_msg_topic_created');
+  // Ищем вызов в обработчике узла: общий диспетчер содержит упоминания раньше него.
+  const autoTransitionPos = code.indexOf('await handle_callback_msg_topic_created(callback_query, state=None)', createTopicPos);
   ok(createTopicPos !== -1, 'bot.create_forum_topic должен быть в коде');
   ok(autoTransitionPos !== -1, 'автопереход к msg-topic-created должен быть в коде');
   ok(createTopicPos < autoTransitionPos, 'bot.create_forum_topic должен идти РАНЬШЕ автоперехода в коде');

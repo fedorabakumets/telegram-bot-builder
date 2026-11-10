@@ -218,9 +218,9 @@ curl -s -b cookies.txt \
 | `projectId` | path | да | ID проекта | `"42"` |
 | `userId` | path | да | Telegram user_id (или `bot` для аватара бота) | `"123456789"` |
 | `tokenId` | query | нет | ID токена бота проекта | `"7"` |
-| `includeGroupContext` | query | нет | — | — |
-| `limit` | query | нет | — | `"100"` |
-| `messageType` | query | нет | — | `"bot"` |
+| `includeGroupContext` | query | нет | По умолчанию только личная история; true включает групповой контекст пользователя. | — |
+| `limit` | query | нет | Лимит последних сообщений (default 100) | `"100"` |
+| `messageType` | query | нет | Фильтр по типу сообщения | `"bot"` |
 | `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
 | `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 

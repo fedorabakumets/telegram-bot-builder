@@ -224,7 +224,7 @@ export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOpt
     {
       description: 'Валидация project.json: zod-схема + доменные правила (битые target, condition branches, дубли id)',
       inputSchema: {
-        project_json: z.union([z.string(), z.record(z.unknown())]).describe('Объект project.json или JSON-строка'),
+        project_json: z.union([z.string(), z.record(z.string(), z.unknown())]).describe('Объект project.json или JSON-строка'),
       },
     },
     async ({ project_json }) => textResult(validateBotProject(project_json)),
@@ -235,7 +235,7 @@ export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOpt
     {
       description: 'Валидация одной ноды',
       inputSchema: {
-        node: z.record(z.unknown()).describe('Объект ноды { id, type, position, data }'),
+        node: z.record(z.string(), z.unknown()).describe('Объект ноды { id, type, position, data }'),
         type: z.string().optional().describe('Ожидаемый тип для сверки'),
       },
     },
@@ -247,7 +247,7 @@ export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOpt
     {
       description: 'Генерация bot.py из валидного project.json',
       inputSchema: {
-        project_json: z.union([z.string(), z.record(z.unknown())]).describe('project.json'),
+        project_json: z.union([z.string(), z.record(z.string(), z.unknown())]).describe('project.json'),
         bot_name: z.string().optional().describe('Имя бота для генерации'),
         skip_validation: z.boolean().optional().describe('Пропустить validate_bot_project'),
       },
@@ -263,7 +263,7 @@ export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOpt
         'Создать одну ноду с дефолтами конструктора (get_node_schema перед незнакомым типом). Для command_trigger: только латиница (/buy, /refund), не /купить',
       inputSchema: {
         type: z.string().describe('Тип ноды'),
-        partial_data: z.record(z.unknown()).optional().describe('Частичные поля data для merge'),
+        partial_data: z.record(z.string(), z.unknown()).optional().describe('Частичные поля data для merge'),
         id: z.string().optional(),
         position: z.object({ x: z.number(), y: z.number() }).optional(),
       },
@@ -281,7 +281,7 @@ export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOpt
       description: 'Создать пустой project.json v2 со стартовой парой /start → message (или переданными нодами)',
       inputSchema: {
         sheet_name: z.string().optional().describe('Имя листа'),
-        nodes: z.array(z.record(z.unknown())).optional().describe('Массив готовых нод'),
+        nodes: z.array(z.record(z.string(), z.unknown())).optional().describe('Массив готовых нод'),
       },
     },
     async ({ sheet_name, nodes }) =>
@@ -293,7 +293,7 @@ export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOpt
     {
       description: 'Добавить ноду в project.json',
       inputSchema: {
-        project_json: z.union([z.string(), z.record(z.unknown())]),
+        project_json: z.union([z.string(), z.record(z.string(), z.unknown())]),
         node: scenarioNodeSchema.describe('Узел по общей схеме проекта'),
         sheet_id: z.string().optional(),
       },
@@ -311,7 +311,7 @@ export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOpt
     {
       description: 'Обновить ноду в project.json по id. Без sheet_id ищет ноду по всем листам; если не найдена — ошибка (не silent ok)',
       inputSchema: {
-        project_json: z.union([z.string(), z.record(z.unknown())]),
+        project_json: z.union([z.string(), z.record(z.string(), z.unknown())]),
         node_id: z.string(),
         patch: scenarioNodePatchSchema.describe('Только изменяемые поля: position, data, type'),
         sheet_id: z.string().optional().describe('ID листа (иначе автопоиск по всем листам)'),
@@ -326,7 +326,7 @@ export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOpt
     {
       description: 'Удалить ноду из project.json. Без sheet_id ищет ноду по всем листам; если не найдена — ошибка',
       inputSchema: {
-        project_json: z.union([z.string(), z.record(z.unknown())]),
+        project_json: z.union([z.string(), z.record(z.string(), z.unknown())]),
         node_id: z.string(),
         sheet_id: z.string().optional().describe('ID листа (иначе автопоиск по всем листам)'),
       },
@@ -340,7 +340,7 @@ export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOpt
     {
       description: 'Соединить ноды: auto-transition, button-goto+branch, input-target',
       inputSchema: {
-        project_json: z.union([z.string(), z.record(z.unknown())]),
+        project_json: z.union([z.string(), z.record(z.string(), z.unknown())]),
         from_id: z.string(),
         to_id: z.string(),
         branch: z.string().optional().describe('id кнопки/ветки для portType=button-goto'),
@@ -374,7 +374,7 @@ export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOpt
         description: 'Записать project.json на диск в каталог bots/ (с валидацией перед записью)',
         inputSchema: {
           path: z.string().describe('Путь к папке бота или project.json внутри bots/'),
-          project_json: z.union([z.string(), z.record(z.unknown())]).describe('project.json'),
+          project_json: z.union([z.string(), z.record(z.string(), z.unknown())]).describe('project.json'),
           skip_validation: z.boolean().optional().describe('Пропустить валидацию перед записью'),
         },
       },
@@ -389,7 +389,7 @@ export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOpt
       description: 'Записать сценарий проекта и получить квитанцию сохранения. Передайте expected_revision из чтения проекта для защиты от перезаписи конкурентных правок. Без неё сохраняется совместимый безусловный режим. Рассылка обновления холста не подтверждает применение интерфейсом.',
       inputSchema: {
         project_id: z.number().describe('Числовой ID проекта из URL редактора'),
-        project_json: z.union([z.string(), z.record(z.unknown())]).describe('project.json'),
+        project_json: z.union([z.string(), z.record(z.string(), z.unknown())]).describe('project.json'),
         expected_revision: z.number().int().nonnegative().optional().describe('Ревизия прочитанного проекта; при конфликте сохранение отклоняется.'),
         commit_message: z.string().optional().describe('Заметка к версии (ручной чекпоинт)'),
         skip_validation: z.boolean().optional().describe('Пропустить валидацию перед записью'),

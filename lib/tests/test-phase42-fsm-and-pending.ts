@@ -31,11 +31,26 @@ const minimalProject = {
 };
 
 /**
- * Загружает реальный проект из bots/новый/новый.json
- * @returns Объект проекта
+ * Создаёт воспроизводимый проект для проверки передачи FSM через разные узлы.
+ * @returns Проект с командой, входящими событиями и переходами
  */
-function loadRealProject(): unknown {
-  return JSON.parse(fs.readFileSync('bots/новый/новый.json', 'utf-8'));
+function makeFsmProject(): unknown {
+  const node = (id: string, type: string, data: Record<string, unknown>) => ({
+    id, type, position: { x: 0, y: 0 }, data,
+  });
+  return { sheets: [{ id: 'fsm-sheet', name: 'FSM', nodes: [
+    node('start', 'command_trigger', { command: '/start', autoTransitionTo: 'message', buttons: [] }),
+    node('message', 'message', { messageText: 'Ответ {callback_data}', buttons: [], keyboardType: 'none' }),
+    node('callback', 'incoming_callback_trigger', { autoTransitionTo: 'message', buttons: [] }),
+    node('incoming', 'incoming_message_trigger', { autoTransitionTo: 'message', buttons: [] }),
+    node('http', 'http_request', { httpRequestUrl: 'https://example.com/', httpRequestMethod: 'GET', autoTransitionTo: 'message' }),
+    node('condition', 'condition', { variable: 'callback_data', branches: [
+      { id: 'match', operator: 'filled', value: '', target: 'message' },
+      { id: 'other', operator: 'else', value: '', target: 'message' },
+    ] }),
+    node('media', 'media', { autoTransitionTo: 'message', attachedMedia: [], buttons: [] }),
+    node('map', 'map', { autoTransitionTo: 'message', buttons: [] }),
+  ] }] };
 }
 
 /**
@@ -106,7 +121,7 @@ function syntax(code: string, label: string) {
 // ─── Генерируем код один раз для каждой конфигурации ─────────────────────────
 const codeNoDb  = gen(minimalProject, { userDatabaseEnabled: false, label: 'nodb' });
 const codeWithDb = gen(minimalProject, { userDatabaseEnabled: true,  label: 'db'   });
-const codeReal   = gen(loadRealProject(), { userDatabaseEnabled: false, label: 'real' });
+const codeReal   = gen(makeFsmProject(), { userDatabaseEnabled: false, label: 'fixture' });
 
 console.log('\n╔════════════════════════════════════════════════════════════════════╗');
 console.log('║   Фаза — FSM PostgresStorage и фильтр устаревших апдейтов          ║');
@@ -488,11 +503,12 @@ test('J03', 'RedisStorage содержит методы set_state, get_state, se
 });
 
 /**
- * J04: код содержит условный выбор if REDIS_URL: для FSM хранилища.
- * Проверяем что выбор хранилища происходит динамически в runtime.
+ * J04: хранилище FSM переключается после успешного подключения Redis.
+ * Проверяем что при недоступном Redis сохраняется PostgreSQL.
  */
-test('J04', 'код содержит условный выбор if REDIS_URL: для FSM хранилища', () => {
-  ok(codeNoDb.includes('if REDIS_URL:'), 'условный блок if REDIS_URL: не найден');
+test('J04', 'Redis FSM включается только после успешного подключения', () => {
+  ok(codeNoDb.includes('if _redis_connected and _redis_client is not None:'), 'проверка успешного подключения Redis не найдена');
+  ok(codeNoDb.includes('dp.fsm.storage = RedisStorage('), 'переключение FSM-хранилища не найдено');
 });
 
 /**

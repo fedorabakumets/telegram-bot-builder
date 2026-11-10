@@ -35,8 +35,8 @@ curl -s 'http://localhost:5000/api/projects/42/messages/activity?granularity=1h&
 |-----|-----|--------------|----------|--------|
 | `id` | path | да | Числовой ID проекта | `"42"` |
 | `tokenId` | query | нет | Опциональный ID токена бота. Без него — все токены. | `"7"` |
-| `granularity` | query | нет | — | `"1h"` |
-| `period` | query | нет | — | `"30d"` |
+| `granularity` | query | нет | 1m|5m|1h|1w|1d|7d|30d | `"1h"` |
+| `period` | query | нет | Обратная совместимость; игнорируется при granularity | `"30d"` |
 | `split` | query | нет | true — разбивка incoming/outgoing | `"true"` |
 | `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
 | `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |

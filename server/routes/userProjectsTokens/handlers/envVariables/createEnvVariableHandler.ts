@@ -50,7 +50,7 @@ export async function createEnvVariableHandler(req: Request, res: Response): Pro
     });
 
     if (!parsed.success) {
-      res.status(400).json({ error: parsed.error.errors[0]?.message || "Ошибка валидации" });
+      res.status(400).json({ error: parsed.error.issues[0]?.message || "Ошибка валидации" });
       return;
     }
 

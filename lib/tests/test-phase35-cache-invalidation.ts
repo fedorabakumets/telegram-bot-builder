@@ -3,7 +3,7 @@
  *
  * Тестирует корректность инвалидации кэша и очистки переменных:
  *  A. Очистка переменных перед HTTP запросом (4 теста)
- *  B. Синхронная инвалидация Redis кэша (2 теста)
+ *  B. Мгновенное обновление памяти без старого кэша Redis (2 теста)
  *  C. Интеграция — два последовательных HTTP запроса (2 теста)
  *
  * Баг: при переходе между проектами переменная `project_tokens`
@@ -145,7 +145,7 @@ function ok(cond: boolean, msg: string) {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 console.log('\n╔══════════════════════════════════════════════════════════════╗');
-console.log('║       Фаза — Инвалидация Redis кэша при HTTP запросах       ║');
+console.log('║       Фаза — Обновление переменных при HTTP запросах         ║');
 console.log('╚══════════════════════════════════════════════════════════════╝\n');
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -212,23 +212,23 @@ test('A04', 'pop происходит ДО set_user_var (очистка пере
 // БЛОК B: Синхронная инвалидация Redis кэша
 // ═══════════════════════════════════════════════════════════════════════════════
 
-console.log('\n── Блок B: Синхронная инвалидация Redis кэша ────────────────────');
+console.log('\n── Блок B: Обновление памяти без старого кэша Redis ────────────');
 
-test('B01', 'set_user_var содержит await _redis_client.delete (синхронный вызов)', () => {
+test('B01', 'set_user_var немедленно обновляет переменную в памяти', () => {
   const p = makeProject([makeStartNode(), makeHttpRequestNode('http1')]);
   const code = gen(p, 'B01');
   ok(
-    code.includes('await _redis_client.delete(f"vars_cache:{user_id}")'),
-    'await _redis_client.delete(f"vars_cache:{user_id}") не найдено — синхронная инвалидация Redis отсутствует',
+    code.includes('user_data[user_id][key] = value'),
+    'Мгновенное обновление пользовательской переменной отсутствует',
   );
 });
 
-test('B02', 'set_user_var НЕ содержит create_task(_redis_client.delete', () => {
+test('B02', 'set_user_var не удаляет устаревший Redis-кэш переменных', () => {
   const p = makeProject([makeStartNode(), makeHttpRequestNode('http1')]);
   const code = gen(p, 'B02');
   ok(
     !code.includes('create_task(_redis_client.delete'),
-    'create_task(_redis_client.delete найдено — инвалидация Redis должна быть синхронной (await), не fire-and-forget',
+    'Найдено удаление устаревшего Redis-кэша переменных',
   );
 });
 

@@ -105,11 +105,11 @@ export const insertBotGroupSchema = z.object({
   /** Описание группы */
   description: z.string().nullable().optional(),
   /** Настройки группы */
-  settings: z.record(z.any()).default({}),
+  settings: z.record(z.string(), z.any()).default({}),
   /** URL аватарки группы */
   avatarUrl: z.string().nullable().optional(),
   /** Права администратора */
-  adminRights: z.record(z.any()).default({
+  adminRights: z.record(z.string(), z.any()).default({
     can_manage_chat: false,
     can_change_info: false,
     can_delete_messages: false,

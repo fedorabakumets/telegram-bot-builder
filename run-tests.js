@@ -41,6 +41,10 @@ const filePattern = patternIndex !== -1
   ? process.argv[patternIndex + 1] 
   : process.argv.find(arg => arg.endsWith('.test.ts'));
 
+/**
+ * Находит выбранные тесты, запускает их и сохраняет ошибочный код выхода при сбое.
+ * @returns {Promise<void>} Завершение выбранного набора тестов.
+ */
 async function runTests() {
   const testFiles = [];
 
@@ -136,7 +140,7 @@ async function runTests() {
 
   if (testFiles.length === 0) {
     console.log('Тесты не найдены');
-    process.exit(0);
+    process.exit(1);
   }
 
   console.log(`Найдено тестов: ${testFiles.length}`);
@@ -176,6 +180,8 @@ async function runTests() {
   // Ждём завершения
   return new Promise((resolve, reject) => {
     testRun.on('test:fail', (data) => {
+      // Ошибка теста должна делать проверку CI красной.
+      process.exitCode = 1;
       console.error(`\n❌ Тест не прошёл: ${data.name}`);
       if (data.details?.error) {
         console.error(data.details.error);

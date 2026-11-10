@@ -45,7 +45,7 @@ export function registerMediaUrlPaths(
       },
     },
     responses: {
-      200: { description: "Результат проверки", content: { "application/json": { schema: z.record(z.unknown()) } } },
+      200: { description: "Результат проверки", content: { "application/json": { schema: z.record(z.string(), z.unknown()) } } },
       401: { description: "Не авторизован", content: { "application/json": { schema: UnauthorizedSchema } } },
     },
   });
@@ -73,7 +73,7 @@ export function registerMediaUrlPaths(
       },
     },
     responses: {
-      200: { description: "Созданный media_files", content: { "application/json": { schema: z.record(z.unknown()) } } },
+      200: { description: "Созданный media_files", content: { "application/json": { schema: z.record(z.string(), z.unknown()) } } },
       401: { description: "Не авторизован", content: { "application/json": { schema: UnauthorizedSchema } } },
       403: { description: "Нет доступа", content: { "application/json": { schema: MediaErrorSchema } } },
     },
@@ -102,7 +102,7 @@ export function registerMediaUrlPaths(
       },
     },
     responses: {
-      200: { description: "Результаты batch", content: { "application/json": { schema: z.record(z.unknown()) } } },
+      200: { description: "Результаты batch", content: { "application/json": { schema: z.record(z.string(), z.unknown()) } } },
       401: { description: "Не авторизован", content: { "application/json": { schema: UnauthorizedSchema } } },
       403: { description: "Нет доступа", content: { "application/json": { schema: MediaErrorSchema } } },
     },

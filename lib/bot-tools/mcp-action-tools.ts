@@ -55,7 +55,7 @@ export function registerMcpActionTools(server: McpServer, registry: Map<string, 
   }) }));
   server.registerTool('call_action', {
     description: 'Выполнить разрешённое действие BotCraft по ID с проверкой исходной схемы. Сохраняет авторизацию и ограничения исходного инструмента.',
-    inputSchema: { action_id: z.string(), args: z.record(z.unknown()).default({}) },
+    inputSchema: { action_id: z.string(), args: z.record(z.string(), z.unknown()).default({}) },
   }, async ({ action_id, args }, extra) => {
     const action = registry.get(action_id);
     if (!action) throw new Error(`Неизвестное действие: ${action_id}`);

@@ -280,7 +280,8 @@ test('A04', 'middleware содержит saveCreatorIdTo переменную', 
 test('A05', 'обработчик вызывает handle_callback_<targetId>', () => {
   const p = makeCleanProject([makeManagedBotUpdatedTriggerNode('mbu1', 'msg_target'), makeMessageNode('msg_target')]);
   const code = gen(p, 'a05');
-  ok(code.includes('await handle_callback_msg_target(fake_cb)'), 'вызов handle_callback_msg_target должен быть в коде');
+  // Состояние передаётся обработчику явно для совместимости с целевой нодой.
+  ok(code.includes('await handle_callback_msg_target(fake_cb, state=None)'), 'вызов handle_callback_msg_target должен быть в коде');
 });
 
 test('A06', 'обработчик содержит logging.info', () => {

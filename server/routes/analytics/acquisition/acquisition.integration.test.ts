@@ -29,7 +29,8 @@ beforeAll(async () => {
   url = `http://127.0.0.1:${(server.address() as { port: number }).port}`;
 }, 30000);
 afterAll(async () => { if (server) await new Promise<void>(resolve => server.close(() => resolve())); await db.cleanup(); });
-describe.sequential('Связанные рекламные данные', () => {
+/** Проверки используют общие записи и выполняются последовательно по умолчанию. */
+describe('Связанные рекламные данные', () => {
   it('создаёт площадку, размещение и постоянную ссылку, запрещает чужого бота', async () => {
     const source = await request('/sources', { name: 'Канал', kind: 'telegram' });
     expect(source.status).toBe(201); sourceId = source.data.item.id;

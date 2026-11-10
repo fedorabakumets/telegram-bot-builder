@@ -24,7 +24,7 @@ export async function editBroadcastCampaignHandler(req: Request, res: Response):
 
     const validation = editBroadcastCampaignBodySchema.safeParse(req.body);
     if (!validation.success) {
-      res.status(400).json({ message: "Неверное тело запроса", errors: validation.error.errors });
+      res.status(400).json({ message: "Неверное тело запроса", errors: validation.error.issues });
       return;
     }
 

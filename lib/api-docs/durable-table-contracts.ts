@@ -44,13 +44,15 @@ export function applyDurableTableContracts(registry: OpenAPIRegistry): void {
     if (definition.type !== 'route' || definition.route.method !== 'post' || !DURABLE_TABLE_PATHS.includes(definition.route.path as typeof DURABLE_TABLE_PATHS[number])) continue;
     const route = definition.route;
     const body = route.request?.body?.content['application/json'];
-    if (!body || !(body.schema instanceof z.ZodType)) throw new Error(`Отсутствует общая Zod-схема тела: ${route.path}`);
+    /** Ссылка OpenAPI не содержит локальной схемы и не может дополняться пересечением Zod. */
+    if (!body || '$ref' in body || !(body.schema instanceof z.ZodType)) throw new Error(`Отсутствует общая Zod-схема тела: ${route.path}`);
     body.schema = body.schema.and(z.object({ /** Необязательный UUID одной записи. */ requestId: actionRequestIdSchema.optional() }));
     route.description = `${route.description ?? ''}\n\nБез requestId сохраняется прежний формат ответа. Объект дополнен persistence; массив подтверждается JSON-заголовком x-botcraft-persistence. С requestId возвращается только квитанция IDs: повтор того же UUID и аргументов не выполняет запись снова. 202 unknown требует сверки, автоматический повтор запрещён. 409 означает повтор UUID с другими аргументами.`;
     for (const [status, response] of Object.entries(route.responses)) {
       if (!/^2/.test(status) || '$ref' in response) continue;
       const json = response.content?.['application/json'];
-      if (!json || !(json.schema instanceof z.ZodType)) throw new Error(`Отсутствует Zod-схема результата: ${route.path}`);
+      /** Для успешного результата требуется локальная схема; ссылку оставляем ошибкой контракта. */
+      if (!json || '$ref' in json || !(json.schema instanceof z.ZodType)) throw new Error(`Отсутствует Zod-схема результата: ${route.path}`);
       const legacyPersistence = route.path.endsWith('/tables/import') ? ProjectPersistenceSchema : TablePersistenceSchema;
       const legacy = json.schema instanceof z.ZodObject ? json.schema.extend({ /** Доказательство записи. */ persistence: legacyPersistence }) : json.schema;
       json.schema = z.union([legacy, TableCompletedReceiptSchema]);
@@ -66,7 +68,8 @@ export function applyDurableTableContracts(registry: OpenAPIRegistry): void {
     for (const [status, response] of Object.entries(route.responses)) {
       if (Number(status) < 400 || '$ref' in response) continue;
       const json = response.content?.['application/json'];
-      if (json?.schema instanceof z.ZodObject) json.schema = json.schema.extend({ /** UUID, если ошибка оформлена сохранённой квитанцией. */ requestId: actionRequestIdSchema.optional() });
+      /** Ссылочные ошибки сохраняются без изменений, как и ошибки без объектной Zod-схемы. */
+      if (json && !('$ref' in json) && json.schema instanceof z.ZodObject) json.schema = json.schema.extend({ /** UUID, если ошибка оформлена сохранённой квитанцией. */ requestId: actionRequestIdSchema.optional() });
     }
   }
 }
