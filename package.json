@@ -288,7 +288,7 @@
     "fast-check": "3.23.2",
     "jsdom": "^28.1.0",
     "json-schema-to-zod": "^2.8.1",
-    "openapi-mcp-generator": "^4.1.0",
+    "openapi-mcp-generator": "^5.0.1",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.19",
     "typescript": "^5.9.3",
