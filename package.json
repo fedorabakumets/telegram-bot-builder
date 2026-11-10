@@ -167,8 +167,8 @@
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^9.1.0",
-    "@aws-sdk/client-s3": "3.1076.0",
-    "@aws-sdk/s3-request-presigner": "3.1076.0",
+    "@aws-sdk/client-s3": "3.1164.0",
+    "@aws-sdk/s3-request-presigner": "3.1164.0",
     "@hookform/resolvers": "^5.2.2",
     "@jridgewell/trace-mapping": "^0.3.31",
     "@modelcontextprotocol/sdk": "^1.32.2",
@@ -262,8 +262,8 @@
     "zod-validation-error": "^5.0.0"
   },
   "devDependencies": {
-    "@replit/vite-plugin-cartographer": "^0.4.4",
-    "@replit/vite-plugin-runtime-error-modal": "^0.0.4",
+    "@replit/vite-plugin-cartographer": "^0.6.1",
+    "@replit/vite-plugin-runtime-error-modal": "^0.0.6",
     "@tailwindcss/container-queries": "^0.1.1",
     "@tailwindcss/typography": "^0.5.19",
     "@testing-library/dom": "^10.4.1",
@@ -288,9 +288,9 @@
     "autoprefixer": "^10.4.23",
     "c8": "^11.0.0",
     "caniuse-lite": "^1.0.30001814",
-    "drizzle-docs-generator": "^0.7.2",
+    "drizzle-docs-generator": "^0.8.2",
     "drizzle-kit": "^0.31.8",
-    "esbuild": "^0.28.1",
+    "esbuild": "^0.28.2",
     "eslint": "^9.39.5",
     "eslint-plugin-react-hooks": "^5.2.0",
     "fast-check": "3.23.2",
