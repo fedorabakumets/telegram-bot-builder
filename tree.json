@@ -583,7 +583,7 @@
     "folder_titles": {
       "database": "Database"
     },
-    "updated_at": "2026-11-03T04:34:45Z",
+    "updated_at": "2026-11-10T02:03:58Z",
     "tags": [],
     "author": ""
   },
@@ -838,7 +838,7 @@
     "folder_titles": {
       "database": "Database"
     },
-    "updated_at": "2026-10-15T08:19:31Z",
+    "updated_at": "2026-11-10T02:03:58Z",
     "tags": [],
     "author": ""
   },
@@ -1484,6 +1484,21 @@
       "development": "🛠️ Разработка"
     },
     "updated_at": "2026-11-08T10:34:14+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "development/frontend-backend-split",
+    "title": "Раздельные frontend и backend",
+    "excerpt": "<!-- @fileoverview Запуск интерфейса отдельно от API, подготовка Railway и безопасный откат. -->",
+    "parts": [
+      "development",
+      "frontend-backend-split"
+    ],
+    "folder_titles": {
+      "development": "🛠️ Разработка"
+    },
+    "updated_at": "2026-11-10T06:30:06+03:00",
     "tags": [],
     "author": ""
   },
