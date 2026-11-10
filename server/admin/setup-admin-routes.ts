@@ -7,6 +7,7 @@ import express, { type Express } from "express";
 import { redirectAfterAdminLogin } from "./admin-login-redirect";
 import { isAdminAuthenticated, requireAdminAuth } from "./admin-auth-middleware";
 import { adminKeysMatch } from "./admin-key-match";
+import { adminLoginRateLimit } from './admin-login-rate-limit';
 import { clearAdminCookie, setAdminCookie } from "./admin-session";
 import {
   handleGetAdminAppSettings,
@@ -67,9 +68,8 @@ export function setupAdminRoutes(app: Express): void {
     serveAdminLoginPage(req, res);
   });
 
-  app.use("/admin/api/login", express.urlencoded({ extended: false }));
-
-  app.post("/admin/api/login", async (req, res) => {
+  /** Ограничивает попытки до локального парсинга формы и проверки ключа. */
+  app.post("/admin/api/login", adminLoginRateLimit, express.urlencoded({ extended: false }), async (req, res) => {
     const key = resolveAdminApiKey();
     if (!key) {
       res.status(503).send("Admin не настроен");

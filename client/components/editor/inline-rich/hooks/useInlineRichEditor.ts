@@ -6,6 +6,7 @@
 import { useRef, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import type { InlineRichEditorProps } from '../types';
+import { pasteRichHtml } from '../utils/paste-rich-html';
 import { useTextStats } from './useTextStats';
 import { useUndoRedo } from './useUndoRedo';
 import { useEditorSync } from './useEditorSync';
@@ -59,7 +60,7 @@ export interface UseInlineRichEditorReturn {
   /** Обработчик потери фокуса редактором — сохраняет выделение */
   saveSelectionOnBlur: () => void;
   /** Обработчик вставки текста — сохраняет состояние в undo стек перед вставкой */
-  handlePaste: () => void;
+  handlePaste: (event: React.ClipboardEvent<HTMLDivElement>) => void;
 }
 
 /**
@@ -133,12 +134,14 @@ export function useInlineRichEditor(
   const activeFormats = useActiveFormats(editorRef);
 
   /**
-   * Сохраняет текущее состояние в undo стек перед вставкой текста,
-   * чтобы вставку можно было отменить кнопкой Undo
+   * Очищает буфер до вставки, сохраняя состояние в пользовательском undo стеке.
+   * @param event - Событие вставки буфера обмена
    */
-  const handlePaste = useCallback(() => {
+  const handlePaste = useCallback((event: React.ClipboardEvent<HTMLDivElement>) => {
+    event.preventDefault();
     saveToUndoStack();
-  }, [saveToUndoStack]);
+    if (editorRef.current && pasteRichHtml(editorRef.current, event.clipboardData)) handleInput();
+  }, [saveToUndoStack, handleInput]);
 
   return {
     editorRef,

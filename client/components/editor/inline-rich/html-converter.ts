@@ -4,9 +4,8 @@
  * Поддерживает Telegram-специфичные теги: tg-spoiler, blockquote expandable.
  */
 
-import { decodeHtmlEntities } from './utils/html-entities';
-import { escapeHtmlContent } from './utils/escape-html-content';
 import { highlightVariables, unwrapVariables } from './utils/highlight-variables';
+import { sanitizeRichHtml } from './utils/safe-rich-html';
 
 /**
  * Заменяет \n на <br> во всём HTML, включая содержимое тегов <pre>.
@@ -29,8 +28,8 @@ function replaceNewlinesOutsidePre(html: string): string {
 export function valueToHtml(text: string, enableMarkdown: boolean): string {
   if (!text) return '';
 
-  // Сначала декодируем HTML-сущности (если они есть)
-  let html = decodeHtmlEntities(text);
+  // Сущности в текстовых узлах остаются текстом, а не превращаются в исполняемую разметку.
+  let html = text;
 
   if (enableMarkdown) {
     html = html
@@ -52,7 +51,7 @@ export function valueToHtml(text: string, enableMarkdown: boolean): string {
     html = replaceNewlinesOutsidePre(html);
   }
 
-  return highlightVariables(html);
+  return sanitizeRichHtml(highlightVariables(sanitizeRichHtml(html)));
 }
 
 /**
@@ -64,8 +63,9 @@ export function valueToHtml(text: string, enableMarkdown: boolean): string {
 export function htmlToValue(html: string, enableMarkdown: boolean): string {
   if (!html) return '';
 
-  // Сначала убираем span-обёртки переменных, затем декодируем HTML-сущности
-  let text = decodeHtmlEntities(unwrapVariables(html));
+  // Сериализация безопасного DOM уже экранирует текст; повторное декодирование изменило бы его смысл.
+  let text = unwrapVariables(sanitizeRichHtml(html))
+    .replace(/<(?:div|p)\b[^>]*>/g, '\n').replace(/<\/(?:div|p)>/g, '');
 
   if (enableMarkdown) {
     text = text
@@ -82,13 +82,9 @@ export function htmlToValue(html: string, enableMarkdown: boolean): string {
       .replace(/<h5[^>]*>(.*?)<\/h5>/g, '### $1')
       .replace(/<a[^>]*href="([^"]*)"[^>]*>(.*?)<\/a>/g, '[$2]($1)')
       .replace(/<br\s*\/?>/g, '\n')
-      .replace(/<div[^>]*>/g, '\n')
-      .replace(/<\/div>/g, '');
+      .replace(/<(?:div|p)\b[^>]*>/g, '\n')
+      .replace(/<\/(?:div|p)>/g, '');
   } else {
-    // Экранируем спецсимволы в текстовых узлах до замены тегов,
-    // чтобы <, > и & в пользовательском тексте не ломали Telegram HTML-парсер
-    text = escapeHtmlContent(text);
-
     // Даже без Markdown сохраняем теги форматирования для Telegram
     text = text
       .replace(/<strong[^>]*>(.*?)<\/strong>/g, '<b>$1</b>')
@@ -117,8 +113,8 @@ export function htmlToValue(html: string, enableMarkdown: boolean): string {
       .replace(/<blockquote[^>]*>(.*?)<\/blockquote>/g, '<blockquote>$1</blockquote>')
       .replace(/<h[3-5][^>]*>(.*?)<\/h[3-5]>/g, '<b>$1</b>')
       .replace(/<br\s*\/?>/g, '\n')
-      .replace(/<div[^>]*>/g, '\n')
-      .replace(/<\/div>/g, '');
+      .replace(/<(?:div|p)\b[^>]*>/g, '\n')
+      .replace(/<\/(?:div|p)>/g, '');
   }
 
   // Очищаем пустые значения (только пробелы и новые строки)
