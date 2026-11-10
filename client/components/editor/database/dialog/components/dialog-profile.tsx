@@ -2,6 +2,7 @@
  * @fileoverview Боковая карточка сведений о собеседнике или группе.
  */
 import { useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { CalendarDays, Clock3, Users, UserRound, X, ZoomIn } from 'lucide-react';
 import type { UserBotData } from '@/types/bot';
 import { UserAvatar } from './user-avatar';
@@ -99,7 +100,11 @@ export function DialogProfile({ user, projectId, tokenId, onClose, children }: D
           </div>}
         </div>
         {children}
-        {photoSrc && <ImageLightbox src={photoSrc} alt={isGroup ? 'Фотография группы' : 'Фотография пользователя'} onClose={() => setPhotoSrc(null)} />}
+        {photoSrc && createPortal(
+          <div className="pointer-events-auto relative z-[100]">
+            <ImageLightbox src={photoSrc} alt={isGroup ? 'Фотография группы' : 'Фотография пользователя'} onClose={() => setPhotoSrc(null)} />
+          </div>, document.body,
+        )}
       </div>
     </aside>
   );

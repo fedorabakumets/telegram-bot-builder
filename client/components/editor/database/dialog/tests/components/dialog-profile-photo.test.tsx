@@ -22,7 +22,7 @@ describe('Фотография профиля', () => {
     render(<DialogProfile user={{ userId: '-123', isGroup: true, avatarUrl: '/group.png' }} projectId={12} onClose={vi.fn()} />);
     fireEvent.click(screen.getByRole('button', { name: 'Увеличить фотографию группы' }));
     expect(screen.getByTestId('lightbox-image')).toHaveAttribute('src', '/group.png');
-    fireEvent.click(screen.getByRole('button', { name: 'Закрыть', exact: true }));
+    fireEvent.click(screen.getByRole('button', { name: /^Закрыть$/ }));
     expect(screen.queryByTestId('lightbox-overlay')).not.toBeInTheDocument();
   });
 });
