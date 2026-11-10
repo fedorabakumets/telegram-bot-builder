@@ -18,7 +18,7 @@ export const CONDITION_OPERATORS = CONDITION_OPERATOR_VALUES;
  * @param schema - Zod-схема, возможно с .default()
  * @returns Внутренняя схема без default
  */
-function unwrapZodDefault(schema: z.ZodTypeAny): z.ZodTypeAny {
+function unwrapZodDefault(schema: z.core.$ZodType): z.core.$ZodType {
   return schema instanceof z.ZodDefault ? schema.unwrap() : schema;
 }
 
@@ -36,4 +36,5 @@ function getBranchOperatorEnum(): z.ZodEnum | null {
 }
 
 /** Операторы, принятые zod-схемой node-schema (может быть уже полного списка) */
-export const ZOD_CONDITION_OPERATORS: readonly string[] = getBranchOperatorEnum()?.options ?? [];
+export const ZOD_CONDITION_OPERATORS: readonly string[] = (getBranchOperatorEnum()?.options ?? [])
+  .filter((value): value is string => typeof value === 'string');
