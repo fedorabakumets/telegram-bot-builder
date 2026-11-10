@@ -10,7 +10,9 @@
 import { useCallback, useState } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useToast } from '@/hooks/use-toast';
-import { useProjectVersions, useRestoreProjectVersion } from '@/hooks/use-project-versions';
+import { useRestoreProjectVersion } from '@/hooks/use-project-versions';
+import { usePagedProjectVersions } from '@/hooks/use-paged-project-versions';
+import { Button } from '@/components/ui/button';
 import { VersionRow } from '@/components/editor/versions/version-row';
 import { CommitForm } from '@/components/editor/versions/commit-form';
 
@@ -31,19 +33,17 @@ export function VersionHistoryButton({ projectId, onRestored }: VersionHistoryBu
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [restoringId, setRestoringId] = useState<number | null>(null);
-  const { data: versions = [], isLoading } = useProjectVersions(projectId);
+  const { data, isLoading, isError, isFetching, refetch, page, pageSize, onPageChange } = usePagedProjectVersions(projectId, open);
+  const versions = data?.items ?? [];
+  const total = data?.total ?? 0;
   const restoreMutation = useRestoreProjectVersion(projectId);
 
   /** Обработчик восстановления версии проекта */
   const handleRestore = useCallback((versionId: number) => {
     setRestoringId(versionId);
-    // Уведомление показываем первым — гарантированно, до обновления холста
-    toast({
-      title: 'Версия восстановлена',
-      description: 'Проект откатан к выбранной версии. Изменения видны на холсте.',
-    });
     restoreMutation.mutate(versionId, {
       onSuccess: () => {
+        toast({ title: 'Версия восстановлена', description: 'Проект откатан к выбранной версии.' });
         try {
           onRestored?.();
         } catch (err) {
@@ -85,7 +85,7 @@ export function VersionHistoryButton({ projectId, onRestored }: VersionHistoryBu
           <i className="fas fa-code-branch text-slate-400 dark:text-slate-500 text-xs" />
           <span className="font-semibold text-sm text-slate-700 dark:text-slate-200">История версий</span>
           {versions.length > 0 && (
-            <span className="text-xs text-slate-400 dark:text-slate-500 tabular-nums">{versions.length}</span>
+            <span className="text-xs text-slate-400 dark:text-slate-500 tabular-nums">{total}</span>
           )}
         </div>
 
@@ -96,7 +96,10 @@ export function VersionHistoryButton({ projectId, onRestored }: VersionHistoryBu
 
         {/* Список версий */}
         <div className="overflow-y-auto flex-1">
-          {isLoading ? (
+          {isError ? <div role="alert" className="p-4 text-sm">
+            <p>Не удалось загрузить историю версий.</p>
+            <Button size="sm" variant="outline" disabled={isFetching} onClick={() => void refetch()}>Повторить загрузку</Button>
+          </div> : isLoading ? (
             <div className="p-6 text-sm text-slate-400 dark:text-slate-500">Загрузка истории версий…</div>
           ) : versions.length > 0 ? (
             versions.map((version, index) => (
@@ -104,9 +107,10 @@ export function VersionHistoryButton({ projectId, onRestored }: VersionHistoryBu
                 key={version.id}
                 version={version}
                 projectId={projectId}
-                versionNumber={versions.length - index}
-                isLatest={index === 0}
+                versionNumber={total - (page - 1) * pageSize - index}
+                isLatest={page === 1 && index === 0}
                 isRestoring={restoringId === version.id}
+                restoreDisabled={restoringId !== null}
                 compact
                 onRestore={handleRestore}
               />
@@ -119,6 +123,11 @@ export function VersionHistoryButton({ projectId, onRestored }: VersionHistoryBu
           )}
         </div>
 
+        {(page > 1 || data?.nextCursor) && <nav aria-label="Страницы истории" className="flex items-center justify-between border-t p-2">
+          <Button size="sm" variant="outline" disabled={page <= 1 || isFetching} onClick={() => onPageChange(page - 1)}>Назад</Button>
+          <span className="text-xs">Страница {page}</span>
+          <Button size="sm" variant="outline" disabled={!data?.nextCursor || isFetching} onClick={() => onPageChange(page + 1)}>Далее</Button>
+        </nav>}
         {/* Пояснение: откат не удаляет историю */}
         {versions.length > 0 && (
           <div className="flex-shrink-0 px-3 py-2 border-t border-slate-200 dark:border-slate-700 bg-slate-50/80 dark:bg-slate-800/50">
