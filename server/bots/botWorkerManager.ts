@@ -906,6 +906,13 @@ class BotWorkerManager extends EventEmitter {
   getStats(): WorkerPoolStats {
     return collectWorkerStats(this.workers.values(), (tokenId, workerKey) => this.projectOf(tokenId, workerKey));
   }
+
+  /** Возвращает действующие привязки ботов к воркерам для точечного перезапуска. */
+  listActiveBots(): Array<{ workerKey: number; projectId: number; tokenId: number }> {
+    return [...this.workers.values()].flatMap((worker) => [...worker.activeBots].map((tokenId) => ({
+      workerKey: worker.projectId, projectId: this.projectOf(tokenId, worker.projectId), tokenId,
+    })));
+  }
 }
 
 /**

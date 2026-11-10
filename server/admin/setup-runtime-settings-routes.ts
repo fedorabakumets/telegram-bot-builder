@@ -6,6 +6,8 @@
 import { handleTestTelegramConnection } from "./telegram-connection-test";
 import type { Express } from "express";
 import { requireAdminAuth } from "./admin-auth-middleware";
+import { getWorkerRuntimeStatus } from "./worker-runtime-status";
+import { restartPendingWorkers } from "./restart-pending-workers";
 import {
   handleGetRuntimeSettings,
   handlePutRuntimeSettings,
@@ -21,6 +23,16 @@ import { handleTestBackupTelegram } from "./runtime-backup-telegram-handler";
  */
 export function setupRuntimeSettingsRoutes(app: Express): void {
   app.get("/admin/api/runtime-settings/:group", requireAdminAuth, handleGetRuntimeSettings);
+  /** Отдаёт администратору снимок работающих воркеров. */
+  app.get("/admin/api/runtime-settings/workers/status", requireAdminAuth, async (_req, res) => {
+    try { res.json(await getWorkerRuntimeStatus()); }
+    catch { res.status(500).json({ message: "Не удалось получить состояние воркеров" }); }
+  });
+  /** Перезапускает только ботов в воркерах прежней группировки. */
+  app.post("/admin/api/runtime-settings/workers/restart-pending", requireAdminAuth, async (_req, res) => {
+    try { res.json(await restartPendingWorkers()); }
+    catch (error) { res.status(409).json({ message: error instanceof Error ? error.message : 'Не удалось перезапустить ботов' }); }
+  });
   app.put("/admin/api/runtime-settings/:group", requireAdminAuth, handlePutRuntimeSettings);
   app.post("/admin/api/runtime-settings/platform/telegram/test", requireAdminAuth, handleTestTelegramConnection);
   app.post("/admin/api/runtime-settings/backups/run", requireAdminAuth, handleRunRuntimeBackup);
