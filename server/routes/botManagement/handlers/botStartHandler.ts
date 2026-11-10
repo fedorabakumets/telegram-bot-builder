@@ -7,6 +7,8 @@ import type { Request, Response } from "express";
 import { startBot } from "../../../bots/startBot";
 import { storage } from "../../../storages/storage";
 import { botStartErrorStatus } from "./botStartErrorStatus";
+import { resolveActualBotStatus } from '../resolve-actual-bot-status';
+import { setBotDesiredStatus } from '../../../bots/setBotDesiredStatus';
 
 /**
  * Нормализует tokenId из тела (число, "42", "token_42").
@@ -78,12 +80,18 @@ export async function handleBotStart(req: Request, res: Response): Promise<void>
       return;
     }
 
-    const existingInstance = await storage.getBotInstanceByToken(actualTokenId);
-    if (existingInstance && existingInstance.status === "running") {
+    let existingInstance = await storage.getBotInstanceByToken(actualTokenId);
+    if (existingInstance && await resolveActualBotStatus(projectId, actualTokenId, existingInstance) === 'running') {
       res.status(400).json({ message: "Бот уже запущен" });
       return;
     }
 
+    if (!existingInstance) {
+      existingInstance = await storage.createBotInstance({
+        projectId, tokenId: actualTokenId, token: botToken, status: 'stopped',
+      });
+    }
+    await setBotDesiredStatus(existingInstance.id, 'running');
     const result = await startBot(projectId, botToken, actualTokenId);
     if (result.success) {
       await storage.markTokenAsUsed(actualTokenId);
@@ -93,6 +101,13 @@ export async function handleBotStart(req: Request, res: Response): Promise<void>
         tokenUsed: true,
       });
     } else {
+      const failedInstance = await storage.getBotInstanceByToken(actualTokenId);
+      const failureMessage = failedInstance?.errorMessage?.includes('TBB_BUILD_LINK_EXPIRED:')
+        ? failedInstance.errorMessage
+        : result.error || 'Не удалось запустить бота';
+      await storage.updateBotInstance(existingInstance.id, {
+        status: 'error', errorMessage: failureMessage,
+      });
       res.status(botStartErrorStatus(result.error)).json({ message: result.error || "Не удалось запустить бота" });
     }
   } catch {

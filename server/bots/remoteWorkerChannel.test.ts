@@ -47,6 +47,16 @@ describe("encodeFields / decodeFields", () => {
 });
 
 describe("RemoteWorkerChannel", () => {
+  it("подключается к существующему воркеру без повторного spawn", () => {
+    const hub = new FakeHub();
+    const channel = RemoteWorkerChannel.attach(hub as unknown as RemoteRunnerHub, 7, "existing");
+    const got: string[] = [];
+    channel.on("line", (line) => got.push(line));
+    hub.sinks.get("existing")?.handle({ k: "line", w: "7", i: "existing", l: "ready" });
+    assert.deepStrictEqual(got, ["ready"]);
+    assert.deepStrictEqual(hub.sent, []);
+  });
+
   it("при создании просит исполнителя поднять воркер, строки уходят с ID экземпляра", () => {
     const { hub, channel } = makeChannel();
     assert.strictEqual(channel.pid, undefined);

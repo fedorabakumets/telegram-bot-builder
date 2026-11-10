@@ -14,6 +14,8 @@ import {
 import { isTokenOfflineForBulkStart } from '../isTokenOfflineForBulkStart';
 import { isTokenPendingRestore } from '../../../bots/restoreState';
 import { shouldSkipBulkStartDuringRestore } from '../../../../shared/should-skip-bulk-start-during-restore';
+import { setBotDesiredStatus } from '../../../bots/setBotDesiredStatus';
+import { resolveActualBotStatus, type RunnerInspectionCache } from '../resolve-actual-bot-status';
 
 /** Пауза между стартами, чтобы не устроить thundering herd */
 const START_DELAY_MS = 400;
@@ -77,6 +79,7 @@ export async function handleBotStartOfflineAll(req: Request, res: Response): Pro
     const offlineTokens: typeof tokens = [];
     let skippedRunning = 0;
     let skippedRestoring = 0;
+    const inspectionCache: RunnerInspectionCache = new Map();
 
     for (const t of tokens) {
       if (shouldSkipBulkStartDuringRestore(isTokenPendingRestore(t.id))) {
@@ -84,9 +87,14 @@ export async function handleBotStartOfflineAll(req: Request, res: Response): Pro
         continue;
       }
       const instance = await storage.getBotInstanceByToken(t.id);
-      if (isTokenOfflineForBulkStart(instance?.status, t.isActive)) {
+      const live = instance
+        ? await resolveActualBotStatus(projectId, t.id, instance, false, inspectionCache)
+        : 'stopped';
+      if (live === 'unknown' || live === 'starting' || live === 'requested') {
+        skippedRestoring += 1;
+      } else if (isTokenOfflineForBulkStart(live, t.isActive)) {
         offlineTokens.push(t);
-      } else if (instance?.status === 'running') {
+      } else if (live === 'running') {
         skippedRunning += 1;
       }
     }
@@ -122,12 +130,28 @@ export async function handleBotStartOfflineAll(req: Request, res: Response): Pro
 
     for (let i = 0; i < offlineTokens.length; i++) {
       const token = offlineTokens[i];
+      let instance = await storage.getBotInstanceByToken(token.id);
+      if (!instance) {
+        instance = await storage.createBotInstance({
+          projectId, tokenId: token.id, token: token.token, status: 'stopped',
+        });
+      }
+      const generation = await setBotDesiredStatus(instance.id, 'running');
+      const current = await storage.getBotInstanceByToken(token.id);
+      if (!current || current.desiredStatus !== 'running' || current.desiredGeneration !== generation) {
+        failed += 1;
+        results.push({ tokenId: token.id, success: false, error: 'Запуск отменён новым запросом' });
+        continue;
+      }
       const startResult = await startBot(projectId, token.token, token.id);
 
       if (startResult.success) {
         started += 1;
         results.push({ tokenId: token.id, success: true, processId: startResult.processId });
       } else {
+        await storage.updateBotInstance(instance.id, {
+          status: 'error', errorMessage: startResult.error || 'Не удалось запустить',
+        });
         failed += 1;
         results.push({
           tokenId: token.id,

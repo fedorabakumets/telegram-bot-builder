@@ -14,6 +14,12 @@
 | project_id | integer | - | NO | - | [bot_projects.id](./bot_projects.md) | Идентификатор проекта (ссылка на bot_projects.id) |
 | token_id | integer | - | NO | - | [bot_tokens.id](./bot_tokens.md) | Идентификатор токена (ссылка на bot_tokens.id) |
 | status | text | - | NO | - | - | Статус экземпляра ("running", "stopped", "error") |
+| desired_status | text | - | YES | - | - | Желаемое состояние; null сохраняет поведение старых записей |
+| desired_generation | integer | `0` | NO | - | - | Версия намерения для защиты от устаревших команд |
+| desired_updated_at | timestamp | - | YES | - | - | Время последнего изменения намерения |
+| build_retry_generation | integer | `0` | NO | - | - | Поколение, для которого учтён повтор загрузки сборки |
+| build_retry_count | integer | `0` | NO | - | - | Число повторов загрузки сборки в этом поколении |
+| build_retry_after | timestamp | - | YES | - | - | Время следующей попытки загрузки сборки |
 | token | text | - | NO | - | - | Токен бота |
 | process_id | text | - | YES | - | - | Идентификатор процесса (если бот запущен) |
 | started_at | timestamp | `now()` | YES | - | - | Время запуска экземпляра |

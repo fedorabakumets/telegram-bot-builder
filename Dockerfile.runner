@@ -1,5 +1,6 @@
 # syntax=docker/dockerfile:1
-# Образ исполнителя ботов (`WORKER_RUNTIME=remote`): только исполнитель, worker.py
+# @fileoverview Образ исполнителя ботов и очереди рассылок с отдельной сборкой JavaScript.
+# Образ исполнителя ботов (`WORKER_RUNTIME=remote`): исполнитель, worker.py
 # и Python-зависимости ботов, без панели и клиента. Подробно: docs/deployment/BOT_RUNNER.md
 # Собирается BuildKit (`docker buildx build`): кеш npm/pip между сборками, amd64 и arm64.
 
@@ -8,12 +9,13 @@
 FROM --platform=$BUILDPLATFORM node:24-bookworm-slim AS builder
 
 WORKDIR /app
-RUN --mount=type=cache,target=/root/.npm \
-    npm init -y >/dev/null \
- && npm install --no-save --ignore-scripts --no-audit --no-fund esbuild@0.27 ioredis@5.10 dotenv@17
+COPY package*.json .npmrc ./
+RUN --mount=type=cache,target=/root/.npm npm ci --ignore-scripts --no-audit --no-fund
 COPY server ./server
+COPY shared ./shared
+COPY tsconfig*.json ./
 RUN npx esbuild server/runner/index.ts --bundle --platform=node --target=node24 \
-    --format=cjs --log-level=error --outfile=dist-runner/runner.cjs
+    --format=cjs --tsconfig=tsconfig.node.json --log-level=error --outfile=dist-runner/runner.cjs
 
 # ── Исполнитель ──────────────────────────────────────────────────────────────
 FROM python:3.12-slim-bookworm

@@ -5,6 +5,8 @@
  */
 
 import type { Redis as RedisConnection } from "ioredis";
+import { randomUUID } from "node:crypto";
+import type { RunnerSnapshot } from "../runner/runnerWorkers";
 import {
   appendToStream,
   connectStreamRedis,
@@ -37,6 +39,8 @@ export class RemoteRunnerHub {
   private readonly sinks = new Map<string, RunnerEventSink>();
   /** Признаки жизни исполнителя */
   private readonly presence = new RunnerPresence();
+  /** Запросы снимка, ожидающие ответа исполнителя */
+  private readonly inspections = new Map<string, (snapshot: RunnerSnapshot) => void>();
 
   /**
    * @param runnerId - ID исполнителя
@@ -50,8 +54,7 @@ export class RemoteRunnerHub {
   ) {}
 
   /**
-   * Возвращает узел исполнителя, при первом вызове подключается и сбрасывает
-   * воркеры, оставшиеся от прошлого запуска панели
+   * Возвращает узел исполнителя и сохраняет его работающие воркеры
    * @param runnerId - ID исполнителя
    * @param redisUrl - REDIS_URL панели
    * @returns готовый узел
@@ -70,15 +73,13 @@ export class RemoteRunnerHub {
    * Подключается к Redis и начинает читать события
    * @param runnerId - ID исполнителя
    * @param redisUrl - REDIS_URL панели
-   * @returns узел после сброса воркеров исполнителя
+   * @returns подключённый узел исполнителя
    */
   private static async connect(runnerId: string, redisUrl: string): Promise<RemoteRunnerHub> {
     const [writer, reader] = await Promise.all([connectStreamRedis(redisUrl), connectStreamRedis(redisUrl)]);
     const hub = new RemoteRunnerHub(runnerId, writer);
     hub.follower = followStream(reader, runnerEventStream(runnerId), (fields) => hub.dispatch(fields));
     await hub.follower.ready;
-    // Воркеры прошлого запуска панели держат ботов, о которых панель уже не знает
-    await appendToStream(writer, runnerCommandStream(runnerId), { k: "reset" } satisfies RunnerCommand);
     console.log(`🛰️ [Runner:${runnerId}] связь установлена`);
     return hub;
   }
@@ -87,9 +88,35 @@ export class RemoteRunnerHub {
    * Отправляет команду исполнителю (порядок команд сохраняется)
    * @param command - Команда
    */
-  send(command: RunnerCommand): void {
-    appendToStream(this.writer, runnerCommandStream(this.runnerId), command).catch((error) => {
+  send(command: RunnerCommand): Promise<void> {
+    return appendToStream(this.writer, runnerCommandStream(this.runnerId), command).catch((error) => {
       console.error(`🛰️ [Runner:${this.runnerId}] команда ${command.k} не отправлена:`, error?.message ?? error);
+      throw error;
+    });
+  }
+
+  /**
+   * Запрашивает фактический список процессов и ботов у исполнителя
+   * @param timeoutMs - Максимальное время ответа
+   * @returns Снимок работающих процессов
+   */
+  inspect(timeoutMs: number): Promise<RunnerSnapshot> {
+    const q = randomUUID();
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        this.inspections.delete(q);
+        reject(new Error(`исполнитель ${this.runnerId} не ответил на inspect`));
+      }, timeoutMs);
+      this.inspections.set(q, (snapshot) => {
+        clearTimeout(timer);
+        this.inspections.delete(q);
+        resolve(snapshot);
+      });
+      void this.send({ k: "inspect", q }).catch((error) => {
+        clearTimeout(timer);
+        this.inspections.delete(q);
+        reject(error);
+      });
     });
   }
 
@@ -99,7 +126,7 @@ export class RemoteRunnerHub {
    * @returns промис, который завершается при ответе исполнителя
    */
   waitOnline(timeoutMs: number): Promise<void> {
-    return this.presence.wait(() => this.send({ k: "ping" }), timeoutMs);
+    return this.presence.wait(() => { void this.send({ k: "ping" }).catch(() => undefined); }, timeoutMs);
   }
 
   /**
@@ -136,6 +163,11 @@ export class RemoteRunnerHub {
   private dispatch(fields: Record<string, string>): void {
     if (fields.k === "hello" || fields.k === "pong") this.presence.notify();
     if (fields.k === "hello") return this.dropAll();
+    if (fields.k === "snapshot" && fields.q && fields.d) {
+      try { this.inspections.get(fields.q)?.(JSON.parse(fields.d) as RunnerSnapshot); }
+      catch (error) { console.error(`🛰️ [Runner:${this.runnerId}] повреждённый снимок:`, error); }
+      return;
+    }
     if (!fields.i || !fields.k) return;
     this.sinks.get(fields.i)?.handle(fields as unknown as RunnerEvent);
   }

@@ -46,6 +46,8 @@ export async function prepareWorkerLine(
     delete command.build;
     return { line: JSON.stringify(command), tokenId, fingerprint: build.fingerprint };
   } catch (error) {
-    return { tokenId, error: `Исполнитель не получил код бота: ${error instanceof Error ? error.message : String(error)}` };
+    const reason = error instanceof Error ? error.message : String(error);
+    const expired = /^HTTP (401|403) при скачивании сборки/.test(reason);
+    return { tokenId, error: `${expired ? "TBB_BUILD_LINK_EXPIRED: " : ""}Исполнитель не получил код бота: ${reason}` };
   }
 }

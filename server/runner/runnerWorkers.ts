@@ -12,6 +12,25 @@ import type { RunnerConfig } from "./runnerConfig";
 import { fetchBuildOverHttp, pruneBuildCache, type FetchBuild } from "./runnerBuildCache";
 import { prepareWorkerLine } from "./runnerStartCommand";
 import { botFailedEvents, forwardWorkerEvents, stopWorker } from "./runnerWorkerEvents";
+import { parseWorkerSystemMessage } from "../bots/parseWorkerSystemMessage";
+
+/** Снимок одного процесса воркера */
+export interface RunnerWorkerSnapshot {
+  /** Ключ воркера */
+  workerKey: number;
+  /** ID процесса, назначенный панелью */
+  instance: string;
+  /** Боты с подтверждённым запуском */
+  tokenIds: number[];
+  /** Боты, команда запуска которых ещё обрабатывается */
+  pendingTokenIds: number[];
+}
+
+/** Снимок состояния исполнителя */
+export interface RunnerSnapshot {
+  /** Работающие процессы воркеров */
+  workers: RunnerWorkerSnapshot[];
+}
 
 /** Сколько ждать штатного завершения воркеров при остановке исполнителя (мс) */
 const SHUTDOWN_GRACE_MS = 5_000;
@@ -26,6 +45,10 @@ interface RunnerWorker {
   queue: Promise<void>;
   /** Отпечатки сборок запущенных ботов: tokenId → отпечаток (не удаляются из кеша) */
   builds: Map<number, string>;
+  /** Боты, подтвердившие запуск */
+  tokenIds: Set<number>;
+  /** Запуски, для которых ещё нет подтверждения bot_started */
+  pendingTokenIds: Set<number>;
 }
 
 /**
@@ -34,6 +57,8 @@ interface RunnerWorker {
 export class RunnerWorkers {
   /** Ключ воркера → запущенный воркер */
   private readonly workers = new Map<string, RunnerWorker>();
+  /** Команды, уже выполненные в этом процессе до подтверждения Redis */
+  private readonly handledCommands = new Set<string>();
 
   /**
    * @param config - Настройки исполнителя
@@ -55,14 +80,43 @@ export class RunnerWorkers {
    * Выполняет команду панели
    * @param fields - Поля записи потока команд
    */
-  handle(fields: Record<string, string>): void {
+  async handle(fields: Record<string, string>): Promise<void> {
+    const id = fields.__id;
+    if (id && this.handledCommands.has(id)) return;
+    await this.perform(fields);
+    if (id) {
+      this.handledCommands.add(id);
+      if (this.handledCommands.size > 10_000) this.handledCommands.delete(this.handledCommands.values().next().value!);
+    }
+  }
+
+  /**
+   * Выполняет команду после проверки повторной доставки
+   * @param fields - Поля команды
+   */
+  private async perform(fields: Record<string, string>): Promise<void> {
     const command = fields as unknown as RunnerCommand;
     if (command.k === "reset") return this.reset();
     if (command.k === "ping") return this.emitEvent({ k: "pong", w: "", i: "" });
+    if (command.k === "inspect" && command.q) {
+      this.emitEvent({ k: "snapshot", w: "", i: "", q: command.q, d: JSON.stringify(this.snapshot()) });
+      return;
+    }
     if (!command.w || !command.i) return;
     if (command.k === "spawn") this.spawn(command.w, command.i);
-    else if (command.k === "line" && command.l !== undefined) this.forward(command.w, command.i, command.l);
+    else if (command.k === "line" && command.l !== undefined) await this.forward(command.w, command.i, command.l);
     else if (command.k === "kill") this.kill(command.w, command.i);
+  }
+
+  /**
+   * Возвращает подтверждённые состояния воркеров для переподключившейся панели
+   * @returns Снимок процессов и ботов
+   */
+  snapshot(): RunnerSnapshot {
+    return { workers: [...this.workers].map(([workerKey, worker]) => ({
+      workerKey: Number(workerKey), instance: worker.instance, tokenIds: [...worker.tokenIds],
+      pendingTokenIds: [...worker.pendingTokenIds],
+    })) };
   }
 
   /**
@@ -82,6 +136,7 @@ export class RunnerWorkers {
    * @param instance - ID экземпляра
    */
   private spawn(workerKey: string, instance: string): void {
+    if (this.current(workerKey, instance)) return;
     this.workers.get(workerKey)?.channel.kill();
     console.log(`🛰️ Воркер ${workerKey} запускается (${instance.slice(0, 8)})`);
     const channel = new LocalWorkerChannel({
@@ -89,8 +144,29 @@ export class RunnerWorkers {
       args: ["-u", this.config.workerScript],
       env: { ...buildWorkerBaseEnv(process.env, { includeConnections: false }), PROJECT_ID: workerKey, WORKER_REPORT_MEMORY: "true" },
     });
-    this.workers.set(workerKey, { instance, channel, queue: Promise.resolve(), builds: new Map() });
-    forwardWorkerEvents(channel, { w: workerKey, i: instance }, this.emitEvent, () => {
+    const worker: RunnerWorker = {
+      instance, channel, queue: Promise.resolve(), builds: new Map(), tokenIds: new Set(), pendingTokenIds: new Set(),
+    };
+    this.workers.set(workerKey, worker);
+    forwardWorkerEvents(channel, { w: workerKey, i: instance }, (event) => {
+      if (event.k === "line" && event.l) {
+        try {
+          const message = JSON.parse(event.l);
+          if (message.type === "system") {
+            const parsed = parseWorkerSystemMessage(message.content);
+            if (parsed.kind === "bot_started" && parsed.tokenId !== undefined) {
+              worker.pendingTokenIds.delete(parsed.tokenId);
+              worker.tokenIds.add(parsed.tokenId);
+            }
+            if ((parsed.kind === "bot_exited" || parsed.kind === "bot_stopped") && parsed.tokenId !== undefined) {
+              worker.pendingTokenIds.delete(parsed.tokenId);
+              worker.tokenIds.delete(parsed.tokenId);
+            }
+          }
+        } catch { /* Вывод воркера может быть обычным текстом. */ }
+      }
+      this.emitEvent(event);
+    }, () => {
       if (this.workers.get(workerKey)?.instance === instance) this.workers.delete(workerKey);
     });
   }
@@ -102,13 +178,34 @@ export class RunnerWorkers {
    * @param instance - ID экземпляра
    * @param line - Строка JSON от панели
    */
-  private forward(workerKey: string, instance: string, line: string): void {
+  private async forward(workerKey: string, instance: string, line: string): Promise<void> {
     const worker = this.current(workerKey, instance);
     if (!worker) return;
+    const parsed = JSON.parse(line);
+    if (parsed.cmd === "start_bot" || parsed.cmd === "stop_bot") {
+      const fenced = Number.isSafeInteger(parsed.instance_id) && Number.isSafeInteger(parsed.desired_generation);
+      if (!fenced && this.config.requireFence) {
+        const reason = `нет версии намерения для ${parsed.cmd}`;
+        if (parsed.cmd === "start_bot" && Number.isSafeInteger(parsed.token_id)) {
+          botFailedEvents({ w: workerKey, i: instance }, parsed.token_id, reason).forEach(this.emitEvent);
+        }
+        console.error(`🛰️ ${reason}`);
+        return;
+      }
+      if (this.config.requireFence && fenced && !await (await import("./runnerCommandFence")).isCurrentBotCommand(parsed, parsed.cmd)) {
+        console.warn(`🛰️ Устаревшая команда ${parsed.cmd} для бота ${parsed.token_id} пропущена`);
+        return;
+      }
+    }
+    try {
+      if (parsed.cmd === "start_bot" && Number.isSafeInteger(parsed.token_id)) worker.pendingTokenIds.add(parsed.token_id);
+      if (parsed.cmd === "stop_bot" && Number.isSafeInteger(parsed.token_id)) worker.pendingTokenIds.delete(parsed.token_id);
+    } catch { /* Неизвестную строку обработает Python-воркер. */ }
     worker.queue = worker.queue
       .then(() => prepareWorkerLine(line, this.config.cacheDir, this.fetchBuild))
-      .then((prepared) => {
+      .then(async (prepared) => {
         if ("error" in prepared) {
+          worker.pendingTokenIds.delete(prepared.tokenId);
           console.error(`🛰️ Воркер ${workerKey}, бот ${prepared.tokenId}: ${prepared.error}`);
           botFailedEvents({ w: workerKey, i: instance }, prepared.tokenId, prepared.error).forEach(this.emitEvent);
           return;
@@ -118,9 +215,31 @@ export class RunnerWorkers {
           const inUse = new Set([...this.workers.values()].flatMap((w) => [...w.builds.values()]));
           void pruneBuildCache(this.config.cacheDir, this.config.buildsKeep, inUse).catch(() => undefined);
         }
-        worker.channel.send(prepared.line);
+        if (this.config.requireFence && (parsed.cmd === "start_bot" || parsed.cmd === "stop_bot")
+          && Number.isSafeInteger(parsed.instance_id) && Number.isSafeInteger(parsed.desired_generation)) {
+          const current = await import("./runnerCommandFence").then(({ isCurrentBotCommand }) =>
+            isCurrentBotCommand(parsed, parsed.cmd));
+          if (!current) {
+            worker.pendingTokenIds.delete(parsed.token_id);
+            console.warn(`🛰️ Команда ${parsed.cmd} устарела во время подготовки и пропущена`);
+            return;
+          }
+        }
+        if (!worker.channel.send(prepared.line)) throw new Error(`воркер ${workerKey} завершился до доставки команды`);
       })
-      .catch((error) => console.error(`🛰️ Воркер ${workerKey}: ошибка подготовки команды:`, error));
+      .catch((error) => {
+        console.error(`🛰️ Воркер ${workerKey}: ошибка подготовки команды:`, error);
+        try {
+          const command = JSON.parse(line);
+          if (command.cmd === "start_bot" && Number.isSafeInteger(command.token_id)) {
+            worker.pendingTokenIds.delete(command.token_id);
+            botFailedEvents({ w: workerKey, i: instance }, command.token_id, String(error)).forEach(this.emitEvent);
+            return;
+          }
+        } catch { /* Неразбираемая команда остаётся без подтверждения. */ }
+        throw error;
+      });
+    await worker.queue;
   }
 
   /**
@@ -146,5 +265,10 @@ export class RunnerWorkers {
    */
   async shutdown(): Promise<void> {
     await Promise.all([...this.workers.values()].map(({ channel }) => stopWorker(channel, SHUTDOWN_GRACE_MS)));
+  }
+
+  /** Немедленно останавливает процессы после потери аренды. */
+  killAll(): void {
+    for (const worker of this.workers.values()) worker.channel.kill();
   }
 }

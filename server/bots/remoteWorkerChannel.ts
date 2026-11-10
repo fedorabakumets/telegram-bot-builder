@@ -17,7 +17,7 @@ const KILL_CONFIRM_MS = 5_000;
  */
 export class RemoteWorkerChannel extends EventEmitter implements WorkerChannel, RunnerEventSink {
   /** ID экземпляра: отличает новый воркер от старого с тем же ключом */
-  readonly instance = randomUUID();
+  readonly instance: string;
 
   /** true после события exit (настоящего или по таймауту kill) */
   private exited = false;
@@ -33,10 +33,22 @@ export class RemoteWorkerChannel extends EventEmitter implements WorkerChannel, 
    * @param hub - Связь с исполнителем
    * @param workerKey - Ключ воркера
    */
-  constructor(private readonly hub: RemoteRunnerHub, private readonly workerKey: number) {
+  constructor(private readonly hub: RemoteRunnerHub, private readonly workerKey: number, instance?: string) {
     super();
+    this.instance = instance ?? randomUUID();
     hub.register(this.instance, this);
-    hub.send({ k: "spawn", w: String(workerKey), i: this.instance });
+    if (!instance) void Promise.resolve(hub.send({ k: "spawn", w: String(workerKey), i: this.instance })).catch((error) => this.fail(error));
+  }
+
+  /**
+   * Привязывается к уже работающему процессу после перезапуска API
+   * @param hub - Связь с исполнителем
+   * @param workerKey - Ключ воркера
+   * @param instance - ID работающего процесса из inspect
+   * @returns Канал без команды spawn
+   */
+  static attach(hub: RemoteRunnerHub, workerKey: number, instance: string): RemoteWorkerChannel {
+    return new RemoteWorkerChannel(hub, workerKey, instance);
   }
 
   /**
@@ -46,14 +58,14 @@ export class RemoteWorkerChannel extends EventEmitter implements WorkerChannel, 
    */
   send(line: string): boolean {
     if (this.exited) return false;
-    this.hub.send({ k: "line", w: String(this.workerKey), i: this.instance, l: line });
+    void Promise.resolve(this.hub.send({ k: "line", w: String(this.workerKey), i: this.instance, l: line })).catch((error) => this.fail(error));
     return true;
   }
 
   /** Просит исполнителя убить воркер; без ответа считает его завершённым через KILL_CONFIRM_MS */
   kill(): void {
     if (this.exited || this.killTimer) return;
-    this.hub.send({ k: "kill", w: String(this.workerKey), i: this.instance });
+    void Promise.resolve(this.hub.send({ k: "kill", w: String(this.workerKey), i: this.instance })).catch((error) => this.fail(error));
     this.killTimer = setTimeout(() => this.finish(null, "SIGKILL"), KILL_CONFIRM_MS);
   }
 
@@ -84,5 +96,17 @@ export class RemoteWorkerChannel extends EventEmitter implements WorkerChannel, 
     if (this.killTimer) clearTimeout(this.killTimer);
     this.hub.unregister(this.instance);
     this.emit("exit", code, signal);
+  }
+
+  /**
+   * Передаёт ошибку доставки управляющему коду и завершает канал
+   * @param error - Ошибка Redis
+   */
+  private fail(error: unknown): void {
+    if (this.exited) return;
+    this.exited = true;
+    if (this.killTimer) clearTimeout(this.killTimer);
+    this.hub.unregister(this.instance);
+    this.emit("error", error instanceof Error ? error : new Error(String(error)));
   }
 }

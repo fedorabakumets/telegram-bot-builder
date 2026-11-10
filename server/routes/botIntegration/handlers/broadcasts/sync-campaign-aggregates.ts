@@ -50,7 +50,7 @@ export async function syncCampaignAggregates(
       ...totals,
       status,
       // startedAt проставляем один раз при первом переходе в работу
-      ...(campaign.startedAt ? {} : { startedAt: new Date() }),
+      ...(campaign.startedAt || status === "pending" ? {} : { startedAt: new Date() }),
       // finishedAt — только при переходе в терминальный статус
       ...(isTerminalCampaignStatus(status) && !campaign.finishedAt ? { finishedAt: new Date() } : {}),
     });

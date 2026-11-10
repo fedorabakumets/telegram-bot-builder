@@ -6,7 +6,7 @@
 import type { Request, Response } from 'express';
 import { storage } from '../../../storages/storage';
 import { reconcileLaunchHistoryForToken } from '../../../bots/reconcileLaunchHistory';
-import { computeLiveBotStatus } from '../compute-live-bot-status';
+import { resolveActualBotStatus, type ActualBotStatus, type RunnerInspectionCache } from '../resolve-actual-bot-status';
 import { mapProjectBotStatusItems } from '../map-project-bot-status-items';
 import { resolveStoppedErrorMessage } from '../../../bots/resolveStoppedErrorMessage';
 import { isTokenPendingRestore } from '../../../bots/restoreState';
@@ -45,21 +45,24 @@ export async function handleBotProjectStatuses(req: Request, res: Response): Pro
     const tokens = await storage.getBotTokensByProject(projectId);
     const instances = await storage.getBotInstancesByProject(projectId);
     const instanceByTokenId = new Map(instances.map((row) => [row.tokenId, row]));
-    const liveByTokenId = new Map<number, 'running' | 'stopped'>();
+    const liveByTokenId = new Map<number, ActualBotStatus>();
+    const inspectionCache: RunnerInspectionCache = new Map();
 
     for (const token of tokens) {
       const instance = instanceByTokenId.get(token.id);
-      const live = computeLiveBotStatus(projectId, token.id, instance);
+      const live = await resolveActualBotStatus(projectId, token.id, instance, false, inspectionCache);
       liveByTokenId.set(token.id, live);
       if (!instance) continue;
-      if (instance.status !== live && !isBotStarting(token.id)) {
+      if ((live === 'running' || live === 'stopped') && instance.status !== live && !isBotStarting(token.id)) {
         await storage.updateBotInstance(instance.id, {
           status: live,
           errorMessage: resolveStoppedErrorMessage(instance.errorMessage, live),
         });
         instance.status = live;
       }
-      await reconcileLaunchHistoryForToken(token.id, live === 'running');
+      if (live === 'running' || live === 'stopped') {
+        await reconcileLaunchHistoryForToken(token.id, live === 'running');
+      }
     }
 
     const tokenIdList = tokens.map((token) => token.id);

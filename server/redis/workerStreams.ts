@@ -19,7 +19,9 @@ export interface RunnerCommand {
    * spawn — поднять воркер; line — строка в stdin; kill — убить; reset — убить все воркеры;
    * ping — проверка, что исполнитель слушает команды (ответ — событие pong)
    */
-  k: "spawn" | "line" | "kill" | "reset" | "ping";
+  k: "spawn" | "line" | "kill" | "reset" | "ping" | "inspect";
+  /** ID запроса снимка состояния */
+  q?: string;
   /** Ключ воркера */
   w?: string;
   /** ID экземпляра воркера (новый на каждый spawn) */
@@ -35,7 +37,11 @@ export interface RunnerEvent {
    * hello — исполнитель (пере)запущен, воркеров прошлого запуска больше нет (w и i пустые);
    * pong — ответ на ping (w и i пустые)
    */
-  k: "line" | "stderr" | "exit" | "error" | "hello" | "pong";
+  k: "line" | "stderr" | "exit" | "error" | "hello" | "pong" | "snapshot";
+  /** ID запроса снимка состояния */
+  q?: string;
+  /** Сериализованный снимок исполнителя */
+  d?: string;
   /** Ключ воркера */
   w: string;
   /** ID экземпляра воркера */
@@ -109,7 +115,8 @@ export function decodeFields(flat: string[]): Record<string, string> {
  * @param fields - Поля записи
  */
 export async function appendToStream(redis: RedisConnection, stream: string, fields: object): Promise<void> {
-  await redis.xadd(stream, "MAXLEN", "~", STREAM_MAXLEN, "*", ...encodeFields(fields));
+  if (stream.endsWith(":cmd")) await redis.xadd(stream, "*", ...encodeFields(fields));
+  else await redis.xadd(stream, "MAXLEN", "~", STREAM_MAXLEN, "*", ...encodeFields(fields));
 }
 
 /** Чтение потока в фоне */
@@ -177,4 +184,57 @@ export function followStream(
       redis.disconnect();
     },
   };
+}
+
+/**
+ * Читает команды через группу Redis и подтверждает каждую после обработки.
+ * Неподтверждённые команды того же исполнителя повторяются после его перезапуска.
+ * @param redis - Отдельное соединение для блокирующего чтения
+ * @param stream - Поток команд
+ * @param onEntry - Обработчик команды
+ * @returns Готовность и остановка чтения
+ */
+export function followCommandStream(
+  redis: RedisConnection,
+  stream: string,
+  onEntry: (fields: Record<string, string>) => Promise<void>,
+): StreamFollower {
+  const group = "runner";
+  const consumer = "owner";
+  let stopped = false;
+  let markReady!: () => void;
+  let rejectReady!: (error: unknown) => void;
+  const ready = new Promise<void>((resolve, reject) => { markReady = resolve; rejectReady = reject; });
+  void (async () => {
+    try {
+      await redis.xgroup("CREATE", stream, group, "$", "MKSTREAM");
+    } catch (error) {
+      if (!String(error).includes("BUSYGROUP")) throw error;
+    }
+    markReady();
+    let pending = true;
+    while (!stopped) {
+      try {
+        const raw = pending
+          ? await redis.call("XREADGROUP", "GROUP", group, consumer, "COUNT", 1, "STREAMS", stream, "0")
+          : await redis.call("XREADGROUP", "GROUP", group, consumer, "COUNT", 1,
+            "BLOCK", READ_BLOCK_MS, "STREAMS", stream, ">");
+        const entries = raw as Array<[string, Array<[string, string[]]>]> | null;
+        if (!entries?.some(([, messages]) => messages.length > 0)) { pending = false; continue; }
+        for (const [, messages] of entries) for (const [id, flat] of messages) {
+          await onEntry({ ...decodeFields(flat), __id: id });
+          await redis.xack(stream, group, id);
+          await redis.xdel(stream, id);
+        }
+      } catch (error) {
+        if (stopped) return;
+        console.error(`[WorkerStreams] Ошибка команды ${stream}:`, error);
+        await new Promise((resolve) => setTimeout(resolve, 1_000));
+      }
+    }
+  })().catch((error) => {
+    console.error(`[WorkerStreams] Нет доступа к ${stream}:`, error);
+    rejectReady(error);
+  });
+  return { ready, stop: () => { stopped = true; redis.disconnect(); } };
 }

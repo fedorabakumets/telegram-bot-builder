@@ -11,7 +11,6 @@ import { storage } from "../../../../storages/storage";
 import { getRequestTokenId, resolveEffectiveProjectToken } from "../../../utils/resolve-request-token";
 import { buildBroadcastDefaultName } from "./build-broadcast-default-name";
 import { createBroadcastBodySchema } from "./broadcast-body-schemas";
-import { runBroadcastQueue } from "./broadcastQueue";
 import { countBroadcastRecipients, normalizeBroadcastGroupIds } from "./broadcast-recipient-total";
 import { startSelectedTokensBroadcast } from "./start-selected-tokens-broadcast";
 import {
@@ -97,13 +96,9 @@ export async function createBroadcastHandler(req: Request, res: Response): Promi
       buttons,
       buttonsPerRow,
       filters: childFilters,
-      status: "running",
+      status: "pending",
       /** Все запланированные доставки: пользователи и уникальные группы. */
       totalCount: countBroadcastRecipients(users.length, groupIds),
-      startedAt: new Date(),
-    });
-    runBroadcastQueue(broadcast.id, selectedToken.token).catch((err) => {
-      console.error(`[broadcast] Ошибка очереди рассылки ${broadcast.id}:`, err);
     });
     res.status(201).json({ broadcastId: broadcast.id });
   } catch (error) {

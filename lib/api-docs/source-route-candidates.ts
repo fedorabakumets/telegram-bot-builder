@@ -62,7 +62,8 @@ export function sourceRouteCandidates(directory: string) {
           const receiver = node.expression.expression.getText(source);
           if (/^(app|router|.*Router)$/.test(receiver) && /^(get|post|put|patch|delete|head|all|use)$/.test(method) && node.arguments[0]) {
             const literal = resolve(node.arguments[0], scope);
-            const expression = node.arguments[0].getText(source);
+            /** Нормализует переносы до обрезки, чтобы снимок совпадал на Windows и Linux. */
+            const expression = node.arguments[0].getText(source).replace(/\r\n/g, '\n');
             candidates.push({ file: path.relative(process.cwd(), file).replace(/\\/g, '/'),
               line: source.getLineAndCharacterOfPosition(node.getStart(source)).line + 1,
               method: method.toUpperCase(), expression: expression.length > 300 ? `${expression.slice(0, 300)}…` : expression,

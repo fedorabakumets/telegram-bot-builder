@@ -432,16 +432,13 @@ class BotWorker:
         self._shutdown_event.set()
 
     async def _report_memory(self) -> None:
-        """Раз в 10 с сообщает RSS процесса: в контейнере сервер не видит PID воркера."""
+        """Раз в 10 с сообщает RSS процесса на Linux и Windows."""
+        from worker_memory import process_rss_kb
+
         while not self._shutdown_event.is_set():
-            try:
-                with open("/proc/self/status", encoding="utf-8") as status:
-                    for line in status:
-                        if line.startswith("VmRSS:"):
-                            emit_system(f"memory_kb:{int(line.split()[1])}")
-                            break
-            except (OSError, ValueError, IndexError):
-                return
+            memory_kb = process_rss_kb()
+            if memory_kb is not None:
+                emit_system(f"memory_kb:{memory_kb}")
             await asyncio.sleep(10)
 
     async def run(self) -> None:

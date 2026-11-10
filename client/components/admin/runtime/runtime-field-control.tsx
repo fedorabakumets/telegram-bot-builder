@@ -59,6 +59,14 @@ export function RuntimeFieldControl({ field, storages, register }: RuntimeFieldC
           <option value="auto">Авто</option>
         </select>
       ) : null}
+      {field.env === 'WORKER_GROUPING' ? (
+        <select id={field.env} aria-describedby={descriptionId} className={selectClass} {...register(name)}>
+          <option value="">По умолчанию — по проекту</option>
+          <option value="project">По проекту — отдельный воркер</option>
+          <option value="owner">По владельцу — проекты вместе</option>
+          <option value="shared">Общий — все проекты вместе</option>
+        </select>
+      ) : null}
       {field.kind === 'bool' ? (
         <select id={field.env} className={selectClass} {...register(name)}>
           <option value="">не задано</option>
@@ -76,7 +84,7 @@ export function RuntimeFieldControl({ field, storages, register }: RuntimeFieldC
           ))}
         </select>
       ) : null}
-      {field.env !== 'TELEGRAM_BOT_API_MODE' && field.env !== 'TELEGRAM_CONNECTION_MODE' && field.kind !== 'bool' && field.kind !== 'storage' ? (
+      {field.env !== 'TELEGRAM_BOT_API_MODE' && field.env !== 'TELEGRAM_CONNECTION_MODE' && field.env !== 'WORKER_GROUPING' && field.kind !== 'bool' && field.kind !== 'storage' ? (
         <Input
           id={field.env}
           aria-describedby={descriptionId}

@@ -17,6 +17,8 @@ import { useRunRuntimeBackup, useSaveRuntimeSettings } from './use-runtime-setti
 import { TelegramConnectionTest } from './telegram-connection-test';
 import { BackupTelegramTestButton } from './backup-telegram-test-button';
 import { BackupS3Dialog } from './backup-s3-dialog';
+import { WorkerRuntimeStatus } from './worker-runtime-status';
+import { showRuntimeField } from './worker-field-visibility';
 
 /** Схема словаря строк */
 const schema = z.object({ values: z.record(z.string(), z.string()) });
@@ -72,11 +74,13 @@ export function RuntimeSettingsForm({ data }: { data: RuntimeGroupView }) {
     });
   };
 
-  return (
+  const selectedRuntime = form.watch('values.WORKER_RUNTIME') || 'process';
+  return (<div className="space-y-4">
+    {data.id === 'workers' ? <WorkerRuntimeStatus /> : null}
     <Card>
       <form onSubmit={form.handleSubmit(onSubmit)}>
         <CardContent className="grid gap-5 pt-6 sm:grid-cols-2">
-          {data.fields.map((field) => (
+          {data.fields.filter((field) => showRuntimeField(data.id, field, selectedRuntime)).map((field) => (
             <Fragment key={field.env}>
               {field.env !== 'TELEGRAM_BOT_API_URL' || form.watch('values.TELEGRAM_BOT_API_MODE') === 'local' ? <RuntimeFieldControl field={field} storages={addedStorage && !data.storages.some((item) => item.id === addedStorage.id) ? [...data.storages, addedStorage] : data.storages} register={form.register} /> : null}
               {data.id === 'backups' && field.kind === 'storage' ? <div className="sm:col-span-2"><BackupS3Dialog onConnected={(storage) => {
@@ -113,5 +117,5 @@ export function RuntimeSettingsForm({ data }: { data: RuntimeGroupView }) {
         </CardFooter>
       </form>
     </Card>
-  );
+  </div>);
 }

@@ -20,13 +20,14 @@ export async function restartBotIfRunning(projectId: number): Promise<{ success:
   try {
     const instance = await storage.getBotInstance(projectId);
 
-    if (!instance || instance.status !== 'running') {
+    if (!instance || instance.status !== 'running' || instance.desiredStatus === 'stopped') {
       return { success: true };
     }
 
     console.log(`Перезапускаем бота ${projectId} из-за обновления кода...`);
 
     const tokenId = instance.tokenId;
+    const desiredGeneration = instance.desiredGeneration;
     if (!tokenId) {
       return { success: false, error: 'У экземпляра бота нет tokenId' };
     }
@@ -42,6 +43,8 @@ export async function restartBotIfRunning(projectId: number): Promise<{ success:
         return { success: false, error: stopResult.error };
       }
       await sleepMs(POST_STOP_COOLDOWN_MS);
+      const current = await storage.getBotInstanceByToken(tokenId);
+      if (!current || current.desiredStatus === 'stopped' || current.desiredGeneration !== desiredGeneration) return { success: true };
       return await startBotAfterStop(projectId, launchToken, tokenId);
     }
 
@@ -52,6 +55,8 @@ export async function restartBotIfRunning(projectId: number): Promise<{ success:
     }
 
     await sleepMs(POST_STOP_COOLDOWN_MS);
+    const current = await storage.getBotInstanceByToken(tokenId);
+    if (!current || current.desiredStatus === 'stopped' || current.desiredGeneration !== desiredGeneration) return { success: true };
 
     const activeProcessInfo = findActiveProcessForProject(projectId);
     if (activeProcessInfo) {

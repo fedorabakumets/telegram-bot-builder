@@ -23,6 +23,18 @@ export const botInstances = pgTable("bot_instances", {
   tokenId: integer("token_id").references(() => botTokens.id, { onDelete: "cascade" }).notNull(),
   /** Статус экземпляра ("running", "stopped", "error") */
   status: text("status").notNull(),
+  /** Желаемое состояние; null сохраняет поведение старых записей */
+  desiredStatus: text("desired_status"),
+  /** Версия намерения для защиты от устаревших команд */
+  desiredGeneration: integer("desired_generation").notNull().default(0),
+  /** Время последнего изменения намерения */
+  desiredUpdatedAt: timestamp("desired_updated_at"),
+  /** Поколение, для которого учтён повтор загрузки сборки */
+  buildRetryGeneration: integer("build_retry_generation").notNull().default(0),
+  /** Число повторов загрузки сборки в этом поколении */
+  buildRetryCount: integer("build_retry_count").notNull().default(0),
+  /** Время следующей попытки загрузки сборки */
+  buildRetryAfter: timestamp("build_retry_after"),
   /** Токен бота */
   token: text("token").notNull(),
   /** Идентификатор процесса (если бот запущен) */
@@ -43,6 +55,18 @@ export const insertBotInstanceSchema = z.object({
   tokenId: z.number().int(),
   /** Статус экземпляра */
   status: z.enum(["running", "stopped", "error"]),
+  /** Желаемое состояние */
+  desiredStatus: z.enum(["running", "stopped"]).nullable().optional(),
+  /** Версия намерения */
+  desiredGeneration: z.number().int().nonnegative().optional(),
+  /** Время изменения намерения */
+  desiredUpdatedAt: z.date().nullable().optional(),
+  /** Поколение счётчика повторов сборки */
+  buildRetryGeneration: z.number().int().nonnegative().optional(),
+  /** Число повторов загрузки сборки */
+  buildRetryCount: z.number().int().nonnegative().optional(),
+  /** Время следующей попытки */
+  buildRetryAfter: z.date().nullable().optional(),
   /** Токен бота */
   token: z.string().min(1, "Токен бота обязателен"),
   /** Идентификатор процесса */

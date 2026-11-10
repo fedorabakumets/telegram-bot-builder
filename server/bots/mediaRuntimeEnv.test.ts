@@ -1,7 +1,7 @@
 /** @fileoverview Проверка адреса и проектной изоляции доступа к медиа бота. */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildMediaRuntimeEnv, collectRuntimeMediaUrls } from './mediaRuntimeEnv';
+import { buildMediaRuntimeEnv, collectRuntimeMediaUrls, validateMediaRuntimeEnv } from './mediaRuntimeEnv';
 
 describe('окружение доступа к медиа', () => {
   it('выдаёт отдельные токены проектов без секрета панели', () => {
@@ -17,6 +17,7 @@ describe('окружение доступа к медиа', () => {
       assert.notEqual(first.MEDIA_RUNTIME_WRITE_TOKEN, first.MEDIA_RUNTIME_TOKEN);
       assert.equal(first.MEDIA_RUNTIME_PROJECT_ID, '1');
       assert.ok(!Object.values(first).includes(process.env.MEDIA_RUNTIME_SECRET));
+      assert.equal(validateMediaRuntimeEnv(first), null);
     } finally { process.env = old; }
   });
   it('не передаёт адрес с паролем и сохраняет запуск без секрета', () => {
@@ -29,6 +30,7 @@ describe('окружение доступа к медиа', () => {
       assert.deepEqual(buildMediaRuntimeEnv(1, {}), {});
       // Выбранное S3 требует runtime даже без статических вложений.
       assert.deepEqual(buildMediaRuntimeEnv(1, {}, true), { MEDIA_RUNTIME_REQUIRED: '1' });
+      assert.match(validateMediaRuntimeEnv(buildMediaRuntimeEnv(1, {}, true)) ?? '', /недоступны медиа/);
     } finally { process.env = old; }
   });
   it('не передаёт токен по HTTP удалённому исполнителю без явного разрешения', () => {
@@ -46,6 +48,20 @@ describe('окружение доступа к медиа', () => {
   });
   it('находит старые и абсолютные адреса для проверки записей хранилища', () => {
     assert.deepEqual([...collectRuntimeMediaUrls({ proxy: '/api/storage/proxy/a', s3: 'https://bucket.test/file' })], ['/api/storage/proxy/a', 'https://bucket.test/file']);
+  });
+  it('разрешает loopback только локальному исполнителю в режиме разработки', () => {
+    const old = { ...process.env };
+    try {
+      process.env.MEDIA_RUNTIME_SECRET = 'x'.repeat(40);
+      process.env.MEDIA_RUNTIME_BASE_URL = 'http://127.0.0.1:5001';
+      process.env.MEDIA_RUNTIME_ALLOW_INSECURE_REMOTE = 'true';
+      process.env.MEDIA_RUNTIME_ALLOW_LOCAL_LOOPBACK = 'true';
+      process.env.WORKER_RUNTIME = 'remote';
+      process.env.NODE_ENV = 'development';
+      assert.equal(validateMediaRuntimeEnv(buildMediaRuntimeEnv(1, {})), null);
+      process.env.NODE_ENV = 'production';
+      assert.match(validateMediaRuntimeEnv(buildMediaRuntimeEnv(1, {})) ?? '', /недоступны медиа/);
+    } finally { process.env = old; }
   });
 });
 

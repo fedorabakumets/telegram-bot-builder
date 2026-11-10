@@ -48,6 +48,10 @@ export async function scheduleBotRestart(
       return;
     }
 
+    const requestedInstance = await storage.getBotInstanceByToken(tokenId);
+    if (requestedInstance?.desiredStatus === 'stopped') return;
+    const requestedGeneration = requestedInstance?.desiredGeneration;
+
     const maxAttempts = tokenRecord.maxRestartAttempts ?? 3;
     const delay = getRestartDelay(tokenId, maxAttempts);
     if (delay === null) {
@@ -77,6 +81,8 @@ export async function scheduleBotRestart(
         try {
           if (getBotStartRevision(tokenId) !== revision) return;
           const current = await storage.getBotInstanceByToken(tokenId);
+          if (current?.desiredStatus === 'stopped' ||
+              (requestedGeneration !== undefined && current?.desiredGeneration !== requestedGeneration)) return;
           if (current?.status === 'running') {
             console.log(
               `[AutoRestart] Уже running token=${tokenId} — пропуск`,

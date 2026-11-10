@@ -32,7 +32,11 @@ export function buildMediaRuntimeEnv(projectId: number, projectData: unknown, st
     if (needsMedia) console.warn('[MediaRuntime] Для удалённого исполнителя требуется HTTPS или явно разрешённый доверенный канал');
     return fallback;
   }
-  if ((remote || dockerIsolated) && ['localhost', '127.0.0.1', '::1', '[::1]'].includes(url.hostname)) {
+  /** Разрешает loopback только для явно настроенного локального исполнителя разработки. */
+  const localRunnerLoopback = remote && process.env.NODE_ENV === 'development'
+    && process.env.MEDIA_RUNTIME_ALLOW_LOCAL_LOOPBACK === 'true'
+    && getProjectPlacement(projectId).railwayProjectId === null;
+  if ((remote || dockerIsolated) && !localRunnerLoopback && ['localhost', '127.0.0.1', '::1', '[::1]'].includes(url.hostname)) {
     if (needsMedia) console.warn('[MediaRuntime] Локальный адрес панели недоступен удалённому исполнителю или контейнеру; задайте MEDIA_RUNTIME_BASE_URL');
     return fallback;
   }
@@ -42,6 +46,17 @@ export function buildMediaRuntimeEnv(projectId: number, projectData: unknown, st
     if (needsMedia) console.warn('[MediaRuntime] Доступ к хранилищу медиа не настроен: проверьте MEDIA_RUNTIME_SECRET');
     return fallback;
   }
+}
+
+/**
+ * Проверяет, что удалённый бот получил доступ к медиа до отправки команды запуска.
+ * @param env - Окружение бота после добавления переменных медиа
+ * @returns Причина отказа или null при готовом доступе
+ */
+export function validateMediaRuntimeEnv(env: Record<string, string>): string | null {
+  if (env.MEDIA_RUNTIME_REQUIRED !== '1') return null;
+  if (env.MEDIA_RUNTIME_BASE_URL && env.MEDIA_RUNTIME_PROJECT_ID && env.MEDIA_RUNTIME_TOKEN && env.MEDIA_RUNTIME_WRITE_TOKEN) return null;
+  return 'Удалённому боту недоступны медиа: проверьте MEDIA_RUNTIME_BASE_URL и MEDIA_RUNTIME_SECRET';
 }
 
 /**
