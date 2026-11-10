@@ -36,7 +36,7 @@ describe("Восстановление рассылок", () => {
     await flush();
     expect(mocks.run).toHaveBeenCalledWith(7, "secret");
     const statements = mocks.clientQuery.mock.calls.map(([sql]) => sql);
-    expect(statements.at(-1)).toContain("pg_advisory_unlock");
+    expect(statements[statements.length - 1]).toContain("pg_advisory_unlock");
     expect(mocks.release).toHaveBeenCalledOnce();
   });
 

@@ -30,7 +30,7 @@ async function main(): Promise<void> {
   ]);
   const lease = await acquireRuntimeLease(leaseRedis, config.runnerId, 15_000);
   if (!lease) throw new Error(`исполнитель ${config.runnerId} уже запущен`);
-  let onLeaseLost = (error?: unknown) => {
+  let onLeaseLost: (error?: unknown) => void = (error?: unknown) => {
     console.error("🛰️ Аренда исполнителя потеряна до запуска:", error);
     process.exit(1);
   };
