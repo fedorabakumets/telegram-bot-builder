@@ -241,6 +241,8 @@ export class LocalStorageService {
       token: data.token,
       isDefault: data.isDefault ?? 0,
       isActive: data.isActive ?? 1,
+      /** Новый локальный токен ещё не имеет подтверждённого отказа Telegram. */
+      authorizationError: null,
       description: data.description || null,
       botFirstName: data.botFirstName || null,
       botUsername: data.botUsername || null,

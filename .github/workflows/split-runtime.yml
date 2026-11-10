@@ -4,7 +4,12 @@ on:
   push:
     paths:
       - 'frontend/**'
+      - 'client/**'
       - 'server/**'
+      - 'shared/**'
+      - 'lib/**'
+      - 'Dockerfile.*'
+      - 'railway.*.toml'
       - 'scripts/*split*'
       - 'scripts/build-server.mjs'
       - 'vite.config.ts'
