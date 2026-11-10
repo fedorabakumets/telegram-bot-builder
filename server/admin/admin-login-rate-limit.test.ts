@@ -15,7 +15,7 @@ function attempt(middleware: RequestHandler, ip: string, forwarded = '') {
   const res = { set: vi.fn(), status: vi.fn(), json: vi.fn() };
   res.status.mockReturnValue(res);
   const req = { ip, socket: { remoteAddress: '127.0.0.1' }, headers: { 'x-forwarded-for': forwarded } };
-  middleware(req as Request, res as unknown as Response, next);
+  middleware(req as unknown as Request, res as unknown as Response, next);
   return { next, ...res };
 }
 
