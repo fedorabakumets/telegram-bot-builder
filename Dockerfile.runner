@@ -10,7 +10,7 @@ FROM --platform=$BUILDPLATFORM node:24-bookworm-slim AS builder
 
 WORKDIR /app
 COPY package*.json .npmrc ./
-RUN --mount=type=cache,id=tbb-runner-npm,target=/root/.npm npm ci --ignore-scripts --no-audit --no-fund
+RUN npm ci --ignore-scripts --no-audit --no-fund
 COPY server ./server
 COPY shared ./shared
 COPY tsconfig*.json ./
@@ -28,7 +28,7 @@ COPY --from=node:24-bookworm-slim /usr/local/bin/node /usr/local/bin/node
 
 WORKDIR /app
 COPY requirements.txt ./
-RUN --mount=type=cache,id=tbb-runner-pip,target=/root/.cache/pip pip install -r requirements.txt
+RUN pip install -r requirements.txt
 
 COPY server/python ./python
 COPY --from=builder /app/dist-runner/runner.cjs ./runner.cjs
