@@ -29,6 +29,7 @@ jobs:
       - run: npx vitest run --config server/admin/admin-login-rate-limit.vitest.config.ts
       - run: npx vitest run --config server/middleware/cookie-csrf.vitest.config.ts
       - run: npx vitest run --config server/routes/storageConfigs/vitest.config.ts
+      - run: npx vitest run --config server/routes/media/vitest.backup-access.config.ts
       - run: npx vitest run --config client/components/editor/inline-rich/vitest.security.config.ts
       - run: npx vitest run lib/bot-tools/constants.test.ts
       - run: node --import tsx --test lib/api-docs/durable-table-contracts.test.ts
