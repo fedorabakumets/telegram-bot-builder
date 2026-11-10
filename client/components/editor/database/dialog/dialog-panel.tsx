@@ -21,10 +21,11 @@ import { useBotData } from './hooks/use-bot-data';
 import { useProjectData } from './hooks/use-project-data';
 import { collectNodesFromProjectData } from './utils/node-utils';
 import { useDialogLiveMessages } from './hooks/use-dialog-live-messages';
+import { useOlderDialogMessages } from './hooks/use-older-dialog-messages';
 import { useUserList } from '@/components/editor/database/user-details/hooks/useUserList';
 import { MessageBubble } from './components/message-bubble';
+import { MessageNavigation } from './components/message-navigation';
 import { DialogHeader } from './components/dialog-header';
-import { DialogWarning } from './components/dialog-warning';
 import { EmptyDialog } from './components/empty-dialog';
 import { DialogInput } from './components/dialog-input';
 import { LoadingMessages } from './components/loading-messages';
@@ -74,12 +75,8 @@ export function DialogPanel({
   onClose,
   onSelectUser,
   hideHeader,
+  onOpenMember,
 }: DialogPanelProps) {
-  const [showWarning, setShowWarning] = useState(() => {
-    if (typeof window === 'undefined') return true;
-    return localStorage.getItem('dialog-warning-dismissed') !== 'true';
-  });
-
   /** Набор id сообщений, оптимистично скрытых при удалении */
   const [deletedMessageIds, setDeletedMessageIds] = useState<Set<number>>(new Set());
 
@@ -88,6 +85,8 @@ export function DialogPanel({
 
   const messagesScrollRef = useRef<HTMLDivElement>(null);
   const prevMessageCountRef = useRef(0);
+  /** Первый элемент нужен, чтобы отличать подгрузку старых сообщений от новых. */
+  const previousFirstIdRef = useRef<number | null>(null);
 
   /** Флаг группового диалога */
   const isGroup = !!(user as any)?.isGroup;
@@ -120,36 +119,35 @@ export function DialogPanel({
 
   const requestUrl = targetMessageId ? `${baseRequestUrl}${baseRequestUrl.includes('?' ) ? '&' : '?'}aroundMessageId=${targetMessageId}` : baseRequestUrl;
   const {
-    data: httpMessages = [],
+    data: historyPage,
     isLoading: messagesLoading,
     isError: messagesError,
     refetch: refetchMessages,
-  } = useQuery<BotMessageWithMedia[]>({
+  } = useQuery<{ messages: BotMessageWithMedia[]; total: number | null }>({
     queryKey: [requestUrl, selectedTokenId, user?.userId],
     enabled: !!user?.userId,
     queryFn: async () => {
       const response = await fetch(requestUrl, { credentials: 'include' });
       if (!response.ok) throw new Error('Не удалось загрузить сообщения');
-      return response.json();
+      const data = await response.json();
+      const countHeader = response.headers.get('X-Dialog-Message-Count');
+      return { messages: Array.isArray(data) ? data : data && typeof data === 'object' ? [data] : [], total: countHeader === null ? null : Number(countHeader) };
     },
     staleTime: 0,
     refetchOnMount: 'always',
     refetchOnWindowFocus: true,
-    select: (data) => {
-      if (!Array.isArray(data)) {
-        return data && typeof data === 'object' ? [data] : [];
-      }
-      return data;
-    },
   });
+  /** Последняя страница и общее число записей выбранного диалога. */
+  const httpMessages = historyPage?.messages ?? [];
 
+  const history = useOlderDialogMessages(baseRequestUrl, httpMessages, messagesScrollRef, !messagesLoading && !messagesError && !targetMessageId);
   const { liveMessages, resetLiveMessages, addOptimisticMessage, removeOptimisticMessage, wsDeletedIds, wsEditedMessages } =
     useDialogLiveMessages(projectId, selectedTokenId, user?.userId, isGroup ? groupChatId : null);
 
   /** Объединённые и дедуплицированные сообщения */
   const allMessages = useMemo(
-    () => mergeMessages(httpMessages, liveMessages),
-    [httpMessages, liveMessages],
+    () => mergeMessages([...history.older, ...httpMessages.filter((message) => !history.older.some((item) => item.id === message.id))], liveMessages),
+    [history.older, httpMessages, liveMessages],
   );
 
   /** Сообщения без оптимистично удалённых и удалённых через WS */
@@ -164,12 +162,17 @@ export function DialogPanel({
     setDeletedMessageIds(new Set());
     setEditedMessages(new Map());
     prevMessageCountRef.current = 0;
+    previousFirstIdRef.current = null;
   }, [user?.userId, selectedTokenId, resetLiveMessages]);
 
   /** Автопрокрутка при первой загрузке и при новых live-сообщениях */
   useLayoutEffect(() => {
     if (messagesLoading) return;
     if (messages.length === 0) return;
+    const firstId = messages[0]?.id ?? null;
+    const prepended = previousFirstIdRef.current !== null && firstId !== previousFirstIdRef.current;
+    previousFirstIdRef.current = firstId;
+    if (prepended) { prevMessageCountRef.current = messages.length; return; }
     if (messages.length <= prevMessageCountRef.current) return;
 
     prevMessageCountRef.current = messages.length;
@@ -277,18 +280,12 @@ export function DialogPanel({
         />
       ))}
 
-      {!isGroup && showWarning && (
-        <DialogWarning
-          onClose={() => {
-            localStorage.setItem('dialog-warning-dismissed', 'true');
-            setShowWarning(false);
-          }}
-        />
-      )}
-
+      <div className="flex flex-1 min-h-0 min-w-0">
+      <MessageNavigation messages={messages} scrollRef={messagesScrollRef} total={targetMessageId ? null : historyPage?.total ?? null} />
+      {/* Содержимое области прокрутки не должно расширяться по длине сообщения. */}
       <ScrollArea
         ref={messagesScrollRef}
-        className="min-h-0 flex-1 p-3"
+        className="min-h-0 min-w-0 flex-1 p-3 [&_[data-radix-scroll-area-viewport]>div]:!block"
         data-testid="dialog-messages-scroll-area"
       >
         {messagesLoading ? (
@@ -299,6 +296,14 @@ export function DialogPanel({
           <EmptyDialog />
         ) : (
           <div className="space-y-3 py-2">
+            {(history.hasMore || history.loading || history.failed) && !targetMessageId && (
+              <div className="flex justify-center">
+                <button type="button" onClick={() => void history.loadOlder()} disabled={history.loading}
+                  className="rounded-md px-3 py-2 text-xs text-muted-foreground hover:bg-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-60">
+                  {history.loading ? 'Загрузка сообщений…' : history.failed ? 'Не удалось загрузить. Повторить' : 'Загрузить предыдущие сообщения'}
+                </button>
+              </div>
+            )}
             {messages.map((message, index) => {
               /** WS-запись с новым текстом, кнопками и раскладкой (если есть) */
               const wsRec = wsEditedMessages.get(message.id);
@@ -317,6 +322,7 @@ export function DialogPanel({
                   }
                 : message;
               return (
+                <div key={message.id || index} data-dialog-index={index}>
                 <MessageBubble
                   key={message.id || index}
                   message={displayMessage}
@@ -332,6 +338,7 @@ export function DialogPanel({
                   tokenId={selectedTokenId}
                   isGroupDialog={isGroup}
                   showSource={!isGroup}
+                  onOpenMember={onOpenMember}
                   onDelete={!canActOnDialogMessage(isGroup, message.chatType)
                     ? undefined : (id) => deleteMessageMutation.mutate(id)}
                   isDeleting={
@@ -347,11 +354,13 @@ export function DialogPanel({
                     editMessageMutation.variables?.messageId === message.id
                   }
                 />
+                </div>
               );
             })}
           </div>
         )}
       </ScrollArea>
+      </div>
 
       <Separator />
 

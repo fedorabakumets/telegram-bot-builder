@@ -116,13 +116,13 @@ export function CampaignProgress({ projectId, campaignId, name, refetch, onClose
             onClick={() => stopAllMutation.mutate(campaignId)}
             disabled={stopAllMutation.isPending}
           >
-            ⏸ Остановить у всех ботов
+            Остановить у всех ботов
           </Button>
         </div>
       ) : (
         <div className="text-center">
           <p className="text-sm text-muted-foreground mb-3">
-            {campaign?.status === 'stopped' ? '⏸ Рассылка остановлена' : '✅ Рассылка завершена'}
+            {campaign?.status === 'stopped' ? 'Рассылка остановлена' : 'Рассылка завершена'}
           </p>
           <Button variant="outline" onClick={onClose}>Закрыть</Button>
         </div>

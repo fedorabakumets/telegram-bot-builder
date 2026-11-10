@@ -12,6 +12,7 @@ import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
 import { getRequestTokenId } from "../../../utils/resolve-request-token";
 import { getUserDialogHistory } from '../../../dialogs/user-dialog-history';
+import { getDialogMessageCount } from './dialog-message-count';
 
 /**
  * Обрабатывает запрос на получение сообщений
@@ -48,6 +49,11 @@ export async function getMessagesHandler(req: Request, res: Response): Promise<v
             res.status(400).json({ message: 'Неверное ограничение сообщений' });
             return;
         }
+        /** Курсор предыдущей страницы истории. */
+        const beforeId = req.query.beforeId === undefined ? undefined : Number(req.query.beforeId);
+        if (beforeId !== undefined && (!Number.isSafeInteger(beforeId) || beforeId <= 0)) {
+            res.status(400).json({ message: 'Неверный курсор сообщений' }); return;
+        }
         if (req.query.aroundMessageId !== undefined) {
             const context = await getMessageContext(projectId, token.id, userId, Number(req.query.aroundMessageId));
             if (!context) { res.status(404).json({ message: "Сообщение не найдено в этом диалоге" }); return; }
@@ -55,7 +61,8 @@ export async function getMessagesHandler(req: Request, res: Response): Promise<v
         }
         /** Общую историю включает только панель диалогов; остальные потребители сохраняют личную выборку. */
         if (req.query.includeGroupContext === 'true') {
-            res.json(await getUserDialogHistory(projectId, token.id, userId, limit, messageType));
+            res.set('X-Dialog-Message-Count', String(await getDialogMessageCount(projectId, token.id, userId, false)));
+            res.json(await getUserDialogHistory(projectId, token.id, userId, limit, messageType, beforeId));
         } else {
             const messages = await storage.getBotMessagesWithMedia(projectId, userId, limit, 'desc', messageType, token.id);
             res.json(messages.reverse());

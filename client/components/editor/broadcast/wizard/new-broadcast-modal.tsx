@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import './broadcast-wizard.css';
 import { Megaphone, X } from 'lucide-react';
 import {
   Dialog,
@@ -20,6 +21,7 @@ import { CampaignProgress } from './campaign-progress';
 import { WizardStepper } from './wizard-stepper';
 import { canNavigateBroadcastStep } from './can-navigate-broadcast-step';
 import { useCreateBroadcast } from '../hooks/use-create-broadcast';
+import { useFrozenBots } from '../hooks/use-frozen-bots';
 import type { NewBroadcastFormData, Broadcast } from '../types';
 
 /**
@@ -64,6 +66,7 @@ const STEP_TITLES = ['Аудитория', 'Сообщение', 'Подтвер
  * @returns JSX элемент модального окна
  */
 export function NewBroadcastModal({ open, onClose, projectId, tokenId, refetch, initialMessageText, initialMediaUrls }: NewBroadcastModalProps) {
+  const botStatuses = useFrozenBots(projectId);
   const [step, setStep] = useState<1 | 2 | 3 | 'progress'>(1);
   const [formData, setFormData] = useState<NewBroadcastFormData>({
     ...INITIAL_FORM,
@@ -144,7 +147,9 @@ export function NewBroadcastModal({ open, onClose, projectId, tokenId, refetch, 
    * @returns true если переход возможен
    */
   const isStepEnabled = (target: number) =>
-    typeof step === 'number' && canNavigateBroadcastStep(target, step, formData);
+    typeof step === 'number' && canNavigateBroadcastStep(target, step, formData) &&
+    (target < step || (!botStatuses.isLoading && !botStatuses.isError &&
+      !(botStatuses.data?.statuses ?? []).some((status) => status.frozen && formData.tokenIds.includes(status.tokenId))));
 
   /**
    * Переход по клику на шаг в stepper
@@ -169,17 +174,17 @@ export function NewBroadcastModal({ open, onClose, projectId, tokenId, refetch, 
       <DialogContent
         hideClose
         className={[
-          'p-0 gap-0 !flex flex-col overflow-hidden',
+          'broadcast-wizard !p-0 gap-0 !flex flex-col overflow-hidden bg-background',
           // Мобилка — на весь экран
           'max-sm:!inset-auto max-sm:!left-0 max-sm:!top-0 max-sm:!translate-x-0 max-sm:!translate-y-0',
           'max-sm:!h-[100dvh] max-sm:!w-screen max-sm:!max-h-none max-sm:!max-w-none',
           'max-sm:rounded-none max-sm:border-0',
           // ПК — компактная карточка по ширине формы, без пустых полей по бокам
-          'sm:!max-w-3xl sm:w-full sm:h-[min(90vh,840px)] sm:max-h-[min(90vh,840px)]',
+          'sm:!max-w-3xl sm:!w-[calc(100%-2rem)] sm:h-[min(90dvh,840px)] sm:max-h-[min(90dvh,840px)]',
           'sm:rounded-xl sm:border sm:shadow-2xl',
         ].join(' ')}
       >
-        <div className="flex-shrink-0 border-b border-border/60 bg-card">
+        <div className="flex-shrink-0 border-b border-border/60 bg-background">
           <div className="flex items-center gap-2 px-3 py-2.5 sm:gap-3 sm:px-6 sm:py-3.5">
             <DialogHeader className="min-w-0 flex-1 space-y-0 text-left">
               <DialogTitle className="flex items-center gap-2 text-base font-semibold tracking-tight sm:gap-2.5 sm:text-lg">

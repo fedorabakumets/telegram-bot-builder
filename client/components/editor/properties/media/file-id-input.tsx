@@ -3,7 +3,7 @@
  * @module client/components/editor/properties/media/file-id-input
  */
 
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -41,6 +41,8 @@ const MEDIA_TYPES: { value: MediaType; label: string }[] = [
  * @returns JSX элемент формы ввода file_id
  */
 export function FileIdInput({ projectId, mediaType, onMediaTypeChange, onAdd }: FileIdInputProps) {
+  /** Уникальный префикс связывает подписи с полями этой формы. */
+  const formId = useId();
   /** Маппинг tokenId → введённый file_id */
   const [fileIds, setFileIds] = useState<Record<string, string>>({});
 
@@ -96,24 +98,19 @@ export function FileIdInput({ projectId, mediaType, onMediaTypeChange, onAdd }: 
 
   return (
     <div className="space-y-4">
-      <InfoBlock
-        variant="info"
-        title="ℹ️ file_id привязан к боту"
-        description="Один файл имеет разный file_id для каждого бота. Заполните поля для нужных токенов."
-      />
-
       {/* Выбор типа медиа */}
       <div className="space-y-1.5 sm:space-y-2">
-        <Label className="text-xs sm:text-sm font-medium">Тип медиа</Label>
+        <Label id={`${formId}-media-type`} className="text-sm font-medium">Тип медиа</Label>
         <RadioGroup
+          aria-labelledby={`${formId}-media-type`}
           value={mediaType}
           onValueChange={(v) => onMediaTypeChange(v as MediaType)}
           className="flex flex-wrap gap-2 sm:gap-3"
         >
           {MEDIA_TYPES.map(({ value, label }) => (
             <div key={value} className="flex items-center gap-1 sm:gap-1.5">
-              <RadioGroupItem value={value} id={`mt-${value}`} />
-              <Label htmlFor={`mt-${value}`} className="text-xs sm:text-sm cursor-pointer">{label}</Label>
+              <RadioGroupItem value={value} id={`${formId}-${value}`} />
+              <Label htmlFor={`${formId}-${value}`} className="text-sm cursor-pointer">{label}</Label>
             </div>
           ))}
         </RadioGroup>
@@ -123,13 +120,14 @@ export function FileIdInput({ projectId, mediaType, onMediaTypeChange, onAdd }: 
       <div className="space-y-2 sm:space-y-3">
         {tokens.map((token) => (
           <div key={token.id} className="space-y-1">
-            <Label className="text-[11px] sm:text-xs text-muted-foreground flex items-center gap-1 truncate">
-              🤖 {token.name}{token.botUsername ? ` (@${token.botUsername})` : ''}
+            <Label htmlFor={`${formId}-token-${token.id}`} className="text-xs text-muted-foreground block truncate">
+              {token.name}{token.botUsername && !token.name.includes(`@${token.botUsername}`) ? ` (@${token.botUsername})` : ''}
             </Label>
             <Input
+              id={`${formId}-token-${token.id}`}
               value={fileIds[String(token.id)] ?? ''}
               onChange={(e) => handleFileIdChange(token.id, e.target.value)}
-              placeholder="file_id..."
+              placeholder="Введите file_id"
               className="h-8 sm:h-9 text-xs sm:text-sm font-mono"
             />
           </div>

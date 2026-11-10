@@ -4,7 +4,7 @@
  */
 
 import { useState, useMemo } from 'react';
-import { Hash } from 'lucide-react';
+import { ChevronDown, FileKey2, ImagePlus, MousePointerClick } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CompactInlineEditor } from '@/components/editor/inline-rich/compact-inline-editor';
 import { MultiMediaSelector } from '@/components/editor/properties/media/multi-media-selector';
@@ -33,14 +33,6 @@ interface StepMessageProps {
   onBack: () => void;
 }
 
-/** Доступные переменные для вставки в сообщение */
-const VARIABLES = [
-  { key: '{first_name}', label: 'Имя' },
-  { key: '{last_name}', label: 'Фамилия' },
-  { key: '{username}', label: 'Username' },
-  { key: '{user_id}', label: 'ID' },
-];
-
 /**
  * Шаг редактирования текста и медиа сообщения рассылки
  * @param props - Свойства компонента
@@ -49,6 +41,10 @@ const VARIABLES = [
 export function StepMessage({ projectId, formData, onChange, onNext, onBack }: StepMessageProps) {
   /** Флаг видимости блока ввода Telegram file_id */
   const [showFileId, setShowFileId] = useState(false);
+  /** Раскрытые разделы сохраняют видимость добавленного содержимого. */
+  const [showMedia, setShowMedia] = useState(formData.mediaUrls.length > 0);
+  /** Видимость редактора инлайн-кнопок. */
+  const [showButtons, setShowButtons] = useState((formData.buttons?.length ?? 0) > 0);
   /** Тип медиа для file_id */
   const [fileIdMediaType, setFileIdMediaType] = useState<'photo' | 'video' | 'audio' | 'document'>('photo');
 
@@ -61,56 +57,36 @@ export function StepMessage({ projectId, formData, onChange, onNext, onBack }: S
     [project?.data],
   );
 
-  /**
-   * Вставляет переменную в конец текста сообщения
-   * @param variable - Переменная для вставки
-   */
-  const insertVariable = (variable: string) => {
-    onChange({ messageText: formData.messageText + variable });
-  };
-
   /** Валидация по лимитам Telegram */
   const validation = useMemo(() => validateBroadcastMessage(formData), [formData]);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <div className="space-y-2">
         <p className="text-sm font-medium">Текст сообщения</p>
         <CompactInlineEditor
           value={formData.messageText}
           onChange={(val) => onChange({ messageText: val })}
           placeholder="Введите текст рассылки..."
-          showStats
         />
         <BroadcastValidationAlerts validation={validation} showTextCounter showMessages={false} />
       </div>
 
-      <div className="space-y-1.5">
-        <p className="text-xs text-muted-foreground">Вставить переменную:</p>
-        <div className="flex flex-wrap gap-1.5">
-          {VARIABLES.map(({ key, label }) => (
-            <Button
-              key={key}
-              variant="outline"
-              size="sm"
-              className="h-7 text-xs"
-              onClick={() => insertVariable(key)}
-            >
-              {key} <span className="ml-1 text-muted-foreground">({label})</span>
-            </Button>
-          ))}
-        </div>
-      </div>
-
       {/* Прикрепление медиафайлов — переиспользуем MultiMediaSelector из панели свойств */}
-      <div className="space-y-2">
-        <p className="text-sm font-medium">Медиафайл (необязательно)</p>
-        <div className="rounded-xl border border-pink-200/40 dark:border-pink-800/40 bg-gradient-to-br from-pink-50/40 to-rose-50/20 dark:from-pink-950/30 dark:to-rose-900/20 p-3">
+      <div className="overflow-hidden rounded-lg border border-border bg-background">
+        <button type="button" onClick={() => setShowMedia((v) => !v)} aria-expanded={showMedia} aria-controls="broadcast-media-section"
+          className="flex w-full items-center gap-3 px-3 py-3 text-left text-sm transition-colors hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
+          <ImagePlus className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <span className="flex-1 font-medium">Медиафайлы <span className="font-normal text-muted-foreground">{formData.mediaUrls.length ? `· ${formData.mediaUrls.length}` : '· необязательно'}</span></span>
+          <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${showMedia ? 'rotate-180' : ''}`} />
+        </button>
+        <div id="broadcast-media-section" hidden={!showMedia} className="border-t border-border p-3">
           <MultiMediaSelector
             projectId={projectId}
             value={formData.mediaUrls}
             onChange={(urls) => onChange({ mediaUrls: urls })}
-            label="Прикреплённые файлы"
+            label=""
+            nodeName="Сообщение рассылки"
             placeholder="Перетащи файл или вставь ссылку"
           />
 
@@ -119,15 +95,16 @@ export function StepMessage({ projectId, formData, onChange, onNext, onBack }: S
             variant={showFileId ? 'secondary' : 'outline'}
             size="sm"
             className="mt-2 h-7 text-xs"
+            aria-expanded={showFileId}
             onClick={() => setShowFileId((v) => !v)}
           >
-            <Hash className="w-3.5 h-3.5 mr-1" />
+            <FileKey2 className="w-3.5 h-3.5 mr-1" />
             Добавить Telegram file_id
           </Button>
 
           {/* Блок ввода Telegram file_id */}
           {showFileId && (
-            <div className="mt-2 border rounded-md p-3 bg-violet-50/30 dark:bg-violet-900/10 border-violet-200/60 dark:border-violet-700/60 max-h-64 overflow-y-auto">
+            <div className="mt-2 border rounded-md p-3 bg-background border-border max-h-64 overflow-y-auto">
               <FileIdInput
                 projectId={projectId}
                 mediaType={fileIdMediaType}
@@ -143,9 +120,14 @@ export function StepMessage({ projectId, formData, onChange, onNext, onBack }: S
       </div>
 
       {/* Инлайн-кнопки — переиспользуем DialogButtonsEditor из диалога */}
-      <div className="space-y-2">
-        <p className="text-sm font-medium">Инлайн-кнопки (необязательно)</p>
-        <div className="rounded-xl border border-blue-200/40 dark:border-blue-800/40 bg-gradient-to-br from-blue-50/40 to-violet-50/20 dark:from-blue-950/30 dark:to-violet-900/20 p-3">
+      <div className="overflow-hidden rounded-lg border border-border bg-background">
+        <button type="button" onClick={() => setShowButtons((v) => !v)} aria-expanded={showButtons} aria-controls="broadcast-buttons-section"
+          className="flex w-full items-center gap-3 px-3 py-3 text-left text-sm transition-colors hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
+          <MousePointerClick className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <span className="flex-1 font-medium">Кнопки сообщения <span className="font-normal text-muted-foreground">{formData.buttons?.length ? `· ${formData.buttons.length}` : '· необязательно'}</span></span>
+          <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${showButtons ? 'rotate-180' : ''}`} />
+        </button>
+        <div id="broadcast-buttons-section" hidden={!showButtons} className="border-t border-border p-3">
           <DialogButtonsEditor
             buttons={formData.buttons ?? []}
             onChange={(buttons) => onChange({ buttons })}
@@ -171,7 +153,7 @@ export function StepMessage({ projectId, formData, onChange, onNext, onBack }: S
         <Button
           onClick={onNext}
           disabled={!validation.isValid}
-          className="bg-gradient-to-r from-blue-500 to-violet-500 text-white hover:from-blue-600 hover:to-violet-600"
+          className="bg-primary text-primary-foreground hover:bg-primary/90"
         >
           Далее →
         </Button>

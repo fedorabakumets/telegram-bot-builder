@@ -58,6 +58,8 @@ interface MessageBubbleProps {
   showSource?: boolean;
   /** Узлы проекта для выбора цели действия goto в редакторе кнопок */
   availableNodes?: NodeWithSheet[];
+  /** Открывает профиль автора группового сообщения. */
+  onOpenMember?: (message: BotMessageWithMedia) => void;
 }
 
 /**
@@ -107,10 +109,12 @@ function getSenderName(message: BotMessageWithMedia): string | null {
  */
 export function MessageBubble({
   message, index, user, bot, projectId, tokenId,
-  onDelete, isDeleting, onEdit, isEditing, isGroupDialog, showSource, availableNodes,
+  onDelete, isDeleting, onEdit, isEditing, isGroupDialog, showSource, availableNodes, onOpenMember,
 }: MessageBubbleProps) {
   const isBot = message.messageType === 'bot';
   const isUser = message.messageType === 'user';
+  /** Открывать профиль можно только для известного личного Telegram ID. */
+  const canOpenMember = !!isGroupDialog && isUser && /^[1-9]\d*$/.test(String(message.userId ?? '')) && !!onOpenMember;
   const messageType: 'bot' | 'user' = isBot ? 'bot' : 'user';
 
   /** Состояние наведения курсора на блок сообщения */
@@ -129,8 +133,11 @@ export function MessageBubble({
     setIsEditMode(false);
   }, [message.id]);
 
-  /** Скрываем текст-плейсхолдер если медиа отображается */
-  const displayText = hasVisibleMedia(message) && MEDIA_PLACEHOLDERS.has(message.messageText ?? '')
+  /** Скрываем служебный текст, если нажатие уже показано отдельной меткой. */
+  const isButtonPlaceholder = isUser && hasButtonClicked(message) && !!getButtonText(message)
+    && message.messageText?.trim() === `[Нажата кнопка: ${(message.messageData as Record<string, unknown>)?.button_text}]`;
+  /** Скрываем текст-плейсхолдер, если медиа или нажатие уже отображается. */
+  const displayText = isButtonPlaceholder || (hasVisibleMedia(message) && MEDIA_PLACEHOLDERS.has(message.messageText ?? ''))
     ? null
     : message.messageText;
 
@@ -185,17 +192,19 @@ export function MessageBubble({
       data-testid={`dialog-message-${message.messageType}-${index}`}
     >
       <div
-        className={`flex items-end gap-2 max-w-[85%] ${isBot ? 'flex-row-reverse' : 'flex-row'}`}
+        className={`flex items-start gap-2 max-w-[85%] ${isBot ? 'flex-row-reverse' : 'flex-row'}`}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        <MessageAvatar
+        {canOpenMember ? <button type="button" aria-label={`Открыть профиль ${getSenderName(message) ?? message.userId}`} onClick={() => onOpenMember?.(message)} className="shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><MessageAvatar
+          messageType={messageType} user={user} projectId={projectId} tokenId={tokenId ?? message.tokenId}
+        /></button> : <MessageAvatar
           messageType={messageType}
           user={isUser ? user : null}
           bot={isBot ? bot : null}
           projectId={projectId}
           tokenId={tokenId ?? message.tokenId}
-        />
+        />}
 
         {/* Кнопки действий — между аватаром и пузырём, видны при наведении */}
         <div className="flex flex-col gap-0.5 self-center">
@@ -232,18 +241,17 @@ export function MessageBubble({
         </div>
 
         <div className="flex flex-col gap-1 min-w-0" onDoubleClick={isBot && message.id > 0 && !!message.telegramMessageId && !!onEdit ? handleOpenEdit : undefined}>
-          {showSource && (
+          {showSource && isGroupSource(message.chatType) && (
             <span className="text-[10px] font-medium text-muted-foreground px-1 break-words">
-              {isGroupSource(message.chatType)
-                ? `Группа: ${message.sourceChatTitle || message.chatId}` : 'Личка'}
+              {`Группа: ${message.sourceChatTitle || message.chatId}`}
             </span>
           )}
           {/* Имя отправителя в групповом диалоге — показывается над сообщением пользователя */}
-          {isGroupDialog && isUser && (
-            <span className="text-[10px] font-medium text-violet-600 dark:text-violet-400 px-1">
+          {isGroupDialog && isUser && (canOpenMember ? (
+            <button type="button" onClick={() => onOpenMember?.(message)} className="self-start text-left text-[10px] font-medium text-violet-600 dark:text-violet-400 px-1 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
               {getSenderName(message) ?? message.userId}
-            </span>
-          )}
+            </button>
+          ) : <span className="text-[10px] font-medium text-violet-600 dark:text-violet-400 px-1">{getSenderName(message) ?? message.userId}</span>)}
           <MessageMedia
             media={message.media}
             messageData={message.messageData}

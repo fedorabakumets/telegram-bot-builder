@@ -99,6 +99,9 @@ export async function syncGroupHandler(req: Request, res: Response): Promise<voi
     if (existingGroup) {
       const updated = await storage.updateBotGroup(existingGroup.id, {
         name: title,
+        // Сохраняем публичное имя, не удаляя ссылку-приглашение приватной группы.
+        url: chatInfo.username ? `https://t.me/${chatInfo.username}` :
+          /^https?:\/\/t\.me\/[a-zA-Z0-9_]{5,32}\/?$/i.test(existingGroup.url ?? '') ? '' : existingGroup.url,
         avatarUrl,
         chatType,
         tokenId,

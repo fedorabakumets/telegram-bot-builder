@@ -6,6 +6,7 @@
 import type { Request, Response } from "express";
 import type { BroadcastFilters } from "@shared/schema";
 import { BOT_UNAUTHORIZED_HINT, isTokenActiveForBroadcast } from "@shared/broadcast-unauthorized";
+import { isBotFrozen } from "../../../../bots/frozenBotStatus";
 import { storage } from "../../../../storages/storage";
 import { getRequestTokenId, resolveEffectiveProjectToken } from "../../../utils/resolve-request-token";
 import { buildBroadcastDefaultName } from "./build-broadcast-default-name";
@@ -67,6 +68,10 @@ export async function createBroadcastHandler(req: Request, res: Response): Promi
     }
     if (!isTokenActiveForBroadcast(selectedToken.isActive)) {
       res.status(400).json({ message: BOT_UNAUTHORIZED_HINT });
+      return;
+    }
+    if (isBotFrozen(projectId, effectiveTokenId)) {
+      res.status(400).json({ message: 'Бот заморожен Telegram и недоступен для рассылки.' });
       return;
     }
 

@@ -56,12 +56,12 @@ export function AudienceContextHint({ projectId, tokenId, selectedTokenIds }: Au
       </p>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
         <span className="inline-flex items-center gap-1.5 min-w-0">
-          <FolderKanban className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+          <FolderKanban className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
           <span className="font-medium truncate">{projectLabel}</span>
         </span>
         <span className="text-muted-foreground hidden sm:inline">·</span>
         <span className="inline-flex items-center gap-1.5 min-w-0">
-          <Bot className="w-3.5 h-3.5 text-violet-500 shrink-0" />
+          <Bot className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
           <span className="font-medium truncate">{botLabel}</span>
         </span>
       </div>

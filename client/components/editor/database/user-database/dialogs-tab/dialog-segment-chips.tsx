@@ -49,10 +49,10 @@ export function DialogSegmentChips({
             aria-selected={selected}
             onClick={() => onChange(segment.id)}
             className={cn(
-              'shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors',
+              'shrink-0 rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
               selected
-                ? 'bg-primary text-primary-foreground'
+                ? 'bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-200'
                 : 'bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground'
             )}
           >

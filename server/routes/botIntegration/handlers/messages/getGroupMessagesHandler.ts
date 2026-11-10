@@ -8,6 +8,8 @@ import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
 import { getRequestTokenId } from "../../../utils/resolve-request-token";
 import { assertProjectGroup } from "../../utils/assert-project-group";
+import { getOlderGroupMessages } from './get-older-group-messages';
+import { getDialogMessageCount } from './dialog-message-count';
 
 /**
  * История сообщений группы (панель «Диалоги» для group/supergroup).
@@ -33,6 +35,25 @@ export async function getGroupMessagesHandler(req: Request, res: Response): Prom
     }
 
     if (!(await assertProjectGroup(projectId, groupId, res))) return;
+
+    /** Число записей передаётся отдельно, не меняя формат ответа. */
+    const countToken = tokenId ? await storage.getBotToken(tokenId) : await storage.getDefaultBotToken(projectId);
+    if (countToken?.projectId === projectId) res.set('X-Dialog-Message-Count', String(await getDialogMessageCount(projectId, countToken.id, groupId, true)));
+
+    if (!Number.isInteger(limit) || limit < 1 || limit > 1000) {
+      res.status(400).json({ message: 'Неверное ограничение сообщений' }); return;
+    }
+    if (req.query.beforeId !== undefined) {
+      const beforeId = Number(req.query.beforeId);
+      const token = tokenId ? await storage.getBotToken(tokenId) : await storage.getDefaultBotToken(projectId);
+      if (!token || token.projectId !== projectId || (req.query.tokenId !== undefined && !tokenId)) {
+        res.status(404).json({ message: 'Бот проекта не найден' }); return;
+      }
+      if (!Number.isSafeInteger(beforeId) || beforeId <= 0) {
+        res.status(400).json({ message: 'Неверный курсор сообщений' }); return;
+      }
+      res.json(await getOlderGroupMessages(projectId, token.id, groupId, beforeId, limit)); return;
+    }
 
     if (req.query.aroundMessageId !== undefined) {
       const token = tokenId ? await storage.getBotToken(tokenId) : await storage.getDefaultBotToken(projectId);

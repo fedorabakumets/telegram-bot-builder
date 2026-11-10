@@ -1,0 +1,28 @@
+/** @fileoverview Нейтральное оформление вложенных редакторов мастера рассылки. */
+.broadcast-wizard [data-button-id] {
+  background: hsl(var(--background));
+  border-color: hsl(var(--border));
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+/** Поля общих редакторов используют ту же поверхность, что и форма. */
+.broadcast-wizard input,
+.broadcast-wizard textarea,
+.broadcast-wizard [role="combobox"] {
+  background-color: hsl(var(--background));
+  background-image: none;
+  border-color: hsl(var(--border));
+  color: hsl(var(--foreground));
+}
+
+/** Предпросмотр сохраняет цвета самих Telegram-кнопок, убирая декоративный градиент. */
+.broadcast-wizard [data-broadcast-preview] {
+  background: hsl(var(--muted) / 0.2);
+  border-color: hsl(var(--border));
+}
+
+/** Подписи вариантов остаются читаемыми и при невыбранном состоянии. */
+.broadcast-wizard [data-button-id] button {
+  opacity: 1;
+}

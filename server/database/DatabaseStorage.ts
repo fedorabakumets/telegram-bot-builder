@@ -1386,7 +1386,7 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(botMessages)
       .where(and(...whereConditions))
-      .orderBy(desc(botMessages.createdAt))
+      .orderBy(desc(botMessages.createdAt), desc(botMessages.id))
       .limit(limit);
 
     const messagesWithMedia = await Promise.all(

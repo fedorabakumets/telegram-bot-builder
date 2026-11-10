@@ -53,7 +53,7 @@ export function CampaignBotProgressRow({
   return (
     <div className="rounded-lg border p-2.5 space-y-1.5">
       <div className="flex items-center gap-2">
-        <Bot className="w-3.5 h-3.5 text-violet-500 shrink-0" />
+        <Bot className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
         <span className="text-sm font-medium truncate">{botLabel}</span>
         <span className="ml-auto text-xs text-muted-foreground shrink-0">{percent}%</span>
         {isRunning && onStop && (

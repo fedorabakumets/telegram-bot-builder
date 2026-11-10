@@ -51,14 +51,14 @@ export function AudienceFilters({ audienceType, formData, onChange, tagInput, se
 
   if (audienceType === 'date') {
     return (
-      <div className="grid grid-cols-2 gap-2 rounded-xl border p-3 bg-muted/20">
+      <div className="grid grid-cols-1 min-[420px]:grid-cols-2 gap-2 rounded-xl border p-3 bg-muted/20">
         <div>
           <Label className="text-xs">От</Label>
-          <Input type="date" value={formData.filters.registeredFrom ?? ''} onChange={(e) => onChange({ filters: { ...formData.filters, registeredFrom: e.target.value } })} />
+          <Input aria-label="Дата регистрации: от" type="date" value={formData.filters.registeredFrom ?? ''} onChange={(e) => onChange({ filters: { ...formData.filters, registeredFrom: e.target.value } })} />
         </div>
         <div>
           <Label className="text-xs">До</Label>
-          <Input type="date" value={formData.filters.registeredTo ?? ''} onChange={(e) => onChange({ filters: { ...formData.filters, registeredTo: e.target.value } })} />
+          <Input aria-label="Дата регистрации: до" type="date" value={formData.filters.registeredTo ?? ''} onChange={(e) => onChange({ filters: { ...formData.filters, registeredTo: e.target.value } })} />
         </div>
       </div>
     );
@@ -66,14 +66,14 @@ export function AudienceFilters({ audienceType, formData, onChange, tagInput, se
 
   if (audienceType === 'activity') {
     return (
-      <div className="grid grid-cols-2 gap-2 rounded-xl border p-3 bg-muted/20">
+      <div className="grid grid-cols-1 min-[420px]:grid-cols-2 gap-2 rounded-xl border p-3 bg-muted/20">
         <div>
           <Label className="text-xs">Активен от</Label>
-          <Input type="date" value={formData.filters.activeFrom ?? ''} onChange={(e) => onChange({ filters: { ...formData.filters, activeFrom: e.target.value } })} />
+          <Input aria-label="Последняя активность: от" type="date" value={formData.filters.activeFrom ?? ''} onChange={(e) => onChange({ filters: { ...formData.filters, activeFrom: e.target.value } })} />
         </div>
         <div>
           <Label className="text-xs">Активен до</Label>
-          <Input type="date" value={formData.filters.activeTo ?? ''} onChange={(e) => onChange({ filters: { ...formData.filters, activeTo: e.target.value } })} />
+          <Input aria-label="Последняя активность: до" type="date" value={formData.filters.activeTo ?? ''} onChange={(e) => onChange({ filters: { ...formData.filters, activeTo: e.target.value } })} />
         </div>
       </div>
     );

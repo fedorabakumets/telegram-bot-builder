@@ -24,6 +24,8 @@ export function canNavigateBroadcastStep(
 
   const hasBots = (formData.tokenIds?.length ?? 0) > 0;
   if (targetStep >= 2 && !hasBots) return false;
+  if (targetStep >= 2 && formData.filters.audienceType === 'retry' &&
+    (!formData.filters.retryBroadcastId || !formData.filters.userIds?.length)) return false;
   if (targetStep >= 3 && !validateBroadcastMessage(formData).isValid) return false;
   return true;
 }

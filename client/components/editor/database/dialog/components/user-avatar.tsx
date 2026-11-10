@@ -73,6 +73,7 @@ export function UserAvatar({ messageType, user, projectId, tokenId, size = 28 }:
   if (canFetchPhoto && photoUrl) {
     return (
       <img
+        loading="lazy"
         src={photoUrl}
         alt={isBot ? 'Bot avatar' : 'User avatar'}
         style={{ width: size, height: size }}

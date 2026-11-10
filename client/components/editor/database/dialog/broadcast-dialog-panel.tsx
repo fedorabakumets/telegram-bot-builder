@@ -4,7 +4,7 @@
  */
 
 import { useState, useRef, useEffect, useMemo } from 'react';
-import { Megaphone, X, Send, Paperclip, Hash } from 'lucide-react';
+import { Megaphone, X, Send, FilePlus2, FileKey2 } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDeleteBroadcast } from '@/components/editor/broadcast/hooks/use-delete-broadcast';
 import { Button } from '@/components/ui/button';
@@ -211,50 +211,30 @@ export function BroadcastDialogPanel({ projectId, selectedTokenId, onClose, hide
       <Separator />
 
       {/* Зона ввода */}
-      <div className="flex-shrink-0 p-3 space-y-2">
-        <CompactInlineEditor
-          value={messageText}
-          onChange={setMessageText}
-          placeholder="Текст рассылки..."
-        />
+      <div className="flex-shrink-0 overflow-y-auto p-2 space-y-2">
+        {/* Размеры редактора совпадают с редактором личного сообщения. */}
+        <div className="[&_[contenteditable=true]]:!min-h-[64px] [&>div>div:first-child]:flex-nowrap [&>div>div:first-child]:overflow-x-auto">
+          <CompactInlineEditor
+            value={messageText}
+            onChange={setMessageText}
+            placeholder="Текст рассылки..."
+          />
+        </div>
 
-        {/* Медиаселектор */}
-        {showMedia && (
-          <div className="border rounded-md p-2 bg-muted/30 max-h-48 overflow-y-auto">
-            <MultiMediaSelector
-              projectId={projectId}
-              value={mediaUrls}
-              onChange={setMediaUrls}
-              label=""
-            />
-          </div>
-        )}
-
-        {/* Блок ввода Telegram file_id */}
-        {showFileId && (
-          <div className="border rounded-md p-3 bg-violet-50/30 dark:bg-violet-900/10 border-violet-200/60 dark:border-violet-700/60 max-h-64 overflow-y-auto">
-            <FileIdInput
-              projectId={projectId}
-              mediaType={fileIdMediaType}
-              onMediaTypeChange={setFileIdMediaType}
-              onAdd={(entry) => {
-                setMediaUrls((prev) => [...prev, entry]);
-                setShowFileId(false);
-              }}
-            />
-          </div>
-        )}
-
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-1">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex min-w-0 flex-wrap items-center gap-1" role="group" aria-label="Дополнения к рассылке">
             {/* Кнопка прикрепления медиафайлов */}
             <Button
               variant={showMedia ? 'secondary' : 'ghost'}
               size="sm"
               onClick={() => { setShowMedia((v) => !v); setShowFileId(false); }}
               title="Прикрепить медиафайл"
+              aria-label="Прикрепить медиафайл"
+              aria-expanded={showMedia}
+              className="h-9 gap-2 px-2 aria-expanded:bg-blue-100 aria-expanded:text-blue-700 dark:aria-expanded:bg-blue-500/20 dark:aria-expanded:text-blue-300"
             >
-              <Paperclip className="w-4 h-4" />
+              <FilePlus2 className="w-4 h-4" />
+              <span>Файл</span>
               {mediaUrls.length > 0 && (
                 <span className="ml-1 text-xs font-semibold">{mediaUrls.length}</span>
               )}
@@ -266,9 +246,12 @@ export function BroadcastDialogPanel({ projectId, selectedTokenId, onClose, hide
               size="sm"
               onClick={() => { setShowFileId((v) => !v); setShowMedia(false); }}
               title="Добавить Telegram file_id"
-              className={showFileId ? '' : 'text-violet-500 hover:text-violet-600'}
+              aria-label="Добавить Telegram file_id"
+              aria-expanded={showFileId}
+              className="h-9 gap-2 px-2 aria-expanded:bg-blue-100 aria-expanded:text-blue-700 dark:aria-expanded:bg-blue-500/20 dark:aria-expanded:text-blue-300"
             >
-              <Hash className="w-4 h-4" />
+              <FileKey2 className="w-4 h-4" />
+              <span>file_id</span>
             </Button>
           </div>
 
@@ -278,6 +261,19 @@ export function BroadcastDialogPanel({ projectId, selectedTokenId, onClose, hide
             <span className="sm:hidden">Отправить</span>
           </Button>
         </div>
+
+        {/* Панели вложений открываются под соответствующими кнопками. */}
+        {showMedia && (
+          <div className="border rounded-md p-2 bg-muted/30 max-h-48 overflow-y-auto">
+            <MultiMediaSelector projectId={projectId} value={mediaUrls} onChange={setMediaUrls} label="" />
+          </div>
+        )}
+        {showFileId && (
+          <div className="border rounded-md p-3 bg-violet-50/30 dark:bg-violet-900/10 border-violet-200/60 dark:border-violet-700/60 max-h-64 overflow-y-auto">
+            <FileIdInput projectId={projectId} mediaType={fileIdMediaType} onMediaTypeChange={setFileIdMediaType}
+              onAdd={(entry) => { setMediaUrls((prev) => [...prev, entry]); setShowFileId(false); }} />
+          </div>
+        )}
       </div>
 
       {/* Подтверждение удаления одиночной рассылки */}

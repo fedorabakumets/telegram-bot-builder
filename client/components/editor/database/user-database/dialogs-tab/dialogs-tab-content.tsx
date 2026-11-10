@@ -20,6 +20,9 @@ import { useBroadcastLiveInvalidate } from '@/components/editor/broadcast/hooks/
 import { useProjectTokens } from '@/hooks/use-project-tokens';
 import { BotTokenSelector, ProjectSelector } from '../components/header';
 import { NewBroadcastModal } from '@/components/editor/broadcast/wizard/new-broadcast-modal';
+import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
+import { DialogProfileData } from '../../dialog/components/dialog-profile-data';
+import type { BotMessageWithMedia } from '../../dialog/types';
 
 /**
  * Пропсы компонента DialogsTabContent
@@ -72,6 +75,19 @@ export function DialogsTabContent({
   const [isBroadcastDialogOpen, setIsBroadcastDialogOpen] = useState(false);
   /** Флаг открытия модалки создания рассылки */
   const [broadcastModalOpen, setBroadcastModalOpen] = useState(false);
+  /** Открытый профиль группы, участника или собеседника. */
+  const [profileUser, setProfileUser] = useState<UserBotData | null>(null);
+  /** Название исходной группы для профиля автора. */
+  const [profileMemberGroup, setProfileMemberGroup] = useState<string | null>(null);
+
+  /** Открывает автора сообщения по сохранённым данным Telegram. */
+  const openMemberProfile = (message: BotMessageWithMedia) => {
+    const id = String(message.userId ?? '');
+    if (!/^[1-9]\d*$/.test(id)) return;
+    const data = message.messageData as { from_user?: { first_name?: string; last_name?: string; username?: string } } | null;
+    setProfileMemberGroup(selectedUser?.firstName ?? 'группа');
+    setProfileUser({ userId: id, firstName: data?.from_user?.first_name, lastName: data?.from_user?.last_name, userName: data?.from_user?.username });
+  };
 
   /** Реагируем на изменение initialUser извне (переход из другой вкладки) */
   useEffect(() => {
@@ -87,8 +103,11 @@ export function DialogsTabContent({
   const [internalTokenId, setInternalTokenId] = useState<number | null>(
     selectedTokenIdProp !== undefined ? selectedTokenIdProp : null,
   );
-  const resolvedTokenId =
-    selectedTokenIdProp !== undefined ? selectedTokenIdProp : internalTokenId;
+  /** Выбранный бот должен принадлежать текущему проекту, включая момент переключения. */
+  const requestedTokenId = selectedTokenIdProp !== undefined ? selectedTokenIdProp : internalTokenId;
+  const resolvedTokenId = projectTokens.some((token) => token.id === requestedTokenId)
+    ? requestedTokenId
+    : (projectTokens.find((token) => token.isDefault === 1) ?? projectTokens[0])?.id ?? null;
   const previousScope = useRef(`${projectId}:${resolvedTokenId}`);
 
   /** При смене области закрываем диалог предыдущего бота. */
@@ -98,6 +117,7 @@ export function DialogsTabContent({
     previousScope.current = scope;
     setSelectedUser(null);
     setIsBroadcastDialogOpen(false);
+    setProfileUser(null);
   }, [projectId, resolvedTokenId]);
 
   useEffect(() => {
@@ -109,13 +129,13 @@ export function DialogsTabContent({
   useEffect(() => {
     if (projectTokens.length === 0) return;
     const tokenExists =
-      resolvedTokenId != null && projectTokens.some((t) => t.id === resolvedTokenId);
+      requestedTokenId != null && projectTokens.some((t) => t.id === requestedTokenId);
     if (tokenExists) return;
     const next = projectTokens.find((t) => t.isDefault === 1) ?? projectTokens[0];
     if (!next) return;
     setInternalTokenId(next.id);
     onSelectToken?.(next.id);
-  }, [projectTokens, resolvedTokenId, onSelectToken]);
+  }, [projectTokens, requestedTokenId, onSelectToken]);
 
   // Подписываемся на WS-события: обновляет кэш infinite-users (lastMessageText, порядок)
   useLiveInvalidate({ projectId, selectedTokenId: resolvedTokenId });
@@ -126,16 +146,19 @@ export function DialogsTabContent({
   const handleClose = () => {
     setSelectedUser(null);
     setIsBroadcastDialogOpen(false);
+    setProfileUser(null);
   };
 
   /** Выбор пользователя из списка или из DialogPanel */
   const handleSelectUser = (user: UserBotData) => {
+    setProfileUser(null);
     setSelectedUser(user);
     setIsBroadcastDialogOpen(false);
   };
 
   /** Клик по виртуальному элементу «Рассылка» */
   const handleSelectBroadcast = () => {
+    setProfileUser(null);
     setIsBroadcastDialogOpen(true);
     setSelectedUser(null);
   };
@@ -149,12 +172,11 @@ export function DialogsTabContent({
       {/* Десктопный хедер — 2 строки */}
       <div className="hidden md:flex flex-col border-b border-border/50 bg-card flex-shrink-0">
         {/* Строка 1: навигация — проект + токен */}
-        <div className="flex items-center gap-x-1.5 px-3 py-1 border-b border-border/30">
+        <div className="flex items-center gap-2 px-3 py-2 border-b border-border/30">
           <div className="rounded-lg bg-primary/10 p-1 shrink-0">
             <MessageSquare className="w-3.5 h-3.5 text-primary" />
           </div>
-          <span className="text-xs font-semibold text-foreground">Диалоги</span>
-          <span className="text-border/60 text-[10px]">·</span>
+          <span className="text-sm font-semibold text-foreground">Диалоги</span>
           {showProjectSelector ? (
             <ProjectSelector
               projects={allProjects!}
@@ -208,7 +230,7 @@ export function DialogsTabContent({
                   ) : (
                     <>
                       {selectedUser && <DialogHeaderIdentity key={`${resolvedTokenId}:${selectedUser.userId}`}
-                        user={selectedUser} projectId={projectId} tokenId={resolvedTokenId} />}
+                        user={selectedUser} projectId={projectId} tokenId={resolvedTokenId} onOpenProfile={() => { setProfileMemberGroup(null); setProfileUser(selectedUser); }} />}
                     </>
                   )}
                 </div>
@@ -217,6 +239,7 @@ export function DialogsTabContent({
                   size="icon"
                   className="h-6 w-6 shrink-0"
                   onClick={handleClose}
+                  aria-label="Закрыть диалог"
                 >
                   <X className="h-3.5 w-3.5" />
                 </Button>
@@ -303,6 +326,7 @@ export function DialogsTabContent({
               user={selectedUser}
               onClose={handleClose}
               onSelectUser={handleSelectUser}
+              onOpenMember={openMemberProfile}
               hideHeader
             />
           ) : (
@@ -345,7 +369,7 @@ export function DialogsTabContent({
                 <ArrowLeft className="h-4 w-4" />
               </Button>
               <DialogHeaderIdentity key={`${resolvedTokenId}:${selectedUser.userId}`}
-                user={selectedUser} projectId={projectId} tokenId={resolvedTokenId} />
+                user={selectedUser} projectId={projectId} tokenId={resolvedTokenId} onOpenProfile={() => { setProfileMemberGroup(null); setProfileUser(selectedUser); }} />
               <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={handleClose}>
                 <X className="h-4 w-4" />
               </Button>
@@ -358,6 +382,7 @@ export function DialogsTabContent({
                 user={selectedUser}
                 onClose={handleClose}
                 onSelectUser={handleSelectUser}
+                onOpenMember={openMemberProfile}
                 hideHeader
               />
             </div>
@@ -381,6 +406,12 @@ export function DialogsTabContent({
         projectId={projectId}
         tokenId={resolvedTokenId}
       />
+      <Sheet open={!!profileUser} onOpenChange={(open) => { if (!open) setProfileUser(null); }}>
+        <SheetContent side="right" hideClose className="!w-full !max-w-sm !p-0">
+          <SheetTitle className="sr-only">Профиль диалога</SheetTitle>
+          {profileUser && <DialogProfileData key={String(profileUser.userId)} user={profileUser} projectId={projectId} tokenId={resolvedTokenId} memberGroup={profileMemberGroup} onClose={() => setProfileUser(null)} />}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

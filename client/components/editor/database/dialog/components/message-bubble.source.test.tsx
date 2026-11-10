@@ -30,7 +30,9 @@ it('использует ID группы при неизвестном назв�
   expect(screen.getByText('Группа: -1002')).toBeInTheDocument();
 });
 
-it('отличает личные сообщения от группового контекста', () => {
+/** Проверяет отсутствие лишней подписи у личной переписки при сохранении текста. */
+it('не добавляет подпись «Личка» к личным сообщениям', () => {
   render(<MessageBubble index={0} showSource message={message({ chatType: 'private' })} />);
-  expect(screen.getByText('Личка')).toBeInTheDocument();
+  expect(screen.queryByText('Личка')).not.toBeInTheDocument();
+  expect(screen.getByText('Привет')).toBeInTheDocument();
 });

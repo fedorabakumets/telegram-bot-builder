@@ -146,7 +146,7 @@ export function BroadcastMessagePreview({
   return (
     <div className="space-y-1">
       {showLabel && <p className="text-xs text-muted-foreground">Предпросмотр:</p>}
-      <div className="rounded-xl rounded-tl-sm bg-gradient-to-br from-blue-50 to-violet-50 dark:from-blue-950/40 dark:to-violet-950/30 border border-blue-100 dark:border-blue-900/40 p-3 space-y-2 max-h-80 overflow-auto">
+      <div data-broadcast-preview className="rounded-xl rounded-tl-sm bg-gradient-to-br from-blue-50 to-violet-50 dark:from-blue-950/40 dark:to-violet-950/30 border border-blue-100 dark:border-blue-900/40 p-3 space-y-2 max-h-80 overflow-auto">
         {hasMedia && (
           <MediaPreviewList
             mediaUrls={mediaUrls}

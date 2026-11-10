@@ -112,6 +112,6 @@ export function useAudiencePreview(
     uniqueCount: data?.uniqueCount ?? total,
     perBot: data?.perBot ?? [],
     overlapEstimate: data?.overlapEstimate ?? 0,
-    isLoading,
+    isLoading: isLoading || JSON.stringify(debouncedFilters) !== JSON.stringify(filters),
   };
 }

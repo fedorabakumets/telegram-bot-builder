@@ -40,7 +40,7 @@ export function FormattedText({ text, messageType }: FormattedTextProps) {
       className={`rounded-lg px-3 py-2 ${
         isBot
           ? 'bg-green-100 dark:bg-green-900/50 text-green-900 dark:text-green-100'
-          : 'bg-muted text-foreground'
+          : 'border border-zinc-200 bg-white text-foreground dark:border-zinc-800 dark:bg-[#181818]'
       }`}
     >
       <p className="text-sm whitespace-pre-wrap break-words">

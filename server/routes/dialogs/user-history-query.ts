@@ -10,6 +10,10 @@ export const USER_HISTORY_QUERY = `SELECT m.*, bg.name AS source_chat_title
     AND (COALESCE(m.chat_type, 'private') = 'private'
       OR (m.chat_type IN ('group', 'supergroup') AND m.message_type = 'user'))
     AND ($4::text IS NULL OR m.message_type = $4)
+    AND ($6::integer IS NULL OR (m.created_at, m.id) < (
+      SELECT c.created_at, c.id FROM bot_messages c
+      WHERE c.id = $6 AND c.project_id = $1 AND c.token_id = $2 AND c.user_id = $3
+    ))
   ORDER BY m.created_at DESC NULLS LAST, m.id DESC LIMIT $5`;
 
 /**

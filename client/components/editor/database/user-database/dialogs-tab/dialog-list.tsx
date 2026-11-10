@@ -98,7 +98,8 @@ export function DialogList({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Поиск диалогов..."
-            className="pl-8 h-8 text-sm bg-muted/50"
+            aria-label="Поиск диалогов"
+            className="pl-8 h-9 text-sm bg-background"
           />
         </div>
       </div>
@@ -124,7 +125,7 @@ export function DialogList({
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-baseline justify-between gap-2">
-                <span className="text-sm font-medium truncate">📢 Рассылка</span>
+                <span className="text-sm font-medium truncate">Рассылка</span>
                 {broadcastProgress}
               </div>
               <p className="text-xs text-muted-foreground truncate mt-0.5">{broadcastPreview}</p>
@@ -137,9 +138,12 @@ export function DialogList({
             <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
           </div>
         ) : allUsers.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-24 gap-2 text-muted-foreground">
+          <div className="flex min-h-24 flex-col items-center justify-center gap-2 px-4 py-4 text-center text-muted-foreground">
             <MessageSquare className="h-6 w-6 opacity-40" />
-            <span className="text-sm">Нет диалогов</span>
+            <span className="text-sm">{search.trim() ? 'Диалоги не найдены' : 'Нет диалогов'}</span>
+            {dialogKind === 'channels' && !search.trim() && (
+              <span className="max-w-64 text-xs leading-relaxed">Сообщения каналов пока не записываются. В будущем они появятся здесь.</span>
+            )}
           </div>
         ) : (
           <>

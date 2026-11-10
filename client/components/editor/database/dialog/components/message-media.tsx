@@ -7,6 +7,7 @@
 import { useState } from 'react';
 import { ImageLightbox } from './image-lightbox';
 import { CopyFileIdButton } from './copy-file-id-button';
+import { MessageAudio } from './message-audio';
 
 /**
  * Тип медиа из messageData
@@ -173,30 +174,16 @@ export function MessageMedia({ media, messageData, projectId, tokenId }: Message
   const audio = extractMedia(messageData, 'audio');
   if (audio?.file_id) {
     return (
-      <div className="flex items-center gap-1 rounded-lg bg-muted/40 p-2 max-w-[280px]">
-        <audio
-          src={buildProxyUrl(audio.file_id, projectId, tokenId)}
-          controls
-          className="w-full"
-          preload="metadata"
-        />
-        <CopyFileIdButton fileId={audio.file_id} />
-      </div>
+      <MessageAudio key={audio.file_id} src={buildProxyUrl(audio.file_id, projectId, tokenId)}
+        fileId={audio.file_id} duration={audio.duration} label={audio.file_name || 'Аудиозапись'} />
     );
   }
 
   const voice = extractMedia(messageData, 'voice');
   if (voice?.file_id) {
     return (
-      <div className="flex items-center gap-1 rounded-lg bg-muted/40 p-2 max-w-[280px]">
-        <audio
-          src={buildProxyUrl(voice.file_id, projectId, tokenId)}
-          controls
-          className="w-full"
-          preload="metadata"
-        />
-        <CopyFileIdButton fileId={voice.file_id} />
-      </div>
+      <MessageAudio key={voice.file_id} src={buildProxyUrl(voice.file_id, projectId, tokenId)}
+        fileId={voice.file_id} duration={voice.duration} label="Голосовое сообщение" />
     );
   }
 
@@ -339,9 +326,7 @@ export function MessageMedia({ media, messageData, projectId, tokenId }: Message
     }
     if (broadcastMediaType === 'audio') {
       return (
-        <div className="flex items-center gap-1 rounded-lg bg-muted/40 p-2 max-w-[280px]">
-          <audio src={mediaSrc} controls className="w-full" preload="metadata" />
-        </div>
+        <MessageAudio key={mediaSrc} src={mediaSrc} />
       );
     }
     // document и прочие — иконка со ссылкой

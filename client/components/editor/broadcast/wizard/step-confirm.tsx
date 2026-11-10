@@ -4,7 +4,7 @@
  */
 
 import { useMemo } from 'react';
-import { Tag, Users, Clock, MessageSquare, Rocket, Layers, Bot } from 'lucide-react';
+import { Tag, Users, Clock, MessageSquare, Send, Layers, Bot } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useProjectTokens } from '@/hooks/use-project-tokens';
 import { useAudiencePreview } from '../hooks/use-audience-preview';
@@ -51,7 +51,7 @@ export function StepConfirm({ projectId, tokenId, formData, isLoading, onConfirm
   const apiFilters = audienceType === 'tags' ? { tags: filterFields.tags } :
     audienceType === 'date' ? { registeredFrom: filterFields.registeredFrom, registeredTo: filterFields.registeredTo } :
     audienceType === 'activity' ? { activeFrom: filterFields.activeFrom, activeTo: filterFields.activeTo } :
-    audienceType === 'manual' ? { userIds: filterFields.userIds ?? [] } : {};
+    audienceType === 'manual' || audienceType === 'retry' ? { userIds: filterFields.userIds ?? [] } : {};
 
   const tokenIds = formData.tokenIds ?? [];
   const tokensInfo = useProjectTokens([projectId]);
@@ -68,13 +68,8 @@ export function StepConfirm({ projectId, tokenId, formData, isLoading, onConfirm
     tokenIds,
   );
 
-  /**
-   * Итоговое число получателей. Для ручного выбора берём длину userIds,
-   * т.к. при пустом массиве preview на сервере вернул бы всех пользователей.
-   */
-  const recipientCount = audienceType === 'manual'
-    ? (filterFields.userIds?.length ?? 0)
-    : count;
+  /** Сервер исключает недоступные аккаунты и учитывает каждого выбранного бота. */
+  const recipientCount = count;
 
   /**
    * Боты отправляют параллельно, поэтому время оценивается по самому
@@ -102,7 +97,7 @@ export function StepConfirm({ projectId, tokenId, formData, isLoading, onConfirm
       {/* Таблица параметров */}
       <div className="rounded-xl border shadow-sm divide-y text-sm overflow-hidden">
         <div className="flex items-center gap-3 px-4 py-3">
-          <Tag className="w-4 h-4 text-blue-500 shrink-0" />
+          <Tag className="w-4 h-4 text-muted-foreground shrink-0" />
           <span className="text-muted-foreground">Название</span>
           <span className="ml-auto font-medium text-right max-w-[70%] truncate">
             {resolveBroadcastDisplayName(formData.name, formData.messageText)}
@@ -110,7 +105,7 @@ export function StepConfirm({ projectId, tokenId, formData, isLoading, onConfirm
         </div>
         {selectedBotLabels.length > 0 && (
           <div className="flex items-center gap-3 px-4 py-3">
-            <Bot className="w-4 h-4 text-blue-500 shrink-0" />
+            <Bot className="w-4 h-4 text-muted-foreground shrink-0" />
             <span className="text-muted-foreground">Боты</span>
             <span className="ml-auto font-medium text-right max-w-[70%] truncate">
               {selectedBotLabels.length} {pluralizeBots(selectedBotLabels.length)} · {selectedBotLabels.join(', ')}
@@ -118,16 +113,14 @@ export function StepConfirm({ projectId, tokenId, formData, isLoading, onConfirm
           </div>
         )}
         <div className="flex items-center gap-3 px-4 py-3">
-          <Users className="w-4 h-4 text-violet-500 shrink-0" />
+          <Users className="w-4 h-4 text-muted-foreground shrink-0" />
           <span className="text-muted-foreground">Получателей</span>
           <span className="ml-auto font-medium">
-            {audienceType === 'manual'
-              ? recipientCount.toLocaleString('ru-RU')
-              : (isCountLoading ? '...' : count.toLocaleString('ru-RU'))}
+            {isCountLoading ? '...' : recipientCount.toLocaleString('ru-RU')}
           </span>
         </div>
         <div className="flex items-center gap-3 px-4 py-3">
-          <Clock className="w-4 h-4 text-amber-500 shrink-0" />
+          <Clock className="w-4 h-4 text-muted-foreground shrink-0" />
           <span className="text-muted-foreground">Примерное время</span>
           <span className="ml-auto font-medium">
             {estimatedSeconds > 0 ? `~${estimatedSeconds} сек` : '—'}
@@ -141,7 +134,7 @@ export function StepConfirm({ projectId, tokenId, formData, isLoading, onConfirm
           if (groupsCount === 0) return null;
           return (
             <div className="flex items-center gap-3 px-4 py-3">
-              <Layers className="w-4 h-4 text-fuchsia-500 shrink-0" />
+              <Layers className="w-4 h-4 text-muted-foreground shrink-0" />
               <span className="text-muted-foreground">Группы</span>
               <span className="ml-auto font-medium">{groupsCount}</span>
             </div>
@@ -149,7 +142,7 @@ export function StepConfirm({ projectId, tokenId, formData, isLoading, onConfirm
         })()}
         <div className="px-4 py-3 space-y-2">
           <div className="flex items-center gap-2">
-            <MessageSquare className="w-4 h-4 text-green-500 shrink-0" />
+            <MessageSquare className="w-4 h-4 text-muted-foreground shrink-0" />
             <span className="text-muted-foreground">Сообщение</span>
           </div>
           <div className="ml-6">
@@ -174,10 +167,10 @@ export function StepConfirm({ projectId, tokenId, formData, isLoading, onConfirm
         <Button variant="outline" onClick={onBack} disabled={isLoading}>← Назад</Button>
         <Button
           onClick={onConfirm}
-          disabled={isLoading || recipientCount === 0 || !validation.isValid}
-          className="bg-gradient-to-r from-blue-500 to-violet-500 text-white hover:from-blue-600 hover:to-violet-600 gap-1.5 px-5"
+          disabled={isLoading || isCountLoading || recipientCount === 0 || !validation.isValid}
+          className="bg-primary text-primary-foreground hover:bg-primary/90 gap-1.5 px-5"
         >
-          <Rocket className="w-4 h-4" />
+          <Send className="w-4 h-4" />
           {isLoading ? 'Запуск...' : 'Запустить рассылку'}
         </Button>
       </div>

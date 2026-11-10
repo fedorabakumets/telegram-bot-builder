@@ -5,10 +5,10 @@
 
 import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Users, Radio, Inbox } from 'lucide-react';
+import { Inbox } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
+import { GroupAvatar } from './group-avatar';
 import { cn } from '@/utils/utils';
 
 /** Данные группы из API */
@@ -23,6 +23,8 @@ interface GroupData {
   chatType: string;
   /** Участники */
   memberCount: number | null;
+  /** Адрес сохранённой фотографии группы. */
+  avatarUrl?: string | null;
 }
 
 /** Пропсы GroupSelect */
@@ -49,7 +51,7 @@ const chatTypeLabels: Record<string, string> = {
  * @returns JSX
  */
 export function GroupSelect({ projectId, tokenId, selectedGroupIds, onChangeGroupIds }: GroupSelectProps) {
-  const { data: groups = [], isLoading } = useQuery<GroupData[]>({
+  const { data: groups = [], isLoading, isError } = useQuery<GroupData[]>({
     queryKey: ['broadcast-groups', projectId, tokenId],
     queryFn: async () => {
       const res = await fetch(
@@ -70,6 +72,8 @@ export function GroupSelect({ projectId, tokenId, selectedGroupIds, onChangeGrou
       onChangeGroupIds(availableGroups.map((g) => g.groupId));
     }
   }, [availableGroups.length, tokenId]);
+
+  if (isError) return <p role="alert" className="text-sm text-destructive">Не удалось загрузить список. Закройте мастер и попробуйте снова.</p>;
 
   if (isLoading) {
     return <div className="text-sm text-muted-foreground py-2">Загрузка групп...</div>;
@@ -103,8 +107,6 @@ export function GroupSelect({ projectId, tokenId, selectedGroupIds, onChangeGrou
 
       <div className="max-h-36 overflow-y-auto space-y-1.5">
         {availableGroups.map((group) => {
-          const isChannel = group.chatType === 'channel';
-          const Icon = isChannel ? Radio : Users;
           const isSelected = selectedGroupIds.includes(group.groupId);
 
           return (
@@ -113,7 +115,7 @@ export function GroupSelect({ projectId, tokenId, selectedGroupIds, onChangeGrou
               className={cn(
                 'flex items-center gap-2.5 rounded-lg border p-2 transition-colors',
                 'hover:bg-accent/40',
-                isSelected && 'border-violet-300/50 bg-violet-500/5',
+                isSelected && 'border-blue-500/40 bg-blue-500/10',
               )}
             >
               <Checkbox
@@ -124,19 +126,17 @@ export function GroupSelect({ projectId, tokenId, selectedGroupIds, onChangeGrou
                   else onChangeGroupIds(selectedGroupIds.filter((id) => id !== group.groupId));
                 }}
               />
-              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-violet-400 to-fuchsia-400 flex items-center justify-center shrink-0">
-                <Icon className="w-3.5 h-3.5 text-white" />
-              </div>
+              <GroupAvatar projectId={projectId} tokenId={tokenId} groupId={group.groupId} name={group.name} chatType={group.chatType} avatarUrl={group.avatarUrl} />
               <Label
                 htmlFor={`group-${tokenId}-${group.groupId}`}
                 className="cursor-pointer text-sm truncate flex-1"
               >
                 {group.name}
               </Label>
-              <Badge variant="secondary" className="text-[10px] shrink-0">
+              <span className="text-xs text-muted-foreground shrink-0">
                 {chatTypeLabels[group.chatType] ?? group.chatType}
                 {group.memberCount != null && ` · ${group.memberCount}`}
-              </Badge>
+              </span>
             </div>
           );
         })}

@@ -7,6 +7,7 @@ import { useMutation } from '@tanstack/react-query';
 import { apiRequest } from '@/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import type { NewBroadcastFormData } from '../types';
+import { validateRetryAudience } from '../utils/validate-retry-audience';
 
 /**
  * Ответ сервера POST /api/projects/:projectId/broadcasts.
@@ -52,6 +53,8 @@ export function useCreateBroadcast({
 
   return useMutation({
     mutationFn: async (formData: NewBroadcastFormData) => {
+      /** Пустая повторная аудитория не должна превращаться в отправку всем. */
+      validateRetryAudience(formData);
       const { audienceType, ...filterFields } = formData.filters;
       // Строим фильтры в зависимости от типа аудитории
       const filters =
@@ -61,12 +64,13 @@ export function useCreateBroadcast({
           registeredFrom: filterFields.registeredFrom,
           registeredTo: filterFields.registeredTo,
         } :
-        audienceType === 'manual' ? { userIds: filterFields.userIds } : {
+        audienceType === 'manual' || audienceType === 'retry' ? { userIds: filterFields.userIds ?? [] } : {
           activeFrom: filterFields.activeFrom,
           activeTo: filterFields.activeTo,
         };
 
-      const groupsByTokenId = formData.groupsByTokenId ?? {};
+      /** Повторная отправка адресована только пользователям с ошибками. */
+      const groupsByTokenId = audienceType === 'retry' ? {} : formData.groupsByTokenId ?? {};
       const groupsByTokenPayload: Record<string, string[]> = {};
       for (const [tid, ids] of Object.entries(groupsByTokenId)) {
         if (ids?.length) groupsByTokenPayload[String(tid)] = ids;
@@ -75,7 +79,7 @@ export function useCreateBroadcast({
 
       const filtersWithGroups = {
         ...filters,
-        ...(!hasPerTokenGroups && filterFields.groupIds?.length
+        ...(audienceType !== 'retry' && !hasPerTokenGroups && filterFields.groupIds?.length
           ? { groupIds: filterFields.groupIds }
           : {}),
       };

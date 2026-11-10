@@ -98,6 +98,7 @@ export function BotTokenSelector({
     <div className="flex items-center gap-1.5">
       <Bot className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
       <Select
+        key={`${projectId}:${selectValue ?? 'none'}`}
         value={selectValue}
         onValueChange={(value) => {
           if (allowAll && value === 'all') {

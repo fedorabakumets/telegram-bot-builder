@@ -10,11 +10,12 @@ import { mapUserHistoryRow, USER_HISTORY_QUERY } from './user-history-query';
  * @param userId - Пользователь Telegram
  * @param limit - Максимальное количество сообщений
  * @param messageType - Необязательный фильтр направления
+ * @param beforeId - Сообщение, перед которым загружается страница
  * @returns Общая история по возрастанию времени
  */
 export async function getUserDialogHistory(projectId: number, tokenId: number, userId: string,
-  limit: number, messageType?: 'user' | 'bot') {
-  const { rows } = await pool.query(USER_HISTORY_QUERY, [projectId, tokenId, userId, messageType ?? null, limit]);
+  limit: number, messageType?: 'user' | 'bot', beforeId?: number) {
+  const { rows } = await pool.query(USER_HISTORY_QUERY, [projectId, tokenId, userId, messageType ?? null, limit, beforeId ?? null]);
   const messages = await Promise.all(rows.map(async (row) => ({
     ...mapUserHistoryRow(row), media: await storage.getMessageMedia(row.id),
   })));

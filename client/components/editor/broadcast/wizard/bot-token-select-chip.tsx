@@ -4,6 +4,7 @@
  */
 
 import { Check } from 'lucide-react';
+import { UserAvatar } from '@/components/editor/database/dialog/components/user-avatar';
 import { cn } from '@/utils/utils';
 import { isTokenActiveForBroadcast } from '@shared/broadcast-unauthorized';
 import { formatBotShortLabel } from '../utils/format-bot-label';
@@ -11,6 +12,10 @@ import type { BotToken } from '@shared/schema';
 
 /** Пропсы чипа выбора бота */
 interface BotTokenSelectChipProps {
+  /** Проект, к которому относится бот. */
+  projectId: number;
+  /** Telegram подтвердил заморозку бота. */
+  frozen?: boolean;
   /** Токен бота */
   token: BotToken;
   /** Бот выбран для рассылки */
@@ -26,21 +31,22 @@ interface BotTokenSelectChipProps {
  * @param props - Свойства чипа
  * @returns JSX элемент чипа
  */
-export function BotTokenSelectChip({ token, selected, count, onToggle }: BotTokenSelectChipProps) {
-  const inactive = !isTokenActiveForBroadcast(token.isActive);
+export function BotTokenSelectChip({ projectId, token, frozen, selected, count, onToggle }: BotTokenSelectChipProps) {
+  const inactive = !!frozen || !isTokenActiveForBroadcast(token.isActive);
 
   return (
     <button
       type="button"
       disabled={inactive}
-      title={inactive ? 'Токен недействителен. Обновите в настройках проекта.' : undefined}
+      aria-pressed={selected}
+      title={frozen ? 'Бот заморожен Telegram' : inactive ? 'Токен недействителен. Обновите в настройках проекта.' : undefined}
       onClick={() => onToggle(token.id)}
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition-all',
+        'inline-flex items-center gap-2 rounded-md border px-3 py-2 text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
         inactive && 'cursor-not-allowed opacity-60 border-destructive/40 text-muted-foreground',
-        !inactive && 'hover:bg-accent/60 hover:shadow-sm',
+        !inactive && 'hover:bg-accent/60',
         !inactive && selected
-          ? 'border-blue-500/50 bg-gradient-to-r from-blue-500/15 to-violet-500/15 text-foreground shadow-sm'
+          ? 'border-blue-500/40 bg-blue-500/10 text-foreground'
           : !inactive && 'text-muted-foreground',
       )}
     >
@@ -48,16 +54,17 @@ export function BotTokenSelectChip({ token, selected, count, onToggle }: BotToke
         className={cn(
           'flex h-3.5 w-3.5 items-center justify-center rounded border shrink-0',
           inactive && 'border-destructive/40',
-          !inactive && selected && 'border-blue-500 bg-blue-500 text-white',
+          !inactive && selected && 'border-primary bg-primary text-primary-foreground',
           !inactive && !selected && 'border-muted-foreground/40',
         )}
       >
         {!inactive && selected && <Check className="h-2.5 w-2.5" />}
       </span>
+      <UserAvatar messageType="bot" projectId={projectId} tokenId={token.id} size={24} />
       <span className="truncate max-w-[160px]">{formatBotShortLabel(token, token.id)}</span>
-      {inactive && <span className="text-[10px] text-destructive">токен недействителен</span>}
+      {inactive && <span className="text-[10px] text-destructive">{frozen ? 'заморожен' : 'токен недействителен'}</span>}
       {!inactive && selected && count != null && (
-        <span className="font-semibold text-blue-600 dark:text-blue-400">
+        <span className="font-semibold text-foreground tabular-nums">
           {count.toLocaleString('ru-RU')}
         </span>
       )}

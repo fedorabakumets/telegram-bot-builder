@@ -82,7 +82,7 @@ export function BroadcastProgress({ projectId, broadcast, refetch, onClose }: Br
       {isDone ? (
         <div className="text-center">
           <p className="text-sm text-muted-foreground mb-3">
-            {status === 'done' ? '✅ Рассылка завершена' : '⏸ Рассылка остановлена'}
+            {status === 'done' ? 'Рассылка завершена' : 'Рассылка остановлена'}
           </p>
           <Button variant="outline" onClick={onClose}>Закрыть</Button>
         </div>
@@ -94,7 +94,7 @@ export function BroadcastProgress({ projectId, broadcast, refetch, onClose }: Br
             onClick={() => stopMutation.mutate(broadcast.id)}
             disabled={stopMutation.isPending}
           >
-            ⏸ Остановить
+            Остановить
           </Button>
         </div>
       )}

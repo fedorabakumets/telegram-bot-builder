@@ -80,7 +80,9 @@ export interface NewBroadcastFormData {
   /** Фильтры аудитории */
   filters: {
     /** Тип аудитории */
-    audienceType: 'all' | 'tags' | 'date' | 'activity' | 'manual';
+    audienceType: 'all' | 'tags' | 'date' | 'activity' | 'manual' | 'retry';
+    /** Рассылка, по ошибкам которой выбираются получатели. */
+    retryBroadcastId?: number;
     /** Теги для фильтрации */
     tags?: string[];
     /** Дата регистрации от (ISO) */

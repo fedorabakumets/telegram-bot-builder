@@ -3,27 +3,16 @@
  * @module client/components/editor/broadcast/wizard/manual-user-select
  */
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/utils/utils';
-import { buildUsersApiUrl } from '@/components/editor/database/utils';
+import { loadManualUsers } from './load-manual-users';
+import { UserAvatar } from '@/components/editor/database/dialog/components/user-avatar';
 import type { UserBotData } from '@shared/schema';
-
-/**
- * Ответ сервера при загрузке пользователей
- */
-interface UsersResponse {
-  /** Список пользователей */
-  users: UserBotData[];
-  /** Общее количество */
-  total: number;
-  /** Есть ли ещё страницы */
-  hasMore: boolean;
-}
 
 /**
  * Пропсы компонента ManualUserSelect
@@ -35,6 +24,8 @@ interface ManualUserSelectProps {
   tokenId?: number | null;
   /** Массив выбранных userId */
   selectedUserIds: string[];
+  /** Выбрать доступных пользователей при первом открытии. */
+  initializeAll: boolean;
   /** Колбэк изменения выбранных userId */
   onChangeUserIds: (userIds: string[]) => void;
 }
@@ -44,33 +35,27 @@ interface ManualUserSelectProps {
  * @param props - Свойства компонента
  * @returns JSX элемент списка пользователей
  */
-export function ManualUserSelect({ projectId, tokenId, selectedUserIds, onChangeUserIds }: ManualUserSelectProps) {
+export function ManualUserSelect({ projectId, tokenId, selectedUserIds, initializeAll, onChangeUserIds }: ManualUserSelectProps) {
   const [search, setSearch] = useState('');
+  /** Однократная проверка сохранённого выбора после загрузки. */
+  const initialized = useRef(false);
 
-  const url = buildUsersApiUrl(`/api/projects/${projectId}/users`, tokenId, {
-    limit: '1000',
-    offset: '0',
-  });
-
-  const { data, isLoading } = useQuery<UsersResponse>({
-    queryKey: ['broadcast-manual-users', projectId, tokenId],
-    queryFn: async () => {
-      const response = await fetch(url, { credentials: 'include' });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      return response.json();
-    },
+  const { data: users = [], isLoading, isError } = useQuery<UserBotData[]>({
+    queryKey: ['broadcast-manual-users-complete', projectId, tokenId],
+    queryFn: ({ signal }) => loadManualUsers(projectId, tokenId, signal),
     enabled: !!projectId,
     staleTime: 30_000,
   });
 
-  const users = data?.users ?? [];
-
-  /** При первой загрузке — выбираем всех пользователей */
+  /** При первой загрузке исключаем недоступные аккаунты из выбора. */
   useEffect(() => {
-    if (users.length > 0 && selectedUserIds.length === 0) {
-      onChangeUserIds(users.map((u) => u.userId));
-    }
-  }, [users.length]);
+    if (isLoading || isError || initialized.current) return;
+    initialized.current = true;
+    const available = users.filter((u) => !u.isBlocked && !u.isDeleted && !u.isBot);
+    const allowed = new Set(available.map((u) => u.userId));
+    const next = initializeAll ? available.map((u) => u.userId) : selectedUserIds.filter((id) => allowed.has(id));
+    if (initializeAll || next.length !== selectedUserIds.length) onChangeUserIds(next);
+  }, [users, isLoading, isError, initializeAll, selectedUserIds, onChangeUserIds]);
 
   /** Фильтрация по поисковому запросу */
   const filteredUsers = useMemo(() => {
@@ -83,16 +68,18 @@ export function ManualUserSelect({ projectId, tokenId, selectedUserIds, onChange
     });
   }, [users, search]);
 
-  const allFilteredSelected = filteredUsers.length > 0 && filteredUsers.every((u) => selectedUserIds.includes(u.userId));
+  /** Для массового выбора доступны только получатели без известных ограничений. */
+  const availableFiltered = filteredUsers.filter((u) => !u.isBlocked && !u.isDeleted && !u.isBot);
+  const allFilteredSelected = availableFiltered.length > 0 && availableFiltered.every((u) => selectedUserIds.includes(u.userId));
 
   /** Переключение чекбокса «Все» */
   const handleToggleAll = (checked: boolean) => {
     if (checked) {
       const newIds = new Set(selectedUserIds);
-      filteredUsers.forEach((u) => newIds.add(u.userId));
+      availableFiltered.forEach((u) => newIds.add(u.userId));
       onChangeUserIds(Array.from(newIds));
     } else {
-      const removeSet = new Set(filteredUsers.map((u) => u.userId));
+      const removeSet = new Set(availableFiltered.map((u) => u.userId));
       onChangeUserIds(selectedUserIds.filter((id) => !removeSet.has(id)));
     }
   };
@@ -105,6 +92,8 @@ export function ManualUserSelect({ projectId, tokenId, selectedUserIds, onChange
       onChangeUserIds(selectedUserIds.filter((id) => id !== userId));
     }
   };
+
+  if (isError) return <p role="alert" className="text-sm text-destructive">Не удалось загрузить список. Закройте мастер и попробуйте снова.</p>;
 
   if (isLoading) {
     return <div className="text-sm text-muted-foreground py-2">Загрузка пользователей...</div>;
@@ -125,17 +114,17 @@ export function ManualUserSelect({ projectId, tokenId, selectedUserIds, onChange
 
       {/* Чекбокс «Все» */}
       <div className="flex items-center gap-2 py-1.5 border-b pb-2">
-        <Checkbox id="select-all" checked={allFilteredSelected} onCheckedChange={handleToggleAll} />
+        <Checkbox id="select-all" checked={allFilteredSelected} disabled={availableFiltered.length === 0} onCheckedChange={handleToggleAll} />
         <Label htmlFor="select-all" className="cursor-pointer text-sm font-semibold">
-          Все ({filteredUsers.length})
+          Все доступные ({availableFiltered.length.toLocaleString('ru-RU')})
         </Label>
       </div>
 
       {/* Список пользователей */}
       <div className="max-h-48 overflow-y-auto rounded-lg border p-2 space-y-1">
         {filteredUsers.map((user) => {
-          const initials = (user.firstName ?? '?')[0].toUpperCase();
-          const isSelected = selectedUserIds.includes(user.userId);
+          const unavailable = !!(user.isBlocked || user.isDeleted || user.isBot);
+          const isSelected = !unavailable && selectedUserIds.includes(user.userId);
 
           return (
             <div
@@ -143,21 +132,21 @@ export function ManualUserSelect({ projectId, tokenId, selectedUserIds, onChange
               className={cn(
                 'flex items-center gap-2.5 rounded-lg p-1.5 transition-colors',
                 'hover:bg-accent/40',
-                isSelected && 'bg-blue-500/5',
+                isSelected && 'bg-muted/40',
               )}
             >
               <Checkbox
                 id={`user-${user.userId}`}
                 checked={isSelected}
+                disabled={unavailable}
                 onCheckedChange={(checked) => handleToggleUser(user.userId, !!checked)}
               />
-              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-400 to-cyan-400 flex items-center justify-center text-white text-xs font-semibold shrink-0">
-                {initials}
-              </div>
-              <Label htmlFor={`user-${user.userId}`} className="cursor-pointer text-sm truncate flex-1">
+              <UserAvatar messageType="user" user={user} projectId={projectId} tokenId={tokenId} size={28} />
+              <Label htmlFor={`user-${user.userId}`} className={cn('text-sm truncate flex-1', !unavailable && 'cursor-pointer')}>
                 {user.firstName ?? ''} {user.lastName ?? ''}
                 {user.userName && <span className="text-muted-foreground ml-1">@{user.userName}</span>}
               </Label>
+              {unavailable && <span className="shrink-0 text-xs text-muted-foreground">{user.isDeleted ? 'Аккаунт удалён' : user.isBlocked ? 'Заблокировал бота' : 'Бот'}</span>}
             </div>
           );
         })}

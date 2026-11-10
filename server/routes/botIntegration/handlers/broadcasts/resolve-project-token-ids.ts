@@ -11,6 +11,7 @@ import {
   BOT_UNAUTHORIZED_HINT,
 } from "@shared/broadcast-unauthorized";
 import { storage } from "../../../../storages/storage";
+import { isBotFrozen } from "../../../../bots/frozenBotStatus";
 
 /** Результат резолва списка токенов проекта */
 export interface ResolvedProjectTokens {
@@ -27,8 +28,8 @@ export interface ResolvedProjectTokens {
  * @returns Активные токены или ошибка
  */
 function keepActiveOrError(tokens: BotToken[], emptyError: string): ResolvedProjectTokens {
-  const active = tokens.filter((token) => isTokenActiveForBroadcast(token.isActive));
-  if (active.length === 0) return { tokens: [], error: emptyError };
+  const active = tokens.filter((token) => isTokenActiveForBroadcast(token.isActive) && !isBotFrozen(token.projectId, token.id));
+  if (active.length === 0) return { tokens: [], error: tokens.some((token) => isBotFrozen(token.projectId, token.id)) ? 'Бот заморожен Telegram и недоступен для рассылки.' : emptyError };
   return { tokens: active };
 }
 

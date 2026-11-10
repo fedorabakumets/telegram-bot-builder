@@ -45,11 +45,10 @@ export function WizardStepper({
           const circleClass = cn(
             'flex items-center justify-center rounded-full font-semibold transition-colors',
             compact ? 'h-6 w-6 text-[11px]' : 'relative z-[1] h-8 w-8 text-xs',
-            isCompleted && 'bg-primary text-primary-foreground',
-            isActive && 'bg-primary text-primary-foreground',
-            isActive && !compact && 'shadow-[0_0_0_4px] shadow-primary/15',
+            isCompleted && 'bg-primary/15 text-primary',
+            isActive && 'border border-primary bg-primary text-primary-foreground',
             !isActive && !isCompleted && 'border border-border bg-background text-muted-foreground',
-            enabled && 'cursor-pointer hover:ring-2 hover:ring-primary/30',
+            enabled && 'cursor-pointer hover:bg-accent',
             !enabled && !isActive && stepNum > currentStep && 'opacity-70',
           );
 

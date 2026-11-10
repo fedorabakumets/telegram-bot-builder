@@ -38,15 +38,18 @@ export function useQuickAttachUpload(
       setIsUploading(true);
       const urls: string[] = [];
       let failed = 0;
+      /** Сообщение сервера для первого файла с ошибкой. */
+      let firstError: string | undefined;
       try {
         for (const file of batch) {
           try {
             const result = await mutateAsync({ file });
             const url = typeof result?.url === 'string' ? result.url.trim() : '';
             if (url) urls.push(url);
-            else failed += 1;
-          } catch {
+            else { failed += 1; firstError ??= 'Сервер не вернул адрес загруженного файла.'; }
+          } catch (error) {
             failed += 1;
+            firstError ??= error instanceof Error ? error.message : 'Попробуйте загрузить файл ещё раз.';
           }
         }
         if (urls.length > 0) {
@@ -56,7 +59,7 @@ export function useQuickAttachUpload(
           });
         }
         if (failed > 0) {
-          toast({ title: `Не удалось загрузить: ${failed}`, variant: 'destructive' });
+          toast({ title: failed === 1 ? 'Не удалось загрузить файл' : `Не удалось загрузить файлов: ${failed}`, description: firstError, variant: 'destructive' });
         }
       } finally {
         setIsUploading(false);

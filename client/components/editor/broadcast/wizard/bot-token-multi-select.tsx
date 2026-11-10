@@ -4,6 +4,7 @@
  */
 
 import { Bot } from 'lucide-react';
+import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useProjectTokens } from '@/hooks/use-project-tokens';
@@ -21,6 +22,8 @@ interface BotTokenMultiSelectProps {
   projectId: number;
   /** Идентификаторы выбранных ботов */
   selectedTokenIds: number[];
+  /** Идентификаторы замороженных ботов. */
+  frozenTokenIds: number[];
   /** Обработчик изменения выбора ботов */
   onChange: (tokenIds: number[]) => void;
   /** Количество получателей по каждому боту (опционально) */
@@ -33,14 +36,19 @@ interface BotTokenMultiSelectProps {
  * @param props - Свойства компонента
  * @returns JSX элемент выбора ботов
  */
-export function BotTokenMultiSelect({ projectId, selectedTokenIds, onChange, perBot }: BotTokenMultiSelectProps) {
+export function BotTokenMultiSelect({ projectId, selectedTokenIds, frozenTokenIds, onChange, perBot }: BotTokenMultiSelectProps) {
   const tokensInfo = useProjectTokens([projectId]);
   const tokens = tokensInfo[0]?.tokens ?? [];
-  const activeTokens = tokens.filter((token) => isTokenActiveForBroadcast(token.isActive));
+  const activeTokens = tokens.filter((token) => isTokenActiveForBroadcast(token.isActive) && !frozenTokenIds.includes(token.id));
   const allSelected = activeTokens.length > 0 && activeTokens.every((token) => selectedTokenIds.includes(token.id));
   const countByToken = new Map(perBot?.map((item) => [item.tokenId, item.count]));
 
   useStripInactiveTokenIds(tokens, selectedTokenIds, onChange);
+  /** Убирает замороженных ботов из уже сделанного выбора. */
+  useEffect(() => {
+    const next = selectedTokenIds.filter((id) => !frozenTokenIds.includes(id));
+    if (next.length !== selectedTokenIds.length) onChange(next);
+  }, [frozenTokenIds, selectedTokenIds, onChange]);
 
   /** Переключает бота в списке выбранных */
   const handleToggle = (tokenId: number) => {
@@ -51,10 +59,10 @@ export function BotTokenMultiSelect({ projectId, selectedTokenIds, onChange, per
   };
 
   return (
-    <div className="rounded-xl border border-blue-200/50 dark:border-blue-800/40 bg-gradient-to-r from-blue-500/5 to-violet-500/5 p-3 space-y-2">
+    <div className="rounded-xl border border-border bg-background p-3 space-y-2">
       <div className="flex items-center justify-between gap-2">
         <Label className="flex items-center gap-1.5">
-          <Bot className="w-3.5 h-3.5 text-blue-500" />
+          <Bot className="w-3.5 h-3.5 text-muted-foreground" />
           Отправить от ботов
         </Label>
         <div className="flex items-center gap-1">
@@ -86,6 +94,8 @@ export function BotTokenMultiSelect({ projectId, selectedTokenIds, onChange, per
           {tokens.map((token) => (
             <BotTokenSelectChip
               key={token.id}
+              projectId={projectId}
+              frozen={frozenTokenIds.includes(token.id)}
               token={token}
               selected={selectedTokenIds.includes(token.id)}
               count={countByToken.get(token.id)}
@@ -98,7 +108,7 @@ export function BotTokenMultiSelect({ projectId, selectedTokenIds, onChange, per
       <p className="text-[11px] text-muted-foreground">
         {selectedTokenIds.length === 0
           ? activeTokens.length === 0 && tokens.length > 0
-            ? 'Нет ботов с действительным токеном'
+            ? 'Нет доступных ботов для рассылки'
             : 'Выберите хотя бы одного бота'
           : `Выбрано: ${selectedTokenIds.length} ${pluralizeBots(selectedTokenIds.length)} — сообщения уйдут параллельно`}
       </p>

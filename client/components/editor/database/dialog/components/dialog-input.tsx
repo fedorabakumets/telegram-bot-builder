@@ -5,7 +5,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Send, Paperclip, Hash, Rows3 } from 'lucide-react';
+import { RefreshCw, Send, FilePlus2, FileKey2, MousePointerClick } from 'lucide-react';
 import { CompactInlineEditor } from '@/components/editor/inline-rich/compact-inline-editor';
 import { MultiMediaSelector } from '@/components/editor/properties/media/multi-media-selector';
 import { FileIdInput } from '@/components/editor/properties/media/file-id-input';
@@ -56,6 +56,7 @@ export function DialogInput({ isPending, projectId, availableNodes, onSend }: Di
   /** Флаг видимости редактора инлайн-кнопок */
   const [showButtons, setShowButtons] = useState(false);
 
+  /** Отправляет подготовленное сообщение и очищает редактор. */
   const handleSend = () => {
     // Разрешаем отправку, если есть текст ИЛИ хотя бы один прикреплённый файл.
     // Кнопки сами по себе отправлять нельзя — они лишь дополнение к тексту/медиа.
@@ -72,14 +73,87 @@ export function DialogInput({ isPending, projectId, availableNodes, onSend }: Di
   };
 
   return (
-    <div className="p-3 space-y-2">
-      <CompactInlineEditor
-        value={messageText}
-        onChange={setMessageText}
-        placeholder="Введите сообщение..."
-      />
+    <div className="space-y-2 p-2">
+      {/* Компактный редактор сохраняет место для переписки. */}
+      <div className="[&_[contenteditable=true]]:!min-h-[64px] [&>div>div:first-child]:flex-nowrap [&>div>div:first-child]:overflow-x-auto">
+        <CompactInlineEditor
+          value={messageText}
+          onChange={setMessageText}
+          placeholder="Введите сообщение..."
+        />
+      </div>
 
-      {/* Медиаселектор — показывается при нажатии на скрепку, ограничен по высоте */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex min-w-0 flex-wrap items-center gap-1" role="group" aria-label="Дополнения к сообщению">
+          {/* Кнопка прикрепления медиафайлов */}
+          <Button
+            variant={showMedia ? 'secondary' : 'ghost'}
+            size="sm"
+            onClick={() => { setShowMedia((v) => !v); setShowFileId(false); setShowButtons(false); }}
+            title="Прикрепить медиафайл"
+            aria-label="Прикрепить медиафайл"
+            aria-expanded={showMedia}
+            className="h-9 gap-2 px-2 aria-expanded:bg-blue-100 aria-expanded:text-blue-700 dark:aria-expanded:bg-blue-500/20 dark:aria-expanded:text-blue-300"
+          >
+            <FilePlus2 className="w-4 h-4" />
+            <span>Файл</span>
+            {mediaUrls.length > 0 && (
+              <span className="ml-1 text-xs font-semibold">{mediaUrls.length}</span>
+            )}
+          </Button>
+
+          {/* Кнопка Telegram file_id */}
+          <Button
+            variant={showFileId ? 'secondary' : 'ghost'}
+            size="sm"
+            onClick={() => { setShowFileId((v) => !v); setShowMedia(false); setShowButtons(false); }}
+            title="Добавить Telegram file_id"
+            aria-label="Добавить Telegram file_id"
+            aria-expanded={showFileId}
+            className="h-9 gap-2 px-2 aria-expanded:bg-blue-100 aria-expanded:text-blue-700 dark:aria-expanded:bg-blue-500/20 dark:aria-expanded:text-blue-300"
+          >
+            <FileKey2 className="w-4 h-4" />
+            <span>file_id</span>
+          </Button>
+
+          {/* Кнопка редактора инлайн-кнопок */}
+          <Button
+            variant={showButtons ? 'secondary' : 'ghost'}
+            size="sm"
+            onClick={() => { setShowButtons((v) => !v); setShowMedia(false); setShowFileId(false); }}
+            title="Инлайн-кнопки сообщения"
+            aria-label="Инлайн-кнопки сообщения"
+            aria-expanded={showButtons}
+            className="h-9 gap-2 px-2 aria-expanded:bg-blue-100 aria-expanded:text-blue-700 dark:aria-expanded:bg-blue-500/20 dark:aria-expanded:text-blue-300"
+          >
+            <MousePointerClick className="w-4 h-4" />
+            <span>Кнопки</span>
+            {buttons.length > 0 && (
+              <span className="ml-1 text-xs font-semibold">{buttons.length}</span>
+            )}
+          </Button>
+
+        </div>
+
+        <Button
+          data-testid="dialog-panel-button-send"
+          onClick={handleSend}
+          disabled={(!messageText.trim() && mediaUrls.length === 0) || isPending}
+          size="sm"
+          className="h-9 shrink-0 gap-2 px-3"
+        >
+          {isPending ? (
+            <RefreshCw className="w-4 h-4 animate-spin" />
+          ) : (
+            <>
+              <Send className="w-4 h-4" />
+              Отправить
+            </>
+          )}
+        </Button>
+      </div>
+
+      {/* Медиаселектор расположен под кнопкой прикрепления файла. */}
       {showMedia && (
         <div className="border rounded-md p-2 bg-muted/30 max-h-48 overflow-y-auto">
           <MultiMediaSelector
@@ -91,9 +165,9 @@ export function DialogInput({ isPending, projectId, availableNodes, onSend }: Di
         </div>
       )}
 
-      {/* Блок ввода Telegram file_id */}
+      {/* Блок ввода Telegram file_id расположен под рядом инструментов. */}
       {showFileId && (
-        <div className="border rounded-md p-3 bg-violet-50/30 dark:bg-violet-900/10 border-violet-200/60 dark:border-violet-700/60 max-h-64 overflow-y-auto">
+        <div className="border rounded-md p-3 bg-violet-50/30 dark:bg-violet-900/10 border-violet-200/60 dark:border-violet-700/60">
           <FileIdInput
             projectId={projectId}
             mediaType={fileIdMediaType}
@@ -106,7 +180,7 @@ export function DialogInput({ isPending, projectId, availableNodes, onSend }: Di
         </div>
       )}
 
-      {/* Блок редактора инлайн-кнопок */}
+      {/* Редактор инлайн-кнопок расположен под рядом инструментов. */}
       {showButtons && (
         <div className="border rounded-md p-3 bg-violet-50/30 dark:bg-violet-900/10 border-violet-200/60 dark:border-violet-700/60 max-h-64 overflow-y-auto">
           <DialogButtonsEditor
@@ -118,65 +192,6 @@ export function DialogInput({ isPending, projectId, availableNodes, onSend }: Di
           />
         </div>
       )}
-
-      <div className="flex justify-between items-center">
-        <div className="flex items-center gap-1">
-          {/* Кнопка прикрепления медиафайлов */}
-          <Button
-            variant={showMedia ? 'secondary' : 'ghost'}
-            size="sm"
-            onClick={() => { setShowMedia((v) => !v); setShowFileId(false); setShowButtons(false); }}
-            title="Прикрепить медиафайл"
-          >
-            <Paperclip className="w-4 h-4" />
-            {mediaUrls.length > 0 && (
-              <span className="ml-1 text-xs font-semibold">{mediaUrls.length}</span>
-            )}
-          </Button>
-
-          {/* Кнопка Telegram file_id */}
-          <Button
-            variant={showFileId ? 'secondary' : 'ghost'}
-            size="sm"
-            onClick={() => { setShowFileId((v) => !v); setShowMedia(false); setShowButtons(false); }}
-            title="Добавить Telegram file_id"
-            className={showFileId ? '' : 'text-violet-500 hover:text-violet-600'}
-          >
-            <Hash className="w-4 h-4" />
-          </Button>
-
-          {/* Кнопка редактора инлайн-кнопок */}
-          <Button
-            variant={showButtons ? 'secondary' : 'ghost'}
-            size="sm"
-            onClick={() => { setShowButtons((v) => !v); setShowMedia(false); setShowFileId(false); }}
-            title="Инлайн-кнопки сообщения"
-          >
-            <Rows3 className="w-4 h-4" />
-            {buttons.length > 0 && (
-              <span className="ml-1 text-xs font-semibold">{buttons.length}</span>
-            )}
-          </Button>
-
-          <p className="text-xs text-muted-foreground ml-1 hidden">Enter - отправить</p>
-        </div>
-
-        <Button
-          data-testid="dialog-panel-button-send"
-          onClick={handleSend}
-          disabled={(!messageText.trim() && mediaUrls.length === 0) || isPending}
-          size="sm"
-        >
-          {isPending ? (
-            <RefreshCw className="w-4 h-4 animate-spin" />
-          ) : (
-            <>
-              <Send className="w-4 h-4 mr-1" />
-              Отправить
-            </>
-          )}
-        </Button>
-      </div>
     </div>
   );
 }

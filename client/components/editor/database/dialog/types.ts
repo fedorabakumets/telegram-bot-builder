@@ -43,4 +43,6 @@ export interface DialogPanelProps {
   onSelectUser?: (user: UserBotData) => void;
   /** Скрыть заголовок (если он уже отображается в родительском компоненте) */
   hideHeader?: boolean;
+  /** Открывает профиль автора сообщения группы. */
+  onOpenMember?: (message: BotMessageWithMedia) => void;
 }
