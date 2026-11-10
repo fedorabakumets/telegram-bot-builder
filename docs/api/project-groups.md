@@ -140,7 +140,7 @@ curl -s -b cookies.txt \
 | `projectId` | path | да | ID проекта | `"42"` |
 | `groupId` | path | да | Telegram chat_id группы | `"-1001234567890"` |
 | `tokenId` | query | нет | ID токена бота проекта | `"7"` |
-| `limit` | query | нет | — | `"100"` |
+| `limit` | query | нет | Сколько последних сообщений вернуть (default 100) | `"100"` |
 | `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
 | `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 

@@ -245,7 +245,7 @@ curl -s -c admin.txt -b admin.txt -X POST http://localhost:5000/admin/api/logout
 
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
-| `id` | path | да | — | — |
+| `id` | path | да | Числовой идентификатор проекта; проверяется обработчиком | — |
 
 #### Ответы
 
@@ -271,7 +271,7 @@ curl -s -c admin.txt -b admin.txt -X POST http://localhost:5000/admin/api/logout
 
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
-| `id` | path | да | — | — |
+| `id` | path | да | Числовой идентификатор проекта; проверяется обработчиком | — |
 
 #### Ответы
 
@@ -297,7 +297,7 @@ curl -s -c admin.txt -b admin.txt -X POST http://localhost:5000/admin/api/logout
 
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
-| `id` | path | да | — | — |
+| `id` | path | да | Числовой идентификатор проекта; проверяется обработчиком | — |
 | `tokenId` | path | да | — | — |
 
 #### Ответы
@@ -487,7 +487,7 @@ curl -s http://localhost:5000/admin/api/support/attachments/1 -b admin.txt -o sc
 
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
-| `id` | path | да | — | `"1"` |
+| `id` | path | да | Идентификатор вложения | `"1"` |
 | `admin_auth` | cookie | нет | Admin cookie после `/admin/login` (`ADMIN_API_KEY`). Без неё — 401 ADMIN_UNAUTHORIZED. | `"eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0"` |
 
 #### Ответы
@@ -521,7 +521,7 @@ curl -s 'http://localhost:5000/admin/api/support/threads?status=open' -b admin.t
 
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
-| `status` | query | нет | — | `"open"` |
+| `status` | query | нет | Фильтр статуса. По умолчанию open | `"open"` |
 | `admin_auth` | cookie | нет | Admin cookie после `/admin/login` (`ADMIN_API_KEY`). Без неё — 401 ADMIN_UNAUTHORIZED. | `"eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0"` |
 
 #### Ответы
@@ -578,7 +578,7 @@ curl -s http://localhost:5000/admin/api/support/threads/1 -b admin.txt
 
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
-| `id` | path | да | — | `"1"` |
+| `id` | path | да | Идентификатор диалога | `"1"` |
 | `admin_auth` | cookie | нет | Admin cookie после `/admin/login` (`ADMIN_API_KEY`). Без неё — 401 ADMIN_UNAUTHORIZED. | `"eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0"` |
 
 #### Ответы
@@ -658,7 +658,7 @@ curl -s -X PATCH http://localhost:5000/admin/api/support/threads/1 -b admin.txt 
 
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
-| `id` | path | да | — | `"1"` |
+| `id` | path | да | Идентификатор диалога | `"1"` |
 | `admin_auth` | cookie | нет | Admin cookie после `/admin/login` (`ADMIN_API_KEY`). Без неё — 401 ADMIN_UNAUTHORIZED. | `"eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0"` |
 
 #### Пример тела запроса
@@ -711,7 +711,7 @@ curl -s -X POST http://localhost:5000/admin/api/support/threads/1/messages -b ad
 
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
-| `id` | path | да | — | `"1"` |
+| `id` | path | да | Идентификатор диалога | `"1"` |
 | `admin_auth` | cookie | нет | Admin cookie после `/admin/login` (`ADMIN_API_KEY`). Без неё — 401 ADMIN_UNAUTHORIZED. | `"eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0"` |
 
 #### Ответы
@@ -758,7 +758,7 @@ curl -s -X POST http://localhost:5000/admin/api/support/threads/1/read -b admin.
 
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
-| `id` | path | да | — | `"1"` |
+| `id` | path | да | Идентификатор диалога | `"1"` |
 | `admin_auth` | cookie | нет | Admin cookie после `/admin/login` (`ADMIN_API_KEY`). Без неё — 401 ADMIN_UNAUTHORIZED. | `"eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0"` |
 
 #### Ответы
@@ -1045,7 +1045,7 @@ curl -s 'http://localhost:5000/admin/api/update-check?refresh=1' -b admin.txt
 
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
-| `refresh` | query | нет | — | `"1"` |
+| `refresh` | query | нет | Сбросить кеш проверки | `"1"` |
 | `admin_auth` | cookie | нет | Admin cookie после `/admin/login` (`ADMIN_API_KEY`). Без неё — 401 ADMIN_UNAUTHORIZED. | `"eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0"` |
 
 #### Ответы
@@ -1099,7 +1099,7 @@ curl -s 'http://localhost:5000/admin/api/users?search=ivan&page=1&perPage=25' -b
 
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
-| `search` | query | нет | — | `"ivan"` |
+| `search` | query | нет | Поиск по имени, @username или ID (до 100 символов) | `"ivan"` |
 | `page` | query | нет | — | `1` |
 | `perPage` | query | нет | — | `25` |
 | `admin_auth` | cookie | нет | Admin cookie после `/admin/login` (`ADMIN_API_KEY`). Без неё — 401 ADMIN_UNAUTHORIZED. | `"eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0"` |
@@ -1160,7 +1160,7 @@ curl -s http://localhost:5000/admin/api/users/123456789 -b admin.txt
 
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
-| `id` | path | да | — | `"123456789"` |
+| `id` | path | да | Telegram user id (положительное целое) | `"123456789"` |
 | `admin_auth` | cookie | нет | Admin cookie после `/admin/login` (`ADMIN_API_KEY`). Без неё — 401 ADMIN_UNAUTHORIZED. | `"eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0"` |
 
 #### Ответы

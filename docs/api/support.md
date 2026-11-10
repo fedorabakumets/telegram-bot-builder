@@ -20,8 +20,8 @@ curl -s http://localhost:5000/api/support/attachments/1 -b cookies.txt -o screen
 
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
-| `id` | path | да | — | `"1"` |
-| `connect.sid` | cookie | нет | — | `"s%3Axxxx.yyyy"` |
+| `id` | path | да | Идентификатор вложения | `"1"` |
+| `connect.sid` | cookie | нет | Сессия Studio. Не нужна, если задан Bearer PAT. Без обоих — 401. | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -49,7 +49,7 @@ curl -s -X POST http://localhost:5000/api/support/messages -b cookies.txt -F tex
 
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
-| `connect.sid` | cookie | нет | — | `"s%3Axxxx.yyyy"` |
+| `connect.sid` | cookie | нет | Сессия Studio. Не нужна, если задан Bearer PAT. Без обоих — 401. | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -96,7 +96,7 @@ curl -s -X POST http://localhost:5000/api/support/read -b cookies.txt
 
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
-| `connect.sid` | cookie | нет | — | `"s%3Axxxx.yyyy"` |
+| `connect.sid` | cookie | нет | Сессия Studio. Не нужна, если задан Bearer PAT. Без обоих — 401. | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -131,7 +131,7 @@ curl -s http://localhost:5000/api/support/thread -b cookies.txt
 
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
-| `connect.sid` | cookie | нет | — | `"s%3Axxxx.yyyy"` |
+| `connect.sid` | cookie | нет | Сессия Studio. Не нужна, если задан Bearer PAT. Без обоих — 401. | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
