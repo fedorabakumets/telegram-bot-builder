@@ -2,6 +2,8 @@
  * @fileoverview Контракт IStorage и создание активного экземпляра server storage
  */
 
+import type { ProjectVersionMetadata, ProjectVersionPage, ProjectVersionPageOptions } from "../database/project-version-list";
+
 import {
   type BotGroup,
   type BotInstance,
@@ -1173,7 +1175,10 @@ export interface IStorage {
    * @param projectId - ID проекта
    * @returns Массив версий проекта
    */
-  listProjectVersions(projectId: number): Promise<ProjectVersion[]>;
+  listProjectVersions(projectId: number): Promise<ProjectVersionMetadata[]>;
+
+  /** Получает страницу метаданных с точным курсором и общим числом версий. */
+  listProjectVersionsPage(projectId: number, options: ProjectVersionPageOptions): Promise<ProjectVersionPage>;
 
   /**
    * Получить самую свежую версию проекта (для дедупликации снимков)

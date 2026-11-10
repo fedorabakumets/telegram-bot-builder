@@ -8,6 +8,7 @@ import { IStorage } from "../storages/storage";
 import type { MessageMedia } from "../storages/message-media";
 import type { StorageBotGroupInput, StorageBotGroupUpdate, StorageBotInstanceInput, StorageBotInstanceUpdate, StorageBotLaunchHistoryInput, StorageBotLaunchHistoryUpdate, StorageBotLogInput, StorageBotMessageInput, StorageBotMessageMediaInput, StorageBotProjectInput, StorageBotProjectUpdate, StorageBotTemplateInput, StorageBotTemplateUpdate, StorageBotTokenInput, StorageBotTokenUpdate, StorageGroupMemberInput, StorageGroupMemberUpdate, StorageMediaFileInput, StorageMediaFileUpdate, StorageTelegramUserInput, StorageBroadcastInput, StorageBroadcastUpdate, StorageBroadcastResultInput, StorageBroadcastCampaignInput, StorageBroadcastCampaignUpdate, StorageBotEnvVariableInput, StorageBotEnvVariableUpdate, StorageBotTableInput, StorageBotTableColumnInput, StorageBotTableRowInput, StorageWorkerProcessInput } from "../storages/storageTypes";
 import { db } from "./db";
+import { selectProjectVersionList, type ProjectVersionMetadata, type ProjectVersionPage, type ProjectVersionPageOptions } from "./project-version-list";
 import { revokeOwnedAgentToken } from "../auth/agent/repository";
 import { generateAgentToken, hashAgentToken } from "../utils/agent-token-crypto";
 import { createMessageWithAnalytics } from './analytics-v2/create-message';
@@ -2342,10 +2343,13 @@ export class DatabaseStorage implements IStorage {
    * @param projectId - ID проекта
    * @returns Массив версий проекта
    */
-  async listProjectVersions(projectId: number): Promise<ProjectVersion[]> {
-    return await this.db.select().from(projectVersions)
-      .where(eq(projectVersions.projectId, projectId))
-      .orderBy(desc(projectVersions.createdAt));
+  async listProjectVersions(projectId: number): Promise<ProjectVersionMetadata[]> {
+    return await selectProjectVersionList(this.db, projectId) as ProjectVersionMetadata[];
+  }
+
+  /** Получает ограниченную страницу метаданных без загрузки снимков. */
+  async listProjectVersionsPage(projectId: number, options: ProjectVersionPageOptions): Promise<ProjectVersionPage> {
+    return await selectProjectVersionList(this.db, projectId, options) as ProjectVersionPage;
   }
 
   /**

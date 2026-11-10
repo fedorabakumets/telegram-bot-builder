@@ -7,6 +7,24 @@ import "./common";
 import { z } from "zod";
 import { ProjectVersionMetaSchema } from "./projects";
 
+/** Параметры постраничной загрузки; без них сохраняется прежний массив метаданных. */
+export const ProjectVersionPageQuerySchema = z.object({
+  /** Размер страницы; при передаче одного курсора используется 20. */
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+  /** Непрозрачный курсор следующей страницы, полученный от сервера. */
+  cursor: z.string().max(512).optional(),
+});
+
+/** Страница метаданных без снимков; полный снимок загружается по идентификатору. */
+export const ProjectVersionPageSchema = z.object({
+  /** Метаданные версий текущей страницы. */
+  items: z.array(ProjectVersionMetaSchema),
+  /** Курсор следующей страницы либо null в конце списка. */
+  nextCursor: z.string().nullable(),
+  /** Общее число сохранённых версий проекта на момент запроса. */
+  total: z.number().int().nonnegative(),
+}).openapi("ProjectVersionPage");
+
 /** Path `id` проекта */
 export const VersionsProjectIdParamsSchema = z.object({
   /** Числовой ID проекта */

@@ -19,26 +19,6 @@ export type ProjectVersionMeta = Pick<ProjectVersion, "id" | "projectId" | "labe
 };
 
 /**
- * Хук получения списка версий проекта
- * @param projectId - ID проекта
- * @returns Результат useQuery со списком версий
- */
-export function useProjectVersions(projectId: number) {
-  return useQuery<ProjectVersionMeta[]>({
-    queryKey: ["/api/projects", projectId, "versions"],
-    queryFn: async () => {
-      const res = await fetch(`/api/projects/${projectId}/versions`, { credentials: "include" });
-      if (!res.ok) {
-        throw new Error("Ошибка получения версий проекта");
-      }
-      return res.json() as Promise<ProjectVersionMeta[]>;
-    },
-    enabled: !!projectId,
-    staleTime: 10000,
-  });
-}
-
-/**
  * Хук мутации восстановления проекта из версии (откат)
  * @param projectId - ID проекта
  * @returns Мутация восстановления версии

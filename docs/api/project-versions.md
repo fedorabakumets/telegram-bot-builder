@@ -8,7 +8,7 @@
 
 **Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
-Метаданные снимков **без** `snapshot` (экономия трафика). `authorName` — из Telegram или «ИИ-агент» при `authorKind=agent`.
+Метаданные снимков **без** чтения `snapshot` из БД. Без query-параметров возвращается прежний массив. `limit=1..100` включает постраничный ответ `{items,nextCursor,total}`; `cursor` берётся из предыдущего ответа для того же проекта; при одном `cursor` размер страницы равен 20. Порядок: createdAt DESC NULLS LAST, затем id DESC. `authorName` — из Telegram или «ИИ-агент» при `authorKind=agent`.
 
 **Auth:** cookie / Bearer PAT + `requireProjectAccess`.
 
@@ -27,6 +27,8 @@ curl -s http://localhost:5000/api/projects/42/versions -b cookies.txt
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
 | `id` | path | да | Числовой ID проекта | `"42"` |
+| `limit` | query | нет | — | — |
+| `cursor` | query | нет | — | — |
 | `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
 | `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
@@ -34,8 +36,8 @@ curl -s http://localhost:5000/api/projects/42/versions -b cookies.txt
 
 | Код | Описание |
 |-----|----------|
-| 200 | Массив метаданных версий |
-| 400 | Невалидный ID проекта |
+| 200 | Массив метаданных либо страница при указанном limit |
+| 400 | Невалидный ID проекта, размер страницы или курсор |
 | 401 | Нет session cookie и Bearer PAT |
 | 403 | Нет доступа к проекту |
 | 500 | Ошибка БД |

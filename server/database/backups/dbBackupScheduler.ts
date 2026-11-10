@@ -8,6 +8,7 @@ import type { StorageBackend } from "../../storage/storage-backend";
 import { getDbBackupIntervalHours, getDbBackupsKeep } from "./dbBackupConfig";
 import { createDbBackup } from "./createDbBackup";
 import { readBackupIndex } from "./dbBackupIndex";
+import { runDueDbBackup } from "./dbBackupDue";
 import { resolveDbBackupsBackend } from "./dbBackupsBackend";
 import { getDbBackupTargets, staleBackupWarning, type DbBackupTarget } from "./dbBackupTargets";
 
@@ -32,10 +33,12 @@ let repeatTimer: ReturnType<typeof setInterval> | undefined;
 async function backupTarget(target: DbBackupTarget, backend: StorageBackend, intervalHours: number): Promise<void> {
   const { label, databaseUrl } = target;
   try {
-    const { entry } = await createDbBackup({
-      databaseUrl, label, backend, keep: getDbBackupsKeep(), log: (message) => console.log(`🗄️ [DbBackup:${label}] ${message}`),
+    await runDueDbBackup(backend, label, intervalHours, async () => {
+      const { entry } = await createDbBackup({
+        databaseUrl, label, backend, keep: getDbBackupsKeep(), log: (message) => console.log(`🗄️ [DbBackup:${label}] ${message}`),
+      });
+      console.log(`✅ [DbBackup:${label}] бэкап ${entry.id} сохранён в ${backend.configId}`);
     });
-    console.log(`✅ [DbBackup:${label}] бэкап ${entry.id} сохранён в ${backend.configId}`);
   } catch (error) {
     console.error(`❌ [DbBackup:${label}] бэкап не создан:`, error instanceof Error ? error.message : error);
     const index = await readBackupIndex(backend, label).catch(() => null);
@@ -45,7 +48,7 @@ async function backupTarget(target: DbBackupTarget, backend: StorageBackend, int
 }
 
 /**
- * Бэкапит все базы по очереди; ошибки только пишутся в журнал.
+ * Проверяет сохранённые сроки всех баз по очереди; ошибки повторяются в следующей проверке.
  * @param intervalHours - Интервал расписания
  */
 export async function runScheduledBackup(intervalHours: number): Promise<void> {
@@ -66,14 +69,19 @@ export async function runScheduledBackup(intervalHours: number): Promise<void> {
  * @returns true, если расписание запущено
  */
 export function startDbBackupScheduler(): boolean {
+  if (firstTimer) clearTimeout(firstTimer);
+  if (repeatTimer) clearInterval(repeatTimer);
+  firstTimer = undefined;
+  repeatTimer = undefined;
   const hours = getDbBackupIntervalHours();
   if (hours <= 0) return false;
   const labels = getDbBackupTargets().map((t) => t.label).join(", ");
   firstTimer = setTimeout(() => void runScheduledBackup(hours), FIRST_RUN_DELAY_MS);
   firstTimer.unref();
-  repeatTimer = setInterval(() => void runScheduledBackup(hours), hours * 3_600_000);
+  // Индекс хранится вне процесса: деплой и ручная копия не сбрасывают срок следующего бэкапа.
+  repeatTimer = setInterval(() => void runScheduledBackup(hours), Math.min(FIRST_RUN_DELAY_MS, hours * 3_600_000));
   repeatTimer.unref();
-  console.log(`🗄️ [DbBackup] бэкап (${labels}) каждые ${hours} ч, первый через 5 мин`);
+  console.log(`🗄️ [DbBackup] бэкап (${labels}) каждые ${hours} ч от последней копии; проверка через 5 мин`);
   return true;
 }
 

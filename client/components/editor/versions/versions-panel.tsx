@@ -3,7 +3,7 @@
  * @module editor/versions/versions-panel
  */
 
-import { useCallback, useState, useRef, useEffect } from 'react';
+import { useCallback, useState, useRef } from 'react';
 import { History } from 'lucide-react';
 import { WorkspaceTabActions } from '@/components/ui/workspace-tab-actions';
 import { WorkspaceProjectScope, type WorkspaceProjectScopeProps } from '@/components/ui/workspace-project-scope';
@@ -11,7 +11,8 @@ import { Button } from '@/components/ui/button';
 import { WorkspaceCollapsibleHeader } from '@/components/ui/workspace-collapsible-header';
 import { WorkspaceTabHeading } from '@/components/ui/workspace-tab-heading';
 import { useToast } from '@/hooks/use-toast';
-import { useProjectVersions, useRestoreProjectVersion } from '@/hooks/use-project-versions';
+import { useRestoreProjectVersion } from '@/hooks/use-project-versions';
+import { usePagedProjectVersions } from '@/hooks/use-paged-project-versions';
 import { VersionList } from './version-list';
 import { CommitForm } from './commit-form';
 import { VersionsPagination } from './versions-pagination';
@@ -32,15 +33,13 @@ export interface VersionsPanelProps extends WorkspaceProjectScopeProps {
  */
 export function VersionsPanel({ projectId, onRestored, projects, onProjectChange }: VersionsPanelProps) {
   const { toast } = useToast();
-  const { data: versions = [], isLoading, isError, isFetching, refetch } = useProjectVersions(projectId);
+  const { data, isLoading, isError, isFetching, refetch, page: currentPage, pageSize, setPageSize, onPageChange } = usePagedProjectVersions(projectId);
+  const versions = data?.items ?? [];
+  const total = data?.total ?? 0;
   const restoreMutation = useRestoreProjectVersion(projectId);
   const [restoringId, setRestoringId] = useState<number | null>(null);
   const panel = useRef<HTMLDivElement>(null);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(25);
-  const currentPage = Math.min(page, Math.max(1, Math.ceil(versions.length / pageSize)));
   const offset = (currentPage - 1) * pageSize;
-  useEffect(() => { setPage(1); }, [projectId]);
   /** Возвращает к началу списка после переключения страницы, сохраняя закреплённую навигацию. */
   const scrollToVersions = () => requestAnimationFrame(() => {
     const root = panel.current;
@@ -90,16 +89,17 @@ export function VersionsPanel({ projectId, onRestored, projects, onProjectChange
         <section className="space-y-3" aria-labelledby="saved-versions-heading" aria-busy={isFetching}>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h3 id="saved-versions-heading" className="text-lg font-semibold">Сохранённые версии</h3>
-            {!isLoading && !isError && <span className="text-xs text-muted-foreground">Всего: {versions.length}</span>}
+            {!isLoading && !isError && <span className="text-xs text-muted-foreground">Всего: {total}</span>}
           </div>
           {isError ? <div role="alert" className="versions-surface space-y-3 rounded-xl border p-4">
             <p className="text-sm text-destructive">Не удалось загрузить историю версий.</p>
             <Button variant="outline" size="sm" onClick={() => void refetch()} disabled={isFetching}>Повторить загрузку</Button>
-          </div> : <VersionList versions={versions.slice(offset, offset + pageSize)} totalVersions={versions.length} offset={offset} projectId={projectId} isLoading={isLoading} restoringId={restoringId} onRestore={handleRestore} />}
+          </div> : <VersionList versions={versions} totalVersions={total} offset={offset} projectId={projectId} isLoading={isLoading} restoringId={restoringId} onRestore={handleRestore} />}
         </section>
-        {!isLoading && !isError && versions.length > 0 && <VersionsPagination page={currentPage} pageSize={pageSize} total={versions.length}
-          onPageChange={next => { setPage(next); scrollToVersions(); }}
-          onPageSizeChange={size => { setPageSize(size); setPage(1); scrollToVersions(); }} />}
+        {!isLoading && !isError && versions.length > 0 && <VersionsPagination page={currentPage} pageSize={pageSize} total={total}
+          hasNextPage={!!data?.nextCursor} isFetching={isFetching}
+          onPageChange={next => { onPageChange(next); scrollToVersions(); }}
+          onPageSizeChange={size => { setPageSize(size); scrollToVersions(); }} />}
       </div>
     </div>
   );
