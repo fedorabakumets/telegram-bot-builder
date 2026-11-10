@@ -282,7 +282,7 @@
     "caniuse-lite": "^1.0.30001814",
     "drizzle-docs-generator": "^0.7.2",
     "drizzle-kit": "^0.31.8",
-    "esbuild": "^0.27.2",
+    "esbuild": "^0.28.1",
     "eslint": "^9.39.5",
     "eslint-plugin-react-hooks": "^5.2.0",
     "fast-check": "3.23.2",
