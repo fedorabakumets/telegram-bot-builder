@@ -1,3 +1,4 @@
+<!-- @fileoverview Требования, установка и запуск проекта BotCraft. -->
 # Руководство по установке
 
 **🇷🇺 Русский** | [🇬🇧 English](INSTALLATION.en.md)
@@ -33,10 +34,10 @@ docker compose logs -f     # Логи
 ### Ручная установка
 
 ### Требования
-- **Node.js** ≥ 18.0.0
+- **Node.js** 24 LTS
 - **PostgreSQL** ≥ 17
 - **Redis** ≥ 7
-- **Python** ≥ 3.10 (рекомендуется 3.13, для сгенерированных ботов)
+- **Python** ≥ 3.11 и < 3.15 (рекомендуется 3.13, для сгенерированных ботов)
 - **Git**
 <details>
 <summary><strong>Шаг 1: Установка Git</strong></summary>
@@ -144,7 +145,7 @@ git --version
 
 **Способ 1: Через терминал (рекомендуется):**
 ```bash
-curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash -
 sudo apt install -y nodejs
 node -v && npm -v
 ```
@@ -159,7 +160,7 @@ node -v && npm -v
 
 **Способ 1: Через winget:**
 ```powershell
-winget install OpenJS.NodeJS.LTS
+winget install OpenJS.NodeJS.LTS --version 24.22.1
 node -v && npm -v
 ```
 
@@ -178,7 +179,8 @@ npm -v
 
 **Способ 1: Через Homebrew:**
 ```bash
-brew install node@lts
+brew install node@24
+export PATH="$(brew --prefix node@24)/bin:$PATH"
 node -v && npm -v
 ```
 
@@ -264,6 +266,9 @@ brew services start postgresql@15
 <details>
 <summary><strong>Шаг 4: Установка Python 3</strong></summary>
 
+> Используйте Python 3.13; aiogram 3.31.0 не поддерживает Python 3.15. После установки проверьте версию: системные пакеты Linux могут отличаться.
+
+
 <table>
 <tr>
 <th width="33%">🐧 Linux</th>
@@ -289,7 +294,7 @@ python3 --version
 
 **Способ 1: Через winget:**
 ```powershell
-winget install Python.Python.3.12
+winget install Python.Python.3.13
 ```
 
 **Способ 2: С сайта:**
@@ -306,8 +311,8 @@ python --version
 
 **Способ 1: Через Homebrew:**
 ```bash
-brew install python
-python3 --version
+brew install python@3.13
+python3.13 --version
 ```
 
 **Способ 2: С сайта:**
@@ -618,13 +623,27 @@ ADMIN_API_KEY=любая-случайная-строка-для-локалки
 
 **1. Установка зависимостей Node.js:**
 ```bash
-npm install
+npm ci
 ```
 
 **2. Установка Python-зависимостей (для запуска ботов):**
-```bash
-pip install -r requirements.txt
+Windows (PowerShell):
+
+```powershell
+py -3.13 -m venv .venv-botcraft
+.\.venv-botcraft\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv-botcraft\Scripts\python.exe -m pip check
 ```
+
+Linux/macOS:
+
+```sh
+python3.13 -m venv .venv-botcraft
+.venv-botcraft/bin/python -m pip install -r requirements.txt
+.venv-botcraft/bin/python -m pip check
+```
+
+В `.env` задайте `PYTHON_PATH` абсолютным путём к Python внутри окружения. Подробнее: [Среда и зависимости](runtime-requirements.md).
 
 **3. Запуск приложения:**
 

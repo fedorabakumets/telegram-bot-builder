@@ -1,3 +1,4 @@
+<!-- @fileoverview Требования, установка и запуск проекта BotCraft. -->
 <div align="center">
 
   [🇷🇺 Русский](README.md) | **🇬🇧 English**
@@ -13,7 +14,7 @@
   **Build Telegram bots without coding!**
 
   [![MIT License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](https://choosealicense.com/licenses/mit/)
-  [![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen?style=for-the-badge&logo=node.js)](https://nodejs.org/)
+  [![Node.js Version](https://img.shields.io/badge/node-24%20LTS-brightgreen?style=for-the-badge&logo=node.js)](https://nodejs.org/)
   [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
   [![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
   [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
@@ -77,19 +78,23 @@ App available at: `http://localhost:5000`
 
 ### Manual Installation
 
-**Requirements:** Node.js ≥ 18, PostgreSQL ≥ 17, Redis ≥ 7, Python ≥ 3.10, Git
+**Requirements:** Node.js 24 LTS, PostgreSQL ≥ 17, Redis ≥ 7, Python ≥ 3.11 and < 3.15 (3.13 recommended), Git
 
 Full installation guide: **[docs/development/INSTALLATION.md](docs/development/INSTALLATION.md)**
 
 ```bash
 git clone https://github.com/fedorabakumets/telegram-bot-builder.git
 cd telegram-bot-builder
-npm install
-pip install -r requirements.txt
+npm ci
+python3.13 -m venv .venv-botcraft
+source .venv-botcraft/bin/activate
+python -m pip install -r requirements.txt
 cp .env.example .env
 # Edit .env with your database credentials
 npm run dev
 ```
+> Create and activate a Python virtual environment before installing packages. See [runtime requirements and Python setup](docs/development/runtime-requirements.md) (Russian), or the [installation guide](docs/development/INSTALLATION.en.md).
+
 
 ---
 
@@ -116,7 +121,7 @@ Click "Start" in the Bot tab — the server generates code and launches the bot 
 From the "Code" tab, download the `.py` file and run independently:
 
 ```bash
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 python bot.py
 ```
 
@@ -134,10 +139,10 @@ python bot.py
 
 | Component | Minimum | Recommended |
 |-----------|---------|-------------|
-| Node.js | 18.0 | 22.0+ LTS |
+| Node.js | 24.0 | 24 LTS |
 | PostgreSQL | 17 | 17.10+ |
 | Redis | 7.0 | 7.2+ (Memurai on Windows) |
-| Python | 3.10 | 3.13+ |
+| Python | 3.11, below 3.15 | 3.13 |
 | RAM | 1 GB | 2+ GB |
 | Disk | 500 MB | 1+ GB SSD |
 

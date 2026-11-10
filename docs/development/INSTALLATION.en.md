@@ -1,3 +1,4 @@
+<!-- @fileoverview Требования, установка и запуск проекта BotCraft. -->
 # Installation Guide
 
 [🇷🇺 Русский](INSTALLATION.md) | **🇬🇧 English**
@@ -33,10 +34,10 @@ docker compose logs -f     # Logs
 ### Manual Installation
 
 ### Requirements
-- **Node.js** ≥ 18.0.0
+- **Node.js** 24 LTS
 - **PostgreSQL** ≥ 17
 - **Redis** ≥ 7
-- **Python** ≥ 3.10 (3.13 recommended, for generated bots)
+- **Python** ≥ 3.11 and < 3.15 (3.13 recommended, for generated bots)
 - **Git**
 <details>
 <summary><strong>Step 1: Install Git</strong></summary>
@@ -144,7 +145,7 @@ git --version
 
 **Option 1: Via terminal (recommended):**
 ```bash
-curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash -
 sudo apt install -y nodejs
 node -v && npm -v
 ```
@@ -159,7 +160,7 @@ node -v && npm -v
 
 **Option 1: Via winget:**
 ```powershell
-winget install OpenJS.NodeJS.LTS
+winget install OpenJS.NodeJS.LTS --version 24.22.1
 node -v && npm -v
 ```
 
@@ -178,7 +179,8 @@ npm -v
 
 **Option 1: Via Homebrew:**
 ```bash
-brew install node@lts
+brew install node@24
+export PATH="$(brew --prefix node@24)/bin:$PATH"
 node -v && npm -v
 ```
 
@@ -264,6 +266,9 @@ brew services start postgresql@15
 <details>
 <summary><strong>Step 4: Install Python 3</strong></summary>
 
+> Use Python 3.13; aiogram 3.31.0 does not support Python 3.15. Verify the installed version: Linux distribution packages may differ.
+
+
 <table>
 <tr>
 <th width="33%">🐧 Linux</th>
@@ -289,7 +294,7 @@ python3 --version
 
 **Option 1: Via winget:**
 ```powershell
-winget install Python.Python.3.12
+winget install Python.Python.3.13
 ```
 
 **Option 2: From website:**
@@ -306,8 +311,8 @@ python --version
 
 **Option 1: Via Homebrew:**
 ```bash
-brew install python
-python3 --version
+brew install python@3.13
+python3.13 --version
 ```
 
 **Option 2: From website:**
@@ -609,13 +614,27 @@ ADMIN_API_KEY=any-random-string-for-local
 
 **1. Install Node.js dependencies:**
 ```bash
-npm install
+npm ci
 ```
 
 **2. Install Python dependencies (for running bots):**
-```bash
-pip install -r requirements.txt
+Windows (PowerShell):
+
+```powershell
+py -3.13 -m venv .venv-botcraft
+.\.venv-botcraft\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv-botcraft\Scripts\python.exe -m pip check
 ```
+
+Linux/macOS:
+
+```sh
+python3.13 -m venv .venv-botcraft
+.venv-botcraft/bin/python -m pip install -r requirements.txt
+.venv-botcraft/bin/python -m pip check
+```
+
+Set `PYTHON_PATH` in `.env` to the absolute path of the Python executable inside this environment. On Windows it ends with `/.venv-botcraft/Scripts/python.exe`; on Linux/macOS, `/.venv-botcraft/bin/python`. Do not copy this local path into Docker or Railway.
 
 **3. Run the application:**
 

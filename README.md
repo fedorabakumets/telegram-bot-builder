@@ -1,3 +1,4 @@
+<!-- @fileoverview Требования, установка и запуск проекта BotCraft. -->
 <div align="center">
 
   **🇷🇺 Русский** | [🇬🇧 English](README.en.md)
@@ -15,7 +16,7 @@
   **Создавайте Telegram ботов без программирования!**
   
   [![MIT License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](https://choosealicense.com/licenses/mit/)
-  [![Node.js Version](https://img.shields.io/badge/node-%3E%3D18%20%7C%2022%20LTS-brightgreen?style=for-the-badge&logo=node.js)](https://nodejs.org/)
+  [![Node.js Version](https://img.shields.io/badge/node-24%20LTS-brightgreen?style=for-the-badge&logo=node.js)](https://nodejs.org/)
   [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
   [![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
   [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
@@ -62,7 +63,7 @@
 
 ## 🚀 Быстрый старт
 
-Локально конструктор поднимается одной командой. Образ панели собран на **Node.js 22**. Боты генерируются на **Python (aiogram)** и по умолчанию запускаются процессом на том же сервере.
+Локально конструктор поднимается одной командой. Образ панели собран на **Node.js 24**. Боты генерируются на **Python (aiogram)** и по умолчанию запускаются процессом на том же сервере.
 
 ### Docker
 
@@ -76,16 +77,20 @@ docker compose up -d
 
 ### Вручную
 
-Нужны Node.js ≥ 18 (удобнее 22), PostgreSQL ≥ 17, Redis ≥ 7, Python ≥ 3.10. Пошагово для Windows, macOS и Linux: **[docs/development/INSTALLATION.md](docs/development/INSTALLATION.md)**.
+Нужны Node.js 24 LTS, PostgreSQL ≥ 17, Redis ≥ 7, Python ≥ 3.11 и < 3.15 (рекомендуется 3.13). Пошагово для Windows, macOS и Linux: **[docs/development/INSTALLATION.md](docs/development/INSTALLATION.md)**.
 
 ```bash
 git clone https://github.com/fedorabakumets/telegram-bot-builder.git
 cd telegram-bot-builder
-npm install
-pip install -r requirements.txt
+npm ci
+python3.13 -m venv .venv-botcraft
+source .venv-botcraft/bin/activate
+python -m pip install -r requirements.txt
 cp .env.example .env
 npm run dev
 ```
+> Перед установкой Python-пакетов создайте и активируйте отдельное окружение. Версии, команды и настройка `PYTHON_PATH`: [Среда и зависимости](docs/development/runtime-requirements.md).
+
 
 ### Свой сервер
 
@@ -151,7 +156,7 @@ npm run dev
           <p><strong>Node.js + Python</strong></p>
           <p>Панель и боты</p>
           <hr style="border: 1px solid rgba(255,255,255,0.3);">
-          <small>• Образ панели на Node 22<br/>
+          <small>• Образ панели на Node 24<br/>
           • Боты на Python (aiogram)<br/>
           • Docker, Railway или VPS</small>
         </div>
@@ -951,8 +956,8 @@ if __name__ == "__main__":
 </tr>
 <tr>
 <td><strong>Node.js</strong></td>
-<td>18.0</td>
-<td>22.0+ LTS</td>
+<td>24.0</td>
+<td>24 LTS</td>
 </tr>
 <tr>
 <td><strong>PostgreSQL</strong></td>
@@ -966,8 +971,8 @@ if __name__ == "__main__":
 </tr>
 <tr>
 <td><strong>Python</strong></td>
-<td>3.10</td>
-<td>3.13+</td>
+<td>3.11, ниже 3.15</td>
+<td>3.13</td>
 </tr>
 <tr>
 <td><strong>RAM</strong></td>
@@ -986,7 +991,7 @@ if __name__ == "__main__":
 ![macOS](https://img.shields.io/badge/macOS-000000?style=flat-square&logo=apple&logoColor=white)
 ![Linux](https://img.shields.io/badge/Linux-FCC624?style=flat-square&logo=linux&logoColor=black)
 
-Образ панели в Docker собран на **Node.js 22**. Локально без Docker достаточно **Node.js 18**, удобнее та же 22-я.
+Образ панели в Docker собран на **Node.js 24**. Локально используйте ту же основную версию **Node.js 24**.
 
 </div>
 
@@ -1003,7 +1008,7 @@ if __name__ == "__main__":
 2. Запускает бот как Python-процесс (через Worker Pool)
 3. Показывает логи и статус в реальном времени
 
-> ⚠️ **Важно:** Python-зависимости устанавливаются один раз на сервере командой `pip install -r requirements.txt`. Все боты используют общее окружение.
+> ⚠️ **Важно:** Python-зависимости устанавливаются один раз на сервере командой `python -m pip install -r requirements.txt`. Все боты используют общее окружение.
 
 ### 📦 Скачать код и запустить отдельно
 
@@ -1015,7 +1020,7 @@ if __name__ == "__main__":
 </div>
 
 ```bash
-pip install -r requirements.txt   # один раз
+python -m pip install -r requirements.txt   # один раз
 python bot.py                     # запуск бота
 ```
 

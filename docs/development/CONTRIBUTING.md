@@ -1,3 +1,4 @@
+<!-- @fileoverview Требования, установка и запуск проекта BotCraft. -->
 # 🤝 Как внести вклад в проект
 
 Спасибо за интерес к развитию Telegram Bot Builder! Мы рады любой помощи.
@@ -34,13 +35,13 @@
 ```bash
 git clone https://github.com/fedorabakumets/telegram-bot-builder.git
 cd telegram-bot-builder
-npm install
-pip install -r requirements.txt
+npm ci
+python -m pip install -r requirements.txt
 cp .env.example .env
 npm run dev
 ```
 
-> Требуется: Node.js ≥ 18, PostgreSQL ≥ 17, Redis ≥ 7 (Memurai на Windows), Python ≥ 3.10
+> Требуется: Node.js 24 LTS, PostgreSQL ≥ 17, Redis ≥ 7 (Memurai на Windows), Python ≥ 3.11 и < 3.15 (рекомендуется 3.13)
 
 ### Процесс внесения изменений
 
