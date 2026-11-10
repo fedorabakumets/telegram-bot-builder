@@ -24,6 +24,7 @@
 
 | Тег | Эндпоинтов |
 |-----|------------|
+| [Диалоги](./Диалоги.md) | 3 |
 | [admin](./admin.md) | 27 |
 | [agent-auto-auth](./agent-auto-auth.md) | 2 |
 | [agent-connections](./agent-connections.md) | 2 |
@@ -57,7 +58,6 @@
 | [tokens](./tokens.md) | 2 |
 | [webhook](./webhook.md) | 1 |
 | [workers](./workers.md) | 1 |
-| [Диалоги](./Диалоги.md) | 3 |
 
 ## Авторизация
 

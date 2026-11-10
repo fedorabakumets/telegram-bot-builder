@@ -6,7 +6,8 @@
 import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import { MessageErrorSchema, UnauthorizedSchema } from "../schemas/common";
 import { ProjectVersionListSchema, ProjectsCookiesSchema, ProjectsAuthHeadersSchema } from "../schemas/projects";
-import { VersionsProjectIdParamsSchema } from "../schemas/project-versions";
+import { VersionsProjectIdParamsSchema, ProjectVersionPageQuerySchema, ProjectVersionPageSchema } from "../schemas/project-versions";
+import { z } from "zod";
 import { VERSIONS_LIST_EXAMPLE } from "./projects-versions-examples";
 
 /**
@@ -25,7 +26,11 @@ export function registerProjectsVersionsListPaths(
     tags: ["project-versions"],
     summary: "Список версий проекта",
     description:
-      "Метаданные снимков **без** `snapshot` (экономия трафика). " +
+      "Метаданные снимков **без** чтения `snapshot` из БД. " +
+      "Без query-параметров возвращается прежний массив. `limit=1..100` включает " +
+      "постраничный ответ `{items,nextCursor,total}`; `cursor` берётся из предыдущего ответа " +
+      "и используется вместе с `limit` для того же проекта. " +
+      "Порядок: createdAt DESC NULLS LAST, затем id DESC. " +
       "`authorName` — из Telegram или «ИИ-агент» при `authorKind=agent`.\n\n" +
       "**Auth:** cookie / Bearer PAT + `requireProjectAccess`.\n\n" +
       "**Клиент:** VersionsPanel / `useProjectVersions`; MCP `db_list_versions`.\n\n" +
@@ -38,13 +43,14 @@ export function registerProjectsVersionsListPaths(
       cookies: ProjectsCookiesSchema,
       headers: ProjectsAuthHeadersSchema,
       params: VersionsProjectIdParamsSchema,
+      query: ProjectVersionPageQuerySchema,
     },
     responses: {
       200: {
-        description: "Массив метаданных версий",
+        description: "Массив метаданных либо страница при указанном limit",
         content: {
           "application/json": {
-            schema: ProjectVersionListSchema,
+            schema: z.union([ProjectVersionListSchema, ProjectVersionPageSchema]),
             examples: {
               withVersions: {
                 summary: "Есть версии",
@@ -56,7 +62,7 @@ export function registerProjectsVersionsListPaths(
         },
       },
       400: {
-        description: "Невалидный ID проекта",
+        description: "Невалидный ID проекта, размер страницы или курсор",
         content: {
           "application/json": {
             schema: MessageErrorSchema,
