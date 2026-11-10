@@ -128,10 +128,14 @@ test('B04', 'namespace содержит bot, set_user_var, all_user_data', () =>
   ok(code.includes("'all_user_data':"), "ключ all_user_data в namespace");
 });
 
+/** Проверяет состав пропускаемых ключей без зависимости от их порядка. */
 test('B05', 'служебные ключи namespace не пишутся в переменные', () => {
   const p = makeCleanProject([makeCodeNode('code1')]);
   const code = gen(p, 'b05');
-  ok(code.includes("'all_user_data', 'bot', 'set_user_var'"), "служебные ключи в _CODE_SKIP_KEYS");
+  const skipKeys = code.match(/_CODE_SKIP_KEYS\s*=\s*\{([^}]*)\}/s)?.[1] || '';
+  for (const key of ['all_user_data', 'bot', 'set_user_var']) {
+    ok(skipKeys.includes(`'${key}'`), `служебный ключ ${key} в _CODE_SKIP_KEYS`);
+  }
 });
 
 console.log('── Блок C: Автопереход ───────────────────────────────────────────');
