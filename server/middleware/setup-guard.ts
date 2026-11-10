@@ -8,7 +8,7 @@
  */
 
 import type { Request, Response, NextFunction } from "express";
-import { isConfigured } from "../services/app-settings.service";
+import { checkSetupAvailability } from "./check-setup-availability";
 
 /**
  * Пути (без префикса /api), которые всегда пропускаются.
@@ -37,6 +37,7 @@ function isExcluded(path: string): boolean {
  *
  * Если `isConfigured()` возвращает `false` и путь не исключён —
  * отвечает статусом 503 с телом `{ setupRequired: true, message }`.
+ * Ошибка проверки возвращает временный 503 без признака первоначальной настройки.
  * В противном случае передаёт управление следующему middleware.
  *
  * @param req - Объект запроса Express
@@ -54,7 +55,9 @@ export async function setupGuard(
     return;
   }
 
-  const configured = await isConfigured();
+  /** При сбое проверки ответ уже отправлен; авторизация не обходится. */
+  const configured = await checkSetupAvailability(res, "setupGuard");
+  if (configured === undefined) return;
   if (configured) {
     next();
     return;

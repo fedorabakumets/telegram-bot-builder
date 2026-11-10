@@ -10,13 +10,11 @@
 import { db } from "../database/db";
 import { appSettings } from "@shared/schema";
 import { eq } from "drizzle-orm";
+import { SettingValueCache } from "./setting-value-cache";
 import { fetchBotUsernameFromToken } from "./telegram-bot-username";
 
 /** In-memory кэш настроек с TTL */
-const cache = new Map<string, { value: string; expiresAt: number }>();
-
-/** Время жизни записи в кэше — 60 секунд */
-const CACHE_TTL_MS = 60_000;
+const cache = new SettingValueCache(60_000);
 
 /** Ключи Telegram Login / Mini App в app_settings */
 const TELEGRAM_KEYS = {
@@ -60,21 +58,14 @@ const ENV_FALLBACK: Record<string, string | undefined> = {
  * @returns Значение из БД или undefined если запись отсутствует
  */
 async function getSettingFromDb(key: string): Promise<string | undefined> {
-  const cached = cache.get(key);
-  if (cached && cached.expiresAt > Date.now()) return cached.value;
-
-  const rows = await db
-    .select()
-    .from(appSettings)
-    .where(eq(appSettings.key, key))
-    .limit(1);
-
-  if (rows.length > 0) {
-    const value = rows[0].value;
-    cache.set(key, { value, expiresAt: Date.now() + CACHE_TTL_MS });
-    return value;
-  }
-  return undefined;
+  return cache.read(key, async () => {
+    const rows = await db
+      .select()
+      .from(appSettings)
+      .where(eq(appSettings.key, key))
+      .limit(1);
+    return rows[0]?.value;
+  });
 }
 
 /**
@@ -87,27 +78,8 @@ async function getSettingFromDb(key: string): Promise<string | undefined> {
  * @returns Значение настройки или undefined если не найдено
  */
 export async function getSetting(key: string): Promise<string | undefined> {
-  // 1. Проверяем кэш
-  const cached = cache.get(key);
-  if (cached && cached.expiresAt > Date.now()) {
-    return cached.value;
-  }
-
-  // 2. Запрашиваем из БД
-  const rows = await db
-    .select()
-    .from(appSettings)
-    .where(eq(appSettings.key, key))
-    .limit(1);
-
-  if (rows.length > 0) {
-    const value = rows[0].value;
-    cache.set(key, { value, expiresAt: Date.now() + CACHE_TTL_MS });
-    return value;
-  }
-
-  // 3. Fallback на process.env (не кэшируем)
-  return ENV_FALLBACK[key];
+  const value = await getSettingFromDb(key);
+  return value === undefined ? ENV_FALLBACK[key] : value;
 }
 
 /**
@@ -128,7 +100,7 @@ export async function setSetting(key: string, value: string): Promise<void> {
       set: { value, updatedAt: new Date() },
     });
 
-  cache.delete(key);
+  cache.invalidate(key);
 
   if (key === AUTH_LOGIN_MODE_KEY) {
     skipAuthSyncCache = value === "dev_login";
@@ -143,7 +115,7 @@ export async function setSetting(key: string, value: string): Promise<void> {
  */
 export async function deleteSetting(key: string): Promise<void> {
   await db.delete(appSettings).where(eq(appSettings.key, key));
-  cache.delete(key);
+  cache.invalidate(key);
   if (key === AUTH_LOGIN_MODE_KEY) skipAuthSyncCache = null;
 }
 

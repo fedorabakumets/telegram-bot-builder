@@ -8,6 +8,8 @@
  */
 import { getTelegramApiBaseUrl } from '../../../../utils/telegram-api-url';
 
+/** Общий пул ограничивает число подключений и не закрывается после отдельного запроса. */
+import { pool } from "../../../../database/db";
 import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
 import { fetchWithProxy } from "../../../../utils/telegram-proxy";
@@ -36,8 +38,6 @@ export async function getBotDataHandler(req: Request, res: Response): Promise<vo
         }
 
         const botId = defaultToken.token.split(':')[0];
-        const { Pool } = await import('pg');
-        const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
         // Получаем текущие данные из базы
         const cachedResult = await pool.query(
@@ -123,8 +123,6 @@ export async function getBotDataHandler(req: Request, res: Response): Promise<vo
                 // Используем кэшированные данные
             }
         }
-
-        await pool.end();
 
         if (!botData) {
             res.json(null);

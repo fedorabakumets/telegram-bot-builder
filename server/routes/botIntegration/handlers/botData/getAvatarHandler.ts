@@ -8,6 +8,8 @@
  */
 import { getTelegramApiBaseUrl } from '../../../../utils/telegram-api-url';
 
+/** Общий пул ограничивает число подключений и не закрывается после отдельного запроса. */
+import { pool } from "../../../../database/db";
 import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
 import { fetchWithProxy } from "../../../../utils/telegram-proxy";
@@ -32,9 +34,6 @@ export async function getAvatarHandler(req: Request, res: Response): Promise<voi
             res.status(400).json({ message: "Неверный ID проекта" });
             return;
         }
-
-        const { Pool } = await import('pg');
-        const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
         let avatarUrl: string | null = null;
 
@@ -174,8 +173,6 @@ export async function getAvatarHandler(req: Request, res: Response): Promise<voi
             }
         }
 
-        await pool.end();
-
         if (!avatarUrl) {
             console.log(`[avatar] avatarUrl is null for user_id=${userId}, project_id=${projectId}`);
             res.status(404).json({ message: "Аватарка не найдена" });
@@ -209,13 +206,11 @@ export async function getAvatarHandler(req: Request, res: Response): Promise<voi
                     if (photoResp.ok && photoData.result?.total_count > 0) {
                         const freshFileId = photoData.result.photos[0].at(-1).file_id;
                         // Сохраняем свежий file_id
-                        const { Pool } = await import('pg');
-                        const pool3 = new Pool({ connectionString: process.env.DATABASE_URL });
-                        await pool3.query(
+                        await pool.query(
                             'UPDATE bot_users SET avatar_url = $1 WHERE user_id = $2 AND project_id = $3',
                             [freshFileId, userId, projectId]
                         );
-                        await pool3.end();
+
                         // Резолвим свежий file_id в URL
                         const freshFileResp = await fetchWithProxy(
                             `${getTelegramApiBaseUrl()}/bot${tokenToUse.token}/getFile`,
@@ -230,13 +225,11 @@ export async function getAvatarHandler(req: Request, res: Response): Promise<voi
                         }
                     } else {
                         // У пользователя нет аватарки — очищаем устаревший file_id
-                        const { Pool } = await import('pg');
-                        const pool3 = new Pool({ connectionString: process.env.DATABASE_URL });
-                        await pool3.query(
+                        await pool.query(
                             'UPDATE bot_users SET avatar_url = NULL WHERE user_id = $1 AND project_id = $2',
                             [userId, projectId]
                         );
-                        await pool3.end();
+
                         res.status(404).json({ message: "Аватарка не найдена" });
                         return;
                     }
@@ -274,10 +267,9 @@ export async function getAvatarHandler(req: Request, res: Response): Promise<voi
                             const photoData = await photoResp.json();
                             if (photoResp.ok && photoData.result?.total_count > 0) {
                                 const freshFileId = photoData.result.photos[0].at(-1).file_id;
-                                const { Pool } = await import('pg');
-                                const pool2 = new Pool({ connectionString: process.env.DATABASE_URL });
-                                await pool2.query('UPDATE bot_tokens SET bot_photo_url = $1 WHERE id = $2', [freshFileId, tokenToUse.id]);
-                                await pool2.end();
+
+                                await pool.query('UPDATE bot_tokens SET bot_photo_url = $1 WHERE id = $2', [freshFileId, tokenToUse.id]);
+
                                 const fileResp = await fetchWithProxy(
                                     `${getTelegramApiBaseUrl()}/bot${tokenToUse.token}/getFile`,
                                     { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ file_id: freshFileId }) }
@@ -291,13 +283,12 @@ export async function getAvatarHandler(req: Request, res: Response): Promise<voi
 
                         // Fallback: если getMyProfilePhotos не помог — пробуем file_id из БД напрямую
                         if (!response.ok) {
-                            const { Pool } = await import('pg');
-                            const pool2 = new Pool({ connectionString: process.env.DATABASE_URL });
-                            const botResult2 = await pool2.query(
+
+                            const botResult2 = await pool.query(
                                 'SELECT bot_photo_url FROM bot_tokens WHERE id = $1',
                                 [tokenToUse.id]
                             );
-                            await pool2.end();
+
                             const storedFileId = botResult2.rows[0]?.bot_photo_url;
                             if (storedFileId && !storedFileId.startsWith('http')) {
                                 // Это file_id — резолвим в свежий URL
@@ -328,24 +319,20 @@ export async function getAvatarHandler(req: Request, res: Response): Promise<voi
                             if (fileResp.ok && fileData.result?.file_path) {
                                 const freshUrl = `${getTelegramApiBaseUrl()}/file/bot${tokenToUse.token}/${fileData.result.file_path}`;
                                 // Сохраняем свежий file_id в БД
-                                const { Pool } = await import('pg');
-                                const pool2 = new Pool({ connectionString: process.env.DATABASE_URL });
-                                await pool2.query(
+                                await pool.query(
                                     'UPDATE bot_users SET avatar_url = $1 WHERE user_id = $2 AND project_id = $3',
                                     [freshFileId, userId, projectId]
                                 );
-                                await pool2.end();
+
                                 response = await fetchWithProxy(freshUrl);
                             }
                         } else {
                             // Аватарки больше нет — очищаем протухший URL
-                            const { Pool } = await import('pg');
-                            const pool2 = new Pool({ connectionString: process.env.DATABASE_URL });
-                            await pool2.query(
+                            await pool.query(
                                 'UPDATE bot_users SET avatar_url = NULL WHERE user_id = $1 AND project_id = $2',
                                 [userId, projectId]
                             );
-                            await pool2.end();
+
                         }
                     }
                 }

@@ -15,6 +15,8 @@ import dotenv from 'dotenv';
 dotenv.config({ debug: false });
 
 import { Pool } from 'pg';
+import { installPoolAcquireDiagnostics } from './pool-diagnostics';
+import { createPoolRecovery, probePool } from './pool-recovery';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from "@shared/schema";
 
@@ -29,7 +31,6 @@ if (!process.env.DATABASE_URL) {
 }
 
 console.log('🔍 Конфигурация базы данных:', {
-  url: process.env.DATABASE_URL?.substring(0, 30) + '...',
   nodeEnv: process.env.NODE_ENV,
   sslEnabled: process.env.NODE_ENV === 'production' && process.env.PGSSLMODE !== 'disable'
 });
@@ -50,7 +51,6 @@ const poolConfig = {
   min: 1,  // Уменьшено с 2 до экономии ресурсов
   idleTimeoutMillis: 30000, // Закрытие неиспользуемых соединений после 30 секунд
   connectionTimeoutMillis: 20000, // Увеличен таймаут до 20 секунд
-  acquireTimeoutMillis: 60000, // Таймаут получения соединения после 60 секунд
   ssl: process.env.NODE_ENV === 'production' && process.env.PGSSLMODE !== 'disable' && !process.env.DATABASE_URL?.includes('localhost') ? {
     rejectUnauthorized: false,
     require: true
@@ -61,6 +61,9 @@ const poolConfig = {
  * Создание экземпляра пула соединений с PostgreSQL
  */
 export const pool = new Pool(poolConfig);
+installPoolAcquireDiagnostics(pool);
+/** Единичная проверка восстановления объединяет одновременные ошибки пула. */
+const recovery = createPoolRecovery(pool, active => { globalThis.__dbPoolActive = active; });
 
 /**
  * Обработка ошибок пула соединений
@@ -79,22 +82,7 @@ pool.on('error', (err: Error) => {
       err.message.includes('ECONNRESET') || 
       err.message.includes('ETIMEDOUT')) {
     console.log('⚠️ Соединение с БД прервано. Помечаем пул как неактивный.');
-    globalThis.__dbPoolActive = false;
-    
-    // Пытаемся восстановить соединение через 5 секунд
-    setTimeout(async () => {
-      console.log('🔄 Попытка восстановления соединения с БД...');
-      try {
-        const client = await pool.connect();
-        await client.query('SELECT 1');
-        client.release();
-        globalThis.__dbPoolActive = true;
-        console.log('✅ Соединение с БД восстановлено');
-      } catch (error: any) {
-        console.error('❌ Не удалось восстановить соединение:', error.message);
-        globalThis.__dbPoolActive = false;
-      }
-    }, 5000);
+    recovery.schedule();
   }
 });
 
@@ -141,12 +129,7 @@ export const db = drizzle(pool, { schema });
 async function testConnection() {
   try {
     // console.log('🧪 Тестирование подключения к базе данных...');
-    const client = await pool.connect();
-    // console.log('✅ Тест подключения к базе данных прошел успешно:', {
-    //   time: result.rows[0].current_time,
-    //   version: result.rows[0].version.split(' ')[0] + ' ' + result.rows[0].version.split(' ')[1]
-    // });
-    client.release();
+    await probePool(pool);
   } catch (error: any) {
     // console.error('❌ Тест подключения к базе данных не удался:', error.message);
     // console.error('Детали подключения:', {
@@ -163,7 +146,8 @@ async function testConnection() {
 }
 
 // Тестирование подключения после небольшой задержки для завершения запуска
-setTimeout(testConnection, 2000);
+const initialProbe = setTimeout(testConnection, 2000);
+initialProbe.unref();
 
 /**
  * Закрывает пул соединений с БД.
@@ -174,6 +158,8 @@ export function closeDbPool(): void {
   globalThis.__dbPoolActive = false;
   if (poolClosed) return;
   poolClosed = true;
+  clearTimeout(initialProbe);
+  recovery.stop();
   pool.end().catch((error) => console.error('Ошибка закрытия пула БД:', error));
 }
 

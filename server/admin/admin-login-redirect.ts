@@ -4,7 +4,7 @@
  */
 
 import type { Request, Response } from "express";
-import { isConfigured } from "../services/app-settings.service";
+import { checkSetupAvailability } from "../middleware/check-setup-availability";
 
 /**
  * Редирект после успешного admin login: settings если не настроено, иначе hub.
@@ -13,7 +13,9 @@ import { isConfigured } from "../services/app-settings.service";
  * @returns Promise<void>
  */
 export async function redirectAfterAdminLogin(_req: Request, res: Response): Promise<void> {
-  const configured = await isConfigured();
+  /** Не перенаправляет в первоначальную настройку при временном отказе хранилища. */
+  const configured = await checkSetupAvailability(res, "adminLoginRedirect");
+  if (configured === undefined) return;
   if (!configured) {
     res.redirect(302, "/admin/settings");
     return;

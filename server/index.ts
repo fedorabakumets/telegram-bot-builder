@@ -8,7 +8,8 @@ import { apiLogPath, mayLogApiResponse } from "./utils/api-log-policy";
 
 import { captureAgentBody } from "./auth/agent/signature";
 import dotenv from "dotenv";
-import express, { NextFunction, type Request, Response } from "express";
+import express from "express";
+import { apiErrorHandler } from './middleware/api-error-handler';
 import { createServer } from "http";
 import { startFileMonitoring } from "./files/file-monitoring";
 import { restoreRunningBots } from "./bots/restoreRunningBots";
@@ -156,15 +157,7 @@ app.use((req, res, next) => {
    * @param res - Объект ответа
    * @param _next - Функция перехода (не используется)
    */
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Внутренняя ошибка сервера";
-
-    if (!res.headersSent) {
-      res.status(status).json({ message });
-    }
-    throw err;
-  });
+  app.use(apiErrorHandler);
 
   // Инициализируем WebSocket-серверы в режиме noServer (без привязки к upgrade).
   // Маршрутизацию upgrade по пути выполняет единый registerWebSocketUpgrade —

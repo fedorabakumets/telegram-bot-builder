@@ -9,7 +9,7 @@
 
 import type { Request, Response } from "express";
 import { isAdminEnabled } from "../../admin/resolve-admin-key";
-import { isConfigured } from "../../services/app-settings.service";
+import { checkSetupAvailability } from "../../middleware/check-setup-availability";
 
 /**
  * Возвращает статус настройки приложения
@@ -18,13 +18,14 @@ import { isConfigured } from "../../services/app-settings.service";
  *
  * @param _req - Объект запроса (не используется)
  * @param res - Объект ответа
- * @returns `{ configured: boolean }` — всегда 200
+ * @returns Статус настройки либо временный отказ 503 при ошибке проверки
  */
 export async function handleGetSetupStatus(
   _req: Request,
   res: Response,
 ): Promise<void> {
-  const configured = await isConfigured();
+  const configured = await checkSetupAvailability(res, "setupStatus");
+  if (configured === undefined) return;
   res.json({ configured });
 }
 
@@ -35,13 +36,14 @@ export async function handleGetSetupStatus(
  *
  * @param _req - Объект запроса (не используется)
  * @param res - Объект ответа
- * @returns `{ configured, adminEnabled }` — всегда 200
+ * @returns Данные первоначальной настройки либо временный отказ 503
  */
 export async function handleGetSetupBootstrap(
   _req: Request,
   res: Response,
 ): Promise<void> {
-  const configured = await isConfigured();
+  const configured = await checkSetupAvailability(res, "setupBootstrap");
+  if (configured === undefined) return;
   res.json({
     configured,
     adminEnabled: isAdminEnabled(),
