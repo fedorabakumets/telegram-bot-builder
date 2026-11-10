@@ -7,12 +7,13 @@ import { readBackupIndex, type DbBackupEntry } from "./dbBackupIndex";
  * @param entries - Успешные бэкапы одной базы из выбранного хранилища
  * @param intervalHours - Интервал создания копий
  * @param now - Текущее время в миллисекундах
- * @returns Нужна ли новая копия; неверные и будущие даты не откладывают защиту базы
+ * @returns Нужна ли новая копия; неверная дата вызывает ошибку
  */
 export function isDbBackupDue(entries: DbBackupEntry[], intervalHours: number, now = Date.now()): boolean {
   const latest = entries.reduce((last, entry) => {
     const timestamp = Date.parse(entry.createdAt);
-    return Number.isFinite(timestamp) && timestamp <= now ? Math.max(last, timestamp) : last;
+    if (!Number.isFinite(timestamp) || timestamp > now + 300_000) throw new Error("Некорректная дата бэкапа в индексе");
+    return Math.max(last, Math.min(timestamp, now));
   }, Number.NEGATIVE_INFINITY);
   return now - latest >= intervalHours * 3_600_000;
 }

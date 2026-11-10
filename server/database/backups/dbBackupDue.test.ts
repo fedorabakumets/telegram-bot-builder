@@ -24,11 +24,12 @@ test("свежая копия переживает рестарт, просро�
   assert.equal(isDbBackupDue([entry("2026-11-08T12:00:00Z")], 24, now), true);
 });
 
-test("пустой индекс, неверные и будущие даты не отменяют первый бэкап", () => {
+test("пустой индекс вызывает бэкап, некорректные даты возвращают ошибку", () => {
   const now = Date.parse("2026-11-10T12:00:00Z");
-  for (const entries of [[], [entry("invalid")], [entry("2027-01-01T00:00:00Z")]]) {
-    assert.equal(isDbBackupDue(entries, 24, now), true);
-  }
+  assert.equal(isDbBackupDue([], 24, now), true);
+  assert.throws(() => isDbBackupDue([entry("invalid")], 24, now));
+  assert.throws(() => isDbBackupDue([entry("2027-01-01T00:00:00Z")], 24, now));
+  assert.equal(isDbBackupDue([entry("2026-11-10T12:01:00Z")], 24, now), false);
 });
 
 test("выбирается самая новая успешная копия независимо от порядка записей", () => {

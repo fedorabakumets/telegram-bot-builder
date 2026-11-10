@@ -212,6 +212,7 @@
     "embla-carousel-react": "^8.6.0",
     "express": "^4.22.3",
     "express-list-endpoints": "^7.1.1",
+    "express-rate-limit": "^8.7.4",
     "express-session": "^1.19.0",
     "fflate": "^0.8.3",
     "form-data": "^4.0.5",

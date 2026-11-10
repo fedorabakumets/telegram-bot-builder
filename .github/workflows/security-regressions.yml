@@ -28,11 +28,13 @@ jobs:
       - run: npm ci
       - run: npx vitest run --config server/admin/admin-login-rate-limit.vitest.config.ts
       - run: npx vitest run --config server/middleware/cookie-csrf.vitest.config.ts
+      - run: npx vitest run --config server/routes/storageConfigs/vitest.config.ts
+      - run: npx vitest run --config server/routes/media/vitest.backup-access.config.ts
       - run: npx vitest run --config client/components/editor/inline-rich/vitest.security.config.ts
       - run: npx vitest run lib/bot-tools/constants.test.ts
       - run: node --import tsx --test lib/api-docs/durable-table-contracts.test.ts
       - name: История проектов и сроки бэкапов
         run: |
-          node --import tsx --test server/database/project-version-list.test.ts server/database/backups/dbBackupDue.test.ts
+          node --import tsx --test server/database/project-version-list.test.ts server/database/backups/dbBackupDue.test.ts server/database/backups/dbBackups.test.ts
           npx vitest run --config server/routes/projectRoutes/handlers/vitest.history.config.ts
           npx vitest run client/hooks/use-paged-project-versions.test.ts

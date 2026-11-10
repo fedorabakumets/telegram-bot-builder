@@ -27,6 +27,7 @@ import { mediaFiles } from "@shared/schema";
 import { db } from "../../database/db";
 import type { StorageBackend, StorageRegistry } from "../../storage/storage-backend";
 import { LOCAL_DEFAULT_ID } from "../../storage/storage-config";
+import { getDbBackupsStorageId } from "../../database/backups/dbBackupConfig";
 import { getUploadsStorageId } from "../../storage/uploads-storage";
 
 /** Результат записи загруженного файла в целевой бэкенд */
@@ -76,6 +77,11 @@ export function resolveUploadBackend(
   const requested = selected || (typeof storageConfigId === "string" ? storageConfigId.trim() : "");
   let backend: StorageBackend;
   try {
+    // Явно настроенное общее хранилище остаётся доступным; выбор отдельного бэкап-бакета запрещён.
+    if (!selected && requested && requested === getDbBackupsStorageId()
+      && registry.getActiveBackend().configId !== requested) {
+      throw new Error("Хранилище резервных копий недоступно для загрузки файлов");
+    }
     backend = requested ? registry.resolveBackend(requested) : registry.getActiveBackend();
   } catch {
     throw new StorageBackendWriteError(selected ? "s3" : "unknown", "Хранилище недоступно");

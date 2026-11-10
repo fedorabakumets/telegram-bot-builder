@@ -143,6 +143,24 @@ async function runTests() {
     process.exit(1);
   }
 
+  // На CI независимые задания получают непересекающиеся части общего списка.
+  const shardCount = Number(process.env.PHASE_TEST_SHARDS || 1);
+  const shardNumber = Number(process.env.PHASE_TEST_SHARD || 1);
+  if (!Number.isInteger(shardCount) || !Number.isInteger(shardNumber)
+      || shardCount < 1 || shardNumber < 1 || shardNumber > shardCount) {
+    throw new Error('Некорректные параметры разделения фазовых тестов');
+  }
+  testFiles.sort();
+  if (shardCount > 1) {
+    const selected = testFiles.filter((_, index) => index % shardCount === shardNumber - 1);
+    testFiles.splice(0, testFiles.length, ...selected);
+    console.log(`Часть тестов: ${shardNumber} из ${shardCount}`);
+    if (testFiles.length === 0) {
+      console.log('В этой части нет тестов');
+      return;
+    }
+  }
+
   console.log(`Найдено тестов: ${testFiles.length}`);
   console.log('Запуск тестов...\n');
 
@@ -170,6 +188,7 @@ async function runTests() {
 
   const testRun = run({
     files: testFiles,
+    concurrency: 1,
     timeout: 300000, // 5 минут на тест для обработки долгой генерации кода
     execArgv
   });

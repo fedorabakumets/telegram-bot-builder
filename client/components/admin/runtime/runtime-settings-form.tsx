@@ -3,7 +3,7 @@
  * @module components/admin/runtime/runtime-settings-form
  */
 
-import { useEffect, Fragment } from 'react';
+import { useEffect, useState, Fragment } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2 } from 'lucide-react';
@@ -12,10 +12,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { RuntimeFieldControl, type RuntimeFormShape } from './runtime-field-control';
-import { runtimeFormValue, type RuntimeGroupView } from './runtime-types';
+import { runtimeFormValue, type RuntimeGroupView, type RuntimeStorageOption } from './runtime-types';
 import { useRunRuntimeBackup, useSaveRuntimeSettings } from './use-runtime-settings';
 import { TelegramConnectionTest } from './telegram-connection-test';
 import { BackupTelegramTestButton } from './backup-telegram-test-button';
+import { BackupS3Dialog } from './backup-s3-dialog';
 
 /** Схема словаря строк */
 const schema = z.object({ values: z.record(z.string(), z.string()) });
@@ -45,6 +46,7 @@ export function RuntimeSettingsForm({ data }: { data: RuntimeGroupView }) {
   const { toast } = useToast();
   const save = useSaveRuntimeSettings(data.id);
   const backup = useRunRuntimeBackup();
+  const [addedStorage, setAddedStorage] = useState<RuntimeStorageOption | null>(null);
   const form = useForm<RuntimeFormShape>({
     resolver: zodResolver(schema),
     defaultValues: { values: {} },
@@ -76,7 +78,12 @@ export function RuntimeSettingsForm({ data }: { data: RuntimeGroupView }) {
         <CardContent className="grid gap-5 pt-6 sm:grid-cols-2">
           {data.fields.map((field) => (
             <Fragment key={field.env}>
-              {field.env !== 'TELEGRAM_BOT_API_URL' || form.watch('values.TELEGRAM_BOT_API_MODE') === 'local' ? <RuntimeFieldControl field={field} storages={data.storages} register={form.register} /> : null}
+              {field.env !== 'TELEGRAM_BOT_API_URL' || form.watch('values.TELEGRAM_BOT_API_MODE') === 'local' ? <RuntimeFieldControl field={field} storages={addedStorage && !data.storages.some((item) => item.id === addedStorage.id) ? [...data.storages, addedStorage] : data.storages} register={form.register} /> : null}
+              {data.id === 'backups' && field.kind === 'storage' ? <div className="sm:col-span-2"><BackupS3Dialog onConnected={(storage) => {
+                setAddedStorage(storage);
+                form.setValue(`values.${field.env}`, storage.id, { shouldDirty: true });
+                toast({ title: 'Подключение проверено', description: 'Сохраните настройки, чтобы выбрать это хранилище для бэкапов.' });
+              }} /></div> : null}
               {field.env === 'TELEGRAM_PROXY_URL' ? <TelegramConnectionTest apiMode={form.watch('values.TELEGRAM_BOT_API_MODE') ?? ''} apiUrl={form.watch('values.TELEGRAM_BOT_API_URL') ?? ''} mode={form.watch('values.TELEGRAM_CONNECTION_MODE') ?? ''} proxy={form.watch('values.TELEGRAM_PROXY_URL') ?? ''} disabled={save.isPending} /> : null}
             </Fragment>
           ))}
