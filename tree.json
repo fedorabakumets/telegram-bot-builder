@@ -1363,7 +1363,7 @@
     "folder_titles": {
       "development": "🛠️ Разработка"
     },
-    "updated_at": "2026-09-25T13:49:27+03:00",
+    "updated_at": "2026-11-10T11:27:54+03:00",
     "tags": [],
     "author": ""
   },
@@ -1393,7 +1393,7 @@
     "folder_titles": {
       "development": "🛠️ Разработка"
     },
-    "updated_at": "2026-08-04T17:44:54+03:00",
+    "updated_at": "2026-11-10T11:27:54+03:00",
     "tags": [],
     "author": ""
   },
@@ -1408,7 +1408,7 @@
     "folder_titles": {
       "development": "🛠️ Разработка"
     },
-    "updated_at": "2026-10-08T08:53:27+03:00",
+    "updated_at": "2026-11-10T11:27:54+03:00",
     "tags": [],
     "author": ""
   },
@@ -1483,7 +1483,7 @@
     "folder_titles": {
       "development": "🛠️ Разработка"
     },
-    "updated_at": "2026-11-08T10:34:14+03:00",
+    "updated_at": "2026-11-10T11:24:29+03:00",
     "tags": [],
     "author": ""
   },
@@ -1499,6 +1499,21 @@
       "development": "🛠️ Разработка"
     },
     "updated_at": "2026-11-10T06:30:06+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "development/runtime-requirements",
+    "title": "Среда и зависимости",
+    "excerpt": "Для локального запуска используйте **Node.js 24 LTS** и **Python 3.13**.",
+    "parts": [
+      "development",
+      "runtime-requirements"
+    ],
+    "folder_titles": {
+      "development": "🛠️ Разработка"
+    },
+    "updated_at": "2026-11-10T11:27:54+03:00",
     "tags": [],
     "author": ""
   },
