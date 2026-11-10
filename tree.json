@@ -583,7 +583,7 @@
     "folder_titles": {
       "database": "Database"
     },
-    "updated_at": "2026-11-10T02:03:58Z",
+    "updated_at": "2026-11-10T17:07:08+03:00",
     "tags": [],
     "author": ""
   },
@@ -688,7 +688,7 @@
     "folder_titles": {
       "database": "Database"
     },
-    "updated_at": "2026-07-04T19:19:59+03:00",
+    "updated_at": "2026-11-10T17:07:08+03:00",
     "tags": [],
     "author": ""
   },
@@ -1218,6 +1218,21 @@
     "author": ""
   },
   {
+    "path": "deployment/BOT_RUNTIME_SPLIT",
+    "title": "Выделение исполнителя ботов",
+    "excerpt": "Одна кодовая база собирается в три приложения: frontend, API и bot runtime. PostgreSQL и Redis остаются общими. Совместный режим сохраняет п",
+    "parts": [
+      "deployment",
+      "BOT_RUNTIME_SPLIT"
+    ],
+    "folder_titles": {
+      "deployment": "🚀 Деплой"
+    },
+    "updated_at": "2026-11-10T17:07:08+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
     "path": "deployment/CURSOR_WORKER_RAILWAY",
     "title": "Исполнитель Cursor Cloud Agents на Railway (My Machines)",
     "excerpt": "Облачный агент Cursor может выполнять команды не на машине Cursor, а на нашем сервисе Railway. Модель и логика агента остаются у Cursor. В с",
@@ -1289,6 +1304,21 @@
       "deployment": "🚀 Деплой"
     },
     "updated_at": "2026-10-02T19:53:53Z",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "deployment/SPLIT_RUNTIME_LOCAL",
+    "title": "Раздельный запуск одной кодовой базы",
+    "excerpt": "Обычный `npm run dev` запускает совмещённую панель на порту 5000. Существующий `npm run dev:split` запускает API и frontend двумя процессами",
+    "parts": [
+      "deployment",
+      "SPLIT_RUNTIME_LOCAL"
+    ],
+    "folder_titles": {
+      "deployment": "🚀 Деплой"
+    },
+    "updated_at": "2026-11-10T17:07:08+03:00",
     "tags": [],
     "author": ""
   },
