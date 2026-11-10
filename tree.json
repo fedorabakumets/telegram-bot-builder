@@ -31,7 +31,7 @@
       "bot-json-prompt"
     ],
     "folder_titles": {},
-    "updated_at": "2026-11-09T09:55:40Z",
+    "updated_at": "2026-11-10T11:05:54+03:00",
     "tags": [],
     "author": ""
   },
@@ -73,7 +73,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-11-03T07:33:45+03:00",
+    "updated_at": "2026-11-10T11:05:54+03:00",
     "tags": [],
     "author": ""
   },
@@ -148,7 +148,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-11-03T07:33:45+03:00",
+    "updated_at": "2026-11-10T11:05:54+03:00",
     "tags": [],
     "author": ""
   },
@@ -298,7 +298,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-11-03T07:33:45+03:00",
+    "updated_at": "2026-11-10T11:05:54+03:00",
     "tags": [],
     "author": ""
   },
@@ -313,7 +313,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-11-03T07:33:45+03:00",
+    "updated_at": "2026-11-10T11:05:54+03:00",
     "tags": [],
     "author": ""
   },
@@ -328,7 +328,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-11-03T07:33:45+03:00",
+    "updated_at": "2026-11-10T11:05:54+03:00",
     "tags": [],
     "author": ""
   },
@@ -343,7 +343,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-11-03T07:33:45+03:00",
+    "updated_at": "2026-11-10T11:05:54+03:00",
     "tags": [],
     "author": ""
   },
@@ -358,7 +358,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-11-03T07:33:45+03:00",
+    "updated_at": "2026-11-10T11:05:54+03:00",
     "tags": [],
     "author": ""
   },
@@ -388,7 +388,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-11-03T07:33:45+03:00",
+    "updated_at": "2026-11-10T11:05:54+03:00",
     "tags": [],
     "author": ""
   },
@@ -403,7 +403,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-11-03T07:33:45+03:00",
+    "updated_at": "2026-11-10T11:05:54+03:00",
     "tags": [],
     "author": ""
   },
@@ -493,7 +493,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-11-03T07:33:45+03:00",
+    "updated_at": "2026-11-10T11:05:54+03:00",
     "tags": [],
     "author": ""
   },
@@ -538,7 +538,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-11-03T07:33:45+03:00",
+    "updated_at": "2026-11-10T11:05:54+03:00",
     "tags": [],
     "author": ""
   },
@@ -1513,7 +1513,7 @@
     "folder_titles": {
       "features": "🧩 Возможности"
     },
-    "updated_at": "2026-11-09T09:55:40Z",
+    "updated_at": "2026-11-10T11:05:54+03:00",
     "tags": [],
     "author": ""
   },
@@ -10415,6 +10415,21 @@
       "roadmaps": "🗺️ Roadmaps"
     },
     "updated_at": "2026-09-15T06:19:58+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "security/browser-requests",
+    "title": "Запросы с пользовательской и административной cookie",
+    "excerpt": "<!-- @fileoverview Правила защиты изменяющих API-запросов с браузерными cookie от CSRF. -->",
+    "parts": [
+      "security",
+      "browser-requests"
+    ],
+    "folder_titles": {
+      "security": "Security"
+    },
+    "updated_at": "2026-11-10T08:35:26+03:00",
     "tags": [],
     "author": ""
   },
