@@ -1,5 +1,5 @@
-
 #!/bin/bash
+# /** @fileoverview Отправка изменений через настроенный Git remote без встроенных секретов. */
 
 echo "🔧 Принудительная синхронизация с GitHub..."
 
@@ -35,7 +35,7 @@ git commit -m "$COMMIT_MSG" || echo "Нет изменений для комми
 # Отправляем на GitHub
 echo ""
 echo "🌐 Отправляем на GitHub..."
-git push https://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@github.com/fedorabakumets/telegram-bot-builder.git main
+git push origin main
 
 echo ""
 echo "✨ Готово! Проверьте: https://github.com/fedorabakumets/telegram-bot-builder"
