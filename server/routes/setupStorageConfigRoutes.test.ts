@@ -2,6 +2,7 @@
  * @fileoverview Проверка прав доступа к общим конфигурациям хранилищ.
  */
 import express from "express";
+import { rateLimit } from "express-rate-limit";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import type { AddressInfo } from "node:net";
 import type { Server } from "node:http";
@@ -31,7 +32,7 @@ describe("права доступа к хранилищам", () => {
       if (req.headers["x-test-user"]) Object.assign(req, { user: { id: 1 } });
       next();
     });
-    app.use("/api", requireApiAuth);
+    app.use("/api", rateLimit({ windowMs: 60_000, limit: 1000 }), requireApiAuth);
     setupStorageConfigRoutes(app);
     await new Promise<void>((resolve) => { server = app.listen(0, resolve); });
     base = `http://127.0.0.1:${(server.address() as AddressInfo).port}/api/storage-configs`;
@@ -47,5 +48,11 @@ describe("права доступа к хранилищам", () => {
   });
   it.each(actions)("разрешает администратору операцию %s %s", async (method, path) => {
     expect((await fetch(base + path, { method, headers: { "x-test-admin": "valid" } })).status).toBe(204);
+  });
+  it("ограничивает частоту операций записи и возвращает время ожидания", async () => {
+    let response: Response | undefined;
+    for (let i = 0; i < 61; i++) response = await fetch(base, { method: "POST", headers: { "x-test-admin": "valid" } });
+    expect(response?.status).toBe(429);
+    expect(Number(response?.headers.get("retry-after"))).toBeGreaterThan(0);
   });
 });

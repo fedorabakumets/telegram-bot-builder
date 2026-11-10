@@ -8,6 +8,7 @@
  */
 
 import type { Express } from "express";
+import { rateLimit } from "express-rate-limit";
 import { requireAdminAuth } from "../admin/admin-auth-middleware";
 
 import { listStorageConfigsHandler } from "./storageConfigs/handlers/listStorageConfigsHandler";
@@ -22,9 +23,11 @@ import { testStorageConfigHandler } from "./storageConfigs/handlers/testStorageC
  * @returns {void}
  */
 export function setupStorageConfigRoutes(app: Express): void {
+  /** Общий лимит попыток изменения и проверки хранилищ по IP на процесс. */
+  const storageWriteLimit = rateLimit({ windowMs: 60_000, limit: 60, standardHeaders: true, legacyHeaders: false });
   app.get("/api/storage-configs", listStorageConfigsHandler);
-  app.post("/api/storage-configs", requireAdminAuth, createStorageConfigHandler);
-  app.patch("/api/storage-configs/:id", requireAdminAuth, updateStorageConfigHandler);
-  app.delete("/api/storage-configs/:id", requireAdminAuth, deleteStorageConfigHandler);
-  app.post("/api/storage-configs/:id/test", requireAdminAuth, testStorageConfigHandler);
+  app.post("/api/storage-configs", storageWriteLimit, requireAdminAuth, createStorageConfigHandler);
+  app.patch("/api/storage-configs/:id", storageWriteLimit, requireAdminAuth, updateStorageConfigHandler);
+  app.delete("/api/storage-configs/:id", storageWriteLimit, requireAdminAuth, deleteStorageConfigHandler);
+  app.post("/api/storage-configs/:id/test", storageWriteLimit, requireAdminAuth, testStorageConfigHandler);
 }
