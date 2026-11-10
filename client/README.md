@@ -1,3 +1,4 @@
+<!-- @fileoverview Организация исходного кода и импортов интерфейса. -->
 # Client Source
 
 Исходный код React приложения для Telegram Bot Builder.
@@ -134,7 +135,7 @@ import { useState } from 'react';
 
 // 2. Внешние библиотеки
 import { Button } from '@radix-ui/react-button';
-import { motion } from 'framer-motion';
+import { useQuery } from '@tanstack/react-query';
 
 // 3. Внутренние модули
 import { useUserData } from '@/hooks';
