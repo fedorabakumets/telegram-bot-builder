@@ -23,7 +23,7 @@ describe('Фаза: redis platform subscriber', () => {
     assert.ok(code.includes("channel.startsWith('bot:logs:')"));
     assert.match(
       code,
-      /if\s*\(isLogsChannel\(channel\)\)\s*\{\s*return;\s*\}/s,
+      /if\s*\(isLogsChannel\(channel\)\s*\|\|\s*isBotOnlyChannel\(channel\)\)\s*\{\s*return;\s*\}/s,
     );
   });
 
@@ -35,16 +35,11 @@ describe('Фаза: redis platform subscriber', () => {
     );
   });
 
-  it('содержит функцию isMessageChannel', () => {
+  it('распознаёт канал сообщений через карту типов', () => {
     const code = readPlatformSubscriber();
-    assert.ok(
-      code.includes('isMessageChannel'),
-      'функция isMessageChannel должна присутствовать'
-    );
-    assert.ok(
-      code.includes("channel.startsWith('bot:message:')"),
-      "isMessageChannel должна проверять startsWith('bot:message:')"
-    );
+    assert.ok(code.includes("'bot:message': 'new-message'"));
+    assert.ok(code.includes('CHANNEL_TYPE_MAP[prefix]'));
+    assert.match(code, /if\s*\(parsed\.type\s*===\s*'new-message'\)/);
   });
 
   it('parseChannel корректно разбирает bot:message:1:2', () => {

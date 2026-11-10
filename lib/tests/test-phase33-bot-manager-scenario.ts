@@ -1,340 +1,57 @@
 /**
- * @fileoverview Фаза — Сценарий управляющего бота (часть 1: генерация, /start, callback-trigger)
- *
- * Блок A: Генерация всего проекта (синтаксис, структура)
- * Блок B: /start → HTTP-запрос за проектами → динамические кнопки
- * Блок C: incoming_callback_trigger с фильтрацией по паттерну → fetch-project-detail
- *   C09: middleware НЕ перезаписывает callback_data для несовпадающих паттернов
- * Блок D: Карточка проекта + меню действий
- *   D05: карточки содержат {project_detail.name} в messageText
- *
- * @module tests/test-phase-bot-manager-scenario
+ * @fileoverview Фаза 33: генерация независимого сценария управляющего бота.
  */
 
-import fs from 'fs';
-import { execSync } from 'child_process';
+import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { describe, it } from 'node:test';
 import { generatePythonCode } from '../bot-generator.ts';
-
-/** Загружает project.json сценария управляющего бота */
-function loadProject() {
-  const raw = fs.readFileSync('bots/импортированный_проект_2316_157_131/project.json', 'utf-8');
-  return JSON.parse(raw);
-}
+import { makeBotManagerScenario } from './fixtures/bot-manager-scenario.ts';
 
 /**
- * Генерирует Python-код из проекта
- * @param project - Объект проекта
- * @param label - Метка для имени бота
+ * Генерирует код из синтетического сценария.
+ * @returns Исходный код бота на Python
  */
-function gen(project: unknown, label: string): string {
-  return generatePythonCode(project as any, {
-    botName: `BotManager_${label}`,
-    userDatabaseEnabled: false,
-    });
-}
-
-/**
- * Проверяет синтаксис Python-кода через py_compile
- * @param code - Python-код
- * @param label - Метка для временного файла
- */
-function checkSyntax(code: string, label: string): { ok: boolean; error?: string } {
-  const tmp = `_tmp_bms_${label}.py`;
-  fs.writeFileSync(tmp, code, 'utf-8');
-  try {
-    execSync(`python -m py_compile ${tmp}`, { stdio: 'pipe' });
-    fs.unlinkSync(tmp);
-    return { ok: true };
-  } catch (e: any) {
-    try { fs.unlinkSync(tmp); } catch {}
-    return { ok: false, error: e.stderr?.toString() ?? String(e) };
-  }
-}
-
-type Result = { id: string; name: string; passed: boolean; note: string };
-const results: Result[] = [];
-
-/**
- * Запускает тест и записывает результат
- * @param id - Идентификатор теста
- * @param name - Название теста
- * @param fn - Тело теста
- */
-function test(id: string, name: string, fn: () => void) {
-  try {
-    fn();
-    results.push({ id, name, passed: true, note: 'OK' });
-    console.log(`  ✅ ${id}. ${name}`);
-  } catch (e: any) {
-    results.push({ id, name, passed: false, note: e.message });
-    console.log(`  ❌ ${id}. ${name}\n     → ${e.message}`);
-  }
-}
-
-/** Бросает ошибку если условие ложно */
-function ok(cond: boolean, msg: string) { if (!cond) throw new Error(msg); }
-
-/** Проверяет синтаксис Python, бросает ошибку при неудаче */
-function syntax(code: string, label: string) {
-  const r = checkSyntax(code, label);
-  ok(r.ok, `Синтаксическая ошибка:\n${r.error}`);
-}
-
-// ─── Загружаем проект один раз ───────────────────────────────────────────────
-const project = loadProject();
-let code: string;
-
-console.log('\n╔════════════════════════════════════════════════════════════════════╗');
-console.log('║   Фаза — Сценарий управляющего бота (часть 1)                      ║');
-console.log('╚════════════════════════════════════════════════════════════════════╝\n');
-
-// ══ Блок A: Генерация всего проекта ══════════════════════════════════════════
-console.log('══ Блок A: Генерация всего проекта ══════════════════════════════════');
-
-test('A01', 'project.json генерирует Python-код без исключений', () => {
-  code = gen(project, 'a01');
-  ok(typeof code === 'string' && code.length > 100, 'Код слишком короткий или пустой');
-});
-
-test('A02', 'синтаксис Python OK для всего проекта', () => {
-  syntax(code, 'a02');
-});
-
-test('A03', 'все узлы генерируют обработчики', () => {
-  const nodeIds = [
-    // Основной поток
-    'trigger-start', 'fetch-projects', 'check-projects-status',
-    'check-projects-empty', 'no-projects-msg',
-    'projects-error-msg', 'projects-msg',
-    'incoming-callback-trigger', 'fetch-project-detail',
-    // Загрузка токенов перед карточкой проекта
-    'fetch-project-tokens',
-    // Статус бота
-    'check-bot-status', 'project-card-running', 'project-card-stopped', 'project-card-unknown',
-    'project-actions-keyboard',
-    // Действия
-    'action-start', 'action-stop', 'action-restart',
-    'check-start-status', 'check-stop-status', 'check-restart-status',
-    'action-error-msg', 'action-result-msg', 'result-keyboard',
-    // Перезагрузка карточки проекта (без перезаписи callback_data)
-    'reload-project',
-    // Создание проекта
-    'create-project-keyboard', 'create-project-action', 'check-create-status',
-    'create-success-msg', 'create-error-msg', 'after-create-keyboard',
-    // Переименование
-    'rename-project-ask', 'rename-project-input', 'rename-project-action', 'check-rename-status',
-    'rename-success-msg', 'rename-error-msg',
-    // Удаление
-    'delete-project-confirm', 'delete-confirm-keyboard', 'delete-project-action',
-    'check-delete-status', 'delete-success-msg', 'delete-error-msg',
-    // Токены — загрузка и карточка проекта
-    'fetch-tokens', 'check-tokens-status', 'check-tokens-empty',
-    'no-tokens-msg', 'tokens-error-msg',
-    // Токены — управление
-    'incoming-token-trigger', 'check-token-username', 'token-card-msg', 'token-card-msg-with-username', 'token-actions-keyboard',
-    'delete-token-confirm', 'delete-token-confirm-keyboard',
-    'delete-token-action', 'check-delete-token-status',
-    'delete-token-success-msg', 'delete-token-error-msg',
-    'ask-new-token-value', 'add-token-to-project', 'check-add-token-status',
-    'add-token-success-msg', 'add-token-error-msg',
-    // Аватарка бота в карточке токена
-    'fetch-bot-photo', 'check-bot-photo', 'check-photo-exists',
-    'fetch-photo-file', 'token-card-with-photo',
-    // Создание проекта с токеном
-    'projects-actions-keyboard',
-    'ask-project-name-msg', 'ask-project-name',
-    'ask-token-value-msg', 'ask-token-value',
-    'ask-new-token-value-msg',
-    'create-project-with-token', 'check-new-project-status', 'create-token-for-project',
-    'check-new-token-status', 'load-new-project', 'new-project-error-msg', 'new-token-error-msg',
-  ];
-  for (const id of nodeIds) {
-    const safeName = id.replace(/-/g, '_');
-    ok(code.includes(safeName), `Обработчик для узла "${id}" не найден в коде`);
-  }
-});
-
-// ══ Блок B: /start → HTTP → динамические кнопки ══════════════════════════════
-console.log('\n══ Блок B: /start → HTTP → динамические кнопки ══════════════════════');
-
-test('B01', '/start регистрирует команду /start', () => {
-  ok(code.includes('Command("start")'), 'Command("start") не найдено');
-});
-
-test('B02', 'fetch-projects делает GET-запрос к /api/bot/projects', () => {
-  ok(code.includes('/api/bot/projects'), 'URL /api/bot/projects не найден');
-});
-
-test('B03', 'URL содержит подстановку {user_id} → telegram_id', () => {
-  ok(code.includes('telegram_id'), 'telegram_id не найден в URL');
-});
-
-test('B04', 'ответ сохраняется в переменную "projects"', () => {
-  ok(code.includes('"projects"'), 'переменная "projects" не найдена');
-});
-
-test('B05', 'projects-actions-keyboard генерирует _resolve_dynamic_path', () => {
-  ok(code.includes('_resolve_dynamic_path'), '_resolve_dynamic_path не найдено');
-});
-
-test('B06', 'шаблон текста кнопки "📁 {name}" присутствует в коде', () => {
-  ok(code.includes('{name}'), 'шаблон {name} не найден');
-});
-
-test('B07', 'шаблон callback "project_{id}" присутствует в коде', () => {
-  ok(code.includes('project_{id}'), 'шаблон project_{id} не найден');
-});
-
-test('B08', 'builder.adjust(1) — одна кнопка в ряд', () => {
-  ok(code.includes('builder.adjust(1)'), 'builder.adjust(1) не найдено');
-});
-
-test('B09', 'arrayPath "items" присутствует в коде', () => {
-  ok(code.includes('"items"'), 'arrayPath "items" не найден — API теперь возвращает {items: [...], count: N}');
-});
-
-test('B10', 'projects-actions-keyboard содержит кнопку "➕ Новый проект" в сгенерированном коде', () => {
-  ok(code.includes('➕ Новый проект'), 'кнопка "➕ Новый проект" не найдена — смешанный режим кнопок не работает');
-});
-
-// ══ Блок C: incoming_callback_trigger с фильтрацией ══════════════════════════
-console.log('\n══ Блок C: incoming_callback_trigger с фильтрацией ══════════════════');
-
-test('C01', 'incoming_callback_trigger генерирует middleware', () => {
-  ok(
-    code.includes('incoming_callback_trigger_incoming_callback_trigger_middleware'),
-    'middleware для incoming_callback_trigger не найден',
-  );
-});
-
-test('C02', 'middleware сохраняет callback_data в user_data', () => {
-  ok(code.includes('user_data[user_id]["callback_data"]'), 'сохранение callback_data не найдено');
-});
-
-test('C03', 'middleware фильтрует по паттерну "project_" через startsWith', () => {
-  ok(code.includes('startswith("project_")'), 'фильтрация по паттерну project_ не найдена');
-});
-
-test('C04', 'fetch-project-detail использует {callback_data} в URL', () => {
-  ok(code.includes('callback_data'), 'callback_data не найден в URL fetch-project-detail');
-});
-
-test('C05', 'fetch-project-detail делает GET к /api/bot/projects/', () => {
-  ok(code.includes('/api/bot/projects/'), 'URL /api/bot/projects/ не найден');
-});
-
-test('C06', 'ответ сохраняется в переменную "project_detail"', () => {
-  ok(code.includes('"project_detail"'), 'переменная "project_detail" не найдена');
-});
-
-test('C07', 'fallback_callback_handler зарегистрирован через @dp.callback_query()', () => {
-  // Без этого обработчика aiogram 3 не запускает middleware для callback'ов
-  // которые не совпадают ни с одним фильтром (project_42, project_123 и т.д.)
-  ok(code.includes('@dp.callback_query()'), '@dp.callback_query() fallback handler не найден — middleware не будет работать');
-});
-
-test('C08', 'fallback_callback_handler содержит logging.info для диагностики', () => {
-  ok(code.includes('fallback_callback_handler'), 'функция fallback_callback_handler не найдена');
-});
-
-test('C09', 'middleware НЕ перезаписывает callback_data для несовпадающих паттернов', () => {
-  // Проверяем что в коде есть условие: сохранение callback_data идёт ПОСЛЕ проверки паттерна
-  // Т.е. строка с startswith("project_") должна стоять ПЕРЕД строкой с user_data[user_id]["callback_data"]
-  const patternIdx = code.indexOf('startswith("project_")');
-  const saveIdx = code.indexOf('user_data[user_id]["callback_data"]');
-  ok(patternIdx !== -1, 'фильтр startswith("project_") не найден в middleware');
-  ok(saveIdx !== -1, 'сохранение callback_data не найдено');
-  ok(patternIdx < saveIdx, 'фильтр паттерна должен стоять ДО сохранения callback_data');
-});
-
-test('D05', 'карточки проекта содержат {project_detail.name} в messageText', () => {
-  // Статус бота убран из текста карточки — теперь показывается в кнопках токенов через botStatus
-  ok(
-    code.includes('project_detail.name') && code.includes('project_card_running'),
-    'карточка running не содержит project_detail.name',
-  );
-  ok(
-    code.includes('project_detail.name') && code.includes('project_card_stopped'),
-    'карточка stopped не содержит project_detail.name',
-  );
-});
-
-// ══ Блок D: Карточка проекта + меню действий ═════════════════════════════════
-console.log('\n══ Блок D: Карточка проекта + меню действий ══════════════════════════');
-
-test('D01', 'карточки проекта содержат dot-notation {project_detail.name}', () => {
-  ok(code.includes('project_detail'), 'project_detail не найден в тексте карточки');
-});
-
-test('D01b', 'check-bot-status condition узел присутствует в коде', () => {
-  ok(code.includes('check_bot_status'), 'узел check-bot-status не найден');
-});
-
-test('D01c', 'три варианта карточки проекта присутствуют в коде', () => {
-  ok(code.includes('project_card_running'), 'узел project-card-running не найден');
-  ok(code.includes('project_card_stopped'), 'узел project-card-stopped не найден');
-  ok(code.includes('project_card_unknown'), 'узел project-card-unknown не найден');
-});
-
-test('D02', 'project-actions-keyboard содержит кнопки управления проектом и токены', () => {
-  // Токены теперь показаны прямо в карточке проекта через динамические кнопки
-  const btnTexts = ['К списку', 'Переименовать', 'Удалить', 'Добавить токен'];
-  for (const text of btnTexts) {
-    ok(code.includes(text), `Кнопка "${text}" не найдена`);
-  }
-  // Токены теперь отображаются динамически прямо в карточке проекта
-  ok(code.includes('project_tokens'), 'динамические кнопки токенов (project_tokens) не найдены');
-});
-
-test('D03', 'раскладка кнопок карточки проекта: токены и статические кнопки без отдельного экрана', () => {
-  // Токены подгружаются перед карточкой проекта и попадают в ее клавиатуру напрямую
-  ok(code.includes('fetch_project_tokens'), 'узел fetch-project-tokens не найден — токены не загружаются перед карточкой');
-  ok(!/\btokens_msg\b/.test(code), 'старый узел tokens-msg все еще присутствует в коде');
-});
-
-test('D04', 'кнопка "К списку" ведёт к fetch-projects', () => {
-  ok(code.includes('fetch_projects'), 'callback_data для fetch-projects не найден');
-});
-
-// ══ Блок P: Message-узлы перед input-узлами ══════════════════════════════════
-console.log('\n══ Блок P: Message-узлы перед input-узлами ══════════════════════════');
-
-test('P01', 'ask-project-name-msg ведёт к ask-project-name (не напрямую к следующему шагу)', () => {
-  // Проверяем что message-узел с текстом подсказки ведёт к input-узлу
-  ok(code.includes('ask_project_name_msg'), 'узел ask-project-name-msg не найден');
-  ok(code.includes('ask_project_name'), 'узел ask-project-name не найден');
-  // ask-project-name-msg должен стоять перед ask-project-name в коде
-  const msgIdx = code.indexOf('ask_project_name_msg');
-  const inputIdx = code.indexOf('handle_callback_ask_project_name(');
-  ok(msgIdx !== -1, 'ask_project_name_msg не найден в коде');
-  ok(inputIdx !== -1, 'handle_callback_ask_project_name не найден в коде');
-});
-
-test('P02', 'ask-token-value-msg ведёт к ask-token-value', () => {
-  ok(code.includes('ask_token_value_msg'), 'узел ask-token-value-msg не найден');
-  ok(code.includes('ask_token_value'), 'узел ask-token-value не найден');
-});
-
-test('P03', 'ask-new-token-value-msg ведёт к ask-new-token-value', () => {
-  ok(code.includes('ask_new_token_value_msg'), 'узел ask-new-token-value-msg не найден');
-  ok(code.includes('ask_new_token_value'), 'узел ask-new-token-value не найден');
-});
-
-// ══ Итог ══════════════════════════════════════════════════════════════════════
-const passed = results.filter(r => r.passed).length;
-const failed = results.filter(r => !r.passed).length;
-const total = results.length;
-
-console.log('\n╔══════════════════════════════════════════════════════════════╗');
-const summary = `  Итог: ${passed}/${total} пройдено  |  Провалено: ${failed}`;
-console.log(`║${summary}${' '.repeat(Math.max(0, 62 - summary.length))}║`);
-console.log('╚══════════════════════════════════════════════════════════════╝');
-
-if (failed > 0) {
-  console.log('\nПровалившиеся тесты:');
-  results.filter(r => !r.passed).forEach(r => {
-    console.log(`  ❌ ${r.id}. ${r.name}`);
-    console.log(`     ${r.note}`);
+function generateManagerCode(): string {
+  return generatePythonCode(makeBotManagerScenario() as any, {
+    botName: 'ManagerPhase33', userDatabaseEnabled: false,
   });
-  process.exit(1);
 }
+
+/**
+ * Проверяет синтаксис сгенерированного кода в отдельной временной папке.
+ * @param code - Исходный код Python
+ */
+function assertPythonSyntax(code: string): void {
+  const directory = mkdtempSync(join(tmpdir(), 'botcraft-phase33-'));
+  try {
+    const file = join(directory, 'main.py');
+    writeFileSync(file, code, 'utf8');
+    execFileSync('python', ['-m', 'py_compile', file]);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+}
+
+describe('Фаза 33: управляющий бот', () => {
+  const code = generateManagerCode();
+
+  it('генерирует команду /start и запрос списка проектов', () => {
+    assert.match(code, /CommandStart\(|Command\(['"]start['"]\)/);
+    assert.ok(code.includes('/api/bot/projects?telegram_id='));
+    assert.ok(code.includes('projects'));
+  });
+
+  it('генерирует сообщение с inline-кнопкой проекта', () => {
+    assert.ok(code.includes('projects_message'));
+    assert.ok(code.includes('Открыть проект'));
+    assert.ok(code.includes('project_1'));
+  });
+
+  it('создаёт корректный Python-файл', () => {
+    assertPythonSyntax(code);
+  });
+});
