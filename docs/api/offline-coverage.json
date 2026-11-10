@@ -95,7 +95,7 @@
           "file": "server/index.ts",
           "line": 105,
           "method": "USE",
-          "expression": "(req, res, next) => {\n  const start = Date.now();\n  const path = apiLogPath(req.originalUrl);\n  let capturedJsonResponse: Record<string, any> | undefined = undefined;\n\n  const originalResJson = res.json;\n  res.json = function (bodyJson, ...args) {\n    capturedJsonResponse = bodyJson;\n    return orig…"
+          "expression": "(req, res, next) => {\n  const start = Date.now();\n  const path = apiLogPath(req.originalUrl);\n  let capturedJsonResponse: Record<string, any> | undefined = undefined;\n\n  const originalResJson = res.json;\n  res.json = function (bodyJson, ...args) {\n    capturedJsonResponse = bodyJson;\n    ret…"
         },
         "routes": [],
         "reason": "Middleware или статический mount, не отдельная HTTP-операция; не доказательство отсутствия вложенных Router."
@@ -501,35 +501,49 @@
     },
     {
       "file": "server/admin/setup-runtime-settings-routes.ts",
-      "line": 23,
+      "line": 30,
       "method": "GET",
       "expression": "\"/admin/api/runtime-settings/:group\"",
       "resolvedPath": "/admin/api/runtime-settings/{group}"
     },
     {
       "file": "server/admin/setup-runtime-settings-routes.ts",
-      "line": 24,
+      "line": 32,
+      "method": "GET",
+      "expression": "\"/admin/api/runtime-settings/workers/status\"",
+      "resolvedPath": "/admin/api/runtime-settings/workers/status"
+    },
+    {
+      "file": "server/admin/setup-runtime-settings-routes.ts",
+      "line": 37,
+      "method": "POST",
+      "expression": "\"/admin/api/runtime-settings/workers/restart-pending\"",
+      "resolvedPath": "/admin/api/runtime-settings/workers/restart-pending"
+    },
+    {
+      "file": "server/admin/setup-runtime-settings-routes.ts",
+      "line": 41,
       "method": "PUT",
       "expression": "\"/admin/api/runtime-settings/:group\"",
       "resolvedPath": "/admin/api/runtime-settings/{group}"
     },
     {
       "file": "server/admin/setup-runtime-settings-routes.ts",
-      "line": 25,
+      "line": 42,
       "method": "POST",
       "expression": "\"/admin/api/runtime-settings/platform/telegram/test\"",
       "resolvedPath": "/admin/api/runtime-settings/platform/telegram/test"
     },
     {
       "file": "server/admin/setup-runtime-settings-routes.ts",
-      "line": 26,
+      "line": 43,
       "method": "POST",
       "expression": "\"/admin/api/runtime-settings/backups/run\"",
       "resolvedPath": "/admin/api/runtime-settings/backups/run"
     },
     {
       "file": "server/admin/setup-runtime-settings-routes.ts",
-      "line": 27,
+      "line": 44,
       "method": "POST",
       "expression": "\"/admin/api/runtime-settings/backups/telegram/test\"",
       "resolvedPath": "/admin/api/runtime-settings/backups/telegram/test"
@@ -576,7 +590,7 @@
       "file": "server/index.ts",
       "line": 105,
       "method": "USE",
-      "expression": "(req, res, next) => {\n  const start = Date.now();\n  const path = apiLogPath(req.originalUrl);\n  let capturedJsonResponse: Record<string, any> | undefined = undefined;\n\n  const originalResJson = res.json;\n  res.json = function (bodyJson, ...args) {\n    capturedJsonResponse = bodyJson;\n    return orig…"
+      "expression": "(req, res, next) => {\n  const start = Date.now();\n  const path = apiLogPath(req.originalUrl);\n  let capturedJsonResponse: Record<string, any> | undefined = undefined;\n\n  const originalResJson = res.json;\n  res.json = function (bodyJson, ...args) {\n    capturedJsonResponse = bodyJson;\n    ret…"
     },
     {
       "file": "server/index.ts",
