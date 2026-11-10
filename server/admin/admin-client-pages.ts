@@ -8,6 +8,7 @@ import { isAdminAuthenticated } from "./admin-auth-middleware";
 import { ADMIN_DOCS_VIEWER_PAGES } from "./admin-docs-viewer-pages";
 import { resolveAdminApiKey } from "./resolve-admin-key";
 import { setAdminCookie } from "./admin-session";
+import { resolveAppMode } from '../runtime/app-mode';
 
 /** Адреса панели, которые рисует приложение в браузере */
 export const ADMIN_CLIENT_PAGES = [
@@ -50,5 +51,12 @@ export function passAdminPageToClient(
   }
   const key = resolveAdminApiKey();
   if (key) setAdminCookie(res, key, req.secure);
+  /** Отдельный frontend получает разрешение отдать SPA только после проверки администратора. */
+  if (resolveAppMode() === 'backend') {
+    res.setHeader('X-Botcraft-Client-Page', '1');
+    res.setHeader('Cache-Control', 'no-store');
+    res.status(204).end();
+    return;
+  }
   next();
 }

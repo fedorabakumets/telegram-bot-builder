@@ -2,6 +2,7 @@
  * @fileoverview Боковая карточка сведений о собеседнике или группе.
  */
 import { useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { CalendarDays, Clock3, Users, UserRound, X, ZoomIn } from 'lucide-react';
 import type { UserBotData } from '@/types/bot';
 import { UserAvatar } from './user-avatar';
@@ -41,8 +42,8 @@ function profileDate(value?: string | Date | null): string | null {
  */
 export function DialogProfile({ user, projectId, tokenId, onClose, children }: DialogProfileProps) {
   const [failedAvatar, setFailedAvatar] = useState<string | null>(null);
-  /** Открыта ли увеличенная фотография группы. */
-  const [photoOpen, setPhotoOpen] = useState(false);
+  /** Адрес фотографии пользователя или группы, открытой на весь экран. */
+  const [photoSrc, setPhotoSrc] = useState<string | null>(null);
   const isGroup = user.isGroup || String(user.userId).startsWith('-');
   const title = [user.firstName, user.lastName].filter(Boolean).join(' ') || user.userName || String(user.userId);
   const groupType = user.chatType === 'channel' ? 'Канал' : user.chatType === 'supergroup' ? 'Супергруппа' : 'Группа';
@@ -63,7 +64,7 @@ export function DialogProfile({ user, projectId, tokenId, onClose, children }: D
       <div className="min-h-0 flex-1 overflow-y-auto">
         <div className="flex flex-col items-center px-5 pb-6 pt-7 text-center">
           {isGroup ? groupPhoto ? (
-            <button type="button" onClick={() => setPhotoOpen(true)} aria-label="Увеличить фотографию группы"
+            <button type="button" onClick={() => setPhotoSrc(user.avatarUrl!)} aria-label="Увеличить фотографию группы"
               className="group relative h-20 w-20 shrink-0 overflow-hidden rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
               <img src={user.avatarUrl!} alt="" className="h-full w-full object-cover"
                 onError={() => setFailedAvatar(user.avatarUrl ?? null)} />
@@ -75,7 +76,7 @@ export function DialogProfile({ user, projectId, tokenId, onClose, children }: D
             <div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted text-muted-foreground">
               <Users className="h-9 w-9" />
             </div>
-          ) : <UserAvatar messageType="user" user={user} projectId={projectId} tokenId={tokenId} size={80} />}
+          ) : <UserAvatar key={`${user.userId}:${tokenId}`} messageType="user" user={user} projectId={projectId} tokenId={tokenId} size={80} onPhotoClick={setPhotoSrc} />}
           <h3 className="mt-4 max-w-full break-words text-base font-semibold">{title}</h3>
           {isGroup && <p className="mt-1 text-sm text-muted-foreground">{groupType}</p>}
           <p className="mt-1 text-sm text-muted-foreground">
@@ -99,7 +100,11 @@ export function DialogProfile({ user, projectId, tokenId, onClose, children }: D
           </div>}
         </div>
         {children}
-        {photoOpen && groupPhoto && <ImageLightbox src={user.avatarUrl!} alt="Фотография группы" onClose={() => setPhotoOpen(false)} />}
+        {photoSrc && createPortal(
+          <div className="pointer-events-auto relative z-[100]">
+            <ImageLightbox src={photoSrc} alt={isGroup ? 'Фотография группы' : 'Фотография пользователя'} onClose={() => setPhotoSrc(null)} />
+          </div>, document.body,
+        )}
       </div>
     </aside>
   );

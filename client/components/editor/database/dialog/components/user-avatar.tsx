@@ -6,7 +6,7 @@
  * Кэширует неудачные URL в sessionStorage (общий с BotAvatar).
  */
 
-import { Bot, User } from 'lucide-react';
+import { Bot, User, ZoomIn } from 'lucide-react';
 import type { UserBotData } from '@/types/bot';
 import { useState } from 'react';
 import { isAvatarUrlFailed, markAvatarUrlFailed } from '@/lib/avatar-failed-cache';
@@ -23,6 +23,8 @@ interface UserAvatarProps {
   tokenId?: number | null;
   /** Размер в пикселях */
   size?: number;
+  /** Открывает доступную фотографию в просмотрщике профиля. */
+  onPhotoClick?: (src: string) => void;
 }
 
 /**
@@ -55,7 +57,7 @@ function buildBotAvatarUrl(projectId: number, tokenId?: number | null): string {
  * @param props - Свойства компонента
  * @returns JSX элемент
  */
-export function UserAvatar({ messageType, user, projectId, tokenId, size = 28 }: UserAvatarProps) {
+export function UserAvatar({ messageType, user, projectId, tokenId, size = 28, onPhotoClick }: UserAvatarProps) {
   const isBot = messageType === 'bot';
   /** Для групп (отрицательный userId) аватарку через этот роут не запрашиваем */
   const isGroupChat = user?.userId ? String(user.userId).startsWith('-') : false;
@@ -71,7 +73,7 @@ export function UserAvatar({ messageType, user, projectId, tokenId, size = 28 }:
   const canFetchPhoto = !!photoUrl && !imageError && !isAvatarUrlFailed(photoUrl);
 
   if (canFetchPhoto && photoUrl) {
-    return (
+    const image = (
       <img
         loading="lazy"
         src={photoUrl}
@@ -83,6 +85,17 @@ export function UserAvatar({ messageType, user, projectId, tokenId, size = 28 }:
           setImageError(true);
         }}
       />
+    );
+    if (!onPhotoClick) return image;
+    return (
+      <button type="button" onClick={() => onPhotoClick(photoUrl)} aria-label="Увеличить фотографию пользователя"
+        style={{ width: size, height: size }}
+        className="group relative shrink-0 overflow-hidden rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+        {image}
+        <span className="absolute inset-0 flex items-center justify-center bg-black/50 text-white opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+          <ZoomIn className="h-6 w-6" />
+        </span>
+      </button>
     );
   }
 

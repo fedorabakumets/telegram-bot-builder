@@ -63,7 +63,7 @@
       {
         "candidate": {
           "file": "server/index.ts",
-          "line": 76,
+          "line": 80,
           "method": "USE",
           "expression": "express.json({ limit: '50mb', verify: captureAgentBody })"
         },
@@ -73,7 +73,7 @@
       {
         "candidate": {
           "file": "server/index.ts",
-          "line": 77,
+          "line": 81,
           "method": "USE",
           "expression": "express.urlencoded({ extended: false, limit: '50mb' })"
         },
@@ -83,7 +83,7 @@
       {
         "candidate": {
           "file": "server/index.ts",
-          "line": 79,
+          "line": 83,
           "method": "USE",
           "expression": "express.text({ limit: '50mb', type: 'text/plain' })"
         },
@@ -93,7 +93,7 @@
       {
         "candidate": {
           "file": "server/index.ts",
-          "line": 93,
+          "line": 97,
           "method": "USE",
           "expression": "(req, res, next) => {\n  const start = Date.now();\n  const path = apiLogPath(req.originalUrl);\n  let capturedJsonResponse: Record<string, any> | undefined = undefined;\n\n  const originalResJson = res.json;\n  res.json = function (bodyJson, ...args) {\n    capturedJsonResponse = bodyJson;\n    return orig…"
         },
@@ -103,7 +103,7 @@
       {
         "candidate": {
           "file": "server/index.ts",
-          "line": 160,
+          "line": 164,
           "method": "USE",
           "expression": "apiErrorHandler"
         },
@@ -188,6 +188,16 @@
           "line": 471,
           "method": "USE",
           "expression": "sessionMiddleware"
+        },
+        "routes": [],
+        "reason": "Middleware или статический mount, не отдельная HTTP-операция; не доказательство отсутствия вложенных Router."
+      },
+      {
+        "candidate": {
+          "file": "server/routes/viteDev/middleware/backendMediaMiddleware.ts",
+          "line": 23,
+          "method": "USE",
+          "expression": "`/uploads/${match[1]}`"
         },
         "routes": [],
         "reason": "Middleware или статический mount, не отдельная HTTP-операция; не доказательство отсутствия вложенных Router."
@@ -543,44 +553,44 @@
     },
     {
       "file": "server/index.ts",
-      "line": 76,
+      "line": 80,
       "method": "USE",
       "expression": "express.json({ limit: '50mb', verify: captureAgentBody })"
     },
     {
       "file": "server/index.ts",
-      "line": 77,
+      "line": 81,
       "method": "USE",
       "expression": "express.urlencoded({ extended: false, limit: '50mb' })"
     },
     {
       "file": "server/index.ts",
-      "line": 79,
+      "line": 83,
       "method": "USE",
       "expression": "express.text({ limit: '50mb', type: 'text/plain' })"
     },
     {
       "file": "server/index.ts",
-      "line": 93,
+      "line": 97,
       "method": "USE",
       "expression": "(req, res, next) => {\n  const start = Date.now();\n  const path = apiLogPath(req.originalUrl);\n  let capturedJsonResponse: Record<string, any> | undefined = undefined;\n\n  const originalResJson = res.json;\n  res.json = function (bodyJson, ...args) {\n    capturedJsonResponse = bodyJson;\n    return orig…"
     },
     {
       "file": "server/index.ts",
-      "line": 146,
+      "line": 150,
       "method": "USE",
       "expression": "\"/api\"",
       "resolvedPath": "/api"
     },
     {
       "file": "server/index.ts",
-      "line": 160,
+      "line": 164,
       "method": "USE",
       "expression": "apiErrorHandler"
     },
     {
       "file": "server/index.ts",
-      "line": 194,
+      "line": 200,
       "method": "GET",
       "expression": "\"env\"",
       "resolvedPath": "env"
@@ -2349,6 +2359,33 @@
       "method": "POST",
       "expression": "\"/api/templates/:id/use\"",
       "resolvedPath": "/api/templates/{id}/use"
+    },
+    {
+      "file": "server/routes/viteDev/middleware/backendMediaMiddleware.ts",
+      "line": 12,
+      "method": "USE",
+      "expression": "'/uploads'",
+      "resolvedPath": "/uploads"
+    },
+    {
+      "file": "server/routes/viteDev/middleware/backendMediaMiddleware.ts",
+      "line": 14,
+      "method": "USE",
+      "expression": "'/uploads'",
+      "resolvedPath": "/uploads"
+    },
+    {
+      "file": "server/routes/viteDev/middleware/backendMediaMiddleware.ts",
+      "line": 16,
+      "method": "USE",
+      "expression": "'/assets'",
+      "resolvedPath": "/assets"
+    },
+    {
+      "file": "server/routes/viteDev/middleware/backendMediaMiddleware.ts",
+      "line": 23,
+      "method": "USE",
+      "expression": "`/uploads/${match[1]}`"
     },
     {
       "file": "server/routes/viteDev/middleware/staticMiddleware.ts",
