@@ -51,7 +51,12 @@ export async function createProjectCommitHandler(req: Request, res: Response): P
         );
 
         broadcastVersionsChanged(projectId);
-        res.status(201).json(version);
+        /** Координаты объекта и контрольная сумма не входят в публичный API. */
+        const { snapshotStorageId: _storageId, snapshotKey: _key, snapshotSha256: _sha,
+            snapshotBytes: _bytes, snapshotState: _state, snapshotRetryAt: _retry,
+            snapshotAttempts: _attempts, ...publicVersion } = version;
+        /** Публичный ответ по-прежнему содержит снимок, даже если объект уже записан в S3. */
+        res.status(201).json({ ...publicVersion, snapshot: project.data });
     } catch (error) {
         console.error("Ошибка создания коммита проекта:", error);
         res.status(500).json({ message: "Не удалось создать чекпоинт", error: (error as Error).message });

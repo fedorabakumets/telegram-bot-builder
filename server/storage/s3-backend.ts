@@ -21,6 +21,7 @@ import {
   DeleteObjectCommand,
   HeadObjectCommand,
   HeadBucketCommand,
+  ListObjectsV2Command,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
@@ -219,6 +220,20 @@ export class S3Backend implements StorageBackend {
       if (isS3NotFound(err)) return null;
       throw err;
     }
+  }
+
+  /**
+   * Возвращает страницу объектов префикса для поиска сирот после сбоев.
+   * @param prefix - Префикс ключей
+   * @param cursor - Курсор следующей страницы
+   * @returns Ключи, даты изменения и следующий курсор
+   */
+  async listObjects(prefix: string, cursor?: string): Promise<{ objects: Array<{ key: string; modified: Date | null }>; nextCursor?: string }> {
+    const result = await this.client.send(new ListObjectsV2Command({ Bucket: this.bucket,
+      Prefix: this.normalizeKey(prefix), ContinuationToken: cursor, MaxKeys: 1000 }));
+    return { objects: (result.Contents ?? []).filter(item => !!item.Key)
+      .map(item => ({ key: item.Key!, modified: item.LastModified ?? null })),
+      nextCursor: result.NextContinuationToken };
   }
 
   /** Получает фактическую версию и размер объекта.

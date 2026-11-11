@@ -35,6 +35,7 @@ import { initSupportEventBridge } from './redis/support-event-bridge';
 import { stopCleanup } from "./utils/cache";
 import { shutdownAllBots } from "./utils/graceful-shutdown";
 import { runMigrations } from "./database/runMigrations";
+import { startVersionObjectWorker } from './database/version-object-worker';
 import { ensureBotRuntimeRole } from "./database/bot-runtime/ensure-bot-runtime-role";
 import { isRedisAvailable, waitForRedisInit } from "./redis/redisClient";
 import { redactSecrets } from "./utils/redactSecrets";
@@ -151,6 +152,8 @@ app.use((req, res, next) => {
 (async () => {
   const httpServer = createServer(app);
   await runMigrations();
+  /** После миграций обрабатываем накопленные снимки и удаления S3. */
+  startVersionObjectWorker();
   await ensureBotRuntimeRole();
   await registerRoutes(app, httpServer);
 

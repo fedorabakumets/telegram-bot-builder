@@ -1,3 +1,12 @@
-/** @fileoverview Изолированный запуск проверок жизненного цикла пула PostgreSQL. */
+/**
+ * @fileoverview Адресная конфигурация проверок базы данных и хранения версий.
+ */
 import { defineConfig } from 'vitest/config';
-export default defineConfig({ test: { environment: 'node', include: ['server/database/pool-resilience.test.ts'] } });
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+/** Каталог проверяемых модулей базы данных. */
+const dir = path.dirname(fileURLToPath(import.meta.url));
+
+export default defineConfig({ root: dir, test: { environment: 'node', include: ['pool-resilience.test.ts', 'version-object-*.test.ts'] },
+  resolve: { alias: { '@shared': path.resolve(dir, '../../shared') } } });

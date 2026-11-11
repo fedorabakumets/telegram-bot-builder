@@ -26,12 +26,7 @@ export async function deleteProjectVersionHandler(req: Request, res: Response): 
             return;
         }
 
-        const version = await storage.getProjectVersion(versionId);
-        if (!version || version.projectId !== projectId) {
-            res.status(404).json({ message: "Версия не найдена" });
-            return;
-        }
-
+        /** Принадлежность версии проверяется непосредственно при удалении в SQL. */
         const deleted = await storage.deleteProjectVersion(projectId, versionId);
         if (!deleted) { res.status(404).json({ message: "Версия уже удалена" }); return; }
         try { broadcastVersionsChanged(projectId); } catch { /* Уведомление не отменяет сохранённое удаление. */ }

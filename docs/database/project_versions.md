@@ -10,7 +10,14 @@
 |------|------|---------|----------|----------|---------|---------|
 | **id** | serial | - | NO | - | - | Уникальный идентификатор версии |
 | project_id | integer | - | NO | - | [bot_projects.id](./bot_projects.md) | Идентификатор проекта (ссылка на bot_projects.id) |
-| snapshot | jsonb | - | NO | - | - | Снимок данных проекта (BotDataWithSheets) |
+| snapshot | jsonb | - | YES | - | - | Снимок данных проекта (BotDataWithSheets) |
+| snapshot_storage_id | text | - | YES | - | - | ID приватной конфигурации S3 для снимка |
+| snapshot_key | text | - | YES | - | - | Неизменяемый ключ сжатого JSON в S3 |
+| snapshot_sha256 | text | - | YES | - | - | SHA-256 исходного JSON |
+| snapshot_bytes | bigint | - | YES | - | - | Размер исходного JSON в байтах |
+| snapshot_state | text | `'postgres'` | NO | - | - | Состояние снимка: postgres, pending или ready |
+| snapshot_retry_at | timestamp | - | YES | - | - | Следующая попытка переноса после ошибки S3 |
+| snapshot_attempts | integer | `0` | NO | - | - | Число неудачных попыток переноса |
 | label | text | - | YES | - | - | Опциональная метка версии (например имя проекта на момент снимка) |
 | author_id | bigint | - | YES | - | [telegram_users.id](./telegram_users.md) | Идентификатор автора снимка (ссылка на telegram_users.id) |
 | kind | text | `'auto'` | NO | - | - | Тип версии: "auto" — авто-снимок при сохранении, "manual" — ручной коммит-чекпоинт |
@@ -29,6 +36,7 @@
 | Name | Columns | Unique | Type |
 |------|---------|--------|------|
 | idx_project_versions_project | project_id | NO | - |
+| idx_project_versions_order | project_id, created_at, id | NO | - |
 
 ### Relations
 

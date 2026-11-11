@@ -14,6 +14,7 @@ import { resolveAppMode } from '../runtime/app-mode';
 export const ADMIN_CLIENT_PAGES = [
   "/admin",
   "/admin/settings",
+  "/admin/version-storage",
   "/admin/runtime/storages",
   "/admin/runtime/backups",
   "/admin/runtime/workers",
