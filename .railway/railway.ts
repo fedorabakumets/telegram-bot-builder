@@ -7,7 +7,8 @@ import { bucket, defineRailway, github, group, postgres, project, redis, service
 export default defineRailway(() => {
   const telegramBotBuilder = github("fedorabakumets/telegram-bot-builder", { branch: "main", checkSuites: false });
 
-  const PostgresQrUo = postgres("Postgres-QrUo", { region: "europe-west4-drams3a", image: "ghcr.io/railwayapp-templates/postgres-ssl:17" });
+  /** Фиксирует версию PostgreSQL после штатного обновления рабочей базы в Railway. */
+  const PostgresQrUo = postgres("Postgres-QrUo", { region: "europe-west4-drams3a", image: "ghcr.io/railwayapp-templates/postgres-ssl:18" });
   PostgresQrUo.networking = { privateNetworkEndpoint: "postgres-qruo" };
   const Redis = redis("Redis", { region: "europe-west4-drams3a" });
   Redis.deploy = { startCommand: "/bin/sh -c \"rm -rf $RAILWAY_VOLUME_MOUNT_PATH/lost+found/ && exec docker-entrypoint.sh redis-server --requirepass $REDIS_PASSWORD --save 60 1 --dir $RAILWAY_VOLUME_MOUNT_PATH\"" };
