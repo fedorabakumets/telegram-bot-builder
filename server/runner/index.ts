@@ -15,7 +15,8 @@ import {
   type RunnerEvent,
 } from "../redis/workerStreams";
 import { publishRunnerSiteInfo, readRunnerSiteInfo } from "../redis/runnerSiteInfo";
-import { acquireRuntimeLease, watchRuntimeLease } from "../bots/runtime-lease";
+import { watchRuntimeLease } from "../bots/runtime-lease";
+import { waitRuntimeLease } from "./waitRuntimeLease";
 import { loadRunnerConfig } from "./runnerConfig";
 import { RunnerWorkers } from "./runnerWorkers";
 import { closeBotCommandFence } from "./runnerCommandFence";
@@ -29,8 +30,16 @@ async function main(): Promise<void> {
   const [writer, reader, leaseRedis] = await Promise.all([
     connectStreamRedis(config.redisUrl), connectStreamRedis(config.redisUrl), connectStreamRedis(config.redisUrl),
   ]);
-  const lease = await acquireRuntimeLease(leaseRedis, config.runnerId, 15_000);
-  if (!lease) throw new Error(`исполнитель ${config.runnerId} уже запущен`);
+  /** Остановка во время смены контейнеров отменяет ожидание до чтения команд. */
+  const startup = new AbortController();
+  /** Отменяет запуск по сигналу платформы. */
+  const cancelStartup = () => startup.abort();
+  process.once("SIGINT", cancelStartup);
+  process.once("SIGTERM", cancelStartup);
+  const lease = await waitRuntimeLease(leaseRedis, config.runnerId, startup.signal).finally(() => {
+    process.removeListener("SIGINT", cancelStartup);
+    process.removeListener("SIGTERM", cancelStartup);
+  });
   let onLeaseLost: (error?: unknown) => void = (error?: unknown) => {
     console.error("🛰️ Аренда исполнителя потеряна до запуска:", error);
     process.exit(1);
