@@ -40,12 +40,24 @@ jobs:
       PORT: '5000'
       HOST: 0.0.0.0
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Собрать образ приложения
         run: docker compose build app
+      - name: Проверить режим разработки без dev-зависимостей в образе
+        if: matrix.node_env == 'development'
+        run: |
+          docker compose up -d db redis
+          docker compose run --rm --no-deps --entrypoint node app -e '
+            const { Client } = require("pg");
+            if (process.env.NODE_ENV !== "development" || process.env.PGSSLMODE !== "disable") process.exit(1);
+            const client = new Client({ connectionString: process.env.DATABASE_URL, ssl: false });
+            client.connect().then(() => client.query("SELECT 1")).then(() => client.end()).catch(error => { console.error(error); process.exit(1); });
+          '
       - name: Запустить приложение и базы данных
+        if: matrix.node_env == 'production'
         run: docker compose up -d --no-build app
       - name: Проверить переданные значения и запуск без SSL
+        if: matrix.node_env == 'production'
         shell: bash
         run: |
           docker compose exec -T app sh -c 'test "$PGSSLMODE" = disable && test "$NODE_ENV" = "${{ matrix.node_env }}"'
