@@ -48,6 +48,7 @@ import { handleGetAdminProjectAudit } from './handlers/project-audit-handlers';
 import { handleGetAdminBotTokenSecret } from './handlers/project-secret-handlers';
 import { handleGetAdminProject } from './handlers/admin-project-handlers';
 import { handleAdminRevokeUserSession, handleAdminRevokeUserSessions } from './handlers/platform-user-sessions-handlers';
+import { getVersionStorageAdmin, putVersionStorageAdmin, postVersionStorageMigration } from './handlers/version-storage-handlers';
 
 /** Префикс защищённых admin-маршрутов */
 export const ADMIN_PATHS_PREFIX = "/admin";
@@ -112,6 +113,9 @@ export function setupAdminRoutes(app: Express): void {
 
   app.get("/admin/api/app-settings", requireAdminAuth, handleGetAdminAppSettings);
   app.put("/admin/api/app-settings", requireAdminAuth, handlePutAdminAppSettings);
+  app.get('/admin/api/version-storage', requireAdminAuth, getVersionStorageAdmin);
+  app.put('/admin/api/version-storage', requireAdminAuth, putVersionStorageAdmin);
+  app.post('/admin/api/version-storage/migrate', requireAdminAuth, postVersionStorageMigration);
 
   app.get(
     "/admin/api/disabled-node-types",

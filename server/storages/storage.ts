@@ -1190,9 +1190,10 @@ export interface IStorage {
   /**
    * Получить одну версию проекта по ID
    * @param versionId - ID версии
+   * @param projectId - ID проекта для проверки принадлежности до чтения S3
    * @returns Версия проекта или undefined, если не найдена
    */
-  getProjectVersion(versionId: number): Promise<ProjectVersion | undefined>;
+  getProjectVersion(versionId: number, projectId?: number): Promise<ProjectVersion | undefined>;
 
   /**
    * Удалить старые авто-снимки проекта, оставив последние keep штук.

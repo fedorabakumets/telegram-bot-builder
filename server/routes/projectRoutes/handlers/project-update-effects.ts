@@ -12,6 +12,7 @@ import { broadcastAgentCanvasUpdate } from "../../../canvas/broadcastAgentCanvas
 import { parseAgentCanvasData } from "../../../canvas/parse-agent-canvas-data";
 import { broadcastProjectsChangedToUsers } from "../../../terminal/broadcastProjectsChanged";
 import { getProjectMemberIds } from "../../../terminal/resolveProjectMembers";
+import { snapshotDigest } from '../../../database/version-object-codec';
 /**
  * Возвращает статусы попыток побочных эффектов без отмены уже выполненного сохранения.
  * @param req - Контекст запроса
@@ -58,8 +59,7 @@ export async function runProjectUpdateEffects(req: Request, project: BotProject,
                     // Дедупликация: не создаём новый снимок, если самая свежая
                     // версия проекта идентична текущим данным (по JSON-представлению)
                     const latest = await storage.getLatestProjectVersion(projectId);
-                    const isDuplicate = latest != null &&
-                        JSON.stringify(latest.snapshot) === JSON.stringify(validatedData.data);
+                    const isDuplicate = latest != null && latest.snapshotSha256 === snapshotDigest(validatedData.data).sha256;
                     if (!isDuplicate) {
                         await storage.createProjectVersion(projectId, validatedData.data, project.name, project.ownerId ?? null, 'auto', authorKind);
                         await storage.pruneProjectVersions(projectId, 30);

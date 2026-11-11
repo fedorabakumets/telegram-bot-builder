@@ -20,7 +20,21 @@ export const projectVersions = pgTable("project_versions", {
     .references(() => botProjects.id, { onDelete: "cascade" })
     .notNull(),
   /** Снимок данных проекта (BotDataWithSheets) */
-  snapshot: jsonb("snapshot").notNull(),
+  snapshot: jsonb("snapshot"),
+  /** ID приватной конфигурации S3 для снимка */
+  snapshotStorageId: text("snapshot_storage_id"),
+  /** Неизменяемый ключ сжатого JSON в S3 */
+  snapshotKey: text("snapshot_key"),
+  /** SHA-256 исходного JSON */
+  snapshotSha256: text("snapshot_sha256"),
+  /** Размер исходного JSON в байтах */
+  snapshotBytes: bigint("snapshot_bytes", { mode: "number" }),
+  /** Состояние снимка: postgres, pending или ready */
+  snapshotState: text("snapshot_state").notNull().default("postgres"),
+  /** Следующая попытка переноса после ошибки S3 */
+  snapshotRetryAt: timestamp("snapshot_retry_at"),
+  /** Число неудачных попыток переноса */
+  snapshotAttempts: integer("snapshot_attempts").notNull().default(0),
   /** Опциональная метка версии (например имя проекта на момент снимка) */
   label: text("label"),
   /** Идентификатор автора снимка (ссылка на telegram_users.id) */
@@ -34,6 +48,8 @@ export const projectVersions = pgTable("project_versions", {
 }, (table) => ({
   /** Индекс по идентификатору проекта для быстрой выборки версий */
   projectIdx: index("idx_project_versions_project").on(table.projectId),
+  /** Порядок истории по проекту */
+  orderIdx: index("idx_project_versions_order").on(table.projectId, table.createdAt.desc().nullsLast(), table.id.desc()),
 }));
 
 /** Схема для вставки версии проекта */

@@ -40,6 +40,7 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { href: '/support', label: 'Поддержка', icon: MessageCircle },
   { href: '/settings', label: 'Настройки', icon: Settings },
   { href: '/runtime/storages', label: 'Хранилища', icon: HardDrive },
+  { href: '/version-storage', label: 'История версий', icon: Database },
   { href: '/runtime/backups', label: 'Бэкапы', icon: Archive },
   { href: '/runtime/workers', label: 'Воркеры', icon: Cpu },
   { href: '/runtime/runners', label: 'Исполнители', icon: Server },

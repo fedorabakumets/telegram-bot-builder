@@ -26,7 +26,7 @@ export async function restoreProjectVersionHandler(req: Request, res: Response):
             return;
         }
 
-        const version = await storage.getProjectVersion(versionId);
+        const version = await storage.getProjectVersion(versionId, projectId);
         if (!version || version.projectId !== projectId) {
             res.status(404).json({ message: "Версия не найдена" });
             return;
@@ -46,6 +46,6 @@ export async function restoreProjectVersionHandler(req: Request, res: Response):
         await updateProjectHandler(req, res);
     } catch (error) {
         console.error("Ошибка восстановления версии проекта:", error);
-        res.status(500).json({ message: "Не удалось восстановить версию проекта", error: (error as Error).message });
+        res.status(503).json({ message: "Не удалось прочитать снимок версии для восстановления" });
     }
 }

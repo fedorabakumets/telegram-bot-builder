@@ -22,6 +22,7 @@ import { AdminNodeTypesPage } from '@/components/admin/pages/admin-node-types';
 import { AdminSupportPage } from '@/components/admin/pages/admin-support';
 import { AdminRuntimePage } from '@/components/admin/pages/admin-runtime';
 import { AdminGuidePage } from '@/components/admin/pages/admin-guide';
+import { AdminVersionStoragePage } from '@/components/admin/pages/admin-version-storage';
 import type { ComponentType } from 'react';
 
 /**
@@ -49,6 +50,7 @@ export default function AdminPanel() {
     <AdminLayout>
       <Switch>
         <Route path="/admin/settings" component={adminRoute(AdminSettingsPage)} />
+        <Route path="/admin/version-storage" component={adminRoute(AdminVersionStoragePage)} />
         <Route path="/admin/runtime/:group" component={adminRoute(AdminRuntimePage)} />
         <Route path="/admin/guides/:slug" component={adminRoute(AdminGuidePage, true)} />
         <Route path="/admin/docs/:viewer" component={adminRoute(AdminDocsViewerPage, true)} />

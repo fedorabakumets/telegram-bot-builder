@@ -4,7 +4,7 @@ import { projectVersions, type ProjectVersion } from '@shared/schema';
 import type { db } from './db';
 
 /** Метаданные версии без тяжёлого снимка. */
-export type ProjectVersionMetadata = Omit<ProjectVersion, 'snapshot'>;
+export type ProjectVersionMetadata = Omit<ProjectVersion, 'snapshot' | 'snapshotStorageId' | 'snapshotKey' | 'snapshotSha256' | 'snapshotBytes' | 'snapshotState' | 'snapshotRetryAt' | 'snapshotAttempts'>;
 /** Параметры страницы истории. */
 export interface ProjectVersionPageOptions {
   /** Максимальное число записей. */
@@ -22,7 +22,10 @@ export interface ProjectVersionPage {
   total: number;
 }
 /** Поля таблицы, исключающие чтение TOAST-снимков. */
-export const { snapshot: omittedSnapshot, ...versionMetadataColumns } = getTableColumns(projectVersions);
+export const { snapshot: omittedSnapshot, snapshotStorageId: omittedStorageId, snapshotKey: omittedKey,
+  snapshotSha256: omittedSha, snapshotBytes: omittedBytes, snapshotState: omittedState,
+  snapshotRetryAt: omittedRetryAt, snapshotAttempts: omittedAttempts,
+  ...versionMetadataColumns } = getTableColumns(projectVersions);
 
 /** Проверяет и декодирует курсор, сохраняя микросекунды и область проекта. */
 export function decodeVersionCursor(cursor: unknown, projectId: number): { id: number; timestamp: string | null } {

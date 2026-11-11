@@ -17,6 +17,10 @@ import { safeBotLog } from '../utils/safe-bot-log';
 import { resolveLaunchIdsForLogs, mergeLogsByTimestampAsc } from "../bots/selectLatestLaunchLogs";
 import { selectBotLogsInPeriod } from './selectBotLogsInPeriod';
 import { deleteAnalyticsSpool } from '../analytics/spool-cleanup';
+import { snapshotDigest } from './version-object-codec';
+import { readVersionObject } from './version-object-store';
+import { getVersionStorageSettings } from './version-storage-settings';
+import { reserveVersionId, writeVersionObject } from './version-direct-write';
 
 /**
  * Реализация хранилища данных с использованием базы данных
@@ -2317,7 +2321,7 @@ export class DatabaseStorage implements IStorage {
   // Версии проектов (история снимков и откат)
 
   /**
-   * Создать снимок версии проекта в базе данных
+   * Создать снимок версии напрямую в S3 или сохранить его в PostgreSQL при сбое S3.
    * @param projectId - ID проекта
    * @param snapshot - Снимок данных проекта (BotDataWithSheets)
    * @param label - Опциональная метка версии
@@ -2327,13 +2331,54 @@ export class DatabaseStorage implements IStorage {
    * @returns Созданная версия проекта
    */
   async createProjectVersion(projectId: number, snapshot: unknown, label?: string, authorId?: number | null, kind: 'auto' | 'manual' = 'auto', authorKind?: 'user' | 'agent' | 'admin' | null): Promise<ProjectVersion> {
+    /** Хеш позволяет проверять дубликаты без загрузки объекта из S3. */
+    const { json, sha256 } = snapshotDigest(snapshot);
+    const versionStorage = await getVersionStorageSettings();
+    const base = { projectId, label: label ?? null, authorId: authorId ?? null,
+      kind, authorKind: authorKind ?? null };
+    if (versionStorage.mode === 's3' && versionStorage.storageId) {
+      const id = await reserveVersionId();
+      let object;
+      try {
+        object = await writeVersionObject(id, projectId, snapshot, versionStorage.storageId);
+      } catch (error) {
+        /** При отказе S3 снимок остаётся доступным в JSONB и попадает в очередь повтора. */
+        console.error(`[VersionDirectWrite] Версия ${id} ожидает переноса:`, error);
+        const [pending] = await this.db.insert(projectVersions).values({ ...base, id, snapshot,
+          snapshotSha256: sha256, snapshotBytes: json.length, snapshotState: 'pending',
+          snapshotStorageId: versionStorage.storageId }).returning();
+        return pending;
+      }
+      try {
+        const [ready] = await this.db.insert(projectVersions).values({ ...base, id,
+          snapshot: null, snapshotSha256: object.sha256, snapshotBytes: object.bytes,
+          snapshotState: 'ready', snapshotStorageId: object.storageId,
+          snapshotKey: object.key }).returning();
+        /** Сохраняем прежний контракт метода без повторного чтения S3. */
+        return { ...ready, snapshot };
+      } catch (error) {
+        /** Ответ INSERT мог потеряться после успешного COMMIT: сначала проверяем строку. */
+        let persisted: ProjectVersion | undefined;
+        try {
+          [persisted] = await this.db.select().from(projectVersions).where(eq(projectVersions.id, id));
+        } catch (lookupError) {
+          console.error('[VersionDirectWrite] Статус записи БД неизвестен; объект сохранён:', lookupError);
+          throw error;
+        }
+        if (persisted?.snapshotKey === object.key && persisted.snapshotState === 'ready') {
+          return { ...persisted, snapshot };
+        }
+        /** Не удаляем объект при неясном исходе INSERT: сверка удалит сироту через сутки. */
+        if (!persisted) console.error(`[VersionDirectWrite] Запись ${id} не подтверждена; объект оставлен для сверки`);
+        throw error;
+      }
+    }
     const [version] = await this.db.insert(projectVersions).values({
-      projectId,
+      ...base,
       snapshot,
-      label: label ?? null,
-      authorId: authorId ?? null,
-      kind,
-      authorKind: authorKind ?? null,
+      snapshotSha256: sha256,
+      snapshotBytes: json.length,
+      snapshotState: 'postgres',
     }).returning();
     return version;
   }
@@ -2355,12 +2400,15 @@ export class DatabaseStorage implements IStorage {
   /**
    * Получить одну версию проекта по ID
    * @param versionId - ID версии
+   * @param projectId - ID проекта для проверки принадлежности до чтения объекта
    * @returns Версия проекта или undefined, если не найдена
    */
-  async getProjectVersion(versionId: number): Promise<ProjectVersion | undefined> {
+  async getProjectVersion(versionId: number, projectId?: number): Promise<ProjectVersion | undefined> {
     const [version] = await this.db.select().from(projectVersions)
-      .where(eq(projectVersions.id, versionId));
-    return version || undefined;
+      .where(projectId === undefined ? eq(projectVersions.id, versionId)
+        : and(eq(projectVersions.id, versionId), eq(projectVersions.projectId, projectId)));
+    if (!version) return undefined;
+    return { ...version, snapshot: await readVersionObject(version) };
   }
 
   /**
@@ -2371,7 +2419,7 @@ export class DatabaseStorage implements IStorage {
   async getLatestProjectVersion(projectId: number): Promise<ProjectVersion | undefined> {
     const [version] = await this.db.select().from(projectVersions)
       .where(eq(projectVersions.projectId, projectId))
-      .orderBy(desc(projectVersions.createdAt))
+      .orderBy(desc(projectVersions.createdAt), desc(projectVersions.id))
       .limit(1);
     return version || undefined;
   }

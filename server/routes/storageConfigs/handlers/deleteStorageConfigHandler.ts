@@ -12,9 +12,10 @@
 import type { Request, Response } from "express";
 import { eq, count } from "drizzle-orm";
 
-import { db } from "../../../database/db";
-import { storageConfigs, mediaFiles } from "@shared/schema";
-import { getStorageRegistry } from "../../../storage/storage-registry";
+import { db, pool } from "../../../database/db";
+import { storageConfigs, mediaFiles, projectVersions } from "@shared/schema";
+import { getStorageRegistry, ensureStorageRegistryLoaded } from "../../../storage/storage-registry";
+import { S3Backend } from '../../../storage/s3-backend';
 
 /**
  * Обрабатывает запрос на удаление конфига хранилища.
@@ -38,6 +39,11 @@ export async function deleteStorageConfigHandler(
       res.status(404).json({ error: "Хранилище не найдено" });
       return;
     }
+    /** Настроенное хранилище ожидающих версий нельзя удалять. */
+    if (id === process.env.VERSION_SNAPSHOT_STORAGE_ID?.trim()) {
+      res.status(409).json({ error: 'Нельзя удалить активное хранилище снимков версий' });
+      return;
+    }
 
     // Проверяем наличие файлов на этом хранилище (Req 11.8).
     const [filesCount] = await db
@@ -50,6 +56,28 @@ export async function deleteStorageConfigHandler(
         filesCount: filesCount.value,
       });
       return;
+    }
+
+    /** Конфигурация нужна также готовым снимкам и очереди их удаления. */
+    const [versionsCount] = await db.select({ value: count() }).from(projectVersions)
+      .where(eq(projectVersions.snapshotStorageId, id));
+    if ((versionsCount?.value ?? 0) > 0) {
+      res.status(409).json({ error: 'Нельзя удалить хранилище: на нём есть версии проектов', versionsCount: versionsCount.value });
+      return;
+    }
+    const queued = await pool.query('SELECT 1 FROM project_version_object_deletions WHERE storage_id = $1 LIMIT 1', [id]);
+    if (queued.rowCount) {
+      res.status(409).json({ error: 'Нельзя удалить хранилище: ожидается очистка версий' });
+      return;
+    }
+    const backend = (await ensureStorageRegistryLoaded()).resolveBackend(id);
+    if (backend instanceof S3Backend) {
+      /** Незарегистрированные объекты также требуют очистки до удаления конфига. */
+      const objects = await backend.listObjects('project-versions/');
+      if (objects.objects.length > 0) {
+        res.status(409).json({ error: 'Нельзя удалить хранилище: остались объекты версий' });
+        return;
+      }
     }
 
     await db.delete(storageConfigs).where(eq(storageConfigs.id, id));
