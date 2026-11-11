@@ -31,7 +31,7 @@
       "bot-json-prompt"
     ],
     "folder_titles": {},
-    "updated_at": "2026-11-10T11:05:54+03:00",
+    "updated_at": "2026-11-11T14:58:46+03:00",
     "tags": [],
     "author": ""
   },
@@ -58,7 +58,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-11-03T04:34:45Z",
+    "updated_at": "2026-11-11T14:58:46+03:00",
     "tags": [],
     "author": ""
   },
@@ -170,7 +170,7 @@
   {
     "path": "api/bot",
     "title": "bot",
-    "excerpt": "Эндпоинтов: **24**",
+    "excerpt": "Эндпоинтов: **25**",
     "parts": [
       "api",
       "bot"
@@ -178,7 +178,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-11-03T07:33:45+03:00",
+    "updated_at": "2026-11-11T14:58:46+03:00",
     "tags": [],
     "author": ""
   },
@@ -1213,7 +1213,7 @@
     "folder_titles": {
       "deployment": "🚀 Деплой"
     },
-    "updated_at": "2026-10-05T19:18:06Z",
+    "updated_at": "2026-11-11T14:18:54+03:00",
     "tags": [],
     "author": ""
   },
@@ -1333,7 +1333,7 @@
     "folder_titles": {
       "deployment": "🚀 Деплой"
     },
-    "updated_at": "2026-11-10T17:07:08+03:00",
+    "updated_at": "2026-11-11T14:18:54+03:00",
     "tags": [],
     "author": ""
   },
@@ -1603,7 +1603,7 @@
     "folder_titles": {
       "features": "🧩 Возможности"
     },
-    "updated_at": "2026-11-10T11:05:54+03:00",
+    "updated_at": "2026-11-11T14:58:46+03:00",
     "tags": [],
     "author": ""
   },
@@ -3158,7 +3158,7 @@
     "folder_titles": {
       "interface": "🖥️ Интерфейс"
     },
-    "updated_at": "2026-06-15T01:26:00+03:00",
+    "updated_at": "2026-11-11T14:58:46+03:00",
     "tags": [],
     "author": ""
   },
@@ -10505,6 +10505,21 @@
       "roadmaps": "🗺️ Roadmaps"
     },
     "updated_at": "2026-09-15T06:19:58+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "security/bot-users-api",
+    "title": "API пользователей бота: доступ и защита ресурсов",
+    "excerpt": "Этот контракт относится к `GET /api/bot/tokens/:tokenId/users` и",
+    "parts": [
+      "security",
+      "bot-users-api"
+    ],
+    "folder_titles": {
+      "security": "Security"
+    },
+    "updated_at": "2026-11-11T14:58:46+03:00",
     "tags": [],
     "author": ""
   },
