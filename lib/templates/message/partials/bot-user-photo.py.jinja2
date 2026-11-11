@@ -1,0 +1,31 @@
+{# @fileoverview Получение аватара другого бота через закрытый API только в оперативную память. #}
+                # Адрес аватара менеджера разрешён только на настроенном сервере API.
+                import re as _avatar_re
+                if _avatar_re.fullmatch(r"/api/bot/tokens/[1-9][0-9]*/users/-?[1-9][0-9]*/photo\?telegram_id=[1-9][0-9]*", _image_url_resolved):
+                    try:
+                        import os as _avatar_os
+                        import aiohttp as _avatar_http
+                        from urllib.parse import urlsplit as _avatar_split
+                        from aiogram.types import BufferedInputFile as _AvatarInput
+                        _avatar_base = _avatar_os.getenv("API_BASE_URL", "http://localhost:5000").rstrip("/")
+                        _avatar_origin = _avatar_split(_avatar_base)
+                        _avatar_token = _avatar_os.getenv("STUDIO_BOT_MANAGER_TOKEN", "")
+                        if _avatar_origin.scheme not in ("http", "https") or not _avatar_origin.hostname or _avatar_origin.username or _avatar_origin.password or _avatar_origin.query or _avatar_origin.fragment or _avatar_origin.path or not _avatar_token:
+                            raise ValueError("Не настроен защищённый доступ к аватару")
+                        _avatar_bytes = bytearray()
+                        async with _avatar_http.ClientSession(timeout=_avatar_http.ClientTimeout(total=10)) as _avatar_session:
+                            async with _avatar_session.get(_avatar_base + _image_url_resolved, headers={"Authorization": "Bearer " + _avatar_token}, allow_redirects=False) as _avatar_response:
+                                if _avatar_response.status != 200:
+                                    raise ValueError("Аватар временно недоступен")
+                                if _avatar_response.content_length is not None and _avatar_response.content_length > 5 * 1024 * 1024:
+                                    raise ValueError("Аватар превышает допустимый размер")
+                                async for _avatar_chunk in _avatar_response.content.iter_chunked(65536):
+                                    if len(_avatar_bytes) + len(_avatar_chunk) > 5 * 1024 * 1024:
+                                        raise ValueError("Аватар превышает допустимый размер")
+                                    _avatar_bytes.extend(_avatar_chunk)
+                        if not _avatar_bytes:
+                            raise ValueError("Пустой аватар")
+                        _image_url_resolved = _AvatarInput(bytes(_avatar_bytes), filename="avatar.jpg")
+                    except Exception:
+                        logging.warning("Аватар пользователя недоступен; отправлена текстовая карточка")
+                        return await _b.send_message(_target_chat_id, text{{ parse_mode_arg }}{{ link_preview_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{% if userDatabaseEnabled %}, node_id="{{ nodeId }}"{% endif %})

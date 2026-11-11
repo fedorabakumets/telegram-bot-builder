@@ -1,169 +1,42 @@
 /**
- * @fileoverview Компонент строки ответа в таблице ответов
- * @description Отображает данные ответа пользователя в таблице вкладки "Ответы"
+ * @fileoverview Строка таблицы ответов с нейтральной типографикой и вложениями.
  */
-
-import { useState } from 'react';
-import { FileText } from 'lucide-react';
 import { TableRow, TableCell } from '@/components/ui/table';
-import { UserBotData } from '@shared/schema';
+import type { UserBotData } from '@shared/schema';
 import { ResponsePhoto } from './response-photo';
+import { ResponseMediaItem } from './response-media-item';
+import { parseResponseData } from '../utils';
 import { FileNotFound } from './file-not-found';
 
-/**
- * Пропсы компонента ResponseRow
- */
+/** Свойства строки ответа. */
 interface ResponseRowProps {
-  /** Данные пользователя */
+  /** Пользователь, приславший ответ. */
   user: UserBotData;
-  /** Ключ ответа (переменная) */
+  /** Имя переменной ответа. */
   keyName: string;
-  /** Индекс ответа для уникального key */
+  /** Порядковый номер ответа. */
   responseIndex: number;
-  /** Значение ответа */
+  /** Исходное значение ответа. */
   value: unknown;
 }
-
 /**
- * Компонент строки ответа в таблице
- * @param props - Пропсы компонента
- * @returns JSX компонент строки таблицы
+ * Показывает имя, переменную и содержимое ответа.
+ * @param props - Данные пользователя и ответа.
+ * @returns Строка таблицы.
  */
-export function ResponseRow({
-  user,
-  keyName,
-  responseIndex,
-  value,
-}: ResponseRowProps): React.JSX.Element {
-  const [imageError, setImageError] = useState(false);
-
-  // Парсинг ответа
-  let responseData: any = value;
-  if (typeof value === 'string') {
-    try {
-      responseData = JSON.parse(value);
-    } catch {
-      responseData = { value: value, type: 'text' };
-    }
-  } else if (typeof value === 'object' && value !== null) {
-    responseData = value;
-  } else {
-    responseData = { value: String(value), type: 'text' };
-  }
-
-  const answerValue = responseData?.value !== undefined
-    ? responseData.value
-    : (typeof value === 'object' && value !== null ? JSON.stringify(value) : (value ?? '-'));
-
-  // Формирование имени пользователя
-  const formatUserName = (u: UserBotData): string => {
-    const parts = [u.firstName, u.lastName].filter(Boolean);
-    if (parts.length > 0) return parts.join(' ');
-    if (u.userName) return `@${u.userName}`;
-    return `ID: ${u.userId}`;
-  };
-
-  return (
-    <TableRow
-      key={`${user.id}-${keyName}-${responseIndex}`}
-      className="border-b border-border/30 hover:bg-muted/30 transition-colors h-14"
-    >
-      <TableCell className="py-2">
-        <div className="font-medium text-sm truncate">{formatUserName(user)}</div>
-        <div className="text-xs text-muted-foreground truncate">ID: {user.userId}</div>
-      </TableCell>
-      <TableCell className="py-2">
-        <div className="font-medium text-sm">
-          {keyName.startsWith('response_') ? keyName.replace('response_', 'Ответ ') : keyName}
-        </div>
-      </TableCell>
-      <TableCell className="py-2 max-w-sm">
-        {(() => {
-          const valueStr = String(answerValue);
-          const isImageUrl = valueStr.startsWith('http://') || valueStr.startsWith('https://') || valueStr.startsWith('/uploads/');
-          const isAudioFile = valueStr.includes('.mp3') || valueStr.includes('.ogg') || valueStr.includes('.wav') || responseData?.type === 'audio';
-          const isVideoFile = valueStr.includes('.mp4') || valueStr.includes('.webm') || valueStr.includes('.mov') || responseData?.type === 'video';
-          const isDocumentFile = valueStr.includes('.pdf') || valueStr.includes('.doc') || valueStr.includes('.docx') || valueStr.includes('.xls') || valueStr.includes('.xlsx') || valueStr.includes('.ppt') || valueStr.includes('.pptx') || responseData?.type === 'document';
-
-          // Документ
-          if (isDocumentFile && isImageUrl) {
-            if (imageError) {
-              return <FileNotFound />;
-            }
-            const fileName = valueStr.split('/').pop() || 'Файл';
-            const extension = fileName.split('.').pop()?.toUpperCase() || 'FILE';
-            return (
-              <a
-                href={valueStr}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors text-xs"
-              >
-                <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium truncate">{fileName}</div>
-                  <div className="text-muted-foreground">{extension}</div>
-                </div>
-              </a>
-            );
-          }
-
-          // Аудио файл
-          if (isAudioFile && isImageUrl) {
-            if (imageError) {
-              return <FileNotFound />;
-            }
-            return (
-              <audio
-                src={valueStr}
-                controls
-                className="w-full"
-                onError={() => setImageError(true)}
-              />
-            );
-          }
-
-          // Видео файл
-          if (isVideoFile && isImageUrl) {
-            if (imageError) {
-              return <FileNotFound />;
-            }
-            return (
-              <video
-                src={valueStr}
-                controls
-                className="w-full rounded-lg"
-                onError={() => setImageError(true)}
-              />
-            );
-          }
-
-          // Если это URL изображения (не photo тип)
-          if (isImageUrl && !responseData?.media && !responseData?.photoUrl && responseData?.type !== 'photo' && responseData?.type !== 'image') {
-            if (imageError) {
-              return <FileNotFound />;
-            }
-            return (
-              <img
-                src={valueStr}
-                alt="Ответ"
-                className="w-full h-auto rounded-lg"
-                onError={() => setImageError(true)}
-              />
-            );
-          }
-
-          // Если это photo/image тип — используем ResponsePhoto
-          if (responseData?.media || responseData?.photoUrl || responseData?.type === 'photo' || responseData?.type === 'image') {
-            return <ResponsePhoto responseData={responseData} answerValue={valueStr} getPhotoUrlFromMessages={() => null} />;
-          }
-
-          // Обычный текст
-          return (
-            <p className="text-sm text-green-800 dark:text-green-200 font-medium break-all">{valueStr === 'undefined' || valueStr === 'null' ? '-' : valueStr}</p>
-          );
-        })()}
-      </TableCell>
-    </TableRow>
-  );
+export function ResponseRow({ user, keyName, value }: ResponseRowProps): React.JSX.Element {
+  const response = parseResponseData(value);
+  const raw = response?.value ?? value;
+  const text = typeof raw === 'object' && raw !== null ? JSON.stringify(raw) : String(raw ?? '—');
+  const name = [user.firstName, user.lastName].filter(Boolean).join(' ') || (user.userName ? `@${user.userName}` : `ID: ${user.userId}`);
+  const media = /^image_url_/.test(keyName) || response?.media || response?.photoUrl || ['photo', 'image', 'audio', 'video', 'document'].includes(response?.type || '');
+  return <TableRow className="border-b border-border/50 hover:bg-muted/30">
+    <TableCell className="py-3 align-top min-w-32"><div className="text-sm font-medium break-words">{name}</div><div className="text-xs text-muted-foreground tabular-nums">Telegram ID: {user.userId}</div></TableCell>
+    <TableCell className="py-3 align-top"><div className="text-xs text-muted-foreground [overflow-wrap:anywhere]">{keyName.startsWith('response_') ? keyName.replace('response_', 'Ответ ') : keyName}</div></TableCell>
+    <TableCell className="py-3 align-top max-w-sm">
+      {media ? <ResponsePhoto responseData={/^image_url_/.test(keyName) ? { ...response, type: response?.type || 'photo' } : response} answerValue={text} getPhotoUrlFromMessages={() => null} />
+        : /^(https?:\/\/|\/(?!\/))/.test(text) ? <ResponseMediaItem url={text} />
+        : !text.trim() ? <FileNotFound /> : <p className="text-sm text-foreground whitespace-pre-wrap break-words [overflow-wrap:anywhere]">{text === 'undefined' || text === 'null' ? '—' : text}</p>}
+    </TableCell>
+  </TableRow>;
 }

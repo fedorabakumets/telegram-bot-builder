@@ -1,204 +1,49 @@
-/**
- * @fileoverview Хендлер получения одного пользователя токена по userId
- *
- * Принимает tokenId и userId, проверяет доступ через telegram_id,
- * возвращает данные пользователя из таблицы bot_users и его аватарку.
- *
- * @module userProjectsTokens/handlers/users/getBotTokenUserHandler
- */
-import { getTelegramApiBaseUrl } from '../../../../utils/telegram-api-url';
-
+/** @fileoverview Карточка пользователя токена с датами и кэшируемой фотографией. */
 import type { Request, Response } from "express";
-import { Pool } from "pg";
-import { storage } from "../../../../storages/storage";
-import { fetchWithProxy } from "../../../../utils/telegram-proxy";
-import { existsSync, mkdirSync, createWriteStream } from "fs";
-import { join } from "path";
-import { pipeline } from "stream/promises";
-import { Readable } from "stream";
+import { getBotUsersAccess } from "./bot-users-access";
+import { parseBotUserId } from "./bot-users-params";
+import { findBotTokenUser } from "./bot-users-repository";
+import { getBotUserPhoto } from "./bot-user-photo-cache";
 import { getBotActorId } from "../../../../middleware/bot-api-actor";
-
-/** Пул подключений к PostgreSQL */
-let pool: InstanceType<typeof Pool> | null = null;
-
 /**
- * Возвращает или создаёт пул подключений к БД
- * @returns Экземпляр Pool
- */
-function getPool(): InstanceType<typeof Pool> {
-    if (!pool) {
-        pool = new Pool({ connectionString: process.env.DATABASE_URL });
-    }
-    return pool;
-}
-
-/**
- * Нормализует tokenId — срезает префикс `token_` если он есть
- * @param raw - Сырое значение из параметра маршрута
- * @returns Числовой идентификатор токена
- */
-function parseTokenId(raw: string): number {
-    const cleaned = raw.startsWith("token_") ? raw.slice(6) : raw;
-    return parseInt(cleaned, 10);
-}
-
-/**
- * Нормализует userId — срезает префикс `user_` если он есть
- * @param raw - Сырое значение из параметра маршрута
- * @returns Строковый идентификатор пользователя
- */
-function parseUserId(raw: string): string {
-    return raw.startsWith("user_") ? raw.slice(5) : raw;
-}
-
-/**
- * Скачивает файл по URL и сохраняет на диск
- * @param url - URL для скачивания
- * @param destPath - Путь для сохранения файла
- */
-async function downloadFile(url: string, destPath: string): Promise<void> {
-    const resp = await fetchWithProxy(url, { signal: AbortSignal.timeout(15000) });
-    if (!resp.ok) throw new Error(`Ошибка скачивания: ${resp.status}`);
-    const dest = createWriteStream(destPath);
-    await pipeline(Readable.fromWeb(resp.body as any), dest);
-}
-
-/**
- * Получает URL аватарки пользователя через Telegram API и сохраняет локально.
- * При любой ошибке возвращает null — не прерывает основной запрос.
- * @param token - Токен бота
- * @param userId - Telegram ID пользователя
- * @param projectId - ID проекта для пути сохранения
- * @returns Локальный путь к аватарке или null
- */
-async function fetchUserPhotoUrl(
-    token: string,
-    userId: string,
-    projectId: number,
-): Promise<string | null> {
-    try {
-        const baseUrl = `${getTelegramApiBaseUrl()}/bot${token}`;
-
-        const photosResp = await fetchWithProxy(
-            `${baseUrl}/getUserProfilePhotos?user_id=${userId}&limit=1`,
-            { signal: AbortSignal.timeout(10000) },
-        );
-        if (!photosResp.ok) return null;
-
-        const photosData = await photosResp.json() as {
-            ok: boolean;
-            result?: { total_count: number; photos: Array<Array<{ file_id: string }>> };
-        };
-
-        if (!photosData.ok || !photosData.result?.total_count || !photosData.result.photos?.[0]?.[0]) {
-            return null;
-        }
-
-        const photos0 = photosData.result.photos[0];
-        const fileId = photos0[photos0.length - 1].file_id;
-
-        const fileResp = await fetchWithProxy(
-            `${baseUrl}/getFile?file_id=${fileId}`,
-            { signal: AbortSignal.timeout(10000) },
-        );
-        if (!fileResp.ok) return null;
-
-        const fileData = await fileResp.json() as { ok: boolean; result?: { file_path: string } };
-        if (!fileData.ok || !fileData.result?.file_path) return null;
-
-        const telegramFileUrl = `${getTelegramApiBaseUrl()}/file/bot${token}/${fileData.result.file_path}`;
-
-        const uploadDir = join(process.cwd(), "uploads", String(projectId), "user_photos");
-        if (!existsSync(uploadDir)) mkdirSync(uploadDir, { recursive: true });
-
-        const localPath = join(uploadDir, `user_${userId}.jpg`);
-        await downloadFile(telegramFileUrl, localPath);
-
-        return `/uploads/${projectId}/user_photos/user_${userId}.jpg`;
-    } catch {
-        return null;
-    }
-}
-
-/**
- * Форматирует дату в читаемый вид для Telegram-сообщения
- * @param date - Дата в любом формате
- * @returns Строка вида "19.04.2026 06:53" или "—" если дата отсутствует
+ * Форматирует дату для сообщения Telegram, сохраняя прежний формат ответа.
+ * @param date - Дата из базы данных.
+ * @returns Дата в формате ДД.ММ.ГГГГ ЧЧ:ММ либо прочерк.
  */
 function formatDate(date: Date | string | null | undefined): string {
-    if (!date) return '—';
-    const d = new Date(date);
-    if (isNaN(d.getTime())) return '—';
-    const pad = (n: number) => String(n).padStart(2, '0');
-    return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  if (!date) return "—";
+  const value = new Date(date);
+  if (Number.isNaN(value.getTime())) return "—";
+  /**
+   * Дополняет компонент даты до двух цифр.
+   * @param part - Компонент даты.
+   * @returns Строка из двух цифр.
+   */
+  const pad = (part: number) => String(part).padStart(2, "0");
+  return `${pad(value.getDate())}.${pad(value.getMonth() + 1)}.${value.getFullYear()} ${pad(value.getHours())}:${pad(value.getMinutes())}`;
 }
-
 /**
- * Обрабатывает GET /api/bot/tokens/:tokenId/users/:userId
- *
- * Принимает tokenId (`131` или `token_131`) и userId (`1612141295` или `user_1612141295`).
- * Проверяет доступ через query-параметр telegram_id.
- * Возвращает данные пользователя с полем photoUrl.
- *
- * @param req - params: tokenId, userId; query: telegram_id
- * @param res - Объект пользователя с photoUrl или ошибка
- * @returns Promise<void>
+ * Возвращает пользователя из проверенной области текущего токена.
+ * @param req - Запрос с идентификатором Telegram.
+ * @param res - Ответ с проверенным контекстом доступа.
+ * @returns Завершение отправки карточки либо ошибки.
  */
 export async function getBotTokenUserHandler(req: Request, res: Response): Promise<void> {
-    try {
-        const tokenId = parseTokenId(req.params.tokenId);
-        const userId = parseUserId(req.params.userId);
-        const telegramId = getBotActorId(req);
-        if (telegramId === null) {
-            res.status(401).json({ error: "UNAUTHORIZED" });
-            return;
-        }
-        if (isNaN(tokenId)) {
-            res.status(400).json({ error: "Некорректный tokenId" });
-            return;
-        }
-
-        const tokenRecord = await storage.getBotToken(tokenId);
-        if (!tokenRecord?.token) {
-            res.status(404).json({ error: "Токен не найден" });
-            return;
-        }
-
-        const { token, projectId } = tokenRecord;
-
-        if (!(await storage.hasProjectAccess(projectId, telegramId))) {
-            res.status(403).json({ error: "Нет доступа к этому проекту" });
-            return;
-        }
-
-        const db = getPool();
-        const result = await db.query(
-            `SELECT user_id AS "userId", username AS "userName", first_name AS "firstName",
-                    last_name AS "lastName", registered_at AS "registeredAt",
-                    last_interaction AS "lastInteraction", interaction_count AS "interactionCount",
-                    is_active AS "isActive"
-             FROM bot_users
-             WHERE project_id = $1 AND token_id = $2 AND user_id = $3
-             LIMIT 1`,
-            [projectId, tokenId, userId],
-        );
-
-        if (!result.rows.length) {
-            res.status(404).json({ error: "Пользователь не найден" });
-            return;
-        }
-
-        const user = result.rows[0];
-        const photoUrl = await fetchUserPhotoUrl(token, userId, projectId);
-
-        res.json({
-            ...user,
-            registeredAt: formatDate(user.registeredAt),
-            lastInteraction: formatDate(user.lastInteraction),
-            photoUrl,
-        });
-    } catch (error: any) {
-        console.error("[BotTokenUser] Ошибка:", error.message);
-        res.status(500).json({ error: "Не удалось получить пользователя" });
-    }
+  const access = getBotUsersAccess(res);
+  if (!access) { res.status(401).json({ error: "UNAUTHORIZED" }); return; }
+  const userId = parseBotUserId(req.params.userId);
+  if (userId === null) { res.status(400).json({ error: "Некорректный userId" }); return; }
+  try {
+    const user = await findBotTokenUser(access, userId);
+    if (!user) { res.status(404).json({ error: "Пользователь не найден" }); return; }
+    const photo = await getBotUserPhoto({ ...access, userId });
+    const actorId = getBotActorId(req);
+    /** Закрытый адрес для менеджера: запрос дополнительно требует его PAT и проверки доступа. */
+    const photoDownloadUrl = photo.photoFileId && actorId
+      ? `/api/bot/tokens/${access.tokenId}/users/${userId}/photo?telegram_id=${actorId}` : null;
+    res.json({ ...user, registeredAt: formatDate(user.registeredAt), lastInteraction: formatDate(user.lastInteraction), ...photo, photoDownloadUrl });
+  } catch {
+    console.error("[BotTokenUser] Не удалось загрузить карточку пользователя");
+    res.status(500).json({ error: "Не удалось получить пользователя" });
+  }
 }

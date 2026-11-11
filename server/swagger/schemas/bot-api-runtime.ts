@@ -68,7 +68,7 @@ export const BotApiBotUserListSchema = z
   })
   .openapi("BotApiBotUserList");
 
-/** Один пользователь + photoUrl */
+/** Пользователь и метаданные фотографии без локальной копии файла. */
 export const BotApiBotUserDetailSchema = z
   .object({
     userId: z.union([z.string(), z.number()]),
@@ -79,7 +79,12 @@ export const BotApiBotUserDetailSchema = z
     lastInteraction: z.string().nullable().optional(),
     interactionCount: z.number().nullable().optional(),
     isActive: z.union([z.number(), z.boolean()]).nullable().optional(),
+    /** Идентификатор фотографии для использования тем же ботом. */
+    photoFileId: z.string().nullable().optional(),
+    /** Защищённый прокси проекта для авторизованного клиента. */
     photoUrl: z.string().nullable().optional(),
+    /** Авторизованная загрузка через API бота с поддержкой актора bot_manager. */
+    photoDownloadUrl: z.string().nullable().optional(),
   })
   .openapi("BotApiBotUserDetail");
 

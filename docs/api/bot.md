@@ -1,6 +1,6 @@
 # bot
 
-Эндпоинтов: **24**
+Эндпоинтов: **25**
 
 ### `DELETE` /api/bot/env/{id}
 
@@ -1223,7 +1223,7 @@ curl -s 'http://localhost:5000/api/bot/tokens/7/users?telegram_id=123&limit=10&o
 
 Подробнее: `docs/features/bot-manager-api-auth.md`.
 
-Даты в ответе отформатированы. **Клиент:** Bot Manager.
+Даты отформатированы. photoFileId применим только к тому же боту; photoUrl требует доступа к проекту, photoDownloadUrl поддерживает bot_manager и загрузку с Bearer. Файлы на диск не сохраняются. **Клиент:** Bot Manager.
 
 ```bash
 curl -s 'http://localhost:5000/api/bot/tokens/7/users/161?telegram_id=123' \
@@ -1258,6 +1258,48 @@ curl -s 'http://localhost:5000/api/bot/tokens/7/users/161?telegram_id=123' \
   "userId": "161",
   "firstName": "Ada",
   "registeredAt": "09.08.2026 12:00",
-  "photoUrl": "/uploads/42/user_photos/user_161.jpg"
+  "photoFileId": "telegram_file_id",
+  "photoUrl": "/api/projects/42/telegram-file?fileId=telegram_file_id&tokenId=7",
+  "photoDownloadUrl": "/api/bot/tokens/7/users/161/photo?telegram_id=123"
 }
 ```
+
+### `GET` /api/bot/tokens/{tokenId}/users/{userId}/photo
+
+Скачать фотографию пользователя без сохранения на сервере
+
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+
+**Auth (обязательно):** session cookie `connect.sid` **или** `Authorization: Bearer mcp_…`.
+
+**Actor:**
+- Личная сессия / обычный PAT → `req.user.id`; query `telegram_id` если есть — только свой, иначе **403**.
+- PAT scope **`bot_manager`** → actor = обязательный `telegram_id` (Bot Manager: Bearer `{STUDIO_BOT_MANAGER_TOKEN}`).
+
+Подробнее: `docs/features/bot-manager-api-auth.md`.
+
+Проверяет доступ к токену и наличие пользователя, получает file_id и передаёт файл потоком. Ссылка требует сессию/PAT; Telegram не сможет скачать её без авторизации. Другой бот должен загрузить байты с Bearer, затем отправить как новый файл. Отсутствующая фотография возвращает 404. Общая квота со списком и карточкой.
+
+**Operation ID:** `get_api_bot_tokens_tokenId_users_userId_photo_6639e50fb04185ff`
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `tokenId` | path | да | ID токена или token_7 | `"7"` |
+| `userId` | path | да | Telegram user id или user_… | `"1612141295"` |
+| `telegram_id` | query | нет | Telegram user id актора. Обязателен при PAT scope bot_manager. При личной сессии/PAT должен совпадать с req.user.id (или можно опустить). | `"123456789"` |
+| `connect.sid` | cookie | нет | Session cookie. Для bot-manager предпочтителен Bearer PAT со scope bot_manager. | `"s%3Axxxx.yyyy"` |
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Поток изображения |
+| 206 | Запрошенный диапазон файла |
+| 400 | Некорректный id / валидация / bot_manager без telegram_id |
+| 401 | Нет session/PAT |
+| 403 | Нет доступа / чужой telegram_id без bot_manager |
+| 404 | Ресурс не найден |
+| 416 | Диапазон недоступен |
+| 429 | Превышена общая квота пользователей бота; повторить после Retry-After |

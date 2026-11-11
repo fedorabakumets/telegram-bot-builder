@@ -36,11 +36,28 @@ console.log('🔍 Конфигурация базы данных:', {
 });
 
 /**
+ * Выбирает имя процесса для поиска соединений в pg_stat_activity.
+ * Явное PGAPPNAME имеет приоритет; неизвестные точки входа получают общее имя.
+ * @returns Имя API, исполнителя или вспомогательного процесса
+ */
+function resolvePoolApplicationName(): string {
+  const explicitName = process.env.PGAPPNAME?.trim();
+  if (explicitName) return explicitName;
+  const entry = (process.argv[1] || '').replace(/\\/g, '/');
+  if (/(?:^|\/)server\/runner\/index\.[cm]?[jt]s$/.test(entry)
+    || /(?:^|\/)dist-runner\/runner\.cjs$/.test(entry)) return 'botcraft-runtime';
+  if (/(?:^|\/)server\/index\.[cm]?[jt]s$/.test(entry)) return 'botcraft-api';
+  return 'botcraft-process';
+}
+
+/**
  * Конфигурация пула соединений с базой данных
  * Настроена для оптимальной работы в среде Railway с учетом ограничений на количество соединений
  */
 const poolConfig = {
   connectionString: process.env.DATABASE_URL,
+  /** Имя службы позволяет отличить API и исполнителя в статистике PostgreSQL. */
+  application_name: resolvePoolApplicationName(),
   // Принудительно UTC для всех сессий пула. Без этого сессия наследует пояс
   // сервера PostgreSQL (например Europe/Moscow), и now() в колонках
   // `timestamp without time zone` пишется как локальное настенное время,

@@ -10,9 +10,9 @@
  */
 export function MobileEmptyState({ searchQuery }: { searchQuery: string }): React.JSX.Element {
   return (
-    <div className="text-center py-8">
+    <div className="rounded-lg border border-dashed border-border/60 px-4 py-8 text-center text-sm">
       <div className="text-muted-foreground">
-        {searchQuery ? 'Пользователи не найдены' : 'Пользователи еще не взаимодействовали с ботом'}
+        {searchQuery ? 'Пользователи не найдены' : 'В этом списке пока нет пользователей'}
       </div>
     </div>
   );

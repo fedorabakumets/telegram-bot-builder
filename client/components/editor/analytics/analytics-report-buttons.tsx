@@ -9,11 +9,11 @@ import { reportRangeLabel } from './analytics-report-filter';
  * @returns Два рейтинга кнопок с общим периодом.
  */
 export function AnalyticsReportButtons({ snapshot }: { /** Общий снимок. */ snapshot: AnalyticsV2Snapshot }) {
-  /** Формирует независимый рейтинг выбранного показателя. @param people - Считать людей вместо нажатий. @returns Десять лидирующих кнопок. */
+  /** Формирует независимый рейтинг выбранного показателя. @param people - Считать людей вместо нажатий. @returns Пять лидирующих кнопок. */
   const ranking = (people: boolean) => snapshot.buttons.map(item => ({ id: item.label, label: item.label,
     count: people ? item.people ?? item.count : item.count + (item.historical_count ?? 0),
     details: [['С Telegram ID', item.count], ['Из старой истории', item.historical_count ?? 0], ['Уникальные люди', item.people ?? item.count]] as Array<[string, number]>,
-  })).sort((a, b) => b.count - a.count || a.label.localeCompare(b.label)).slice(0, 10);
+  })).sort((a, b) => b.count - a.count || a.label.localeCompare(b.label)).slice(0, 5);
   return <AnalyticsCollapsibleSection title="Популярные действия">
     <div className="analytics-report-grid analytics-overview-report-grid analytics-popular-actions-grid">
       <AnalyticsReportDistribution compact periodSelectable periodInHeader title="Нажатия кнопок" donut={false}

@@ -4997,7 +4997,15 @@
               }
             ]
           },
+          "photoFileId": {
+            "type": "string",
+            "nullable": true
+          },
           "photoUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "photoDownloadUrl": {
             "type": "string",
             "nullable": true
           }
@@ -15572,7 +15580,7 @@
           "bot"
         ],
         "summary": "Один пользователь бота + аватар",
-        "description": "**Auth (обязательно):** session cookie `connect.sid` **или** `Authorization: Bearer mcp_…`.\n\n**Actor:**\n- Личная сессия / обычный PAT → `req.user.id`; query `telegram_id` если есть — только свой, иначе **403**.\n- PAT scope **`bot_manager`** → actor = обязательный `telegram_id` (Bot Manager: Bearer `{STUDIO_BOT_MANAGER_TOKEN}`).\n\nПодробнее: `docs/features/bot-manager-api-auth.md`.\n\nДаты в ответе отформатированы. **Клиент:** Bot Manager.\n\n```bash\ncurl -s 'http://localhost:5000/api/bot/tokens/7/users/161?telegram_id=123' \\\n  -H 'Authorization: Bearer mcp_…'\n```",
+        "description": "**Auth (обязательно):** session cookie `connect.sid` **или** `Authorization: Bearer mcp_…`.\n\n**Actor:**\n- Личная сессия / обычный PAT → `req.user.id`; query `telegram_id` если есть — только свой, иначе **403**.\n- PAT scope **`bot_manager`** → actor = обязательный `telegram_id` (Bot Manager: Bearer `{STUDIO_BOT_MANAGER_TOKEN}`).\n\nПодробнее: `docs/features/bot-manager-api-auth.md`.\n\nДаты отформатированы. photoFileId применим только к тому же боту; photoUrl требует доступа к проекту, photoDownloadUrl поддерживает bot_manager и загрузку с Bearer. Файлы на диск не сохраняются. **Клиент:** Bot Manager.\n\n```bash\ncurl -s 'http://localhost:5000/api/bot/tokens/7/users/161?telegram_id=123' \\\n  -H 'Authorization: Bearer mcp_…'\n```",
         "security": [
           {
             "cookieAuth": []
@@ -15637,7 +15645,9 @@
                   "userId": "161",
                   "firstName": "Ada",
                   "registeredAt": "09.08.2026 12:00",
-                  "photoUrl": "/uploads/42/user_photos/user_161.jpg"
+                  "photoFileId": "telegram_file_id",
+                  "photoUrl": "/api/projects/42/telegram-file?fileId=telegram_file_id&tokenId=7",
+                  "photoDownloadUrl": "/api/bot/tokens/7/users/161/photo?telegram_id=123"
                 },
                 "schema": {
                   "$ref": "#/components/schemas/BotApiBotUserDetail"
@@ -52444,6 +52454,133 @@
           }
         },
         "operationId": "get_api_projects_id_tokens_tokenId_settings_137e9b952e2b1d35"
+      }
+    },
+    "/api/bot/tokens/{tokenId}/users/{userId}/photo": {
+      "get": {
+        "tags": [
+          "bot"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "agentToken": []
+          }
+        ],
+        "summary": "Скачать фотографию пользователя без сохранения на сервере",
+        "description": "**Auth (обязательно):** session cookie `connect.sid` **или** `Authorization: Bearer mcp_…`.\n\n**Actor:**\n- Личная сессия / обычный PAT → `req.user.id`; query `telegram_id` если есть — только свой, иначе **403**.\n- PAT scope **`bot_manager`** → actor = обязательный `telegram_id` (Bot Manager: Bearer `{STUDIO_BOT_MANAGER_TOKEN}`).\n\nПодробнее: `docs/features/bot-manager-api-auth.md`.\n\nПроверяет доступ к токену и наличие пользователя, получает file_id и передаёт файл потоком. Ссылка требует сессию/PAT; Telegram не сможет скачать её без авторизации. Другой бот должен загрузить байты с Bearer, затем отправить как новый файл. Отсутствующая фотография возвращает 404. Общая квота со списком и карточкой.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "7"
+            },
+            "required": true,
+            "description": "ID токена или token_7",
+            "example": "7",
+            "name": "tokenId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "example": "1612141295"
+            },
+            "required": true,
+            "description": "Telegram user id или user_…",
+            "example": "1612141295",
+            "name": "userId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "example": "123456789"
+            },
+            "required": false,
+            "description": "Telegram user id актора. Обязателен при PAT scope bot_manager. При личной сессии/PAT должен совпадать с req.user.id (или можно опустить).",
+            "example": "123456789",
+            "name": "telegram_id",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session Studio. Альтернатива — Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie. Для bot-manager предпочтителен Bearer PAT со scope bot_manager.",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Поток изображения",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "206": {
+            "description": "Запрошенный диапазон файла"
+          },
+          "400": {
+            "description": "Некорректный id / валидация / bot_manager без telegram_id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет session/PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Нет доступа / чужой telegram_id без bot_manager",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Ресурс не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotApiError"
+                }
+              }
+            }
+          },
+          "416": {
+            "description": "Диапазон недоступен"
+          },
+          "429": {
+            "description": "Превышена общая квота пользователей бота; повторить после Retry-After"
+          }
+        },
+        "operationId": "get_api_bot_tokens_tokenId_users_userId_photo_6639e50fb04185ff"
       }
     }
   }

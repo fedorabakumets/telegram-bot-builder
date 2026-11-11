@@ -17,6 +17,7 @@ import {
 } from "../schemas/bot-api-runtime";
 import { BOT_API_AUTH_DOC } from "./bot-api-auth-doc";
 import { BOT_API_CRUD_ERRORS } from "./bot-api-responses";
+import { registerBotApiUserPhotoPath } from "./bot-api-user-photo-path";
 
 /**
  * Регистрирует GET users и GET users/{userId}.
@@ -28,6 +29,7 @@ export function registerBotApiTokenUsersPaths(
   registry: OpenAPIRegistry,
   cookieSecurity: Array<Record<string, string[]>>,
 ): void {
+  registerBotApiUserPhotoPath(registry, cookieSecurity);
   registry.registerPath({
     method: "get",
     path: "/api/bot/tokens/{tokenId}/users",
@@ -72,7 +74,8 @@ export function registerBotApiTokenUsersPaths(
     summary: "Один пользователь бота + аватар",
     description:
       BOT_API_AUTH_DOC +
-      "Даты в ответе отформатированы. **Клиент:** Bot Manager.\n\n" +
+      "Даты отформатированы. photoFileId применим только к тому же боту; photoUrl требует доступа к проекту, " +
+      "photoDownloadUrl поддерживает bot_manager и загрузку с Bearer. Файлы на диск не сохраняются. **Клиент:** Bot Manager.\n\n" +
       "```bash\ncurl -s 'http://localhost:5000/api/bot/tokens/7/users/161?telegram_id=123' \\\n" +
       "  -H 'Authorization: Bearer mcp_…'\n```",
     security: cookieSecurity,
@@ -91,7 +94,9 @@ export function registerBotApiTokenUsersPaths(
               userId: "161",
               firstName: "Ada",
               registeredAt: "09.08.2026 12:00",
-              photoUrl: "/uploads/42/user_photos/user_161.jpg",
+              photoFileId: "telegram_file_id",
+              photoUrl: "/api/projects/42/telegram-file?fileId=telegram_file_id&tokenId=7",
+              photoDownloadUrl: "/api/bot/tokens/7/users/161/photo?telegram_id=123",
             },
           },
         },

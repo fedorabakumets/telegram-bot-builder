@@ -4,7 +4,7 @@
  */
 
 import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 
 /**
  * Пропсы компонента SearchInput
@@ -23,17 +23,29 @@ interface SearchInputProps {
  */
 export function SearchInput({ value, onChange }: SearchInputProps): React.JSX.Element {
   return (
-    <div className="relative group">
-      <div className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center transition-colors group-focus-within:bg-primary/20">
-        <Search className="w-4 h-4 text-primary" />
+    <div className="relative min-w-0">
+      <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+        <Search className="h-4 w-4" aria-hidden="true" />
       </div>
       <Input
-        placeholder="Поиск по имени, username или ID..."
+        type="search"
+        aria-label="Поиск пользователей по имени, username или ID"
+        placeholder="Имя, username или ID"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="pl-14 sm:pl-16 pr-4 h-11 sm:h-12 text-sm sm:text-base rounded-xl border-2 border-transparent bg-background shadow-sm hover:border-primary/20 focus:border-primary/40 focus:ring-0 transition-all"
+        className="h-10 rounded-lg border border-border/60 bg-background pl-10 pr-10 text-sm shadow-none transition-colors focus-visible:ring-2 focus-visible:ring-primary/40 [&::-webkit-search-cancel-button]:appearance-none"
         data-testid="input-search-users"
       />
+      {value && (
+        <button
+          type="button"
+          aria-label="Очистить поиск пользователей"
+          onClick={() => onChange('')}
+          className="absolute right-1 top-1 flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        >
+          <X className="h-4 w-4" aria-hidden="true" />
+        </button>
+      )}
     </div>
   );
 }

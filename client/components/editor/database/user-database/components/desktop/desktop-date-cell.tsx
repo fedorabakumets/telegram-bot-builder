@@ -21,7 +21,7 @@ interface DesktopDateCellProps {
  */
 export function DesktopDateCell({ date }: DesktopDateCellProps): React.JSX.Element {
   return (
-    <TableCell className="py-2 text-xs text-muted-foreground">
+    <TableCell className="py-2 text-xs text-muted-foreground tabular-nums">
       {formatDate(date) || '-'}
     </TableCell>
   );

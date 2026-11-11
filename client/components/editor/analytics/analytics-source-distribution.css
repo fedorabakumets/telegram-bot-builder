@@ -1,4 +1,12 @@
 /** @fileoverview Равная высота карточек источников и компактное распределение рядом с кольцом. */
+/** Показывает динамику и распределение рядом в рабочей панели от 600 пикселей. */
+@container analytics (min-width: 600px) {
+  .analytics-page .analytics-sources-compact { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; }
+  /** Совмещает заголовки и нижние края графика с кольцевой диаграммой. */
+  .analytics-page .analytics-sources-compact > .analytics-report-card > header { min-height: 72px; }
+  .analytics-page .analytics-sources-compact .analytics-donut-content { flex: 1; min-height: 0; }
+  .analytics-page .analytics-sources-compact .analytics-donut-legend { flex: 1; min-height: 0; max-height: 320px; }
+}
 /** Источники продолжают высоту верхней пары; список использует свободное место рядом с кольцом. */
 @container analytics (min-width: 1100px) {
   .analytics-page .analytics-sources-compact { align-items: stretch; }
@@ -13,3 +21,5 @@
 
 /** Повторяющиеся сравнения не раздувают строки; значение прошлого периода доступно в подробностях. */
 .analytics-page .analytics-sources-compact .analytics-donut-legend > button > span.block { display: none; }
+/** Временно скрывает пояснение о восьми источниках под графиком. */
+.analytics-page .analytics-sources-compact > section:first-child > p { display: none !important; }

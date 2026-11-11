@@ -23,6 +23,9 @@ import { deleteBotProjectHandler } from "./userProjectsTokens/handlers/projects/
 import { getBotProjectTokensHandler } from "./userProjectsTokens/handlers/tokens/getBotProjectTokensHandler";
 import { getBotTokenUsersHandler } from "./userProjectsTokens/handlers/users/getBotTokenUsersHandler";
 import { getBotTokenUserHandler } from "./userProjectsTokens/handlers/users/getBotTokenUserHandler";
+import { getBotTokenUserPhotoHandler } from "./userProjectsTokens/handlers/users/getBotTokenUserPhotoHandler";
+import { requireBotUsersTokenAccess } from "./userProjectsTokens/handlers/users/bot-users-access";
+import { botUsersIpRateLimit, botUsersActorRateLimit } from "./userProjectsTokens/users-rate-limit";
 import { createBotTokenHandler } from "./userProjectsTokens/handlers/tokens/createBotTokenHandler";
 import { deleteBotTokenHandler } from "./userProjectsTokens/handlers/tokens/deleteBotTokenHandler";
 import { getTokenStatsHandler } from "./userProjectsTokens/handlers/tokens/getTokenStatsHandler";
@@ -56,12 +59,24 @@ export function setupUserProjectAndTokenRoutes(app: Express): void {
   app.post("/api/bot/projects/:id/tokens", actor, requireBotProjectAccess, createBotTokenHandler);
   app.delete("/api/bot/tokens/:tokenId", actor, requireBotTokenOwnership, deleteBotTokenHandler);
   app.get("/api/bot/tokens/:tokenId/stats", actor, requireBotTokenOwnership, getTokenStatsHandler);
-  app.get("/api/bot/tokens/:tokenId/users", actor, requireBotTokenOwnership, getBotTokenUsersHandler);
+  /** Ограничиваем нагрузку до БД и передаём обработчикам единожды проверенный доступ. */
+  app.get("/api/bot/tokens/:tokenId/users", botUsersIpRateLimit, actor, botUsersActorRateLimit, requireBotUsersTokenAccess, getBotTokenUsersHandler);
   app.get(
     "/api/bot/tokens/:tokenId/users/:userId",
+    botUsersIpRateLimit,
     actor,
-    requireBotTokenOwnership,
+    botUsersActorRateLimit,
+    requireBotUsersTokenAccess,
     getBotTokenUserHandler,
+  );
+  /** Передаём фото другому боту только после той же проверки актора и области пользователей. */
+  app.get(
+    "/api/bot/tokens/:tokenId/users/:userId/photo",
+    botUsersIpRateLimit,
+    actor,
+    botUsersActorRateLimit,
+    requireBotUsersTokenAccess,
+    getBotTokenUserPhotoHandler,
   );
 
   app.get(

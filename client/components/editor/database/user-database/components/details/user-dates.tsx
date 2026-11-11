@@ -3,7 +3,6 @@
  * @description Показывает даты регистрации, обновления и активности
  */
 
-import { Label } from '@/components/ui/label';
 import { formatDate } from '../../../utils';
 
 /**
@@ -30,8 +29,8 @@ export function UserDates({
 }: UserDatesProps): React.JSX.Element {
   return (
     <div>
-      <Label className="text-sm font-medium">Даты</Label>
-      <div className="mt-2 space-y-2">
+      <h3 className="text-sm font-medium">Даты</h3>
+      <div className="mt-3 space-y-2 break-words text-sm tabular-nums">
         <div>
           <span className="text-sm text-muted-foreground">Регистрация:</span>{' '}
           {String(formatDate(createdAt ?? null))}

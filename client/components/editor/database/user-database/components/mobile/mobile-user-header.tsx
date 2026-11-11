@@ -1,38 +1,26 @@
 /**
- * @fileoverview Компонент заголовка мобильной карточки пользователя
- * @description Отображает имя и ID пользователя
+ * @fileoverview Имя пользователя и его идентификатор Telegram в компактной карточке.
  */
-
 import { UserBotData } from '@shared/schema';
 
-/**
- * Пропсы компонента MobileUserHeader
- */
+/** Свойства заголовка карточки. */
 interface MobileUserHeaderProps {
-  /** Данные пользователя */
+  /** Данные пользователя. */
   user: UserBotData;
-  /** Функция форматирования имени */
+  /** Форматирует имя пользователя. */
   formatUserName: (user: UserBotData) => string;
-  /** Индекс пользователя в списке */
 }
 
 /**
- * Компонент заголовка мобильной карточки пользователя
- * @param props - Пропсы компонента
- * @returns JSX компонент заголовка
+ * Показывает переносимое имя и идентификатор Telegram.
+ * @param props - Данные пользователя и форматирование имени.
+ * @returns Заголовок карточки.
  */
-export function MobileUserHeader(props: MobileUserHeaderProps): React.JSX.Element {
-  const {
-    user,
-    formatUserName,
-  } = props;
-
+export function MobileUserHeader({ user, formatUserName }: MobileUserHeaderProps): React.JSX.Element {
   return (
-    <div className="flex items-start justify-between">
-      <div className="flex-1">
-        <div className="font-medium text-base">{formatUserName(user)}</div>
-        <div className="text-sm text-muted-foreground">ID: {user.id}</div>
-      </div>
+    <div className="min-w-0 flex-1">
+      <div className="break-words text-sm font-medium leading-5">{formatUserName(user)}</div>
+      <div className="mt-1 break-all text-xs text-muted-foreground tabular-nums">Telegram ID: {user.userId}</div>
     </div>
   );
 }

@@ -61,11 +61,11 @@ export function UserDetailsDialog(props: UserDetailsDialogProps): React.JSX.Elem
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className={`${isMobile ? 'max-w-[95vw] max-h-[90vh]' : 'max-w-3xl max-h-[80vh]'} overflow-auto`}
+        className={`users-portal ${isMobile ? 'max-w-[95vw] max-h-[90dvh]' : 'max-w-3xl max-h-[80dvh]'} flex flex-col overflow-hidden`}
       >
         <UserDetailsHeader />
 
-        <div className="space-y-6">
+        <div className="min-h-0 min-w-0 space-y-6 overflow-y-auto pr-1">
           <UserInfoGrid
             selectedUser={selectedUser}
             userMessageCounts={userMessageCounts}

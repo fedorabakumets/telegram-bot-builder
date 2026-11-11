@@ -42,7 +42,7 @@ export function ResponseCell({ responseData, answerValue }: ResponseCellProps): 
 
   // Текстовый ответ
   return (
-    <p className="text-[9px] xs:text-[10px] sm:text-xs text-green-800 dark:text-green-200 font-medium break-words max-w-full leading-tight">
+    <p className="text-sm text-foreground break-words max-w-full leading-tight">
       {answerValue === 'undefined' || answerValue === 'null' ? '-' : answerValue}
     </p>
   );

@@ -321,6 +321,7 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
             {# imageUrl содержит переменную вида {var.path} — подставляем через replace_variables_in_text #}
             _image_url_resolved = replace_variables_in_text("{{ imageUrl }}", all_user_vars, {})
             if _image_url_resolved and _image_url_resolved != "{{ imageUrl }}":
+{% include 'message/partials/bot-user-photo.py.jinja2' %}
                 _sent_result = await _b.send_photo(_target_chat_id, await resolve_media_input(_image_url_resolved) if await is_registered_media(_image_url_resolved) else _image_url_resolved, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{% if userDatabaseEnabled %}, node_id="{{ nodeId }}"{% endif %})
                 _main_delivery_done = True
 {% include 'message/partials/send-extra-file-ids.py.jinja2' %}

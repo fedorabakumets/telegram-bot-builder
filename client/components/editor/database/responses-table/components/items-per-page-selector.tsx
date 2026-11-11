@@ -31,10 +31,10 @@ export function ItemsPerPageSelector({
       value={value.toString()}
       onValueChange={(val) => onChange(Number(val) as ItemsPerPageValue)}
     >
-      <SelectTrigger className="w-[80px] xs:w-[90px] sm:w-[100px]">
+      <SelectTrigger aria-label="Количество ответов на странице" className="w-20 h-9">
         <SelectValue placeholder="12" />
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent className="users-portal">
         {ITEMS_PER_PAGE_OPTIONS.map((option) => (
           <SelectItem key={option} value={option.toString()}>
             {option}

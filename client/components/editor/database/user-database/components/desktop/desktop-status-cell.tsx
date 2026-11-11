@@ -28,12 +28,12 @@ export function DesktopStatusCell({ user }: DesktopStatusCellProps): React.JSX.E
         {/* Активен/Неактивен — скрыто */}
         {/* Заблокирован — скрыто */}
         {Boolean(user.isPremium) ? (
-          <Badge variant="outline" className="text-xs h-5 text-yellow-600 border-yellow-400">
-            <Crown className="w-2.5 h-2.5 mr-0.5" />
+          <Badge variant="outline" className="text-xs h-5 text-muted-foreground border-border bg-transparent">
+            <Crown className="w-3 h-3 mr-1" />
             Premium
           </Badge>
         ) : (
-          <span className="text-xs text-muted-foreground/50">—</span>
+          <span className="text-xs text-muted-foreground">—</span>
         )}
       </div>
     </TableCell>

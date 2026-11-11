@@ -30,6 +30,10 @@ export interface UseUserDatabaseParams {
 export interface UseUserDatabaseReturn {
   /** Данные проекта */
   project?: BotProject;
+  /** Ошибка загрузки пользователей */
+  usersError?: Error | null;
+  /** Загрузка списка пользователей */
+  isUsersPending?: boolean;
   /** Список пользователей (все загруженные страницы) */
   users: UserBotData[];
   /** Статистика пользователей */

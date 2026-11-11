@@ -29,17 +29,13 @@ export function DatabaseToggle({
 }: DatabaseToggleProps): React.JSX.Element {
   return (
     <div
-      className={`flex items-center gap-1.5 px-2 py-1 rounded-md border text-xs font-medium transition-colors ${
-        isDatabaseEnabled
-          ? 'border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/30'
-          : 'border-rose-300 dark:border-rose-700 text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/30'
-      }`}
+      className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs text-muted-foreground"
       data-testid="database-toggle-container"
     >
-      <span>{isDatabaseEnabled ? '✅' : '❌'}</span>
       <span className="whitespace-nowrap">{isDatabaseEnabled ? 'Включена' : 'Выключена'}</span>
       <Switch
         id="db-toggle"
+        aria-label="Сохранение данных пользователей"
         data-testid="switch-database-toggle"
         checked={isDatabaseEnabled}
         onCheckedChange={onToggle}

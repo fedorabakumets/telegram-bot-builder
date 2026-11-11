@@ -1,6 +1,6 @@
 {
   "name": "telegram-bot-builder",
-  "version": "2.2.1.7",
+  "version": "2.2.1.9",
   "description": "🤖 Visual Telegram Bot Builder - Create bots without coding using drag-and-drop interface",
   "type": "module",
   "license": "MIT",
@@ -158,12 +158,12 @@
     "dev:split": "node scripts/dev-split.mjs",
     "dev:frontend": "cross-env NODE_ENV=development SPLIT_FRONTEND=1 FRONTEND_PORT=5000 BACKEND_PORT=5001 vite --config vite.config.ts",
     "dev:api": "cross-env NODE_ENV=development PORT=5001 APP_MODE=backend BOT_RUNTIME_MODE=api WORKER_RUNTIME=remote tsx watch --tsconfig tsconfig.node.json server/index.ts",
-    "dev:runtime": "cross-env RUNNER_REQUIRE_FENCE=true RUNNER_BROADCASTS_ENABLED=true tsx watch --tsconfig tsconfig.node.json server/runner/index.ts",
+    "dev:runtime": "cross-env RUNNER_REQUIRE_FENCE=true tsx watch --tsconfig tsconfig.node.json server/runner/index.ts",
     "dev:backend": "cross-env NODE_ENV=development APP_MODE=backend tsx watch --tsconfig tsconfig.node.json server/index.ts",
     "start:frontend": "node frontend/index.mjs",
     "start:backend": "cross-env APP_MODE=backend node dist/server/index.js",
     "start:api": "cross-env APP_MODE=backend BOT_RUNTIME_MODE=api WORKER_RUNTIME=remote node dist/server/index.js",
-    "start:runtime": "cross-env RUNNER_REQUIRE_FENCE=true RUNNER_BROADCASTS_ENABLED=true RUNNER_WORKER_SCRIPT=server/python/worker.py node dist-runner/runner.cjs"
+    "start:runtime": "cross-env RUNNER_REQUIRE_FENCE=true RUNNER_WORKER_SCRIPT=server/python/worker.py node dist-runner/runner.cjs"
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^9.1.0",

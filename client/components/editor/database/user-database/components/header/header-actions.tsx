@@ -17,6 +17,10 @@ interface HeaderActionsProps {
   projectName: string;
   /** Функция обновления (не используется в этом компоненте) */
   onRefresh?: () => void;
+  /** Выбранный бот; null означает всех ботов проекта */
+  selectedTokenId?: number | null;
+  /** Выполняется очистка базы */
+  isPending?: boolean;
   /** Функция очистки базы */
   onDeleteAll: () => void;
 }
@@ -30,6 +34,8 @@ export function HeaderActions({
   projectId,
   projectName,
   onDeleteAll,
+  selectedTokenId = null,
+  isPending = false,
 }: HeaderActionsProps): React.JSX.Element {
   return (
     <div
@@ -42,26 +48,29 @@ export function HeaderActions({
           <Button
             variant="outline"
             size="sm"
-            className="h-9 sm:h-10 px-3 sm:px-4 rounded-xl border-2 border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50"
+            className="h-8 rounded-lg border-border px-3 text-muted-foreground hover:text-foreground"
+            aria-label="Очистить данные пользователей"
+            disabled={isPending}
           >
             <Trash2 className="w-4 h-4" />
             <span className="hidden sm:inline ml-2">Очистить</span>
           </Button>
         </AlertDialogTrigger>
-        <AlertDialogContent>
+        <AlertDialogContent className="users-portal">
           <AlertDialogHeader>
             <AlertDialogTitle>Удалить все данные пользователей?</AlertDialogTitle>
             <AlertDialogDescription>
-              Это действие нельзя отменить. Все данные пользователей для этого бота будут удалены навсегда.
+              Это действие нельзя отменить. Будут удалены данные пользователей {selectedTokenId == null ? `всех ботов проекта «${projectName}»` : `выбранного бота в проекте «${projectName}»`}.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Отмена</AlertDialogCancel>
             <AlertDialogAction
               onClick={onDeleteAll}
+              disabled={isPending}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Удалить все
+              {isPending ? 'Удаление…' : 'Удалить данные'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

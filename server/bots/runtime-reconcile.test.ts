@@ -29,7 +29,7 @@ vi.mock("./claimBuildLinkRetry", () => ({
   isBuildLinkExpired: (error: string | null) => error?.includes("TBB_BUILD_LINK_EXPIRED:") === true,
 }));
 
-import { reconcileBotDesiredState } from "./runtime-reconcile";
+import { reconcileBotDesiredState, scheduleRuntimeReconcile } from "./runtime-reconcile";
 
 beforeEach(() => {
   state.instances = [];
@@ -40,6 +40,20 @@ beforeEach(() => {
 });
 
 describe("сверка исполнителя", () => {
+  /** После недоступности исполнителя повторяет привязку и не прерывает таймер. */
+  it("повторяет привязку после ошибки", async () => {
+    vi.useFakeTimers();
+    const reattach = vi.fn().mockRejectedValueOnce(new Error("исполнитель недоступен")).mockResolvedValue(0);
+    const stop = scheduleRuntimeReconcile(1_000, reattach);
+    try {
+      await vi.advanceTimersByTimeAsync(2_000);
+      expect(reattach).toHaveBeenCalledTimes(2);
+    } finally {
+      stop();
+      vi.useRealTimers();
+    }
+  });
+
   it("восстанавливает пропущенную команду запуска", async () => {
     state.instances = [{ id: 1, projectId: 7, tokenId: 9, status: "stopped", desiredStatus: "running", desiredGeneration: 2 }];
     expect((await reconcileBotDesiredState()).started).toBe(1);

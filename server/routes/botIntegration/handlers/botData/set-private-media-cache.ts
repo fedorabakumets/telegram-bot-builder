@@ -15,6 +15,9 @@ import type { Response } from "express";
  */
 export function setPrivateMediaCacheHeaders(res: Response, maxAgeSeconds = 86400): void {
   res.set("Cache-Control", `private, max-age=${maxAgeSeconds}`);
+  /** Разделяет браузерный кэш между сессиями и персональными токенами. */
+  res.vary('Cookie');
+  res.vary('Authorization');
   res.removeHeader("Pragma");
   res.removeHeader("Expires");
 }

@@ -7183,7 +7183,7 @@
                 }
               ],
               "markdown": false,
-              "variable": "user_detail.photoUrl",
+              "variable": "user_detail.photoDownloadUrl",
               "adminOnly": false,
               "showInMenu": false,
               "messageText": "",
@@ -7217,7 +7217,7 @@
             "id": "user-card-with-photo",
             "data": {
               "buttons": [],
-              "imageUrl": "{user_detail.photoUrl}",
+              "imageUrl": "{user_detail.photoDownloadUrl}",
               "markdown": false,
               "adminOnly": false,
               "formatMode": "html",

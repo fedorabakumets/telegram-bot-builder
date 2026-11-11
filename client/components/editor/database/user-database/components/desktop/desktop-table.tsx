@@ -84,9 +84,9 @@ export function DesktopTable(props: DesktopTableProps): React.JSX.Element {
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   return (
-    <div className="rounded-lg border border-border bg-card/40 overflow-hidden w-full">
+    <div className="rounded-lg border border-border bg-background overflow-hidden w-full">
       <div className="overflow-x-auto">
-        <Table className="w-full">
+        <Table className="w-full" aria-label="Пользователи бота" aria-busy={isFetchingNextPage}>
           <DesktopTableHeader visibleColumns={visibleColumns} />
           <TableBody>
             {users.length === 0 ? (
@@ -112,9 +112,9 @@ export function DesktopTable(props: DesktopTableProps): React.JSX.Element {
         </Table>
       </div>
       {/* Sentinel-элемент для определения момента подгрузки следующей страницы */}
-      <div ref={sentinelRef} className="h-4" />
+      <div ref={sentinelRef} className="h-4" aria-hidden="true" />
       {isFetchingNextPage && (
-        <div className="text-center py-2 text-muted-foreground text-sm">Загрузка...</div>
+        <div role="status" aria-live="polite" className="text-center py-2 text-muted-foreground text-sm">Загрузка пользователей…</div>
       )}
     </div>
   );

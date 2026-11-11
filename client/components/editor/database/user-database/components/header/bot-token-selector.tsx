@@ -95,7 +95,7 @@ export function BotTokenSelector({
           : undefined;
 
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="flex min-w-0 max-w-full items-center gap-2">
       <Bot className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
       <Select
         key={`${projectId}:${selectValue ?? 'none'}`}
@@ -108,10 +108,10 @@ export function BotTokenSelector({
           onSelect(Number(value));
         }}
       >
-        <SelectTrigger className="h-8 text-xs border-border/60 bg-background min-w-[120px]">
+        <SelectTrigger aria-label="Бот пользователей" className="h-8 min-w-0 w-48 max-w-full rounded-lg border-border bg-background text-sm [&>span]:truncate">
           <SelectValue placeholder="Бот" />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="users-portal max-w-[calc(100vw-24px)] [&_[role=option]]:whitespace-normal [&_[role=option]]:break-words">
           {allowAll ? <SelectItem value="all">Все боты</SelectItem> : null}
           {sortedTokens.map((token) => {
             const count = userCounts.get(token.id);

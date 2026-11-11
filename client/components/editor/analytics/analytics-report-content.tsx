@@ -43,7 +43,8 @@ export function AnalyticsReportContent({ snapshot }: { /** Снимок выбр
       <p className="text-sm text-muted-foreground">{availability.checked_at ? `Проверено: ${new Date(availability.checked_at).toLocaleString('ru-RU', { timeZone: snapshot.range.timezone })}` : 'Дата проверки неизвестна · последние известные статусы'}</p>
       <AnalyticsAccessCheckPanel projectId={snapshot.project_id} tokenId={snapshot.token_id} totalUsers={current.audience.total_users} showSummary={false} />
     </section>
-    <div className="analytics-report-grid"><AnalyticsReportDistribution compact title="Telegram Premium" items={[{ id: 'premium', label: 'Premium', count: composition.premium }, { id: 'regular', label: 'Без Premium', count: composition.regular }, { id: 'unknown', label: 'Не определено', count: composition.unknown }]} />
+    {/* Сетка распределений сохраняет две колонки в рабочей панели. */}
+    <div className="analytics-report-grid analytics-audience-distribution-grid"><AnalyticsReportDistribution compact title="Telegram Premium" items={[{ id: 'premium', label: 'Premium', count: composition.premium }, { id: 'regular', label: 'Без Premium', count: composition.regular }, { id: 'unknown', label: 'Не определено', count: composition.unknown }]} />
       <AnalyticsReportDistribution compact title="Языки Telegram" items={composition.languages.map(item => ({ id: item.code, label: item.code === 'unknown' ? 'Не определён' : item.code, count: item.count }))} /></div>
     </AnalyticsCollapsibleSection>
   </>;

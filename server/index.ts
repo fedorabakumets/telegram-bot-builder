@@ -206,11 +206,9 @@ app.use((req, res, next) => {
   applyRuntimeProxyEnv();
   assertBotRuntimeMode(botRuntimeMode, getWorkerRuntime(), process.env.REDIS_URL, runtimeEnv('WORKER_RAILWAY_PROJECTS'));
   startDbBackupScheduler();
-  if (botRuntimeMode === 'combined') {
-    /** Совместный процесс исполняет рассылки до выделения отдельного runtime. */
-    const stopBroadcastRuntime = startBroadcastRuntime();
-    httpServer.once('close', stopBroadcastRuntime);
-  }
+  /** Рассылки исполняются API независимо от размещения процессов ботов. */
+  const stopBroadcastRuntime = startBroadcastRuntime();
+  httpServer.once('close', stopBroadcastRuntime);
 
   // Важно настраивать Vite только в режиме разработки и после
   // настройки всех остальных маршрутов, чтобы маршрут catch-all
@@ -278,10 +276,15 @@ app.use((req, res, next) => {
   /** Railway допускает HOST=:: для доступа по внутренней IPv6-сети. */
   const host = process.env.HOST?.trim() || '0.0.0.0';
   if (botRuntimeMode === 'api') {
-    const attached = await workerManager.reattachRemoteWorkers();
-    log(`API привязан к ${attached} работающим воркерам исполнителя`);
-    /** Повторяет сверку после временной недоступности исполнителя или потери команды. */
-    const stopReconcile = scheduleRuntimeReconcile();
+    /** Недоступный исполнитель не должен останавливать HTTP API; следующая сверка повторит привязку. */
+    try {
+      const attached = await workerManager.reattachRemoteWorkers();
+      log(`API привязан к ${attached} работающим воркерам исполнителя`);
+    } catch (error) {
+      log(`Привязка к исполнителю отложена: ${error instanceof Error ? error.message : String(error)}`);
+    }
+    /** Сначала привязывает уже живые воркеры, затем сверяет намерения запуска. */
+    const stopReconcile = scheduleRuntimeReconcile(30_000, () => workerManager.reattachRemoteWorkers());
     httpServer.once('close', stopReconcile);
   }
   httpServer.listen(Number(port), host, () => {

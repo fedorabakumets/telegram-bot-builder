@@ -1,0 +1,42 @@
+/** @fileoverview Компоновка вкладки пользователей по общему образцу аналитики и файлов. */
+.users-page-header { border-bottom: 1px solid var(--border); }
+.users-header-tools > dl { flex: 1; width: auto; }
+.users-scope > div { min-width: 0; max-width: 100%; }
+.users-scope [role='combobox'] { height: 32px; }
+.users-workspace .workspace-tab-heading h2 { font-size: 20px; line-height: 28px; }
+.users-workspace .workspace-header-toggle { color: var(--muted-foreground); }
+.users-workspace :is(input:not([type='checkbox']), textarea, [role='combobox']) {
+  background: var(--background); color: var(--foreground); border-color: var(--border); border-radius: 8px; box-shadow: none;
+}
+.users-workspace :is(table, [data-testid^='user-card-mobile-']) { background: var(--background); }
+.users-workspace th { background: var(--background); color: var(--muted-foreground); }
+.users-workspace :is(th, td) { padding-inline: 16px; }
+.users-workspace .workspace-tab-actions > :is(button, a):hover { background: transparent; color: var(--foreground); }
+/** Селекторы показывают наведение и раскрытие рамкой, не меняя фон на серый. */
+.users-workspace [role='combobox']:is(:hover, [data-state='open']) { border-color: #52525b; background: var(--background); }
+.users-workspace [role='combobox'] > svg { color: var(--muted-foreground); opacity: 1; }
+.users-workspace nav[aria-label='Страницы ответов'] button[aria-current='page'] { background: transparent; color: #60a5fa; box-shadow: inset 0 -2px #3b82f6; }
+.users-workspace :is(button, input, textarea):disabled { opacity: .45; }
+/** Общая строка названия, области данных и действий повторяет среднюю панель аналитики. */
+@container (min-width: 800px) and (max-width: 1200px) {
+  .users-page-header { padding-block: 4px 12px; }
+  .users-header-content { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; }
+  .users-header-content .workspace-tab-heading { display: contents; }
+  .users-header-content .workspace-tab-heading > div:first-child { grid-column: 1; grid-row: 1; }
+  .users-header-content .workspace-tab-heading > div:first-child > p { display: none; }
+  .users-header-content .workspace-tab-heading > div:last-child { grid-column: 3; grid-row: 1; }
+  .users-header-content > .users-scope { grid-column: 2; grid-row: 1; margin: 0; }
+  .users-header-tools { grid-column: 1 / -1; margin: 0; }
+}
+@container (min-width: 800px) and (max-width: 999px) {
+  .users-header-content .workspace-tab-actions > :is(button, a) { width: 32px; padding: 0; }
+  .users-header-content .workspace-tab-actions span { display: none; }
+}
+/** Узкая панель сохраняет два селектора рядом и позволяет свернуть шапку. */
+@container (max-width: 479px) {
+  .users-header-content .workspace-tab-heading > div:first-child > p { display: none; }
+  .users-scope { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .users-scope > div { width: 100%; }
+  .users-scope [role='combobox'] { width: 100%; height: 40px; padding-inline: 8px; font-size: 12px; }
+  .users-header-tools { gap: 8px; }
+}

@@ -18,7 +18,8 @@ import { DialogHeaderIdentity } from './dialog-header-identity';
 import { useLiveInvalidate } from '../hooks/use-live-invalidate';
 import { useBroadcastLiveInvalidate } from '@/components/editor/broadcast/hooks/use-broadcast-live-invalidate';
 import { useProjectTokens } from '@/hooks/use-project-tokens';
-import { BotTokenSelector, ProjectSelector } from '../components/header';
+import { ProjectSelector } from '../components/header';
+import { DialogBotSelector } from './dialog-bot-selector';
 import { NewBroadcastModal } from '@/components/editor/broadcast/wizard/new-broadcast-modal';
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { DialogProfileData } from '../../dialog/components/dialog-profile-data';
@@ -185,7 +186,7 @@ export function DialogsTabContent({
             />
           ) : null}
           {projectTokens.length > 0 && (
-            <BotTokenSelector
+            <DialogBotSelector
               projectId={projectId}
               tokens={projectTokens}
               selectedTokenId={resolvedTokenId}
@@ -278,7 +279,7 @@ export function DialogsTabContent({
               />
             )}
             {projectTokens.length > 0 && (
-              <BotTokenSelector
+              <DialogBotSelector
                 projectId={projectId}
                 tokens={projectTokens}
                 selectedTokenId={resolvedTokenId}

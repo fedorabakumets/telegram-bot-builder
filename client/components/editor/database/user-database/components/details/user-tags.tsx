@@ -4,7 +4,6 @@
  */
 
 import { Badge } from '@/components/ui/badge';
-import { Label } from '@/components/ui/label';
 
 /**
  * Пропсы компонента UserTags
@@ -26,10 +25,10 @@ export function UserTags({ tags }: UserTagsProps): React.JSX.Element | null {
 
   return (
     <div>
-      <Label className="text-sm font-medium">Теги</Label>
-      <div className="mt-2 flex flex-wrap gap-1">
+      <h3 className="text-sm font-medium">Теги</h3>
+      <div className="mt-2 flex flex-wrap gap-2">
         {tags.map((tag, index) => (
-          <Badge key={index} variant="secondary">
+          <Badge key={index} variant="secondary" className="max-w-full whitespace-normal break-all font-normal">
             {String(tag)}
           </Badge>
         ))}
