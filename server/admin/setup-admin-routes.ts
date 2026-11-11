@@ -4,6 +4,7 @@
  */
 
 import express, { type Express } from "express";
+import { rateLimit } from 'express-rate-limit';
 import { redirectAfterAdminLogin } from "./admin-login-redirect";
 import { isAdminAuthenticated, requireAdminAuth } from "./admin-auth-middleware";
 import { adminKeysMatch } from "./admin-key-match";
@@ -52,6 +53,13 @@ import { getVersionStorageAdmin, putVersionStorageAdmin, postVersionStorageMigra
 
 /** Префикс защищённых admin-маршрутов */
 export const ADMIN_PATHS_PREFIX = "/admin";
+
+/** Ограничивает частый опрос состояния хранения версий одним адресом. */
+const versionStorageReadLimit = rateLimit({ windowMs: 60_000, limit: 60, standardHeaders: true, legacyHeaders: false });
+/** Ограничивает проверки S3 и смену настройки хранения. */
+const versionStorageWriteLimit = rateLimit({ windowMs: 60_000, limit: 10, standardHeaders: true, legacyHeaders: false });
+/** Ограничивает повторные запуски миграции. */
+const versionStorageMigrationLimit = rateLimit({ windowMs: 60_000, limit: 3, standardHeaders: true, legacyHeaders: false });
 
 /**
  * Регистрирует /admin/login, API входа/выхода и hub.
@@ -113,9 +121,9 @@ export function setupAdminRoutes(app: Express): void {
 
   app.get("/admin/api/app-settings", requireAdminAuth, handleGetAdminAppSettings);
   app.put("/admin/api/app-settings", requireAdminAuth, handlePutAdminAppSettings);
-  app.get('/admin/api/version-storage', requireAdminAuth, getVersionStorageAdmin);
-  app.put('/admin/api/version-storage', requireAdminAuth, putVersionStorageAdmin);
-  app.post('/admin/api/version-storage/migrate', requireAdminAuth, postVersionStorageMigration);
+  app.get('/admin/api/version-storage', versionStorageReadLimit, requireAdminAuth, getVersionStorageAdmin);
+  app.put('/admin/api/version-storage', versionStorageWriteLimit, requireAdminAuth, putVersionStorageAdmin);
+  app.post('/admin/api/version-storage/migrate', versionStorageMigrationLimit, requireAdminAuth, postVersionStorageMigration);
 
   app.get(
     "/admin/api/disabled-node-types",
