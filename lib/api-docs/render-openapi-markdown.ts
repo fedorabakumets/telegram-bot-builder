@@ -192,7 +192,8 @@ function removeStaleTagMarkdownFiles(outputDir: string, activeTags: Set<string>)
 export async function renderOpenApiMarkdownFiles(doc: OpenApiDocForMarkdown, outputDir: string): Promise<string[]> {
   fs.mkdirSync(outputDir, { recursive: true });
   const byTag = collectByTag(doc);
-  const sortedTags = [...byTag.keys()].sort((a, b) => a.localeCompare(b));
+  /** Порядок кодовых точек одинаков в Windows и Linux при генерации документации. */
+  const sortedTags = [...byTag.keys()].sort((a, b) => a < b ? -1 : a > b ? 1 : 0);
   const activeTagSet = new Set(sortedTags);
 
   const indexRows = sortedTags.map((tag) => {
