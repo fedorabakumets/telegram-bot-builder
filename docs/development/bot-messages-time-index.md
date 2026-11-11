@@ -35,6 +35,14 @@ npx tsx --tsconfig tsconfig.node.json tools/measure-bot-messages-index.ts 12 9 a
 выполняет запрос; для сравнения памяти наблюдайте RAM в Railway при обычной
 нагрузке несколько дней.
 
+Если локальная копия содержит только старые сообщения, можно зафиксировать
+историческое время пятым аргументом. Используйте одинаковое время до и после:
+
+```bash
+npx tsx --tsconfig tsconfig.node.json tools/measure-bot-messages-index.ts 12 9 before.json "" 2026-10-31T23:58:04.742Z
+npx tsx --tsconfig tsconfig.node.json tools/measure-bot-messages-index.ts 12 9 after.json before.json 2026-10-31T23:58:04.742Z
+```
+
 После запуска проверьте готовность индекса:
 
 ```sql

@@ -43,6 +43,8 @@ interface Snapshot {
   projectId: number;
   /** Идентификатор бота. */
   tokenId: number;
+  /** Фиксированное время для исторического замера. */
+  asOf?: string;
   /** Замеры проекта и бота. */
   measurements: Measurement[];
 }
@@ -80,11 +82,14 @@ function inspectPlan(node: PlanNode, indexes: Set<string>): number {
  * @param client - Соединение с базой.
  * @param projectId - Идентификатор проекта.
  * @param tokenId - Идентификатор бота или отсутствие фильтра.
+ * @param asOf - Фиксированный момент времени для исторической выборки.
  * @returns Время и объём чтения по плану.
  */
-async function measure(client: Client, projectId: number, tokenId: number | null): Promise<Measurement> {
+async function measure(client: Client, projectId: number, tokenId: number | null, asOf?: string): Promise<Measurement> {
+  const query = asOf ? QUERY.replaceAll('NOW()', '$3::timestamptz') : QUERY;
   const result = await client.query<{ 'QUERY PLAN': [{ Plan: PlanNode; 'Execution Time': number }] }>(
-    `EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) ${QUERY}`, [projectId, tokenId],
+    `EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) ${query}`,
+    asOf ? [projectId, tokenId, asOf] : [projectId, tokenId],
   );
   const report = result.rows[0]['QUERY PLAN'][0];
   const indexes = new Set<string>();
@@ -107,17 +112,20 @@ async function measure(client: Client, projectId: number, tokenId: number | null
  */
 function compare(current: Snapshot, baselinePath: string): void {
   const baseline = JSON.parse(readFileSync(baselinePath, 'utf8')) as Snapshot;
-  if (baseline.projectId !== current.projectId || baseline.tokenId !== current.tokenId) {
-    throw new Error('Исходный замер относится к другому проекту или боту');
+  if (baseline.projectId !== current.projectId || baseline.tokenId !== current.tokenId
+    || baseline.asOf !== current.asOf) {
+    throw new Error('Исходный замер относится к другому проекту, боту или моменту времени');
   }
   for (const item of current.measurements) {
     const before = baseline.measurements.find((candidate) => candidate.scope === item.scope);
     if (!before || !Number.isFinite(before.executionMs) || !Number.isFinite(before.readBlocks)
+      || !Number.isFinite(before.hitBlocks)
       || !Number.isFinite(before.messageSeqScans)) {
       throw new Error(`Некорректный исходный замер для ${item.scope}`);
     }
     console.log(`${item.scope}: время ${before.executionMs} → ${item.executionMs} мс; `
       + `чтение ${before.readBlocks} → ${item.readBlocks} блоков; `
+      + `всего буферов ${before.readBlocks + before.hitBlocks} → ${item.readBlocks + item.hitBlocks}; `
       + `полных проходов сообщений ${before.messageSeqScans} → ${item.messageSeqScans}`);
   }
 }
@@ -127,12 +135,13 @@ function compare(current: Snapshot, baselinePath: string): void {
  * @returns Завершение замера.
  */
 async function main(): Promise<void> {
-  const [projectArg, tokenArg, outputPath, baselinePath] = process.argv.slice(2);
+  const [projectArg, tokenArg, outputPath, baselinePath, asOfArg] = process.argv.slice(2);
   const projectId = Number(projectArg);
   const tokenId = Number(tokenArg);
   if (!process.env.DATABASE_URL || !Number.isSafeInteger(projectId) || projectId <= 0
-    || !Number.isSafeInteger(tokenId) || tokenId <= 0 || !outputPath) {
-    throw new Error('Формат: tsx tools/measure-bot-messages-index.ts PROJECT_ID TOKEN_ID OUTPUT.json [BASELINE.json]; нужен DATABASE_URL');
+    || !Number.isSafeInteger(tokenId) || tokenId <= 0 || !outputPath
+    || (asOfArg && Number.isNaN(Date.parse(asOfArg)))) {
+    throw new Error('Формат: tsx tools/measure-bot-messages-index.ts PROJECT_ID TOKEN_ID OUTPUT.json [BASELINE.json] [AS_OF_ISO]; нужен DATABASE_URL');
   }
   const client = new Client({ connectionString: process.env.DATABASE_URL, application_name: 'bot_messages_index_measure' });
   await client.connect();
@@ -140,11 +149,11 @@ async function main(): Promise<void> {
     await client.query('BEGIN READ ONLY');
     await client.query("SET LOCAL statement_timeout = '15s'");
     const measurements = [
-      await measure(client, projectId, null),
-      await measure(client, projectId, tokenId),
+      await measure(client, projectId, null, asOfArg),
+      await measure(client, projectId, tokenId, asOfArg),
     ];
     await client.query('ROLLBACK');
-    const snapshot: Snapshot = { projectId, tokenId, measurements };
+    const snapshot: Snapshot = { projectId, tokenId, asOf: asOfArg, measurements };
     for (const item of measurements) console.log(item);
     if (baselinePath) compare(snapshot, baselinePath);
     writeFileSync(outputPath, `${JSON.stringify(snapshot, null, 2)}\n`, { flag: 'wx' });
