@@ -36,6 +36,7 @@ interface MobileUserListProps {
 
 /**
  * Компонент мобильного списка пользователей с поддержкой infinite scroll
+ * Передаёт карточкам обработчик открытия панели сведений о пользователе.
  * @param props - Пропсы компонента
  * @returns JSX компонент списка
  */
@@ -85,6 +86,7 @@ export function MobileUserList(props: MobileUserListProps): React.JSX.Element {
           index={index}
           formatUserName={formatUserName}
           onNavigateToDialog={onNavigateToDialog}
+          onOpenUserDetailsPanel={onOpenUserDetailsPanel}
         />
       ))}
       {hasNextPage && fetchNextPage && !isFetchingNextPage && (
