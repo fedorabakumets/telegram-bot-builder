@@ -1,4 +1,4 @@
-# @fileoverview Проверяет защиту административного входа, cookie-запросов и HTML редактора.
+# @fileoverview Проверяет защиту входа, cookie-запросов, маршрутов пользователей и HTML редактора.
 name: Security regressions
 
 on:
@@ -29,6 +29,8 @@ jobs:
       - run: npx vitest run --config server/admin/admin-login-rate-limit.vitest.config.ts
       - run: npx vitest run --config server/middleware/cookie-csrf.vitest.config.ts
       - run: npx vitest run --config server/routes/storageConfigs/vitest.config.ts
+      - name: Доступ, лимиты запросов и аватары пользователей ботов
+        run: npx vitest run --config server/routes/userProjectsTokens/vitest.config.ts
       - run: npx vitest run --config server/routes/media/vitest.backup-access.config.ts
       - run: npx vitest run --config client/components/editor/inline-rich/vitest.security.config.ts
       - run: npx vitest run lib/bot-tools/constants.test.ts

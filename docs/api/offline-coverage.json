@@ -1979,154 +1979,154 @@
     },
     {
       "file": "server/routes/setupUserProjectAndTokenRoutes.ts",
-      "line": 46,
+      "line": 48,
       "method": "GET",
       "expression": "\"/api/bot/projects\"",
       "resolvedPath": "/api/bot/projects"
     },
     {
       "file": "server/routes/setupUserProjectAndTokenRoutes.ts",
-      "line": 47,
+      "line": 49,
       "method": "GET",
       "expression": "\"/api/bot/projects/:id\"",
       "resolvedPath": "/api/bot/projects/{id}"
     },
     {
       "file": "server/routes/setupUserProjectAndTokenRoutes.ts",
-      "line": 48,
+      "line": 50,
       "method": "GET",
       "expression": "\"/api/bot/projects/:id/export\"",
       "resolvedPath": "/api/bot/projects/{id}/export"
     },
     {
       "file": "server/routes/setupUserProjectAndTokenRoutes.ts",
-      "line": 49,
+      "line": 51,
       "method": "POST",
       "expression": "\"/api/bot/projects\"",
       "resolvedPath": "/api/bot/projects"
     },
     {
       "file": "server/routes/setupUserProjectAndTokenRoutes.ts",
-      "line": 50,
+      "line": 52,
       "method": "POST",
       "expression": "\"/api/bot/projects/import\"",
       "resolvedPath": "/api/bot/projects/import"
     },
     {
       "file": "server/routes/setupUserProjectAndTokenRoutes.ts",
-      "line": 51,
+      "line": 53,
       "method": "PUT",
       "expression": "\"/api/bot/projects/:id/data\"",
       "resolvedPath": "/api/bot/projects/{id}/data"
     },
     {
       "file": "server/routes/setupUserProjectAndTokenRoutes.ts",
-      "line": 52,
+      "line": 54,
       "method": "PATCH",
-      "expression": "\"/api/bot/projects/:id\"",
-      "resolvedPath": "/api/bot/projects/{id}"
-    },
-    {
-      "file": "server/routes/setupUserProjectAndTokenRoutes.ts",
-      "line": 53,
-      "method": "DELETE",
       "expression": "\"/api/bot/projects/:id\"",
       "resolvedPath": "/api/bot/projects/{id}"
     },
     {
       "file": "server/routes/setupUserProjectAndTokenRoutes.ts",
       "line": 55,
+      "method": "DELETE",
+      "expression": "\"/api/bot/projects/:id\"",
+      "resolvedPath": "/api/bot/projects/{id}"
+    },
+    {
+      "file": "server/routes/setupUserProjectAndTokenRoutes.ts",
+      "line": 57,
       "method": "GET",
       "expression": "\"/api/bot/projects/:id/tokens\"",
       "resolvedPath": "/api/bot/projects/{id}/tokens"
     },
     {
       "file": "server/routes/setupUserProjectAndTokenRoutes.ts",
-      "line": 56,
+      "line": 58,
       "method": "POST",
       "expression": "\"/api/bot/projects/:id/tokens\"",
       "resolvedPath": "/api/bot/projects/{id}/tokens"
     },
     {
       "file": "server/routes/setupUserProjectAndTokenRoutes.ts",
-      "line": 57,
+      "line": 59,
       "method": "DELETE",
       "expression": "\"/api/bot/tokens/:tokenId\"",
       "resolvedPath": "/api/bot/tokens/{tokenId}"
     },
     {
       "file": "server/routes/setupUserProjectAndTokenRoutes.ts",
-      "line": 58,
+      "line": 60,
       "method": "GET",
       "expression": "\"/api/bot/tokens/:tokenId/stats\"",
       "resolvedPath": "/api/bot/tokens/{tokenId}/stats"
     },
     {
       "file": "server/routes/setupUserProjectAndTokenRoutes.ts",
-      "line": 59,
+      "line": 62,
       "method": "GET",
       "expression": "\"/api/bot/tokens/:tokenId/users\"",
       "resolvedPath": "/api/bot/tokens/{tokenId}/users"
     },
     {
       "file": "server/routes/setupUserProjectAndTokenRoutes.ts",
-      "line": 60,
+      "line": 63,
       "method": "GET",
       "expression": "\"/api/bot/tokens/:tokenId/users/:userId\"",
       "resolvedPath": "/api/bot/tokens/{tokenId}/users/{userId}"
     },
     {
       "file": "server/routes/setupUserProjectAndTokenRoutes.ts",
-      "line": 67,
+      "line": 72,
       "method": "GET",
       "expression": "\"/api/bot/projects/:id/collaborators\"",
       "resolvedPath": "/api/bot/projects/{id}/collaborators"
     },
     {
       "file": "server/routes/setupUserProjectAndTokenRoutes.ts",
-      "line": 73,
+      "line": 78,
       "method": "POST",
       "expression": "\"/api/bot/projects/:id/collaborators\"",
       "resolvedPath": "/api/bot/projects/{id}/collaborators"
     },
     {
       "file": "server/routes/setupUserProjectAndTokenRoutes.ts",
-      "line": 79,
+      "line": 84,
       "method": "DELETE",
       "expression": "\"/api/bot/projects/:id/collaborators/:userId\"",
       "resolvedPath": "/api/bot/projects/{id}/collaborators/{userId}"
     },
     {
       "file": "server/routes/setupUserProjectAndTokenRoutes.ts",
-      "line": 86,
+      "line": 91,
       "method": "GET",
       "expression": "\"/api/bot/tokens/:tokenId/env\"",
       "resolvedPath": "/api/bot/tokens/{tokenId}/env"
     },
     {
       "file": "server/routes/setupUserProjectAndTokenRoutes.ts",
-      "line": 87,
+      "line": 92,
       "method": "POST",
       "expression": "\"/api/bot/tokens/:tokenId/env\"",
       "resolvedPath": "/api/bot/tokens/{tokenId}/env"
     },
     {
       "file": "server/routes/setupUserProjectAndTokenRoutes.ts",
-      "line": 88,
+      "line": 93,
       "method": "PATCH",
       "expression": "\"/api/bot/env/:id\"",
       "resolvedPath": "/api/bot/env/{id}"
     },
     {
       "file": "server/routes/setupUserProjectAndTokenRoutes.ts",
-      "line": 89,
+      "line": 94,
       "method": "DELETE",
       "expression": "\"/api/bot/env/:id\"",
       "resolvedPath": "/api/bot/env/{id}"
     },
     {
       "file": "server/routes/setupUserProjectAndTokenRoutes.ts",
-      "line": 90,
+      "line": 95,
       "method": "GET",
       "expression": "\"/api/bot/env/:id/reveal\"",
       "resolvedPath": "/api/bot/env/{id}/reveal"
