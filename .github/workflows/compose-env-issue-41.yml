@@ -46,7 +46,7 @@ jobs:
       - name: Проверить режим разработки без dev-зависимостей в образе
         if: matrix.node_env == 'development'
         run: |
-          docker compose up -d db redis
+          docker compose up -d --wait db redis
           docker compose run --rm --no-deps --entrypoint node app -e '
             const { Client } = require("pg");
             if (process.env.NODE_ENV !== "development" || process.env.PGSSLMODE !== "disable") process.exit(1);
