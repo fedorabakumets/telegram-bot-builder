@@ -1,13 +1,13 @@
 # syntax=docker/dockerfile:1
 # @fileoverview Отдельная сборка интерфейса и лёгкого сервера прокси без БД и Python.
-FROM node:24-alpine AS builder
+FROM node:26-alpine AS builder
 WORKDIR /app
 COPY package*.json .npmrc ./
 RUN npm ci --ignore-scripts --no-audit --no-fund
 COPY . .
 RUN npm run build:client
 
-FROM node:24-alpine
+FROM node:26-alpine
 WORKDIR /app
 ENV NODE_ENV=production
 # Только браузерная сборка и модули стандартной библиотеки Node.js.
