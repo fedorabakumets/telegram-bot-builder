@@ -24,6 +24,7 @@ import { storage } from "./storages/storage";
 import { initializeTerminalWebSocket } from './terminal/initializeTerminalWebSocket';
 import { startAnalyticsLiveBridge } from './analytics/live-bridge';
 import { attachAnalyticsHistoryBackfill } from './analytics/attach-history-backfill';
+import { attachBotMessagesTimeIndex } from './database/attach-bot-messages-time-index';
 import { pool } from './database/db';
 import { initializeCanvasWebSocket } from './canvas/initializeCanvasWebSocket';
 import { initializeSupportWebSocket } from './support/initialize-support-websocket';
@@ -182,6 +183,8 @@ app.use((req, res, next) => {
   httpServer.once('close', stopAnalyticsLive);
   /** Переносит сохранённую историю всех проектов в фоне после готовности HTTP. */
   attachAnalyticsHistoryBackfill(httpServer, pool);
+  /** Создаёт индекс активности в фоне после готовности HTTP. */
+  attachBotMessagesTimeIndex(httpServer);
   const canvasWss = initializeCanvasWebSocket();
   const supportWss = initializeSupportWebSocket();
   registerWebSocketUpgrade(httpServer, {
