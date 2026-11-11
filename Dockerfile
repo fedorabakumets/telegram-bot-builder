@@ -6,7 +6,7 @@
 # s/<ID сервиса>-, обычный buildx (GitHub Actions) принимает такой id как есть.
 
 # ── Build stage ──────────────────────────────────────────────────────────────
-FROM node:24-alpine AS builder
+FROM node:26-alpine AS builder
 
 WORKDIR /app
 
@@ -21,7 +21,7 @@ COPY . .
 RUN npm run build
 
 # ── Runtime stage ─────────────────────────────────────────────────────────────
-FROM node:24-alpine
+FROM node:26-alpine
 
 # Python3 нужен для запуска пользовательских ботов (server/bots/startBot.ts)
 # procps нужен для команды ps (поиск Python процессов при остановке)
