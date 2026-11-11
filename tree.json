@@ -583,7 +583,7 @@
     "folder_titles": {
       "database": "Database"
     },
-    "updated_at": "2026-11-10T17:07:08+03:00",
+    "updated_at": "2026-11-11T07:54:21+03:00",
     "tags": [],
     "author": ""
   },
@@ -1018,7 +1018,7 @@
     "folder_titles": {
       "database": "Database"
     },
-    "updated_at": "2026-07-04T19:19:59+03:00",
+    "updated_at": "2026-11-11T07:54:21+03:00",
     "tags": [],
     "author": ""
   },
@@ -1258,7 +1258,22 @@
     "folder_titles": {
       "deployment": "🚀 Деплой"
     },
-    "updated_at": "2026-11-10T13:51:11+03:00",
+    "updated_at": "2026-11-11T07:54:21+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "deployment/PROJECT_VERSIONS_S3",
+    "title": "Снимки версий проектов в S3",
+    "excerpt": "Полный JSON истории хранится в отдельном приватном бакете S3. PostgreSQL хранит метаданные, SHA-256 и ключ объекта. Новая версия при выбранн",
+    "parts": [
+      "deployment",
+      "PROJECT_VERSIONS_S3"
+    ],
+    "folder_titles": {
+      "deployment": "🚀 Деплой"
+    },
+    "updated_at": "2026-11-11T07:54:21+03:00",
     "tags": [],
     "author": ""
   },
