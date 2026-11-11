@@ -19,6 +19,8 @@ export default defineRailway(() => {
   const tbbBotBuilds = bucket("tbb-bot-builds", { region: "ams" });
   const PostgresPITR = bucket("Postgres-PITR", { region: "ams" });
   const tbbUploads = bucket("tbb-uploads", { region: "ams" });
+  /** Хранит приватные снимки истории версий проектов. */
+  const tbbProjectVersions = bucket("tbb-project-versions", { region: "ams" });
   const botBuilderBackend = service("bot builder backend", {
     source: telegramBotBuilder,
     build: { buildEnvironment: "V3", builder: "DOCKERFILE", dockerfilePath: "Dockerfile.backend", watchPatterns: ["/server/**", "/lib/**", "/shared/**", "/client/utils/**", "/client/components/editor/sidebar/parsePythonCodeToJson.ts", "/scripts/**", "/migrations/**", "/assets/**", "/requirements.txt", "/package.json", "/package-lock.json", "/.npmrc", "/.dockerignore", "/tsconfig*.json", "/drizzle.config.ts", "/version.json", "/Dockerfile.backend", "/railway.backend.toml"] },
@@ -52,6 +54,6 @@ export default defineRailway(() => {
 
   return project("tbb-panel", {
     variables: { managed: false },
-    resources: [botBuilderBackend, botRuntime, postgresQruoVolume, telegramBotBuilder_e3uVolume, redisVolume, tbbBotBuilds, tbbUploads, awareEncouragement, fortunateAchievement],
+    resources: [botBuilderBackend, botRuntime, postgresQruoVolume, telegramBotBuilder_e3uVolume, redisVolume, tbbBotBuilds, tbbUploads, tbbProjectVersions, awareEncouragement, fortunateAchievement],
   });
 });
