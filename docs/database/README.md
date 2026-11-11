@@ -30,7 +30,7 @@
 | [media_files](./media_files.md) | 21 | Таблица медиафайлов |
 | [message_activity_daily](./message_activity_daily.md) | 5 | Дневные счётчики входящих/исходящих сообщений. Увеличиваются при записи сообщения; удаление из bot_messages их не уменьшает. |
 | [project_collaborators](./project_collaborators.md) | 4 | Таблица коллабораторов проекта. Хранит связи между проектами и пользователями, имеющими доступ к ним. |
-| [project_versions](./project_versions.md) | 8 | Таблица версий проектов — хранит снимки данных проекта (BotDataWithSheets) |
+| [project_versions](./project_versions.md) | 15 | Таблица версий проектов — хранит снимки данных проекта (BotDataWithSheets) |
 | [storage_configs](./storage_configs.md) | 8 | Таблица реестра хранилищ: несколько S3 (разные бакеты/endpoint'ы/креды) и несколько локальных папок. Одно хранилище помечено активным для новых загрузок; читать можно из всех. |
 | [support_attachments](./support_attachments.md) | 8 | Картинка, приложенная к сообщению поддержки. Файл лежит в активном хранилище, не в media_files проекта. |
 | [support_messages](./support_messages.md) | 7 | Сообщение в диалоге поддержки |

@@ -40,7 +40,7 @@
       {
         "candidate": {
           "file": "server/admin/setup-admin-routes.ts",
-          "line": 141,
+          "line": 145,
           "method": "GET",
           "expression": "pagePath"
         },
@@ -63,7 +63,7 @@
       {
         "candidate": {
           "file": "server/index.ts",
-          "line": 88,
+          "line": 89,
           "method": "USE",
           "expression": "express.json({ limit: '50mb', verify: captureAgentBody })"
         },
@@ -73,7 +73,7 @@
       {
         "candidate": {
           "file": "server/index.ts",
-          "line": 89,
+          "line": 90,
           "method": "USE",
           "expression": "express.urlencoded({ extended: false, limit: '50mb' })"
         },
@@ -83,7 +83,7 @@
       {
         "candidate": {
           "file": "server/index.ts",
-          "line": 91,
+          "line": 92,
           "method": "USE",
           "expression": "express.text({ limit: '50mb', type: 'text/plain' })"
         },
@@ -93,7 +93,7 @@
       {
         "candidate": {
           "file": "server/index.ts",
-          "line": 105,
+          "line": 106,
           "method": "USE",
           "expression": "(req, res, next) => {\n  const start = Date.now();\n  const path = apiLogPath(req.originalUrl);\n  let capturedJsonResponse: Record<string, any> | undefined = undefined;\n\n  const originalResJson = res.json;\n  res.json = function (bodyJson, ...args) {\n    capturedJsonResponse = bodyJson;\n    return orig…"
         },
@@ -103,7 +103,7 @@
       {
         "candidate": {
           "file": "server/index.ts",
-          "line": 172,
+          "line": 175,
           "method": "USE",
           "expression": "apiErrorHandler"
         },
@@ -278,105 +278,105 @@
   "sourceCandidates": [
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 63,
+      "line": 64,
       "method": "GET",
       "expression": "\"/admin/login\"",
       "resolvedPath": "/admin/login"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 72,
+      "line": 73,
       "method": "POST",
       "expression": "\"/admin/api/login\"",
       "resolvedPath": "/admin/api/login"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 89,
+      "line": 90,
       "method": "POST",
       "expression": "\"/admin/api/logout\"",
       "resolvedPath": "/admin/api/logout"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 94,
+      "line": 95,
       "method": "GET",
       "expression": "\"/admin/api/status\"",
       "resolvedPath": "/admin/api/status"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 98,
+      "line": 99,
       "method": "GET",
       "expression": "\"/admin/api/version\"",
       "resolvedPath": "/admin/api/version"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 99,
+      "line": 100,
       "method": "GET",
       "expression": "\"/admin/api/update-check\"",
       "resolvedPath": "/admin/api/update-check"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 101,
+      "line": 102,
       "method": "GET",
       "expression": "\"/admin/api/users\"",
       "resolvedPath": "/admin/api/users"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 102,
+      "line": 103,
       "method": "GET",
       "expression": "\"/admin/api/users/:id\"",
       "resolvedPath": "/admin/api/users/{id}"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 103,
+      "line": 104,
       "method": "GET",
       "expression": "\"/admin/api/projects/:id/audit\"",
       "resolvedPath": "/admin/api/projects/{id}/audit"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 104,
+      "line": 105,
       "method": "GET",
       "expression": "\"/admin/api/projects/:id\"",
       "resolvedPath": "/admin/api/projects/{id}"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 105,
+      "line": 106,
       "method": "GET",
       "expression": "\"/admin/api/projects/:id/secrets/bot-token/:tokenId\"",
       "resolvedPath": "/admin/api/projects/{id}/secrets/bot-token/{tokenId}"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 110,
+      "line": 111,
       "method": "DELETE",
       "expression": "\"/admin/api/users/:id/sessions/:sessionId\"",
       "resolvedPath": "/admin/api/users/{id}/sessions/{sessionId}"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 111,
+      "line": 112,
       "method": "DELETE",
       "expression": "\"/admin/api/users/:id/sessions\"",
       "resolvedPath": "/admin/api/users/{id}/sessions"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 113,
+      "line": 114,
       "method": "GET",
       "expression": "\"/admin/api/app-settings\"",
       "resolvedPath": "/admin/api/app-settings"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 114,
+      "line": 115,
       "method": "PUT",
       "expression": "\"/admin/api/app-settings\"",
       "resolvedPath": "/admin/api/app-settings"
@@ -385,102 +385,123 @@
       "file": "server/admin/setup-admin-routes.ts",
       "line": 116,
       "method": "GET",
+      "expression": "'/admin/api/version-storage'",
+      "resolvedPath": "/admin/api/version-storage"
+    },
+    {
+      "file": "server/admin/setup-admin-routes.ts",
+      "line": 117,
+      "method": "PUT",
+      "expression": "'/admin/api/version-storage'",
+      "resolvedPath": "/admin/api/version-storage"
+    },
+    {
+      "file": "server/admin/setup-admin-routes.ts",
+      "line": 118,
+      "method": "POST",
+      "expression": "'/admin/api/version-storage/migrate'",
+      "resolvedPath": "/admin/api/version-storage/migrate"
+    },
+    {
+      "file": "server/admin/setup-admin-routes.ts",
+      "line": 120,
+      "method": "GET",
       "expression": "\"/admin/api/disabled-node-types\"",
       "resolvedPath": "/admin/api/disabled-node-types"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 121,
+      "line": 125,
       "method": "PUT",
       "expression": "\"/admin/api/disabled-node-types\"",
       "resolvedPath": "/admin/api/disabled-node-types"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 127,
+      "line": 131,
       "method": "POST",
       "expression": "\"/admin/api/templates/refresh\"",
       "resolvedPath": "/admin/api/templates/refresh"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 128,
+      "line": 132,
       "method": "POST",
       "expression": "\"/admin/api/templates/recreate\"",
       "resolvedPath": "/admin/api/templates/recreate"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 129,
+      "line": 133,
       "method": "PATCH",
       "expression": "\"/admin/api/templates/:id/featured\"",
       "resolvedPath": "/admin/api/templates/{id}/featured"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 134,
+      "line": 138,
       "method": "POST",
       "expression": "\"/admin/api/bot-folders/cleanup\"",
       "resolvedPath": "/admin/api/bot-folders/cleanup"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 141,
+      "line": 145,
       "method": "GET",
       "expression": "pagePath"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 144,
+      "line": 148,
       "method": "GET",
       "expression": "\"/admin/schema/embed\"",
       "resolvedPath": "/admin/schema/embed"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 145,
+      "line": 149,
       "method": "GET",
       "expression": "\"/admin/schema/embed/:tableName\"",
       "resolvedPath": "/admin/schema/embed/{tableName}"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 146,
+      "line": 150,
       "method": "GET",
       "expression": "\"/admin/api-docs/embed\"",
       "resolvedPath": "/admin/api-docs/embed"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 147,
+      "line": 151,
       "method": "GET",
       "expression": "\"/admin/api-docs/embed/:slug\"",
       "resolvedPath": "/admin/api-docs/embed/{slug}"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 149,
+      "line": 153,
       "method": "GET",
       "expression": "\"/admin/schema/:tableName\"",
       "resolvedPath": "/admin/schema/{tableName}"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 150,
+      "line": 154,
       "method": "GET",
       "expression": "\"/admin/api-docs/:slug\"",
       "resolvedPath": "/admin/api-docs/{slug}"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 151,
+      "line": 155,
       "method": "GET",
       "expression": "\"/admin/users/:id\"",
       "resolvedPath": "/admin/users/{id}"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 152,
+      "line": 156,
       "method": "GET",
       "expression": "\"/admin/projects/:id\"",
       "resolvedPath": "/admin/projects/{id}"
@@ -570,44 +591,44 @@
     },
     {
       "file": "server/index.ts",
-      "line": 88,
+      "line": 89,
       "method": "USE",
       "expression": "express.json({ limit: '50mb', verify: captureAgentBody })"
     },
     {
       "file": "server/index.ts",
-      "line": 89,
+      "line": 90,
       "method": "USE",
       "expression": "express.urlencoded({ extended: false, limit: '50mb' })"
     },
     {
       "file": "server/index.ts",
-      "line": 91,
+      "line": 92,
       "method": "USE",
       "expression": "express.text({ limit: '50mb', type: 'text/plain' })"
     },
     {
       "file": "server/index.ts",
-      "line": 105,
+      "line": 106,
       "method": "USE",
       "expression": "(req, res, next) => {\n  const start = Date.now();\n  const path = apiLogPath(req.originalUrl);\n  let capturedJsonResponse: Record<string, any> | undefined = undefined;\n\n  const originalResJson = res.json;\n  res.json = function (bodyJson, ...args) {\n    capturedJsonResponse = bodyJson;\n    return orig…"
     },
     {
       "file": "server/index.ts",
-      "line": 158,
+      "line": 161,
       "method": "USE",
       "expression": "\"/api\"",
       "resolvedPath": "/api"
     },
     {
       "file": "server/index.ts",
-      "line": 172,
+      "line": 175,
       "method": "USE",
       "expression": "apiErrorHandler"
     },
     {
       "file": "server/index.ts",
-      "line": 214,
+      "line": 217,
       "method": "GET",
       "expression": "\"env\"",
       "resolvedPath": "env"
