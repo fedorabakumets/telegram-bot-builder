@@ -40,7 +40,7 @@
       {
         "candidate": {
           "file": "server/admin/setup-admin-routes.ts",
-          "line": 145,
+          "line": 153,
           "method": "GET",
           "expression": "pagePath"
         },
@@ -278,230 +278,230 @@
   "sourceCandidates": [
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 64,
+      "line": 72,
       "method": "GET",
       "expression": "\"/admin/login\"",
       "resolvedPath": "/admin/login"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 73,
+      "line": 81,
       "method": "POST",
       "expression": "\"/admin/api/login\"",
       "resolvedPath": "/admin/api/login"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 90,
+      "line": 98,
       "method": "POST",
       "expression": "\"/admin/api/logout\"",
       "resolvedPath": "/admin/api/logout"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 95,
+      "line": 103,
       "method": "GET",
       "expression": "\"/admin/api/status\"",
       "resolvedPath": "/admin/api/status"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 99,
+      "line": 107,
       "method": "GET",
       "expression": "\"/admin/api/version\"",
       "resolvedPath": "/admin/api/version"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 100,
+      "line": 108,
       "method": "GET",
       "expression": "\"/admin/api/update-check\"",
       "resolvedPath": "/admin/api/update-check"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 102,
+      "line": 110,
       "method": "GET",
       "expression": "\"/admin/api/users\"",
       "resolvedPath": "/admin/api/users"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 103,
+      "line": 111,
       "method": "GET",
       "expression": "\"/admin/api/users/:id\"",
       "resolvedPath": "/admin/api/users/{id}"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 104,
+      "line": 112,
       "method": "GET",
       "expression": "\"/admin/api/projects/:id/audit\"",
       "resolvedPath": "/admin/api/projects/{id}/audit"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 105,
+      "line": 113,
       "method": "GET",
       "expression": "\"/admin/api/projects/:id\"",
       "resolvedPath": "/admin/api/projects/{id}"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 106,
+      "line": 114,
       "method": "GET",
       "expression": "\"/admin/api/projects/:id/secrets/bot-token/:tokenId\"",
       "resolvedPath": "/admin/api/projects/{id}/secrets/bot-token/{tokenId}"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 111,
+      "line": 119,
       "method": "DELETE",
       "expression": "\"/admin/api/users/:id/sessions/:sessionId\"",
       "resolvedPath": "/admin/api/users/{id}/sessions/{sessionId}"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 112,
+      "line": 120,
       "method": "DELETE",
       "expression": "\"/admin/api/users/:id/sessions\"",
       "resolvedPath": "/admin/api/users/{id}/sessions"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 114,
+      "line": 122,
       "method": "GET",
       "expression": "\"/admin/api/app-settings\"",
       "resolvedPath": "/admin/api/app-settings"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 115,
+      "line": 123,
       "method": "PUT",
       "expression": "\"/admin/api/app-settings\"",
       "resolvedPath": "/admin/api/app-settings"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 116,
+      "line": 124,
       "method": "GET",
       "expression": "'/admin/api/version-storage'",
       "resolvedPath": "/admin/api/version-storage"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 117,
+      "line": 125,
       "method": "PUT",
       "expression": "'/admin/api/version-storage'",
       "resolvedPath": "/admin/api/version-storage"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 118,
+      "line": 126,
       "method": "POST",
       "expression": "'/admin/api/version-storage/migrate'",
       "resolvedPath": "/admin/api/version-storage/migrate"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 120,
+      "line": 128,
       "method": "GET",
       "expression": "\"/admin/api/disabled-node-types\"",
       "resolvedPath": "/admin/api/disabled-node-types"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 125,
+      "line": 133,
       "method": "PUT",
       "expression": "\"/admin/api/disabled-node-types\"",
       "resolvedPath": "/admin/api/disabled-node-types"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 131,
+      "line": 139,
       "method": "POST",
       "expression": "\"/admin/api/templates/refresh\"",
       "resolvedPath": "/admin/api/templates/refresh"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 132,
+      "line": 140,
       "method": "POST",
       "expression": "\"/admin/api/templates/recreate\"",
       "resolvedPath": "/admin/api/templates/recreate"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 133,
+      "line": 141,
       "method": "PATCH",
       "expression": "\"/admin/api/templates/:id/featured\"",
       "resolvedPath": "/admin/api/templates/{id}/featured"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 138,
+      "line": 146,
       "method": "POST",
       "expression": "\"/admin/api/bot-folders/cleanup\"",
       "resolvedPath": "/admin/api/bot-folders/cleanup"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 145,
+      "line": 153,
       "method": "GET",
       "expression": "pagePath"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 148,
+      "line": 156,
       "method": "GET",
       "expression": "\"/admin/schema/embed\"",
       "resolvedPath": "/admin/schema/embed"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 149,
+      "line": 157,
       "method": "GET",
       "expression": "\"/admin/schema/embed/:tableName\"",
       "resolvedPath": "/admin/schema/embed/{tableName}"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 150,
+      "line": 158,
       "method": "GET",
       "expression": "\"/admin/api-docs/embed\"",
       "resolvedPath": "/admin/api-docs/embed"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 151,
+      "line": 159,
       "method": "GET",
       "expression": "\"/admin/api-docs/embed/:slug\"",
       "resolvedPath": "/admin/api-docs/embed/{slug}"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 153,
+      "line": 161,
       "method": "GET",
       "expression": "\"/admin/schema/:tableName\"",
       "resolvedPath": "/admin/schema/{tableName}"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 154,
+      "line": 162,
       "method": "GET",
       "expression": "\"/admin/api-docs/:slug\"",
       "resolvedPath": "/admin/api-docs/{slug}"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 155,
+      "line": 163,
       "method": "GET",
       "expression": "\"/admin/users/:id\"",
       "resolvedPath": "/admin/users/{id}"
     },
     {
       "file": "server/admin/setup-admin-routes.ts",
-      "line": 156,
+      "line": 164,
       "method": "GET",
       "expression": "\"/admin/projects/:id\"",
       "resolvedPath": "/admin/projects/{id}"
