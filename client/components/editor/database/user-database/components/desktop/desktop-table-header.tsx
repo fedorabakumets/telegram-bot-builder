@@ -36,12 +36,12 @@ export function DesktopTableHeader({ visibleColumns = 5 }: DesktopTableHeaderPro
   const columnsToShow = [...alwaysVisible, ...optional.slice(0, Math.max(0, visibleColumns - alwaysVisible.length))];
 
   return (
-    <TableHeader className="bg-muted/40 hover:bg-muted/50">
+    <TableHeader className="bg-muted/20">
       <TableRow className="border-b border-border/50 hover:bg-transparent">
         {columnsToShow.map((column) => (
           <TableHead
             key={column.key}
-            className={`font-semibold h-10 ${column.align === 'right' ? 'text-right' : ''}`}
+            className={`text-xs font-medium h-10 ${column.align === 'right' ? 'text-right' : ''}`}
           >
             {column.label}
           </TableHead>

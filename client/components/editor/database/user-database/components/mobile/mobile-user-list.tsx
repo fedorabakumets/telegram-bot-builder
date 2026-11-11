@@ -4,6 +4,8 @@
  */
 
 import { useEffect, useRef } from 'react';
+import { VariableToQuestionMap } from '../../types';
+import { Button } from '@/components/ui/button';
 import { UserBotData } from '@shared/schema';
 import { MobileEmptyState } from './mobile-empty-state';
 import { MobileUserCard } from './mobile-user-card';
@@ -14,12 +16,16 @@ import { MobileUserCard } from './mobile-user-card';
 interface MobileUserListProps {
   /** Список пользователей */
   users: UserBotData[];
+  /** Соответствие переменных вопросам сценария. */
+  variableToQuestionMap?: VariableToQuestionMap;
   /** Поисковый запрос */
   searchQuery: string;
   /** Функция форматирования имени */
   formatUserName: (user: UserBotData) => string;
   /** Обработчик перехода к диалогу с пользователем */
   onNavigateToDialog?: (user: UserBotData) => void;
+  /** Открывает сведения о пользователе. */
+  onOpenUserDetailsPanel?: (user: UserBotData) => void;
   /** Загрузить следующую страницу */
   fetchNextPage?: () => void;
   /** Есть ли следующая страница */
@@ -36,9 +42,11 @@ interface MobileUserListProps {
 export function MobileUserList(props: MobileUserListProps): React.JSX.Element {
   const {
     users,
+    variableToQuestionMap,
     searchQuery,
     formatUserName,
     onNavigateToDialog,
+    onOpenUserDetailsPanel,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
@@ -48,7 +56,7 @@ export function MobileUserList(props: MobileUserListProps): React.JSX.Element {
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!sentinelRef.current || !hasNextPage) return;
+    if (!sentinelRef.current || !hasNextPage || typeof IntersectionObserver === 'undefined') return;
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -68,20 +76,26 @@ export function MobileUserList(props: MobileUserListProps): React.JSX.Element {
   }
 
   return (
-    <div className="space-y-3 sm:space-y-4 w-full">
+    <div className="w-full space-y-3">
       {users.map((user, index) => (
         <MobileUserCard
           key={user.id || index}
           user={user}
+          variableToQuestionMap={variableToQuestionMap}
           index={index}
           formatUserName={formatUserName}
           onNavigateToDialog={onNavigateToDialog}
         />
       ))}
+      {hasNextPage && fetchNextPage && !isFetchingNextPage && (
+        <Button variant="ghost" className="h-9 w-full text-sm text-muted-foreground" onClick={() => fetchNextPage()}>
+          Загрузить ещё
+        </Button>
+      )}
       {/* Sentinel-элемент для определения момента подгрузки следующей страницы */}
       <div ref={sentinelRef} className="h-4" />
       {isFetchingNextPage && (
-        <div className="text-center py-2 text-muted-foreground text-sm">
+        <div role="status" aria-live="polite" className="py-2 text-center text-sm text-muted-foreground">
           Загрузка...
         </div>
       )}

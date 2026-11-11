@@ -34,7 +34,8 @@ export default defineRailway(() => {
   });
   const botRuntime = service("bot runtime", {
     source: telegramBotBuilder,
-    build: { buildEnvironment: "V3", builder: "DOCKERFILE", dockerfilePath: "Dockerfile.runner", watchPatterns: ["/server/runner/**", "/server/redis/**", "/server/bots/**", "/server/routes/botIntegration/**", "/server/database/**", "/server/storages/**", "/server/storage/**", "/server/terminal/**", "/server/analytics/**", "/server/auth/agent/**", "/server/services/runtime-overlay.ts", "/server/utils/**", "/server/python/**", "/shared/**", "/requirements.txt", "/package.json", "/package-lock.json", "/tsconfig.node.json", "/Dockerfile.runner", "/railway.runtime.toml"] },
+    /** Исполнитель пересобирается только при изменении зависимостей управления ботами. */
+    build: { buildEnvironment: "V3", builder: "DOCKERFILE", dockerfilePath: "Dockerfile.runner", watchPatterns: ["/server/runner/**", "/server/redis/**", "/server/bots/**", "/server/services/runtime-overlay.ts", "/server/utils/**", "/server/python/**", "/requirements.txt", "/package.json", "/package-lock.json", "/tsconfig.node.json", "/Dockerfile.runner", "/.railway/railway.ts"] },
     start: "node /app/runner.cjs",
     replicas: { "europe-west4-drams3a": 1 },
     deploy: { drainingSeconds: 0, overlapSeconds: 0 },

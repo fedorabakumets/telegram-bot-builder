@@ -30,11 +30,11 @@ export function ResponsesTabContent(props: ResponsesTabContentProps): React.JSX.
   const { selectedUser, setSelectedUser, filteredUsers } = useResponsesFilter({ users });
 
   return (
-    <TabsContent value="responses" className="mt-3 w-full block px-2 sm:px-3">
-      <div className="p-2 sm:p-3 space-y-3 w-full">
-        <div className="flex items-center gap-2">
+    <TabsContent value="responses" className="users-tab-content mt-0 w-full min-w-0 px-4 py-4">
+      <div className="space-y-4 w-full min-w-0">
+        <div className="grid min-w-0 gap-2">
           <Label htmlFor="user-filter" className="text-sm font-medium whitespace-nowrap">
-            Фильтр:
+            Пользователь
           </Label>
           <ResponsesUserFilter
             users={users}

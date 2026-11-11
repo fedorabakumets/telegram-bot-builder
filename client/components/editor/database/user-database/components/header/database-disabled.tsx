@@ -1,38 +1,23 @@
 /**
- * @fileoverview Компонент состояния "База данных выключена"
- * @description Отображается когда база данных пользователей отключена
+ * @fileoverview Спокойное штатное состояние отключённого сохранения пользователей.
  */
 
-import { Card } from '@/components/ui/card';
 import { Database } from 'lucide-react';
 
 /**
- * Компонент состояния отключенной БД
- * @returns JSX компонент
+ * Объясняет поведение бота при отключённой базе пользователей.
+ * @returns Панель с описанием отключённого сохранения.
  */
 export function DatabaseDisabled(): React.JSX.Element {
   return (
-    <Card className="max-w-md w-full border-2 border-red-200 dark:border-red-800 bg-red-50/50 dark:bg-red-950/50">
-      <div className="p-8 text-center space-y-4">
-        <div className="flex justify-center">
-          <div className="rounded-full bg-red-100 dark:bg-red-900/50 p-4">
-            <Database className="w-12 h-12 text-red-600 dark:text-red-400" />
-          </div>
-        </div>
-        <div>
-          <h3 className="text-xl font-bold text-red-900 dark:text-red-100 mb-2">
-            База данных выключена
-          </h3>
-          <p className="text-red-700 dark:text-red-300 text-sm">
-            Включите базу данных с помощью переключателя выше, чтобы начать сохранять данные пользователей и просматривать статистику.
-          </p>
-        </div>
-        <div className="pt-2">
-          <p className="text-xs text-red-600/80 dark:text-red-400/80">
-            Пока база данных выключена, бот продолжает работать, но данные пользователей не сохраняются.
-          </p>
-        </div>
+    <section className="m-6 flex max-w-lg items-start gap-4 rounded-xl border border-border bg-muted/20 p-6" aria-labelledby="database-disabled-title">
+      <Database className="mt-1 h-5 w-5 shrink-0 text-muted-foreground" aria-hidden="true" />
+      <div className="space-y-2">
+        <h3 id="database-disabled-title" className="text-base font-medium">Сохранение пользователей выключено</h3>
+        <p className="text-sm leading-6 text-muted-foreground">
+          Бот продолжает работать, но новые данные пользователей не сохраняются. Включите базу данных в настройках проекта, чтобы собирать ответы и статистику.
+        </p>
       </div>
-    </Card>
+    </section>
   );
 }

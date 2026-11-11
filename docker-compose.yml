@@ -1,4 +1,4 @@
-# Docker Compose конфигурация для конструктора Telegram-ботов
+# @fileoverview Локальные сервисы конструктора: API исполняет рассылки, runtime управляет ботами.
 # Запускает приложение и PostgreSQL базу данных одной командой
 # Usage: docker compose up -d
 
@@ -111,7 +111,6 @@ services:
       REDIS_URL: redis://redis:6379
       RUNNER_ID: default
       RUNNER_REQUIRE_FENCE: "true"
-      RUNNER_BROADCASTS_ENABLED: "true"
       DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}"
       S3_BUCKET: "${S3_BUCKET:-}"
       S3_REGION: "${S3_REGION:-}"

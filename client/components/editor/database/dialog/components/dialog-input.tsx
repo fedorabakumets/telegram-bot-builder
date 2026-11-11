@@ -93,7 +93,7 @@ export function DialogInput({ isPending, projectId, availableNodes, onSend }: Di
             title="Прикрепить медиафайл"
             aria-label="Прикрепить медиафайл"
             aria-expanded={showMedia}
-            className="h-9 gap-2 px-2 aria-expanded:bg-blue-100 aria-expanded:text-blue-700 dark:aria-expanded:bg-blue-500/20 dark:aria-expanded:text-blue-300"
+            className="h-9 gap-2 px-2 aria-expanded:bg-muted aria-expanded:text-foreground"
           >
             <FilePlus2 className="w-4 h-4" />
             <span>Файл</span>
@@ -110,7 +110,7 @@ export function DialogInput({ isPending, projectId, availableNodes, onSend }: Di
             title="Добавить Telegram file_id"
             aria-label="Добавить Telegram file_id"
             aria-expanded={showFileId}
-            className="h-9 gap-2 px-2 aria-expanded:bg-blue-100 aria-expanded:text-blue-700 dark:aria-expanded:bg-blue-500/20 dark:aria-expanded:text-blue-300"
+            className="h-9 gap-2 px-2 aria-expanded:bg-muted aria-expanded:text-foreground"
           >
             <FileKey2 className="w-4 h-4" />
             <span>file_id</span>
@@ -124,7 +124,7 @@ export function DialogInput({ isPending, projectId, availableNodes, onSend }: Di
             title="Инлайн-кнопки сообщения"
             aria-label="Инлайн-кнопки сообщения"
             aria-expanded={showButtons}
-            className="h-9 gap-2 px-2 aria-expanded:bg-blue-100 aria-expanded:text-blue-700 dark:aria-expanded:bg-blue-500/20 dark:aria-expanded:text-blue-300"
+            className="h-9 gap-2 px-2 aria-expanded:bg-muted aria-expanded:text-foreground"
           >
             <MousePointerClick className="w-4 h-4" />
             <span>Кнопки</span>
@@ -137,13 +137,15 @@ export function DialogInput({ isPending, projectId, availableNodes, onSend }: Di
 
         <Button
           data-testid="dialog-panel-button-send"
+          aria-label={isPending ? 'Отправка сообщения' : 'Отправить сообщение'}
+          aria-busy={isPending}
           onClick={handleSend}
           disabled={(!messageText.trim() && mediaUrls.length === 0) || isPending}
           size="sm"
           className="h-9 shrink-0 gap-2 px-3"
         >
           {isPending ? (
-            <RefreshCw className="w-4 h-4 animate-spin" />
+            <><RefreshCw className="w-4 h-4 animate-spin" aria-hidden="true" /><span>Отправка…</span></>
           ) : (
             <>
               <Send className="w-4 h-4" />
@@ -167,7 +169,7 @@ export function DialogInput({ isPending, projectId, availableNodes, onSend }: Di
 
       {/* Блок ввода Telegram file_id расположен под рядом инструментов. */}
       {showFileId && (
-        <div className="border rounded-md p-3 bg-violet-50/30 dark:bg-violet-900/10 border-violet-200/60 dark:border-violet-700/60">
+        <div className="border rounded-md p-3 bg-muted/30 border-border">
           <FileIdInput
             projectId={projectId}
             mediaType={fileIdMediaType}
@@ -182,7 +184,7 @@ export function DialogInput({ isPending, projectId, availableNodes, onSend }: Di
 
       {/* Редактор инлайн-кнопок расположен под рядом инструментов. */}
       {showButtons && (
-        <div className="border rounded-md p-3 bg-violet-50/30 dark:bg-violet-900/10 border-violet-200/60 dark:border-violet-700/60 max-h-64 overflow-y-auto">
+        <div className="border rounded-md p-3 bg-muted/30 border-border max-h-64 overflow-y-auto">
           <DialogButtonsEditor
             buttons={buttons}
             onChange={setButtons}

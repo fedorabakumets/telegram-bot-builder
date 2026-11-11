@@ -1,145 +1,54 @@
 /**
- * @fileoverview Компонент карточки ответа пользователя
- * @description Отображает вопрос и ответ пользователя
+ * @fileoverview Спокойная карточка вопроса и ответа пользователя.
  */
-
-import { Badge } from '@/components/ui/badge';
-import { Calendar, Edit, MessageSquare } from 'lucide-react';
 import { VariableToQuestionMap } from '../../types';
+import { ResponseData } from '../../types';
 import { formatDate } from '../../../utils';
 import { ResponseMedia } from './response-media';
 
-/**
- * Пропсы компонента ResponseCard
- */
+/** Свойства карточки ответа. */
 interface ResponseCardProps {
-  /** Ключ ответа */
+  /** Ключ переменной. */
   keyName: string;
-  /** Значение ответа */
+  /** Сохранённое значение. */
   value: unknown;
-  /** Карта вопросов */
+  /** Соответствие переменных вопросам. */
   variableToQuestionMap: VariableToQuestionMap;
-  /** Функция поиска URL фото */
+  /** Поиск фотографии в истории. */
   getPhotoUrlFromMessages: (fileId: string) => string | null;
 }
 
-/**
- * Компонент карточки ответа
- * @param props - Пропсы компонента
- * @returns JSX компонент карточки
- */
-export function ResponseCard({
-  keyName,
-  value,
-  variableToQuestionMap,
-  getPhotoUrlFromMessages,
-}: ResponseCardProps): React.JSX.Element {
-  // Парсинг ответа
-  let responseData: any = value;
+/** Читает структурированный ответ, сохраняя обычный текст без изменений. */
+function parseResponse(value: unknown): ResponseData {
+  let parsed = value;
   if (typeof value === 'string') {
-    try {
-      responseData = JSON.parse(value);
-    } catch {
-      responseData = { value: value, type: 'text' };
-    }
+    try { parsed = JSON.parse(value); } catch { return { value, type: 'text' }; }
   }
+  return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed as ResponseData : { value: String(parsed ?? '') };
+}
 
-  const answerValue =
-    responseData?.value !== undefined
-      ? responseData.value
-      : typeof value === 'object' && value !== null
-      ? JSON.stringify(value)
-      : String(value);
-
-  // Получение текста вопроса
-  const getQuestionText = (questionKey: string, data: any) => {
-    if (variableToQuestionMap[questionKey]) {
-      return variableToQuestionMap[questionKey];
-    }
-    if (data?.prompt && data.prompt.trim()) {
-      return data.prompt;
-    }
-    return questionKey;
-  };
-
-  const questionText = getQuestionText(keyName, responseData);
-
+/** Отображает вопрос, ответ и метаданные без декоративных цветовых сигналов. */
+export function ResponseCard({ keyName, value, variableToQuestionMap, getPhotoUrlFromMessages }: ResponseCardProps): React.JSX.Element {
+  const data = parseResponse(value);
+  const answer = data.value !== undefined ? String(data.value) : typeof value === 'object' && value !== null ? JSON.stringify(value) : String(value ?? '');
+  const question = variableToQuestionMap[keyName] || data.prompt?.trim() || keyName;
+  const types: Record<string, string> = { text: 'Текст', number: 'Число', email: 'Email', phone: 'Телефон', photo: 'Фото', image: 'Фото', audio: 'Аудио', video: 'Видео', document: 'Документ' };
+  const hasMedia = Boolean(data.media?.length || data.photoUrl || ['photo', 'image', 'audio', 'video', 'document'].includes(data.type || ''));
   return (
-    <div className="border rounded-lg p-4 bg-gradient-to-br from-muted/30 to-muted/60 hover:from-muted/50 hover:to-muted/80 transition-all duration-200 shadow-sm hover:shadow-md">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-gradient-to-r from-blue-500 to-green-500" />
-            <span className="text-sm font-medium text-foreground">
-              {String(keyName.startsWith('response_') ? keyName.replace('response_', 'Ответ ') : keyName)}
-            </span>
-          </div>
-          {responseData?.type && (
-            <Badge variant="outline" className="text-xs border-primary/20 text-primary">
-              {String(
-                responseData.type === 'text'
-                  ? 'Текст'
-                  : responseData.type === 'number'
-                  ? 'Число'
-                  : responseData.type === 'email'
-                  ? 'Email'
-                  : responseData.type === 'phone'
-                  ? 'Телефон'
-                  : responseData.type
-              )}
-            </Badge>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          <Calendar className="w-3 h-3 text-muted-foreground" />
-          <span className="text-xs text-muted-foreground font-medium">
-            {String(responseData?.timestamp ? formatDate(responseData.timestamp) : 'Недавно')}
-          </span>
+    <article className="min-w-0 rounded-xl border border-border/60 bg-background p-4">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+        <span className="break-all">{keyName.startsWith('response_') ? keyName.replace('response_', 'Ответ ') : keyName}</span>
+        <div className="flex flex-wrap items-center gap-3">
+          {data.type && <span>{types[data.type] || data.type}</span>}
+          {data.timestamp && <span className="tabular-nums">{String(formatDate(data.timestamp))}</span>}
         </div>
       </div>
-
-      <div className="bg-background rounded-lg p-4 border border-border shadow-sm">
-        {/* Вопрос */}
-        <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 rounded-lg border">
-          <div className="flex items-center gap-2 mb-2">
-            <MessageSquare className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-            <span className="font-medium text-blue-900 dark:text-blue-100">Вопрос:</span>
-          </div>
-          <div className="text-blue-800 dark:text-blue-200 leading-relaxed">
-            {String(questionText)}
-          </div>
-        </div>
-
-        {/* Ответ */}
-        <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-          <div className="flex items-center gap-2 mb-2">
-            <Edit className="w-4 h-4 text-green-600 dark:text-green-400" />
-            <span className="font-medium text-green-900 dark:text-green-100">Ответ:</span>
-          </div>
-
-          <ResponseMedia
-            responseData={responseData}
-            answerValue={String(answerValue)}
-            getPhotoUrlFromMessages={getPhotoUrlFromMessages}
-          />
-
-          {!responseData?.media && !responseData?.photoUrl && !(responseData?.type === 'photo' || responseData?.type === 'image') && !String(answerValue).startsWith('/uploads/') && (
-            <div className="text-green-800 dark:text-green-200 leading-relaxed font-medium">
-              {String(answerValue)}
-            </div>
-          )}
-        </div>
-
-        {/* ID узла */}
-        {responseData?.nodeId && (
-          <div className="mt-3 pt-3 border-t border-border">
-            <div className="text-xs text-muted-foreground flex items-center gap-1">
-              <span className="inline-block w-2 h-2 bg-muted-foreground rounded-full" />
-              ID узла: {String(responseData.nodeId)}
-            </div>
-          </div>
-        )}
+      {question !== keyName && <p className="mb-3 whitespace-pre-wrap break-words text-sm text-muted-foreground">{String(question)}</p>}
+      <div className="min-w-0 space-y-3">
+        <ResponseMedia responseData={data} answerValue={answer} getPhotoUrlFromMessages={getPhotoUrlFromMessages} />
+        {!hasMedia && <p className="whitespace-pre-wrap break-words text-sm leading-6 text-foreground">{answer || 'Ответ не заполнен'}</p>}
       </div>
-    </div>
+      {data.nodeId != null && <p className="mt-3 break-all border-t border-border/50 pt-3 text-xs text-muted-foreground">Узел: {String(data.nodeId)}</p>}
+    </article>
   );
 }

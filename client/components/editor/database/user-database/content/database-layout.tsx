@@ -4,6 +4,8 @@
  */
 
 import { ScrollArea } from '@/components/ui/scroll-area';
+import './users-workspace.css';
+import './users-header.css';
 import { DatabaseContentProps } from './database-content-props';
 import { DatabaseHeaderSection } from './database-header-section';
 import { DatabaseFiltersSection } from './database-filters-section';
@@ -26,29 +28,18 @@ export function DatabaseContent(props: DatabaseContentProps): React.JSX.Element 
   } = props;
 
   return (
-    <ScrollArea className="h-full w-full overflow-hidden">
-      <div className="flex flex-col bg-background h-full min-h-0 pb-32 sm:pb-4">
+    <div className="users-workspace flex h-full min-h-0 w-full flex-col overflow-hidden bg-background">
         <DatabaseHeaderSection
           {...restProps}
           isDatabaseEnabled={isDatabaseEnabled}
           project={project || null}
           stats={restProps.stats}
         />
+      <ScrollArea className="min-h-0 flex-1 w-full">
+      <div className="flex flex-col min-h-0 pb-6">
         {!isDatabaseEnabled && <DatabaseDisabled />}
         {isDatabaseEnabled && (
           <div className="flex-1 flex flex-col min-h-0 w-full">
-            {/* DatabaseStatsSection скрыта — статистика теперь отображается инлайн-бейджами в хедере */}
-            {/* <DatabaseStatsSection
-              stats={restProps.stats}
-              projectId={restProps.projectId}
-              selectedTokenId={restProps.selectedTokenId}
-              onSourceClick={restProps.onSourceClick}
-            /> */}
-            {/* <SaveMediaToggle
-              projectId={restProps.projectId}
-              tokenId={restProps.selectedTokenId}
-              saveIncomingMedia={saveIncomingMedia ?? null}
-            /> */}
             <DatabaseFiltersSection {...restProps} />
             <DatabaseTabs 
               {...restProps} 
@@ -59,5 +50,6 @@ export function DatabaseContent(props: DatabaseContentProps): React.JSX.Element 
         )}
       </div>
     </ScrollArea>
+    </div>
   );
 }

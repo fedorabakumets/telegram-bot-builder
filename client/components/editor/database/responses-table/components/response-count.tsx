@@ -3,7 +3,7 @@
  * @description Отображает диапазон показанных ответов и общее количество
  */
 
-import { Badge } from '@/components/ui/badge';
+
 import type { ResponseCountProps } from '../types';
 
 /**
@@ -22,8 +22,8 @@ export function ResponseCount({
   const end = Math.min(currentPage * itemsPerPage, totalCount);
 
   return (
-    <Badge variant="secondary" className="text-[9px] xs:text-[10px] sm:text-xs flex-shrink-0 px-1 xs:px-1.5 sm:px-2 py-0">
+    <span className="text-xs tabular-nums text-muted-foreground">
       {start}–{end} из {totalCount}
-    </Badge>
+    </span>
   );
 }

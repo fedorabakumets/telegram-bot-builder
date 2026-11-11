@@ -38,19 +38,18 @@ export function SortFilter({
       }}
     >
       <SelectTrigger
-        className="h-10 sm:h-11 text-sm rounded-xl border-2 border-transparent bg-background shadow-sm hover:border-primary/20 transition-all"
+        className="h-10 w-full min-w-0 rounded-lg border border-border/60 bg-background text-sm shadow-none transition-colors hover:bg-muted/40 [&>span]:truncate"
+        aria-label="Сортировка пользователей"
         data-testid="select-sort-filter"
       >
-        <div className="flex items-center gap-2.5">
-          <div className="w-6 h-6 rounded-md bg-indigo-500/10 flex items-center justify-center">
-            <ArrowUpDown className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-          </div>
+        <div className="flex min-w-0 items-center gap-2 [&>span]:truncate">
+          <ArrowUpDown className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
           <SelectValue placeholder="Сортировка" />
         </div>
       </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="lastInteraction-desc">Последняя активность</SelectItem>
-        <SelectItem value="lastInteraction-asc">Давняя активность</SelectItem>
+      <SelectContent className="users-portal">
+        <SelectItem value="lastInteraction-desc">Сначала активные</SelectItem>
+        <SelectItem value="lastInteraction-asc">Давно не заходили</SelectItem>
         <SelectItem value="interactionCount-desc">Больше сообщений</SelectItem>
         <SelectItem value="interactionCount-asc">Меньше сообщений</SelectItem>
         <SelectItem value="createdAt-desc">Сначала новые</SelectItem>

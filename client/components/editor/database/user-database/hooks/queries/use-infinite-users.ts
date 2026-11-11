@@ -11,9 +11,7 @@ import { buildUsersApiUrl } from '@/components/editor/database/utils';
 /** Размер одной страницы пользователей */
 const PAGE_SIZE = 50;
 
-/**
- * Ответ сервера при пагинации
- */
+/** Ответ сервера при пагинации. */
 interface UsersPageResponse {
   /** Список пользователей на странице */
   users: UserBotData[];
@@ -23,9 +21,7 @@ interface UsersPageResponse {
   hasMore: boolean;
 }
 
-/**
- * Параметры хука useInfiniteUsers
- */
+/** Параметры загрузки пользователей. */
 interface UseInfiniteUsersParams {
   /** Идентификатор проекта */
   projectId: number;
@@ -43,11 +39,11 @@ interface UseInfiniteUsersParams {
   includeGroups?: boolean;
   /** Фильтр вкладки «Диалоги»: all | users | groups | channels */
   dialogKind?: 'all' | 'users' | 'groups' | 'channels';
+  /** Показывать только пользователей с историей личного общения с ботом. */
+  privateContactsOnly?: boolean;
 }
 
-/**
- * Результат хука useInfiniteUsers
- */
+/** Результат постраничной загрузки пользователей. */
 export interface UseInfiniteUsersResult {
   /** Все загруженные пользователи (объединение всех страниц) */
   allUsers: UserBotData[];
@@ -59,6 +55,8 @@ export interface UseInfiniteUsersResult {
   isFetchingNextPage: boolean;
   /** Идёт ли первоначальная загрузка */
   isLoading: boolean;
+  /** Ошибка получения списка пользователей */
+  usersError: Error | null;
   /** Функция сброса и перезагрузки с начала */
   refetch: () => void;
 }
@@ -78,6 +76,7 @@ export function useInfiniteUsers(params: UseInfiniteUsersParams): UseInfiniteUse
     sortDir,
     includeGroups,
     dialogKind,
+    privateContactsOnly,
   } = params;
 
   const basePath = `/api/projects/${projectId}/users`;
@@ -88,6 +87,7 @@ export function useInfiniteUsers(params: UseInfiniteUsersParams): UseInfiniteUse
     hasNextPage,
     isFetchingNextPage,
     isLoading,
+    error,
     refetch,
   } = useInfiniteQuery<UsersPageResponse>({
     queryKey: [
@@ -100,6 +100,7 @@ export function useInfiniteUsers(params: UseInfiniteUsersParams): UseInfiniteUse
       sortDir,
       includeGroups,
       dialogKind,
+      privateContactsOnly,
     ],
     initialPageParam: 0,
     queryFn: async ({ pageParam }) => {
@@ -114,6 +115,7 @@ export function useInfiniteUsers(params: UseInfiniteUsersParams): UseInfiniteUse
       }
       if (sortBy) extraParams.sortBy = sortBy;
       if (sortDir) extraParams.sortDir = sortDir;
+      if (privateContactsOnly) extraParams.privateContactsOnly = 'true';
       if (dialogKind) {
         extraParams.dialogKind = dialogKind;
       } else if (includeGroups) {
@@ -134,11 +136,11 @@ export function useInfiniteUsers(params: UseInfiniteUsersParams): UseInfiniteUse
     gcTime: 30_000,
     retry: false,
   });
-
   const allUsers = data?.pages.flatMap((page) => page.users) ?? [];
 
   return {
     allUsers,
+    usersError: error,
     fetchNextPage,
     hasNextPage: hasNextPage ?? false,
     isFetchingNextPage,

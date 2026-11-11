@@ -2,12 +2,7 @@
  * @fileoverview Главный компонент панели базы данных пользователей
  * @description Компонент верхнего уровня, объединяющий все подкомпоненты
  */
-
-import { useCallback, useEffect, useState } from 'react';
-import { RefreshCw } from 'lucide-react';
-import { useIsMobile } from '@/components/editor/header/hooks/use-mobile';
-import { useProjectTokens } from '@/hooks/use-project-tokens';
-import { useNormalizeSelectedTokenId } from '@/hooks/use-normalize-selected-token';
+import { usePanelToken } from './panel/use-panel-token';
 import { useToast } from '@/hooks/use-toast';
 import { DatabaseContent } from './database-content';
 import { useResponsive } from './hooks/use-responsive';
@@ -17,9 +12,7 @@ import { useVariableToQuestionMap, useFilteredAndSortedUsers } from './panel/pan
 import { useUserDatabasePanelState } from './panel/panel-state';
 import { UserDatabasePanelProps } from './types';
 import { formatUserName } from './utils';
-import { useLiveInvalidate } from './hooks/use-live-invalidate';
-import { useTraffic } from './hooks/queries/use-traffic';
-
+import { LiveInvalidator } from './panel/live-invalidator';
 /**
  * Компонент панели базы данных пользователей
  * @param props - Пропсы компонента
@@ -32,26 +25,14 @@ export function UserDatabasePanel(props: UserDatabasePanelProps): React.JSX.Elem
     onOpenDialogPanel,
     onOpenUserDetailsPanel,
     onNavigateToDialog,
-    selectedTokenId: selectedTokenIdProp,
-    availableTokens: availableTokensProp,
-    onSelectToken,
     allProjects,
     onProjectChange,
   } = props;
-
-  const { containerRef, visibleColumns } = useResponsive();
-  const projectTokensInfo = useProjectTokens([projectId]);
-  const projectTokens = availableTokensProp ?? projectTokensInfo[0]?.tokens ?? [];
-  const [internalSelectedTokenId, setInternalSelectedTokenId] = useState<number | null>(
-    selectedTokenIdProp !== undefined ? selectedTokenIdProp : null,
-  );
-  /** null = «Все боты»; `??` нельзя — null схлопнется во внутренний стейт */
-  const resolvedSelectedTokenId =
-    selectedTokenIdProp !== undefined ? selectedTokenIdProp : internalSelectedTokenId;
+  const { containerRef, visibleColumns, width } = useResponsive();
+  const { projectTokens, resolvedSelectedTokenId, handleSelectToken } = usePanelToken(props);
   const { state, setters } = useUserDatabasePanelState();
-  const isMobile = useIsMobile();
+  const isMobile = width < 960;
   const { toast } = useToast();
-
   const {
     searchQuery,
     sortField,
@@ -66,12 +47,12 @@ export function UserDatabasePanel(props: UserDatabasePanelProps): React.JSX.Elem
     setFilterActive,
     setFilterPremium,
   } = setters;
-
   const {
     project,
     users,
     stats,
-    isLoading,
+    usersError,
+    isUsersPending,
     refetchUsers,
     refetchStats,
     fetchNextPage,
@@ -85,7 +66,6 @@ export function UserDatabasePanel(props: UserDatabasePanelProps): React.JSX.Elem
     sortField,
     sortDirection,
   });
-
   const {
     deleteUserMutation,
     updateUserMutation,
@@ -97,78 +77,35 @@ export function UserDatabasePanel(props: UserDatabasePanelProps): React.JSX.Elem
     refetchUsers,
     refetchStats,
   });
-
-  useEffect(() => {
-    if (selectedTokenIdProp !== undefined) {
-      setInternalSelectedTokenId(selectedTokenIdProp);
-    }
-  }, [selectedTokenIdProp]);
-
-  const resetDeletedToken = useCallback(
-    (tokenId: null) => {
-      if (selectedTokenIdProp === undefined) {
-        setInternalSelectedTokenId(tokenId);
-      }
-      onSelectToken?.(tokenId);
-    },
-    [onSelectToken, selectedTokenIdProp],
-  );
-  useNormalizeSelectedTokenId(projectTokens, resolvedSelectedTokenId, resetDeletedToken);
-
   const variableToQuestionMap = useVariableToQuestionMap({
     projectData: project?.data,
   });
-
   const filteredAndSortedUsers = useFilteredAndSortedUsers({
     users,
     filterActive,
     filterPremium,
     filterBlocked: null,
   });
-
   const { handleUserStatusToggle } = useUserDatabasePanelHandlers(
     { updateUserMutation, toast },
     undefined
   );
-
   /** Флаг сохранения медиафайлов для выбранного токена */
   const selectedToken = projectTokens.find((t) => t.id === resolvedSelectedTokenId);
   const saveIncomingMedia = selectedToken?.saveIncomingMedia ?? 0;
-
-  /**
-   * Обновляет выбранный токен локально и снаружи
-   * @param tokenId - Новый идентификатор токена
-   */
-  function handleSelectToken(tokenId: number | null): void {
-    if (selectedTokenIdProp === undefined) {
-      setInternalSelectedTokenId(tokenId);
-    }
-
-    onSelectToken?.(tokenId);
-  }
-
-  if (isLoading) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <div className="text-center">
-          <RefreshCw className="mx-auto mb-2 h-8 w-8 animate-spin text-muted-foreground" />
-          <p className="text-muted-foreground">Загрузка базы данных...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <>
       <LiveInvalidator projectId={projectId} selectedTokenId={resolvedSelectedTokenId} />
       <div ref={containerRef} className="flex h-full w-full flex-col">
         <DatabaseContent
+        usersError={usersError}
+        isUsersPending={isUsersPending}
         projectId={projectId}
         projectName={projectName}
         selectedTokenId={resolvedSelectedTokenId}
         availableTokens={projectTokens}
         onSelectToken={handleSelectToken}
-        isDatabaseEnabled={project?.userDatabaseEnabled === 1}
+        isDatabaseEnabled={project ? project.userDatabaseEnabled === 1 : true}
         toggleDatabaseMutation={toggleDatabaseMutation}
         handleRefresh={() => {
           refetchUsers();
@@ -207,30 +144,4 @@ export function UserDatabasePanel(props: UserDatabasePanelProps): React.JSX.Elem
       </div>
     </>
   );
-}
-
-/**
- * Пропсы внутреннего компонента-инвалидатора
- */
-interface LiveInvalidatorProps {
-  /** Идентификатор проекта */
-  projectId: number;
-  /** Идентификатор выбранного токена бота */
-  selectedTokenId: number | null;
-}
-
-/**
- * Вспомогательный компонент, вызывающий useLiveInvalidate внутри UserMessagesLiveProvider.
- * Также держит useTraffic смонтированным чтобы инвалидация кэша трафика работала
- * независимо от того, какой вид статистики выбран (дашборд или классика).
- * Рендерится без UI — только для подключения хуков к контексту провайдера.
- * @param props - Пропсы компонента
- * @returns null
- */
-function LiveInvalidator({ projectId, selectedTokenId }: LiveInvalidatorProps): null {
-  useLiveInvalidate({ projectId, selectedTokenId });
-  // Держим useTraffic смонтированным всегда — иначе при классическом виде
-  // StatsDashboard не рендерится и инвалидация не триггерит fetch
-  useTraffic({ projectId, selectedTokenId });
-  return null;
 }

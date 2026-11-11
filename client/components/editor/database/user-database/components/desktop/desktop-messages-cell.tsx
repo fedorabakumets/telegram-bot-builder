@@ -22,7 +22,7 @@ interface DesktopMessagesCellProps {
 export function DesktopMessagesCell({ user }: DesktopMessagesCellProps): React.JSX.Element {
   return (
     <TableCell className="py-2 text-center">
-      <span className="text-sm font-medium">{user.interactionCount || 0}</span>
+      <span className="text-sm font-medium tabular-nums">{user.interactionCount || 0}</span>
     </TableCell>
   );
 }

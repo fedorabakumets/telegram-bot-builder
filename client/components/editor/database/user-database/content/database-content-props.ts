@@ -69,6 +69,10 @@ export interface DatabaseContentProps {
   setSortDirection: React.Dispatch<React.SetStateAction<SortDirection>>;
   /** Флаг мобильного режима */
   isMobile: boolean;
+  /** Ошибка загрузки пользователей */
+  usersError?: Error | null;
+  /** Загрузка списка пользователей */
+  isUsersPending?: boolean;
   /** Список пользователей */
   filteredAndSortedUsers: UserBotData[];
   /** Функция форматирования имени */

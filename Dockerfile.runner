@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-# @fileoverview Образ исполнителя ботов и очереди рассылок с отдельной сборкой JavaScript.
+# @fileoverview Образ исполнителя только ботов с отдельной сборкой JavaScript.
 # Образ исполнителя ботов (`WORKER_RUNTIME=remote`): исполнитель, worker.py
 # и Python-зависимости ботов, без панели и клиента. Подробно: docs/deployment/BOT_RUNNER.md
 # Собирается BuildKit (`docker buildx build`): кеш npm/pip между сборками, amd64 и arm64.
@@ -38,5 +38,5 @@ ENV RUNNER_WORKER_SCRIPT=/app/python/worker.py \
     RUNNER_CACHE_DIR=/app/cache \
     PYTHONUNBUFFERED=1
 
-# Нужны только REDIS_URL и RUNNER_ID
+# REDIS_URL и RUNNER_ID задают транспорт; DATABASE_URL нужен при RUNNER_REQUIRE_FENCE=true.
 CMD ["node", "/app/runner.cjs"]

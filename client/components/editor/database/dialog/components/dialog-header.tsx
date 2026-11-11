@@ -41,8 +41,8 @@ export function DialogHeader({
   return (
     <div className="flex items-center justify-between gap-2 p-2 xs:p-2.5 sm:p-3 border-b">
       <div className="flex items-center gap-2 min-w-0 flex-1">
-        <div className="w-7 xs:w-7 sm:w-8 h-7 xs:h-7 sm:h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center flex-shrink-0">
-          <MessageSquare className="w-3.5 xs:w-3.5 sm:w-4 h-3.5 xs:h-3.5 sm:h-4 text-white" />
+        <div className="w-7 xs:w-7 sm:w-8 h-7 xs:h-7 sm:h-8 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+          <MessageSquare className="w-3.5 xs:w-3.5 sm:w-4 h-3.5 xs:h-3.5 sm:h-4 text-muted-foreground" />
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
@@ -58,7 +58,7 @@ export function DialogHeader({
               }
             }}
           >
-            <SelectTrigger className="h-7 text-[10px] xs:text-[10px] sm:text-xs px-2 py-0.5 border-0 shadow-none bg-transparent hover:bg-accent/50 focus:ring-0 focus:ring-offset-0 [&>span]:text-muted-foreground [&>span]:leading-tight">
+            <SelectTrigger aria-label="Пользователь диалога" className="h-8 text-xs px-2 border-0 shadow-none bg-transparent hover:bg-muted focus:ring-2 focus:ring-ring [&>span]:text-muted-foreground [&>span]:leading-tight">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -76,6 +76,7 @@ export function DialogHeader({
         size="icon"
         onClick={onClose}
         data-testid="button-close-dialog-panel"
+        aria-label="Закрыть диалог"
         className="h-7 w-7 xs:h-8 xs:w-8 sm:h-9 sm:w-9 flex-shrink-0"
       >
         <X className="w-3.5 xs:w-4 h-3.5 xs:h-4" />

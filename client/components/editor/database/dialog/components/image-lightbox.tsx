@@ -3,8 +3,8 @@
  * @module client/components/editor/database/dialog/components/image-lightbox
  */
 
-import { useEffect, useCallback } from 'react';
-import { X } from 'lucide-react';
+import { useRef } from 'react';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 /**
  * Свойства компонента лайтбокса
@@ -22,49 +22,32 @@ interface ImageLightboxProps {
 
 /**
  * Лайтбокс для просмотра изображения или видео на весь экран.
- * Закрывается по клику на фон, кнопку ✕ или клавишу Escape.
+ * Использует модальный диалог с управлением фокусом и закрытием по Escape.
  * @param props - Свойства компонента
  * @returns JSX элемент
  */
 export function ImageLightbox({ src, alt = 'Изображение', mediaType = 'image', onClose }: ImageLightboxProps) {
-  /** Закрытие по Escape */
-  const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if (e.key === 'Escape') onClose();
-  }, [onClose]);
-
-  useEffect(() => {
-    document.addEventListener('keydown', handleKeyDown);
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = '';
-    };
-  }, [handleKeyDown]);
-
+  /** Элемент, открывший просмотр, для возврата клавиатурного фокуса. */
+  const previousFocus = useRef(typeof document !== 'undefined' ? document.activeElement as HTMLElement | null : null);
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
-      onClick={onClose}
-      data-testid="lightbox-overlay"
-    >
-      {/* Кнопка закрытия */}
-      <button
-        className="absolute right-4 top-4 rounded-full bg-black/50 p-2 text-white hover:bg-black/70 transition-colors"
-        onClick={onClose}
-        aria-label="Закрыть"
+    <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent
+        className="max-w-[94vw] border-0 bg-background p-8 shadow-none [&>button]:text-foreground"
+        data-testid="lightbox-overlay"
+        onCloseAutoFocus={(event) => {
+          event.preventDefault();
+          previousFocus.current?.focus();
+        }}
       >
-        <X className="h-5 w-5" />
-      </button>
-
+        <DialogTitle className="sr-only">Просмотр медиафайла</DialogTitle>
+        <DialogDescription className="sr-only">{alt}</DialogDescription>
       {/* Медиа-контент — клик по нему не закрывает лайтбокс */}
       {mediaType === 'video' ? (
         <video
           src={src}
-          autoPlay
-          loop
-          muted
+          controls
           playsInline
-          className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain shadow-2xl"
+          className="mx-auto max-h-[80dvh] max-w-full rounded-lg object-contain shadow-2xl"
           onClick={(e) => e.stopPropagation()}
           data-testid="lightbox-video"
         />
@@ -72,11 +55,12 @@ export function ImageLightbox({ src, alt = 'Изображение', mediaType =
         <img
           src={src}
           alt={alt}
-          className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain shadow-2xl"
+          className="mx-auto max-h-[80dvh] max-w-full rounded-lg object-contain shadow-2xl"
           onClick={(e) => e.stopPropagation()}
           data-testid="lightbox-image"
         />
       )}
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

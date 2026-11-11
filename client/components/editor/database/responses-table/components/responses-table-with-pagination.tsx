@@ -35,9 +35,13 @@ export function ResponsesTableWithPagination({
   // Собираем все ответы от всех пользователей
   const allEntries = React.useMemo(() => {
     const entries: Array<{
+      /** Пользователь, которому принадлежит ответ. */
       user: typeof users[0];
+      /** Название переменной ответа. */
       key: string;
+      /** Исходное значение ответа. */
       value: unknown;
+      /** Порядковый номер ответа пользователя. */
       index: number;
     }> = [];
 
@@ -54,7 +58,7 @@ export function ResponsesTableWithPagination({
         userGameData = user.userData as Record<string, unknown>;
       }
 
-      if (Object.keys(userGameData).length > 0) {
+      if (userGameData && typeof userGameData === 'object' && !Array.isArray(userGameData) && Object.keys(userGameData).length > 0) {
         Object.entries(userGameData).forEach(([key, value], index) => {
           entries.push({ user, key, value, index });
         });
@@ -66,27 +70,33 @@ export function ResponsesTableWithPagination({
 
   const totalPages = Math.ceil(allEntries.length / itemsPerPage);
 
-  const visibleEntries = React.useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage;
-    return allEntries.slice(start, start + itemsPerPage);
-  }, [allEntries, currentPage, itemsPerPage]);
+  /** Ограничивает страницу после изменения фильтра или набора ответов. */
+  const activePage = Math.min(currentPage, Math.max(1, totalPages));
 
+  const visibleEntries = React.useMemo(() => {
+    const start = (activePage - 1) * itemsPerPage;
+    return allEntries.slice(start, start + itemsPerPage);
+  }, [allEntries, activePage, itemsPerPage]);
+
+  /** Открывает страницу в допустимом диапазоне. */
   const goToPage = (page: number) => {
     setCurrentPage(Math.max(1, Math.min(page, totalPages)));
   };
 
-  const nextPage = () => setCurrentPage((prev) => Math.min(prev + 1, totalPages));
-  const prevPage = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
+  /** Открывает следующую доступную страницу. */
+  const nextPage = () => setCurrentPage(Math.min(activePage + 1, Math.max(1, totalPages)));
+  /** Открывает предыдущую доступную страницу. */
+  const prevPage = () => setCurrentPage(Math.max(activePage - 1, 1));
 
   return (
     <div className="space-y-3 w-full max-w-full">
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-1 xs:gap-1.5 sm:gap-2 text-[9px] xs:text-[10px] sm:text-xs text-muted-foreground">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-1 xs:gap-1.5 sm:gap-2 text-xs text-muted-foreground">
           <span className="whitespace-nowrap">Показывать:</span>
           <ItemsPerPageSelector value={itemsPerPage} onChange={(val) => { setItemsPerPage(val); setCurrentPage(1); }} />
         </div>
         <ResponseCount
-          currentPage={currentPage}
+          currentPage={activePage}
           totalPages={totalPages}
           itemsPerPage={itemsPerPage}
           totalCount={allEntries.length}
@@ -94,12 +104,12 @@ export function ResponsesTableWithPagination({
       </div>
       <div className="rounded-md border overflow-hidden w-full max-w-full">
         <div className="overflow-x-auto">
-          <Table className="w-full min-w-[600px] max-w-full text-[9px] xs:text-[10px] sm:text-xs">
+          <Table className="w-full min-w-[600px] max-w-full text-xs">
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead className="font-semibold text-[9px] xs:text-[10px] sm:text-xs whitespace-nowrap px-2 xs:px-2.5 sm:px-3 py-1.5 xs:py-2">Пользователь</TableHead>
-                <TableHead className="font-semibold text-[9px] xs:text-[10px] sm:text-xs whitespace-nowrap px-2 xs:px-2.5 sm:px-3 py-1.5 xs:py-2">Переменная</TableHead>
-                <TableHead className="font-semibold text-[9px] xs:text-[10px] sm:text-xs whitespace-nowrap px-2 xs:px-2.5 sm:px-3 py-1.5 xs:py-2">Ответ</TableHead>
+                <TableHead className="font-semibold text-xs whitespace-nowrap px-3 py-3">Пользователь</TableHead>
+                <TableHead className="font-semibold text-xs whitespace-nowrap px-3 py-3">Переменная</TableHead>
+                <TableHead className="font-semibold text-xs whitespace-nowrap px-3 py-3">Ответ</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -116,7 +126,7 @@ export function ResponsesTableWithPagination({
               ) : (
                 <TableRow>
                   <TableCell colSpan={3} className="text-center py-12 text-muted-foreground">
-                    Нет ответов
+                    Нет ответов для выбранных пользователей
                   </TableCell>
                 </TableRow>
               )}
@@ -126,7 +136,7 @@ export function ResponsesTableWithPagination({
       </div>
       {totalPages > 0 && (
         <PaginationControls
-          currentPage={currentPage}
+          currentPage={activePage}
           totalPages={totalPages}
           goToPage={goToPage}
           nextPage={nextPage}

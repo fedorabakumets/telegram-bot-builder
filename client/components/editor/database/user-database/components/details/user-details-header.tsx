@@ -11,10 +11,10 @@ import { DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/di
  */
 export function UserDetailsHeader(): React.JSX.Element {
   return (
-    <DialogHeader>
-      <DialogTitle>Детали пользователя</DialogTitle>
+    <DialogHeader className="shrink-0 border-b border-border/60 pb-4 pr-8 text-left">
+      <DialogTitle>Профиль пользователя</DialogTitle>
       <DialogDescription>
-        Подробная информация о пользователе
+        Данные Telegram, история активности и ответы боту
       </DialogDescription>
     </DialogHeader>
   );

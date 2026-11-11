@@ -1,5 +1,5 @@
 /**
- * @fileoverview Исполнитель ботов: отдельный процесс без доступа к БД панели.
+ * @fileoverview Исполнитель ботов: команды Redis, процессы Python и защита актуальности команд.
  * Читает команды панели из Redis Streams, запускает worker.py на своей машине
  * и отправляет обратно его вывод. Запуск: `npm run runner`.
  * @module server/runner
@@ -18,6 +18,7 @@ import { publishRunnerSiteInfo, readRunnerSiteInfo } from "../redis/runnerSiteIn
 import { acquireRuntimeLease, watchRuntimeLease } from "../bots/runtime-lease";
 import { loadRunnerConfig } from "./runnerConfig";
 import { RunnerWorkers } from "./runnerWorkers";
+import { closeBotCommandFence } from "./runnerCommandFence";
 
 /**
  * Подключается к Redis, принимает команды и останавливает воркеры по сигналу
@@ -44,9 +45,6 @@ async function main(): Promise<void> {
   const follower = followCommandStream(reader, runnerCommandStream(config.runnerId), (fields) => workers.handle(fields));
   await follower.ready;
   await publishRunnerSiteInfo(writer, readRunnerSiteInfo(config.runnerId));
-  const stopBroadcasts = process.env.RUNNER_BROADCASTS_ENABLED === "true"
-    ? (await import("../routes/botIntegration/handlers/broadcasts/broadcast-runtime")).startBroadcastRuntime()
-    : () => {};
   // Панель считает воркеры прошлого запуска исполнителя завершёнными
   await appendToStream(writer, eventStream, { k: "hello", w: "", i: "" } satisfies RunnerEvent);
   console.log(`🛰️ Исполнитель ${config.runnerId} готов: python=${config.pythonPath}, worker=${config.workerScript}, кеш=${config.cacheDir}`);
@@ -55,12 +53,12 @@ async function main(): Promise<void> {
   const stop = async (signal: string, lost = false) => {
     if (stopping) return;
     stopping = true;
-    stopBroadcasts();
     stopWatching();
     console.log(`🛰️ ${signal}: останавливаем воркеры (${workers.size})`);
     follower.stop();
     if (lost) workers.killAll();
     else await workers.shutdown();
+    await closeBotCommandFence();
     if (!lost) await lease.release().catch(() => undefined);
     leaseRedis.disconnect();
     // Даём событиям exit уйти в Redis до закрытия соединения

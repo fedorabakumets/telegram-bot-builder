@@ -6,27 +6,15 @@
  * Не требует браузерной сессии.
  * Возвращает { items: [...], count: N } для корректной работы condition-нод.
  *
+ * Запросы используют общий пул PostgreSQL с едиными лимитами и диагностикой.
+ *
  * @module userProjectsTokens/handlers/users/getBotTokenUsersHandler
  */
 
 import type { Request, Response } from "express";
-import { Pool } from "pg";
+import { pool } from "../../../../database/db";
 import { storage } from "../../../../storages/storage";
 import { getBotActorId } from "../../../../middleware/bot-api-actor";
-
-/** Пул подключений к PostgreSQL */
-let pool: InstanceType<typeof Pool> | null = null;
-
-/**
- * Возвращает или создаёт пул подключений к БД
- * @returns Экземпляр Pool
- */
-function getPool(): InstanceType<typeof Pool> {
-    if (!pool) {
-        pool = new Pool({ connectionString: process.env.DATABASE_URL });
-    }
-    return pool;
-}
 
 /**
  * Нормализует tokenId — срезает префикс `token_` если он есть
@@ -79,10 +67,8 @@ export async function getBotTokenUsersHandler(req: Request, res: Response): Prom
             return;
         }
 
-        const db = getPool();
-
         // Получаем общее количество пользователей
-        const countResult = await db.query<{ total: string }>(
+        const countResult = await pool.query<{ total: string }>(
             `SELECT COUNT(*) AS total
              FROM bot_users
              WHERE project_id = $1
@@ -93,7 +79,7 @@ export async function getBotTokenUsersHandler(req: Request, res: Response): Prom
         const count = parseInt(countResult.rows[0]?.total ?? "0", 10);
 
         // Получаем пользователей с пагинацией
-        const usersResult = await db.query(
+        const usersResult = await pool.query(
             `SELECT
                bu.user_id        AS "userId",
                bu.username       AS "userName",

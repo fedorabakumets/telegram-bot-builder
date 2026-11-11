@@ -4,12 +4,14 @@
  * Принимает tokenId и userId, проверяет доступ через telegram_id,
  * возвращает данные пользователя из таблицы bot_users и его аватарку.
  *
+ * Запросы используют общий пул PostgreSQL с едиными лимитами и диагностикой.
+ *
  * @module userProjectsTokens/handlers/users/getBotTokenUserHandler
  */
 import { getTelegramApiBaseUrl } from '../../../../utils/telegram-api-url';
 
 import type { Request, Response } from "express";
-import { Pool } from "pg";
+import { pool } from "../../../../database/db";
 import { storage } from "../../../../storages/storage";
 import { fetchWithProxy } from "../../../../utils/telegram-proxy";
 import { existsSync, mkdirSync, createWriteStream } from "fs";
@@ -17,20 +19,6 @@ import { join } from "path";
 import { pipeline } from "stream/promises";
 import { Readable } from "stream";
 import { getBotActorId } from "../../../../middleware/bot-api-actor";
-
-/** Пул подключений к PostgreSQL */
-let pool: InstanceType<typeof Pool> | null = null;
-
-/**
- * Возвращает или создаёт пул подключений к БД
- * @returns Экземпляр Pool
- */
-function getPool(): InstanceType<typeof Pool> {
-    if (!pool) {
-        pool = new Pool({ connectionString: process.env.DATABASE_URL });
-    }
-    return pool;
-}
 
 /**
  * Нормализует tokenId — срезает префикс `token_` если он есть
@@ -171,8 +159,7 @@ export async function getBotTokenUserHandler(req: Request, res: Response): Promi
             return;
         }
 
-        const db = getPool();
-        const result = await db.query(
+        const result = await pool.query(
             `SELECT user_id AS "userId", username AS "userName", first_name AS "firstName",
                     last_name AS "lastName", registered_at AS "registeredAt",
                     last_interaction AS "lastInteraction", interaction_count AS "interactionCount",

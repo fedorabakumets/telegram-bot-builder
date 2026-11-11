@@ -1,11 +1,18 @@
 /** @fileoverview Восстановление живых уведомлений из PostgreSQL независимо от доступности Redis. */
-import type { Pool, PoolClient } from 'pg';
+import { Client, type Pool } from 'pg';
 import { broadcastProjectEventLocal } from '../terminal/broadcastProjectEvent';
 import { setAnalyticsTransportStatus } from './live-status';
-/** Запускает LISTEN и сверку сохранённых версий при подключении и уведомлениях. */
-export function startAnalyticsLiveBridge(pool: Pool): () => void {
+/**
+ * Запускает отдельное соединение LISTEN и сверку сохранённых версий через общий пул.
+ * @param pool - Пул коротких запросов и источник конфигурации подключения.
+ * @param createListener - Фабрика выделенного клиента для подписки.
+ * @returns Остановка подписки и повторных подключений.
+ */
+export function startAnalyticsLiveBridge(pool: Pool, createListener = () => new Client({
+  ...pool.options, application_name: `${pool.options.application_name || 'botcraft-api'}-analytics-listener`,
+})): () => void {
   const versions = new Map<number, bigint>();
-  let client: PoolClient | undefined, stopped = false, generation = 0;
+  let client: Client | undefined, stopped = false, generation = 0;
   let reconnect: ReturnType<typeof setTimeout> | undefined;
   let debounce: ReturnType<typeof setTimeout> | undefined;
   /** Публикует последнюю версию проекта; отдельные изменения объединяются. */
@@ -35,7 +42,7 @@ export function startAnalyticsLiveBridge(pool: Pool): () => void {
     const failed = client;
     client = undefined;
     if (debounce) { clearTimeout(debounce); debounce = undefined; }
-    if (failed) { failed.removeAllListeners('notification'); failed.removeAllListeners('end'); failed.release(true); }
+    if (failed) { failed.removeAllListeners('notification'); failed.removeAllListeners('end'); void failed.end().catch(() => undefined); }
     reconnect = setTimeout(() => { reconnect = undefined; void connect(); }, 3000);
     reconnect.unref();
   }
@@ -43,8 +50,7 @@ export function startAnalyticsLiveBridge(pool: Pool): () => void {
   async function connect(): Promise<void> {
     const epoch = ++generation;
     try {
-      const listener = await pool.connect();
-      if (stopped || epoch !== generation) { listener.release(); return; }
+      const listener = createListener();
       client = listener;
       /** Старые соединения не могут менять состояние нового канала. */
       const current = () => !stopped && epoch === generation && client === listener;
@@ -64,6 +70,8 @@ export function startAnalyticsLiveBridge(pool: Pool): () => void {
         debounce = setTimeout(() => { debounce = undefined; void sync().catch(() => recover(epoch)); }, 120);
         debounce.unref();
       });
+      await listener.connect();
+      if (!current()) return;
       await listener.query('LISTEN analytics_v2_changed');
       if (!current()) return;
       await sync();
@@ -79,6 +87,6 @@ export function startAnalyticsLiveBridge(pool: Pool): () => void {
     if (debounce) clearTimeout(debounce);
     const closing = client;
     client = undefined;
-    if (closing) { closing.removeAllListeners('notification'); closing.removeAllListeners('end'); closing.release(true); }
+    if (closing) { closing.removeAllListeners('notification'); closing.removeAllListeners('end'); void closing.end().catch(() => undefined); }
   };
 }

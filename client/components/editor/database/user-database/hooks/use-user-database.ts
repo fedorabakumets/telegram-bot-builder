@@ -4,6 +4,7 @@
  */
 
 import { UseUserDatabaseParams, UseUserDatabaseReturn } from './types';
+import { useEffect } from 'react';
 import { useProject } from './queries/use-project';
 import { useInfiniteUsers } from './queries/use-infinite-users';
 import { useStats } from './queries/use-stats';
@@ -18,7 +19,8 @@ export function useUserDatabase(params: UseUserDatabaseParams): UseUserDatabaseR
 
   const { project } = useProject({ projectId });
   const {
-    allUsers: users,
+    allUsers,
+    usersError,
     isLoading: isUsersLoading,
     refetch,
     fetchNextPage,
@@ -31,13 +33,21 @@ export function useUserDatabase(params: UseUserDatabaseParams): UseUserDatabaseR
     filterActive,
     sortBy: sortField,
     sortDir: sortDirection,
+    privateContactsOnly: true,
   });
+  /** Защищает список при работе с сервером, ещё не поддерживающим новый параметр фильтра. */
+  const users = allUsers.filter((user) => Boolean(user.lastMessageAt));
+  useEffect(() => {
+    if (allUsers.length > 0 && users.length === 0 && hasNextPage && !isFetchingNextPage) fetchNextPage();
+  }, [allUsers.length, users.length, hasNextPage, isFetchingNextPage, fetchNextPage]);
   const { stats, isStatsLoading, refetchStats } = useStats({ projectId, selectedTokenId });
   const isLoading = isUsersLoading || isStatsLoading;
 
   return {
     project,
     users,
+    usersError,
+    isUsersPending: isUsersLoading,
     stats,
     isLoading,
     isUsersLoading,

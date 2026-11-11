@@ -21,14 +21,14 @@ interface MobileUserStatsProps {
  */
 export function MobileUserStats({ user }: MobileUserStatsProps): React.JSX.Element {
   return (
-    <div className="grid grid-cols-2 gap-4 text-sm">
+    <div className="grid grid-cols-2 gap-3 text-xs">
       <div>
         <div className="text-muted-foreground">Сообщений</div>
-        <div className="font-medium">{user.interactionCount || 0}</div>
+        <div className="mt-1 font-medium tabular-nums">{user.interactionCount || 0}</div>
       </div>
       <div>
         <div className="text-muted-foreground">Последняя активность</div>
-        <div className="font-medium text-xs">{formatDate(user.lastInteraction)}</div>
+        <div className="mt-1 font-medium tabular-nums">{formatDate(user.lastInteraction)}</div>
       </div>
     </div>
   );

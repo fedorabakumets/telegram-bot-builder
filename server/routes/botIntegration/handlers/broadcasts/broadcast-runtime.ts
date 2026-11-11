@@ -3,6 +3,9 @@
  */
 
 import { pool } from "../../../../database/db";
+import type { PoolClient } from "pg";
+import { suppressPoolClientHoldWarning } from "../../../../database/pool-diagnostics";
+import { startAdaptivePoller } from "../../../../utils/adaptive-poller";
 import { runBroadcastQueue } from "./broadcastQueue";
 import { syncCampaignAggregates } from "./sync-campaign-aggregates";
 
@@ -19,9 +22,11 @@ const active = new Set<number>();
  * @returns Завершение попытки исполнения
  */
 async function executeBroadcast(id: number): Promise<void> {
-  const client = await pool.connect();
+  let client: PoolClient | undefined;
   let locked = false;
   try {
+    client = await pool.connect();
+    suppressPoolClientHoldWarning(client);
     const claim = await client.query<{ locked: boolean }>(
       "SELECT pg_try_advisory_lock($1, $2) AS locked", [LOCK_NAMESPACE, id],
     );
@@ -49,17 +54,26 @@ async function executeBroadcast(id: number): Promise<void> {
   } catch (error) {
     console.error(`[broadcastRuntime] Ошибка рассылки ${id}:`, error);
   } finally {
-    if (locked) await client.query("SELECT pg_advisory_unlock($1, $2)", [LOCK_NAMESPACE, id]).catch(() => {});
-    client.release();
+    let discard = false;
+    if (locked && client) {
+      try {
+        await client.query("SELECT pg_advisory_unlock($1, $2)", [LOCK_NAMESPACE, id]);
+      } catch (error) {
+        discard = true;
+        console.error(`[broadcastRuntime] Ошибка снятия блокировки ${id}:`, error);
+      }
+    }
+    client?.release(discard);
     active.delete(id);
   }
 }
 
 /**
  * Находит незавершённые задания и запускает те, которыми ещё не владеет процесс.
- * @returns Завершение одного прохода
+ * @returns Наличие незавершённых заданий или занятых слотов исполнителя
  */
-export async function reconcileBroadcasts(): Promise<void> {
+export async function reconcileBroadcasts(): Promise<boolean> {
+  if (active.size >= MAX_RUNNING) return true;
   const found = await pool.query<{ id: number }>(
     "SELECT id FROM broadcasts WHERE status IN ('pending', 'running') ORDER BY id LIMIT 100",
   );
@@ -69,18 +83,19 @@ export async function reconcileBroadcasts(): Promise<void> {
     active.add(id);
     void executeBroadcast(id);
   }
+  return found.rows.length > 0 || active.size > 0;
 }
 
 /**
  * Запускает периодическое восстановление рассылок из базы данных.
- * @param intervalMs - Интервал проверки
+ * @param intervalMs - Минимальная пауза; пустая очередь проверяется не реже одного раза в 10 секунд
  * @returns Функция остановки новых проходов
  */
 export function startBroadcastRuntime(intervalMs = 2_000): () => void {
-  const tick = () => void reconcileBroadcasts().catch((error) =>
-    console.error("[broadcastRuntime] Ошибка восстановления:", error));
-  tick();
-  const timer = setInterval(tick, intervalMs);
-  timer.unref?.();
-  return () => clearInterval(timer);
+  return startAdaptivePoller({
+    poll: reconcileBroadcasts,
+    intervalMs,
+    maxIntervalMs: Math.max(intervalMs, 10_000),
+    onError: (error) => console.error("[broadcastRuntime] Ошибка восстановления:", error),
+  });
 }

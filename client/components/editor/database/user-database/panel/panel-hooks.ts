@@ -36,6 +36,10 @@ interface UseUserDatabasePanelMutationsParams extends UseUserMutationsParams {
 interface UseUserDatabasePanelDataReturn {
   /** Данные проекта */
   project: any;
+  /** Ошибка загрузки пользователей */
+  usersError?: Error | null;
+  /** Загрузка списка пользователей */
+  isUsersPending?: boolean;
   /** Список пользователей */
   users: any[];
   /** Статистика */
@@ -90,6 +94,8 @@ export function useUserDatabasePanelData(
   return {
     project: data.project,
     users: data.users,
+    usersError: data.usersError,
+    isUsersPending: data.isUsersPending,
     stats: data.stats,
     isLoading: data.isLoading,
     refetchUsers: data.refetchUsers,

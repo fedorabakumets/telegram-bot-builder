@@ -32,33 +32,33 @@ interface DesktopLastMessageCellProps {
 }
 
 /**
- * Получить иконку для типа медиа
+ * Получить подпись для типа медиа
  * @param type - Тип медиафайла
- * @returns Эмодзи-иконка
+ * @returns Читаемая подпись вложения
  */
-function getMediaIcon(type: string): string {
+function getMediaLabel(type: string): string {
   switch (type) {
-    case 'photo': return '📷';
-    case 'video': return '🎬';
-    case 'audio': return '🎵';
-    case 'document': return '📄';
-    case 'sticker': return '🎭';
-    default: return '📎';
+    case 'photo': return 'Фото';
+    case 'video': return 'Видео';
+    case 'audio': return 'Аудио';
+    case 'document': return 'Документ';
+    case 'sticker': return 'Стикер';
+    default: return 'Вложение';
   }
 }
 
 /**
- * Маппинг текстовых плейсхолдеров на красивый вид с иконкой
+ * Маппинг текстовых плейсхолдеров на читаемую подпись
  */
 const MEDIA_PLACEHOLDER_MAP: Record<string, string> = {
-  '[Фото]': '📷 Фото',
-  '[Photo]': '📷 Фото',
-  '[Видео]': '🎬 Видео',
-  '[Аудио]': '🎵 Аудио',
-  '[Голосовое]': '🎤 Голосовое',
-  '[Документ]': '📄 Документ',
-  '[Стикер]': '🎭 Стикер',
-  '[медиа]': '📎 Медиафайл',
+  '[Фото]': 'Фото',
+  '[Photo]': 'Фото',
+  '[Видео]': 'Видео',
+  '[Аудио]': 'Аудио',
+  '[Голосовое]': 'Голосовое',
+  '[Документ]': 'Документ',
+  '[Стикер]': 'Стикер',
+  '[медиа]': 'Медиафайл',
 };
 
 /**
@@ -91,12 +91,12 @@ export function DesktopLastMessageCell({ user, projectId }: DesktopLastMessageCe
   const strippedText = typeof rawText === 'string'
     ? rawText.replace(/<[^>]*>/g, '').trim()
     : '';
-  /** Заменяем текстовые плейсхолдеры медиа на красивый вид с иконкой */
+  /** Заменяем текстовые плейсхолдеры медиа на читаемую подпись */
   let messageText = MEDIA_PLACEHOLDER_MAP[strippedText] ?? strippedText;
 
   if (!messageText && lastMessage?.media && lastMessage.media.length > 0) {
     const mediaTypes = [...new Set(lastMessage.media.map((m: any) => m.fileType ?? m.type ?? 'unknown'))];
-    messageText = mediaTypes.map(getMediaIcon).join(' ') + ' Медиафайл' + (mediaTypes.length > 1 ? 'ы' : '');
+    messageText = mediaTypes.map(getMediaLabel).join(', ');
   }
 
   if (!messageText) messageText = 'Нет сообщений';
@@ -107,8 +107,8 @@ export function DesktopLastMessageCell({ user, projectId }: DesktopLastMessageCe
   return (
     <TableCell className="py-2 max-w-xs">
       <div className="flex flex-col gap-0.5 min-w-0">
-        <div className="text-sm text-muted-foreground truncate">{messageText}</div>
-        <div className="text-xs text-muted-foreground/70">{timestamp}</div>
+        <div className="text-sm text-muted-foreground truncate" title={messageText}>{messageText}</div>
+        <div className="text-xs text-muted-foreground tabular-nums">{timestamp}</div>
       </div>
     </TableCell>
   );

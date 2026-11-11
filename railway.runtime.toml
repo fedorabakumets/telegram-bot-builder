@@ -1,9 +1,9 @@
 # @fileoverview Конфигурация будущего отдельного исполнителя ботов; сервис Railway автоматически не создаётся.
-# При назначении сервису задайте RUNNER_REQUIRE_FENCE=true, RUNNER_BROADCASTS_ENABLED=true и DATABASE_URL в его переменных окружения.
+# При назначении сервису задайте RUNNER_REQUIRE_FENCE=true и DATABASE_URL для защиты команд ботов.
 [build]
 builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile.runner"
-watchPatterns = ["/server/runner/**", "/server/redis/**", "/server/bots/**", "/server/routes/botIntegration/**", "/server/database/**", "/server/storages/**", "/server/storage/**", "/server/terminal/**", "/server/analytics/**", "/server/auth/agent/**", "/server/services/runtime-overlay.ts", "/server/utils/**", "/server/python/**", "/shared/**", "/requirements.txt", "/package.json", "/package-lock.json", "/tsconfig.node.json", "/Dockerfile.runner", "/railway.runtime.toml"]
+watchPatterns = ["/server/runner/**", "/server/redis/**", "/server/bots/**", "/server/services/runtime-overlay.ts", "/server/utils/**", "/server/python/**", "/requirements.txt", "/package.json", "/package-lock.json", "/tsconfig.node.json", "/Dockerfile.runner", "/railway.runtime.toml"]
 
 [deploy]
 startCommand = "node /app/runner.cjs"

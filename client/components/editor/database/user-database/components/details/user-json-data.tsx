@@ -3,7 +3,7 @@
  * @description Показывает все данные пользователя в формате JSON
  */
 
-import { Label } from '@/components/ui/label';
+import { useId } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 
 /**
@@ -20,18 +20,21 @@ interface UserJsonDataProps {
  * @returns JSX компонент JSON
  */
 export function UserJsonData({ userData }: UserJsonDataProps): React.JSX.Element {
+  const id = useId();
   return (
-    <div>
-      <Label className="text-sm font-medium">Все данные пользователя (JSON)</Label>
+    <details className="rounded-lg border border-border/60 p-4">
+      <summary className="cursor-pointer text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">Исходные данные</summary>
+      <label htmlFor={id} className="sr-only">Данные пользователя в формате JSON</label>
       <div className="mt-2">
         <Textarea
+          id={id}
           value={JSON.stringify(userData ?? {}, null, 2)}
           readOnly
           rows={6}
-          className="text-xs font-mono bg-muted"
+          className="text-xs font-mono bg-muted/30"
           placeholder="Нет данных для отображения"
         />
       </div>
-    </div>
+    </details>
   );
 }

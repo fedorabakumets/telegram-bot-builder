@@ -1,123 +1,55 @@
 /**
- * @fileoverview Компактная секция заголовка панели базы данных пользователей
- * @description Строка с заголовком, инлайн-бейджами статистики и кнопками управления
+ * @fileoverview Нейтральная шапка аудитории с выбором проекта, бота и подписанными показателями.
  */
-
-import { Users, RefreshCw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { TabHeader } from '@/components/ui/tab-header';
+import { Users } from 'lucide-react';
+import { WorkspaceTabHeading } from '@/components/ui/workspace-tab-heading';
+import { WorkspaceTabActions } from '@/components/ui/workspace-tab-actions';
+import { WorkspaceCollapsibleHeader } from '@/components/ui/workspace-collapsible-header';
 import { BotProject } from '@shared/schema';
-import {
-  BotTokenSelector,
-  HeaderActions,
-  ProjectSelector,
-} from '../components/header';
+import { HeaderActions, ProjectSelector } from '../components/header';
+import { UsersBotSelector } from '../components/header/users-bot-selector';
 import { DatabaseContentProps } from './database-content-props';
 import { InlineStatsBadges } from '../components/header/inline-stats-badges';
 
-/**
- * Пропсы компонента DatabaseHeaderSection
- */
-interface DatabaseHeaderSectionProps
-  extends Pick<
-    DatabaseContentProps,
-    | 'projectId'
-    | 'projectName'
-    | 'selectedTokenId'
-    | 'availableTokens'
-    | 'onSelectToken'
-    | 'isDatabaseEnabled'
-    | 'toggleDatabaseMutation'
-    | 'handleRefresh'
-    | 'deleteAllUsersMutation'
-    | 'allProjects'
-    | 'onProjectChange'
-    | 'stats'
-  > {
-  /** Данные проекта */
+/** Свойства заголовка аудитории. */
+interface DatabaseHeaderSectionProps extends Pick<DatabaseContentProps,
+  'projectId' | 'projectName' | 'selectedTokenId' | 'availableTokens' | 'onSelectToken' |
+  'isDatabaseEnabled' | 'toggleDatabaseMutation' | 'handleRefresh' |
+  'deleteAllUsersMutation' | 'allProjects' | 'onProjectChange' | 'stats'> {
+  /** Данные текущего проекта. */
   project: BotProject | null;
 }
 
 /**
- * Компактная секция заголовка панели БД — использует TabHeader
- * @param props - Пропсы компонента
- * @returns JSX компонент заголовка
+ * Показывает контекст аудитории и действия над выбранной базой.
+ * @param props - Параметры проекта, фильтра бота и статистики.
+ * @returns Заголовок вкладки пользователей.
  */
 export function DatabaseHeaderSection(props: DatabaseHeaderSectionProps): React.JSX.Element {
-  const {
-    projectId,
-    projectName,
-    selectedTokenId,
-    availableTokens,
-    onSelectToken,
-    isDatabaseEnabled,
-    handleRefresh,
-    deleteAllUsersMutation,
-    allProjects,
-    onProjectChange,
-    stats,
-  } = props;
-
-  /** Показывать селектор проекта только если передан список из более чем одного проекта */
-  const showProjectSelector =
-    allProjects !== undefined && allProjects.length > 1 && onProjectChange !== undefined;
-
+  const { projectId, projectName, selectedTokenId, availableTokens, onSelectToken,
+    isDatabaseEnabled, handleRefresh, deleteAllUsersMutation, allProjects,
+    onProjectChange, stats } = props;
+  const showProjects = allProjects && allProjects.length > 1 && onProjectChange;
   return (
-    <TabHeader
-      icon={<Users className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />}
-      title="Пользователи"
-      actions={
-        handleRefresh ? (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleRefresh}
-            className="h-7 px-2 text-muted-foreground hover:text-foreground"
-            title="Обновить данные"
-          >
-            <RefreshCw className="w-3.5 h-3.5 mr-1" />
-            <span className="text-xs hidden sm:inline">Обновить</span>
-          </Button>
-        ) : undefined
-      }
-    >
-      {/* Селектор проекта */}
-      {showProjectSelector && (
-        <ProjectSelector
-          projects={allProjects!}
-          selectedProjectId={projectId}
-          onSelect={onProjectChange!}
-        />
-      )}
-
-      {/* Селектор бота */}
-      <BotTokenSelector
-        projectId={projectId}
-        tokens={availableTokens}
-        selectedTokenId={selectedTokenId}
-        onSelect={onSelectToken}
-      />
-
-      {/* Кнопка очистить */}
-      {isDatabaseEnabled && (
-        <>
-          <span className="text-border/60 text-[10px]">·</span>
-          <HeaderActions
-            projectId={projectId}
-            projectName={projectName}
-            onRefresh={handleRefresh}
-            onDeleteAll={() => deleteAllUsersMutation.mutate()}
-          />
-        </>
-      )}
-
-      {/* Инлайн-бейджи статистики */}
-      {isDatabaseEnabled && stats && (
-        <>
-          <span className="text-border/60 text-[10px]">·</span>
-          <InlineStatsBadges stats={stats} />
-        </>
-      )}
-    </TabHeader>
+    <div className="users-page-header workspace-tab-frame shrink-0">
+      <WorkspaceCollapsibleHeader><div className="users-header-content space-y-4">
+      <WorkspaceTabHeading title="Пользователи" icon={<Users className="text-blue-500" />}
+        description="Личные контакты бота, история общения и ответы."
+        actions={<WorkspaceTabActions docsPath="interface/users" section="Пользователи" onRefresh={handleRefresh} />} />
+      <div role="group" aria-label="Проект и бот" className="users-scope flex min-w-0 flex-wrap items-center gap-3">
+        {showProjects && <ProjectSelector projects={allProjects} selectedProjectId={projectId} onSelect={onProjectChange} />}
+        <UsersBotSelector projectId={projectId} tokens={availableTokens}
+          selectedTokenId={selectedTokenId} onSelect={onSelectToken} />
+      </div>
+      {isDatabaseEnabled && <div className="users-header-tools flex flex-wrap items-center justify-between gap-3">
+        {stats && <InlineStatsBadges stats={stats} />}
+        <div className="shrink-0 ml-auto">
+          <HeaderActions projectId={projectId} projectName={projectName}
+            selectedTokenId={selectedTokenId} isPending={deleteAllUsersMutation.isPending}
+            onRefresh={handleRefresh} onDeleteAll={() => deleteAllUsersMutation.mutate()} />
+        </div>
+      </div>}
+      </div></WorkspaceCollapsibleHeader>
+    </div>
   );
 }

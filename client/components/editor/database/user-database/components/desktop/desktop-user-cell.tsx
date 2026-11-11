@@ -32,8 +32,8 @@ export function DesktopUserCell({ user, formatUserName, projectId, tokenId }: De
       <div className="flex items-center gap-3 min-w-0">
         <UserAvatar messageType="user" user={user} projectId={projectId} tokenId={tokenId} />
         <div className="flex-1 min-w-0">
-          <div className="font-medium text-sm truncate">{formatUserName(user)}</div>
-          <div className="text-xs text-muted-foreground truncate">ID: {user.userId}</div>
+          <div className="font-medium text-sm truncate" title={formatUserName(user)}>{formatUserName(user)}</div>
+          <div className="text-xs text-muted-foreground truncate tabular-nums">Telegram ID: {user.userId}</div>
         </div>
       </div>
     </TableCell>

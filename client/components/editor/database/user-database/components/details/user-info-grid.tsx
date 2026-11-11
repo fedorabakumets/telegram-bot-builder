@@ -3,7 +3,6 @@
  * @description Отображает основную информацию и статистику
  */
 
-import { Label } from '@/components/ui/label';
 import { UserBotData } from '@shared/schema';
 
 /**
@@ -29,16 +28,16 @@ export function UserInfoGrid({
   isMobile,
 }: UserInfoGridProps): React.JSX.Element {
   return (
-    <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-4`}>
+    <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-6 min-w-0`}>
       <div>
-        <Label className="text-sm font-medium">Основная информация</Label>
-        <div className="mt-2 space-y-2">
+        <h3 className="text-sm font-medium">Основная информация</h3>
+        <div className="mt-3 space-y-2 break-words text-sm tabular-nums">
           <div>
             <span className="text-sm text-muted-foreground">Имя:</span>{' '}
             {selectedUser.firstName || 'Не указано'}
           </div>
           <div>
-            <span className="text-sm text-muted-foreground">Username:</span>{' '}
+            <span className="text-sm text-muted-foreground">Имя пользователя:</span>{' '}
             {selectedUser.userName ? `@${selectedUser.userName}` : 'Не указано'}
           </div>
           <div>
@@ -49,8 +48,8 @@ export function UserInfoGrid({
       </div>
 
       <div>
-        <Label className="text-sm font-medium">Статистика</Label>
-        <div className="mt-2 space-y-2">
+        <h3 className="text-sm font-medium">Статистика</h3>
+        <div className="mt-3 space-y-2 break-words text-sm tabular-nums">
           <div>
             <span className="text-sm text-muted-foreground">Всего сообщений:</span>{' '}
             {userMessageCounts.total || selectedUser.interactionCount || 0}

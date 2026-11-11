@@ -1,0 +1,75 @@
+/**
+ * @fileoverview Изолированное оформление аудитории и её портальных меню с адаптацией к ширине панели.
+ */
+@font-face {
+  font-family: 'BotCraft Manrope';
+  src: url('../../../../../assets/fonts/manrope-variable.ttf') format('truetype');
+  font-weight: 200 800;
+  font-display: swap;
+}
+
+.users-workspace,
+.users-portal {
+  font-family: 'BotCraft Manrope', sans-serif;
+  --background: #09090b;
+  --foreground: #ededf0;
+  --muted-foreground: #a1a1aa;
+  --card: #09090b;
+  --popover: #09090b;
+  --popover-foreground: #ededf0;
+  --muted: #09090b;
+  --accent: #09090b;
+  --accent-foreground: #ededf0;
+  --border: #29292e;
+  --input: #29292e;
+  --ring: #3b82f6;
+  --secondary: #09090b;
+  --secondary-foreground: #ededf0;
+}
+
+.users-workspace { container-type: inline-size; }
+/** Задаёт спокойные рамки вместо унаследованного белого currentColor у таблиц и полей. */
+.users-workspace *,
+.users-portal * { border-color: var(--border); }
+/** Ограничивает внутреннюю таблицу ScrollArea, чтобы длинные ответы прокручивались внутри своего блока. */
+.users-workspace [data-radix-scroll-area-viewport] > div { display: block !important; width: 100%; min-width: 0 !important; }
+.users-workspace h2,
+.users-portal h2 { text-wrap: balance; }
+.users-workspace p,
+.users-portal p { text-wrap: pretty; }
+.users-filters { padding: 16px 16px 12px; }
+.users-filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.users-filter-grid > :last-child { grid-column: 1 / -1; }
+.users-workspace [role='tablist'] { padding: 0; margin: 0 16px 8px; width: auto; height: auto; gap: 8px; border: 0; border-radius: 0; background: transparent; }
+.users-workspace [role='tab'] { border: 0; border-bottom: 2px solid transparent; border-radius: 0; padding: 12px; color: var(--muted-foreground); }
+.users-workspace [role='tab'][data-state='active'] { background: transparent; color: #60a5fa; border-bottom-color: #3b82f6; box-shadow: none; }
+.users-workspace [role='tab']:hover { color: #93c5fd; }
+.users-workspace [data-testid^='user-card-mobile-'] { background: var(--card); }
+.users-workspace button,
+.users-portal button { transition-timing-function: cubic-bezier(0.22,1,0.36,1); transition-duration: 300ms; }
+.users-workspace button:active,
+.users-portal button:active { transform: translateY(1px); }
+.users-workspace button:focus-visible,
+.users-portal button:focus-visible { outline: 2px solid #3b82f6; outline-offset: 2px; }
+.users-portal { background: var(--popover); color: var(--popover-foreground); border-color: var(--border); }
+/** Подчёркивает выбранный пункт меню текстом без серой заливки. */
+.users-portal [role='option'][data-state='checked'],
+.users-portal [role='option'][data-highlighted] { background: transparent; color: #60a5fa; }
+.users-workspace svg,
+.users-portal svg { stroke-width: 1.5; }
+.users-workspace th { font-weight: 500; }
+.users-workspace td { font-variant-numeric: tabular-nums; }
+
+@container (min-width: 460px) {
+  .users-filter-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .users-filter-grid > :last-child { grid-column: auto; }
+}
+@container (min-width: 800px) {
+  .users-filters { padding: 16px 24px; }
+  .users-workspace [role='tablist'] { margin-inline: 24px; }
+  .users-tab-content { padding-inline: 24px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .users-workspace button:active,
+  .users-portal button:active { transform: none; }
+}

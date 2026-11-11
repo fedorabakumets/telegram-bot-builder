@@ -39,16 +39,16 @@ export function ProjectSelector({
   const selectedProject = projects.find((p) => p.id === selectedProjectId);
 
   return (
-    <div className="flex items-center gap-1.5 min-w-0 shrink-0">
+    <div className="flex items-center gap-2 min-w-0 max-w-full">
       <FolderOpen className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
       <Select
         value={String(selectedProjectId)}
         onValueChange={(value) => onSelect(Number(value))}
       >
-        <SelectTrigger className="h-8 text-xs border-border/60 bg-background min-w-[120px] w-auto max-w-[280px]">
+        <SelectTrigger aria-label="Проект пользователей" className="h-8 min-w-0 w-40 max-w-full rounded-lg border-border bg-background text-sm [&>span]:truncate">
           <SelectValue placeholder="Проект">{selectedProject?.name}</SelectValue>
         </SelectTrigger>
-        <SelectContent className="project-selector-menu" align="start" collisionPadding={12}>
+        <SelectContent className="users-portal project-selector-menu" align="start" collisionPadding={12}>
           {projects.map((project) => (
             <SelectItem
               key={project.id}

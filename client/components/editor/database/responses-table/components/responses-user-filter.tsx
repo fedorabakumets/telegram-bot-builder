@@ -31,10 +31,10 @@ export function ResponsesUserFilter({
         }
       }}
     >
-      <SelectTrigger className="w-[200px]">
+      <SelectTrigger id="user-filter" aria-label="Пользователь для просмотра ответов" className="h-10 w-full min-w-0 rounded-lg bg-background text-sm [&>span]:truncate">
         <SelectValue placeholder="Все пользователи" />
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent className="users-portal">
         <SelectItem value="all">Все пользователи</SelectItem>
         {usersArray.map((user) => (
           <SelectItem key={user.id} value={user.id.toString()}>

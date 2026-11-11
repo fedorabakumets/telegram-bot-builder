@@ -2284,6 +2284,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     let tokenId = getRequestTokenId(req);
     /** Фильтрация реальных личных переписок применяется только к списку диалогов. */
     const isDialogList = req.query.dialogKind !== undefined || req.query.includeGroups === 'true';
+    /** Во вкладке пользователей исключаем групповые профили без личной переписки, сохраняя выбор всех ботов. */
+    const privateContactsOnly = req.query.privateContactsOnly === 'true';
     if (isDialogList) {
       const token = tokenId ? await storage.getBotToken(tokenId) : await storage.getDefaultBotToken(projectId);
       if (!token || token.projectId !== projectId || (req.query.tokenId !== undefined && !tokenId)) {
@@ -2361,7 +2363,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       WHERE u.is_bot = 0
         AND u.project_id = $1
         AND ($2::integer IS NULL OR u.token_id = $2)
-        ${isDialogList ? 'AND lm.id IS NOT NULL' : ''}
+        ${isDialogList || privateContactsOnly ? 'AND lm.id IS NOT NULL' : ''}
     `;
 
     // Фильтр вкладки «Диалоги»: all | users | groups | channels (includeGroups — legacy)
@@ -2458,7 +2460,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     } catch (error) {
       console.error("Error fetching user data:", error);
       /** Ошибка выборки диалогов не должна возвращать групповых отправителей через запасной список. */
-      if (isDialogList) return res.status(500).json({ message: 'Не удалось получить диалоги' });
+      if (isDialogList || privateContactsOnly) return res.status(500).json({ message: 'Не удалось получить пользователей с личной перепиской' });
       /** Запасная выборка сохраняет формат основного ответа; недоступные статусы остаются неизвестными. */
       try {
         const fallbackResult = await dbPool.query(
