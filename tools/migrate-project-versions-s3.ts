@@ -4,19 +4,31 @@
 import 'dotenv/config';
 import { pool } from '../server/database/db';
 import { processPendingVersions, verifyVersionObjectStore } from '../server/database/version-object-store';
+import { enqueueVersionMigrationBatch, finishVersionMigration } from '../server/database/version-storage-migration';
+import { getVersionStorageSettings } from '../server/database/version-storage-settings';
 
 /**
  * Переносит порции и проверяет отсутствие ожидающих снимков.
  * @returns Завершение переноса
  */
 async function main(): Promise<void> {
-  await verifyVersionObjectStore();
+  const settings = await getVersionStorageSettings();
+  if (settings.mode !== 's3' || !settings.storageId) throw new Error('Сначала выберите S3-хранилище версий');
+  await verifyVersionObjectStore(settings.storageId);
+  let queued = 0;
+  while (true) {
+    const count = await enqueueVersionMigrationBatch(200);
+    queued += count;
+    if (count === 0) break;
+  }
+  await finishVersionMigration();
+  console.log(`Поставлено в очередь: ${queued}`);
   let moved = 0;
   while (true) {
-    const count = await processPendingVersions(50);
+    const count = await processPendingVersions(50, 10);
     moved += count;
     if (count === 0) break;
-    console.log(`Перенесено за запуск: ${moved}`);
+    if (moved % 200 === 0) console.log(`Обработано за запуск: ${moved}`);
   }
   const result = await pool.query<{ pending: string; ready: string; missing: string }>(`
     SELECT count(*) FILTER (WHERE snapshot IS NOT NULL)::text AS pending,

@@ -66,22 +66,27 @@ export async function uploadPendingVersion(version: typeof projectVersions.$infe
 /**
  * Обрабатывает небольшую порцию старых и новых снимков без блокировки API.
  * @param limit - Максимальный размер порции
+ * @param concurrency - Число одновременных загрузок в S3
  * @returns Число обработанных строк
  */
-export async function processPendingVersions(limit = 20): Promise<number> {
+export async function processPendingVersions(limit = 20, concurrency = 1): Promise<number> {
   const rows = await db.select().from(projectVersions).where(and(isNotNull(projectVersions.snapshot),
     eq(projectVersions.snapshotState, 'pending'), or(isNull(projectVersions.snapshotRetryAt),
       lte(projectVersions.snapshotRetryAt, new Date())))).orderBy(asc(projectVersions.id)).limit(limit);
-  for (const row of rows) {
-    try { await uploadPendingVersion(row); }
-    catch (error) {
-      /** Увеличиваем паузу, чтобы один проблемный объект не блокировал очередь. */
-      const attempts = row.snapshotAttempts + 1;
-      const delay = Math.min(3600, 5 * 2 ** Math.min(attempts, 10));
-      await db.update(projectVersions).set({ snapshotAttempts: attempts,
-        snapshotRetryAt: new Date(Date.now() + delay * 1000) }).where(eq(projectVersions.id, row.id));
-      console.error(`[VersionObjectWorker] Версия ${row.id} ожидает повтора:`, error);
-    }
+  /** Ограничиваем одновременные операции, не создавая отдельный пул задач. */
+  for (let start = 0; start < rows.length; start += concurrency) {
+    await Promise.all(rows.slice(start, start + concurrency).map(async row => {
+      try { await uploadPendingVersion(row); }
+      catch (error) {
+        /** Увеличиваем паузу, чтобы один проблемный объект не блокировал очередь. */
+        const attempts = row.snapshotAttempts + 1;
+        const delay = Math.min(3600, 5 * 2 ** Math.min(attempts, 10));
+        await db.update(projectVersions).set({ snapshotAttempts: attempts,
+          snapshotRetryAt: new Date(Date.now() + delay * 1000) })
+          .where(and(eq(projectVersions.id, row.id), isNotNull(projectVersions.snapshot)));
+        console.error(`[VersionObjectWorker] Версия ${row.id} ожидает повтора:`, error);
+      }
+    }));
   }
   return rows.length;
 }
