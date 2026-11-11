@@ -10,6 +10,16 @@
 .analytics-report-filters { padding: 16px; border: 1px solid var(--border); border-radius: 16px; }
 .analytics-report-filters .analytics-segments button[aria-pressed='true'] { background: var(--muted); color: var(--foreground); box-shadow: inset 0 0 0 1px var(--border); font-weight: 600; }
 .analytics-report-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+/** Временно скрывает сводки под всеми графиками, сохраняя их разметку и данные. */
+.analytics-report-card:has(.analytics-chart-plot) > .analytics-report-summary,
+.analytics-report-card:has(.analytics-chart-plot) > .space-y-4:has(.analytics-report-summary),
+.analytics-chart-dialog > .analytics-report-summary,
+.analytics-chart-dialog > .space-y-4:has(.analytics-report-summary) { display: none !important; }
+/** Временно скрывает раскрываемый список значений у графиков аналитики. */
+:is(.analytics-page, .analytics-chart-dialog) .analytics-chart-values { display: none !important; }
+/** Временно скрывает локальный выбор периода во всех карточках аналитики. */
+.analytics-page .analytics-choose-period,
+.analytics-chart-dialog .analytics-choose-period { display: none !important; }
 .analytics-report-summary dt { min-height: 40px; font-size: 12px; line-height: 16px; color: var(--muted-foreground); }
 .analytics-report-summary dd { font-size: 20px; line-height: 28px; font-weight: 600; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .analytics-report-card { display: flex; flex-direction: column; gap: 16px; }

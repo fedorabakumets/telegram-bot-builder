@@ -19,6 +19,8 @@ function Leaders({ title, items, group, observed, projectId, tokenId, controls, 
   /** Проект. */ projectId: number; /** Выбранный бот. */ tokenId: number | null;
   /** Переключатель, относящийся только к этой карточке рейтинга. */ controls?: ReactNode;
 }) {
+  /** Ограничивает все рейтинги людей и групп пятью строками. */
+  items = items.slice(0, 5);
   const [selected, setSelected] = useState<string | null>(null);
   const maximum = Math.max(1, ...items.map(item => item.total));
   const chosen = items.find(item => item.id === selected);
@@ -62,10 +64,10 @@ export function AnalyticsReportLeaders({ snapshot }: { /** Общий снимо
 }
 
 /**
- * Показывает десять лидеров рядом с графиком активности без повторения списка в разделе групп.
+ * Показывает пять лидеров рядом с графиком активности без повторения списка в разделе групп.
  * @param props - Согласованный снимок пользователей.
- * @returns Карточка десяти самых активных пользователей.
+ * @returns Карточка пяти самых активных пользователей.
  */
 export function AnalyticsUserLeaders({ snapshot }: { /** Общий снимок. */ snapshot: AnalyticsV2Snapshot }) {
-  return <Leaders title="Топ-10 пользователей" items={snapshot.leaders.users.slice(0, 10)} projectId={snapshot.project_id} tokenId={snapshot.token_id} />;
+  return <Leaders title="Топ-5 пользователей" items={snapshot.leaders.users.slice(0, 5)} projectId={snapshot.project_id} tokenId={snapshot.token_id} />;
 }

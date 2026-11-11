@@ -136,7 +136,8 @@ export default function Editor() {
     const params = new URLSearchParams(window.location.search);
     if (params.get('log')) return 'terminal';
     const tab = params.get('tab');
-    const validTabs: EditorTab[] = ['editor', 'export', 'bot', 'terminal', 'users', 'dialogs', 'broadcast', 'analytics', 'tables', 'files', 'versions', 'agent'];
+    /** Временный список доступных вкладок без раздела рассылок. */
+    const validTabs: EditorTab[] = ['editor', 'export', 'bot', 'terminal', 'users', 'dialogs', 'analytics', 'tables', 'files', 'versions', 'agent'];
     if (tab && validTabs.includes(tab as EditorTab)) {
       return tab as EditorTab;
     }
