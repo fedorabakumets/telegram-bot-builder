@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/queryClient';
+import { VersionS3Dialog } from './version-s3-dialog';
 
 /** Ответ настройки и счётчиков версий. */
 interface VersionStorageView {
@@ -64,12 +65,23 @@ export function AdminVersionStoragePage() {
           <HardDrive className="mb-3 h-5 w-5" /><strong className="block">S3</strong>
           <span className="text-sm text-muted-foreground">Новые снимки сразу записываются в бакет. При сбое S3 они временно остаются в PostgreSQL.</span></button>
       </div>
-      {mode === 's3' && <label className="block space-y-2 text-sm font-medium">Приватное S3-хранилище
-        <select className="w-full rounded-md border bg-background px-3 py-2" value={storageId}
-          onChange={event => setStorageId(event.target.value)}>
-          <option value="">Выберите хранилище</option>
-          {data.stores.map(store => <option key={store.id} value={store.id}>{store.name}</option>)}
-        </select></label>}
+      {mode === 's3' && <div className="space-y-3">
+        <label className="block space-y-2 text-sm font-medium">Приватное S3-хранилище
+          <select className="w-full rounded-md border bg-background px-3 py-2" value={storageId}
+            onChange={event => setStorageId(event.target.value)}>
+            <option value="">Выберите хранилище</option>
+            {data.stores.map(store => <option key={store.id} value={store.id}>{store.name}</option>)}
+          </select></label>
+        <VersionS3Dialog onConnected={storage => {
+          client.setQueryData<VersionStorageView>(['/admin/api/version-storage'], current => current && ({
+            ...current, stores: current.stores.some(item => item.id === storage.id)
+              ? current.stores : [...current.stores, storage],
+          }));
+          setStorageId(storage.id);
+          client.invalidateQueries({ queryKey: ['/admin/api/version-storage'] });
+          toast({ title: 'Хранилище добавлено', description: 'Сохраните выбор для новых версий.' });
+        }} />
+      </div>}
       <Button disabled={save.isPending || (mode === 's3' && !storageId)} onClick={() => save.mutate()}>
         {save.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Сохранить выбор</Button>
       <p className="text-sm text-muted-foreground">Ранее сохранённые версии остаются доступными в прежнем хранилище.</p>
