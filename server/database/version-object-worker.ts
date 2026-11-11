@@ -24,7 +24,7 @@ export async function runVersionObjectWorkerOnce(): Promise<void> {
       if (await isVersionMigrationRequested() && await enqueueVersionMigrationBatch() === 0) {
         await finishVersionMigration();
       }
-      await processPendingVersions();
+      await processPendingVersions(50, 10);
     }
     await processVersionObjectDeletions();
     if (Date.now() - lastReconcile > 24 * 60 * 60 * 1000) {
@@ -42,6 +42,6 @@ export async function runVersionObjectWorkerOnce(): Promise<void> {
  */
 export function startVersionObjectWorker(): void {
   void runVersionObjectWorkerOnce();
-  const timer = setInterval(() => void runVersionObjectWorkerOnce(), 15_000);
+  const timer = setInterval(() => void runVersionObjectWorkerOnce(), 2_000);
   timer.unref();
 }
