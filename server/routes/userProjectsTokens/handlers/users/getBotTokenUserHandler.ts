@@ -3,7 +3,8 @@ import type { Request, Response } from "express";
 import { getBotUsersAccess } from "./bot-users-access";
 import { parseBotUserId } from "./bot-users-params";
 import { findBotTokenUser } from "./bot-users-repository";
-import { getBotUserPhotoUrl } from "./bot-user-photo-cache";
+import { getBotUserPhoto } from "./bot-user-photo-cache";
+import { getBotActorId } from "../../../../middleware/bot-api-actor";
 /**
  * Форматирует дату для сообщения Telegram, сохраняя прежний формат ответа.
  * @param date - Дата из базы данных.
@@ -35,8 +36,12 @@ export async function getBotTokenUserHandler(req: Request, res: Response): Promi
   try {
     const user = await findBotTokenUser(access, userId);
     if (!user) { res.status(404).json({ error: "Пользователь не найден" }); return; }
-    const photoUrl = await getBotUserPhotoUrl({ ...access, userId });
-    res.json({ ...user, registeredAt: formatDate(user.registeredAt), lastInteraction: formatDate(user.lastInteraction), photoUrl });
+    const photo = await getBotUserPhoto({ ...access, userId });
+    const actorId = getBotActorId(req);
+    /** Закрытый адрес для менеджера: запрос дополнительно требует его PAT и проверки доступа. */
+    const photoDownloadUrl = photo.photoFileId && actorId
+      ? `/api/bot/tokens/${access.tokenId}/users/${userId}/photo?telegram_id=${actorId}` : null;
+    res.json({ ...user, registeredAt: formatDate(user.registeredAt), lastInteraction: formatDate(user.lastInteraction), ...photo, photoDownloadUrl });
   } catch {
     console.error("[BotTokenUser] Не удалось загрузить карточку пользователя");
     res.status(500).json({ error: "Не удалось получить пользователя" });

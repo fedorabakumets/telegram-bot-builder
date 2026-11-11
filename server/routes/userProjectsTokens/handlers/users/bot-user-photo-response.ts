@@ -25,7 +25,7 @@ export async function readPhotoResponse(response: Response, limit: number, signa
       signal.throwIfAborted();
       if (chunk.done) break;
       size += chunk.value.byteLength;
-      if (size > limit) throw new Error('Фотография превышает допустимый размер');
+      if (size > limit) throw new Error('Ответ превышает допустимый размер');
       chunks.push(chunk.value);
     }
     return Buffer.concat(chunks, size);
@@ -34,17 +34,4 @@ export async function readPhotoResponse(response: Response, limit: number, signa
     await reader.cancel().catch(() => undefined);
     reader.releaseLock();
   }
-}
-
-/**
- * Проверяет относительный путь Telegram и кодирует его сегменты.
- * @param path - Путь из ответа getFile
- * @returns Безопасный относительный путь
- */
-export function encodePhotoFilePath(path: unknown): string {
-  if (typeof path !== 'string' || path.length > 2048 || !/^[A-Za-z0-9_./-]+$/.test(path)
-    || path.split('/').some(part => !part || part === '.' || part === '..')) {
-    throw new Error('Недопустимый путь фотографии');
-  }
-  return path.split('/').map(encodeURIComponent).join('/');
 }

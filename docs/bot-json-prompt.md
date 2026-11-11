@@ -37,6 +37,15 @@
 
 ## Основные правила
 
+В Bot Manager карточка пользователя использует `imageUrl: "{user_detail.photoDownloadUrl}"`.
+API возвращает `photoFileId` только для исходного бота, `photoUrl` для авторизованного интерфейса
+и `photoDownloadUrl` для менеджера. Закрытый адрес `/api/bot/tokens/<id>/users/<id>/photo?telegram_id=<id>`
+загружается узлом `message` в память с `STUDIO_BOT_MANAGER_TOKEN` только с настроенного `API_BASE_URL`;
+перенаправления запрещены, предел — 5 МиБ и 10 секунд. При ошибке отправляется текстовая карточка.
+Не подставляйте `photoFileId` чужого бота в отправку и не используйте HTTP-ноду с ответом `file`
+для аватара: её base64 сохраняется в данных пользователя. Существующий Bot Manager требует
+обновления ссылки в сценарии, повторной генерации и перезапуска.
+
 - [Формат project.json](mcp/rules/project-format.md)
 - [Переменные и контекст](mcp/rules/variables.md)
 - [Переходы](mcp/rules/transitions.md)

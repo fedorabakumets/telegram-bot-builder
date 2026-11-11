@@ -23,6 +23,7 @@ import { deleteBotProjectHandler } from "./userProjectsTokens/handlers/projects/
 import { getBotProjectTokensHandler } from "./userProjectsTokens/handlers/tokens/getBotProjectTokensHandler";
 import { getBotTokenUsersHandler } from "./userProjectsTokens/handlers/users/getBotTokenUsersHandler";
 import { getBotTokenUserHandler } from "./userProjectsTokens/handlers/users/getBotTokenUserHandler";
+import { getBotTokenUserPhotoHandler } from "./userProjectsTokens/handlers/users/getBotTokenUserPhotoHandler";
 import { requireBotUsersTokenAccess } from "./userProjectsTokens/handlers/users/bot-users-access";
 import { botUsersIpRateLimit, botUsersActorRateLimit } from "./userProjectsTokens/users-rate-limit";
 import { createBotTokenHandler } from "./userProjectsTokens/handlers/tokens/createBotTokenHandler";
@@ -67,6 +68,15 @@ export function setupUserProjectAndTokenRoutes(app: Express): void {
     botUsersActorRateLimit,
     requireBotUsersTokenAccess,
     getBotTokenUserHandler,
+  );
+  /** Передаём фото другому боту только после той же проверки актора и области пользователей. */
+  app.get(
+    "/api/bot/tokens/:tokenId/users/:userId/photo",
+    botUsersIpRateLimit,
+    actor,
+    botUsersActorRateLimit,
+    requireBotUsersTokenAccess,
+    getBotTokenUserPhotoHandler,
   );
 
   app.get(

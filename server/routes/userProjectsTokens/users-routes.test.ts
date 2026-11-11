@@ -9,7 +9,7 @@ import { getBotTokenUserHandler } from './handlers/users/getBotTokenUserHandler'
 const mocks = vi.hoisted(() => ({ token: vi.fn(), access: vi.fn(), query: vi.fn(), photo: vi.fn() }));
 vi.mock('../../storages/storage', () => ({ storage: { getBotToken: mocks.token, hasProjectAccess: mocks.access } }));
 vi.mock('../../database/db', () => ({ pool: { query: mocks.query } }));
-vi.mock('./handlers/users/bot-user-photo-cache', () => ({ getBotUserPhotoUrl: mocks.photo }));
+vi.mock('./handlers/users/bot-user-photo-cache', () => ({ getBotUserPhoto: mocks.photo }));
 
 /**
  * Выполняет проверки актора, доступа и обработчик с подменённым хранилищем.
@@ -39,7 +39,7 @@ beforeEach(() => {
   mocks.token.mockResolvedValue({ id: 7, projectId: 9, token: 'test-token' });
   mocks.access.mockResolvedValue(true);
   mocks.query.mockResolvedValue({ rows: [] });
-  mocks.photo.mockResolvedValue(null);
+  mocks.photo.mockResolvedValue({ photoFileId: null, photoUrl: null });
 });
 
 describe('Доступ к пользователям токена', () => {
@@ -113,10 +113,18 @@ describe('Совместимость ответов', () => {
   it('поддерживает user_ и сохраняет данные при недоступной фотографии', async () => {
     mocks.query.mockResolvedValue({ rows: [{ userId: '123', firstName: 'Иван', registeredAt: null, lastInteraction: null }] });
     const res = await request({ tokenId: 'token_7', userId: 'user_123' });
-    expect(res.json).toHaveBeenCalledWith({ userId: '123', firstName: 'Иван', registeredAt: '—', lastInteraction: '—', photoUrl: null });
+    expect(res.json).toHaveBeenCalledWith({ userId: '123', firstName: 'Иван', registeredAt: '—', lastInteraction: '—', photoFileId: null, photoUrl: null, photoDownloadUrl: null });
     expect(mocks.query.mock.calls[0][1]).toEqual([9, 7, '123']);
     expect(mocks.access).toHaveBeenCalledTimes(1);
     expect(mocks.photo).toHaveBeenCalledTimes(1);
+  });
+  it('возвращает метаданные Telegram и защищённый URL без публичного uploads пути', async () => {
+    const photo = { photoFileId: 'telegram-file-id', photoUrl: '/api/projects/9/telegram-file?fileId=telegram-file-id&tokenId=7' };
+    mocks.photo.mockResolvedValue(photo);
+    mocks.query.mockResolvedValue({ rows: [{ userId: '123' }] });
+    const res = await request({ tokenId: '7', userId: '123' });
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ ...photo, photoDownloadUrl: '/api/bot/tokens/7/users/123/photo?telegram_id=42' }));
+    expect(mocks.photo).toHaveBeenCalledWith({ projectId: 9, tokenId: 7, token: 'test-token', userId: '123' });
   });
   it('несуществующий пользователь не вызывает Telegram', async () => {
     const res = await request({ tokenId: '7', userId: '123' });

@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { expect, it, vi } from 'vitest';
 import type { Express } from 'express';
 
-it('оба маршрута ограничивают запрос до определения актора и обращения к БД', async () => {
+it('маршруты пользователей и фотографии ограничивают запрос до актора и БД', async () => {
   const setupUrl = new URL('../setupUserProjectAndTokenRoutes.ts', import.meta.url);
   const source = await readFile(setupUrl, 'utf8');
   const handlers = new Map<string, ReturnType<typeof vi.fn>>();
@@ -21,7 +21,7 @@ it('оба маршрута ограничивают запрос до опре�
   const { setupUserProjectAndTokenRoutes } = await import('../setupUserProjectAndTokenRoutes');
   const app = { get: vi.fn(), post: vi.fn(), put: vi.fn(), patch: vi.fn(), delete: vi.fn() };
   setupUserProjectAndTokenRoutes(app as unknown as Express);
-  for (const [suffix, handler] of [['', 'getBotTokenUsersHandler'], ['/:userId', 'getBotTokenUserHandler']]) {
+  for (const [suffix, handler] of [['', 'getBotTokenUsersHandler'], ['/:userId', 'getBotTokenUserHandler'], ['/:userId/photo', 'getBotTokenUserPhotoHandler']]) {
     const registrations = app.get.mock.calls.filter(([path]) => path === `/api/bot/tokens/:tokenId/users${suffix}`);
     expect(registrations).toHaveLength(1);
     expect(registrations[0].slice(1)).toEqual([

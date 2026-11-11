@@ -1,18 +1,20 @@
-/** @fileoverview Общий кэш локальных аватаров пользователей бота в процессе API. */
-import { access } from 'node:fs/promises';
-import { createBotUserPhotoCache } from './bot-user-photo-cache-engine';
-import { getBotUserPhotoLocation, loadBotUserPhoto } from './bot-user-photo-download';
+/** @fileoverview Кэш метаданных аватаров без скачивания и хранения файлов на диске. */
+import { createBotUserPhotoCache, type BotUserPhotoInput } from './bot-user-photo-cache-engine';
+import { loadBotUserPhotoFileId } from './bot-user-photo-file-id';
 
-/** Получает адрес аватара с ограничением параллелизма и повторных обращений к Telegram. */
-export const getBotUserPhotoUrl = createBotUserPhotoCache({
-  load: loadBotUserPhoto,
-  /** Проверяет, не удалён ли файл сборщиком или администратором. */
-  exists: async (input) => {
-    try {
-      await access(getBotUserPhotoLocation(input).path);
-      return true;
-    } catch {
-      return false;
-    }
-  },
-});
+/** Ограничивает повторные обращения за идентификаторами аватаров к Telegram. */
+const getFileId = createBotUserPhotoCache({ load: loadBotUserPhotoFileId });
+
+/**
+ * Возвращает метаданные и закрытый адрес для интерфейса текущего проекта.
+ * @param input - Проверенный контекст бота и пользователя.
+ * @returns Идентификатор для исходного бота и адрес для авторизованного интерфейса.
+ */
+export async function getBotUserPhoto(input: BotUserPhotoInput) {
+  const photoFileId = await getFileId(input);
+  const query = photoFileId ? new URLSearchParams({ fileId: photoFileId, tokenId: String(input.tokenId) }) : null;
+  return {
+    photoFileId,
+    photoUrl: query ? `/api/projects/${input.projectId}/telegram-file?${query}` : null,
+  };
+}
