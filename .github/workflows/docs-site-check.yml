@@ -1,0 +1,32 @@
+# @fileoverview Проверяет установку зависимостей и сборку сайта документации в запросах на слияние.
+name: Docs site check
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'docs-site/**'
+      - '.github/workflows/docs-site-check.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: docs-site
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: docs-site/package-lock.json
+      - name: Установить зависимости
+        run: npm ci
+      - name: Собрать сайт документации
+        run: npm run build
