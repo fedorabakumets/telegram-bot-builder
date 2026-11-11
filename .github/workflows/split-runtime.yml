@@ -1,4 +1,4 @@
-# Проверка совмещённого и раздельного запуска без доступа к production.
+# @fileoverview Проверка совмещённого и раздельного запуска и передачи аренды исполнителя без production.
 name: Split runtime
 on:
   push:
@@ -69,6 +69,8 @@ jobs:
       - run: node --test frontend/*.test.mjs
       - run: node --import tsx --test scripts/vite-split.test.ts
       - run: npx vitest run --config server/runtime/vitest.config.ts
+      - name: Аренда, команды и границы зависимостей исполнителя
+        run: npx vitest run --config server/runner/vitest.config.ts
       - run: node --import tsx --test server/redis/workerStreams.integration.test.ts
       - run: node scripts/smoke-split-build.mjs
       - run: node scripts/smoke-split-build.mjs --dev
