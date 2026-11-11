@@ -1518,6 +1518,21 @@
     "author": ""
   },
   {
+    "path": "development/bot-messages-time-index",
+    "title": "Индекс сообщений по проекту и времени",
+    "excerpt": "Индекс `idx_bot_messages_project_created_at` поддерживает выборки активности по проекту и временному окну. После обновления сервер автоматич",
+    "parts": [
+      "development",
+      "bot-messages-time-index"
+    ],
+    "folder_titles": {
+      "development": "🛠️ Разработка"
+    },
+    "updated_at": "2026-11-11T09:45:30+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
     "path": "development/compiled-server-runtime",
     "title": "Серверный JavaScript для production",
     "excerpt": "<!-- @fileoverview Сборка и запуск сервера BotCraft без загрузчика TypeScript. -->",
