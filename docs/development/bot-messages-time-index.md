@@ -14,6 +14,27 @@ npx tsx --tsconfig tsconfig.node.json tools/create-bot-messages-time-index.ts
 
 ## Проверка
 
+До создания индекса запустите замер для крупного проекта и его бота. Команда
+выполняет точный запрос итогов активности за 24 часа в транзакции только для
+чтения, отдельно для всего проекта и выбранного бота:
+
+```bash
+npx tsx --tsconfig tsconfig.node.json tools/measure-bot-messages-index.ts 12 9 before.json
+```
+
+После создания индекса повторите на той же базе и с теми же ID:
+
+```bash
+npx tsx --tsconfig tsconfig.node.json tools/measure-bot-messages-index.ts 12 9 after.json before.json
+```
+
+Последний аргумент включает сравнение времени, числа прочитанных блоков и полных
+проходов `bot_messages`. Подставьте ID своей среды. Один блок PostgreSQL обычно
+равен 8 КиБ; на горячем кеше `readBlocks` может быть нулём, поэтому учитывайте
+также `hitBlocks`. Замер может прогреть кеш, а `EXPLAIN ANALYZE` действительно
+выполняет запрос; для сравнения памяти наблюдайте RAM в Railway при обычной
+нагрузке несколько дней.
+
 После запуска проверьте готовность индекса:
 
 ```sql
