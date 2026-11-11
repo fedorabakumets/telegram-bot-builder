@@ -27,12 +27,16 @@ let inFlight: Promise<ReconcileResult> | null = null;
 /**
  * Запускает регулярную сверку; ошибки не останавливают будущие проходы.
  * @param intervalMs - Интервал между попытками
+ * @param beforeReconcile - Привязка к уже работающим воркерам перед сверкой
  * @returns Остановка регулярной сверки
  */
-export function scheduleRuntimeReconcile(intervalMs = 30_000): () => void {
+export function scheduleRuntimeReconcile(intervalMs = 30_000, beforeReconcile?: () => Promise<unknown>): () => void {
   if (!Number.isSafeInteger(intervalMs) || intervalMs < 1_000) throw new Error("Некорректный интервал сверки");
   const timer = setInterval(() => {
-    void reconcileBotDesiredState().catch((error) => {
+    void (async () => {
+      await beforeReconcile?.();
+      return reconcileBotDesiredState();
+    })().catch((error) => {
       console.error("[RuntimeReconcile] Не удалось сверить состояние ботов:", error);
     });
   }, intervalMs);

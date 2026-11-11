@@ -278,10 +278,15 @@ app.use((req, res, next) => {
   /** Railway допускает HOST=:: для доступа по внутренней IPv6-сети. */
   const host = process.env.HOST?.trim() || '0.0.0.0';
   if (botRuntimeMode === 'api') {
-    const attached = await workerManager.reattachRemoteWorkers();
-    log(`API привязан к ${attached} работающим воркерам исполнителя`);
-    /** Повторяет сверку после временной недоступности исполнителя или потери команды. */
-    const stopReconcile = scheduleRuntimeReconcile();
+    /** Недоступный исполнитель не должен останавливать HTTP API; следующая сверка повторит привязку. */
+    try {
+      const attached = await workerManager.reattachRemoteWorkers();
+      log(`API привязан к ${attached} работающим воркерам исполнителя`);
+    } catch (error) {
+      log(`Привязка к исполнителю отложена: ${error instanceof Error ? error.message : String(error)}`);
+    }
+    /** Сначала привязывает уже живые воркеры, затем сверяет намерения запуска. */
+    const stopReconcile = scheduleRuntimeReconcile(30_000, () => workerManager.reattachRemoteWorkers());
     httpServer.once('close', stopReconcile);
   }
   httpServer.listen(Number(port), host, () => {
