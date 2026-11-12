@@ -1593,6 +1593,21 @@
     "author": ""
   },
   {
+    "path": "development/runtime-startup",
+    "title": "Запуск исполнителя при обновлении Railway",
+    "excerpt": "Контейнеры с одинаковым `RUNNER_ID` используют одну аренду Redis. Новый",
+    "parts": [
+      "development",
+      "runtime-startup"
+    ],
+    "folder_titles": {
+      "development": "🛠️ Разработка"
+    },
+    "updated_at": "2026-11-11T15:16:27+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
     "path": "features/NODE_TYPES",
     "title": "🧩 Типы узлов (блоков)",
     "excerpt": "<!--",
