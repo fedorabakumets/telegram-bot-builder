@@ -7,16 +7,22 @@ import { readFile } from 'node:fs/promises';
 import http from 'node:http';
 import test from 'node:test';
 import express from 'express';
+import { rateLimit } from 'express-rate-limit';
 import { setupWebhookRoutes, getBotWebhookPort } from '../../server/routes/setupWebhookRoutes.ts';
 import { requireApiAuth } from '../../server/middleware/requireApiAuth.ts';
 import { captureAgentBody } from '../../server/auth/agent/signature.ts';
 
-/** Поднимает только проверяемые middleware и реальный обработчик на случайном loopback-порту. */
-async function fixture() {
+/**
+ * Поднимает проверяемые middleware и обработчик на случайном loopback-порту.
+ * @param limit - Число запросов в минуту; отдельный малый лимит проверяет защиту от перебора.
+ * @returns Локальный сервер и его адрес.
+ */
+async function fixture(limit = 1000) {
   const source = await readFile(new URL('../../server/index.ts', import.meta.url), 'utf8');
   const match = source.match(/app\.use\(express\.json\(\{ limit: '([^']+)', verify: captureAgentBody \}\)\)/);
   assert.ok(match, 'Настройки настоящего JSON-парсера изменились: требуется пересмотр probe');
   const app = express();
+  app.use('/api', rateLimit({ windowMs: 60_000, limit, standardHeaders: 'draft-8', legacyHeaders: false }));
   app.use(express.json({ limit: match[1], verify: captureAgentBody }));
   app.use('/api', requireApiAuth);
   setupWebhookRoutes(app);
@@ -46,6 +52,17 @@ test('Изолированные характеристики текущего w
     method: 'POST', headers: { 'Content-Type': 'application/json', ...headers }, body: JSON.stringify(body),
   });
   try {
+    await t.test('Лимит API срабатывает до авторизации без изменения ответа первого запроса', async () => {
+      const limited = await fixture(2);
+      try {
+        assert.equal((await realFetch(limited.origin + '/api/private-probe')).status, 401);
+        assert.equal((await realFetch(limited.origin + '/api/private-probe')).status, 401);
+        assert.equal((await realFetch(limited.origin + '/api/private-probe')).status, 429);
+      } finally {
+        limited.server.closeAllConnections();
+        await new Promise((resolve) => limited.server.close(resolve));
+      }
+    });
     await t.test('Обычный закрытый API без сессии возвращает 401', async () => {
       assert.equal((await realFetch(origin + '/api/private-probe')).status, 401);
     });

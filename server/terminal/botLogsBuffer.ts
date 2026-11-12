@@ -144,7 +144,7 @@ export async function flushBuffer(processKey: string): Promise<void> {
     // Страховочная обрезка суммарно по боту
     await trimOldLogs(projectId, tokenId);
   } catch (err) {
-    console.error(`[BotLogsBuffer] Ошибка сброса буфера для ${processKey}:`, err);
+    console.error("[BotLogsBuffer] Ошибка сброса буфера для %s:", processKey, err);
   }
 }
 
@@ -166,7 +166,7 @@ async function trimLogsByLaunch(launchId: number): Promise<void> {
         )
     `);
   } catch (err) {
-    console.error(`[BotLogsBuffer] Ошибка обрезки логов запуска ${launchId}:`, err);
+    console.error("[BotLogsBuffer] Ошибка обрезки логов запуска %s:", launchId, err);
   }
 }
 
@@ -251,7 +251,7 @@ export async function clearBotLogs(projectId: number, tokenId: number, strict = 
       DELETE FROM bot_logs WHERE project_id = ${projectId} AND token_id = ${tokenId} AND launch_id IS NULL
     `);
   } catch (err) {
-    console.error(`[BotLogsBuffer] Ошибка очистки логов для ${key}:`, err);
+    console.error("[BotLogsBuffer] Ошибка очистки логов для %s:", key, err);
     if (strict) throw err;
   }
 }

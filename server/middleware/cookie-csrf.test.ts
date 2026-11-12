@@ -108,6 +108,10 @@ it('защищает действующую admin-cookie в admin API и общ�
   expect((await post({ Cookie, Origin: 'https://evil.example' }, '/admin/api/logout')).status).toBe(403);
   expect((await post({ Cookie, Origin: 'https://evil.example' })).status).toBe(403);
   expect((await post({ Cookie, Origin: base }, '/admin/api/logout')).status).toBe(200);
+  for (const path of ['/api/unknown', '/admin/api/unknown']) {
+    expect((await post({ Cookie, Origin: 'https://evil.example' }, path)).status).toBe(403);
+    expect((await post({ Cookie, Origin: base }, path)).status).toBe(200);
+  }
 });
 
 it('оставляет машинные маршруты их собственной авторизации, не освобождая весь auth', async () => {

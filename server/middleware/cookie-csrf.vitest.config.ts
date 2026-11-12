@@ -2,5 +2,5 @@
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
-  test: { environment: 'node', include: ['server/middleware/cookie-csrf.test.ts'] },
+  test: { environment: 'node', include: ['server/middleware/cookie-csrf*.test.ts'] },
 });

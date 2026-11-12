@@ -8,6 +8,7 @@
  */
 
 import type { Express } from 'express';
+import { rateLimit } from 'express-rate-limit';
 import { requireProjectAccess } from '../middleware/requireProjectAccess';
 import { resolveBotApiActor } from '../middleware/bot-api-actor';
 import { requireBotTokenOwnership, requireTokenOwnership } from '../middleware/requireResourceOwnership';
@@ -36,9 +37,19 @@ import { handleGetBotLogById } from './botManagement/handlers/botLogByIdHandler'
  * @returns {void}
  */
 export function setupBotManagementRoutes(app: Express): void {
+    /** Квота чтения применяется до обращения к хранилищу при проверке владения. */
+    const runtimeReadLimit = rateLimit({ windowMs: 60_000, limit: 120,
+        standardHeaders: true, legacyHeaders: false,
+        message: { message: 'Слишком много запросов настроек бота. Повторите позже.' } });
+    /** Запись имеет отдельную квоту, чтобы опрос интерфейса не блокировал сохранение. */
+    const runtimeWriteLimit = rateLimit({ windowMs: 60_000, limit: 20,
+        standardHeaders: true, legacyHeaders: false,
+        message: { message: 'Слишком частое изменение режима бота. Повторите позже.' } });
     /** Режим обработчика сохраняется отдельно от способа получения сообщений. */
-    app.get('/api/projects/:projectId/tokens/:tokenId/runtime-settings', requireTokenOwnership, handleBotRuntimeSettings);
-    app.put('/api/projects/:projectId/tokens/:tokenId/runtime-settings', requireTokenOwnership, handleBotRuntimeSettings);
+    app.get('/api/projects/:projectId/tokens/:tokenId/runtime-settings', runtimeReadLimit,
+        requireTokenOwnership, handleBotRuntimeSettings);
+    app.put('/api/projects/:projectId/tokens/:tokenId/runtime-settings', runtimeWriteLimit,
+        requireTokenOwnership, handleBotRuntimeSettings);
     app.get("/api/workers/stats", handleWorkerStats);
     app.get("/api/tokens/:tokenId/bot-status", handleBotStatusByToken);
     app.get(
