@@ -31,7 +31,7 @@
       "bot-json-prompt"
     ],
     "folder_titles": {},
-    "updated_at": "2026-11-11T14:58:46+03:00",
+    "updated_at": "2026-11-12T12:06:32+03:00",
     "tags": [],
     "author": ""
   },
@@ -1533,6 +1533,21 @@
     "author": ""
   },
   {
+    "path": "development/bot-runtime-mode-ui",
+    "title": "Режим работы обработчика бота",
+    "excerpt": "В настройках конкретного бота поле **«Работа обработчика»** управляет временем жизни обработчика. Оно не заменяет выбор способа получения об",
+    "parts": [
+      "development",
+      "bot-runtime-mode-ui"
+    ],
+    "folder_titles": {
+      "development": "🛠️ Разработка"
+    },
+    "updated_at": "2026-11-12T12:06:32+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
     "path": "development/compiled-server-runtime",
     "title": "Серверный JavaScript для production",
     "excerpt": "<!-- @fileoverview Сборка и запуск сервера BotCraft без загрузчика TypeScript. -->",
@@ -1563,6 +1578,36 @@
     "author": ""
   },
   {
+    "path": "development/node-process-polling",
+    "title": "Приём polling в Node для временных Python-обработчиков",
+    "excerpt": "Экспериментальный путь убирает постоянный Python-диспетчер для ботов с транспортом polling и режимом `process` («Освобождает память после пр",
+    "parts": [
+      "development",
+      "node-process-polling"
+    ],
+    "folder_titles": {
+      "development": "🛠️ Разработка"
+    },
+    "updated_at": "2026-11-12T12:06:32+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "development/on-demand-polling",
+    "title": "Polling с пробуждением обработчика",
+    "excerpt": "Настройка конкретного бота доступна в интерфейсе в поле «Работа обработчика»; см. [описание UI, сохранения и синхронизации](bot-runtime-mode",
+    "parts": [
+      "development",
+      "on-demand-polling"
+    ],
+    "folder_titles": {
+      "development": "🛠️ Разработка"
+    },
+    "updated_at": "2026-11-12T12:06:32+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
     "path": "development/project-history-loading",
     "title": "Загрузка истории проектов",
     "excerpt": "Список истории получает из PostgreSQL только метаданные: идентификатор, метку,",
@@ -1574,6 +1619,21 @@
       "development": "🛠️ Разработка"
     },
     "updated_at": "2026-11-10T12:12:01+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "development/runtime-memory-diagnostics",
+    "title": "Измерение памяти исполнителя",
+    "excerpt": "Диагностика добавляет структурированные JSON-снимки в журнал runtime. Она не меняет режимы",
+    "parts": [
+      "development",
+      "runtime-memory-diagnostics"
+    ],
+    "folder_titles": {
+      "development": "🛠️ Разработка"
+    },
+    "updated_at": "2026-11-12T12:06:32+03:00",
     "tags": [],
     "author": ""
   },
@@ -1618,7 +1678,7 @@
     "folder_titles": {
       "features": "🧩 Возможности"
     },
-    "updated_at": "2026-11-11T14:58:46+03:00",
+    "updated_at": "2026-11-12T12:06:32+03:00",
     "tags": [],
     "author": ""
   },
@@ -3053,7 +3113,7 @@
     "folder_titles": {
       "interface": "🖥️ Интерфейс"
     },
-    "updated_at": "2026-10-15T10:19:27+03:00",
+    "updated_at": "2026-11-12T12:06:32+03:00",
     "tags": [],
     "author": ""
   },
@@ -10550,6 +10610,21 @@
       "security": "Security"
     },
     "updated_at": "2026-11-10T08:35:26+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "security/codeql-csrf-review",
+    "title": "Проверка предупреждения CodeQL о CSRF",
+    "excerpt": "Проверено 12 ноября 2026 года для PR #91. Предупреждение [#62](https://github.com/fedorabakumets/telegram-bot-builder/security/code-scanning",
+    "parts": [
+      "security",
+      "codeql-csrf-review"
+    ],
+    "folder_titles": {
+      "security": "Security"
+    },
+    "updated_at": "2026-11-12T12:31:26+03:00",
     "tags": [],
     "author": ""
   },
