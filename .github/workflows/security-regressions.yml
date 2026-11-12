@@ -31,7 +31,7 @@ jobs:
       # Проверяем защиту до авторизации, безопасное логирование и изолированный webhook.
       - run: npx vitest run --config server/admin/runtime-settings-rate-limit.vitest.config.ts
       - run: npx vitest run --config server/routes/bot-runtime-rate-limit.vitest.config.ts
-      - run: node --import tsx --test --test-force-exit server/terminal/botLogsBuffer.validation.test.ts
+      - run: npx vitest run --config server/terminal/botLogsBuffer.security.vitest.config.ts
       - run: node --import tsx --test scripts/local-webhook/security.test.mjs
       - run: npx vitest run --config server/routes/storageConfigs/vitest.config.ts
       - name: Доступ, лимиты запросов и аватары пользователей ботов

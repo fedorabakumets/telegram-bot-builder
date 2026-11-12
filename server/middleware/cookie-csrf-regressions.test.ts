@@ -37,7 +37,11 @@ describe('границы защиты пользовательской сесс�
 
   it.each(['sec-fetch-site', 'sec-fetch-dest', 'sec-fetch-user'])(
     'не разрешает JSON или специальный заголовок без источника при %s', (header) => {
-      for (const cli of [{ 'content-type': 'application/json' }, { 'x-botcraft-csrf': '1' }]) {
+      /** Допустимые заголовки CLI без необязательных полей объединённого типа. */
+      const cliHeaders: Record<string, string>[] = [
+        { 'content-type': 'application/json' }, { 'x-botcraft-csrf': '1' },
+      ];
+      for (const cli of cliHeaders) {
         expect(inspect('POST', { ...cli, [header]: 'same-origin' }).status).toHaveBeenCalledWith(403);
       }
     },
