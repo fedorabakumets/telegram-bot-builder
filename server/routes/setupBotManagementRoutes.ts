@@ -45,12 +45,16 @@ export function setupBotManagementRoutes(app: Express): void {
     const runtimeWriteLimit = rateLimit({ windowMs: 60_000, limit: 20,
         standardHeaders: true, legacyHeaders: false,
         message: { message: 'Слишком частое изменение режима бота. Повторите позже.' } });
+    /** Частый опрос статистики ограничивается до авторизации и чтения снимка исполнителя. */
+    const workerStatsLimit = rateLimit({ windowMs: 60_000, limit: 120,
+        standardHeaders: true, legacyHeaders: false,
+        message: { message: 'Слишком много запросов статистики воркеров. Повторите позже.' } });
     /** Режим обработчика сохраняется отдельно от способа получения сообщений. */
     app.get('/api/projects/:projectId/tokens/:tokenId/runtime-settings', runtimeReadLimit,
         requireTokenOwnership, handleBotRuntimeSettings);
     app.put('/api/projects/:projectId/tokens/:tokenId/runtime-settings', runtimeWriteLimit,
         requireTokenOwnership, handleBotRuntimeSettings);
-    app.get("/api/workers/stats", handleWorkerStats);
+    app.get("/api/workers/stats", workerStatsLimit, handleWorkerStats);
     app.get("/api/tokens/:tokenId/bot-status", handleBotStatusByToken);
     app.get(
         "/api/bot/tokens/:tokenId/status",

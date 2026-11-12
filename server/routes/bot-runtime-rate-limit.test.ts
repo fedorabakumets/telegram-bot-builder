@@ -4,7 +4,7 @@ import { once } from 'node:events';
 import { describe, expect, it, vi } from 'vitest';
 
 /** Счётчик подтверждает, что превышение квоты отсекается до проверки доступа к БД. */
-const ownership = vi.hoisted(() => ({ calls: 0 }));
+const ownership = vi.hoisted(() => ({ calls: 0, statsCalls: 0 }));
 vi.mock('../middleware/requireProjectAccess', () => ({ requireProjectAccess: vi.fn() }));
 vi.mock('../middleware/bot-api-actor', () => ({ resolveBotApiActor: vi.fn() }));
 vi.mock('../middleware/requireResourceOwnership', () => ({
@@ -29,7 +29,12 @@ vi.mock('./botManagement/handlers/getBotTokenStatusHandler', () => ({ getBotToke
 vi.mock('./botManagement/handlers/getBotTokenPhotoHandler', () => ({ getBotTokenPhotoHandler: vi.fn() }));
 vi.mock('./botManagement/handlers/botLaunchHistoryHandler', () => ({ handleGetLaunchHistory: vi.fn() }));
 vi.mock('./botManagement/handlers/botLaunchLogsHandler', () => ({ handleGetLaunchLogs: vi.fn() }));
-vi.mock('./botManagement/handlers/workerStatsHandler', () => ({ handleWorkerStats: vi.fn() }));
+vi.mock('./botManagement/handlers/workerStatsHandler', () => ({
+  handleWorkerStats: (_req: express.Request, res: express.Response) => {
+    ownership.statsCalls++;
+    res.status(401).end();
+  },
+}));
 vi.mock('./botManagement/handlers/clearLogsHandler', () => ({ handleClearLogs: vi.fn() }));
 vi.mock('./botManagement/handlers/botLiveLogsHandler', () => ({ handleGetLiveBotLogs: vi.fn() }));
 vi.mock('./botManagement/handlers/botLogByIdHandler', () => ({ handleGetBotLogById: vi.fn() }));
@@ -51,6 +56,21 @@ async function withRuntimeApi(check: (url: string) => Promise<void>): Promise<vo
 }
 
 describe('ограничения настроек режима бота', () => {
+  it('ограничивает статистику до обработчика, сохраняя независимые квоты настроек', async () => {
+    await withRuntimeApi(async url => {
+      const statsUrl = `${new URL(url).origin}/api/workers/stats`;
+      ownership.statsCalls = 0;
+      for (let index = 0; index < 120; index++) expect((await fetch(statsUrl)).status).toBe(401);
+      const response = await fetch(statsUrl);
+      expect(response.status).toBe(429);
+      expect(ownership.statsCalls).toBe(120);
+      expect(Number(response.headers.get('retry-after'))).toBeGreaterThan(0);
+      for (const method of ['GET', 'PUT']) {
+        expect((await fetch(url, { method, headers: { 'x-test-owner': 'yes' } })).status).toBe(200);
+      }
+    });
+  });
+
   it('не снимает проверку владения для чтения и записи', async () => {
     await withRuntimeApi(async url => {
       for (const method of ['GET', 'PUT']) {
