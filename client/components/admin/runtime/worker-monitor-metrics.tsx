@@ -16,9 +16,10 @@ export function WorkerMonitorMetrics({ metrics }: Props) {
     <dl className="grid grid-cols-2 gap-4 sm:grid-cols-4">
       <div><dt className="text-xs text-muted-foreground">Node · RSS</dt><dd className="mt-1 text-lg font-medium tabular-nums">{memory(metrics.nodeRssBytes)}</dd></div>
       <div><dt className="text-xs text-muted-foreground">Python · RSS</dt><dd className="mt-1 text-lg font-medium tabular-nums">{memory(metrics.pythonRssBytes)}</dd></div>
-      <div><dt className="text-xs text-muted-foreground">Обработчиков активно</dt><dd className="mt-1 text-lg font-medium tabular-nums">{metrics.activeHandlers ?? '—'}</dd></div>
-      <div><dt className="text-xs text-muted-foreground">Ботов спит</dt><dd className="mt-1 text-lg font-medium tabular-nums">{metrics.sleepingBots ?? '—'}</dd><p className="mt-1 text-xs text-muted-foreground">Из них ждут слот: {metrics.waitingBots ?? '—'}</p></div>
+      <div><dt className="text-xs text-muted-foreground">Обработчиков process активно</dt><dd className="mt-1 text-lg font-medium tabular-nums">{metrics.activeHandlers ?? '—'}</dd></div>
+      <div><dt className="text-xs text-muted-foreground">Ботов process спит</dt><dd className="mt-1 text-lg font-medium tabular-nums">{metrics.sleepingBots ?? '—'}</dd><p className="mt-1 text-xs text-muted-foreground">Из них ждут слот: {metrics.waitingBots ?? '—'}</p></div>
     </dl>
+    <p className="text-sm text-muted-foreground">Постоянных ботов: {metrics.permanentBots ?? '—'} · их обработчики не входят в счётчики process.</p>
     <WorkerMemoryChart history={metrics.history} />
     <div className="grid gap-3 sm:grid-cols-2">
       {([{ title: 'Пробуждение сценария', value: metrics.latency.startupMs }, { title: 'Получение → завершение', value: metrics.latency.handlingMs }]).map(item => <div key={item.title} className="rounded-md border border-border p-3">

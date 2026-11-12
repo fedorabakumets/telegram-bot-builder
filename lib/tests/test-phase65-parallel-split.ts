@@ -251,6 +251,7 @@ test('E01', 'utils содержит _get_user_var_lock', () => {
   const code = gen(makeStandardProject(), 'e01');
   ok(code.includes('def _get_user_var_lock(user_id: int)'), 'хелпер лока');
   ok(code.includes('_user_var_locks'), 'словарь локов');
+  ok(code.includes('return _scoped_user_lock(_user_var_locks, user_id)'), 'неиспользуемые локи освобождаются безопасным общим контекстом');
 });
 
 test('E02', 'set_variable expression → под локом', () => {

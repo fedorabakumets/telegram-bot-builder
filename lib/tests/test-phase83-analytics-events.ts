@@ -15,6 +15,8 @@ try {
   const middleware = join(directory, 'middleware.py');
   writeFileSync(middleware, generateMessageLoggingCode(true, true, 12, true), 'utf8');
   execFileSync('python', [resolve('lib/tests/analytics-events-runtime.py'), middleware], { stdio: 'inherit' });
+  // Ошибки SQL и commit не должны удерживать SQLite-соединения и их кеш.
+  execFileSync('python', [resolve('lib/tests/analytics-spool-resources-runtime.py'), middleware], { stdio: 'inherit' });
   // Последовательность middleware → обёртка сохраняет reply/inline и не удваивает сообщения.
   execFileSync('python', [resolve('lib/tests/analytics-reply-history-runtime.py'), middleware], { stdio: 'inherit' });
   // Настоящий локальный Dispatcher проверяет фильтры и middleware без сети Telegram.

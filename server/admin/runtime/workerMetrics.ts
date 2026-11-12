@@ -1,5 +1,6 @@
 /** @fileoverview Ограниченная история свежих снимков исполнителя без тяжёлого профилирования. */
 import type { WorkerMetricPoint, WorkerMetrics, MetricDistribution } from '../../../shared/worker-metrics';
+import { workerActivity } from './workerActivity';
 /** Минимальный клиент позволяет использовать существующее соединение Redis. */
 interface MetricsRedis {
   /** Атомарно сохраняет ограниченное окно. */
@@ -49,14 +50,12 @@ export async function collectWorkerMetrics(snapshot: unknown, runnerId: string, 
   const complete = Array.isArray(source.workers) && source.workers.length <= 1000;
   const fresh = snapshot !== null && number(runtime.nodeRssBytes) !== null;
   const execution = workers.map(worker => object(worker.execution));
-  const polling = execution.map(item => object(item.polling));
-  const knownPolling = fresh && complete && execution.every((item, index) => !item.legacy &&
-    (item.polling === null || ['activeChildren', 'registeredBots', 'waitingBots']
-      .every(key => number(polling[index][key]) !== null)));
+  const activities = workers.map(workerActivity);
   /** Складывает уже проверенные измерения без подстановки неизвестных значений. */
   const sum = (items: number[]) => items.reduce((total, value) => total + value, 0);
-  const active = knownPolling ? sum(polling.map(item => number(item.activeChildren) ?? 0)) : null;
-  const registered = knownPolling ? sum(polling.map(item => number(item.registeredBots) ?? 0)) : null;
+  /** Сумма доступна только при полном наборе подтверждённых измерений. */
+  const aggregate = (key: keyof ReturnType<typeof workerActivity>) => fresh && complete &&
+    activities.every(item => item[key] !== null) ? sum(activities.map(item => item[key]!)) : null;
   const pythonKnown = fresh && complete && execution.every(item => {
     const host = object(object(item.polling).sharedHost);
     const live = item.legacy || host.pid || host.actualPid || number(object(item.polling).activeChildren);
@@ -65,8 +64,8 @@ export async function collectWorkerMetrics(snapshot: unknown, runnerId: string, 
   const point: WorkerMetricPoint = { sampledAt: new Date(now).toISOString(),
     nodeRssBytes: fresh ? number(runtime.nodeRssBytes) : null,
     pythonRssBytes: pythonKnown ? sum(execution.map(item => item.pythonMemoryKb)) * 1024 : null,
-    activeHandlers: active, sleepingBots: registered === null || active === null ? null : Math.max(0, registered - active),
-    waitingBots: knownPolling ? sum(polling.map(item => number(item.waitingBots) ?? 0)) : null };
+    activeHandlers: aggregate('activeHandlers'), sleepingBots: aggregate('sleepingBots'),
+    permanentBots: aggregate('permanentBots'), waitingBots: aggregate('waitingBots') };
   let history: WorkerMetricPoint[] = [];
   if (redis) try {
     const raw = await redis.eval(HISTORY_SCRIPT, 1, `tbb:runner:${runnerId}:admin-metrics`, String(now), fresh ? JSON.stringify(point) : '');
@@ -75,7 +74,7 @@ export async function collectWorkerMetrics(snapshot: unknown, runnerId: string, 
       if (Array.isArray(parsed)) history = parsed.slice(-120).filter(item => typeof object(item).sampledAt === 'string')
         .map(item => ({ sampledAt: item.sampledAt, nodeRssBytes: number(item.nodeRssBytes),
           pythonRssBytes: number(item.pythonRssBytes), activeHandlers: number(item.activeHandlers),
-          sleepingBots: number(item.sleepingBots), waitingBots: number(item.waitingBots) }));
+          sleepingBots: number(item.sleepingBots), permanentBots: number(item.permanentBots), waitingBots: number(item.waitingBots) }));
     }
   } catch { /* Недоступность истории не скрывает актуальный снимок исполнителя. */ }
   return { ...point, status: fresh ? 'live' : 'unavailable', sampledAt: fresh ? point.sampledAt : null, source: 'runner-inspect', historyMode: 'while-observed', history,

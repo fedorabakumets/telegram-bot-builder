@@ -8,6 +8,8 @@ import type { Express } from "express";
 import { rateLimit } from "express-rate-limit";
 import { requireAdminAuth } from "./admin-auth-middleware";
 import { getWorkerRuntimeStatus } from "./worker-runtime-status";
+import { getWorkerInspectionSnapshot } from "./worker-runtime-metrics";
+import { selectWorkerRuntimeCounters } from "./worker-runtime-counters";
 import { createWorkerStatusHandler } from "./worker-status-handler";
 import { createWorkerBotListHandler } from "./worker-bot-handler";
 import { listWorkerBots } from "./worker-bot-list";
@@ -40,6 +42,9 @@ export function setupRuntimeSettingsRoutes(app: Express): void {
   /** Отдаёт администратору снимок работающих воркеров. */
   app.get("/admin/api/runtime-settings/workers/status", workerStatusLimit, requireAdminAuth,
     createWorkerStatusHandler(getWorkerRuntimeStatus));
+  /** Диагностика доступна только администратору, с тем же кешем inspect и ограничением опроса. */
+  app.get("/admin/api/runtime-settings/workers/counters", workerStatusLimit, requireAdminAuth,
+    createWorkerStatusHandler(async () => selectWorkerRuntimeCounters(await getWorkerInspectionSnapshot())));
   /** Показывает выбранные и подтверждённые режимы ботов без секретных полей. */
   app.get("/admin/api/runtime-settings/workers/bots", workerStatusLimit, requireAdminAuth,
     createWorkerBotListHandler(listWorkerBots));

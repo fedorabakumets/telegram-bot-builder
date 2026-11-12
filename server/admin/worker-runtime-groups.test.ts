@@ -9,6 +9,16 @@ function project(workers: unknown) {
   return workerRuntimeGroups({ workers } as RunnerSnapshot);
 }
 describe('проекция групп воркеров', () => {
+  it('смешанный воркер сохраняет счётчики спящего process и отдельный постоянный состав', () => {
+    const row = project([{ workerKey: 0, tokenIds: [1, 2, 3], execution: {
+      legacy: { pid: 1 }, pythonMemoryKb: 100,
+      polling: { activeChildren: 0, registeredBots: 2, waitingBots: 0, hostAlive: false },
+    } }])![0];
+    assert.equal(row.activeHandlers, 0);
+    assert.equal(row.sleepingBots, 2);
+    assert.equal(row.permanentBots, 1);
+    assert.equal(row.hostAlive, false);
+  });
   it('старый исполнитель без расширенной телеметрии не показывает фиктивный ноль RSS', () => {
     const data = project([{ workerKey: 0, tokenIds: [30, 31], pendingTokenIds: [] }])!;
     assert.equal(data[0].registeredBots, 2);

@@ -1,0 +1,62 @@
+{# @fileoverview Загрузка Bot Tables без декартова размножения строк и параллельных обновлений кеша. #}
+async def _refresh_bot_tables_cache() -> None:
+    """Обновляет общий кеш раз в минуту; конкурентные запросы ожидают одно обновление."""
+    global _bot_tables_cache, _bot_tables_cache_ts
+    import time as _table_time
+    import json as _table_json
+
+    def _fresh() -> bool:
+        """Проверяет срок кеша по монотонным часам, независимо от коррекции времени ОС."""
+        return _bot_tables_cache is not None and _table_time.monotonic() - _bot_tables_cache_ts <= 60
+
+    if not db_pool or _fresh():
+        return
+    async with _bot_tables_cache_lock:
+        if _fresh():
+            return
+        try:
+            async with db_pool.acquire() as conn:
+                # Колонки и строки читаются отдельно: JSON каждой строки разбирается только один раз.
+                _columns = await conn.fetch("""
+                    SELECT bt.id AS table_id, btc.name AS col_name, btc.id AS col_id
+                    FROM bot_tables bt JOIN bot_table_columns btc ON btc.table_id = bt.id
+                    WHERE bt.project_id = $1 ORDER BY bt.id, btc.position
+                """, PROJECT_ID)
+                _rows = await conn.fetch("""
+                    SELECT bt.id AS table_id, bt.name AS table_name, btr.data, btr.row_index
+                    FROM bot_tables bt JOIN bot_table_rows btr ON btr.table_id = bt.id
+                    WHERE bt.project_id = $1
+                    AND EXISTS (SELECT 1 FROM bot_table_columns btc WHERE btc.table_id = bt.id)
+                    ORDER BY bt.id, btr.row_index
+                """, PROJECT_ID)
+                _by_table = {}
+                for _column in _columns:
+                    _by_table.setdefault(_column["table_id"], []).append((_column["col_name"], str(_column["col_id"])))
+                _tables = {}
+                for _row in _rows:
+                    _raw = _row["data"]
+                    if isinstance(_raw, str):
+                        try:
+                            _raw = _table_json.loads(_raw)
+                        except (ValueError, TypeError):
+                            _raw = {}
+                    if not isinstance(_raw, dict):
+                        _raw = {}
+                    # Сохраняем прежнее объединение одинаковых имён таблиц и индексов строк.
+                    _target = _tables.setdefault(_row["table_name"], {}).setdefault(_row["row_index"], {})
+                    for _name, _column_id in _by_table.get(_row["table_id"], []):
+                        _value = _raw.get(_column_id, "")
+                        _target[_name] = str(_value) if _value else ""
+                _cache = {}
+                for _name, _indexed in _tables.items():
+                    _array = [_indexed[_index] for _index in sorted(_indexed)]
+                    _cache[f"table.{_name}"] = _array
+                    if len(_array) == 1:
+                        for _column, _value in _array[0].items():
+                            _cache[f"table.{_name}.{_column}"] = _value
+                _bot_tables_cache = _cache
+        except Exception as _error:
+            logging.warning("Не удалось загрузить Bot Tables: %s", _error)
+            # Ошибка не создаёт лавину повторных запросов; следующее обновление через прежние 60 секунд.
+            _bot_tables_cache = {}
+        _bot_tables_cache_ts = _table_time.monotonic()

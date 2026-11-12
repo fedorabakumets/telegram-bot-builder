@@ -1,6 +1,7 @@
 /**
  * @fileoverview Текущая инфраструктура панели BotCraft в Railway без управления секретами.
  */
+import { backendEnvironment, frontendEnvironment, runtimeEnvironment } from "./preserved-environment.ts";
 import { bucket, defineRailway, github, group, postgres, project, redis, service, volume } from "railway/iac";
 
 /** Создаёт описание существующего проекта Railway для сверки и будущих изменений. */
@@ -22,6 +23,8 @@ export default defineRailway(() => {
   /** Хранит приватные снимки истории версий проектов. */
   const tbbProjectVersions = bucket("tbb-project-versions", { region: "ams" });
   const botBuilderBackend = service("bot builder backend", {
+    /** Секреты и подключения сохраняются на стороне Railway. */
+    env: backendEnvironment,
     source: telegramBotBuilder,
     build: { buildEnvironment: "V3", builder: "DOCKERFILE", dockerfilePath: "Dockerfile.backend", watchPatterns: ["/server/**", "/lib/**", "/shared/**", "/client/utils/**", "/client/components/editor/sidebar/parsePythonCodeToJson.ts", "/scripts/**", "/migrations/**", "/assets/**", "/requirements.txt", "/package.json", "/package-lock.json", "/.npmrc", "/.dockerignore", "/tsconfig*.json", "/drizzle.config.ts", "/version.json", "/Dockerfile.backend", "/railway.backend.toml"] },
     start: "node dist/server/index.js",
@@ -34,6 +37,8 @@ export default defineRailway(() => {
   });
   const botRuntime = service("bot runtime", {
     source: telegramBotBuilder,
+    /** Принимает обновления в Node и лениво загружает общий Python для активных сценариев. */
+    env: { ...runtimeEnvironment, RUNNER_PROCESS_POLLING: "node", RUNNER_PROCESS_HANDLER: "shared" },
     /** Исполнитель пересобирается только при изменении зависимостей управления ботами. */
     build: { buildEnvironment: "V3", builder: "DOCKERFILE", dockerfilePath: "Dockerfile.runner", watchPatterns: ["/server/runner/**", "/server/redis/**", "/server/bots/**", "/server/services/runtime-overlay.ts", "/server/utils/**", "/server/python/**", "/requirements.txt", "/package.json", "/package-lock.json", "/tsconfig.node.json", "/Dockerfile.runner", "/.railway/railway.ts"] },
     start: "node /app/runner.cjs",
@@ -42,6 +47,8 @@ export default defineRailway(() => {
     networking: { privateNetworkEndpoint: "bot-runtime" },
   });
   const botBuilderFrontend = service("bot builder frontend", {
+    /** Сохраняет действующий адрес API и настройки публикации. */
+    env: frontendEnvironment,
     source: github("fedorabakumets/telegram-bot-builder", { branch: "main", checkSuites: false, upstreamUrl: "https://github.com/fedorabakumets/telegram-bot-builder" }),
     build: { buildEnvironment: "V3", builder: "DOCKERFILE", dockerfilePath: "Dockerfile.frontend", watchPatterns: ["/client/**", "/frontend/**", "/shared/**", "/lib/**", "/assets/**", "/attached_assets/**", "/scripts/vite*.ts", "/package.json", "/package-lock.json", "/.npmrc", "/.dockerignore", "/vite.config.ts", "/tailwind.config.ts", "/postcss.config.js", "/tsconfig*.json", "/Dockerfile.frontend", "/railway.frontend.toml"] },
     start: "node frontend/index.mjs",
@@ -54,7 +61,7 @@ export default defineRailway(() => {
   const fortunateAchievement = group("fortunate-achievement", [Redis]);
 
   return project("tbb-panel", {
-    variables: { managed: false },
+    variables: { managed: true },
     resources: [botBuilderBackend, botRuntime, postgresQruoVolume, telegramBotBuilder_e3uVolume, redisVolume, tbbBotBuilds, tbbUploads, tbbProjectVersions, awareEncouragement, fortunateAchievement],
   });
 });

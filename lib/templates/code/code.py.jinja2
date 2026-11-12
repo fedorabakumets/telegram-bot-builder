@@ -17,11 +17,9 @@ except Exception:
 
 _code_node_locks: dict = {}
 
-def _get_code_node_lock(user_id: int) -> asyncio.Lock:
-    """Возвращает asyncio.Lock для узла code в расчёте на одного пользователя."""
-    if user_id not in _code_node_locks:
-        _code_node_locks[user_id] = asyncio.Lock()
-    return _code_node_locks[user_id]
+def _get_code_node_lock(user_id: int):
+    """Возвращает контекст блокировки узла code с очисткой после завершения ожиданий."""
+    return _scoped_user_lock(_code_node_locks, user_id)
 
 _CODE_NODE_TIMEOUT = 180
 _CODE_SKIP_KEYS = {

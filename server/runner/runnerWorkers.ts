@@ -16,6 +16,7 @@ import { RunnerCachePruner } from "./runnerCachePruner";
 import { parseWorkerSystemMessage } from "../bots/parseWorkerSystemMessage";
 import { pollingTimingMetrics } from "./polling/timingMetrics";
 import { RunnerBotModes, type RunnerBotMode } from "./runnerBotModes";
+import { RunnerRuntimeCounters } from "./runnerRuntimeCounters";
 
 /** Снимок одного процесса воркера */
 export interface RunnerWorkerSnapshot {
@@ -31,6 +32,8 @@ export interface RunnerWorkerSnapshot {
   bots?: RunnerBotMode[];
   /** Фактические процессы и суммарная память Python внутри данной группы. */
   execution?: ReturnType<RunnerWorkerExecution["memoryCounters"]>;
+  /** Последние безопасные счётчики постоянного Python с возрастом и признаком устарелости. */
+  pythonCounters?: ReturnType<RunnerRuntimeCounters["snapshot"]>;
 }
 
 /** Снимок состояния исполнителя */
@@ -70,6 +73,8 @@ interface RunnerWorker {
   pendingTokenIds: Set<number>;
   /** Только безопасные настройки текущих запусков. */
   modes: RunnerBotModes;
+  /** Ограниченная последняя выборка без пользовательских данных. */
+  counters: RunnerRuntimeCounters;
 }
 
 /**
@@ -163,6 +168,7 @@ export class RunnerWorkers {
       pendingTokenIds: [...worker.pendingTokenIds],
       bots: worker.modes.snapshot(worker.channel.memoryCounters().polling?.bots),
       execution: worker.channel.memoryCounters(),
+      pythonCounters: worker.counters.snapshot(),
     })) };
   }
 
@@ -190,6 +196,7 @@ export class RunnerWorkers {
       if (event.k === "line" && event.l) {
         try {
           const message = JSON.parse(event.l);
+          if (worker.counters.ingest(message, Date.now(), event.l.length)) return;
           /** Профиль памяти остаётся в журнале runtime и не нагружает Redis или терминалы ботов. */
           if (message.type === "worker_memory_profile") {
             console.log(JSON.stringify({ ...message, workerKey, instance }));
@@ -220,7 +227,7 @@ export class RunnerWorkers {
       }
     });
     const worker: RunnerWorker = {
-      instance, channel, queue: Promise.resolve(), builds: new RunnerBuildPins(), tokenIds: new Set(), pendingTokenIds: new Set(), modes: new RunnerBotModes(),
+      instance, channel, queue: Promise.resolve(), builds: new RunnerBuildPins(), tokenIds: new Set(), pendingTokenIds: new Set(), modes: new RunnerBotModes(), counters: new RunnerRuntimeCounters(),
     };
     channel.pauseOutput(this.outputPaused);
     this.workers.set(workerKey, worker);

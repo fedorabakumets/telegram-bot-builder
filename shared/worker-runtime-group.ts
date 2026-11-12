@@ -14,6 +14,8 @@ export interface WorkerRuntimeGroup {
   activeHandlerLimitKnown: boolean;
   /** Спящие регистрации Node polling либо неизвестное значение. */
   sleepingBots: number | null;
+  /** Постоянные регистрации вне Node polling; null при старой телеметрии. */
+  permanentBots?: number | null;
   /** Боты, ожидающие свободного слота обработчика. */
   waitingBots: number | null;
   /** Память Python этой группы, байты; общий процесс учтён один раз. */

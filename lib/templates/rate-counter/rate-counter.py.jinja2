@@ -5,6 +5,27 @@
   @param {array} rateCounterEntries - Массив объектов RateCounterEntry
 #}
 
+# Метаданные обходятся небольшими порциями без копирования всех ключей.
+_rate_counter_windows = {}
+_rate_counter_cleanup_keys = deque()
+
+
+def _cleanup_rate_counter_keys(now=None, budget=32):
+    """Удаляет не более budget полностью истёкших ключей за один обход."""
+    if now is None:
+        now = time.time()
+    for _ in range(min(max(0, budget), len(_rate_counter_cleanup_keys))):
+        key = _rate_counter_cleanup_keys.popleft()
+        timestamps = _rate_counter_deques.get(key)
+        window = _rate_counter_windows.get(key, 60.0)
+        # Строгое сравнение сохраняет событие на границе скользящего окна.
+        if not timestamps or timestamps[-1] < now - window:
+            _rate_counter_deques.pop(key, None)
+            _rate_counter_windows.pop(key, None)
+        else:
+            _rate_counter_cleanup_keys.append(key)
+
+
 # Обработчики узлов rate_counter
 {% for entry in rateCounterEntries %}
 {%- set sanitized_node_id = entry.nodeId | safe_name -%}
@@ -25,8 +46,12 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query: types.Callback
         if _rc_window < 0:
             _rc_window = 0.0
         _rc_now = time.time()
+        _cleanup_rate_counter_keys(_rc_now)
         if _rc_key not in _rate_counter_deques:
             _rate_counter_deques[_rc_key] = deque()
+            _rate_counter_cleanup_keys.append(_rc_key)
+        # Общее имя ключа может использоваться узлами с разными окнами.
+        _rate_counter_windows[_rc_key] = max(_rate_counter_windows.get(_rc_key, 0.0), _rc_window)
         _rc_dq = _rate_counter_deques[_rc_key]
         _rc_dq.append(_rc_now)
         _rc_cutoff = _rc_now - _rc_window

@@ -16,13 +16,14 @@ export function WorkerGroupList({ groups }: Props) {
         <dl className="mt-3 grid grid-cols-2 gap-3 text-xs">
           <div><dt className="text-muted-foreground">Ботов</dt><dd className="mt-1 tabular-nums">{group.registeredBots}</dd></div>
           <div><dt className="text-muted-foreground">Python · RSS</dt><dd className="mt-1 tabular-nums">{workerMemory(group.pythonRssBytes === null ? null : group.pythonRssBytes / 1048576)}</dd></div>
-          <div><dt className="text-muted-foreground">Активно / спит</dt><dd className="mt-1 tabular-nums">{group.activeHandlers ?? '—'} / {group.sleepingBots ?? '—'}</dd></div>
+          <div><dt className="text-muted-foreground">Process: активно / спит</dt><dd className="mt-1 tabular-nums">{group.activeHandlers ?? '—'} / {group.sleepingBots ?? '—'}</dd></div>
           <div><dt className="text-muted-foreground">Ожидает слот</dt><dd className="mt-1 tabular-nums">{group.waitingBots ?? '—'}</dd></div>
         </dl>
+        <p className="mt-3 text-xs text-muted-foreground">Постоянных ботов: {group.permanentBots ?? '—'}</p>
         <p className="mt-3 text-xs text-muted-foreground">{group.activeHandlerLimitKnown === true
           ? group.activeHandlerLimit === null ? 'Без фиксированного лимита загруженных сценариев' : `Лимит активных обработчиков: ${group.activeHandlerLimit}`
           : 'Лимит обработчиков не измерен'}</p>
-        <p className="mt-3 text-xs text-muted-foreground">{group.hostAlive === true ? 'Процесс запущен' : group.hostAlive === false ? 'Процесс спит' : 'Состояние процесса не измерено'}{group.pendingBots > 0 ? ` · ожидают применения: ${group.pendingBots}` : ''}</p>
+        <p className="mt-3 text-xs text-muted-foreground">{group.hostAlive === true ? 'Обработчик process запущен' : group.hostAlive === false ? 'Обработчик process спит' : 'Состояние процесса не измерено'}{group.pendingBots > 0 ? ` · ожидают применения: ${group.pendingBots}` : ''}</p>
       </li>)}</ul>}
   </div>;
 }

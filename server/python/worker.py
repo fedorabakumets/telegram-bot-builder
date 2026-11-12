@@ -570,14 +570,16 @@ class BotWorker:
         self._shutdown_event.set()
 
     async def _report_memory(self) -> None:
-        """Раз в 10 с сообщает RSS процесса на Linux и Windows."""
+        """Раз в 10 с сообщает RSS и безопасные счётчики известных контейнеров."""
         from process_memory import total_rss_kb
+        import worker_runtime_counters
 
         while not self._shutdown_event.is_set():
             memory_kb = total_rss_kb()
             if memory_kb is not None:
                 emit_system(f"memory_kb:{memory_kb}")
             memory_profile.report_if_due()
+            worker_runtime_counters.report(self.bots)
             await asyncio.sleep(10)
 
     async def run(self) -> None:
