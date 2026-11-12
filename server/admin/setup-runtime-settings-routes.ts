@@ -8,6 +8,9 @@ import type { Express } from "express";
 import { rateLimit } from "express-rate-limit";
 import { requireAdminAuth } from "./admin-auth-middleware";
 import { getWorkerRuntimeStatus } from "./worker-runtime-status";
+import { createWorkerStatusHandler } from "./worker-status-handler";
+import { createWorkerBotListHandler } from "./worker-bot-handler";
+import { listWorkerBots } from "./worker-bot-list";
 import { restartPendingWorkers } from "./restart-pending-workers";
 import {
   handleGetRuntimeSettings,
@@ -29,10 +32,11 @@ export function setupRuntimeSettingsRoutes(app: Express): void {
   const workerRestartLimit = rateLimit({ windowMs: 60 * 60_000, limit: 10, standardHeaders: true, legacyHeaders: false });
   app.get("/admin/api/runtime-settings/:group", requireAdminAuth, handleGetRuntimeSettings);
   /** Отдаёт администратору снимок работающих воркеров. */
-  app.get("/admin/api/runtime-settings/workers/status", workerStatusLimit, requireAdminAuth, async (_req, res) => {
-    try { res.json(await getWorkerRuntimeStatus()); }
-    catch { res.status(500).json({ message: "Не удалось получить состояние воркеров" }); }
-  });
+  app.get("/admin/api/runtime-settings/workers/status", requireAdminAuth, workerStatusLimit,
+    createWorkerStatusHandler(getWorkerRuntimeStatus));
+  /** Показывает выбранные и подтверждённые режимы ботов без секретных полей. */
+  app.get("/admin/api/runtime-settings/workers/bots", requireAdminAuth, workerStatusLimit,
+    createWorkerBotListHandler(listWorkerBots));
   /** Перезапускает только ботов в воркерах прежней группировки. */
   app.post("/admin/api/runtime-settings/workers/restart-pending", workerRestartLimit, requireAdminAuth, async (_req, res) => {
     try { res.json(await restartPendingWorkers()); }

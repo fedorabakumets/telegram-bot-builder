@@ -61,6 +61,12 @@ jobs:
       - run: python -m pip install -r requirements.txt
       - run: python -m pip check
       - run: python -m unittest discover -s server/python -p 'test_polling_lifecycle.py' -v
+      # Проверяем инвалидацию байткода и совместимость общих пространств имён моделей.
+      - run: python -m unittest discover -s server/python -p 'test_bot_code_cache.py' -v
+      - run: python server/python/lazy_aiogram_namespace_test.py
+      - run: python -m unittest discover -s server/python -p 'test_process_environment.py' -v
+      - run: python scripts/local-process/test_windows_guard.py
+      - run: python scripts/local-process/test_validate.py
       - run: python -m unittest discover -s lib/tests -p 'test_redis_lock_runtime.py' -v
       - run: node --import tsx --test server/bots/lazyAiogram.test.ts
       - run: node --import tsx --test shared/schema/zod-migration.test.ts
@@ -71,6 +77,19 @@ jobs:
       - run: npx vitest run --config server/runtime/vitest.config.ts
       - name: Аренда, команды и границы зависимостей исполнителя
         run: npx vitest run --config server/runner/vitest.config.ts
+      # Адресно проверяем отключение диагностики, реальные сеансы V8 и формат снимков памяти.
+      - name: Диагностика памяти исполнителя
+        run: node --import tsx --test server/runner/runnerHeapProfile.test.ts server/runner/runnerMemoryLinux.test.ts server/runner/runnerMemoryMonitor.test.ts
+      - name: Потоки сборок, очистка кеша и обратное давление
+        run: node --import tsx --test server/bots/workerChannel.test.ts server/runner/runnerBuildCache.test.ts server/runner/runnerBuildStream.test.ts server/runner/runnerCacheLifecycle.test.ts server/runner/runnerEventPublisher.test.ts
+      # Приёмники проверяются на локальном HTTP-двойнике, без запросов к Telegram.
+      - name: Приём обновлений в Node и владение очередью
+        run: node --import tsx --test server/runner/polling/dispatcher.test.ts server/runner/polling/dispatcherUnlimited.test.ts server/runner/polling/sharedTransport.test.ts server/runner/polling/dispatcherLease.test.ts server/runner/polling/dispatcherFailure.test.ts server/runner/polling/pythonChild.test.ts server/runner/polling/queue.integration.test.ts server/runner/polling/runtimeSettings.test.ts server/runner/polling/execution.test.ts server/runner/polling/memoryLedger.test.ts server/runner/runnerMemoryTotals.test.ts
+      - run: npx vitest run --config server/runner/polling/vitest.config.ts
+      - run: npx vitest run --config server/runner/polling/integration.vitest.config.ts
+      # Проверяем сто активных сценариев без ограничения числа загруженных ботов.
+      - run: python -m unittest discover -s server/python -p 'test_shared_worker_capacity.py' -v
+      - run: python -m unittest discover -s server/python -p 'test_worker_memory_profile.py' -v
       - run: node --import tsx --test server/redis/workerStreams.integration.test.ts
       - run: node scripts/smoke-split-build.mjs
       - run: node scripts/smoke-split-build.mjs --dev

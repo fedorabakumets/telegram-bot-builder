@@ -23,6 +23,10 @@ export interface RunnerConfig {
   buildsKeep: number;
   /** Требовать версию намерения из БД для каждой команды бота */
   requireFence?: boolean;
+  /** Приём polling process-ботов: прежний Python либо экспериментальный Node. */
+  processPolling?: "python" | "node";
+  /** Обработка очереди Node: отдельный процесс бота либо общий Python-процесс группы. */
+  processHandler?: "isolated" | "shared";
 }
 
 /**
@@ -42,7 +46,15 @@ function defaultWorkerScript(): string {
 export function loadRunnerConfig(env: NodeJS.ProcessEnv = process.env): RunnerConfig {
   const redisUrl = env.REDIS_URL?.trim();
   if (!redisUrl) throw new Error("Исполнителю нужен REDIS_URL (тот же Redis, что у панели)");
+  const processPolling = env.RUNNER_PROCESS_POLLING?.trim() || "python";
+  if (processPolling !== "python" && processPolling !== "node")
+    throw new Error("RUNNER_PROCESS_POLLING должен быть python или node");
+  const processHandler = env.RUNNER_PROCESS_HANDLER?.trim() || "shared";
+  if (processHandler !== "isolated" && processHandler !== "shared")
+    throw new Error("RUNNER_PROCESS_HANDLER должен быть isolated или shared");
   return {
+    processPolling,
+    processHandler,
     runnerId: env.RUNNER_ID?.trim() || "default",
     redisUrl,
     pythonPath: env.RUNNER_PYTHON?.trim() || env.PYTHON_PATH?.trim() || (process.platform === "win32" ? "python" : "python3"),

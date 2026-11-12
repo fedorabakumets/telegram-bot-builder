@@ -31,6 +31,9 @@ export function BotLaunchSettings({
   const { toast } = useToast();
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  /** Синхронизирует режим с общей очередью после отмены и при выборе другого бота. */
+  useEffect(() => { setLocalMode((launchMode as LaunchMode) ?? 'polling'); }, [launchMode, tokenId]);
+
   /** Мутация сохранения настроек запуска */
   const mutation = useMutation({
     mutationFn: ({ mode, url, secret }: { mode: string; url: string | null; secret: string | null }) =>

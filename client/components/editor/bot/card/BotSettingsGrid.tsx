@@ -12,6 +12,7 @@
  * @module BotSettingsGrid
  */
 
+import { BotRuntimeModeSettings } from './BotRuntimeModeSettings';
 import { BotDatabaseToggle } from './BotDatabaseToggle';
 import { BotAutoRestartToggle } from './BotAutoRestartToggle';
 import { BotLogLevelSelect } from './BotLogLevelSelect';
@@ -66,6 +67,12 @@ interface BotSettingsGridProps {
   showCollaborators?: boolean;
   /** Live-статус бота для истории (не показывать orphan как Онлайн) */
   isLiveRunning?: boolean;
+  /** Несохранённый режим обработчика из общей очереди. */
+  pendingRuntimeMode?: string;
+  /** Несохранённый способ получения обновлений из общей очереди. */
+  pendingLaunchMode?: string;
+  /** Выполняется сохранение общей очереди. */
+  settingsSaving?: boolean;
 }
 
 /**
@@ -88,6 +95,9 @@ export function BotSettingsGrid({
   showLaunchHistory = true,
   showCollaborators = true,
   isLiveRunning = false,
+  pendingRuntimeMode,
+  pendingLaunchMode,
+  settingsSaving,
 }: BotSettingsGridProps) {
   const resolvedBotName = botName ?? `Бот ${tokenId}`;
 
@@ -102,11 +112,14 @@ export function BotSettingsGrid({
         <BotLaunchSettings
           tokenId={tokenId}
           projectId={projectId}
-          launchMode={launchMode}
+          launchMode={pendingLaunchMode ?? launchMode}
           webhookBaseUrl={webhookBaseUrl}
           webhookSecretToken={webhookSecretToken}
           onPendingChange={onPendingChange}
         />
+        <BotRuntimeModeSettings projectId={projectId} tokenId={tokenId} canManage={canManage}
+          launchMode={pendingLaunchMode ?? launchMode} onPendingChange={onPendingChange}
+          pendingRuntimeMode={pendingRuntimeMode} settingsSaving={settingsSaving} />
         <BotAutoRestartToggle
           projectId={projectId}
           tokenId={tokenId}

@@ -4,7 +4,7 @@
  * @module components/editor/bot/card/use-env-pending-changes
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { apiRequest } from '@/queryClient';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
@@ -37,6 +37,14 @@ export interface PendingChange {
 export function useEnvPendingChanges(projectId: number, tokenId: number) {
   const [changes, setChanges] = useState<Map<string, PendingChange>>(new Map());
   const [isSaving, setIsSaving] = useState(false);
+  /** Черновик и завершение старого запроса не должны попадать в другого бота. */
+  const identity = `${projectId}:${tokenId}`;
+  const activeIdentity = useRef(identity);
+  if (activeIdentity.current !== identity) {
+    activeIdentity.current = identity;
+    setChanges(new Map());
+    setIsSaving(false);
+  }
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { mutateAsync: restartBot } = useBotEnvRestart(projectId, tokenId);
@@ -74,6 +82,7 @@ export function useEnvPendingChanges(projectId: number, tokenId: number) {
   const invalidateAll = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/tokens`] });
     queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/tokens/${tokenId}/env-variables`] });
+    queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/tokens/${tokenId}/runtime-settings`] });
     queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/admin-ids`] });
   }, [queryClient, projectId, tokenId]);
 
@@ -83,15 +92,15 @@ export function useEnvPendingChanges(projectId: number, tokenId: number) {
     try {
       const entries = Array.from(changes.values());
       await apiRequest('PUT', batchUrl, { changes: entries });
-      setChanges(new Map());
+      if (activeIdentity.current === identity) setChanges(new Map());
       invalidateAll();
-      toast({ title: 'Сохранено', description: `${entries.length} изменений применено` });
+      if (activeIdentity.current === identity) toast({ title: 'Сохранено', description: `${entries.length} изменений применено` });
     } catch (error: any) {
       toast({ title: 'Ошибка', description: error.message || 'Не удалось сохранить', variant: 'destructive' });
     } finally {
-      setIsSaving(false);
+      if (activeIdentity.current === identity) setIsSaving(false);
     }
-  }, [changes, batchUrl, invalidateAll, toast]);
+  }, [changes, batchUrl, invalidateAll, toast, identity]);
 
   /** Сохранить и перезапустить бота */
   const saveAndRestart = useCallback(async () => {
@@ -99,7 +108,7 @@ export function useEnvPendingChanges(projectId: number, tokenId: number) {
     try {
       const entries = Array.from(changes.values());
       await apiRequest('PUT', batchUrl, { changes: entries });
-      setChanges(new Map());
+      if (activeIdentity.current === identity) setChanges(new Map());
       invalidateAll();
       /** Перезапуск отслеживается общей анимацией карточки и панели. */
       await restartBot();
@@ -107,9 +116,9 @@ export function useEnvPendingChanges(projectId: number, tokenId: number) {
     } catch (error: any) {
       toast({ title: 'Ошибка', description: error.message || 'Не удалось сохранить', variant: 'destructive' });
     } finally {
-      setIsSaving(false);
+      if (activeIdentity.current === identity) setIsSaving(false);
     }
-  }, [changes, batchUrl, restartBot, invalidateAll, toast]);
+  }, [changes, batchUrl, restartBot, invalidateAll, toast, identity]);
 
   return { changes, changesCount, addChange, discardAll, getPendingValue, saveAll, saveAndRestart, isSaving };
 }

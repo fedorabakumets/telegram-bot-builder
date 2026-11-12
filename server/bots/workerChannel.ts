@@ -30,8 +30,13 @@ export interface WorkerChannel extends EventEmitter {
  * Делит поток текста на строки, удерживая незавершённый хвост до следующего куска
  */
 export class LineSplitter {
-  /** Незавершённая строка с прошлого куска */
-  private tail = "";
+  /** Части незавершённой строки без повторного копирования всего хвоста. */
+  private fragments: string[] = [];
+  /** Размер незавершённой строки в байтах UTF-8. */
+  private bytes = 0;
+
+  /** Размер незавершённой строки в UTF-8, а не размер строки в куче JavaScript. */
+  get bufferedBytes(): number { return this.bytes; }
 
   /**
    * Добавляет кусок текста
@@ -39,8 +44,21 @@ export class LineSplitter {
    * @returns Завершённые непустые строки
    */
   push(chunk: string): string[] {
-    const lines = (this.tail + chunk).split("\n");
-    this.tail = lines.pop() ?? "";
-    return lines.filter((line) => line.trim() !== "");
+    const lines: string[] = [];
+    let start = 0;
+    for (let end = chunk.indexOf("\n"); end !== -1; end = chunk.indexOf("\n", start)) {
+      this.fragments.push(chunk.slice(start, end));
+      const line = this.fragments.join("");
+      this.fragments = [];
+      this.bytes = 0;
+      if (line.trim() !== "") lines.push(line);
+      start = end + 1;
+    }
+    const tail = chunk.slice(start);
+    if (tail) {
+      this.fragments.push(tail);
+      this.bytes += Buffer.byteLength(tail);
+    }
+    return lines;
   }
 }

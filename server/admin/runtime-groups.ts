@@ -6,6 +6,7 @@
 import type { RuntimeField, RuntimeGroup } from "./runtime-field";
 import { docsForRuntimeGroup } from "./runtime-guides";
 import { placeholderFor } from "./runtime-placeholders";
+import { WORKER_RUNTIME_FIELDS } from "./runtime-worker-fields";
 
 /** Хранилища файлов */
 const storages: RuntimeField[] = [
@@ -32,22 +33,6 @@ const backups: RuntimeField[] = [
   { env: "DB_BACKUP_TELEGRAM_ENABLED", label: "Отправлять в Telegram", kind: "bool", hint: "Дополнительная копия после сохранения в хранилище" },
   { env: "DB_BACKUP_TELEGRAM_BOT_TOKEN", label: "Токен бота Telegram", kind: "secret", hint: "Пустое поле сохраняет прежний токен" },
   { env: "DB_BACKUP_TELEGRAM_CHAT_ID", label: "Chat ID Telegram", kind: "text", hint: "Личный чат или закрытая группа. Файл до 50 МБ" },
-];
-
-/** Запуск ботов */
-const workers: RuntimeField[] = [
-  { env: "USE_WORKER_POOL", label: "Пул воркеров", kind: "bool", hint: "При выключении боты будут запускаться отдельными процессами. Для уже работающих ботов нужен перезапуск." },
-  { env: "WORKER_GROUPING", label: "Группировка", kind: "text", hint: "project, owner или shared. Для применения к уже работающим ботам нужен перезапуск." },
-  { env: "WORKER_RUNTIME", label: "Среда", kind: "text", hint: "process, docker или remote" },
-  { env: "WORKER_DOCKER_IMAGE", label: "Образ Docker", kind: "text" },
-  { env: "WORKER_DOCKER_NETWORK", label: "Сеть Docker", kind: "text" },
-  { env: "WORKER_DOCKER_ISOLATE", label: "Изоляция сети и uploads", kind: "bool" },
-  { env: "WORKER_DOCKER_BRIDGE_NAME", label: "Имя сети площадки", kind: "text" },
-  { env: "WORKER_DOCKER_UPLOADS_READONLY", label: "Uploads только чтение", kind: "bool" },
-  { env: "WORKER_MEMORY_LIMIT", label: "Память", kind: "text" },
-  { env: "WORKER_CPUS", label: "CPU", kind: "text" },
-  { env: "WORKER_ENV_PASSTHROUGH", label: "Переменные для ботов", kind: "text" },
-  { env: "WORKER_DOCKER_HOST_ROOT", label: "Корень на хосте", kind: "text" },
 ];
 
 /** Исполнители и Railway */
@@ -109,7 +94,7 @@ function withHints(group: RuntimeGroup): RuntimeGroup {
 export const RUNTIME_GROUPS: RuntimeGroup[] = [
   withHints({ id: "storages", title: "Хранилища", description: "Куда панель пишет файлы. Ключи S3 шифруются и в форме не показываются.", fields: storages }),
   withHints({ id: "backups", title: "Бэкапы", description: "Куда и как часто снимать дамп базы. Публичный бакет выбрать нельзя.", fields: backups }),
-  withHints({ id: "workers", title: "Воркеры", description: "Как запускать ботов. Пока поля пустые, действуют прежние переменные.", fields: workers }),
+  withHints({ id: "workers", title: "Воркеры", description: "Группы воркеров, режимы ботов и ограничения ресурсов. Изменения применяются при следующем запуске ботов.", fields: WORKER_RUNTIME_FIELDS }),
   withHints({ id: "runners", title: "Исполнители", description: "Связь с удалённым раннером и Railway.", fields: runners }),
   withHints({ id: "builds", title: "Сборки", description: "Где лежит собранный код бота для исполнителя.", fields: builds }),
   withHints({ id: "platform", title: "Площадка", description: "Поддержка, MCP и доступ ботов к базе. Секрет не меняется, если поле оставить пустым.", fields: platform }),

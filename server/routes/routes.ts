@@ -2,6 +2,9 @@
  * @fileoverview Основной роутер HTTP API для проектов, токенов, интеграций и базы пользователей
  */
 import { getTelegramApiBaseUrl } from '../utils/telegram-api-url';
+import { validateRuntimeModeBatch } from '../bots/runtimeModeBatch';
+import { saveRuntimeMode, saveRuntimeModeSettings } from '../bots/runtimeModeSettings';
+import { buildLaunchSettingsPatch } from '../bots/launchSettingsPatch';
 
 import { requireBotSettingBody, requireBotProfileBody } from "../middleware/require-bot-setting-body";
 import { updateMediaMetadataSchema } from "../../shared/schema/media-metadata-contracts";
@@ -1423,29 +1426,17 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       // Читаем текущий режим до обновления
       const currentToken = await storage.getBotToken(tokenId);
-      const previousMode = currentToken?.launchMode ?? 'polling';
 
-      const updated = await storage.updateBotToken(tokenId, {
-        launchMode,
-        webhookBaseUrl: webhookBaseUrl ?? null,
-        webhookSecretToken: webhookSecretToken ?? null,
-      });
+      /** Не допускаем несовместимый вебхук при сохранённом режиме сна. */
+      validateRuntimeModeBatch([{ action: 'update', key: 'LAUNCH_MODE', value: launchMode }],
+        await storage.getEnvVariables(tokenId), currentToken?.launchMode, undefined, tokenId);
+
+      /** Сохраняем только явно заданные поля; применение выполняется при запуске. */
+      const updated = await saveRuntimeModeSettings(tokenId,
+        buildLaunchSettingsPatch({ launchMode, webhookBaseUrl, webhookSecretToken }), projectId);
 
       if (!updated) {
         return res.status(404).json({ message: "Токен не найден" });
-      }
-
-      // Если переключились с webhook на polling — снимаем webhook в Telegram
-      // чтобы не было конфликта между активным webhook и polling
-      if (previousMode === 'webhook' && launchMode === 'polling' && currentToken?.token) {
-        try {
-          const deleteUrl = `${getTelegramApiBaseUrl()}/bot${currentToken.token}/deleteWebhook`;
-          await fetchWithProxy(deleteUrl, { signal: AbortSignal.timeout(5000) });
-          console.log(`🔗 Webhook удалён при смене режима на polling для токена ${tokenId}`);
-        } catch (webhookError) {
-          // Не критично — при следующем запуске бота deleteWebhook вызовется снова
-          console.log(`⚠️ Не удалось удалить webhook при смене режима для токена ${tokenId}:`, webhookError);
-        }
       }
 
       void emitTokenUpdated({
@@ -1457,8 +1448,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       /** Секрет webhook никогда не возвращается после записи. */
       res.json({ success: true, launchMode, webhookBaseUrl, persistence: { confirmed: true, method: 'storage_returning' } });
-    } catch (error) {
-      res.status(500).json({ message: "Ошибка обновления настроек запуска" });
+    } catch (error: any) {
+      res.status(error?.status || 500).json({ message: error?.status === 400 ? error.message : "Ошибка обновления настроек запуска" });
     }
     return;
   });
@@ -3343,8 +3334,18 @@ function setupTokenEnvVariableRoutes(app: Express) {
       }
 
       const existing = await storage.getEnvVariables(tokenId);
+      /** Проверяем системный режим до создания пользовательской переменной. */
+      validateRuntimeModeBatch([{ action: 'create', key, value }], existing, (await storage.getBotToken(tokenId))?.launchMode, undefined, tokenId);
       if (existing.some(v => v.key === key)) {
         return res.status(409).json({ message: `Переменная ${key} уже существует` });
+      }
+
+      /** Системный режим сохраняется под общей блокировкой настроек токена. */
+      if (key === 'BOT_POLLING_MODE') {
+        await saveRuntimeMode(tokenId, value);
+        const variable = (await storage.getEnvVariables(tokenId)).find(row => row.key === key);
+        void emitTokenUpdated({ projectId: parseInt(req.params.projectId), tokenId, source: 'api', changedFields: ['pollingMode'] }).catch(console.error);
+        return res.status(201).json({ ...variable, persistence: { confirmed: true, method: 'storage_returning' } });
       }
 
       const variable = await storage.createEnvVariable({
@@ -3354,8 +3355,8 @@ function setupTokenEnvVariableRoutes(app: Express) {
         isSecret: isSecret ?? 0,
       });
       res.status(201).json({ ...variable, persistence: { confirmed: true, method: 'storage_returning' } });
-    } catch (error) {
-      res.status(500).json({ message: "Ошибка создания переменной окружения" });
+    } catch (error: any) {
+      res.status(error?.status || 500).json({ message: error?.status === 400 ? error.message : "Ошибка создания переменной окружения" });
     }
     return;
   });
@@ -3382,6 +3383,18 @@ function setupTokenEnvVariableRoutes(app: Express) {
         return res.status(404).json({ message: "Переменная не найдена" });
       }
 
+      /** Проверяем переименование и значение режима до обновления строки. */
+      validateRuntimeModeBatch([{ action: 'update', id, key, value: value ?? variable.value }],
+        await storage.getEnvVariables(variable.tokenId), (await storage.getBotToken(variable.tokenId))?.launchMode, undefined, variable.tokenId);
+
+      /** Не допускаем гонку режима с параллельной сменой способа доставки. */
+      if (variable.key === 'BOT_POLLING_MODE') {
+        await saveRuntimeMode(variable.tokenId, value ?? variable.value);
+        const updated = (await storage.getEnvVariables(variable.tokenId)).find(row => row.key === variable.key);
+        void emitTokenUpdated({ projectId: parseInt(req.params.projectId), tokenId: variable.tokenId, source: 'api', changedFields: ['pollingMode'] }).catch(console.error);
+        return res.json({ ...updated, persistence: { confirmed: true, method: 'storage_returning' } });
+      }
+
       if (key && key !== variable.key) {
         const existing = await storage.getEnvVariables(variable.tokenId);
         if (existing.some(v => v.key === key && v.id !== id)) {
@@ -3397,8 +3410,8 @@ function setupTokenEnvVariableRoutes(app: Express) {
       const updated = await storage.updateEnvVariable(id, updateData);
       if (!updated) return res.status(404).json({ message: "Не удалось обновить" });
       res.json({ ...updated, persistence: { confirmed: true, method: 'storage_returning' } });
-    } catch (error) {
-      res.status(500).json({ message: "Ошибка обновления переменной окружения" });
+    } catch (error: any) {
+      res.status(error?.status || 500).json({ message: error?.status === 400 ? error.message : "Ошибка обновления переменной окружения" });
     }
     return;
   });
@@ -3415,11 +3428,20 @@ function setupTokenEnvVariableRoutes(app: Express) {
       if (!variable || variable.tokenId !== parseInt(req.params.tokenId, 10)) {
         return res.status(404).json({ message: "Переменная не найдена" });
       }
+      /** Удаление индивидуального значения возвращает режим общего окружения. */
+      validateRuntimeModeBatch([{ action: 'delete', id }], await storage.getEnvVariables(variable.tokenId),
+        (await storage.getBotToken(variable.tokenId))?.launchMode, undefined, variable.tokenId);
+      /** Сброс удаляет все старые дубликаты системной настройки одной транзакцией. */
+      if (variable.key === 'BOT_POLLING_MODE') {
+        await saveRuntimeModeSettings(variable.tokenId, { resetMode: true });
+        void emitTokenUpdated({ projectId: parseInt(req.params.projectId), tokenId: variable.tokenId, source: 'api', changedFields: ['pollingMode'] }).catch(console.error);
+        return res.json({ success: true, persistence: { confirmed: true, method: 'storage_delete' } });
+      }
       const deleted = await storage.deleteEnvVariable(id);
       if (!deleted) return res.status(404).json({ message: "Переменная не найдена" });
       res.json({ success: true, persistence: { confirmed: true, method: 'storage_delete' } });
-    } catch (error) {
-      res.status(500).json({ message: "Ошибка удаления переменной окружения" });
+    } catch (error: any) {
+      res.status(error?.status || 500).json({ message: error?.status === 400 ? error.message : "Ошибка удаления переменной окружения" });
     }
     return;
   });
@@ -3482,6 +3504,27 @@ function setupTokenEnvVariableRoutes(app: Express) {
         return res.status(400).json({ message: "Массив changes обязателен" });
       }
 
+      /** Проверяем весь пакет до первой записи, включая переменные по идентификаторам. */
+      const variables = await storage.getEnvVariables(tokenId);
+      const token = await storage.getBotToken(tokenId);
+      const runtimeModeChanged = validateRuntimeModeBatch(changes, variables, token?.launchMode, undefined, tokenId);
+      const normalizedChanges = changes.map(change => ({
+        ...change, key: change.key || variables.find(row => row.id === change.id)?.key || '',
+      }));
+      /** Сначала сохраняем способ доставки, затем совместимый режим обработчика. */
+      const orderedChanges = normalizedChanges.sort((a, b) =>
+        Number(a.key === 'BOT_POLLING_MODE') - Number(b.key === 'BOT_POLLING_MODE'));
+
+      /** Записываем связанные режимы одной транзакцией с блокировкой токена. */
+      const modeChange = normalizedChanges.find(change => change.key === 'BOT_POLLING_MODE');
+      const launchChange = normalizedChanges.filter(change => change.key === 'LAUNCH_MODE' && change.action === 'update').at(-1);
+      if (modeChange || launchChange) {
+        await saveRuntimeModeSettings(tokenId, {
+          ...(modeChange ? modeChange.action === 'delete' ? { resetMode: true } : { mode: modeChange.value } : {}),
+          ...(launchChange ? { launchMode: launchChange.value as 'polling' | 'webhook' } : {}),
+        }, projectId);
+      }
+
       /** Маппинг системных ключей на поля bot_tokens */
       const tokenFieldMap: Record<string, string> = {
         BOT_TOKEN: 'token',
@@ -3512,9 +3555,15 @@ function setupTokenEnvVariableRoutes(app: Express) {
 
       const results: string[] = [];
 
-      for (const change of changes) {
+      for (const change of orderedChanges) {
         const { action, key, value, id, isSecret } = change;
         console.log(`[env-batch]   ${action} ${key}${id ? ` id=${id}` : ''}`);
+
+        /** Сервис удаляет дубликаты и сохраняет единственное каноническое значение. */
+        if (key === 'BOT_POLLING_MODE' || (key === 'LAUNCH_MODE' && action === 'update')) {
+          results.push(`updated:${key}`);
+          continue;
+        }
 
         if (action === 'delete' && id) {
           await storage.deleteEnvVariable(id);
@@ -3605,18 +3654,19 @@ function setupTokenEnvVariableRoutes(app: Express) {
       const tokenFieldUpdated = results.some((r) =>
         r.startsWith('updated:') && !r.includes('ADMIN_IDS') && !r.includes('USER_DATABASE'),
       );
-      if (tokenFieldUpdated) {
+      if (tokenFieldUpdated || runtimeModeChanged) {
         void emitTokenUpdated({
           projectId,
           tokenId,
           source: 'api',
+          changedFields: runtimeModeChanged ? ['pollingMode'] : undefined,
         }).catch((err) => console.error('[env-batch] emitTokenUpdated:', err));
       }
 
       res.json({ success: true, applied: results.length, results });
     } catch (error: any) {
       console.error("[env-batch] Ошибка:", error?.message || error);
-      res.status(500).json({ message: "Ошибка batch обновления переменных" });
+      res.status(error?.status || 500).json({ message: error?.status === 400 ? error.message : "Ошибка batch обновления переменных" });
     }
     return;
   });

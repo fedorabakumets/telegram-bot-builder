@@ -13,6 +13,7 @@ import { subscribeSharedTerminalWs, onSharedTerminalWsReconnect } from '@/lib/sh
 import type { ProjectEvent, StartOfflineProgressPayload } from '@shared/project-sync/project-event';
 import { startOfflineProgressQueryKey } from '@/components/editor/bot/start-offline-progress-query';
 import { invalidateAllBotStatusQueries, invalidateBotStatusQueries } from '@/components/editor/bot/invalidate-bot-status-queries';
+import { invalidateRuntimeSettingsAfterReconnect, invalidateTokenRuntimeSettings } from './invalidate-token-runtime-settings';
 
 /**
  * Структура события проекта, получаемого по WebSocket
@@ -54,6 +55,7 @@ function handleTokenEvent(
   /** Новый токен должен повторно загрузить профиль после прежнего отказа Telegram. */
   queryClient.invalidateQueries({ queryKey: [`/api/projects/${msg.projectId}/bot/info`] });
   queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+  invalidateTokenRuntimeSettings(queryClient, msg.projectId, msg.tokenId);
   if (msg.type === 'token-created' && msg.tokenId) {
     const tokenName = (msg.data as { tokenName?: string } | undefined)?.tokenName ?? '';
     onTokenCreated?.(msg.projectId, msg.tokenId, tokenName);
@@ -125,6 +127,7 @@ export function useAllProjectsEventsWs(options?: UseAllProjectsEventsWsOptions):
   useEffect(() => {
     const unsubscribeReconnect = onSharedTerminalWsReconnect(() => {
       invalidateAllBotStatusQueries(queryClient);
+      invalidateRuntimeSettingsAfterReconnect(queryClient);
     });
 
     const unsubscribe = subscribeSharedTerminalWs((raw) => {

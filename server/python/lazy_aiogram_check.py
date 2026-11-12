@@ -43,6 +43,7 @@ def model_classes() -> List[type]:
     import aiogram.types as types
     import pydantic
 
+
     result = []
     for mod in (types, methods):
         for name in mod.__all__:
@@ -148,6 +149,8 @@ def safe(fn) -> Any:
 
 def main() -> None:
     """Выполняет проверку в режиме из argv[1] и печатает JSON"""
+    from lazy_aiogram_compat_samples import compatibility_samples
+
     mode = sys.argv[1] if len(sys.argv) > 1 else "lazy"
     before = rss_mb()
     applied = None
@@ -179,6 +182,7 @@ def main() -> None:
         "own_model_complete": OwnModel.__pydantic_complete__,
         "button_text": safe(parse_update),
         "requests": safe(sample_requests),
+        "compatibility": safe(compatibility_samples),
         "build_errors": build_all(classes),
     }
     print(json.dumps(result, ensure_ascii=False))

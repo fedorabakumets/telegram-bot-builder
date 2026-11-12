@@ -89,12 +89,16 @@ describe("prepareWorkerLine", () => {
     assert.deepStrictEqual([prepared.tokenId, prepared.fingerprint], [3, build.fingerprint]);
   });
 
+  /** Проверяет маркер обновления просроченной ссылки с сохранением исходного HTTP-кода. */
   it("ошибка скачивания — причина для лога бота", async () => {
     const { build, cacheDir } = fixture();
     const line = JSON.stringify({ cmd: "start_bot", token_id: 3, build });
     const prepared = await prepareWorkerLine(line, cacheDir, async () => {
       throw new Error("HTTP 403 при скачивании сборки");
     });
-    assert.deepStrictEqual(prepared, { tokenId: 3, error: "Исполнитель не получил код бота: HTTP 403 при скачивании сборки" });
+    assert.deepStrictEqual(prepared, {
+      tokenId: 3,
+      error: "TBB_BUILD_LINK_EXPIRED: Исполнитель не получил код бота: HTTP 403 при скачивании сборки",
+    });
   });
 });

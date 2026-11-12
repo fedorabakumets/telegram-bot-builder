@@ -24,6 +24,8 @@ export const mainParamsSchema = z.object({
   managedBotUpdatedTriggerMiddlewares: z.array(z.string()).optional().default([]),
   /** URL вебхука (если задан — включается webhook режим) */
   webhookUrl: z.string().nullable().optional().default(null),
+  /** Есть ли фоновые таймеры, несовместимые со сном обработчика */
+  hasBackgroundTimers: z.boolean().optional().default(false),
   /** Есть ли schedule_trigger ноды (для graceful shutdown) */
   hasScheduleTrigger: z.boolean().optional().default(false),
   /** Есть ли api_trigger ноды (для HTTP-сервера на WEBHOOK_PORT) */

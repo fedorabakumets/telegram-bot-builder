@@ -21,6 +21,8 @@ export interface WorkerDetail {
 
 /** Ответ API /api/workers/stats */
 export interface WorkerStats {
+  /** Исполнитель подтвердил связь; false означает, что показаны последние данные. */
+  connectionVerified?: boolean;
   /** Количество активных воркеров */
   workers: number;
   /** Общее количество ботов во всех воркерах */
@@ -51,6 +53,7 @@ export function WorkerPoolDetails({ data, projects }: { data: WorkerStats; proje
     <div className="space-y-2 text-xs">
       <div>
         <div className="font-medium">Worker Pool</div>
+        {data.connectionVerified === false && <p role="status">Нет связи с исполнителем. Ниже последние данные.</p>}
         <div className="mt-0.5 text-muted-foreground">
           {data.workers} воркер{data.workers > 1 ? 'а' : ''} · {data.totalBots} бот{data.totalBots > 1 ? 'а' : ''}
           {data.totalMemoryMb > 0 && ` · ${data.totalMemoryMb} MB`}

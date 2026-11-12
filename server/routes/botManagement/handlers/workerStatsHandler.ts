@@ -17,6 +17,7 @@ import type { Request, Response } from "express";
 import { workerManager } from "../../../bots/botWorkerManager";
 import { storage } from "../../../storages/storage";
 import { getOwnerIdFromRequest } from "../../../telegram/auth-middleware";
+import { verifyWorkerConnection } from '../verify-worker-connection';
 
 /** Детализация одного воркера для ответа API (без внутреннего pid) */
 interface WorkerDetail {
@@ -57,6 +58,7 @@ export async function handleWorkerStats(req: Request, res: Response): Promise<vo
 
     // Оставляем только проекты владельца; pid и ключ воркера наружу не отдаём
     const owned = stats.details.filter((detail) => ownedProjectIds.has(detail.projectId));
+    const connectionVerified = await verifyWorkerConnection(owned.map(detail => detail.projectId));
     const details: WorkerDetail[] = owned.map((detail) => ({
       projectId: detail.projectId,
       botsCount: detail.botsCount,
@@ -70,6 +72,7 @@ export async function handleWorkerStats(req: Request, res: Response): Promise<vo
     const totalMemoryMb = details.reduce((sum, detail) => sum + detail.memoryMb, 0);
 
     res.json({
+      connectionVerified,
       workers,
       totalBots,
       totalMemoryMb,

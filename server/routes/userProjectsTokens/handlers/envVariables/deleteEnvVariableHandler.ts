@@ -6,6 +6,7 @@
 import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
 import { getBotActorId } from "../../../../middleware/bot-api-actor";
+import { writeRuntimeModeEnv } from './runtimeModeEnvWrite';
 
 /**
  * Удаляет переменную окружения по ID.
@@ -45,7 +46,10 @@ export async function deleteEnvVariableHandler(req: Request, res: Response): Pro
       return;
     }
 
-    const deleted = await storage.deleteEnvVariable(variableId);
+    /** Сброс режима проверяет наследуемое значение до удаления сохранённой строки. */
+    const deleted = variable.key === 'BOT_POLLING_MODE'
+      ? (await writeRuntimeModeEnv(variable.tokenId, token.projectId, undefined, true), true)
+      : await storage.deleteEnvVariable(variableId);
 
     if (!deleted) {
       res.status(500).json({ error: "Не удалось удалить переменную" });
@@ -54,6 +58,10 @@ export async function deleteEnvVariableHandler(req: Request, res: Response): Pro
 
     res.json({ success: true });
   } catch (error: any) {
+    if (error?.status === 400 || error?.status === 404) {
+      res.status(error.status).json({ error: error.message });
+      return;
+    }
     console.error("Ошибка удаления env переменной:", error);
     res.status(500).json({ error: "Не удалось удалить переменную" });
   }

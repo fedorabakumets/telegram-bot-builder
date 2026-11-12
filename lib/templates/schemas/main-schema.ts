@@ -21,6 +21,8 @@ export const mainParamsSchema = z.object({
   managedBotUpdatedTriggerMiddlewares: z.array(z.string()).optional().default([]),
   /** Список имён обработчиков для group_message_trigger */
   groupMessageTriggerHandlers: z.array(z.string()).optional().default([]),
+  /** Есть ли фоновые таймеры, несовместимые со сном обработчика */
+  hasBackgroundTimers: z.boolean().optional().default(false),
   /** Есть ли schedule_trigger ноды (для graceful shutdown) */
   hasScheduleTrigger: z.boolean().optional().default(false),
   /** Есть ли api_trigger ноды (HTTP-сервер на WEBHOOK_PORT) */

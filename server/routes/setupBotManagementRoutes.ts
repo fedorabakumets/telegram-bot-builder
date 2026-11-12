@@ -10,7 +10,8 @@
 import type { Express } from 'express';
 import { requireProjectAccess } from '../middleware/requireProjectAccess';
 import { resolveBotApiActor } from '../middleware/bot-api-actor';
-import { requireBotTokenOwnership } from '../middleware/requireResourceOwnership';
+import { requireBotTokenOwnership, requireTokenOwnership } from '../middleware/requireResourceOwnership';
+import { handleBotRuntimeSettings } from './botManagement/handlers/botRuntimeSettingsHandler';
 import { handleBotStart } from './botManagement/handlers/botStartHandler';
 import { handleBotStop } from './botManagement/handlers/botStopHandler';
 import { handleBotRestart } from './botManagement/handlers/botRestartHandler';
@@ -35,6 +36,9 @@ import { handleGetBotLogById } from './botManagement/handlers/botLogByIdHandler'
  * @returns {void}
  */
 export function setupBotManagementRoutes(app: Express): void {
+    /** Режим обработчика сохраняется отдельно от способа получения сообщений. */
+    app.get('/api/projects/:projectId/tokens/:tokenId/runtime-settings', requireTokenOwnership, handleBotRuntimeSettings);
+    app.put('/api/projects/:projectId/tokens/:tokenId/runtime-settings', requireTokenOwnership, handleBotRuntimeSettings);
     app.get("/api/workers/stats", handleWorkerStats);
     app.get("/api/tokens/:tokenId/bot-status", handleBotStatusByToken);
     app.get(

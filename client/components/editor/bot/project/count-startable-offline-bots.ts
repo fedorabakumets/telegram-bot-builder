@@ -35,6 +35,8 @@ export function countStartableOfflineBots(
 ): number {
   return tokens.filter((token) => {
     const status = statuses.find((entry) => entry.tokenId === token.id);
+    /** Ожидающий подтверждения запуск нельзя повторно предлагать как офлайн. */
+    if (status?.status === 'requested' || status?.status === 'starting') return false;
     return isTokenOfflineForBulkStart(status?.status, token.isActive);
   }).length;
 }

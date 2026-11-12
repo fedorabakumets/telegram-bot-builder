@@ -10,7 +10,7 @@
 /**
  * Статус бота
  */
-export type BotStatus = 'running' | 'stopped' | 'error';
+export type BotStatus = 'running' | 'stopped' | 'error' | 'unknown' | 'requested' | 'starting';
 
 /**
  * Экземпляр запущенного бота

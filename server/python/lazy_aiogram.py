@@ -37,13 +37,33 @@ def enable() -> bool:
 
     orig = pydantic.BaseModel.model_rebuild.__func__
     captured: Dict[str, Any] = {}
+    namespaces: Dict[tuple, Dict[str, Any]] = {}
+
+    def shared_namespace(base, override):
+        """Объединяет имена с приоритетом override и разделяет идентичные словари.
+
+        Сравнение по идентичности значений не вызывает пользовательский __eq__.
+        Pydantic читает родительский словарь, создавая собственный при сборке.
+        @param base - Исходные имена
+        @param override - Имена с преимущественным разрешением
+        @returns Общий словарь для совпадающих наборов имён и объектов
+        """
+        merged = {**base, **override}
+        signature = tuple(sorted((name, id(value)) for name, value in merged.items()))
+        existing = namespaces.get(signature)
+        if existing is not None:
+            return existing
+        namespaces[signature] = merged
+        return merged
 
     @classmethod
     def _lazy(cls, *args, _types_namespace=None, **kwargs):
         """Запоминает namespace forward-ссылок вместо построения схемы"""
         if _types_namespace is not None:
             captured.update(_types_namespace)
-            cls.__pydantic_parent_namespace__ = {**(cls.__pydantic_parent_namespace__ or {}), **_types_namespace}
+            cls.__pydantic_parent_namespace__ = shared_namespace(
+                cls.__pydantic_parent_namespace__ or {}, _types_namespace
+            )
         return None
 
     prev_defer = _config.config_defaults.get("defer_build", False)
@@ -63,5 +83,7 @@ def enable() -> bool:
     for name in aiogram.methods.__all__:
         cls = getattr(aiogram.methods, name, None)
         if isinstance(cls, type) and issubclass(cls, pydantic.BaseModel):
-            cls.__pydantic_parent_namespace__ = {**captured, **(cls.__pydantic_parent_namespace__ or {})}
+            cls.__pydantic_parent_namespace__ = shared_namespace(
+                captured, cls.__pydantic_parent_namespace__ or {}
+            )
     return True

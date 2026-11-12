@@ -150,6 +150,9 @@ export function BotCard({
             )}
             {viewMode === 'settings' ? (
               <BotSettingsGrid
+                pendingRuntimeMode={pending.getPendingValue('BOT_POLLING_MODE')}
+                pendingLaunchMode={pending.getPendingValue('LAUNCH_MODE')}
+                settingsSaving={pending.isSaving}
                 projectId={project.id} tokenId={token.id}
                 botName={token.name ?? `Бот ${token.id}`}
                 userDatabaseEnabled={project.userDatabaseEnabled}

@@ -8,6 +8,12 @@ import { Pool } from "pg";
 /** Узкий ленивый пул проверки команд; не загружает БД, маршруты и фоновые службы панели. */
 let fencePool: Pool | undefined;
 
+/** Возвращает счётчики уже существующего пула, не создавая подключений ради диагностики. */
+export function commandFenceCounters() {
+  return { total: fencePool?.totalCount ?? 0, idle: fencePool?.idleCount ?? 0,
+    waiting: fencePool?.waitingCount ?? 0 };
+}
+
 /**
  * Создаёт подключение только при первой проверке команды запуска или остановки.
  * @returns Пул коротких запросов актуальности команды

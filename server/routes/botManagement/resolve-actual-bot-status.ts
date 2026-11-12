@@ -15,6 +15,16 @@ export type ActualBotStatus = 'requested' | 'starting' | 'running' | 'stopped' |
 /** Кэш одного запроса для проверки каждого исполнителя только один раз. */
 export type RunnerInspectionCache = Map<string, Promise<RunnerSnapshot>>;
 
+/** Состояние экземпляра, необходимое для различения ожидания и завершившейся ошибки. */
+export interface ActualBotInstance extends LiveBotInstanceRef {
+  /** Последнее сохранённое состояние. */
+  status?: string;
+  /** Явное намерение пользователя. */
+  desiredStatus?: string | null;
+  /** Ошибка завершившегося запуска или системный маркер восстановления. */
+  errorMessage?: string | null;
+}
+
 /**
  * Сверяет состояние с исполнителем без предположений о PID другого контейнера.
  * @param projectId - Идентификатор проекта
@@ -27,7 +37,7 @@ export type RunnerInspectionCache = Map<string, Promise<RunnerSnapshot>>;
 export async function resolveActualBotStatus(
   projectId: number,
   tokenId: number,
-  instance: (LiveBotInstanceRef & { status?: string; desiredStatus?: string | null }) | null | undefined,
+  instance: ActualBotInstance | null | undefined,
   spawnHeuristics = false,
   inspectionCache?: RunnerInspectionCache,
 ): Promise<ActualBotStatus> {
@@ -48,6 +58,9 @@ export async function resolveActualBotStatus(
   }
   if (isBotStarting(tokenId)) return 'starting';
   if (instance?.status === 'error') return 'error';
+  /** Записанная ошибка завершения не является новой командой запуска. */
+  if (instance?.status === 'stopped' && instance.desiredStatus === 'running'
+    && instance.errorMessage?.trim() && instance.errorMessage !== '__server_restart__') return 'error';
   if (placement.runnerId && instance?.desiredStatus === 'running') return 'requested';
   if (instance?.status === 'requested' || instance?.status === 'starting') return instance.status;
   return 'stopped';
