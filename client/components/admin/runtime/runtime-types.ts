@@ -22,6 +22,12 @@ export interface RuntimeFieldView {
   value: string;
   /** Уже задано в админке или в окружении */
   configured: boolean;
+  /** Явное значение админки; пустая строка означает наследование. */
+  savedValue?: string;
+  /** Действующее значение с учётом окружения и стандартных настроек. */
+  effectiveValue?: string;
+  /** Источник действующего значения. */
+  source?: 'database' | 'environment' | 'default';
 }
 
 /** Хранилище в выпадающем списке */

@@ -155,7 +155,15 @@ async def track_group_bot_membership(update):
 
 {% endif %}
 
+# Протокол внешнего приёмника не меняет формат сценария и выбирается воркером.
 _WORKER_READY_PROTOCOL = True
+_WORKER_EXTERNAL_UPDATES_PROTOCOL = True
+# Протокол состояния сохраняет user_data; произвольные глобальные объекты не поддерживаются.
+_WORKER_EXTERNAL_STATE_PROTOCOL = 1
+# Прямой polling принимает сохранённое состояние до публикации готовности.
+_WORKER_DIRECT_PREPARE_PROTOCOL = 1
+_WORKER_DIRECT_STATE_PROTOCOL = 1
+_WORKER_EXTERNAL_UPDATES_SAFE = {{ 'False' if hasScheduleTrigger or hasApiTrigger or hasUserbotNodes or hasBackgroundTimers else 'True' }}
 
 async def main():
     """Главная функция запуска бота"""
@@ -166,6 +174,12 @@ async def main():
 
     _stop_event = asyncio.Event()
     _bot_stop_event = _stop_event
+    _external_updates = globals().get('_worker_external_updates')
+    _external_mode = callable(_external_updates) and not WEBHOOK_URL
+    _external_started = False
+    _direct_state_committed = False
+    if _external_mode and not _WORKER_EXTERNAL_UPDATES_SAFE:
+        raise RuntimeError("Сценарий требует постоянного обработчика: сон запрещён")
     _lock_acquired = False
     _background_tasks: list = []  # Все фоновые задачи для корректной отмены при остановке
     _webhook_runner = None  # aiohttp runner для корректного завершения webhook-сервера
@@ -181,6 +195,8 @@ async def main():
     try:
         # Инициализация Redis клиента (если REDIS_URL задан)
         _redis_connected = await init_redis_client()
+        if _external_mode and (not _redis_connected or _redis_client is None):
+            raise RuntimeError("Внешний приёмник требует Redis для состояния обработчика")
         
         # Если Redis успешно подключился — переключаем storage у уже созданного Dispatcher
         if _redis_connected and _redis_client is not None:
@@ -191,7 +207,7 @@ async def main():
 
         # Distributed lock через Redis — защита от двойного запуска (только в polling режиме)
         # В webhook режиме двойной запуск невозможен — Telegram шлёт апдейты на один URL
-        if not WEBHOOK_URL and _redis_connected and _redis_client is not None:
+        if not WEBHOOK_URL and not _external_mode and _redis_connected and _redis_client is not None:
             import uuid
             import time as _lock_time
             _lock_key = f"bot:lock:{BOT_TOKEN[-10:]}"
@@ -240,8 +256,12 @@ async def main():
 
             _background_tasks.append(asyncio.create_task(_refresh_lock()))
 
-        # Публикуем событие о запуске бота в Redis (если доступен)
-        if _redis_connected and _redis_client is not None:
+        # Перенос состояния выполняется после блокировки, до первых обновлений.
+        if not WEBHOOK_URL and not _external_mode and callable(globals().get('_worker_direct_prepare')):
+            await _worker_direct_prepare(bool(_lock_acquired))
+
+        # Логический запуск спящего бота подтверждает приёмник, а не каждое пробуждение.
+        if not _external_mode and _redis_connected and _redis_client is not None:
             try:
                 import json as _json
                 await _redis_client.publish(
@@ -272,7 +292,9 @@ async def main():
         {%- endif %}
 
         {# Фильтр устаревших апдейтов — регистрируем первым чтобы отсеивать до всей логики #}
-        dp.message.middleware(stale_update_filter_middleware)
+        # Подтверждённые внешней очередью сообщения не теряем из-за времени ожидания.
+        if not _external_mode:
+            dp.message.middleware(stale_update_filter_middleware)
 
         {%- if userDatabaseEnabled %}
         dp.message.middleware(message_logging_middleware)
@@ -336,9 +358,15 @@ async def main():
             raise RuntimeError("Запуск прерван до готовности бота")
 
         async def _notify_worker_ready(**_kwargs):
-            """Подтверждает запуск только пока не запрошена остановка."""
+            """Подтверждает запуск и передачу состояния только после успешного старта."""
+            nonlocal _direct_state_committed
             if _stop_event.is_set():
                 raise RuntimeError("Запуск прерван до готовности бота")
+            # Снимок удаляется один раз после готовности, не при неудачном запуске.
+            if not WEBHOOK_URL and not _external_mode and not _direct_state_committed:
+                if callable(globals().get('_worker_direct_commit')):
+                    await _worker_direct_commit()
+                _direct_state_committed = True
             if callable(globals().get('_worker_bot_ready')):
                 _worker_bot_ready()
 
@@ -376,6 +404,12 @@ async def main():
             await runner.cleanup()
             _webhook_runner = None
             await bot.delete_webhook()
+        elif _external_mode:
+            # Внешний приёмник владеет getUpdates и блокировкой; здесь только обработка.
+            _external_started = True
+            await dp.emit_startup(bot=bot, **{"dispatcher": dp, "bots": (bot,), **dp.workflow_data})
+            await _notify_worker_ready()
+            await _external_updates(dp, bot, _stop_event)
         else:
             # Polling режим — с backoff при Telegram Conflict (два getUpdates)
             logging.info("🔄 Polling режим")
@@ -499,8 +533,8 @@ async def main():
             except Exception:
                 pass
 
-        # Публикуем событие об остановке бота в Redis (если доступен)
-        if _redis_connected and _redis_client is not None:
+        # Сон обработчика не является остановкой зарегистрированного бота.
+        if not _external_mode and _redis_connected and _redis_client is not None:
             try:
                 import json as _json
                 await _redis_client.publish(
@@ -510,7 +544,16 @@ async def main():
             except Exception:
                 pass
 
-        await bot.session.close()
+        # Завершаем жизненный цикл диспетчера после сохранения аналитики и закрываем Redis.
+        try:
+            if _external_started:
+                try:
+                    await dp.emit_shutdown(bot=bot, **{"dispatcher": dp, "bots": (bot,), **dp.workflow_data})
+                finally:
+                    if _redis_client is not None:
+                        await _redis_client.aclose()
+        finally:
+            await bot.session.close()
 
 {%- if hasUserbotNodes %}
         # Отключаем Telethon userbot

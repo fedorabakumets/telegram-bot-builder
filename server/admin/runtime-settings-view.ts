@@ -3,11 +3,14 @@
  * @module server/admin/runtime-settings-view
  */
 
-import { storageConfigs } from "@shared/schema";
+import { appSettings, storageConfigs } from "@shared/schema";
+import { inArray } from "drizzle-orm";
 import { db } from "../database/db";
 import type { RuntimeDocLink, RuntimeGroup } from "./runtime-field";
 import { toRuntimeFieldView, type RuntimeFieldView } from "./runtime-field-view";
 import { isPublicStorageRow, type RuntimeStorageOption } from "./runtime-storage-public";
+import { runtimeSettingKey } from "./runtime-field";
+import { toWorkerFieldView } from "./runtime-worker-view";
 
 export type { RuntimeFieldView };
 
@@ -52,12 +55,16 @@ export async function listRuntimeStorageOptions(): Promise<RuntimeStorageOption[
  * @returns Поля и хранилища
  */
 export async function loadRuntimeGroupView(group: RuntimeGroup): Promise<RuntimeGroupView> {
+  const saved = group.id === "workers" ? await db.select({ key: appSettings.key, value: appSettings.value })
+    .from(appSettings).where(inArray(appSettings.key, group.fields.map((field) => runtimeSettingKey(field.env)))) : [];
+  const stored = new Map(saved.map((row) => [row.key, row.value]));
   return {
     id: group.id,
     title: group.title,
     description: group.description,
     docs: group.docs ?? [],
-    fields: group.fields.map(toRuntimeFieldView),
+    fields: group.fields.map((field) => group.id === "workers"
+      ? toWorkerFieldView(field, stored.get(runtimeSettingKey(field.env))) : toRuntimeFieldView(field)),
     storages: await listRuntimeStorageOptions(),
   };
 }

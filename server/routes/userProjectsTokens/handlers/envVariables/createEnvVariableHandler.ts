@@ -7,6 +7,7 @@ import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
 import { insertBotEnvVariableSchema } from "@shared/schema";
 import { getBotActorId } from "../../../../middleware/bot-api-actor";
+import { writeRuntimeModeEnv } from './runtimeModeEnvWrite';
 
 /**
  * Создаёт новую переменную окружения для токена.
@@ -61,10 +62,17 @@ export async function createEnvVariableHandler(req: Request, res: Response): Pro
       return;
     }
 
-    const variable = await storage.createEnvVariable(parsed.data);
+    /** Режим сохраняется канонически с проверкой совместимости транспорта. */
+    const variable = parsed.data.key === 'BOT_POLLING_MODE'
+      ? await writeRuntimeModeEnv(tokenId, token.projectId, parsed.data.value)
+      : await storage.createEnvVariable(parsed.data);
 
     res.status(201).json(variable);
   } catch (error: any) {
+    if (error?.status === 400 || error?.status === 404) {
+      res.status(error.status).json({ error: error.message });
+      return;
+    }
     console.error("Ошибка создания env переменной:", error);
     res.status(500).json({ error: "Не удалось создать переменную" });
   }

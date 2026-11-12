@@ -140,3 +140,12 @@ docs/bots/referral-funnel-analysis.md
 tools/torlink-import/
 output/torlink-import/
 output/torlink-e2e/
+
+# Локальные диагностические профили памяти V8
+output/runner-memory-profiles/
+
+# Локальные журналы, замеры и временные данные Railway
+.tmp-railway-runtime/
+output/local-runtime/
+output/runner-memory-research/
+scripts/local-webhook/results/

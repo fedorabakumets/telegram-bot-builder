@@ -40,6 +40,17 @@ it('сохраняет ошибку запуска после подтвержд
   expect(await resolveActualBotStatus(1, 42, { status: 'error', desiredStatus: 'running' })).toBe('error');
 });
 
+it('не превращает завершившуюся ошибку в бесконечное ожидание запуска', async () => {
+  mocks.inspect.mockResolvedValue({ workers: [] });
+  expect(await resolveActualBotStatus(1, 42, { status: 'stopped', desiredStatus: 'running',
+    errorMessage: 'Ошибка запуска: обработчик завершился' })).toBe('error');
+  expect(await resolveActualBotStatus(1, 42, { status: 'stopped', desiredStatus: 'running',
+    errorMessage: '__server_restart__' })).toBe('requested');
+  mocks.starting.mockReturnValue(true);
+  expect(await resolveActualBotStatus(1, 42, { status: 'stopped', desiredStatus: 'running',
+    errorMessage: 'Ошибка предыдущего запуска' })).toBe('starting');
+});
+
 it('использует один снимок исполнителя для списка ботов', async () => {
   mocks.inspect.mockResolvedValue({ workers: [{ workerKey: 1, instance: 'a', tokenIds: [42], pendingTokenIds: [] }] });
   const cache = new Map();

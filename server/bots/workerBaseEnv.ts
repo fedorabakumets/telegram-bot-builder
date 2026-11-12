@@ -9,12 +9,13 @@
  */
 
 import { canShareServerEnv, getEnvPassthrough, isServerEnvDenied } from "./botEnvPolicy";
+import { POLLING_RUNTIME_ENV } from "./pollingRuntimeEnv";
 
 /** Технические переменные ОС и Python (имена сравниваются в верхнем регистре) */
 export const WORKER_TECH_ENV: readonly string[] = [
   "PATH", "HOME", "USER", "LOGNAME", "LANG", "LANGUAGE", "TZ", "TMPDIR", "TMP", "TEMP",
   "SSL_CERT_FILE", "SSL_CERT_DIR", "REQUESTS_CA_BUNDLE", "LD_LIBRARY_PATH", "VIRTUAL_ENV",
-  "SYSTEMROOT", "WINDIR", "COMSPEC", "PATHEXT", "USERPROFILE", "APPDATA", "LOCALAPPDATA",
+  "SYSTEMROOT", "WINDIR", "COMSPEC", "PATHEXT", "USERPROFILE", "HOMEDRIVE", "HOMEPATH", "APPDATA", "LOCALAPPDATA",
 ];
 
 /** Префиксы технических переменных: локаль и настройки интерпретатора */
@@ -23,8 +24,10 @@ export const WORKER_TECH_ENV_PREFIXES: readonly string[] = ["LC_", "PYTHON"];
 /** Переменные, которые читают worker.py и сгенерированный код бота */
 export const WORKER_TUNING_ENV: readonly string[] = [
   "BOT_CODE_CACHE", "AIOGRAM_LAZY_MODELS", "WORKER_REPORT_MEMORY",
+  "WORKER_MEMORY_PROFILE", "WORKER_MEMORY_PROFILE_SECONDS",
   "MAX_UPDATE_AGE_SECONDS", "DISABLE_ASYNC_LOG", "LOG_LEVEL",
   "ANALYTICS_SPOOL_DIR",
+  ...POLLING_RUNTIME_ENV,
 ];
 
 /** Системные адреса панели, которые бот получает и так (слой 2) */

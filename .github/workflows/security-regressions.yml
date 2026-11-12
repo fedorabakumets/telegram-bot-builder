@@ -28,6 +28,11 @@ jobs:
       - run: npm ci
       - run: npx vitest run --config server/admin/admin-login-rate-limit.vitest.config.ts
       - run: npx vitest run --config server/middleware/cookie-csrf.vitest.config.ts
+      # Проверяем защиту до авторизации, безопасное логирование и изолированный webhook.
+      - run: npx vitest run --config server/admin/runtime-settings-rate-limit.vitest.config.ts
+      - run: npx vitest run --config server/routes/bot-runtime-rate-limit.vitest.config.ts
+      - run: npx vitest run --config server/terminal/botLogsBuffer.security.vitest.config.ts
+      - run: node --import tsx --test scripts/local-webhook/security.test.mjs
       - run: npx vitest run --config server/routes/storageConfigs/vitest.config.ts
       - name: Доступ, лимиты запросов и аватары пользователей ботов
         run: npx vitest run --config server/routes/userProjectsTokens/vitest.config.ts

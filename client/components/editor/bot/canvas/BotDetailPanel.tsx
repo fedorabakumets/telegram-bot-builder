@@ -111,6 +111,9 @@ export function BotDetailPanel({
           )}
           {tab === 'settings' && (
             <BotSettingsGrid
+              pendingRuntimeMode={pending.getPendingValue('BOT_POLLING_MODE')}
+              pendingLaunchMode={pending.getPendingValue('LAUNCH_MODE')}
+              settingsSaving={pending.isSaving}
               projectId={project.id}
               tokenId={token.id}
               botName={title}

@@ -8,6 +8,9 @@ import { getWorkerGroupingMode } from '../bots/workerGrouping';
 import { getWorkerRunnerId, getWorkerRuntime } from '../bots/workerRuntime';
 import { db } from '../database/db';
 import { getRedisPublisher } from '../redis/redisClient';
+import { getWorkerRuntimeMetrics } from './worker-runtime-metrics';
+import type { WorkerMetrics } from '../../shared/worker-metrics';
+import type { WorkerRuntimeGroup } from '../../shared/worker-runtime-group';
 
 /** Сводка действующих процессов и сохранённого правила. */
 export interface WorkerRuntimeStatus {
@@ -21,7 +24,7 @@ export interface WorkerRuntimeStatus {
   workers: number;
   /** Число запущенных ботов */
   bots: number;
-  /** Суммарный RSS процессов в МиБ */
+  /** Прежний показатель RSS Python в МиБ; полный Node+Python доступен в metrics. */
   memoryMb: number;
   /** Боты, работающие по прежнему правилу группировки */
   pendingBots: number;
@@ -29,6 +32,10 @@ export interface WorkerRuntimeStatus {
   runnerConnected: boolean | null;
   /** Время снимка */
   checkedAt: string;
+  /** Фактические замеры Node/Python и ограниченная история наблюдения. */
+  metrics: WorkerMetrics;
+  /** Группы исполнителя либо null, если живой снимок недоступен. */
+  groups: WorkerRuntimeGroup[] | null;
 }
 
 /** Действующий бот, которому нужна новая группировка. */
@@ -71,8 +78,11 @@ export async function getWorkerRuntimeStatus(): Promise<WorkerRuntimeStatus> {
   const owners = new Map(projects.map((project) => [project.id, project.ownerId]));
   const activeModes = new Set(stats.details.filter((item) => item.botsCount > 0).map((item) => {
     if (item.workerKey === 0) return 'shared';
-    if (item.workerKey === item.projectId) return 'project';
-    if (item.workerKey === (owners.get(item.projectId) ?? null)) return 'owner';
+    const projectMatch = item.workerKey === item.projectId;
+    const ownerMatch = item.workerKey === (owners.get(item.projectId) ?? null);
+    if (projectMatch && ownerMatch) return 'unknown';
+    if (projectMatch) return 'project';
+    if (ownerMatch) return 'owner';
     return 'unknown';
   }));
   const activeGrouping = activeModes.size === 0 ? null : activeModes.size === 1 ? [...activeModes][0] : 'mixed';
@@ -83,6 +93,7 @@ export async function getWorkerRuntimeStatus(): Promise<WorkerRuntimeStatus> {
     try { runnerConnected = Boolean(await redis.get(`tbb:runner:${getWorkerRunnerId()}:lease`)); }
     catch { runnerConnected = null; }
   }
+  const monitoring = await getWorkerRuntimeMetrics();
   return { grouping, activeGrouping, runtime, workers: stats.workers, bots: stats.totalBots,
-    memoryMb: stats.totalMemoryMb, pendingBots, runnerConnected, checkedAt: new Date().toISOString() };
+    memoryMb: stats.totalMemoryMb, pendingBots, runnerConnected, checkedAt: new Date().toISOString(), ...monitoring };
 }

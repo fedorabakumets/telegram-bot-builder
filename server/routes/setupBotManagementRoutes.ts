@@ -8,9 +8,11 @@
  */
 
 import type { Express } from 'express';
+import { rateLimit } from 'express-rate-limit';
 import { requireProjectAccess } from '../middleware/requireProjectAccess';
 import { resolveBotApiActor } from '../middleware/bot-api-actor';
-import { requireBotTokenOwnership } from '../middleware/requireResourceOwnership';
+import { requireBotTokenOwnership, requireTokenOwnership } from '../middleware/requireResourceOwnership';
+import { handleBotRuntimeSettings } from './botManagement/handlers/botRuntimeSettingsHandler';
 import { handleBotStart } from './botManagement/handlers/botStartHandler';
 import { handleBotStop } from './botManagement/handlers/botStopHandler';
 import { handleBotRestart } from './botManagement/handlers/botRestartHandler';
@@ -35,7 +37,24 @@ import { handleGetBotLogById } from './botManagement/handlers/botLogByIdHandler'
  * @returns {void}
  */
 export function setupBotManagementRoutes(app: Express): void {
-    app.get("/api/workers/stats", handleWorkerStats);
+    /** Квота чтения применяется до обращения к хранилищу при проверке владения. */
+    const runtimeReadLimit = rateLimit({ windowMs: 60_000, limit: 120,
+        standardHeaders: true, legacyHeaders: false,
+        message: { message: 'Слишком много запросов настроек бота. Повторите позже.' } });
+    /** Запись имеет отдельную квоту, чтобы опрос интерфейса не блокировал сохранение. */
+    const runtimeWriteLimit = rateLimit({ windowMs: 60_000, limit: 20,
+        standardHeaders: true, legacyHeaders: false,
+        message: { message: 'Слишком частое изменение режима бота. Повторите позже.' } });
+    /** Частый опрос статистики ограничивается до авторизации и чтения снимка исполнителя. */
+    const workerStatsLimit = rateLimit({ windowMs: 60_000, limit: 120,
+        standardHeaders: true, legacyHeaders: false,
+        message: { message: 'Слишком много запросов статистики воркеров. Повторите позже.' } });
+    /** Режим обработчика сохраняется отдельно от способа получения сообщений. */
+    app.get('/api/projects/:projectId/tokens/:tokenId/runtime-settings', runtimeReadLimit,
+        requireTokenOwnership, handleBotRuntimeSettings);
+    app.put('/api/projects/:projectId/tokens/:tokenId/runtime-settings', runtimeWriteLimit,
+        requireTokenOwnership, handleBotRuntimeSettings);
+    app.get("/api/workers/stats", workerStatsLimit, handleWorkerStats);
     app.get("/api/tokens/:tokenId/bot-status", handleBotStatusByToken);
     app.get(
         "/api/bot/tokens/:tokenId/status",

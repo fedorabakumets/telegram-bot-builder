@@ -30,12 +30,13 @@ export function useBotVisualStatus(
     >= (matchesStop ? stop.submittedAt ?? 0 : 0);
   const commandError = startLatest ? matchesStart && start.isError : matchesStop && stop.isError;
   const server = allBotStatuses.find(s => (s.tokenId ?? s.instance?.tokenId) === tokenId);
-  const failure = !!getBotServiceFailure(server);
+  /** Ошибка без дат экземпляра тоже завершает ожидание подтверждения. */
+  const failure = server?.status === 'error' || !!getBotServiceFailure(server);
   const envRestarting = useIsMutating({ mutationKey: ['bot-env-restart', projectId, tokenId] }) > 0;
   const operation: Operation | null = matchesStop && stop.isPending ? 'stopping'
     : matchesStart && start.isPending ? 'starting'
     : envRestarting || (restart.isPending && restart.variables === projectId) ? 'restarting'
-    : bulk.isPending && bulk.variables === projectId && !isRunning ? 'starting' : null;
+    : bulk.isPending && bulk.variables === projectId && !isRunning && !failure ? 'starting' : null;
   const previous = useRef<Operation | null>(null);
   const [waiting, setWaiting] = useState<Operation | null>(null);
 
@@ -58,7 +59,7 @@ export function useBotVisualStatus(
       setWaiting(null);
       return;
     }
-    // При недоступном обновлении возвращаем реальный статус, не имитируя успех.
+    /** При недоступном обновлении возвращаем реальный статус, не имитируя успех. */
     const timer = window.setTimeout(() => setWaiting(null), 15000);
     return () => window.clearTimeout(timer);
   }, [waiting, commandError, failure, isRunning]);
@@ -67,7 +68,11 @@ export function useBotVisualStatus(
   const awaitingConfirmation = completed && !commandError && !failure
     && isRunning !== (completed !== 'stopping') ? completed : null;
   const status = resolveBotCanvasStatus({ isActive, authorizationError, isRunning, frozen: server?.frozen,
+    unknown: server?.status === 'unknown',
     hasFailure: failure || (!isRunning && !!commandError),
-    operation: operation ?? waiting ?? awaitingConfirmation });
-  return commandError && !operation && !waiting && status !== 'invalid' && status !== 'inactive' && status !== 'frozen' ? 'error' : status;
+    operation: operation ?? (!failure && !commandError ? waiting ?? awaitingConfirmation
+      ?? (server?.status === 'starting' || server?.status === 'requested' ? 'starting' : null) : null) });
+  /** Подтверждённый результат и отсутствие связи важнее старой ошибки команды. */
+  const unresolvedError = commandError && server?.status !== 'unknown' && isRunning !== startLatest;
+  return unresolvedError && !operation && !waiting && status !== 'invalid' && status !== 'inactive' && status !== 'frozen' ? 'error' : status;
 }

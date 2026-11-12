@@ -17,7 +17,7 @@ import { useRunRuntimeBackup, useSaveRuntimeSettings } from './use-runtime-setti
 import { TelegramConnectionTest } from './telegram-connection-test';
 import { BackupTelegramTestButton } from './backup-telegram-test-button';
 import { BackupS3Dialog } from './backup-s3-dialog';
-import { WorkerRuntimeStatus } from './worker-runtime-status';
+import { WorkersSettingsForm } from './workers-settings-form';
 import { showRuntimeField } from './worker-field-visibility';
 
 /** Схема словаря строк */
@@ -45,6 +45,11 @@ function payloadOf(data: RuntimeGroupView, values: Record<string, string>): Reco
  * @returns JSX элемент формы
  */
 export function RuntimeSettingsForm({ data }: { data: RuntimeGroupView }) {
+  return data.id === 'workers' ? <WorkersSettingsForm data={data} /> : <GenericRuntimeSettingsForm data={data} />;
+}
+
+/** Отображает прежнюю форму остальных разделов без изменения их поведения. */
+function GenericRuntimeSettingsForm({ data }: { data: RuntimeGroupView }) {
   const { toast } = useToast();
   const save = useSaveRuntimeSettings(data.id);
   const backup = useRunRuntimeBackup();
@@ -76,7 +81,6 @@ export function RuntimeSettingsForm({ data }: { data: RuntimeGroupView }) {
 
   const selectedRuntime = form.watch('values.WORKER_RUNTIME') || 'process';
   return (<div className="space-y-4">
-    {data.id === 'workers' ? <WorkerRuntimeStatus /> : null}
     <Card>
       <form onSubmit={form.handleSubmit(onSubmit)}>
         <CardContent className="grid gap-5 pt-6 sm:grid-cols-2">

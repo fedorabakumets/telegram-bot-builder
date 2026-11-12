@@ -6,9 +6,11 @@
  */
 
 import { existsSync } from "node:fs";
-import { mkdir, readdir, readFile, rename, rm, stat, utimes, writeFile } from "node:fs/promises";
+import { mkdir, readdir, rm, stat, utimes } from "node:fs/promises";
 import { join } from "node:path";
-import { sha256Hex, unpackBotBuild } from "../bots/builds/botBuildCodec";
+import { Readable } from "node:stream";
+import { openBuildDownload } from "./runnerBuildDownload";
+import { buildByteLimit, limitBuildStream, matchesCachedBuild, writeBuildStream } from "./runnerBuildStream";
 
 /** Сборка из команды start_bot */
 export interface RunnerBuild {
@@ -28,14 +30,21 @@ export interface RunnerBuild {
 export type FetchBuild = (url: string) => Promise<Buffer>;
 
 /**
- * Скачивает сборку через fetch
+ * Скачивает ограниченную сборку для совместимости с буферными потребителями
  * @param url - Временная ссылка
  * @returns сжатое содержимое
  */
 export async function fetchBuildOverHttp(url: string): Promise<Buffer> {
-  const response = await fetch(url, { signal: AbortSignal.timeout(60_000) });
-  if (!response.ok) throw new Error(`HTTP ${response.status} при скачивании сборки`);
-  return Buffer.from(await response.arrayBuffer());
+  const response = await openBuildDownload(url, AbortSignal.timeout(60_000));
+  const chunks: Buffer[] = [];
+  const stream = response.pipe(limitBuildStream(buildByteLimit("RUNNER_BUILD_MAX_COMPRESSED_BYTES")));
+  response.on("error", (error) => stream.destroy(error));
+  try {
+    for await (const chunk of stream) chunks.push(chunk);
+    return Buffer.concat(chunks);
+  } finally {
+    response.destroy();
+  }
 }
 
 /**
@@ -72,16 +81,20 @@ export async function ensureCachedBuild(
 ): Promise<string> {
   const dir = join(cacheDir, build.fingerprint);
   const file = join(dir, build.file_name);
-  if (existsSync(file) && sha256Hex(await readFile(file)) === build.sha256) {
+  if (!Number.isSafeInteger(build.size) || build.size < 0
+    || build.size > buildByteLimit("RUNNER_BUILD_MAX_UNCOMPRESSED_BYTES")) {
+    throw new Error("Сборка повреждена: превышен допустимый размер");
+  }
+  if (await matchesCachedBuild(file, build)) {
     const now = new Date();
     await utimes(dir, now, now);
     return file;
   }
-  const code = unpackBotBuild(await fetchBuild(build.url), build);
   await mkdir(dir, { recursive: true });
-  const tmp = `${file}.${process.pid}.tmp`;
-  await writeFile(tmp, code);
-  await rename(tmp, file);
+  const source = fetchBuild === fetchBuildOverHttp
+    ? await openBuildDownload(build.url, AbortSignal.timeout(60_000))
+    : Readable.from([await fetchBuild(build.url)]);
+  await writeBuildStream(source, file, build);
   return file;
 }
 

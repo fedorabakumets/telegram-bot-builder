@@ -6,10 +6,12 @@
 import { isTokenActiveForBroadcast } from '@shared/broadcast-unauthorized';
 
 /** Статус, который видит пользователь на карточке и в шапке */
-export type BotCanvasStatus = 'online' | 'offline' | 'inactive' | 'invalid' | 'frozen' | 'failed' | 'error' | 'starting' | 'stopping' | 'restarting';
+export type BotCanvasStatus = 'online' | 'offline' | 'unknown' | 'inactive' | 'invalid' | 'frozen' | 'failed' | 'error' | 'starting' | 'stopping' | 'restarting';
 
 /** Входные данные для статуса */
 export interface BotCanvasStatusInput {
+  /** Исполнитель не подтвердил состояние процесса. */
+  unknown?: boolean;
   /** Telegram подтвердил ограничение бота */
   frozen?: boolean;
   /** Подтверждённая Telegram ошибка авторизации, отдельно от ручного отключения */
@@ -34,6 +36,7 @@ export function resolveBotCanvasStatus(input: BotCanvasStatusInput): BotCanvasSt
   if (input.authorizationError === 'unauthorized') return 'invalid';
   if (!isTokenActiveForBroadcast(input.isActive)) return 'inactive';
   if (input.operation) return input.operation;
+  if (input.unknown) return 'unknown';
   if (input.isRunning) return 'online';
   if (input.hasFailure) return 'failed';
   return 'offline';
@@ -45,6 +48,7 @@ export function resolveBotCanvasStatus(input: BotCanvasStatusInput): BotCanvasSt
  * @returns Текст для бейджа
  */
 export function botCanvasStatusLabel(status: BotCanvasStatus): string {
+  if (status === 'unknown') return 'Нет связи';
   if (status === 'frozen') return 'Заморожен';
   if (status === 'starting') return 'Запускается…';
   if (status === 'stopping') return 'Останавливается…';

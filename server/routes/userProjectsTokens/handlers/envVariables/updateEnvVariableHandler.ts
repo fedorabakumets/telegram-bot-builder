@@ -6,6 +6,7 @@
 import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
 import { getBotActorId } from "../../../../middleware/bot-api-actor";
+import { validateRuntimeModeRename, writeRuntimeModeEnv } from './runtimeModeEnvWrite';
 
 /**
  * Обновляет значение и/или флаг секретности переменной окружения.
@@ -45,6 +46,8 @@ export async function updateEnvVariableHandler(req: Request, res: Response): Pro
       return;
     }
 
+    /** Запрещаем обход проверки режима переименованием произвольного ключа. */
+    validateRuntimeModeRename(variable.key, req.body?.key);
     /** Собираем данные для обновления */
     const updateData: Record<string, any> = {};
     if (req.body?.key !== undefined) updateData.key = req.body.key;
@@ -65,7 +68,10 @@ export async function updateEnvVariableHandler(req: Request, res: Response): Pro
       }
     }
 
-    const updated = await storage.updateEnvVariable(variableId, updateData);
+    /** Для режима используется общая транзакция проверки транспорта и значения. */
+    const updated = variable.key === 'BOT_POLLING_MODE'
+      ? await writeRuntimeModeEnv(variable.tokenId, token.projectId, req.body?.value ?? variable.value)
+      : await storage.updateEnvVariable(variableId, updateData);
 
     if (!updated) {
       res.status(500).json({ error: "Не удалось обновить переменную" });
@@ -74,6 +80,10 @@ export async function updateEnvVariableHandler(req: Request, res: Response): Pro
 
     res.json(updated);
   } catch (error: any) {
+    if (error?.status === 400 || error?.status === 404) {
+      res.status(error.status).json({ error: error.message });
+      return;
+    }
     console.error("Ошибка обновления env переменной:", error);
     res.status(500).json({ error: "Не удалось обновить переменную" });
   }

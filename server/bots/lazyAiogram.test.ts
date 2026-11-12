@@ -38,6 +38,8 @@ interface CheckResult {
   button_text: string;
   /** JSON типовых запросов Bot API или строка "ERROR: ..." */
   requests: string[] | string;
+  /** Вложенные модели медиа, меню и пользовательские конфликтующие имена */
+  compatibility: Record<string, unknown> | string;
   /** Ошибки принудительной сборки всех моделей */
   build_errors: string[];
 }
@@ -61,7 +63,8 @@ function hasAiogram(): boolean {
  * @returns разобранный JSON результата
  */
 async function runCheck(mode: "lazy" | "eager" | "disabled"): Promise<CheckResult> {
-  const env = { ...process.env };
+  // Фиксируем кодировку JSON с русскими текстами независимо от консоли Windows.
+  const env: NodeJS.ProcessEnv = { ...process.env, PYTHONUTF8: "1" };
   delete env.AIOGRAM_LAZY_MODELS;
   const { stdout } = await execFileAsync(PYTHON, [CHECK_SCRIPT, mode], { env, timeout: 120_000 });
   return JSON.parse(stdout.trim().split("\n").pop() ?? "{}") as CheckResult;
@@ -97,6 +100,12 @@ describe("lazy_aiogram", { skip }, () => {
 
   it("модели, объявленные после патча (код бота), собираются сразу", () => {
     assert.strictEqual(lazy.own_model_complete, true);
+  });
+
+  it("вложенные медиа, меню и пользовательские пространства имён совместимы", () => {
+    assert.strictEqual(typeof lazy.compatibility, "object", String(lazy.compatibility));
+    assert.deepStrictEqual(lazy.compatibility, eager.compatibility);
+    assert.deepStrictEqual(disabled.compatibility, eager.compatibility);
   });
 
   it("импорт aiogram с патчем заметно легче", () => {

@@ -32,7 +32,9 @@ export function WorkerPoolStatus({ projects }: WorkerPoolStatusProps) {
 
   if (!data || data.workers === 0) return null;
 
-  const badgeBase = 'flex items-center gap-1 px-1.5 @[600px]:gap-1.5 @[600px]:px-2 py-1 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-medium';
+  /** При недоступности исполнителя сохранённые счётчики не подтверждают онлайн. */
+  const disconnected = data.connectionVerified === false;
+  const badgeBase = `flex items-center gap-1 px-1.5 @[600px]:gap-1.5 @[600px]:px-2 py-1 rounded-md text-xs font-medium ${disconnected ? 'bg-muted text-muted-foreground' : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'}`;
 
   return (
     <>
@@ -41,7 +43,7 @@ export function WorkerPoolStatus({ projects }: WorkerPoolStatusProps) {
         <PopoverTrigger asChild>
           <button type="button" aria-label="Статус Worker Pool" className={`${badgeBase} hidden @[600px]:flex hover:bg-emerald-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 data-[state=open]:bg-emerald-500/20`}>
             <Activity className="w-3 h-3 shrink-0" />
-            <span>{data.workers} воркер{data.workers > 1 ? 'а' : ''}</span>
+            <span>{disconnected ? 'Нет связи' : `${data.workers} воркер${data.workers > 1 ? 'а' : ''}`}</span>
             <span className="text-muted-foreground">·</span>
             <span>{data.totalBots} бот{data.totalBots > 1 ? 'а' : ''}</span>
             {data.totalMemoryMb > 0 && (
@@ -64,7 +66,7 @@ export function WorkerPoolStatus({ projects }: WorkerPoolStatusProps) {
           <button type="button" className={`${badgeBase} @[600px]:hidden max-w-[min(100%,200px)]`} aria-label="Статус Worker Pool">
             <Activity className="w-3 h-3 shrink-0" />
             <span className="truncate tabular-nums">
-              {formatMobileWorkerPoolSummary(data)}
+              {disconnected ? 'Нет связи с исполнителем' : formatMobileWorkerPoolSummary(data)}
             </span>
             <ChevronDown className="w-3 h-3 shrink-0 opacity-60" />
           </button>

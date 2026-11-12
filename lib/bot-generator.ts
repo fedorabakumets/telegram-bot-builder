@@ -583,6 +583,10 @@ function generateCodeSections(
       groupMessageTriggerHandlers: nodes
         .filter(n => n.type === 'group_message_trigger' && n.data?.autoTransitionTo)
         .map(n => `group_message_trigger_${n.id.replace(/[^a-zA-Z0-9_]/g, '_')}_handler`),
+      /** Фоновые продолжения требуют постоянно живущего обработчика. */
+      hasBackgroundTimers: nodes.some(n => Number(n.data?.inputTimeout) > 0
+        || (n.type === 'delay' && n.data?.mode === 'background')
+        || ((n.type as string) === 'parallel_split' && !n.data?.awaitAll)),
       hasScheduleTrigger: nodes.some(n => (n.type as string) === 'schedule_trigger' && n.data?.autoTransitionTo),
       hasApiTrigger: nodes.some(n => (n.type as string) === 'api_trigger' && n.data?.autoTransitionTo),
       webhookUrl: context.options.webhookUrl ?? null,

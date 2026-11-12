@@ -9,6 +9,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import type { ProjectEvent, StartOfflineProgressPayload } from '@shared/project-sync/project-event';
 import { startOfflineProgressQueryKey } from '@/components/editor/bot/start-offline-progress-query';
 import { invalidateAllBotStatusQueries, invalidateBotStatusQueries } from '@/components/editor/bot/invalidate-bot-status-queries';
+import { invalidateRuntimeSettingsAfterReconnect, invalidateTokenRuntimeSettings } from './invalidate-token-runtime-settings';
 
 /**
  * Опции хука подписки на события проекта
@@ -83,6 +84,7 @@ export function useProjectEventsWs(projectId: number, options?: UseProjectEvents
           return;
         }
         invalidateAllBotStatusQueries(queryClient);
+        invalidateRuntimeSettingsAfterReconnect(queryClient, projectId);
       };
 
       ws.onmessage = (event) => {
@@ -95,6 +97,7 @@ export function useProjectEventsWs(projectId: number, options?: UseProjectEvents
             || msg.type === 'token-updated'
           ) {
             invalidateProjectTokens(queryClient, projectId);
+            invalidateTokenRuntimeSettings(queryClient, msg.projectId, msg.tokenId);
 
             if (msg.type === 'token-created' && msg.tokenId) {
               const tokenName = (msg.data as { tokenName?: string } | undefined)?.tokenName ?? '';

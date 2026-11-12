@@ -9,6 +9,7 @@ import { join, relative, isAbsolute } from "node:path";
 import type { DockerWorkerConfig } from "./workerRuntime";
 import { canShareServerEnv } from "./botEnvPolicy";
 import { uploadVolumeArgs } from "./workerDockerMounts";
+import { POLLING_RUNTIME_ENV } from "./pollingRuntimeEnv";
 
 /** Корень приложения внутри контейнера: боты ищут uploads как ../../uploads */
 export const CONTAINER_APP_ROOT = "/app";
@@ -17,7 +18,7 @@ export const CONTAINER_APP_ROOT = "/app";
 export const CONTAINER_WORKER_DIR = "/opt/worker";
 
 /** Переменные воркера, которые передаются в контейнер, если заданы на сервере */
-const WORKER_TUNING_ENV = ["AIOGRAM_LAZY_MODELS", "BOT_CODE_CACHE", "TZ"];
+const WORKER_TUNING_ENV = ["AIOGRAM_LAZY_MODELS", "BOT_CODE_CACHE", "TZ", ...POLLING_RUNTIME_ENV];
 
 /** Локальные пути, нужные контейнеру */
 export interface DockerWorkerPaths {

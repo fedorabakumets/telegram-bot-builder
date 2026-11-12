@@ -7,6 +7,12 @@ import { describe, expect, it } from 'vitest';
 import { countStartableOfflineBots } from './count-startable-offline-bots';
 
 describe('countStartableOfflineBots', () => {
+  /** Незавершённый запрос запуска не считается остановленным процессом. */
+  it('не считает запускающихся ботов офлайн', () => {
+    expect(countStartableOfflineBots([{ id: 1 }, { id: 2 }, { id: 3 }], [
+      { tokenId: 1, status: 'requested' }, { tokenId: 2, status: 'starting' }, { tokenId: 3, status: 'error' },
+    ])).toBe(1);
+  });
   it('не считает ботов с недействительным токеном', () => {
     const count = countStartableOfflineBots(
       [

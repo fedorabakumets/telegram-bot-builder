@@ -5,14 +5,17 @@
  * @module server/runner/runnerWorkers
  */
 
-import { LocalWorkerChannel } from "../bots/localWorkerChannel";
-import { buildWorkerBaseEnv } from "../bots/workerBaseEnv";
+import { RunnerWorkerExecution } from "./runnerWorkerExecution";
 import type { RunnerCommand, RunnerEvent } from "../redis/workerStreams";
 import type { RunnerConfig } from "./runnerConfig";
 import { fetchBuildOverHttp, pruneBuildCache, type FetchBuild } from "./runnerBuildCache";
 import { prepareWorkerLine } from "./runnerStartCommand";
-import { botFailedEvents, forwardWorkerEvents, stopWorker } from "./runnerWorkerEvents";
+import { botFailedEvents } from "./runnerWorkerEvents";
+import { RunnerBuildPins } from "./runnerBuildPins";
+import { RunnerCachePruner } from "./runnerCachePruner";
 import { parseWorkerSystemMessage } from "../bots/parseWorkerSystemMessage";
+import { pollingTimingMetrics } from "./polling/timingMetrics";
+import { RunnerBotModes, type RunnerBotMode } from "./runnerBotModes";
 
 /** Снимок одного процесса воркера */
 export interface RunnerWorkerSnapshot {
@@ -24,31 +27,49 @@ export interface RunnerWorkerSnapshot {
   tokenIds: number[];
   /** Боты, команда запуска которых ещё обрабатывается */
   pendingTokenIds: number[];
+  /** Режимы отправленных запусков и доступная фактическая активность. */
+  bots?: RunnerBotMode[];
+  /** Фактические процессы и суммарная память Python внутри данной группы. */
+  execution?: ReturnType<RunnerWorkerExecution["memoryCounters"]>;
 }
 
 /** Снимок состояния исполнителя */
 export interface RunnerSnapshot {
   /** Работающие процессы воркеров */
   workers: RunnerWorkerSnapshot[];
+  /** Снимок процесса Node; память указана один раз на весь исполнитель. */
+  runtime?: {
+    /** Фактический приёмник обновлений после загрузки окружения. */
+    processPolling: "node" | "python";
+    /** Фактическая стратегия обработчиков process-ботов. */
+    processHandler: "shared" | "isolated";
+    /** PID процесса Node. */
+    pid: number;
+    /** RSS процесса Node в байтах. */
+    nodeRssBytes: number;
+    /** Время жизни процесса Node в секундах. */
+    uptimeSeconds: number;
+    /** Ограниченная выборка задержек пробуждения и обработки без пользовательских данных. */
+    latency: ReturnType<typeof pollingTimingMetrics>;
+  };
 }
-
-/** Сколько ждать штатного завершения воркеров при остановке исполнителя (мс) */
-const SHUTDOWN_GRACE_MS = 5_000;
 
 /** Запущенный воркер */
 interface RunnerWorker {
   /** ID экземпляра от панели */
   instance: string;
-  /** Процесс worker.py */
-  channel: LocalWorkerChannel;
+  /** Реальные каналы выполнения логической группы. */
+  channel: RunnerWorkerExecution;
   /** Очередь строк в stdin: подготовка сборки не должна менять порядок команд */
   queue: Promise<void>;
   /** Отпечатки сборок запущенных ботов: tokenId → отпечаток (не удаляются из кеша) */
-  builds: Map<number, string>;
+  builds: RunnerBuildPins;
   /** Боты, подтвердившие запуск */
   tokenIds: Set<number>;
   /** Запуски, для которых ещё нет подтверждения bot_started */
   pendingTokenIds: Set<number>;
+  /** Только безопасные настройки текущих запусков. */
+  modes: RunnerBotModes;
 }
 
 /**
@@ -59,6 +80,10 @@ export class RunnerWorkers {
   private readonly workers = new Map<string, RunnerWorker>();
   /** Команды, уже выполненные в этом процессе до подтверждения Redis */
   private readonly handledCommands = new Set<string>();
+  /** Объединённая очистка, исключающая подготовку сборок во время удаления. */
+  private readonly cachePruner: RunnerCachePruner;
+  /** Нужно ли приостановить чтение вывода из-за давления очереди событий. */
+  private outputPaused = false;
 
   /**
    * @param config - Настройки исполнителя
@@ -69,11 +94,28 @@ export class RunnerWorkers {
     private readonly config: RunnerConfig,
     private readonly emitEvent: (event: RunnerEvent) => void,
     private readonly fetchBuild: FetchBuild = fetchBuildOverHttp,
-  ) {}
+  ) {
+    this.cachePruner = new RunnerCachePruner(() => pruneBuildCache(config.cacheDir, config.buildsKeep,
+      new Set([...this.workers.values()].flatMap((worker) => worker.builds.values()))));
+  }
+
+  /** Приостанавливает вывод всех каналов, сохраняя состояние для новых воркеров. */
+  pauseOutput(paused: boolean): void {
+    this.outputPaused = paused;
+    for (const worker of this.workers.values()) worker.channel.pauseOutput(paused);
+  }
 
   /** Число запущенных воркеров */
   get size(): number {
     return this.workers.size;
+  }
+
+  /** Сопоставляет PID с воркерами и показывает размеры служебных коллекций без токенов и команд. */
+  memoryCounters() {
+    return { handledCommands: this.handledCommands.size,
+      workers: [...this.workers].map(([workerKey, worker]) => ({ workerKey, pid: worker.channel.pid,
+        activeBots: worker.tokenIds.size, pendingBots: worker.pendingTokenIds.size,
+        buildPins: worker.builds.size, ...worker.channel.memoryCounters() })) };
   }
 
   /**
@@ -113,9 +155,14 @@ export class RunnerWorkers {
    * @returns Снимок процессов и ботов
    */
   snapshot(): RunnerSnapshot {
-    return { workers: [...this.workers].map(([workerKey, worker]) => ({
+    return { runtime: { processPolling: this.config.processPolling ?? "python",
+      processHandler: this.config.processHandler ?? "shared", pid: process.pid,
+      nodeRssBytes: process.memoryUsage.rss(), uptimeSeconds: process.uptime(), latency: pollingTimingMetrics() },
+      workers: [...this.workers].map(([workerKey, worker]) => ({
       workerKey: Number(workerKey), instance: worker.instance, tokenIds: [...worker.tokenIds],
       pendingTokenIds: [...worker.pendingTokenIds],
+      bots: worker.modes.snapshot(worker.channel.memoryCounters().polling?.bots),
+      execution: worker.channel.memoryCounters(),
     })) };
   }
 
@@ -131,7 +178,7 @@ export class RunnerWorkers {
   }
 
   /**
-   * Запускает worker.py; старый воркер с тем же ключом убивается
+   * Создаёт группу выполнения; старый экземпляр останавливается, Python может запускаться лениво.
    * @param workerKey - Ключ воркера
    * @param instance - ID экземпляра
    */
@@ -139,27 +186,27 @@ export class RunnerWorkers {
     if (this.current(workerKey, instance)) return;
     this.workers.get(workerKey)?.channel.kill();
     console.log(`🛰️ Воркер ${workerKey} запускается (${instance.slice(0, 8)})`);
-    const channel = new LocalWorkerChannel({
-      command: this.config.pythonPath,
-      args: ["-u", this.config.workerScript],
-      env: { ...buildWorkerBaseEnv(process.env, { includeConnections: false }), PROJECT_ID: workerKey, WORKER_REPORT_MEMORY: "true" },
-    });
-    const worker: RunnerWorker = {
-      instance, channel, queue: Promise.resolve(), builds: new Map(), tokenIds: new Set(), pendingTokenIds: new Set(),
-    };
-    this.workers.set(workerKey, worker);
-    forwardWorkerEvents(channel, { w: workerKey, i: instance }, (event) => {
+    const channel = new RunnerWorkerExecution(this.config, { w: workerKey, i: instance }, (event) => {
       if (event.k === "line" && event.l) {
         try {
           const message = JSON.parse(event.l);
+          /** Профиль памяти остаётся в журнале runtime и не нагружает Redis или терминалы ботов. */
+          if (message.type === "worker_memory_profile") {
+            console.log(JSON.stringify({ ...message, workerKey, instance }));
+            return;
+          }
           if (message.type === "system") {
+            worker.modes.observe(message.content);
             const parsed = parseWorkerSystemMessage(message.content);
             if (parsed.kind === "bot_started" && parsed.tokenId !== undefined) {
+              worker.builds.started(parsed.tokenId);
               worker.pendingTokenIds.delete(parsed.tokenId);
               worker.tokenIds.add(parsed.tokenId);
             }
             if ((parsed.kind === "bot_exited" || parsed.kind === "bot_stopped") && parsed.tokenId !== undefined) {
-              worker.pendingTokenIds.delete(parsed.tokenId);
+              worker.builds.stopped(parsed.tokenId, parsed.status === "error");
+              this.cachePruner.request();
+              if (parsed.status === "error") worker.pendingTokenIds.delete(parsed.tokenId);
               worker.tokenIds.delete(parsed.tokenId);
             }
           }
@@ -167,8 +214,16 @@ export class RunnerWorkers {
       }
       this.emitEvent(event);
     }, () => {
-      if (this.workers.get(workerKey)?.instance === instance) this.workers.delete(workerKey);
+      if (this.workers.get(workerKey)?.instance === instance) {
+        this.workers.delete(workerKey);
+        this.cachePruner.request();
+      }
     });
+    const worker: RunnerWorker = {
+      instance, channel, queue: Promise.resolve(), builds: new RunnerBuildPins(), tokenIds: new Set(), pendingTokenIds: new Set(), modes: new RunnerBotModes(),
+    };
+    channel.pauseOutput(this.outputPaused);
+    this.workers.set(workerKey, worker);
   }
 
   /**
@@ -202,18 +257,13 @@ export class RunnerWorkers {
       if (parsed.cmd === "stop_bot" && Number.isSafeInteger(parsed.token_id)) worker.pendingTokenIds.delete(parsed.token_id);
     } catch { /* Неизвестную строку обработает Python-воркер. */ }
     worker.queue = worker.queue
-      .then(() => prepareWorkerLine(line, this.config.cacheDir, this.fetchBuild))
-      .then(async (prepared) => {
+      .then(() => this.cachePruner.protect(async () => {
+        const prepared = await prepareWorkerLine(line, this.config.cacheDir, this.fetchBuild);
         if ("error" in prepared) {
           worker.pendingTokenIds.delete(prepared.tokenId);
           console.error(`🛰️ Воркер ${workerKey}, бот ${prepared.tokenId}: ${prepared.error}`);
           botFailedEvents({ w: workerKey, i: instance }, prepared.tokenId, prepared.error).forEach(this.emitEvent);
           return;
-        }
-        if (prepared.fingerprint && prepared.tokenId !== undefined) {
-          worker.builds.set(prepared.tokenId, prepared.fingerprint);
-          const inUse = new Set([...this.workers.values()].flatMap((w) => [...w.builds.values()]));
-          void pruneBuildCache(this.config.cacheDir, this.config.buildsKeep, inUse).catch(() => undefined);
         }
         if (this.config.requireFence && (parsed.cmd === "start_bot" || parsed.cmd === "stop_bot")
           && Number.isSafeInteger(parsed.instance_id) && Number.isSafeInteger(parsed.desired_generation)) {
@@ -225,14 +275,23 @@ export class RunnerWorkers {
             return;
           }
         }
-        if (!worker.channel.send(prepared.line)) throw new Error(`воркер ${workerKey} завершился до доставки команды`);
-      })
+        if (prepared.fingerprint && prepared.tokenId !== undefined) worker.builds.prepare(prepared.tokenId, prepared.fingerprint);
+        if (this.current(workerKey, instance) !== worker) return;
+        await worker.channel.sendAsync(prepared.line);
+        if (parsed.cmd === "start_bot" && (worker.pendingTokenIds.has(parsed.token_id) || worker.tokenIds.has(parsed.token_id))) {
+          worker.modes.start(JSON.parse(prepared.line));
+          if (worker.tokenIds.has(parsed.token_id)) worker.modes.observe(`bot_started:${parsed.token_id}`);
+        }
+      }))
       .catch((error) => {
         console.error(`🛰️ Воркер ${workerKey}: ошибка подготовки команды:`, error);
         try {
           const command = JSON.parse(line);
           if (command.cmd === "start_bot" && Number.isSafeInteger(command.token_id)) {
+            worker.modes.remove(command.token_id);
             worker.pendingTokenIds.delete(command.token_id);
+            worker.builds.stopped(command.token_id, true);
+            this.cachePruner.request();
             botFailedEvents({ w: workerKey, i: instance }, command.token_id, String(error)).forEach(this.emitEvent);
             return;
           }
@@ -264,7 +323,8 @@ export class RunnerWorkers {
    * @returns промис после завершения всех воркеров
    */
   async shutdown(): Promise<void> {
-    await Promise.all([...this.workers.values()].map(({ channel }) => stopWorker(channel, SHUTDOWN_GRACE_MS)));
+    this.cachePruner.cancel();
+    await Promise.all([...this.workers.values()].map(({ channel }) => channel.shutdown()));
   }
 
   /** Немедленно останавливает процессы после потери аренды. */

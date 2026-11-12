@@ -19,6 +19,8 @@ export interface MainTemplateParams {
   managedBotUpdatedTriggerMiddlewares?: string[];
   /** Список имён обработчиков для group_message_trigger */
   groupMessageTriggerHandlers?: string[];
+  /** Есть ли фоновые таймеры, несовместимые со сном обработчика */
+  hasBackgroundTimers?: boolean;
   /** Есть ли schedule_trigger ноды */
   hasScheduleTrigger?: boolean;
   /** Есть ли api_trigger ноды */

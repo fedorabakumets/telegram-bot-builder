@@ -230,9 +230,10 @@ describe('main.py.jinja2 шаблон', () => {
     });
 
     describe('Структура схемы', () => {
-      it('должен иметь 16 полей', () => {
+      /** Учитывает признак несовместимых со сном фоновых продолжений. */
+      it('должен иметь 17 полей', () => {
         const shape = mainParamsSchema.shape;
-        assert.strictEqual(Object.keys(shape).length, 16);
+        assert.strictEqual(Object.keys(shape).length, 17);
       });
 
       it('должен содержать ключевые поля схемы', () => {
@@ -317,10 +318,12 @@ describe('main.py.jinja2 шаблон', () => {
         assert.ok(result.indexOf('_lock_acquired = False') < result.indexOf('try:'));
       });
 
+      /** Проверяет атомарное освобождение только собственной блокировки. */
       it('должен освобождать lock в finally', () => {
         const result = generateMain({ userDatabaseEnabled: false });
         assert.ok(result.includes('_lock_acquired'), 'освобождение lock не найдено');
-        assert.ok(result.includes('_redis_client.delete'), '_redis_client.delete не найден в finally');
+        assert.ok(result.includes("if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1])"),
+          'освобождение должно сравнивать владельца перед удалением');
       });
 
       it('должен обновлять lock TTL через _refresh_lock', () => {

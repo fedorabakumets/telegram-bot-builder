@@ -1,5 +1,5 @@
 """
-Кэш разобранного кода бота рядом с файлом (.botcode/*.bin).
+@fileoverview Кэш разобранного кода бота рядом с файлом (.botcode/*.bin).
 Ускоряет повторный запуск, когда исходный .py не менялся.
 """
 
@@ -10,16 +10,19 @@ import marshal
 import os
 import time
 from pathlib import Path
-from typing import Any, Callable
+from types import CodeType
+from typing import Callable
 
 LogFn = Callable[[str], None]
 
 
 def _cache_enabled() -> bool:
+    """Возвращает признак разрешённого дискового кэша."""
     return os.environ.get("BOT_CODE_CACHE", "true").lower() != "false"
 
 
 def _cache_file_path(bot_path: Path) -> Path:
+    """Определяет ключ кэша по версии Python, размеру и времени исходника."""
     stat = bot_path.stat()
     magic = importlib.util.MAGIC_NUMBER.hex()
     return (
@@ -30,6 +33,7 @@ def _cache_file_path(bot_path: Path) -> Path:
 
 
 def _purge_stale_cache(cache_dir: Path, stem: str, keep: Path) -> None:
+    """Удаляет устаревшие версии кэша указанного исходника."""
     prefix = f"{stem}."
     for old in cache_dir.glob(f"{prefix}*"):
         if old != keep:
@@ -39,29 +43,19 @@ def _purge_stale_cache(cache_dir: Path, stem: str, keep: Path) -> None:
                 pass
 
 
-def load_bot_code(bot_path: Path, log: LogFn) -> Any:
+def load_bot_code(bot_path: Path, log: LogFn) -> CodeType:
     """
     Возвращает объект code (результат compile) для exec().
     При наличии актуального .bin читает его через marshal.
     """
-    t0 = time.perf_counter()
-    source_code = bot_path.read_text(encoding="utf-8")
-    read_ms = (time.perf_counter() - t0) * 1000
-    log(f"Код прочитан: {len(source_code)} символов за {read_ms:.0f} мс")
-
-    if not _cache_enabled():
-        t1 = time.perf_counter()
-        compiled = compile(source_code, str(bot_path), "exec")
-        compile_ms = (time.perf_counter() - t1) * 1000
-        log(f"Разбор кода: {compile_ms:.0f} мс (заново)")
-        return compiled
-
-    cache_file = _cache_file_path(bot_path)
-    if cache_file.is_file():
+    cache_file = _cache_file_path(bot_path) if _cache_enabled() else None
+    if cache_file is not None and cache_file.is_file():
         try:
             t1 = time.perf_counter()
             with open(cache_file, "rb") as fh:
                 compiled = marshal.load(fh)
+            if not isinstance(compiled, CodeType):
+                raise ValueError("Кэш не содержит объект кода")
             compile_ms = (time.perf_counter() - t1) * 1000
             log(f"Разбор кода: {compile_ms:.0f} мс (из готового)")
             return compiled
@@ -71,10 +65,17 @@ def load_bot_code(bot_path: Path, log: LogFn) -> Any:
             except OSError:
                 pass
 
+    t0 = time.perf_counter()
+    source_code = bot_path.read_text(encoding="utf-8")
+    read_ms = (time.perf_counter() - t0) * 1000
+    log(f"Код прочитан: {len(source_code)} символов за {read_ms:.0f} мс")
     t1 = time.perf_counter()
     compiled = compile(source_code, str(bot_path), "exec")
     compile_ms = (time.perf_counter() - t1) * 1000
     log(f"Разбор кода: {compile_ms:.0f} мс (заново)")
+
+    if cache_file is None:
+        return compiled
 
     try:
         cache_file.parent.mkdir(parents=True, exist_ok=True)

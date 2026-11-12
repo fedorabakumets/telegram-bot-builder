@@ -19,7 +19,10 @@ import { watchRuntimeLease } from "../bots/runtime-lease";
 import { waitRuntimeLease } from "./waitRuntimeLease";
 import { loadRunnerConfig } from "./runnerConfig";
 import { RunnerWorkers } from "./runnerWorkers";
-import { closeBotCommandFence } from "./runnerCommandFence";
+import { closeBotCommandFence, commandFenceCounters } from "./runnerCommandFence";
+import { redisQueueLength, startRunnerMemoryMonitor } from "./runnerMemoryMonitor";
+import { startRunnerHeapProfile } from "./runnerHeapProfile";
+import { createRunnerEventPublisher } from "./runnerEventPublisher";
 
 /**
  * Подключается к Redis, принимает команды и останавливает воркеры по сигналу
@@ -46,10 +49,14 @@ async function main(): Promise<void> {
   };
   const stopWatching = watchRuntimeLease(lease, 3_000, (error) => onLeaseLost(error), 9_000);
   const eventStream = runnerEventStream(config.runnerId);
-  const workers = new RunnerWorkers(config, (event: RunnerEvent) => {
-    appendToStream(writer, eventStream, event).catch((error) => {
-      console.error(`🛰️ Событие ${event.k} воркера ${event.w} не отправлено:`, error?.message ?? error);
-    });
+  /** Обратное давление сохраняет события и ограничивает одновременные команды Redis. */
+  const workers: RunnerWorkers = new RunnerWorkers(config, (event: RunnerEvent) => publisher.publish(event));
+  const publisher = createRunnerEventPublisher({
+    send: (event) => appendToStream(writer, eventStream, event),
+    setPaused: (paused) => workers.pauseOutput(paused),
+    onError: (error, event) => {
+      console.error(`🛰️ Событие ${event.k} воркера ${event.w} не отправлено:`, error instanceof Error ? error.message : error);
+    },
   });
   const follower = followCommandStream(reader, runnerCommandStream(config.runnerId), (fields) => workers.handle(fields));
   await follower.ready;
@@ -57,16 +64,29 @@ async function main(): Promise<void> {
   // Панель считает воркеры прошлого запуска исполнителя завершёнными
   await appendToStream(writer, eventStream, { k: "hello", w: "", i: "" } satisfies RunnerEvent);
   console.log(`🛰️ Исполнитель ${config.runnerId} готов: python=${config.pythonPath}, worker=${config.workerScript}, кеш=${config.cacheDir}`);
+  /** Журнал диагностики идёт напрямую в stdout и не увеличивает очередь событий Redis. */
+  const stopMemoryMonitor = startRunnerMemoryMonitor({ intervalMs: process.env.RUNNER_MEMORY_INTERVAL_MS,
+    counters: () => ({ events: publisher.snapshot(), fence: commandFenceCounters(),
+      ...workers.memoryCounters(), redis: [writer, reader, leaseRedis].map((client, index) => ({
+        role: ["writer", "reader", "lease"][index], status: client.status,
+        offlineCommands: redisQueueLength(client, "offlineQueue"), pendingCommands: redisQueueLength(client, "commandQueue"),
+      })) }),
+  });
+  /** Сеанс V8 завершается автоматически и не открывает порт отладки. */
+  const heapProfile = startRunnerHeapProfile();
 
   let stopping = false;
   const stop = async (signal: string, lost = false) => {
     if (stopping) return;
     stopping = true;
+    stopMemoryMonitor();
     stopWatching();
     console.log(`🛰️ ${signal}: останавливаем воркеры (${workers.size})`);
     follower.stop();
     if (lost) workers.killAll();
     else await workers.shutdown();
+    if (!lost) await (await heapProfile)();
+    if (!lost) await publisher.drain();
     await closeBotCommandFence();
     if (!lost) await lease.release().catch(() => undefined);
     leaseRedis.disconnect();
@@ -80,6 +100,12 @@ async function main(): Promise<void> {
   };
   process.on("SIGINT", () => void stop("SIGINT"));
   process.on("SIGTERM", () => void stop("SIGTERM"));
+  /** IPC позволяет локальному надзору корректно завершать исполнитель на Windows. */
+  process.on("message", (message: unknown) => {
+    if (message && typeof message === "object" && "type" in message && message.type === "shutdown") {
+      void stop("IPC_SHUTDOWN");
+    }
+  });
 }
 
 main().catch((error) => {

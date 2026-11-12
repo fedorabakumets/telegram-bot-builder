@@ -7,6 +7,11 @@ import { describe, expect, it } from 'vitest';
 import { botCanvasStatusLabel, resolveBotCanvasStatus } from './bot-canvas-status';
 
 describe('resolveBotCanvasStatus', () => {
+  /** Недоступность исполнителя не доказывает остановку процесса. */
+  it('показывает отсутствие связи вместо офлайна при неизвестном состоянии', () => {
+    expect(resolveBotCanvasStatus({ isActive: 1, isRunning: false, unknown: true })).toBe('unknown');
+    expect(botCanvasStatusLabel('unknown')).toBe('Нет связи');
+  });
   it('показывает заморозку даже при работающем процессе', () => {
     expect(resolveBotCanvasStatus({ frozen: true, isRunning: true })).toBe('frozen');
     expect(botCanvasStatusLabel('frozen')).toBe('Заморожен');

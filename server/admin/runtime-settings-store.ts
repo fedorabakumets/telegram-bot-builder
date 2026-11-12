@@ -14,6 +14,7 @@ import { findRuntimeGroup } from "./runtime-groups";
 import { runtimeSettingKey } from "./runtime-field";
 import { applyRuntimeProxyEnv, refreshRuntimeOverlay } from "./runtime-overlay-refresh";
 import { decideRuntimeSave } from "./runtime-save-rules";
+import { validateWorkerSettings } from "./runtime-worker-validation";
 import { listRuntimeStorageOptions, loadRuntimeGroupView, type RuntimeGroupView } from "./runtime-settings-view";
 
 /** Ошибка API настроек рантайма с кодом HTTP */
@@ -63,6 +64,10 @@ async function assertStorageAllowed(groupId: string, id: string): Promise<void> 
 export async function saveRuntimeGroup(groupId: string, input: Record<string, unknown>): Promise<string[]> {
   const group = findRuntimeGroup(groupId);
   if (!group) throw new RuntimeSettingsError("Раздел не найден", 404);
+  if (groupId === "workers") {
+    try { validateWorkerSettings(input); }
+    catch (error) { throw new RuntimeSettingsError((error as Error).message, 400); }
+  }
   if (groupId === "platform") {
     const apiMode = input.TELEGRAM_BOT_API_MODE;
     const apiUrl = input.TELEGRAM_BOT_API_URL;

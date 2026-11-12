@@ -15,6 +15,11 @@ Bot Worker — asyncio мастер-процесс для запуска нес�
 
 from __future__ import annotations
 
+import worker_memory_profile as memory_profile
+
+# Трассировка начинается до импорта библиотек, если её явно включил администратор.
+memory_profile.start()
+
 import asyncio
 import contextlib
 import json
@@ -30,6 +35,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 import bot_code_cache
+import process_startup_timing as startup_timing
 import bot_env_overlay
 import bot_env_snapshot
 import lazy_aiogram
@@ -167,6 +173,8 @@ class BotContext:
         self.env: Optional[Dict[str, str]] = None
         # Загруженный module bot.py — для request_bot_stop()
         self.module: Optional[types.ModuleType] = None
+        # Лёгкий сеанс остаётся зарегистрированным после выгрузки модуля.
+        self.demand = None
 
     def to_dict(self) -> Dict[str, Any]:
         """Сериализация для команды status."""
@@ -184,6 +192,8 @@ class BotWorker:
     def __init__(self):
         self.bots: Dict[int, BotContext] = {}
         self._shutdown_event = asyncio.Event()
+        self._demand_semaphore = None
+        self._demand_maximum = None
         ensure_root_log_handler()
 
     async def handle_command(self, data: Dict[str, Any]) -> None:
@@ -217,6 +227,11 @@ class BotWorker:
             emit_log(token_id, f"Ошибка: {e}", "stderr")
             return
 
+        # Файловый и встроенный способы передачи настроек имеют одинаковый приоритет.
+        if bot_env is None:
+            bot_env = bot_env_snapshot.bot_env_values(token, token_id, webhook_url,
+                webhook_port, None, Path(bot_file).parent)
+
         if token_id in self.bots:
             emit_log(token_id, "Бот уже запущен, перезапускаем...", "stdout")
             await self._stop_bot({"token_id": token_id})
@@ -226,19 +241,93 @@ class BotWorker:
         ctx.webhook_url = webhook_url
         ctx.webhook_port = webhook_port
         ctx.env = bot_env
+        ctx.project_id = PROJECT_ID
+        from demand_settings import resolve_settings, validate_build
+        try:
+            settings = resolve_settings(token_id, bot_env, webhook_url)
+            if settings:
+                validate_build(bot_file)
+                from demand_session import DemandSession
+                if self._demand_maximum not in (None, settings["maximum"]):
+                    raise ValueError("Лимит активных ботов должен совпадать внутри воркера")
+                self._demand_maximum = settings["maximum"]
+                # Ноль означает отсутствие ограничения, а не семафор без доступных мест.
+                if self._demand_semaphore is None and settings["maximum"] > 0:
+                    self._demand_semaphore = asyncio.Semaphore(settings["maximum"])
+                async def receiver_ready():
+                    """Подтверждает логическую готовность после захвата polling lease."""
+                    ctx.status = "running"
+                    ctx.started_at = datetime.now()
+                    emit_system(f"bot_started:{token_id}")
+                ctx.demand = DemandSession(ctx, settings, self._demand_semaphore,
+                    self._run_process if settings["mode"] == "process" else self._run_bot,
+                    receiver_ready, lambda message: emit_log(token_id, message))
+            else:
+                from demand_handoff import prepare_direct
+                await prepare_direct(ctx)
+        except (ValueError, ImportError, OSError, SyntaxError) as exc:
+            emit_log(token_id, f"Ошибка конфигурации: {exc}", "stderr")
+            emit_system(f"bot_exited:{token_id}:error")
+            return
         self.bots[token_id] = ctx
-        ctx.task = asyncio.create_task(self._run_bot(ctx))
+        ctx.task = asyncio.create_task(self._run_demand(ctx) if ctx.demand else self._run_bot(ctx))
         emit_log(token_id, f"Бот добавлен в воркер (project={PROJECT_ID})", "stdout")
 
-    async def _run_bot(self, ctx: BotContext) -> None:
+    async def _run_demand(self, ctx: BotContext) -> None:
+        """Сохраняет логическую регистрацию бота до остановки приёмника."""
+        marker = iso.current_token_id.set(ctx.token_id)
+        try:
+            await ctx.demand.run()
+        except asyncio.CancelledError:
+            ctx.status = "stopped"
+            raise
+        except Exception as exc:
+            ctx.status = "error"
+            emit_log(ctx.token_id, format_bot_error(exc), "stderr")
+        finally:
+            ctx.module = None
+            if self.bots.get(ctx.token_id) is ctx:
+                del self.bots[ctx.token_id]
+            emit_system(f"bot_exited:{ctx.token_id}:{ctx.status}")
+            iso.current_token_id.reset(marker)
+
+    async def _run_process(self, ctx: BotContext, session) -> None:
+        """Запускает временный процесс, сохраняя lease и слот до его завершения."""
+        from process_handler import run_process_handler
+
+        handler = asyncio.create_task(run_process_handler(ctx, session.settings,
+            lambda token_id, stream, content: emit_log(token_id, content, stream)))
+        stopped = asyncio.create_task(session.stopping.wait())
+        try:
+            done, _ = await asyncio.wait((handler, stopped), return_when=asyncio.FIRST_COMPLETED)
+            if stopped in done and not handler.done():
+                handler.cancel()
+                await asyncio.gather(handler, return_exceptions=True)
+            else:
+                await handler
+        finally:
+            stopped.cancel()
+            if not handler.done():
+                handler.cancel()
+            await asyncio.gather(handler, stopped, return_exceptions=True)
+
+    async def _run_bot(self, ctx: BotContext, demand=None) -> None:
         """Загружает bot.py в изолированном namespace и вызывает main()."""
         token_id = ctx.token_id
         token_token = iso.current_token_id.set(token_id)
         alias_prev: Dict[str, Any] = {}
         dotenv_guard = contextlib.ExitStack()
         overlay_on = False
+        from bot_task_scope import BotTaskScope
+        task_scope = BotTaskScope()
+        task_scope.enter()
 
         try:
+            # Тяжёлые библиотеки нужны только обработчику, но не спящему приёмнику.
+            # Отметки активны только внутри временного обработчика.
+            startup_timing.mark("aiogram_begin")
+            lazy_aiogram.enable()
+            startup_timing.mark("aiogram_done")
             emit_log(token_id, "─── Начало загрузки бота ───", "stdout")
             bot_path = Path(ctx.bot_file)
             emit_log(token_id, f"Путь к файлу: {bot_path}", "stdout")
@@ -279,13 +368,17 @@ class BotWorker:
                     "stdout",
                 )
 
+                startup_timing.mark("siblings_begin")
                 loaded = iso.load_sibling_modules(token_id, bot_dir, siblings)
                 iso.apply_short_aliases(loaded, alias_prev)
+                startup_timing.mark("siblings_done")
 
                 def _bot_log(msg: str) -> None:
                     emit_log(token_id, msg, "stdout")
 
+                startup_timing.mark("bytecode_begin")
                 compiled = bot_code_cache.load_bot_code(bot_path, _bot_log)
+                startup_timing.mark("bytecode_done")
 
                 module = types.ModuleType(f"bot_{token_id}")
                 module.__file__ = str(bot_path)
@@ -302,7 +395,9 @@ class BotWorker:
 
                 emit_log(token_id, "Выполнение top-level кода бота...", "stdout")
                 t_exec = time.perf_counter()
+                startup_timing.mark("module_begin")
                 exec(compiled, module.__dict__)
+                startup_timing.mark("module_done")
                 exec_ms = (time.perf_counter() - t_exec) * 1000
                 iso.inject_bot_constants(
                     module, ctx.token, token_id, ctx.webhook_url, ctx.webhook_port
@@ -321,21 +416,44 @@ class BotWorker:
             def bot_ready() -> None:
                 """Подтверждает готовность нового бота после его проверок запуска."""
                 if ctx.status != "running":
+                    startup_timing.mark("bot_ready")
                     ctx.status = "running"
                     ctx.started_at = datetime.now()
                     emit_system(f"bot_started:{token_id}")
 
             module._worker_bot_ready = bot_ready
+            if demand is not None:
+                if not getattr(module, "_WORKER_EXTERNAL_UPDATES_PROTOCOL", False):
+                    raise RuntimeError("Пересоберите бота: отсутствует протокол внешних обновлений")
+                if not getattr(module, "_WORKER_EXTERNAL_UPDATES_SAFE", False):
+                    raise RuntimeError("Фоновые возможности этого бота несовместимы с ondemand")
+                module._worker_external_updates = demand.feed
+                startup_timing.mark("state_begin")
+                await demand.state.load_into(module)
+                startup_timing.mark("state_done")
+            elif getattr(module, "_WORKER_DIRECT_STATE_PROTOCOL", False):
+                from demand_handoff import transfer_direct, commit_direct
+                async def direct_prepare(lease_owned):
+                    """Переносит состояние после захвата блокировки обычным polling."""
+                    await transfer_direct(ctx, module, lease_owned)
+                async def direct_commit():
+                    """Подтверждает перенос после успешного запуска ordinary polling."""
+                    await commit_direct(ctx)
+                module._worker_direct_prepare = direct_prepare
+                module._worker_direct_commit = direct_commit
 
             if hasattr(module, "main"):
                 if not getattr(module, "_WORKER_READY_PROTOCOL", False):
                     emit_log(token_id, "Старый код бота: запуск подтверждается без проверки блокировки и Telegram", "stderr")
                     bot_ready()
                 emit_log(token_id, "Вызов main()...", "stdout")
+                startup_timing.mark("main_begin")
                 await module.main()
+                if demand is not None:
+                    await demand.state.save(module)
                 emit_log(token_id, "main() завершился", "stdout")
                 # Старые bot.py глотали CancelledError → статус оставался running
-                if ctx.status in ("starting", "running"):
+                if demand is None and ctx.status in ("starting", "running"):
                     ctx.status = "stopped"
             else:
                 emit_log(token_id, "Функция main() не найдена в bot.py", "stderr")
@@ -345,6 +463,10 @@ class BotWorker:
             emit_log(token_id, "Бот остановлен (CancelledError)", "stdout")
             ctx.status = "stopped"
         except Exception as e:
+            from demand_tasks import FatalTaskCleanupError
+            if isinstance(e, FatalTaskCleanupError):
+                emit_log(token_id, "Дочерняя задача не остановилась: аварийный перезапуск воркера для сохранения изоляции", "stderr")
+                os._exit(70)
             user_msg = format_bot_error(e)
             tb = traceback.format_exc()
             emit_log(token_id, user_msg, "stderr")
@@ -352,15 +474,23 @@ class BotWorker:
             sys.stderr.flush()
             ctx.status = "error"
         finally:
+            # Задачи должны потерять доступ к окружению до удаления модулей и env.
+            try:
+                await task_scope.close()
+            except BaseException:
+                emit_log(token_id, "Не удалось остановить задачи сценария: аварийное завершение для сохранения изоляции", "stderr")
+                os._exit(70)
             if alias_prev:
                 iso.restore_short_aliases(alias_prev)
             dotenv_guard.close()
             if overlay_on:
                 bot_env_overlay.unregister(token_id)
             iso.cleanup_bot_modules(token_id, ctx.bot_dir)
-            if token_id in self.bots and self.bots[token_id] is ctx:
-                del self.bots[token_id]
-            emit_system(f"bot_exited:{token_id}:{ctx.status}")
+            ctx.module = None
+            if demand is None:
+                if token_id in self.bots and self.bots[token_id] is ctx:
+                    del self.bots[token_id]
+                emit_system(f"bot_exited:{token_id}:{ctx.status}")
             iso.current_token_id.reset(token_token)
 
     async def _stop_bot(self, data: Dict[str, Any]) -> None:
@@ -374,6 +504,14 @@ class BotWorker:
             # Отсутствие задачи подтверждается самим воркером, а не состоянием базы.
             emit_system(f"bot_stopped:{token_id}")
             return
+
+        if ctx.demand is not None:
+            try:
+                await ctx.demand.stop()
+            except Exception as exc:
+                emit_log(token_id, f"Пауза приёмника не завершилась: {type(exc).__name__}", "stderr")
+                if ctx.task:
+                    ctx.task.cancel()
 
         # 1) Graceful: ставит _stop_event → main делает stop_polling
         mod = ctx.module
@@ -433,18 +571,19 @@ class BotWorker:
 
     async def _report_memory(self) -> None:
         """Раз в 10 с сообщает RSS процесса на Linux и Windows."""
-        from worker_memory import process_rss_kb
+        from process_memory import total_rss_kb
 
         while not self._shutdown_event.is_set():
-            memory_kb = process_rss_kb()
+            memory_kb = total_rss_kb()
             if memory_kb is not None:
                 emit_system(f"memory_kb:{memory_kb}")
+            memory_profile.report_if_due()
             await asyncio.sleep(10)
 
     async def run(self) -> None:
         """Главный цикл: stdin → команды."""
         emit_system("worker_ready")
-        if os.environ.get("WORKER_REPORT_MEMORY", "").lower() == "true":
+        if os.environ.get("WORKER_REPORT_MEMORY", "").lower() == "true" or memory_profile.enabled():
             self._memory_task = asyncio.create_task(self._report_memory())
         loop = asyncio.get_event_loop()
         stdin_queue: asyncio.Queue = asyncio.Queue()
@@ -501,9 +640,6 @@ def main():
     signal.signal(signal.SIGINT, signal.SIG_IGN)
     # Один раз на процесс воркера: боты не регистрируют свои signal_handler
     signal.signal = lambda *args, **kwargs: None  # type: ignore[method-assign]
-
-    # До импорта aiogram ботами: валидаторы моделей строятся по первому использованию
-    lazy_aiogram.enable()
 
     asyncio.run(BotWorker().run())
 
