@@ -1,8 +1,9 @@
 /** @fileoverview Приём обновлений в Node и пробуждение Python по политике вместимости группы. */
 import type { DispatchEntry, DispatcherCapacity, DispatcherDependencies, PollingBot } from "./dispatcherTypes";
 import { failChildRegistration } from "./dispatcherFailure";
+import { LifecycleOperations } from "./lifecycleOperations";
+import { dispatcherCounters } from "./dispatcherCounters";
 export type { DispatcherCapacity, DispatcherDependencies, PollingBot } from "./dispatcherTypes";
-
 /** Не держит Python в простое и исключает параллельные обработчики одного токена. */
 export class NodePollingDispatcher {
   /** Регистрации, включая ожидающие свободного места. */
@@ -11,16 +12,18 @@ export class NodePollingDispatcher {
   private active = 0;
   /** Одна проверка очередей одновременно исключает двойное резервирование. */
   private pumping = false;
-
+  /** Команды одного токена выполняются последовательно, исключая потерянные регистрации. */
+  private readonly operations = new LifecycleOperations();
   /** @param dependencies - Адаптеры Redis, Telegram и процессов. @param capacity - Предел отдельных процессов либо общий процесс без фиксированного лимита. */
   constructor(private readonly dependencies: DispatcherDependencies, private readonly capacity: DispatcherCapacity = 0) {
     if (typeof capacity === "number" ? !Number.isInteger(capacity) || capacity < 0 : capacity?.kind !== "unlimited")
       throw new Error("Недопустимый предел обработчиков");
   }
-
   /** Регистрирует бота; приёмник самостоятельно подтверждает готовность после получения блокировки. */
-  async start(bot: PollingBot): Promise<void> {
-    await this.stop(bot.tokenId);
+  start(bot: PollingBot): Promise<void> { return this.operations.run(bot.tokenId, () => this.register(bot)); }
+  /** Заменяет регистрацию внутри уже упорядоченной команды запуска. */
+  private async register(bot: PollingBot): Promise<void> {
+    await this.stopEntry(bot.tokenId);
     const entry: DispatchEntry = { bot, abort: new AbortController(), childAbort: new AbortController(),
       quiescing: false, failed: false, pending: true, ready: false };
     this.entries.set(bot.tokenId, entry);
@@ -42,7 +45,6 @@ export class NodePollingDispatcher {
         this.dependencies.lifecycle(bot, "error");
       });
   }
-
   /** Отмечает сохранённое обновление; повторные сигналы объединяются. */
   wake(tokenId: number): void {
     const entry = this.entries.get(tokenId);
@@ -50,9 +52,10 @@ export class NodePollingDispatcher {
     entry.pending = true;
     void this.pump();
   }
-
   /** Останавливает регистрацию, не удаляя очередь необработанных обновлений. */
-  async stop(tokenId: number): Promise<boolean> {
+  stop(tokenId: number): Promise<boolean> { return this.operations.run(tokenId, () => this.stopEntry(tokenId)); }
+  /** Завершает регистрацию без повторного захвата очереди команд того же токена. */
+  private async stopEntry(tokenId: number): Promise<boolean> {
     const entry = this.entries.get(tokenId);
     if (!entry) return false;
     entry.abort.abort();
@@ -63,12 +66,10 @@ export class NodePollingDispatcher {
     if (!entry.failed) this.dependencies.lifecycle(entry.bot, "stopped");
     return true;
   }
-
   /** Завершает приёмники и обработчики до выключения исполнителя. */
   async shutdown(): Promise<void> {
-    await Promise.all([...this.entries.keys()].map((id) => this.stop(id)));
+    await Promise.all([...new Set([...this.entries.keys(), ...this.operations.keys()])].map((id) => this.stop(id)));
   }
-
   /** Завершает только обработчик до снятия polling-блокировки, не ожидая приёмник. */
   async quiesceChild(tokenId: number, knownEntry?: DispatchEntry): Promise<void> {
     const entry = knownEntry ?? this.entries.get(tokenId);
@@ -80,17 +81,8 @@ export class NodePollingDispatcher {
     await entry.child?.stop();
     await entry.task;
   }
-
   /** Возвращает только агрегаты без токенов, переменных и содержимого сообщений. */
-  counters() {
-    return { registeredBots: this.entries.size, activeChildren: this.active, maximum: typeof this.capacity === "number" && this.capacity > 0 ? this.capacity : null,
-      bots: [...this.entries.values()].map((entry) => ({ tokenId: entry.bot.tokenId,
-        activity: (!entry.ready || (entry.task && !entry.child) ? "starting" : entry.child ? "active"
-          : entry.pending && !entry.task && !entry.retry && typeof this.capacity === "number" && this.capacity > 0 && this.active >= this.capacity
-            ? "waiting" : "sleeping") as "starting" | "active" | "sleeping" | "waiting" })),
-      waitingBots: [...this.entries.values()].filter((entry) => entry.pending && !entry.task).length };
-  }
-
+  counters() { return dispatcherCounters(this.entries, this.active, this.capacity); }
   /** Резервирует место только после проверки сохранённого обновления. */
   private async pump(): Promise<void> {
     if (this.pumping) return;
@@ -114,7 +106,6 @@ export class NodePollingDispatcher {
         queueMicrotask(() => { void this.pump(); });
     }
   }
-
   /** Дожидается выхода процесса, затем повторно проверяет очередь на гонку с завершением. */
   private async run(entry: DispatchEntry): Promise<void> {
     try {
@@ -140,7 +131,6 @@ export class NodePollingDispatcher {
       queueMicrotask(() => { void this.pump(); });
     }
   }
-
   /** Ограничивает частоту повторов при недоступности Redis или сбоях запуска. */
   private retry(entry: DispatchEntry): void {
     if (entry.retry || entry.abort.signal.aborted || entry.quiescing) return;

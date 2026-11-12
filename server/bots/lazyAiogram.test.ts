@@ -64,7 +64,7 @@ function hasAiogram(): boolean {
  */
 async function runCheck(mode: "lazy" | "eager" | "disabled"): Promise<CheckResult> {
   // Фиксируем кодировку JSON с русскими текстами независимо от консоли Windows.
-  const env = { ...process.env, PYTHONUTF8: "1" };
+  const env: NodeJS.ProcessEnv = { ...process.env, PYTHONUTF8: "1" };
   delete env.AIOGRAM_LAZY_MODELS;
   const { stdout } = await execFileAsync(PYTHON, [CHECK_SCRIPT, mode], { env, timeout: 120_000 });
   return JSON.parse(stdout.trim().split("\n").pop() ?? "{}") as CheckResult;

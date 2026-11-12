@@ -14,7 +14,7 @@ export function workerChartPoints(history: WorkerMetrics['history']): WorkerChar
   const result: WorkerChartPoint[] = [];
   for (const point of history) {
     const time = Date.parse(point.sampledAt);
-    const previous = result.at(-1);
+    const previous = result[result.length - 1];
     if (!Number.isFinite(time)) continue;
     if (previous && time - previous.time > 25_000) result.push({ time: previous.time + 1, node: null, python: null });
     result.push({ time, node: point.nodeRssBytes === null ? null : point.nodeRssBytes / 1048576,

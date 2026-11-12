@@ -16,7 +16,7 @@ test("два бота в одном процессе дают один общи�
   assert.equal(ledger.total(), 100_000);
   assert.equal(ledger.snapshot()[0].handlerCount, 0);
   runtime.close(); runtime.record(999_999); runtime.close();
-  assert.equal(published.at(-1), 0);
+  assert.equal(published[published.length - 1], 0);
 });
 
 test("повторные регистрации одного PID не удваивают RSS, разные PID складываются", () => {
@@ -55,7 +55,7 @@ test("запоздалые кадры завершённой жизни не в�
   current.setHandlers([31]); current.record(95_000);
   previous.record(999_999, 202); previous.setHandlers([30]); previous.close();
   assert.equal(ledger.total(), 95_000);
-  assert.equal(published.at(-1), 95_000);
+  assert.equal(published[published.length - 1], 95_000);
   assert.deepEqual(ledger.snapshot(), [{ memoryScope: "shared", actualPid: 202,
     memoryKb: 95_000, handlerCount: 1, handlerTokenIds: [31] }]);
   current.close();

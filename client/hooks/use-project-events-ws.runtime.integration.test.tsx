@@ -91,7 +91,7 @@ describe('сквозное обновление режима бота', () => {
       await expect(test.hook.result.current.mutation.mutateAsync('process')).rejects.toThrow('Недостаточно прав');
     });
     expect(test.hook.result.current.query.data?.mode).toBe('direct');
-    expect(test.fetchMock.mock.calls.at(-1)).toEqual(['/api/projects/901/tokens/902/runtime-settings', {
+    expect(test.fetchMock.mock.calls[test.fetchMock.mock.calls.length - 1]).toEqual(['/api/projects/901/tokens/902/runtime-settings', {
       method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode: 'process' }),
     }]);
   });

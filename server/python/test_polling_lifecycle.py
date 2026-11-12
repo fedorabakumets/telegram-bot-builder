@@ -1,22 +1,8 @@
 """@fileoverview Проверка наблюдения за задачей polling в шаблоне бота."""
 
 import asyncio
-import textwrap
 import unittest
-from pathlib import Path
-
-
-def polling_block():
-    """Возвращает исполняемый фрагмент шаблона наблюдения за polling."""
-    template = Path(__file__).resolve().parents[2] / 'lib/templates/main/main.py.jinja2'
-    source = template.read_text(encoding='utf-8')
-    start = source.index('                    _polling_task = asyncio.create_task(dp.start_polling')
-    end = source.index('                    try:\n                        await _polling_task', start)
-    body = textwrap.dedent(source[start:end])
-    namespace = {'asyncio': asyncio}
-    exec('async def observe(dp, bot, _stop_event, _background_tasks):\n' +
-         textwrap.indent(body, '    '), namespace)
-    return namespace['observe']
+from polling_test_helpers import polling_block, startup_callback
 
 
 class PollingLifecycleTest(unittest.IsolatedAsyncioTestCase):
@@ -75,22 +61,83 @@ class PollingLifecycleTest(unittest.IsolatedAsyncioTestCase):
         stop_event = asyncio.Event()
         ready = []
 
-        template = Path(__file__).resolve().parents[2] / 'lib/templates/main/main.py.jinja2'
-        source = template.read_text(encoding='utf-8')
-        start = source.index('        async def _notify_worker_ready')
-        end = source.index('        # Выбор режима запуска:', start)
-        namespace = {'_stop_event': stop_event, '_worker_bot_ready': lambda: ready.append(True)}
-        exec(textwrap.dedent(source[start:end]), namespace)
-        on_startup = namespace['_notify_worker_ready']
+        async def commit():
+            """Фиксирует порядок передачи состояния перед готовностью."""
+            ready.append('commit')
+
+        on_startup = startup_callback(stop_event, lambda: ready.append('ready'), commit)
 
         dispatcher.startup.register(on_startup)
         bot = Bot('123456:ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghi', session=Session())
         await dispatcher.emit_startup(bot=bot)
-        self.assertEqual(ready, [True])
+        self.assertEqual(ready, ['commit', 'ready'])
+        await dispatcher.emit_startup(bot=bot)
+        self.assertEqual(ready, ['commit', 'ready', 'ready'])
         stop_event.set()
         with self.assertRaisesRegex(RuntimeError, 'Запуск прерван'):
             await dispatcher.emit_startup(bot=bot)
-        self.assertEqual(ready, [True])
+        self.assertEqual(ready, ['commit', 'ready', 'ready'])
+
+    async def test_commit_failure_does_not_publish_ready_and_can_retry(self):
+        """Не подтверждает готовность при сбое состояния и разрешает повтор запуска."""
+        calls = []
+
+        async def commit():
+            """Имитирует временную недоступность сохранённого состояния."""
+            calls.append('commit')
+            if len(calls) == 1:
+                raise ConnectionError('Redis недоступен')
+
+        callback = startup_callback(asyncio.Event(), lambda: calls.append('ready'), commit)
+        with self.assertRaisesRegex(ConnectionError, 'Redis недоступен'):
+            await callback()
+        self.assertEqual(calls, ['commit'])
+        await callback()
+        self.assertEqual(calls, ['commit', 'commit', 'ready'])
+
+    async def test_other_transports_do_not_commit_direct_state(self):
+        """Webhook и внешний приёмник не подтверждают состояние прямого polling."""
+        for options in ({'external': True}, {'webhook': 'https://example.test'}):
+            with self.subTest(options=options):
+                calls = []
+
+                async def commit():
+                    """Отмечает ошибочную передачу состояния другого транспорта."""
+                    calls.append('commit')
+
+                callback = startup_callback(asyncio.Event(), lambda: calls.append('ready'),
+                                            commit, **options)
+                await callback()
+                self.assertEqual(calls, ['ready'])
+
+    async def test_requested_stop_cancels_polling_waiter(self):
+        """Остановка завершает polling без оставшихся фоновых ожиданий."""
+        started = asyncio.Event()
+        stopped = asyncio.Event()
+
+        class Dispatcher:
+            """Минимальный диспетчер с управляемым завершением polling."""
+
+            def resolve_used_update_types(self):
+                """Возвращает пустой набор обновлений для теста без сети."""
+                return []
+
+            async def start_polling(self, *args, **kwargs):
+                """Ожидает остановки после подтверждения запуска задачи."""
+                started.set()
+                await stopped.wait()
+
+            async def stop_polling(self):
+                """Разблокирует задачу получения обновлений."""
+                stopped.set()
+
+        stop_event, tasks = asyncio.Event(), []
+        task = asyncio.create_task(polling_block()(Dispatcher(), None, stop_event, tasks))
+        await asyncio.wait_for(started.wait(), 1)
+        stop_event.set()
+        await asyncio.wait_for(task, 1)
+        self.assertTrue(stopped.is_set())
+        self.assertTrue(all(item.done() for item in tasks))
 
 
 if __name__ == '__main__':

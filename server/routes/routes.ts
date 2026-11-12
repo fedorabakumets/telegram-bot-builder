@@ -3517,7 +3517,9 @@ function setupTokenEnvVariableRoutes(app: Express) {
 
       /** Записываем связанные режимы одной транзакцией с блокировкой токена. */
       const modeChange = normalizedChanges.find(change => change.key === 'BOT_POLLING_MODE');
-      const launchChange = normalizedChanges.filter(change => change.key === 'LAUNCH_MODE' && change.action === 'update').at(-1);
+      /** Последнее изменение способа получения обновлений определяет итог пакета. */
+      const launchChanges = normalizedChanges.filter(change => change.key === 'LAUNCH_MODE' && change.action === 'update');
+      const launchChange = launchChanges[launchChanges.length - 1];
       if (modeChange || launchChange) {
         await saveRuntimeModeSettings(tokenId, {
           ...(modeChange ? modeChange.action === 'delete' ? { resetMode: true } : { mode: modeChange.value } : {}),

@@ -84,7 +84,8 @@ print(json.dumps(events))
     input: JSON.stringify({ code, failure }), encoding: 'utf8', env: { ...process.env, PYTHONIOENCODING: 'utf-8' },
   });
   assert.equal(result.status, 0, result.stderr || result.stdout);
-  return JSON.parse(result.stdout.trim().split('\n').at(-1)!);
+  const lines = result.stdout.trim().split('\n');
+  return JSON.parse(lines[lines.length - 1]!);
 }
 
 /** Проверяет startup, готовность, обработку и освобождение реальных веток main. */

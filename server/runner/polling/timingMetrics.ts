@@ -17,8 +17,10 @@ export function pollingTimingMetrics(now = Date.now()): { startupMs: MetricDistr
     samples[key] = samples[key].filter(item => item.at >= now - 900_000 && item.at <= now);
     const values = samples[key].map(item => item.ms).sort((a, b) => a - b);
     if (!values.length) return null;
+    /** Последний замер берётся из исходного порядка; индексация совместима с библиотекой ES проекта. */
+    const last = samples[key][samples[key].length - 1];
     return { count: values.length, p50Ms: values[Math.ceil(values.length * .5) - 1],
-      p95Ms: values[Math.ceil(values.length * .95) - 1], lastMs: samples[key].at(-1)!.ms };
+      p95Ms: values[Math.ceil(values.length * .95) - 1], lastMs: last.ms };
   };
   return { startupMs: distribution('startupMs'), handlingMs: distribution('handlingMs') };
 }

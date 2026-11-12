@@ -1,6 +1,6 @@
 /** @fileoverview Ограниченная пакетная выборка режимов ботов без секретов и запросов на каждую строку. */
 import { and, asc, count, desc, eq, ilike, inArray, or, sql } from 'drizzle-orm';
-import { botEnvVariables, botInstances, botProjects, botTokens } from '@shared/schema';
+import { botInstances, botProjects, botTokens } from '@shared/schema';
 import { db } from '../database/db';
 import { runtimeEnv } from '../services/runtime-overlay';
 import type { WorkerBotListQuery } from './worker-bot-request';

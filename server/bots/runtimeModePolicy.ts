@@ -32,7 +32,9 @@ export function resolveRuntimeModeSettings(
   env: NodeJS.ProcessEnv = process.env,
   tokenId?: number,
 ) {
-  const own = variables.filter((item) => item.key === 'BOT_POLLING_MODE').at(-1);
+  /** Последняя индивидуальная настройка имеет приоритет без зависимости от ES2022. */
+  const ownModes = variables.filter((item) => item.key === 'BOT_POLLING_MODE');
+  const own = ownModes[ownModes.length - 1];
   const server = runtimeEnv('BOT_POLLING_MODE', env);
   const selected = runtimeEnv('BOT_ON_DEMAND_TOKEN_IDS', env)?.split(',').map((id) => id.trim()).filter(Boolean) ?? [];
   const excluded = !own && tokenId !== undefined && selected.length > 0 && !selected.includes(String(tokenId));

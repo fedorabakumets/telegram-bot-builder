@@ -9,13 +9,13 @@ test("RSS двух обработчиков складывается числа�
   const first = ledger.register(1);
   const second = ledger.register(2);
   first.record(1024); second.record(2048);
-  assert.equal(values.at(-1), 3072);
+  assert.equal(values[values.length - 1], 3072);
   first.record(1536);
   assert.equal(ledger.total(), 3584);
   first.close();
-  assert.equal(values.at(-1), 2048);
+  assert.equal(values[values.length - 1], 2048);
   second.close();
-  assert.equal(values.at(-1), 0);
+  assert.equal(values[values.length - 1], 0);
   assert.deepEqual(ledger.snapshot(), []);
 });
 

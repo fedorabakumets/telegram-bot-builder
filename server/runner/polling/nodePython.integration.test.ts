@@ -1,4 +1,5 @@
 /** @fileoverview Сквозная проверка Node HTTP → Redis → настоящий Python с выходом по простою. */
+import { testPython } from "./testPython";
 import { randomInt } from "node:crypto";
 import { resolve } from "node:path";
 import Redis from "ioredis";
@@ -27,7 +28,7 @@ it("сохраняет два потока, устраняет повторы, �
   /** Запускает только реальный изолированный process_child, не общий Python worker. */
   async function launch(index: number, signal: AbortSignal): Promise<PythonPollingChild> {
     const child = await startPythonPollingChild({
-      command: resolve(process.platform === "win32" ? ".venv/Scripts/python.exe" : ".venv/bin/python"),
+      command: testPython(),
       args: ["-u", resolve(`server/python/${process.platform === "win32" ? "process_child_windows.py" : "process_child.py"}`)], signal,
       env: process.env, init: { token_id: ids[index], token: tokens[index], project_id: 99001,
         bot_file: resolve("server/runner/polling/fixtures/state_bot.py"), idle: 0.25,

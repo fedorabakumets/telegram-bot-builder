@@ -1,4 +1,5 @@
 /** @fileoverview Проверяет виртуальную готовность и ленивый старый Python без Telegram и Redis. */
+import { testPython } from "./testPython";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { mkdtemp, writeFile, rm } from "node:fs/promises";
@@ -12,7 +13,7 @@ import type { RunnerEvent } from "../../redis/workerStreams";
 /** Создаёт настройки без реальных адресов сервисов. */
 function config(workerScript = "missing-worker.py"): RunnerConfig {
   return { runnerId: "fixture", redisUrl: "redis://unused", processPolling: "node", cacheDir: "unused", buildsKeep: 1,
-    pythonPath: resolve(process.platform === "win32" ? ".venv/Scripts/python.exe" : ".venv/bin/python"), workerScript };
+    pythonPath: testPython(), workerScript };
 }
 
 /** Дожидается наблюдаемого события с конечным пределом вместо бессрочного зависания проверки. */

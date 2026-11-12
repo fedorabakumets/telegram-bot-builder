@@ -1,4 +1,5 @@
 /** @fileoverview Полный маршрут команд RunnerWorkers к Node polling и временному Python без Telegram. */
+import { testPython } from "./testPython";
 import { randomInt } from "node:crypto";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -32,7 +33,7 @@ it("команда панели регистрирует DB token ID, получ
   const cacheDir = await mkdtemp(join(tmpdir(), "tbb-node-routing-"));
   const events: RunnerEvent[] = [];
   const workers = new RunnerWorkers({ runnerId: "integration", redisUrl,
-    pythonPath: resolve(process.platform === "win32" ? ".venv/Scripts/python.exe" : ".venv/bin/python"),
+    pythonPath: testPython(),
     workerScript: resolve("server/python/worker.py"), cacheDir, buildsKeep: 1, requireFence: false,
     processPolling: "node" }, event => events.push(event));
   /** Передаёт ровно тот формат строк, который отправляет панель через поток Redis. */

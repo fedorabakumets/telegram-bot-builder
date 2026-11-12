@@ -7,8 +7,10 @@ const querySchema = z.object({
   /** Отбирает включённых ботов, включая спящих и ожидающих запуска. */
   activity: z.enum(['enabled', 'all']).default('enabled'),
   mode: z.enum(['all', 'direct', 'ondemand', 'process']).default('all'),
-  page: z.union([z.string(), z.number()]).pipe(z.coerce.number().int().min(1).max(100_000)).default(1),
-  pageSize: z.union([z.string(), z.number()]).pipe(z.coerce.number().int().min(1).max(100)).default(25),
+  /** Преобразует только строку или число до проверки целочисленных границ. */
+  page: z.union([z.string(), z.number()]).transform(Number).pipe(z.number().int().min(1).max(100_000)).default(1),
+  /** Ограничивает размер страницы без неявного принятия массивов и логических значений. */
+  pageSize: z.union([z.string(), z.number()]).transform(Number).pipe(z.number().int().min(1).max(100)).default(25),
 });
 
 /** Проверенные параметры одной страницы. */

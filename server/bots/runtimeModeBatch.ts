@@ -40,7 +40,9 @@ export function validateRuntimeModeBatch(
 ): boolean {
   inheritedMode ??= resolveRuntimeModeSettings([], launchMode, process.env, tokenId).mode;
   let finalLaunch = launchMode || 'polling';
-  let mode = variables.filter(row => row.key === 'BOT_POLLING_MODE').at(-1)?.value ?? inheritedMode;
+  /** Последняя сохранённая настройка сохраняет приоритет при наличии дубликатов. */
+  const ownModes = variables.filter(row => row.key === 'BOT_POLLING_MODE');
+  let mode = ownModes[ownModes.length - 1]?.value ?? inheritedMode;
   let touched = false;
   let launchTouched = false;
   for (const change of changes) {

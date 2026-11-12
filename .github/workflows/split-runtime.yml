@@ -47,6 +47,7 @@ jobs:
     env:
       LOCAL_DATABASE_TEST_URL: postgres://postgres:postgres@127.0.0.1:5432/postgres
       LOCAL_REDIS_TEST_URL: redis://127.0.0.1:6379
+      RUNNER_PYTHON: python
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -84,9 +85,18 @@ jobs:
         run: node --import tsx --test server/bots/workerChannel.test.ts server/runner/runnerBuildCache.test.ts server/runner/runnerBuildStream.test.ts server/runner/runnerCacheLifecycle.test.ts server/runner/runnerEventPublisher.test.ts
       # Приёмники проверяются на локальном HTTP-двойнике, без запросов к Telegram.
       - name: Приём обновлений в Node и владение очередью
-        run: node --import tsx --test server/runner/polling/dispatcher.test.ts server/runner/polling/dispatcherUnlimited.test.ts server/runner/polling/sharedTransport.test.ts server/runner/polling/dispatcherLease.test.ts server/runner/polling/dispatcherFailure.test.ts server/runner/polling/pythonChild.test.ts server/runner/polling/queue.integration.test.ts server/runner/polling/runtimeSettings.test.ts server/runner/polling/execution.test.ts server/runner/polling/memoryLedger.test.ts server/runner/runnerMemoryTotals.test.ts
+        run: node --import tsx --test server/runner/polling/dispatcher.test.ts server/runner/polling/dispatcherLifecycle.test.ts server/runner/polling/dispatcherUnlimited.test.ts server/runner/polling/sharedTransport.test.ts server/runner/polling/dispatcherLease.test.ts server/runner/polling/dispatcherFailure.test.ts server/runner/polling/pythonChild.test.ts server/runner/polling/queue.integration.test.ts server/runner/polling/redisRecovery.integration.test.ts server/runner/polling/runtimeSettings.test.ts server/runner/polling/execution.test.ts server/runner/polling/testPython.test.ts server/runner/polling/memoryLedger.test.ts server/runner/runnerMemoryTotals.test.ts
       - run: npx vitest run --config server/runner/polling/vitest.config.ts
       - run: npx vitest run --config server/runner/polling/integration.vitest.config.ts
+      # Общий обработчик и административные режимы проверяются при каждом изменении PR.
+      - name: Жизненный цикл общего обработчика и статистика
+        run: node --import tsx --test server/runner/polling/sharedHost.test.ts server/runner/polling/sharedMemoryLedger.test.ts server/runner/polling/timingMetrics.test.ts server/runner/runnerBotModes.test.ts
+      - run: npx vitest run --config server/runner/polling/shared.vitest.config.ts
+      - name: Выбранные режимы и запросы администратора
+        run: node --import tsx --test server/admin/worker-bot-mode-model.test.ts server/admin/worker-bot-request.test.ts server/admin/worker-bot-handler.test.ts server/admin/worker-inspection-cache.test.ts server/admin/runtime-worker-validation.test.ts server/admin/runtime-worker-view.test.ts
+      - name: Интерфейс управления воркерами
+        run: npx vitest run --project client client/components/admin/runtime/worker-bots-panel.test.tsx client/components/admin/runtime/worker-bot-row.test.tsx client/components/admin/runtime/worker-chart-points.test.ts client/components/admin/runtime/workers-settings-form.test.tsx
+
       # Проверяем сто активных сценариев без ограничения числа загруженных ботов.
       - run: python -m unittest discover -s server/python -p 'test_shared_worker_capacity.py' -v
       - run: python -m unittest discover -s server/python -p 'test_worker_memory_profile.py' -v

@@ -1,4 +1,5 @@
 /** @fileoverview Сквозная проверка ленивого общего Python: сон, освобождение процесса и восстановление состояния. */
+import { testPython } from "./testPython";
 import { randomInt } from "node:crypto";
 import { resolve } from "node:path";
 import Redis from "ioredis";
@@ -20,7 +21,7 @@ it("общий PID существует только при работе бот�
   const telegram = await fakeTelegram(batches);
   const lines: string[] = [];
   const runtime = new ProcessPollingRuntime({ runnerId: "shared-integration", redisUrl,
-    pythonPath: resolve(process.platform === "win32" ? ".venv/Scripts/python.exe" : ".venv/bin/python"),
+    pythonPath: testPython(),
     workerScript: resolve("server/python/worker.py"), cacheDir: resolve("output/shared-test-unused"),
     buildsKeep: 1, processPolling: "node", processHandler: "shared" }, line => lines.push(line), 2);
   /** Извлекает только технические маркеры тестового сценария из очищенного вывода. */

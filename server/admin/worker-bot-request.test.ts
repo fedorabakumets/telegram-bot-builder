@@ -19,7 +19,9 @@ test('неизвестные режимы, массивы, дробные и ч�
   for (const value of [
     { mode: 'shared' }, { mode: ['direct', 'process'] }, { search: ['a', 'b'] },
     { page: 0 }, { page: -1 }, { page: '1.5' }, { page: 'Infinity' }, { page: '100001' },
-    { page: ['1'] }, { pageSize: ['25'] }, { page: true },
+    { page: ['1'] }, { pageSize: ['25'] }, { page: true }, { page: false },
+    { pageSize: true }, { pageSize: false }, { page: null }, { pageSize: null },
+    { page: {} }, { pageSize: {} },
     { pageSize: 0 }, { pageSize: 101 }, { pageSize: 'NaN' }, { search: 'я'.repeat(101) },
   ]) assert.equal(parseWorkerBotQuery(value).success, false, JSON.stringify(value));
 });
