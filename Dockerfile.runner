@@ -18,7 +18,7 @@ RUN npx esbuild server/runner/index.ts --bundle --platform=node --target=node24 
     --format=cjs --tsconfig=tsconfig.node.json --log-level=error --outfile=dist-runner/runner.cjs
 
 # ── Исполнитель ──────────────────────────────────────────────────────────────
-FROM python:3.12-slim-bookworm
+FROM python:3.15-slim-bookworm
 
 RUN apt-get update \
  && apt-get install -y --no-install-recommends libstdc++6 \
