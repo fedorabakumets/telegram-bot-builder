@@ -17,6 +17,7 @@ import contextvars
 import importlib.util
 import sys
 import types
+import bot_code_cache
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Set
 
@@ -90,9 +91,17 @@ def load_sibling_modules(token_id: int, bot_dir: Path, names: Iterable[str]) -> 
         sys.modules[unique] = mod
         # Короткое имя — чтобы `import config` в bot.py резолвился в наш модуль
         # Сохраняем предыдущий и восстановим после exec
-        spec.loader.exec_module(mod)
+        # Sibling тоже проходит изолированную компиляцию и общий дисковый кэш.
+        compiled = bot_code_cache.load_bot_code(path, _ignore_loader_log)
+        exec(compiled, mod.__dict__)
+        del compiled
         loaded[name] = mod
     return loaded
+
+
+def _ignore_loader_log(message: str) -> None:
+    """Подавляет внутренние сообщения компиляции sibling без изменения протокола."""
+    pass
 
 
 def apply_short_aliases(loaded: Dict[str, Any], previous: Dict[str, Any]) -> None:
