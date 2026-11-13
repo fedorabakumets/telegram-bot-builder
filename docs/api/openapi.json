@@ -2522,6 +2522,10 @@
             "nullable": true,
             "example": 1
           },
+          "authorizationError": {
+            "type": "string",
+            "nullable": true
+          },
           "botUsername": {
             "type": "string",
             "nullable": true,
@@ -2652,6 +2656,10 @@
             "nullable": true,
             "example": 1
           },
+          "authorizationError": {
+            "type": "string",
+            "nullable": true
+          },
           "projectId": {
             "type": "integer",
             "example": 42
@@ -2668,6 +2676,7 @@
           "botFirstName",
           "isDefault",
           "isActive",
+          "authorizationError",
           "projectId",
           "messagesRetentionDays"
         ]
@@ -2731,6 +2740,10 @@
             "type": "number",
             "nullable": true,
             "example": 1
+          },
+          "authorizationError": {
+            "type": "string",
+            "nullable": true
           },
           "botUsername": {
             "type": "string",
