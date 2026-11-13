@@ -14,6 +14,7 @@ vi.mock('../routes/botTokens/to-public-bot-token', () => ({
 }));
 vi.mock('../routes/botTokens/token-write-receipt', () => ({ botTokenWriteReceipt: vi.fn(() => ({})) }));
 import { updateProjectTokenHandler } from '../routes/botTokens/handlers/updateProjectTokenHandler';
+import { updateBotTokenSchema } from '@shared/schema/token-update';
 /** Настраивает отклонённый секрет перед каждым запросом. */
 beforeEach(() => {
   vi.clearAllMocks();
@@ -42,4 +43,13 @@ it('обычное переименование не сбрасывает отк
   await request({ name: 'Бот' });
   expect(mocks.update).toHaveBeenCalledWith(4, { name: 'Бот' });
   expect(mocks.reset).not.toHaveBeenCalled();
+});
+it('не подставляет значения флагов вставки в частичное обновление', () => {
+  expect(updateBotTokenSchema.parse({})).toEqual({});
+  expect(updateBotTokenSchema.parse({ description: 'Описание' })).toEqual({ description: 'Описание' });
+  expect(updateBotTokenSchema.parse({ name: 'Бот' })).toEqual({ name: 'Бот' });
+});
+it.each([0, 1])('сохраняет явно переданные значения флагов %s', (value) => {
+  expect(updateBotTokenSchema.parse({ isDefault: value, isActive: value }))
+    .toEqual({ isDefault: value, isActive: value });
 });

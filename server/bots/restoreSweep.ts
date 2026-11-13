@@ -19,6 +19,7 @@ import {
   type SweepInstanceInput,
 } from './restoreSweepSelect';
 import { RESTORE_SWEEP_DELAY_MS } from './restoreSweepConstants';
+import { automaticBotStartAllowed } from './automaticBotStartAllowed';
 
 export {
   selectSweepCandidates,
@@ -74,6 +75,7 @@ export async function runRestoreSweep(
 
     for (const inst of allInstances) {
       if (inst.tokenId == null) continue;
+      if (inst.desiredStatus === 'stopped') continue;
       const token = await storage.getBotToken(inst.tokenId);
       enriched.push({
         id: inst.id,
@@ -123,6 +125,7 @@ export async function runRestoreSweep(
         console.log(`[RestoreSweep] Пропуск token=${inst.tokenId}: ${inactiveError}`);
         continue;
       }
+      if (!await automaticBotStartAllowed(inst.projectId, inst.tokenId)) continue;
 
       if (isBotActuallyRunning(inst.projectId, inst.tokenId)) {
         console.log(`[RestoreSweep] token=${inst.tokenId} уже жив — пропуск`);
@@ -143,6 +146,7 @@ export async function runRestoreSweep(
         inst.projectId,
         launchToken,
         inst.tokenId,
+        { canStart: () => automaticBotStartAllowed(inst.projectId, inst.tokenId!) },
       );
 
       if (result.success) {

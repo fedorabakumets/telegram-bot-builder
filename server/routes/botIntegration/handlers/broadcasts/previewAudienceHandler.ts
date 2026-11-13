@@ -60,7 +60,7 @@ export async function previewAudienceHandler(req: Request, res: Response): Promi
       res.status(400).json({ message: BOT_UNAUTHORIZED_HINT });
       return;
     }
-    if (isBotFrozen(projectId, effectiveTokenId)) {
+    if (isBotFrozen(projectId, effectiveTokenId, selectedToken.token)) {
       res.status(400).json({ message: 'Бот заморожен Telegram и недоступен для рассылки.' });
       return;
     }

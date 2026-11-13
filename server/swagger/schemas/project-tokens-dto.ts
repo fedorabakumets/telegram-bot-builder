@@ -23,6 +23,8 @@ export const PublicBotTokenSchema = z
     isDefault: z.number().nullable().optional().openapi({ example: 1 }),
     /** Активен (0/1) */
     isActive: z.number().nullable().optional().openapi({ example: 1 }),
+    /** Подтверждённый отказ Telegram, а не ручное отключение. */
+    authorizationError: z.string().nullable().optional(),
     /** Username бота */
     botUsername: z.string().nullable().optional().openapi({ example: "my_bot" }),
     /** Имя бота */
@@ -101,6 +103,8 @@ export const BotTokenListItemSchema = z
     isDefault: z.number().nullable().openapi({ example: 1 }),
     /** Active 0/1 */
     isActive: z.number().nullable().openapi({ example: 1 }),
+    /** Подтверждённый отказ Telegram; null при ручном отключении. */
+    authorizationError: z.string().nullable(),
     /** ID проекта */
     projectId: z.number().int().openapi({ example: 42 }),
     /** Срок хранения сообщений */

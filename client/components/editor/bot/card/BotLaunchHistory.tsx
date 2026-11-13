@@ -11,6 +11,7 @@ import { useActiveTerminals } from '../contexts/ActiveTerminalsContext';
 import { useBotDetailTabOptional } from '../canvas/bot-detail-tab-context';
 import { BotLaunchCard } from './BotLaunchCard';
 import { selectCurrentAndPast } from './select-current-launch';
+import { resolveLaunchLiveStatus } from './launch-history-utils';
 
 export { selectCurrentAndPast } from './select-current-launch';
 
@@ -40,16 +41,20 @@ export function BotLaunchHistory({
   compact = false,
   isLiveRunning = false,
 }: BotLaunchHistoryProps) {
-  const { allBotStatuses } = useBotControl();
-  const frozen = allBotStatuses.some((entry) => (entry.tokenId ?? entry.instance?.tokenId) === tokenId && entry.frozen);
+  const { allBotStatuses, stopBotMutation } = useBotControl();
+  const live = allBotStatuses.find((entry) => (entry.tokenId ?? entry.instance?.tokenId) === tokenId);
+  const frozen = live?.frozen === true;
+  /** Недоступность исполнителя не подтверждает остановку даже при сохранённом running в истории. */
+  const stopping = stopBotMutation.isPending && stopBotMutation.variables?.tokenId === tokenId;
+  const liveStatus = resolveLaunchLiveStatus(live?.status, isLiveRunning, stopping);
   const { history, isLoading } = useLaunchHistory(tokenId);
   const { openHistoryTab } = useActiveTerminals();
   const detailTab = useBotDetailTabOptional();
   const [historyOpen, setHistoryOpen] = useState(true);
 
   const { current, past } = useMemo(
-    () => selectCurrentAndPast(history ?? [], isLiveRunning, compact),
-    [history, isLiveRunning, compact],
+    () => selectCurrentAndPast(history ?? [], liveStatus === 'running' || liveStatus === 'stopping', compact, liveStatus === 'unknown'),
+    [history, liveStatus, compact],
   );
 
   const handleShowLogs = (id: number, startedAt: Date | string | null) => {
@@ -85,7 +90,7 @@ export function BotLaunchHistory({
         <h3 className="px-0.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
           Текущий
         </h3>
-        <BotLaunchCard record={current} onShowLogs={handleShowLogs} featured frozen={frozen && isLiveRunning} />
+        <BotLaunchCard record={current} onShowLogs={handleShowLogs} featured frozen={frozen} liveStatus={liveStatus} />
       </div>
 
       {past.length > 0 && (

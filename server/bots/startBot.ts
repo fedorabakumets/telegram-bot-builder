@@ -77,6 +77,7 @@ import {
 } from './botRestartManager';
 import { refuseInactiveBotStart } from './refuse-inactive-bot-start';
 import { markBotTokenUnauthorized } from './mark-bot-token-unauthorized';
+import { observeProcessTokenUnauthorized } from './observe-process-token-unauthorized';
 import { BOT_UNAUTHORIZED_HINT } from '@shared/broadcast-unauthorized';
 import { existsSync } from 'node:fs';
 import {
@@ -91,6 +92,7 @@ import {
 } from '../files/generatedCodeMeta';
 import { persistBotBuildForStart, restoreBotBuildForStart } from './builds/startBotBuildHooks';
 import { resolveRunnerBuildForStart } from './builds/runnerBuildForStart';
+import { bindFrozenBotIdentity } from './frozenBotStatus';
 import { ensureWebhookSecret } from './webhookSecret';
 import { resolveWebhookBaseUrl } from './webhookBaseUrl';
 
@@ -145,6 +147,8 @@ export async function startBot(
     /** Версия намерения фиксируется до подготовки сборки бота. */
     const commandFence = await resolveBotCommandFence(tokenId, 'start');
     const tokenRecord = await storage.getBotToken(tokenId);
+    /** Другой Telegram-бот не наследует ограничение прежнего владельца слота. */
+    if (tokenRecord?.token) bindFrozenBotIdentity(projectId, tokenId, tokenRecord.token);
     const inactiveError = refuseInactiveBotStart(tokenRecord?.isActive, tokenRecord?.authorizationError);
     if (inactiveError) {
       console.log(`⏭ Пропуск запуска: токен ${tokenId} недействителен (isActive=0)`);
@@ -621,6 +625,8 @@ export async function startBot(
 
     // Сохраняем процесс
     botProcesses.set(processKey, botProcess);
+    /** Отказ Telegram привязывается к версии токена и записи именно этого запуска. */
+    const waitForRuntimeRestriction = observeProcessTokenUnauthorized(botProcess, projectId, tokenId, token, launchId);
 
     // Сбрасываем счётчик перезапусков если бот проработал стабильно 2 минуты
     setTimeout(() => {
@@ -694,6 +700,8 @@ export async function startBot(
     });
 
     botProcess.on('exit', async (code, signal) => {
+      /** Запрет восстановления фиксируется до закрытия личности завершившегося запуска. */
+      await waitForRuntimeRestriction();
       console.log(`Бот ${projectId} (токен ${tokenId}) завершен с кодом ${code}, сигнал: ${signal}`);
       try {
         if ((globalThis as any).__dbPoolActive !== false) {
@@ -738,6 +746,8 @@ export async function startBot(
       if (isCrash && (globalThis as any).__dbPoolActive !== false) {
         try {
           const tokenRecord = await storage.getBotToken(tokenId);
+    /** Другой Telegram-бот не наследует ограничение прежнего владельца слота. */
+    if (tokenRecord?.token) bindFrozenBotIdentity(projectId, tokenId, tokenRecord.token);
           if (tokenRecord?.autoRestart === 1) {
             /** Запоминает намерение, чтобы поздний таймер не отменил ручную остановку. */
             const restartInstance = await storage.getBotInstanceByToken(tokenId);

@@ -92,13 +92,18 @@ jobs:
       # Проверяем доставку между сервисами, секрет Telegram и читаемость безопасных журналов.
       - name: Доставка webhook и маскировка секретов
         run: node --import tsx --test server/runner/runnerWebhookServer.test.ts server/routes/telegramWebhookHandler.test.ts server/routes/telegramWebhookDelivery.test.ts server/routes/telegramWebhook.integration.test.ts server/bots/webhookBaseUrl.test.ts server/utils/secret-environment-key.test.ts
-      - run: node --import tsx --test server/bots/webhookSecret.test.ts server/bots/generatedCodeFingerprint.test.ts server/runner/runnerWebhookProject.test.ts server/routes/botTokens/to-public-bot-token.test.ts
+      - run: node --import tsx --test server/bots/webhookSecret.test.ts server/bots/generatedCodeFingerprint.test.ts server/runner/runnerWebhookProject.test.ts server/routes/botTokens/to-public-bot-token.test.ts server/routes/projectRoutes/bot-token-list-dto.test.ts
       - run: python -m unittest discover -s server/python -p 'test_log_redaction.py' -v
-      - run: npx vitest run --project client client/components/editor/bot/card/use-bot-launch-settings.test.tsx client/components/editor/bot/card/BotLaunchSettings.test.tsx client/components/editor/bot/card/WebhookSecretReveal.test.tsx client/components/editor/bot/card/BotActions.test.tsx client/components/editor/bot/card/BotRuntimeModeSettings.test.tsx client/components/editor/bot/card/launch-history-utils.test.ts client/components/editor/bot/canvas/bot-canvas-status.test.ts
+      # Проверяем доверенную заморозку aiogram, личность запуска и отсутствие ложных событий из логов.
+      - run: python -m unittest discover -s server/python -p 'test_worker_telegram_failure.py' -v
+      - run: npx vitest run --project client client/components/editor/bot/card/use-bot-launch-settings.test.tsx client/components/editor/bot/card/BotLaunchSettings.test.tsx client/components/editor/bot/card/WebhookSecretReveal.test.tsx client/components/editor/bot/card/BotActions.test.tsx client/components/editor/bot/card/BotRuntimeModeSettings.test.tsx client/components/editor/bot/card/launch-history-utils.test.ts client/components/editor/bot/canvas/bot-canvas-status.test.ts client/components/editor/bot/canvas/bot-run-status-badge.test.tsx client/components/editor/bot/card/BotLaunchCard.test.tsx client/hooks/invalidate-token-metadata.test.ts client/hooks/invalidate-bot-lifecycle.test.ts client/hooks/use-project-events-ws.runtime.integration.test.tsx
       # Проверяем отдельное авторизованное раскрытие секрета без кеширования и журналирования тела.
       - run: npx vitest run --config server/routes/botTokens/webhook-secret.vitest.config.ts
       # Проверяем удалённый статус истории и возможность остановки ограниченного Telegram бота.
       - run: npx vitest run --config server/routes/botManagement/status.vitest.config.ts
+      - run: npx vitest run --config server/bots/token-lifecycle.vitest.config.ts
+      # Проверяем независимость Telegram-ограничений от процесса и подтверждённый отказ токена.
+      - run: node --import tsx --test server/bots/frozenBotStatus.test.ts server/bots/frozenAutoStop.test.ts server/runner/polling/telegramUnauthorized.test.ts server/runner/polling/telegramFrozen.test.ts server/runner/polling/sharedFrozenRouting.test.ts server/runner/polling/permanentActivations.test.ts server/runner/runnerLegacyRoutes.test.ts
       # Проверяем независимость транспорта от времени жизни сценария и надёжную очередь webhook.
       - run: node --import tsx --test server/bots/runtimeModePolicy.test.ts server/bots/runtimeModeBatch.test.ts server/runner/polling/webhookIngress.test.ts server/runner/polling/webhookQueue.integration.test.ts server/runner/polling/webhookLifecycle.integration.test.ts
       - name: Потоки сборок, очистка кеша и обратное давление

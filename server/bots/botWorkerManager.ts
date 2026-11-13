@@ -37,6 +37,11 @@ import { RemoteWorkerChannel } from "./remoteWorkerChannel";
 import { getWorkerRunnerId } from "./workerRuntime";
 import { resolveRunnerRedisUrl } from "./resolveRunnerRedisUrl";
 import { storage } from "../storages/storage";
+import { handleRuntimeTokenUnauthorized, isRuntimeAuthorizationForToken } from './handle-runtime-token-unauthorized';
+import { isRuntimeTokenUnauthorized } from './is-runtime-token-unauthorized';
+import { isFrozenBotError } from './frozenBotStatus';
+import { handleRuntimeTokenFrozen } from './handle-runtime-token-frozen';
+import { getActiveLaunchId } from '../terminal/activeLaunchIds';
 
 /** Задержка перед killWorker когда activeBots пуст (мс) */
 const WORKER_DRAIN_MS = 2_000;
@@ -51,6 +56,16 @@ interface WorkerMessage {
   content?: string;
   /** Данные статуса (для type=status) */
   data?: any;
+  /** Подтверждённый код ошибки Telegram без секрета. */
+  code?: unknown;
+  /** Источник структурированной ошибки. */
+  source?: unknown;
+  /** Метод Bot API, вернувший ошибку. */
+  method?: unknown;
+  /** Отпечаток отвергнутой версии токена. */
+  tokenFingerprint?: unknown;
+  /** Идентификатор запуска, зафиксированный источником ошибки. */
+  launch_id?: unknown;
 }
 
 /** Команда для отправки воркеру через stdin */
@@ -205,6 +220,8 @@ class BotWorkerManager extends EventEmitter {
 
   /** Последняя stderr-ошибка бота для errorMessage в БД */
   private lastBotErrors = new Map<number, string>();
+  /** Фиксация запрета восстановления должна завершиться до публикации выхода. */
+  private frozenIntentWrites = new Map<number, Promise<void>>();
 
   /** projectId, для которых killWorker/shutdownAll намеренно гасят воркер */
   private intentionalKills = new Set<number>();
@@ -495,6 +512,31 @@ class BotWorkerManager extends EventEmitter {
    * @param msg - Распарсенное сообщение
    */
   private handleWorkerMessage(projectId: number, msg: WorkerMessage): void {
+    /** Отказ авторизации обрабатывается до выхода, независимо от последующих логов. */
+    if (msg.type === 'bot_runtime_error' && msg.token_id !== undefined) {
+      const botProjectId = this.tokenProjects.get(msg.token_id);
+      if (botProjectId !== undefined) {
+        /** Exit ожидает сохранение причины до решения об автоперезапуске. */
+        const observedToken = this.startArgs.get(msg.token_id)?.token;
+        if (observedToken && isRuntimeAuthorizationForToken(msg, observedToken)) {
+          this.lastBotErrors.set(msg.token_id, 'TelegramUnauthorizedError: Telegram отклонил токен');
+        }
+        const sourceLaunchId = typeof msg.launch_id === 'number' && Number.isSafeInteger(msg.launch_id) ? msg.launch_id : undefined;
+        if (observedToken && sourceLaunchId !== undefined && sourceLaunchId === getActiveLaunchId(msg.token_id)
+          && isRuntimeAuthorizationForToken(msg, observedToken, 'telegram_frozen')) {
+          this.lastBotErrors.set(msg.token_id, 'TelegramBadRequest: FROZEN_METHOD_INVALID');
+        }
+        if (msg.code === 'telegram_frozen') {
+          const pending = handleRuntimeTokenFrozen(botProjectId, msg.token_id, msg, sourceLaunchId)
+            .catch(() => console.error('[WorkerPool] Не удалось сохранить ограничение Telegram'));
+          this.frozenIntentWrites.set(msg.token_id, pending);
+          return;
+        }
+        void handleRuntimeTokenUnauthorized(botProjectId, msg.token_id, msg)
+          .catch(() => console.error('[WorkerPool] Не удалось сохранить отказ авторизации Telegram'));
+      }
+      return;
+    }
     if (msg.type === "system") {
       this.handleSystemMessage(projectId, msg.content || "");
       return;
@@ -509,7 +551,10 @@ class BotWorkerManager extends EventEmitter {
     if (msg.token_id !== undefined && msg.token_id > 0) {
       const content = redactSecrets(msg.content || "");
       if (msg.type === "stderr") {
-        this.lastBotErrors.set(msg.token_id, content);
+        /** Последующие строки очистки не затирают подтверждённый отказ Telegram. */
+        if (!isRuntimeTokenUnauthorized(this.lastBotErrors.get(msg.token_id)) && !isFrozenBotError(this.lastBotErrors.get(msg.token_id))) {
+          this.lastBotErrors.set(msg.token_id, content);
+        }
         const preview = content.replace(/^\[\d{2}:\d{2}:\d{2}\]\s*/, "").split("\n")[0];
         console.error(`🏭 [WorkerPool:${projectId}] бот ${msg.token_id} ошибка: ${preview}`);
       }
@@ -564,8 +609,17 @@ class BotWorkerManager extends EventEmitter {
         console.log(`🏭 [WorkerPool:${projectId}] бот ${ev.tokenId} остановлен`);
       }
       /** Передаём секрет завершившегося запуска, чтобы его поздний 401 не отключил замену. */
-      this.emit("bot-exited", this.projectOf(ev.tokenId, projectId), ev.tokenId, status, runtimeError, false,
-        this.startArgs.get(ev.tokenId)?.token);
+      const tokenId = ev.tokenId;
+      const botProjectId = this.projectOf(tokenId, projectId);
+      const observedToken = this.startArgs.get(tokenId)?.token;
+      const pendingFreeze = this.frozenIntentWrites.get(tokenId);
+      /** Ожидаем запись намерения, но не подтверждение stop_bot, приходящее этим же каналом. */
+      const publishExit = () => {
+        if (this.frozenIntentWrites.get(tokenId) === pendingFreeze) this.frozenIntentWrites.delete(tokenId);
+        this.emit('bot-exited', botProjectId, tokenId, status, runtimeError, false, observedToken);
+      };
+      if (pendingFreeze) void pendingFreeze.then(publishExit);
+      else publishExit();
       // Drain: не убиваем воркер мгновенно (гонка с restart)
       if (worker && worker.activeBots.size === 0 && worker.status === "ready") {
         this.scheduleWorkerDrain(projectId);
@@ -687,7 +741,8 @@ class BotWorkerManager extends EventEmitter {
       project_id: args.projectId,
       bot_file: stageBotFile(workerKey, args.botFile, worker.docker),
       ...(args.webhook ? { webhook_url: args.webhook.webhookUrl, webhook_port: args.webhook.webhookPort } : {}),
-      ...(args.env ? { env: args.env } : {}),
+      env: { ...args.env, ...(getActiveLaunchId(args.tokenId) !== undefined
+        ? { BOT_LAUNCH_ID: String(getActiveLaunchId(args.tokenId)) } : {}) },
       ...(args.build ? { build: toCommandBuild(args.build) } : {}),
       ...(args.fence ? { instance_id: args.fence.instanceId, desired_generation: args.fence.desiredGeneration } : {}),
     });

@@ -3,7 +3,7 @@
  * @module bot/canvas/bot-run-status-badge
  */
 
-import { botCanvasStatusLabel, type BotCanvasStatus } from './bot-canvas-status';
+import { botCanvasStatusLabel, isFrozenCanvasStatus, type BotCanvasStatus } from './bot-canvas-status';
 
 /** Пропсы бейджа */
 interface BotRunStatusBadgeProps {
@@ -19,16 +19,19 @@ interface BotRunStatusBadgeProps {
 export function BotRunStatusBadge({ status }: BotRunStatusBadgeProps): React.JSX.Element {
   const invalid = status === 'invalid';
   const online = status === 'online';
-  const failed = status === 'failed' || status === 'error' || status === 'frozen';
+  const failed = status === 'failed' || status === 'error' || isFrozenCanvasStatus(status);
   const starting = status === 'starting' || status === 'restarting';
   const stopping = status === 'stopping';
   const neutral = !online && !invalid && !failed && !starting && !stopping;
   return (
     <span
       role="status"
+      title={status === 'frozen_running'
+        ? 'Процесс ещё работает. Сервер автоматически остановит его после ограничения Telegram.'
+        : botCanvasStatusLabel(status)}
       aria-live="polite"
       className={[
-        'inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px] font-semibold tracking-wide',
+        'inline-flex max-w-full items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px] font-semibold tracking-wide',
         !invalid && 'uppercase',
         online && 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
         (invalid || failed) && 'bg-red-500/10 text-red-500 border-red-500/30',
@@ -49,7 +52,7 @@ export function BotRunStatusBadge({ status }: BotRunStatusBadgeProps): React.JSX
           neutral && 'bg-muted-foreground/50',
         ].filter(Boolean).join(' ')}
       />
-      {botCanvasStatusLabel(status)}
+      <span className="min-w-0 whitespace-normal">{botCanvasStatusLabel(status)}</span>
     </span>
   );
 }

@@ -1,6 +1,8 @@
 /** @fileoverview Ограниченный HTTP-транспорт Telegram без загрузки Undici. */
 import { request as httpRequest } from "node:http";
 import { request as httpsRequest } from "node:https";
+import { confirmedTelegramUnauthorized, TelegramTokenUnauthorized } from "./telegramUnauthorized";
+import { confirmedTelegramFrozen, TelegramBotFrozen } from "./telegramFrozen";
 
 /** Ответ Telegram без доверия к произвольным полям тела. */
 export interface PollResponse {
@@ -33,11 +35,20 @@ export async function requestUpdates(token: string, payload: object, signal: Abo
           }
           const parsed = JSON.parse(Buffer.concat(chunks).toString("utf8"));
           if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("Некорректный ответ Telegram");
+          if (confirmedTelegramUnauthorized(response.statusCode ?? 0, parsed)) {
+            reject(new TelegramTokenUnauthorized(token, method)); return;
+          }
+          if (confirmedTelegramFrozen(response.statusCode ?? 0, parsed)) {
+            reject(new TelegramBotFrozen(token, method)); return;
+          }
           resolve({ status: response.statusCode ?? 0, body: parsed });
         } catch { reject(new Error("Ошибка чтения ответа Telegram")); }
       });
       request.on("error", () => reject(new Error("Соединение Telegram прервано")));
       request.end(body);
     });
-  } catch { throw new Error("Не удалось получить обновления Telegram"); }
+  } catch (error) {
+    if (error instanceof TelegramTokenUnauthorized || error instanceof TelegramBotFrozen) throw error;
+    throw new Error("Не удалось получить обновления Telegram");
+  }
 }

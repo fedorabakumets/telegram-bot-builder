@@ -43,6 +43,8 @@ export async function handleBotProjectStatuses(req: Request, res: Response): Pro
     }
 
     const tokens = await storage.getBotTokensByProject(projectId);
+    /** Текущая личность бота проверяется без дополнительных запросов на каждый статус. */
+    const tokenById = new Map(tokens.map((token) => [token.id, token]));
     const instances = await storage.getBotInstancesByProject(projectId);
     const instanceByTokenId = new Map(instances.map((row) => [row.tokenId, row]));
     const liveByTokenId = new Map<number, ActualBotStatus>();
@@ -73,7 +75,7 @@ export async function handleBotProjectStatuses(req: Request, res: Response): Pro
         instanceByTokenId,
         (tokenId) => liveByTokenId.get(tokenId) ?? 'stopped',
         (tokenId) => isTokenPendingRestore(tokenId),
-      ).map((item) => ({ ...item, frozen: isBotFrozen(projectId, item.tokenId) })),
+      ).map((item) => ({ ...item, frozen: isBotFrozen(projectId, item.tokenId, tokenById.get(item.tokenId)?.token) })),
     });
   } catch (error) {
     console.error('[BotProjectStatuses] Ошибка:', error);

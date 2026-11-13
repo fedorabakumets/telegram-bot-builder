@@ -35,6 +35,8 @@ export interface PollingChild {
 
 /** Зависимости, подменяемые при проверке конкурентного исполнения. */
 export interface DispatcherDependencies {
+  /** Передаёт проверенную причину отказа до сообщения завершения регистрации. */
+  onError?(bot: PollingBot, error: unknown): void;
   /** Проверяет наличие сохранённого обновления без удаления. */
   hasPending(bot: PollingBot): Promise<boolean>;
   /** Принимает обновления, сохраняя их до вызова пробуждения. */

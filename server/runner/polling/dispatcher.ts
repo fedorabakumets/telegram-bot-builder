@@ -23,7 +23,7 @@ export class NodePollingDispatcher {
   start(bot: PollingBot): Promise<void> { return this.operations.run(bot.tokenId, () => this.register(bot)); }
   /** Заменяет регистрацию внутри уже упорядоченной команды запуска. */
   private async register(bot: PollingBot): Promise<void> {
-    await this.stopEntry(bot.tokenId);
+    await this.stopEntry(bot.tokenId, false);
     const entry: DispatchEntry = { bot, abort: new AbortController(), childAbort: new AbortController(),
       quiescing: false, failed: false, pending: true, ready: false };
     this.entries.set(bot.tokenId, entry);
@@ -35,13 +35,14 @@ export class NodePollingDispatcher {
         this.wake(bot.tokenId);
       })).then(() => {
         if (!entry.abort.signal.aborted) throw new Error("Приёмник неожиданно завершился");
-      }).catch(async () => {
+      }).catch(async (error) => {
         if (entry.abort.signal.aborted) return;
         entry.failed = true;
         entry.abort.abort();
         if (this.entries.get(bot.tokenId) === entry) this.entries.delete(bot.tokenId);
         if (entry.retry) clearTimeout(entry.retry);
         await this.quiesceChild(bot.tokenId, entry);
+        this.dependencies.onError?.(bot, error);
         this.dependencies.lifecycle(bot, "error");
       });
   }
@@ -54,8 +55,12 @@ export class NodePollingDispatcher {
   }
   /** Останавливает регистрацию, не удаляя очередь необработанных обновлений. */
   stop(tokenId: number): Promise<boolean> { return this.operations.run(tokenId, () => this.stopEntry(tokenId)); }
+  /** Освобождает прежнюю регистрацию при смене режима без ложного события остановки нового запуска. */
+  stopForHandoff(tokenId: number): Promise<boolean> {
+    return this.operations.run(tokenId, () => this.stopEntry(tokenId, false));
+  }
   /** Завершает регистрацию без повторного захвата очереди команд того же токена. */
-  private async stopEntry(tokenId: number): Promise<boolean> {
+  private async stopEntry(tokenId: number, notify = true): Promise<boolean> {
     const entry = this.entries.get(tokenId);
     if (!entry) return false;
     entry.abort.abort();
@@ -63,7 +68,7 @@ export class NodePollingDispatcher {
     await this.quiesceChild(tokenId, entry);
     await entry.receiver;
     if (this.entries.get(tokenId) === entry) this.entries.delete(tokenId);
-    if (!entry.failed) this.dependencies.lifecycle(entry.bot, "stopped");
+    if (!entry.failed && notify) this.dependencies.lifecycle(entry.bot, "stopped");
     return true;
   }
   /** Завершает приёмники и обработчики до выключения исполнителя. */

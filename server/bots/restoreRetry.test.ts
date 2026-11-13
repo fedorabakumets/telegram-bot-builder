@@ -38,6 +38,17 @@ describe('delayBeforeAttempt', () => {
 });
 
 describe('startBotWithRetries', () => {
+  it('проверяет разрешение заново после backoff и отменяет вторую попытку', async () => {
+    let allowed = true, calls = 0;
+    const result = await startBotWithRetries(1, 'tok', 7, {
+      canStart: async () => allowed,
+      waitFn: async () => { allowed = false; },
+      startBotFn: async () => { calls++; return { success: false, error: 'Временная ошибка' }; },
+    });
+    assert.strictEqual(calls, 1);
+    assert.strictEqual(result.attempts, 1);
+    assert.strictEqual(result.error, 'Запуск отменён остановкой бота');
+  });
   it('успех со второй попытки', async () => {
     let calls = 0;
     const waits: number[] = [];

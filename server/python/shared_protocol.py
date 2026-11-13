@@ -26,6 +26,12 @@ class SharedProtocol:
         import worker
         import worker_isolation as iso
         import process_startup_timing
+        original_runtime_error = worker.emit_runtime_error
+
+        def runtime_error(frame):
+            """Сохраняет идентичность активации источника доверенной ошибки Telegram."""
+            token_id = frame.get("token_id")
+            original_runtime_error({**frame, "activation_id": self.active.get(token_id)})
 
         def log(token_id, content, stream="stdout"):
             """Передаёт лог только владельцу соответствующего запуска."""
@@ -89,4 +95,5 @@ class SharedProtocol:
 
         worker.emit_log = log
         worker.emit_system = system
+        worker.emit_runtime_error = runtime_error
         process_startup_timing.mark = mark

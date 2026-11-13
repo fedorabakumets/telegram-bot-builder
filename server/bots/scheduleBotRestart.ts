@@ -12,6 +12,7 @@ import {
 } from './botRestartManager';
 import { startBotAfterStop } from './startBotAfterStop';
 import { getBotStartRevision } from './botStartState';
+import { automaticBotStartAllowed } from './automaticBotStartAllowed';
 
 /**
  * Если токен с autoRestart=1 и выход неожиданный — ставит backoff и вызывает startBot.
@@ -39,6 +40,7 @@ export async function scheduleBotRestart(
       );
       return;
     }
+    if (!await automaticBotStartAllowed(projectId, tokenId)) return;
 
     const inactiveError = refuseInactiveBotStart(tokenRecord.isActive, tokenRecord.authorizationError);
     if (inactiveError) {
@@ -99,6 +101,8 @@ export async function scheduleBotRestart(
           }
 
           if (getBotStartRevision(tokenId) !== revision) return;
+
+          if (!await automaticBotStartAllowed(projectId, tokenId)) return;
 
           const result = await startBotAfterStop(projectId, fresh.token, tokenId, false);
           if (!result.success) {

@@ -6,7 +6,7 @@
 import { isTokenActiveForBroadcast } from '@shared/broadcast-unauthorized';
 
 /** Статус, который видит пользователь на карточке и в шапке */
-export type BotCanvasStatus = 'online' | 'offline' | 'unknown' | 'inactive' | 'invalid' | 'frozen' | 'failed' | 'error' | 'starting' | 'stopping' | 'restarting';
+export type BotCanvasStatus = 'online' | 'offline' | 'unknown' | 'inactive' | 'invalid' | 'frozen_running' | 'frozen_stopped' | 'frozen_unknown' | 'failed' | 'error' | 'starting' | 'stopping' | 'restarting';
 
 /** Входные данные для статуса */
 export interface BotCanvasStatusInput {
@@ -34,8 +34,11 @@ export interface BotCanvasStatusInput {
 export function resolveBotCanvasStatus(input: BotCanvasStatusInput): BotCanvasStatus {
   /** Остановка процесса остаётся видимой даже при ограничении Telegram или отключённом токене. */
   if (input.operation === 'stopping') return 'stopping';
-  if (input.frozen) return 'frozen';
   if (input.authorizationError === 'unauthorized') return 'invalid';
+  if (input.frozen) {
+    if (input.unknown) return 'frozen_unknown';
+    return input.isRunning ? 'frozen_running' : 'frozen_stopped';
+  }
   if (!isTokenActiveForBroadcast(input.isActive)) return 'inactive';
   if (input.operation) return input.operation;
   if (input.unknown) return 'unknown';
@@ -51,7 +54,9 @@ export function resolveBotCanvasStatus(input: BotCanvasStatusInput): BotCanvasSt
  */
 export function botCanvasStatusLabel(status: BotCanvasStatus): string {
   if (status === 'unknown') return 'Нет связи';
-  if (status === 'frozen') return 'Заморожен';
+  if (status === 'frozen_running') return 'Заморожен · ожидается автоостановка';
+  if (status === 'frozen_stopped') return 'Заморожен · процесс остановлен';
+  if (status === 'frozen_unknown') return 'Заморожен · состояние процесса неизвестно';
   if (status === 'starting') return 'Запускается…';
   if (status === 'stopping') return 'Останавливается…';
   if (status === 'restarting') return 'Перезапускается…';
@@ -61,4 +66,13 @@ export function botCanvasStatusLabel(status: BotCanvasStatus): string {
   if (status === 'inactive') return 'Отключён';
   if (status === 'failed') return 'Запуск с ошибкой';
   return 'Офлайн';
+}
+
+/**
+ * Отделяет ограничение Telegram от жизненного цикла процесса.
+ * @param status - Визуальный статус
+ * @returns Признак любой комбинации заморозки и состояния процесса
+ */
+export function isFrozenCanvasStatus(status: BotCanvasStatus): boolean {
+  return status === 'frozen_running' || status === 'frozen_stopped' || status === 'frozen_unknown';
 }

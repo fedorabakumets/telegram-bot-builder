@@ -32,6 +32,8 @@ export interface StartBotWithRetriesDeps {
   waitFn?: (ms: number) => Promise<void>;
   /** Предельное количество попыток. */
   maxAttempts?: number;
+  /** Повторная проверка автоматического запуска после задержки каждой попытки. */
+  canStart?: () => Promise<boolean>;
 }
 
 /**
@@ -88,7 +90,8 @@ export async function startBotWithRetries(
       await wait(delay);
     }
 
-    if (getBotStartRevision(tokenId) !== revision) {
+    const allowed = !deps.canStart || await deps.canStart();
+    if (getBotStartRevision(tokenId) !== revision || !allowed) {
       return { success: false, error: BOT_START_CANCELLED_ERROR, attempts: attempt - 1 };
     }
     const result = await start(projectId, token, tokenId, {

@@ -7,6 +7,7 @@ import { NodePollingDispatcher, type PollingBot } from "./dispatcher";
 function fixture() {
   const receivers = new Set<AbortSignal>();
   let children = 0;
+  const states: string[] = [];
   const dispatcher = new NodePollingDispatcher({
     hasPending: async () => true,
     receive: async (_bot, signal, _wake, ready) => {
@@ -25,11 +26,11 @@ function fixture() {
       let stopped = false;
       return { done, stop: async () => { if (!stopped) { stopped = true; children--; finish(); } } };
     },
-    lifecycle: () => {},
+    lifecycle: (_bot, state) => { states.push(state); },
   });
   const bot: PollingBot = { tokenId: 1, token: "fake", botFile: "fake.py", env: {},
     idleTimeout: 30, projectId: 1, workerKey: "1", instance: "test" };
-  return { dispatcher, bot, receivers, childCount: () => children };
+  return { dispatcher, bot, receivers, states, childCount: () => children };
 }
 
 test("два одновременных запуска оставляют ровно один приёмник и очищаются при остановке", async () => {
@@ -41,6 +42,20 @@ test("два одновременных запуска оставляют ров
     assert.equal(f.receivers.size, 0);
     assert.equal(f.childCount(), 0);
     assert.equal(f.dispatcher.counters().registeredBots, 0);
+  } finally { await f.dispatcher.shutdown(); }
+});
+
+test("замена регистрации не публикует stop прежнего запуска, явная остановка публикует", async () => {
+  const f = fixture();
+  try {
+    await f.dispatcher.start(f.bot);
+    await f.dispatcher.start(f.bot);
+    assert.deepEqual(f.states, ["started", "started"]);
+    await f.dispatcher.stopForHandoff(1);
+    assert.deepEqual(f.states, ["started", "started"]);
+    await f.dispatcher.start(f.bot);
+    await f.dispatcher.stop(1);
+    assert.deepEqual(f.states, ["started", "started", "started", "stopped"]);
   } finally { await f.dispatcher.shutdown(); }
 });
 

@@ -19,6 +19,7 @@ import {
 } from "./restoreState";
 import { groupRestoreInstancesByProject } from "./restoreGrouping";
 import { workerManager } from './botWorkerManager';
+import { automaticBotStartAllowed } from './automaticBotStartAllowed';
 
 export interface RestoreRunningBotsResult {
   /** Сколько ботов пытались поднять */
@@ -99,11 +100,13 @@ async function restoreProjectGroup(
         markTokenRestored(tokenId);
         continue;
       }
+      if (!await automaticBotStartAllowed(instance.projectId, tokenId)) continue;
 
       const result = await startBotWithRetries(
         instance.projectId,
         launchToken,
         tokenId,
+        { canStart: () => automaticBotStartAllowed(instance.projectId, tokenId) },
       );
 
       if (result.success) {
@@ -164,7 +167,7 @@ export async function restoreRunningBots(): Promise<RestoreRunningBotsResult> {
     const allInstances = await storage.getAllBotInstances();
     const runningInstances = allInstances.filter(
       (i) =>
-        (i.status === "running" ||
+        i.desiredStatus !== 'stopped' && (i.status === "running" ||
           i.errorMessage === "__server_restart__" ||
           (i.status === "stopped" && !i.stoppedAt) ||
           (i.status === "stopped" && isAbruptShutdown(i.errorMessage))) &&

@@ -55,6 +55,8 @@ export const TokenUpdatedPayloadSchema = z
     botFirstName: z.string().nullable(),
     isDefault: z.number().nullable(),
     isActive: z.number().nullable(),
+    /** Подтверждённый отказ Telegram, снимаемый заменой токена. */
+    authorizationError: z.string().nullable().optional(),
     messagesRetentionDays: z.number().int(),
     autoRestart: z.number().nullable(),
     maxRestartAttempts: z.number().nullable(),

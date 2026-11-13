@@ -19,8 +19,17 @@ describe('resolveBotCanvasStatus', () => {
     expect(botCanvasStatusLabel('unknown')).toBe('Нет связи');
   });
   it('показывает заморозку даже при работающем процессе', () => {
-    expect(resolveBotCanvasStatus({ frozen: true, isRunning: true })).toBe('frozen');
-    expect(botCanvasStatusLabel('frozen')).toBe('Заморожен');
+    expect(resolveBotCanvasStatus({ frozen: true, isRunning: true })).toBe('frozen_running');
+    expect(botCanvasStatusLabel('frozen_running')).toBe('Заморожен · ожидается автоостановка');
+  });
+  it('не скрывает остановленный или неизвестный процесс за заморозкой', () => {
+    expect(resolveBotCanvasStatus({ frozen: true, isRunning: false })).toBe('frozen_stopped');
+    expect(botCanvasStatusLabel('frozen_stopped')).toBe('Заморожен · процесс остановлен');
+    expect(resolveBotCanvasStatus({ frozen: true, isRunning: true, unknown: true })).toBe('frozen_unknown');
+    expect(botCanvasStatusLabel('frozen_unknown')).toContain('состояние процесса неизвестно');
+  });
+  it('считает подтверждённый недействительный токен важнее старой заморозки', () => {
+    expect(resolveBotCanvasStatus({ frozen: true, authorizationError: 'unauthorized', isRunning: false })).toBe('invalid');
   });
   it('помечает недействительный токен даже если процесс не запущен', () => {
     expect(resolveBotCanvasStatus({ isActive: 0, authorizationError: 'unauthorized', isRunning: false, hasFailure: true }))

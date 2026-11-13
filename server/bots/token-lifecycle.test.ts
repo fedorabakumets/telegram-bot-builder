@@ -31,6 +31,12 @@ it('не отключает секрет, заменённый до чтения
   await markBotTokenUnauthorized(2, 4, 'old');
   expect(mocks.update).not.toHaveBeenCalled();
 });
+it('добавляет подтверждённую причину уже отключённому токену', async () => {
+  mocks.get.mockResolvedValue({ id: 4, projectId: 2, token: 'old', isActive: 0, authorizationError: null });
+  await markBotTokenUnauthorized(2, 4, 'old');
+  expect(mocks.set).toHaveBeenCalledWith(expect.objectContaining({ isActive: 0, authorizationError: 'unauthorized' }));
+  expect(mocks.emit).toHaveBeenCalledTimes(1);
+});
 it('не уведомляет после проигранного сравнения при замене между чтением и записью', async () => {
   mocks.returning.mockResolvedValue([]);
   await markBotTokenUnauthorized(2, 4, 'old');

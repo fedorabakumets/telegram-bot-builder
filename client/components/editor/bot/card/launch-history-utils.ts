@@ -16,10 +16,24 @@ export interface LaunchStatusMeta {
 }
 
 /**
+ * Выбирает подтверждённое состояние процесса, сохраняя приоритет свежего ответа исполнителя.
+ * @param status - Последнее состояние исполнителя.
+ * @param fallbackRunning - Запасное состояние родительской панели.
+ * @param stopping - Подтверждённая отправка команды остановки текущего бота.
+ * @returns Состояние процесса без предположения о завершённой остановке.
+ */
+export function resolveLaunchLiveStatus(status: string | undefined, fallbackRunning: boolean, stopping = false): 'running' | 'stopping' | 'stopped' | 'error' | 'unknown' | undefined {
+  if (status === 'unknown' || status === 'stopped' || status === 'error') return status;
+  if (stopping || status === 'stopping') return 'stopping';
+  if (status === 'running') return status;
+  return fallbackRunning ? 'running' : undefined;
+}
+
+/**
  * Мета статуса запуска для UI в стиле Railway
  * @param status - running | stopped | error
  * @param errorMessage - Текст ошибки
- * @param frozen - Подтверждённое ограничение Telegram для текущего запуска
+ * @param frozen - Ограничение Telegram, не определяющее состояние процесса
  * @returns Мета для бейджа и футера
  */
 export function getLaunchStatusMeta(
@@ -27,16 +41,21 @@ export function getLaunchStatusMeta(
   errorMessage?: string | null,
   frozen = false,
 ): LaunchStatusMeta {
-  if (frozen) return {
-    label: 'Заморожен',
-    badgeClass: 'bg-red-500/15 text-red-400 border-red-500/30',
-    footer: 'Telegram ограничил бота. Запущенный процесс можно остановить.',
+  if (status === 'unknown') return {
+    label: 'Нет связи',
+    badgeClass: 'bg-muted text-muted-foreground border-border',
+    footer: frozen ? 'Telegram ограничил бота. Состояние процесса неизвестно.' : 'Состояние процесса неизвестно: нет связи с исполнителем.',
+  };
+  if (status === 'stopping') return {
+    label: 'Останавливается',
+    badgeClass: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
+    footer: frozen ? 'Telegram ограничил бота. Автоматическая остановка ещё не подтверждена.' : 'Ожидается подтверждение остановки исполнителем.',
   };
   if (status === 'running') {
     return {
-      label: 'Онлайн',
+      label: frozen ? 'Процесс работает' : 'Онлайн',
       badgeClass: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
-      footer: 'Бот работает',
+      footer: frozen ? 'Telegram ограничил бота. Процесс ещё работает; ожидается автоматическая остановка.' : 'Бот работает',
     };
   }
   if (status === 'error') {
@@ -49,7 +68,7 @@ export function getLaunchStatusMeta(
   return {
     label: 'Остановлен',
     badgeClass: 'bg-muted text-muted-foreground border-border',
-    footer: 'Запуск остановлен',
+    footer: frozen ? 'Telegram ограничил бота. Процесс остановлен.' : 'Запуск остановлен',
   };
 }
 

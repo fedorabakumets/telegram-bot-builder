@@ -14,6 +14,8 @@ import type { ProjectEvent, StartOfflineProgressPayload } from '@shared/project-
 import { startOfflineProgressQueryKey } from '@/components/editor/bot/start-offline-progress-query';
 import { invalidateAllBotStatusQueries, invalidateBotStatusQueries } from '@/components/editor/bot/invalidate-bot-status-queries';
 import { invalidateRuntimeSettingsAfterReconnect, invalidateTokenRuntimeSettings } from './invalidate-token-runtime-settings';
+import { invalidateTokenMetadata } from './invalidate-token-metadata';
+import { invalidateBotLifecycle, invalidateLaunchHistories } from './invalidate-bot-lifecycle';
 
 /**
  * Структура события проекта, получаемого по WebSocket
@@ -51,10 +53,8 @@ function handleTokenEvent(
   msg: AllProjectsWsEvent,
   onTokenCreated?: UseAllProjectsEventsWsOptions['onTokenCreated'],
 ): void {
-  queryClient.invalidateQueries({ queryKey: [`/api/projects/${msg.projectId}/tokens`] });
-  /** Новый токен должен повторно загрузить профиль после прежнего отказа Telegram. */
-  queryClient.invalidateQueries({ queryKey: [`/api/projects/${msg.projectId}/bot/info`] });
-  queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+  /** Авторизация и live-статус обновляются вместе после замены токена. */
+  invalidateTokenMetadata(queryClient, msg.projectId, msg.tokenId);
   invalidateTokenRuntimeSettings(queryClient, msg.projectId, msg.tokenId);
   if (msg.type === 'token-created' && msg.tokenId) {
     const tokenName = (msg.data as { tokenName?: string } | undefined)?.tokenName ?? '';
@@ -71,16 +71,12 @@ function handleBotEvent(
   queryClient: ReturnType<typeof useQueryClient>,
   msg: AllProjectsWsEvent,
 ): void {
+  invalidateBotLifecycle(queryClient, msg.projectId, msg.tokenId);
   if (msg.tokenId) {
-    queryClient.invalidateQueries({ queryKey: ['launch-history', msg.tokenId] });
-    invalidateBotStatusQueries(queryClient, msg.projectId, msg.tokenId);
     queryClient.invalidateQueries({
       queryKey: ['/api/projects', msg.projectId, 'tokens', msg.tokenId, 'logs'],
     });
-  } else {
-    invalidateBotStatusQueries(queryClient, msg.projectId);
   }
-  queryClient.invalidateQueries({ queryKey: [`/api/projects/${msg.projectId}/bot/info`] });
 }
 
 /**
@@ -127,7 +123,11 @@ export function useAllProjectsEventsWs(options?: UseAllProjectsEventsWsOptions):
   useEffect(() => {
     const unsubscribeReconnect = onSharedTerminalWsReconnect(() => {
       invalidateAllBotStatusQueries(queryClient);
+      /** Возвращает актуальные причины отключения после пропущенных событий. */
+      invalidateTokenMetadata(queryClient);
       invalidateRuntimeSettingsAfterReconnect(queryClient);
+      /** Восстанавливает завершённые запуски, чьи события пришлись на разрыв связи. */
+      invalidateLaunchHistories(queryClient);
     });
 
     const unsubscribe = subscribeSharedTerminalWs((raw) => {

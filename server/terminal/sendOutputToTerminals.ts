@@ -41,7 +41,7 @@ export async function sendOutputToTerminals(
   launchId?: number
 ): Promise<void> {
   content = redactSecrets(content);
-  recordFrozenBotError(projectId, tokenId, content);
+  /** Ограничения Telegram меняет структурированный наблюдатель, а не произвольный текст лога. */
   const timestamp = type === "stdout" || type === "stderr"
     ? parseLogTimestamp(content)
     : new Date().toISOString();

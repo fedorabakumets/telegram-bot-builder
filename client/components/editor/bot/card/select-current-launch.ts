@@ -13,16 +13,20 @@ import type { BotLaunchHistory as LaunchRecord } from '@shared/schema';
  * @param history - Записи истории
  * @param isLiveRunning - Бот реально онлайн
  * @param compact - Лимит past
+ * @param liveUnknown - Исполнитель недоступен, поэтому нельзя выдумывать время остановки.
  * @returns current и past
  */
 export function selectCurrentAndPast(
   history: LaunchRecord[],
   isLiveRunning: boolean,
   compact: boolean,
+  liveUnknown = false,
 ): { current: LaunchRecord | null; past: LaunchRecord[] } {
   const running = history.find((h) => h.status === 'running');
   let current: LaunchRecord | null;
-  if (isLiveRunning) {
+  if (liveUnknown) {
+    current = running ?? history[0] ?? null;
+  } else if (isLiveRunning) {
     if (running) {
       current = running;
     } else if (history[0]) {

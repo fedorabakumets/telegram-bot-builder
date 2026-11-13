@@ -61,6 +61,12 @@ function testPickChangedSettings(): void {
   const changed = pickChangedSettings(base, after);
   assert.deepEqual(changed, ['messagesRetentionDays']);
   assert.deepEqual(pickChangedSettings(base, { ...base, webhookSecretToken: 'created' }), ['hasWebhookSecret']);
+  /** Подтверждённый отказ и его снятие заменой токена доставляются отдельным полем. */
+  const invalid = { ...base, isActive: 0, authorizationError: 'unauthorized' };
+  const replaced = { ...base, isActive: 1, authorizationError: null };
+  assert.equal(toTokenUpdatedPayload(invalid).authorizationError, 'unauthorized');
+  assert.equal(toTokenUpdatedPayload(replaced).authorizationError, null);
+  assert.deepEqual(pickChangedSettings(invalid, replaced), ['isActive', 'authorizationError']);
 }
 
 testNoSecretsInPayload();
