@@ -3,8 +3,7 @@
  * @module lib/bot-tools/constants
  */
 
-import { z } from 'zod';
-import { CONDITION_OPERATOR_VALUES } from '@shared/schema/tables/condition-branch-schema';
+import { CONDITION_OPERATOR_VALUES, conditionBranchSchema } from '@shared/schema/tables/condition-branch-schema';
 import { nodeSchema } from '@shared/schema/tables/node-schema';
 
 /** Все допустимые типы нод из zod-схемы */
@@ -14,27 +13,7 @@ export const NODE_TYPES: readonly string[] = nodeSchema.shape.type.options;
 export const CONDITION_OPERATORS = CONDITION_OPERATOR_VALUES;
 
 /**
- * Снимает обёртку ZodDefault (например branches: z.array(...).default([]))
- * @param schema - Zod-схема, возможно с .default()
- * @returns Внутренняя схема без default
+ * Операторы из общей схемы ветки, которую использует node-schema.
+ * Прямой доступ не зависит от различий API обёртки default в Zod 3 и Zod 4.
  */
-function unwrapZodDefault(schema: z.core.$ZodType): z.core.$ZodType {
-  return schema instanceof z.ZodDefault ? schema.unwrap() : schema;
-}
-
-/**
- * Извлекает enum операторов из zod-схемы branches в node-schema
- * @returns ZodEnum операторов или null
- */
-function getBranchOperatorEnum(): z.ZodEnum | null {
-  const branches = unwrapZodDefault(nodeSchema.shape.data.shape.branches);
-  if (!(branches instanceof z.ZodArray)) return null;
-  const branchObj = branches.element;
-  if (!(branchObj instanceof z.ZodObject)) return null;
-  const operator = branchObj.shape.operator;
-  return operator instanceof z.ZodEnum ? operator : null;
-}
-
-/** Операторы, принятые zod-схемой node-schema (может быть уже полного списка) */
-export const ZOD_CONDITION_OPERATORS: readonly string[] = (getBranchOperatorEnum()?.options ?? [])
-  .filter((value): value is string => typeof value === 'string');
+export const ZOD_CONDITION_OPERATORS: readonly string[] = conditionBranchSchema.shape.operator.options;

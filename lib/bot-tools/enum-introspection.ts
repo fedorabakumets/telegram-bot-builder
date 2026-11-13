@@ -8,16 +8,21 @@
  * значения enum-полей (`buttons[].action`, `assignments[].mode` и т.п.) с первого раза.
  */
 
-/** Имена обёрток zod, которые нужно разворачивать до «ядра» через ._def.innerType */
+/** Имена обёрток Zod 3/4, разворачиваемых через внутреннюю схему. */
 const WRAPPER_TYPE_NAMES = new Set(['ZodOptional', 'ZodNullable', 'ZodDefault']);
 
 /**
- * Безопасно читает discriminator zod-узла (._def.typeName)
+ * Приводит дискриминаторы Zod 3 и Zod 4 к общим именам типов.
  * @param schema - Произвольный zod-узел (тип неизвестен)
  * @returns Имя типа zod-узла или undefined
  */
 function getTypeName(schema: unknown): string | undefined {
-  return (schema as any)?._def?.typeName;
+  const definition = (schema as any)?._def;
+  if (typeof definition?.typeName === 'string') return definition.typeName;
+  const type = definition?.type;
+  return typeof type === 'string'
+    ? `Zod${type.charAt(0).toUpperCase()}${type.slice(1)}`
+    : undefined;
 }
 
 /**
@@ -37,6 +42,12 @@ function unwrapSchema(schema: unknown): unknown {
     // ZodEffects (z.preprocess / z.refine) — внутренняя схема лежит в ._def.schema
     if (typeName === 'ZodEffects') {
       current = (current as any)._def?.schema;
+      continue;
+    }
+    // В Zod 4 preprocess/transform представлены конвейером входа и выхода.
+    if (typeName === 'ZodPipe') {
+      const definition = (current as any)._def;
+      current = getTypeName(definition.in) === 'ZodTransform' ? definition.out : definition.in;
       continue;
     }
     break;
