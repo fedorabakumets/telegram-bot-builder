@@ -17,7 +17,8 @@ import type { PollingBot } from "./dispatcherTypes";
 async function api(run: (base: string, methods: string[]) => Promise<void>): Promise<void> {
   const methods: string[] = [];
   const server = createServer((req, res) => {
-    methods.push(req.url!.split("/").at(-1)!);
+    /** Последний сегмент URL читается без требований к библиотеке ES2022. */
+    methods.push(req.url!.split("/").pop()!);
     res.writeHead(400, { "content-type": "application/json" });
     res.end(JSON.stringify({ ok: false, error_code: 400, description: "Bad Request: FROZEN_METHOD_INVALID" }));
   });
