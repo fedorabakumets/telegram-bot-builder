@@ -22,6 +22,8 @@ export interface WorkerRuntimeGroup {
   pythonRssBytes: number | null;
   /** Наличие процесса обработки либо неизвестное значение. */
   hostAlive: boolean | null;
+  /** Подтверждённый единый Python для постоянных и временных сценариев. */
+  hostTopology?: 'unified' | null;
   /** Фактический способ обработки process-ботов. */
   handlerMode: 'shared' | 'isolated' | null;
 }

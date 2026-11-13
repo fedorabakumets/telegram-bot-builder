@@ -11,6 +11,26 @@ function sleeping() {
   } }] };
 }
 describe('достоверность метрик воркеров', () => {
+  it('единый физический Python не складывается повторно с polling host', async () => {
+    const data = await collectWorkerMetrics({ runtime: { nodeRssBytes: 100 }, workers: [{ tokenIds: [1, 2, 3],
+      execution: { execution: 'unified', pythonMemoryKb: 100,
+        unifiedHost: { shared: true, pid: 10, memoryKb: 100, permanentTokenIds: [1] },
+        polling: { activeChildren: 1, registeredBots: 2, waitingBots: 0,
+          sharedHost: { pid: 10, memoryKb: 100 } } } }] }, 'test');
+    assert.equal(data.pythonRssBytes, 102400);
+    assert.equal(data.activeHandlers, 1);
+    assert.equal(data.sleepingBots, 1);
+    assert.equal(data.permanentBots, 1);
+  });
+  it('единый постоянный Python без process-регистраций сохраняет неизвестный RSS', async () => {
+    const data = await collectWorkerMetrics({ runtime: { nodeRssBytes: 100 }, workers: [{ tokenIds: [1],
+      execution: { execution: 'unified', pythonMemoryKb: 0, polling: null,
+        unifiedHost: { shared: true, permanentTokenIds: [1] } } }] }, 'test');
+    assert.equal(data.pythonRssBytes, null);
+    assert.equal(data.activeHandlers, 0);
+    assert.equal(data.sleepingBots, 0);
+    assert.equal(data.permanentBots, 1);
+  });
   it('разделяет 34 спящих process и четыре постоянных бота смешанного воркера', async () => {
     const snapshot = { runtime: { nodeRssBytes: 100 }, workers: [{ tokenIds: Array.from({ length: 38 }, (_, i) => i),
       execution: { legacy: { pid: 100 }, pythonMemoryKb: 198000,

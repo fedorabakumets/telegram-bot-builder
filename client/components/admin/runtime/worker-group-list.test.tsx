@@ -13,6 +13,13 @@ function group(limit: number | null, known = true): WorkerRuntimeGroup {
 
 afterEach(cleanup);
 describe('политика активных сценариев группы', () => {
+  it('не называет живой единый Python спящим из-за сна временных сценариев', () => {
+    render(<WorkerGroupList groups={[{ ...group(null), hostTopology: 'unified',
+      activeHandlers: 0, sleepingBots: 34, permanentBots: 4 }]} />);
+    expect(screen.getByText('Единый Python запущен · RSS учтён один раз')).toBeTruthy();
+    expect(screen.getByText('0 / 34')).toBeTruthy();
+    expect(screen.queryByText('Обработчик process спит')).toBeNull();
+  });
   it('разделяет спящий process и постоянных ботов смешанной группы', () => {
     render(<WorkerGroupList groups={[{ ...group(null), registeredBots: 38,
       activeHandlers: 0, sleepingBots: 34, permanentBots: 4, hostAlive: false }]} />);

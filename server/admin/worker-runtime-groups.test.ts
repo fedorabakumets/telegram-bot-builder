@@ -9,6 +9,18 @@ function project(workers: unknown) {
   return workerRuntimeGroups({ workers } as RunnerSnapshot);
 }
 describe('проекция групп воркеров', () => {
+  it('общий Python остаётся жив при спящих process и постоянном соседе', () => {
+    const row = project([{ workerKey: 0, tokenIds: [1, 2], execution: {
+      execution: 'unified', pythonMemoryKb: 100,
+      unifiedHost: { shared: true, pid: 100, memoryKb: 100, permanentTokenIds: [1] },
+      polling: { activeChildren: 0, registeredBots: 1, waitingBots: 0, hostAlive: false },
+    } }])![0];
+    assert.equal(row.hostTopology, 'unified');
+    assert.equal(row.hostAlive, true);
+    assert.equal(row.sleepingBots, 1);
+    assert.equal(row.permanentBots, 1);
+    assert.equal(row.pythonRssBytes, 102400);
+  });
   it('смешанный воркер сохраняет счётчики спящего process и отдельный постоянный состав', () => {
     const row = project([{ workerKey: 0, tokenIds: [1, 2, 3], execution: {
       legacy: { pid: 1 }, pythonMemoryKb: 100,

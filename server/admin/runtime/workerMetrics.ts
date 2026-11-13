@@ -1,6 +1,7 @@
 /** @fileoverview Ограниченная история свежих снимков исполнителя без тяжёлого профилирования. */
 import type { WorkerMetricPoint, WorkerMetrics, MetricDistribution } from '../../../shared/worker-metrics';
 import { workerActivity } from './workerActivity';
+import { workerPythonMemory } from './workerPythonMemory';
 /** Минимальный клиент позволяет использовать существующее соединение Redis. */
 interface MetricsRedis {
   /** Атомарно сохраняет ограниченное окно. */
@@ -56,14 +57,11 @@ export async function collectWorkerMetrics(snapshot: unknown, runnerId: string, 
   /** Сумма доступна только при полном наборе подтверждённых измерений. */
   const aggregate = (key: keyof ReturnType<typeof workerActivity>) => fresh && complete &&
     activities.every(item => item[key] !== null) ? sum(activities.map(item => item[key]!)) : null;
-  const pythonKnown = fresh && complete && execution.every(item => {
-    const host = object(object(item.polling).sharedHost);
-    const live = item.legacy || host.pid || host.actualPid || number(object(item.polling).activeChildren);
-    return number(item.pythonMemoryKb) !== null && !(live && item.pythonMemoryKb === 0);
-  });
+  const python = execution.map(workerPythonMemory);
+  const pythonKnown = fresh && complete && python.every(item => item.pythonRssBytes !== null);
   const point: WorkerMetricPoint = { sampledAt: new Date(now).toISOString(),
     nodeRssBytes: fresh ? number(runtime.nodeRssBytes) : null,
-    pythonRssBytes: pythonKnown ? sum(execution.map(item => item.pythonMemoryKb)) * 1024 : null,
+    pythonRssBytes: pythonKnown ? sum(python.map(item => item.pythonRssBytes!)) : null,
     activeHandlers: aggregate('activeHandlers'), sleepingBots: aggregate('sleepingBots'),
     permanentBots: aggregate('permanentBots'), waitingBots: aggregate('waitingBots') };
   let history: WorkerMetricPoint[] = [];

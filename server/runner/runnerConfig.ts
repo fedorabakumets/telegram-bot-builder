@@ -27,6 +27,8 @@ export interface RunnerConfig {
   processPolling?: "python" | "node";
   /** Обработка очереди Node: отдельный процесс бота либо общий Python-процесс группы. */
   processHandler?: "isolated" | "shared";
+  /** Раздельные Python-процессы либо общий хост постоянных и временных сценариев. */
+  pythonHost?: "split" | "unified";
 }
 
 /**
@@ -52,9 +54,15 @@ export function loadRunnerConfig(env: NodeJS.ProcessEnv = process.env): RunnerCo
   const processHandler = env.RUNNER_PROCESS_HANDLER?.trim() || "shared";
   if (processHandler !== "isolated" && processHandler !== "shared")
     throw new Error("RUNNER_PROCESS_HANDLER должен быть isolated или shared");
+  const pythonHost = env.RUNNER_PYTHON_HOST?.trim() || "split";
+  if (pythonHost !== "split" && pythonHost !== "unified")
+    throw new Error("RUNNER_PYTHON_HOST должен быть split или unified");
+  if (pythonHost === "unified" && (processPolling !== "node" || processHandler !== "shared"))
+    throw new Error("RUNNER_PYTHON_HOST=unified требует RUNNER_PROCESS_POLLING=node и RUNNER_PROCESS_HANDLER=shared");
   return {
     processPolling,
     processHandler,
+    pythonHost,
     runnerId: env.RUNNER_ID?.trim() || "default",
     redisUrl,
     pythonPath: env.RUNNER_PYTHON?.trim() || env.PYTHON_PATH?.trim() || (process.platform === "win32" ? "python" : "python3"),

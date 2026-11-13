@@ -34,14 +34,17 @@ export class ProcessPollingRuntime {
   readonly dispatcher: NodePollingDispatcher;
 
   /** @param config - Пути исполнителя. @param emit - Передача очищенных строк панели. */
-  constructor(private readonly config: RunnerConfig, private readonly emit: (line: string) => void, maximum = 0) {
+  constructor(private readonly config: RunnerConfig, private readonly emit: (line: string) => void, maximum = 0, sharedHost?: SharedPollingHost) {
     this.memory = new ChildMemoryLedger(memoryKb => this.emit(JSON.stringify({
       type: "system", content: `memory_kb:${memoryKb + (this.shared?.counters().memoryKb ?? 0)}`,
     })));
-    if (config.processHandler !== "isolated") this.shared = new SharedPollingHost(config, event => {
+    if (config.processHandler !== "isolated") this.shared = sharedHost ?? new SharedPollingHost(config, event => {
       if (Number.isSafeInteger(event.token_id)) this.timing.handled(Number(event.token_id), event);
       if (event.type === "stdout" || event.type === "stderr") this.emit(JSON.stringify(event));
     }, memoryKb => this.emit(JSON.stringify({ type: "system", content: `memory_kb:${memoryKb + this.memory.total()}` })));
+    if (sharedHost) sharedHost.processObserver = event => {
+      if (Number.isSafeInteger(event.token_id)) this.timing.handled(Number(event.token_id), event);
+    };
     this.dispatcher = new NodePollingDispatcher({
       hasPending: async (bot) => new DemandQueue(await this.client(bot), telegramPollingId(bot.token)).hasPending(),
       receive: async (bot, signal, wake, ready) => {

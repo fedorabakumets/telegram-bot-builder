@@ -58,11 +58,20 @@ export class SharedPythonTransport {
       const cleaned = redactChildEvent(event, this.activeSecrets()) as Record<string, unknown>;
       // Метаданные известного запуска не являются текстом лога: их очистка ломает маршрутизацию.
       if (this.secrets.has(String(event.activation_id))) cleaned.activation_id = event.activation_id;
-      if (["process", "stdout", "stderr"].includes(String(event.type))) cleaned.type = event.type;
+      if (["process", "stdout", "stderr", "system"].includes(String(event.type))) cleaned.type = event.type;
+      /** Числовые события жизненного цикла сохраняют формат даже при коротком секрете в окружении. */
+      if (event.type === "system" && typeof event.content === "string"
+        && /^(?:worker_ready|memory_kb:\d+|bot_(?:started|stopped):\d+|bot_exited:\d+:(?:error|stopped|0))$/.test(event.content))
+        cleaned.content = event.content;
       if (event.type === "process" && ["ready", "exited", "error", "idle", "memory", "startup_timing"].includes(String(event.event)))
         cleaned.event = event.event;
       options.onEvent(cleaned);
       if (event.type === "process" && event.event === "exited") this.secrets.delete(String(event.activation_id));
+      /** Постоянный бот освобождает секреты только после очистки его последнего события. */
+      if (event.type === "system" && typeof event.content === "string") {
+        const ended = /^bot_(?:stopped|exited):(\d+)(?::|$)/.exec(event.content);
+        if (ended) this.secrets.delete(`permanent:${ended[1]}`);
+      }
     });
     const stderr = boundedLines(text => options.onLog?.(redactChildLog(text, this.activeSecrets())));
     for (const [stream, parser] of [[this.child.stdout, stdout], [this.child.stderr, stderr]] as const) {
@@ -89,6 +98,8 @@ export class SharedPythonTransport {
         && typeof value === "string") secrets.add(value);
     }
     if (command.cmd === "start") this.secrets.set(String(command.activation_id), secrets);
+    /** У каждого постоянного бота собственный ключ: новая регистрация не снимает маскировку соседей. */
+    if (command.cmd === "start_bot") this.secrets.set(`permanent:${command.token_id}`, secrets);
     if ([this.options.command, ...this.options.args].some(arg => this.activeSecrets().some(secret => secret && arg.includes(secret)))) {
       return Promise.reject(new Error("Секрет запрещён в аргументах общего обработчика"));
     }

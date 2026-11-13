@@ -23,7 +23,9 @@ export function WorkerGroupList({ groups }: Props) {
         <p className="mt-3 text-xs text-muted-foreground">{group.activeHandlerLimitKnown === true
           ? group.activeHandlerLimit === null ? 'Без фиксированного лимита загруженных сценариев' : `Лимит активных обработчиков: ${group.activeHandlerLimit}`
           : 'Лимит обработчиков не измерен'}</p>
-        <p className="mt-3 text-xs text-muted-foreground">{group.hostAlive === true ? 'Обработчик process запущен' : group.hostAlive === false ? 'Обработчик process спит' : 'Состояние процесса не измерено'}{group.pendingBots > 0 ? ` · ожидают применения: ${group.pendingBots}` : ''}</p>
+        <p className="mt-3 text-xs text-muted-foreground">{group.hostTopology === 'unified'
+          ? group.hostAlive === true ? 'Единый Python запущен · RSS учтён один раз' : group.hostAlive === false ? 'Единый Python спит' : 'Состояние общего Python не измерено'
+          : group.hostAlive === true ? 'Обработчик process запущен' : group.hostAlive === false ? 'Обработчик process спит' : 'Состояние процесса не измерено'}{group.pendingBots > 0 ? ` · ожидают применения: ${group.pendingBots}` : ''}</p>
       </li>)}</ul>}
   </div>;
 }

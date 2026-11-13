@@ -90,7 +90,7 @@ jobs:
       - run: npx vitest run --config server/runner/polling/integration.vitest.config.ts
       # Общий обработчик и административные режимы проверяются при каждом изменении PR.
       - name: Жизненный цикл общего обработчика и статистика
-        run: node --import tsx --test server/runner/polling/sharedHost.test.ts server/runner/polling/sharedMemoryLedger.test.ts server/runner/polling/timingMetrics.test.ts server/runner/runnerBotModes.test.ts
+        run: node --import tsx --test server/runner/polling/sharedHost.test.ts server/runner/polling/sharedHost.lifecycle.test.ts server/runner/polling/sharedHost.mixedLifecycle.test.ts server/runner/polling/sharedMemoryLedger.test.ts server/runner/polling/timingMetrics.test.ts server/runner/runnerBotModes.test.ts server/runner/runnerConfig.test.ts
       - run: npx vitest run --config server/runner/polling/shared.vitest.config.ts
       - name: Выбранные режимы и запросы администратора
         run: node --import tsx --test server/admin/worker-bot-mode-model.test.ts server/admin/worker-bot-request.test.ts server/admin/worker-bot-handler.test.ts server/admin/worker-inspection-cache.test.ts server/admin/runtime-worker-validation.test.ts server/admin/runtime-worker-view.test.ts
@@ -102,6 +102,8 @@ jobs:
 
       # Проверяем сто активных сценариев без ограничения числа загруженных ботов.
       - run: python -m unittest discover -s server/python -p 'test_shared_worker_capacity.py' -v
+      # Проверяет маршрутизацию постоянных и выгружаемых сценариев единого хоста.
+      - run: python -m unittest discover -s server/python -p 'test_unified_sessions.py' -v
       - run: python -m unittest discover -s server/python -p 'test_worker_memory_profile.py' -v
       - run: node --import tsx --test server/redis/workerStreams.integration.test.ts
       - run: node scripts/smoke-split-build.mjs
