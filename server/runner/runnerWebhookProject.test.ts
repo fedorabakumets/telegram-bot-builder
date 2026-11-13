@@ -12,6 +12,27 @@ test("корректный адрес возвращает проект", () => 
   assert.equal(runnerWebhookProject({ cmd: "start_bot", token_id: 58, webhook_url: "https://api.example/api/webhook/12/58" }), 12);
 });
 
+test("реальная команда передаёт базовый URL и явный проект без изменения адреса", () => {
+  const command = { cmd: "start_bot", token_id: 58, project_id: 12, webhook_url: "https://api.example" };
+  assert.equal(runnerWebhookProject(command), 12);
+  assert.equal(command.webhook_url, "https://api.example");
+  assert.equal(runnerWebhookProject({ ...command, webhook_url: "https://api.example/prefix/" }), 12);
+});
+
+test("старый API передаёт проект через окружение при поочерёдном деплое", () => {
+  assert.equal(runnerWebhookProject({ cmd: "start_bot", token_id: 58, webhook_url: "https://api.example",
+    env: { PROJECT_ID: "12" } }), 12);
+});
+
+test("базовый адрес требует явную безопасную идентичность проекта", () => {
+  for (const project_id of [undefined, 0, -1, 1.5, Number.MAX_SAFE_INTEGER + 1]) {
+    assert.throws(() => runnerWebhookProject({ cmd: "start_bot", token_id: 58, project_id,
+      webhook_url: "https://api.example" }), /webhook/);
+  }
+  assert.throws(() => runnerWebhookProject({ cmd: "start_bot", token_id: 58, project_id: 13,
+    webhook_url: "https://api.example/api/webhook/12/58" }), /webhook/);
+});
+
 test("некорректный адрес и чужой токен отклоняются до запуска", () => {
   for (const address of ["bad", "http://api.example/api/webhook/12/58", "https://api.example/api/webhook/12/59",
     "https://api.example/api/webhook/9007199254740992/58", "https://user:password@api.example/api/webhook/12/58"]) {

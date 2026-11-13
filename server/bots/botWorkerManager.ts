@@ -61,6 +61,8 @@ interface WorkerCommand {
   token?: string;
   /** ID токена */
   token_id?: number;
+  /** ID проекта запуска, не совпадающий с ключом общей группы воркеров. */
+  project_id?: number;
   /** Путь к файлу бота */
   bot_file?: string;
   /** URL webhook, если бот работает через webhook */
@@ -682,6 +684,7 @@ class BotWorkerManager extends EventEmitter {
       cmd: "start_bot",
       token: args.token,
       token_id: args.tokenId,
+      project_id: args.projectId,
       bot_file: stageBotFile(workerKey, args.botFile, worker.docker),
       ...(args.webhook ? { webhook_url: args.webhook.webhookUrl, webhook_port: args.webhook.webhookPort } : {}),
       ...(args.env ? { env: args.env } : {}),
