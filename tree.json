@@ -1633,7 +1633,7 @@
     "folder_titles": {
       "development": "🛠️ Разработка"
     },
-    "updated_at": "2026-11-13T07:21:18+03:00",
+    "updated_at": "2026-11-13T07:53:17+03:00",
     "tags": [],
     "author": ""
   },
@@ -1664,6 +1664,21 @@
       "development": "🛠️ Разработка"
     },
     "updated_at": "2026-11-11T15:16:27+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "development/unified-python-host",
+    "title": "Общий Python-хост постоянных и временных ботов",
+    "excerpt": "Настройка `RUNNER_PYTHON_HOST` задаёт топологию Python в исполнителе. Она не меняет сохранённый режим бота, транспорт, группировку или тайме",
+    "parts": [
+      "development",
+      "unified-python-host"
+    ],
+    "folder_titles": {
+      "development": "🛠️ Разработка"
+    },
+    "updated_at": "2026-11-13T07:53:17+03:00",
     "tags": [],
     "author": ""
   },
