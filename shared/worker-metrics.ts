@@ -20,6 +20,8 @@ export interface WorkerMetricPoint {
   activeHandlers: number | null;
   /** Спящие регистрации Node polling либо неизвестное значение. */
   sleepingBots: number | null;
+  /** Постоянные регистрации вне Node polling; null при неполном снимке. */
+  permanentBots?: number | null;
   /** Боты, ожидающие слот обработчика, а не количество сообщений. */
   waitingBots: number | null;
 }

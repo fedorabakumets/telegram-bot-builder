@@ -154,6 +154,16 @@ test('C05', 'rate_counter → ровно один handle_callback_rc1 (без з
   ok(code.includes('_rate_counter_deques'), 'живой handler должен содержать deque');
 });
 
+/** Проверяет подключение ограниченной очистки без ограничения числа событий. */
+test('D01', 'истёкшие ключи удаляются ограниченным обходом', () => {
+  const code = gen(makeCleanProject([makeRateCounterNode('rc1', 'msg1'), makeMessageNode('msg1')]), 'd01');
+  ok(code.includes('def _cleanup_rate_counter_keys(now=None, budget=32)'), 'помощник очистки');
+  ok(code.includes('_cleanup_rate_counter_keys(_rc_now)'), 'очистка при событии');
+  ok(code.includes('_rate_counter_windows[_rc_key] = max('), 'максимальное использованное окно');
+  ok(!code.includes('deque(maxlen='), 'свежие события не отбрасываются');
+  syntax(code, 'd01');
+});
+
 const passed = results.filter(r => r.passed).length;
 const failed = results.filter(r => !r.passed).length;
 console.log(`\nИтог phase78: ${passed}/${results.length} пройдено, провалено: ${failed}\n`);

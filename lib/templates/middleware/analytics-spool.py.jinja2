@@ -4,6 +4,7 @@ import sqlite3 as _AnalyticsSqlite
 import time as _AnalyticsTime
 from pathlib import Path as _AnalyticsPath
 from functools import wraps as _analytics_wraps
+from contextlib import closing as _analytics_closing
 
 _analytics_delivery_lock = asyncio.Lock()
 _analytics_system_keys = _AnalyticsContextVar('analytics_system_keys', default=None)
@@ -30,10 +31,15 @@ def _analytics_spool_connection():
         path.chmod(0o600)
     except OSError:
         pass
-    connection.execute('PRAGMA journal_mode=WAL')
-    connection.execute('PRAGMA synchronous=FULL')
-    connection.execute('CREATE TABLE IF NOT EXISTS pending (event_key TEXT PRIMARY KEY, payload TEXT NOT NULL, start_tag TEXT, attempts INTEGER NOT NULL DEFAULT 0, retry_at REAL NOT NULL DEFAULT 0)')
-    return connection
+    try:
+        connection.execute('PRAGMA journal_mode=WAL')
+        connection.execute('PRAGMA synchronous=FULL')
+        connection.execute('CREATE TABLE IF NOT EXISTS pending (event_key TEXT PRIMARY KEY, payload TEXT NOT NULL, start_tag TEXT, attempts INTEGER NOT NULL DEFAULT 0, retry_at REAL NOT NULL DEFAULT 0)')
+        return connection
+    except BaseException:
+        # Ошибка подготовки не должна оставлять открытыми дескриптор и кеш SQLite.
+        connection.close()
+        raise
 
 
 def _analytics_spool_store(event, start_payload=None):
@@ -41,10 +47,9 @@ def _analytics_spool_store(event, start_payload=None):
     if not event or _analytics_scope_deleted:
         return None
     payload, start_tag = _analytics_prepare_event(event, start_payload)
-    with _analytics_spool_connection() as connection:
+    with _analytics_closing(_analytics_spool_connection()) as connection, connection:
         connection.execute('INSERT INTO pending(event_key,payload,start_tag) VALUES(?,?,?) ON CONFLICT(event_key) DO NOTHING',
             (payload['event_key'], json.dumps(payload, ensure_ascii=False), start_tag))
-    connection.close()
     keys = _analytics_system_keys.get()
     if keys is not None:
         keys.add(payload['event_key'])
@@ -54,9 +59,8 @@ def _analytics_spool_store(event, start_payload=None):
 def _analytics_spool_ack(key):
     """Удаляет запись только после подтверждённого commit в PostgreSQL."""
     if key and not _analytics_scope_deleted:
-        with _analytics_spool_connection() as connection:
+        with _analytics_closing(_analytics_spool_connection()) as connection, connection:
             connection.execute('DELETE FROM pending WHERE event_key=?', (key,))
-        connection.close()
 
 
 def _analytics_discard_deleted_scope():
@@ -81,10 +85,9 @@ async def _analytics_spool_flush(force=False):
     if _analytics_scope_deleted:
         _analytics_discard_deleted_scope()
         return 0
-    with _analytics_spool_connection() as connection:
+    with _analytics_closing(_analytics_spool_connection()) as connection, connection:
         rows = connection.execute('SELECT event_key,payload,start_tag,attempts FROM pending WHERE retry_at<=? ORDER BY rowid LIMIT 100',
             (float('inf') if force else _AnalyticsTime.time(),)).fetchall()
-    connection.close()
     for key, encoded, start_tag, attempts in rows:
         try:
             async with _analytics_delivery_lock:
@@ -99,9 +102,8 @@ async def _analytics_spool_flush(force=False):
                 _analytics_spool_ack(key)
         except Exception as error:
             delay = min(300, 2 ** min(attempts + 1, 9))
-            with _analytics_spool_connection() as connection:
+            with _analytics_closing(_analytics_spool_connection()) as connection, connection:
                 connection.execute('UPDATE pending SET attempts=attempts+1,retry_at=? WHERE event_key=?', (_AnalyticsTime.time() + delay, key))
-            connection.close()
             logging.warning('Очередь аналитики: повтор через %s с, тип %s', delay, type(error).__name__)
     return len(rows)
 

@@ -1,6 +1,7 @@
 /** @fileoverview Безопасная проекция фактических групп исполнителя для административного API. */
 import type { RunnerSnapshot } from '../runner/runnerWorkers';
 import type { WorkerRuntimeGroup } from '../../shared/worker-runtime-group';
+import { workerActivity } from './runtime/workerActivity';
 
 /** Принимает только конечные неотрицательные счётчики. */
 function count(value: unknown): number | null {
@@ -13,8 +14,8 @@ export function workerRuntimeGroups(snapshot: RunnerSnapshot | null): WorkerRunt
   return snapshot.workers.slice(0, 1000).filter(item => item && Number.isFinite(item.workerKey)).map(item => {
     const execution = item.execution;
     const polling = execution?.polling;
-    const active = !execution?.legacy ? count(polling?.activeChildren) : null;
-    const registered = count(polling?.registeredBots);
+    const activity = workerActivity(item);
+    const active = activity.activeHandlers;
     const maximum = polling?.maximum;
     const limited = typeof maximum === 'number' && Number.isSafeInteger(maximum) && maximum > 0;
     const reported = count(execution?.pythonMemoryKb);
@@ -23,12 +24,11 @@ export function workerRuntimeGroups(snapshot: RunnerSnapshot | null): WorkerRunt
     return { workerKey: item.workerKey,
       registeredBots: Array.isArray(item.tokenIds) ? item.tokenIds.length : 0,
       pendingBots: Array.isArray(item.pendingTokenIds) ? item.pendingTokenIds.length : 0,
-      activeHandlers: active,
+      ...activity,
       activeHandlerLimit: limited ? maximum : null,
       activeHandlerLimitKnown: maximum === null || limited,
-      sleepingBots: registered === null || active === null ? null : Math.max(0, registered - active),
-      waitingBots: count(polling?.waitingBots), pythonRssBytes: python === null ? null : python * 1024,
-      hostAlive: !execution?.legacy && typeof polling?.hostAlive === 'boolean' ? polling.hostAlive : null,
+      pythonRssBytes: python === null ? null : python * 1024,
+      hostAlive: typeof polling?.hostAlive === 'boolean' ? polling.hostAlive : null,
       handlerMode: polling?.handlerMode === 'shared' || polling?.handlerMode === 'isolated' ? polling.handlerMode : null };
   });
 }

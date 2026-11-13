@@ -1,0 +1,25 @@
+{# @fileoverview Блокировки пользователей с очисткой после последнего владельца или ожидающего. #}
+from contextlib import asynccontextmanager as _lock_contextmanager
+
+
+@_lock_contextmanager
+async def _scoped_user_lock(registry, user_id):
+    """Сериализует операции пользователя, не сохраняя неиспользуемые блокировки."""
+    # До первого await запись и счётчик меняются атомарно в одном цикле событий.
+    entry = registry.get(user_id)
+    if entry is None:
+        entry = [asyncio.Lock(), 0]
+        registry[user_id] = entry
+    entry[1] += 1
+    acquired = False
+    try:
+        await entry[0].acquire()
+        acquired = True
+        yield
+    finally:
+        if acquired:
+            entry[0].release()
+        entry[1] -= 1
+        # Ожидающий уже учтён, поэтому освобождение владельца не создаёт второй lock.
+        if entry[1] == 0 and registry.get(user_id) is entry:
+            del registry[user_id]

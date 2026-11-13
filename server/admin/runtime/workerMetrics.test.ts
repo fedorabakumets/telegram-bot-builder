@@ -11,6 +11,22 @@ function sleeping() {
   } }] };
 }
 describe('достоверность метрик воркеров', () => {
+  it('разделяет 34 спящих process и четыре постоянных бота смешанного воркера', async () => {
+    const snapshot = { runtime: { nodeRssBytes: 100 }, workers: [{ tokenIds: Array.from({ length: 38 }, (_, i) => i),
+      execution: { legacy: { pid: 100 }, pythonMemoryKb: 198000,
+        polling: { activeChildren: 0, registeredBots: 34, waitingBots: 0 } } }] };
+    const data = await collectWorkerMetrics(snapshot, 'test');
+    assert.equal(data.activeHandlers, 0);
+    assert.equal(data.sleepingBots, 34);
+    assert.equal(data.permanentBots, 4);
+    assert.equal(data.pythonRssBytes, 198000 * 1024);
+  });
+  it('не угадывает постоянные регистрации при отсутствующем polling-снимке', async () => {
+    const data = await collectWorkerMetrics({ runtime: { nodeRssBytes: 100 }, workers: [{ tokenIds: [1],
+      execution: { legacy: { pid: 1 } } }] }, 'test');
+    assert.equal(data.permanentBots, null);
+    assert.equal(data.activeHandlers, null);
+  });
   it('показывает подтверждённый ноль Python, сохраняя память общего Node', async () => {
     const data = await collectWorkerMetrics(sleeping(), 'test');
     assert.equal(data.nodeRssBytes, 100);

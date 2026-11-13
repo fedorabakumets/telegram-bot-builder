@@ -13,6 +13,13 @@ function group(limit: number | null, known = true): WorkerRuntimeGroup {
 
 afterEach(cleanup);
 describe('политика активных сценариев группы', () => {
+  it('разделяет спящий process и постоянных ботов смешанной группы', () => {
+    render(<WorkerGroupList groups={[{ ...group(null), registeredBots: 38,
+      activeHandlers: 0, sleepingBots: 34, permanentBots: 4, hostAlive: false }]} />);
+    expect(screen.getByText('0 / 34')).toBeTruthy();
+    expect(screen.getByText('Постоянных ботов: 4')).toBeTruthy();
+    expect(screen.getByText('Обработчик process спит')).toBeTruthy();
+  });
   it('показывает отсутствие фиксированного лимита только по фактическому снимку', () => {
     render(<WorkerGroupList groups={[group(null)]} />);
     expect(screen.getByText('Без фиксированного лимита загруженных сценариев')).toBeTruthy();

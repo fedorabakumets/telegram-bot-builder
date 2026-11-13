@@ -98,6 +98,8 @@ test('A06', 'блокировка узла code по пользователю', 
   const p = makeCleanProject([makeCodeNode('code1')]);
   const code = gen(p, 'a06');
   ok(code.includes('_get_code_node_lock'), '_get_code_node_lock должен быть');
+  ok(code.includes('return _scoped_user_lock(_code_node_locks, user_id)'), 'блокировка должна очищаться после владельца и ожидающих');
+  ok(code.includes('async def _scoped_user_lock('), 'экспортируемый бот должен содержать реализацию блокировок');
   ok(!code.includes('_code_node_lock = asyncio.Lock()'), 'глобальная блокировка не должна быть');
 });
 

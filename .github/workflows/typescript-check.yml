@@ -11,6 +11,22 @@ permissions:
   contents: read
 
 jobs:
+  # Проверяет освобождение структур памяти без Telegram, БД и секретов.
+  memory-regressions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7.1.0
+        with:
+          python-version: '3.13'
+      - name: Структурные регрессии памяти
+        run: python scripts/memory-regression/run.py
+      - name: Отмена и очистка блокировок
+        run: python lib/tests/scoped-user-locks-runtime.py
+      - name: Приватность и ограничения диагностики
+        run: python -m unittest discover -s server/python -p test_worker_runtime_counters.py
+
   generator-phases:
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -52,6 +68,9 @@ jobs:
         run: npm ci
       - name: Check React Hooks
         run: npm run check:hooks
+      # Диагностика не должна раскрывать содержимое ботов или скрывать известные показатели.
+      - name: Регрессии диагностики воркеров
+        run: npx tsx --tsconfig tsconfig.node.json --test server/runner/runnerRuntimeCounters.test.ts server/admin/worker-runtime-counters.test.ts server/admin/worker-status-handler.test.ts server/admin/runtime/workerMetrics.test.ts server/admin/worker-runtime-groups.test.ts
 
   typecheck:
     runs-on: ubuntu-latest
