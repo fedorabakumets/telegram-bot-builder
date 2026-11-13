@@ -12,10 +12,14 @@ export function workerActivity(worker: Record<string, any>) {
   const registered = absent ? 0 : count(polling?.registeredBots);
   const waiting = absent ? 0 : count(polling?.waitingBots);
   const total = Array.isArray(worker.tokenIds) ? worker.tokenIds.length : null;
+  const resident = execution?.execution === 'unified' && Array.isArray(execution.unifiedHost?.permanentTokenIds)
+    ? execution.unifiedHost.permanentTokenIds : null;
+  const permanent = resident && resident.every((id: unknown) => count(id) !== null)
+    && new Set(resident).size === resident.length ? resident.length : null;
   return {
     activeHandlers: active,
     sleepingBots: registered === null || active === null || active > registered ? null : registered - active,
     waitingBots: waiting,
-    permanentBots: total === null || registered === null || registered > total ? null : total - registered,
+    permanentBots: permanent ?? (total === null || registered === null || registered > total ? null : total - registered),
   };
 }

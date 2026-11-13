@@ -8,12 +8,15 @@ import { ProcessPollingRuntime } from "./polling/factory";
 import { processPollingBot, usesNodePolling, type ProcessStartCommand } from "./polling/runtimeSettings";
 import { validateProcessBuild } from "./polling/validateBuild";
 import { RunnerLegacyRoutes } from "./runnerLegacyRoutes";
+import { SharedPollingHost } from "./polling/sharedHost";
 import { RunnerMemoryTotals } from "./runnerMemoryTotals";
 
 /** Разделяет маршруты выполнения без выдачи виртуальной группы за Python-процесс. */
 export class RunnerWorkerExecution {
   /** Старый общий Python запускается только при необходимости. */
   private legacy?: LocalWorkerChannel;
+  /** Единый физический владелец постоянных и временных сценариев. */
+  private readonly unified?: SharedPollingHost;
   /** Учёт владельцев токенов в старом Python для безопасной передачи. */
   private readonly legacyRoutes = new RunnerLegacyRoutes();
   /** Диспетчер временных обработчиков process. */
@@ -30,31 +33,32 @@ export class RunnerWorkerExecution {
   private terminating?: Promise<void>;
   /** Суммарные измерения постоянного и временных Python-процессов смешанной группы. */
   private readonly memoryTotals = new RunnerMemoryTotals();
-
   /** @param config - Настройки исполнителя. @param base - Идентичность группы. @param emit - События панели. @param gone - Удаление группы. */
   constructor(private readonly config: RunnerConfig, private readonly base: { w: string; i: string },
     private readonly emit: (event: RunnerEvent) => void, private readonly gone: () => void) {
+    if (config.pythonHost === "unified") this.unified = new SharedPollingHost(config, event => {
+      if (event.type === "process" || (event.type === "system" && event.content === "worker_ready")) return;
+      this.emit({ ...this.base, k: "line", l: JSON.stringify(event) });
+    }, memoryKb => this.emit({ ...this.base, k: "line", l: JSON.stringify({ type: "system", content: `memory_kb:${memoryKb}` }) }));
+    if (this.unified) this.unified.onPermanentCrash = () => { void this.finish({ ...this.base, k: "exit", c: "1" }); };
     if (config.processPolling !== "node") this.ensureLegacy();
     else queueMicrotask(() => { if (!this.closed) this.system("worker_ready"); });
   }
-
   /** PID только действительно запущенного общего Python; виртуальная группа PID не имеет. */
-  get pid(): number | undefined { return this.legacy?.pid; }
-
+  get pid(): number | undefined { return this.unified?.counters().pid ?? this.legacy?.pid; }
   /** Сообщает реальные каналы и дочерние PID без деления общей памяти Node между ботами. */
   memoryCounters() {
-    return { execution: this.config.processPolling === "node" ? "mixed" : "python",
-      pythonMemoryKb: this.memoryTotals.snapshot().total,
+    return { unifiedHost: this.unified?.counters() ?? null, execution: this.unified ? "unified" : this.config.processPolling === "node" ? "mixed" : "python",
+      pythonMemoryKb: this.unified?.counters().memoryKb ?? this.memoryTotals.snapshot().total,
       legacy: this.legacy?.memoryCounters() ?? null, polling: this.runtime?.counters() ?? null };
   }
-
   /** Передаёт приостановку всем текущим и будущим каналам. */
   pauseOutput(paused: boolean): void {
     this.paused = paused;
     this.legacy?.pauseOutput(paused);
+    this.unified?.pauseOutput(paused);
     this.runtime?.pauseOutput(paused);
   }
-
   /** Маршрутизирует проверенную команду, сохраняя прежний Python для direct и ondemand. */
   async sendAsync(line: string): Promise<void> {
     if (this.closed) throw new Error("Группа исполнителя уже остановлена");
@@ -71,9 +75,10 @@ export class RunnerWorkerExecution {
       if (!this.runtime) {
         this.maximum = maximum;
         this.runtime = new ProcessPollingRuntime(this.config, (l) => this.emit({ ...this.base, k: "line",
-          l: this.memoryTotals.observe(l, 'polling') }), maximum);
+          l: this.memoryTotals.observe(l, 'polling') }), maximum, this.unified);
         this.runtime.pauseOutput(this.paused);
       }
+      await this.unified?.stopPermanent(bot.tokenId);
       await this.legacyRoutes.stopBeforeHandoff(this.legacy, bot.tokenId);
       this.nodeBots.add(bot.tokenId);
       await this.runtime.dispatcher.start(bot);
@@ -88,11 +93,14 @@ export class RunnerWorkerExecution {
         return;
       }
     }
+    if (this.unified) {
+      if (command.cmd === "start_bot") await this.unified.stopPermanent(command.token_id);
+      await this.unified.sendPermanent(command as unknown as Record<string, unknown>); return;
+    }
     if (command.cmd === "status" && !this.legacy) return;
     if (command.cmd === "start_bot") this.legacyRoutes.started(command.token_id);
     await this.ensureLegacy().sendAsync(line);
   }
-
   /** Создаёт настоящий старый Python только для первой соответствующей команды. */
   private ensureLegacy(): LocalWorkerChannel {
     if (this.legacy) return this.legacy;
@@ -109,16 +117,14 @@ export class RunnerWorkerExecution {
     }, () => {});
     return channel;
   }
-
   /** Публикует системное сообщение логической группы. */
   private system(content: string): void { this.emit({ ...this.base, k: "line", l: JSON.stringify({ type: "system", content }) }); }
-
   /** Завершает группу и освобождает регистрации до единственного события окончания. */
   private finish(event: RunnerEvent): Promise<void> {
     if (this.terminating) return this.terminating;
     this.closed = true;
     this.terminating = (async () => {
-      try { await this.runtime?.shutdown(); }
+      try { await this.runtime?.shutdown(); await this.unified?.shutdown(); }
       catch { console.error("Не удалось штатно завершить временные обработчики группы"); }
       finally { this.gone(); this.emit(event); }
     })();
@@ -129,6 +135,7 @@ export class RunnerWorkerExecution {
   kill(): void {
     this.closed = true;
     this.runtime?.kill();
+    this.unified?.kill();
     if (this.legacy) this.legacy.kill();
     else void this.finish({ ...this.base, k: "exit", s: "SIGKILL" });
   }
