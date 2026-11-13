@@ -74,9 +74,9 @@ class BotCodeCacheTests(unittest.TestCase):
         load_bot_code(self.bot, lambda _: None)
         magic = importlib.util.MAGIC_NUMBER
         with patch("bot_code_cache.importlib.util.MAGIC_NUMBER", bytes(x ^ 255 for x in magic)):
-            with patch.object(Path, "read_text", autospec=True, return_value="answer = 43\n") as read:
-                self.assertEqual(self.execute(load_bot_code(self.bot, lambda _: None)), 43)
-                read.assert_called_once()
+            with patch("builtins.compile", side_effect=AssertionError("Компиляция в родителе")):
+                self.assertEqual(self.execute(load_bot_code(self.bot, lambda _: None)), 41)
+                self.assertTrue(_cache_file_path(self.bot).exists())
 
     def test_disabled_cache_reads_source_and_does_not_write(self):
         """Отключённый кэш не читает готовый код и не создаёт файлы."""

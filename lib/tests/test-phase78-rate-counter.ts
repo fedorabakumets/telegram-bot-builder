@@ -164,6 +164,15 @@ test('D01', 'истёкшие ключи удаляются ограниченн
   syntax(code, 'd01');
 });
 
+/** Проверяет независимый от часового TTL пользователей фоновый обход счётчиков. */
+test('D02', 'без новых сообщений счётчики обходятся каждую секунду', () => {
+  const code = gen(makeCleanProject([makeRateCounterNode('rc1', 'msg1'), makeMessageNode('msg1')]), 'd02');
+  ok(code.includes('await asyncio.sleep(min(1.0, USER_DATA_TTL))'), 'частый обход при наличии счётчиков');
+  ok(code.includes('_rate_cleanup(budget=256)'), 'ограниченная порция ключей');
+  ok(code.includes('if now < _next_user_cleanup:'), 'часовой обход пользователей сохранён');
+  syntax(code, 'd02');
+});
+
 const passed = results.filter(r => r.passed).length;
 const failed = results.filter(r => !r.passed).length;
 console.log(`\nИтог phase78: ${passed}/${results.length} пройдено, провалено: ${failed}\n`);

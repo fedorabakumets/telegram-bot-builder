@@ -38,7 +38,7 @@ export default defineRailway(() => {
   const botRuntime = service("bot runtime", {
     source: telegramBotBuilder,
     /** Принимает обновления в Node и лениво загружает общий Python для активных сценариев. */
-    env: { ...runtimeEnvironment, RUNNER_PROCESS_POLLING: "node", RUNNER_PROCESS_HANDLER: "shared" },
+    env: { ...runtimeEnvironment, RUNNER_PROCESS_POLLING: "node", RUNNER_PROCESS_HANDLER: "shared", RUNNER_PYTHON_HOST: "unified" },
     /** Исполнитель пересобирается только при изменении зависимостей управления ботами. */
     build: { buildEnvironment: "V3", builder: "DOCKERFILE", dockerfilePath: "Dockerfile.runner", watchPatterns: ["/server/runner/**", "/server/redis/**", "/server/bots/**", "/server/services/runtime-overlay.ts", "/server/utils/**", "/server/python/**", "/requirements.txt", "/package.json", "/package-lock.json", "/tsconfig.node.json", "/Dockerfile.runner", "/.railway/railway.ts"] },
     start: "node /app/runner.cjs",

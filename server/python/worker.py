@@ -397,6 +397,8 @@ class BotWorker:
                 t_exec = time.perf_counter()
                 startup_timing.mark("module_begin")
                 exec(compiled, module.__dict__)
+                # Корневой code больше не нужен: функции сохраняют только свои объекты кода.
+                del compiled
                 startup_timing.mark("module_done")
                 exec_ms = (time.perf_counter() - t_exec) * 1000
                 iso.inject_bot_constants(
@@ -406,6 +408,9 @@ class BotWorker:
                 for _name, smod in loaded.items():
                     smod.__dict__["BOT_TOKEN"] = ctx.token
                     smod.__dict__["TOKEN_ID"] = token_id
+                # Не держим загрузочные ссылки в coroutine frame весь срок работы main().
+                loaded.clear()
+                smod = None
                 emit_log(token_id, f"Top-level код выполнен за {exec_ms:.0f} мс", "stdout")
                 ctx.module = module
 

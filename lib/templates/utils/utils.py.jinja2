@@ -23,17 +23,23 @@ _bot_tables_cache_lock = asyncio.Lock()
 async def cleanup_user_data() -> None:
     """Фоновая задача: удаляет записи user_data, неактивные дольше USER_DATA_TTL секунд.
 
-    Запускается один раз при старте бота и работает в бесконечном цикле.
-    Предотвращает бесконечный рост глобального словаря user_data.
+    Пользовательские данные проверяются раз в USER_DATA_TTL; счётчики с истёкшим
+    окном обходятся независимо, по 256 ключей в секунду, без удаления свежих событий.
     """
     import time
+    _next_user_cleanup = time.monotonic() + USER_DATA_TTL
     while True:
-        await asyncio.sleep(USER_DATA_TTL)
-        now = time.monotonic()
-        # Удаляем также истёкшие ключи счётчиков, даже если пользователь больше не пишет.
         _rate_cleanup = globals().get("_cleanup_rate_counter_keys")
         if callable(_rate_cleanup):
-            _rate_cleanup()
+            await asyncio.sleep(min(1.0, USER_DATA_TTL))
+        else:
+            await asyncio.sleep(USER_DATA_TTL)
+        now = time.monotonic()
+        if callable(_rate_cleanup):
+            _rate_cleanup(budget=256)
+        if now < _next_user_cleanup:
+            continue
+        _next_user_cleanup = now + USER_DATA_TTL
         expired = [uid for uid, ts in _user_last_seen.items() if now - ts > USER_DATA_TTL]
         for uid in expired:
             user_data.pop(uid, None)
