@@ -18,6 +18,8 @@ export interface BotLaunchSettingsProps {
   webhookBaseUrl: string | null;
   /** Секретный токен webhook из БД */
   webhookSecretToken: string | null;
+  /** Сервер подтвердил наличие сохранённого секрета без раскрытия значения. */
+  hasWebhookSecret?: boolean;
   /** Дополнительный CSS-класс */
   className?: string;
   /** Колбэк для pending (если передан — не сохраняет мгновенно) */

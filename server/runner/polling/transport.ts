@@ -12,9 +12,10 @@ export interface PollResponse {
 
 /** Отправляет один long poll с ограничением времени и объёма ответа. */
 export async function requestUpdates(token: string, payload: object, signal: AbortSignal,
-  apiBase = "https://api.telegram.org", maxBytes = 8 * 1024 * 1024): Promise<PollResponse> {
+  apiBase = "https://api.telegram.org", maxBytes = 8 * 1024 * 1024,
+  method: "getUpdates" | "setWebhook" | "deleteWebhook" = "getUpdates"): Promise<PollResponse> {
   try {
-    const address = new URL(`${apiBase.replace(/\/$/, "")}/bot${token}/getUpdates`);
+    const address = new URL(`${apiBase.replace(/\/$/, "")}/bot${token}/${method}`);
     if (!["http:", "https:"].includes(address.protocol)) throw new Error("Недопустимый транспорт Telegram");
     const body = JSON.stringify(payload);
     return await new Promise<PollResponse>((resolve, reject) => {

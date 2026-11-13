@@ -5,6 +5,8 @@ export type DispatcherCapacity = number | { /** Отсутствие фикси�
 
 /** Настройки зарегистрированного бота; секреты не попадают в счётчики. */
 export interface PollingBot {
+  /** Внешний webhook вместо запросов getUpdates; регистрацией управляет Node. */
+  webhook?: { /** Полный публичный адрес Telegram. */ url: string; /** Секрет проверки Telegram. */ secret: string };
   /** Идентификатор токена. */
   tokenId: number;
   /** Секрет Telegram. */

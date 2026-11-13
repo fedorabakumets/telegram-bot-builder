@@ -16,6 +16,8 @@ export interface ProcessStartCommand {
   env?: Record<string, string>;
   /** Адрес webhook, несовместимого с данным polling-режимом. */
   webhook_url?: string;
+  /** Проект бота, независимый от общей группы воркеров. */
+  project_id?: number;
 }
 
 /** Определяет именно явно выбранный process, оставляя другие режимы старому воркеру. */
@@ -31,7 +33,6 @@ export function processPollingBot(command: ProcessStartCommand, workerKey: strin
   isolated = true): PollingBot {
   if (!Number.isSafeInteger(command.token_id) || command.token_id <= 0 || !command.token || !command.bot_file)
     throw new Error("Не указаны корректные token_id, token или bot_file");
-  if (command.webhook_url) throw new Error("Режим process пока несовместим с webhook");
   const env = { ...buildWorkerBaseEnv(), ...(command.env ?? {}) } as Record<string, string>;
   if (!env.REDIS_URL) throw new Error("Для режима process требуется REDIS_URL");
   const idleTimeout = Number(env.BOT_ON_DEMAND_IDLE_SECONDS ?? "30");
@@ -39,8 +40,14 @@ export function processPollingBot(command: ProcessStartCommand, workerKey: strin
   if (!Number.isFinite(idleTimeout) || idleTimeout < 0.1 || idleTimeout > 86400
     || (isolated && (!Number.isInteger(maximum) || maximum < 0 || maximum > 64)))
     throw new Error("Недопустимые ограничения режима process");
+  const projectId = command.project_id ?? Number(env.PROJECT_ID ?? workerKey);
+  if (command.webhook_url && (!Number.isSafeInteger(projectId) || projectId <= 0)) throw new Error("Не указан корректный проект webhook-бота");
+  const webhook = command.webhook_url ? { url: `${command.webhook_url.replace(/\/$/, "")}/api/webhook/${projectId}/${command.token_id}`,
+    secret: env.WEBHOOK_SECRET_TOKEN ?? "" } : undefined;
+  if (webhook && !/^[A-Za-z0-9_-]{1,256}$/.test(webhook.secret)) throw new Error("Для webhook требуется защитный токен");
+  if (webhook) env.BOT_WEBHOOK_INGRESS = "node";
   return { tokenId: command.token_id, token: command.token, botFile: command.bot_file,
-    env, projectId: Number(workerKey), idleTimeout, workerKey, instance };
+    env, projectId, idleTimeout, workerKey, instance, ...(webhook ? { webhook } : {}) };
 }
 
 /** Возвращает Telegram ID для общего с Python пространства очередей, отличного от ID строки БД. */

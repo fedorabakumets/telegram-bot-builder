@@ -122,6 +122,14 @@ export class RunnerWorkers {
   hasWebhook(projectId: number, tokenId: number): boolean {
     return [...this.workers.values()].some(worker => worker.tokenIds.has(tokenId) && worker.webhookProjects.get(tokenId) === projectId);
   }
+  /** Направляет webhook в надёжную очередь текущей группы, не пробуждая остановленных ботов. */
+  async enqueueWebhook(projectId: number, tokenId: number, update: unknown, secret: string): Promise<boolean> {
+    for (const worker of this.workers.values()) {
+      if (worker.tokenIds.has(tokenId) && worker.webhookProjects.get(tokenId) === projectId)
+        return worker.channel.enqueueWebhook(projectId, tokenId, update, secret);
+    }
+    throw new Error("Webhook-регистрация недоступна");
+  }
 
   /** Сопоставляет PID с воркерами и показывает размеры служебных коллекций без токенов и команд. */
   memoryCounters() {

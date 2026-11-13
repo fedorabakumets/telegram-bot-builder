@@ -11,6 +11,7 @@ import { cn } from '@/utils/utils';
 import { buildWebhookPreview } from './bot-launch-helpers';
 import type { LaunchMode, BotLaunchSettingsProps } from './bot-launch-helpers';
 import { useBotLaunchSettings } from './use-bot-launch-settings';
+import { WebhookSecretReveal } from './WebhookSecretReveal';
 
 /** Блок выбора режима запуска бота с сохранением в БД */
 export function BotLaunchSettings({
@@ -19,6 +20,7 @@ export function BotLaunchSettings({
   launchMode,
   webhookBaseUrl,
   webhookSecretToken,
+  hasWebhookSecret,
   className,
   onPendingChange,
 }: BotLaunchSettingsProps) {
@@ -99,9 +101,14 @@ export function BotLaunchSettings({
                 onChange={(e) => handleSecretChange(e.target.value)}
                 type="password"
                 autoComplete="new-password"
-                placeholder="Создаётся автоматически при запуске"
+                placeholder={hasWebhookSecret ? '•••••••• — токен сохранён' : 'Создаётся автоматически при запуске'}
                 className="h-8 text-xs"
               />
+              <p className="text-xs text-muted-foreground">{hasWebhookSecret
+                ? 'Защита настроена. Оставьте поле пустым, чтобы сохранить токен; введите новый для замены.'
+                : 'Токен защиты будет создан автоматически при сохранении webhook или запуске бота. Вводить его вручную не требуется.'}</p>
+              <WebhookSecretReveal key={`${projectId}_${tokenId}`} projectId={projectId} tokenId={tokenId}
+                available={hasWebhookSecret === true} />
             </div>
             <div className="rounded-md bg-muted/40 px-2.5 py-2 text-xs text-muted-foreground">
               <div className="flex items-center gap-1.5 font-medium text-foreground">

@@ -10,6 +10,8 @@ export interface RunnerWebhookOptions {
   isRunning: (projectId: number, tokenId: number) => boolean;
   /** Подмена транспорта только для адресных тестов. */
   deliver?: typeof fetch;
+  /** Сохраняет обновление process-бота; false означает прямой Python-обработчик. */
+  enqueueWebhook?: (projectId: number, tokenId: number, update: unknown, secret: string) => Promise<boolean>;
 }
 
 /** Сравнивает авторизацию без зависимости времени от совпавшего префикса. */
@@ -39,10 +41,14 @@ export async function handleRunnerWebhook(req: IncomingMessage, res: ServerRespo
       chunks.push(chunk);
     }
     const body = Buffer.concat(chunks).toString("utf8");
-    try { JSON.parse(body); } catch { res.writeHead(400).end(); return; }
+    let update: unknown;
+    try { update = JSON.parse(body); } catch { res.writeHead(400).end(); return; }
     const headers: Record<string, string> = { "Content-Type": "application/json" };
     const telegramSecret = req.headers["x-telegram-bot-api-secret-token"];
     if (typeof telegramSecret === "string") headers["X-Telegram-Bot-Api-Secret-Token"] = telegramSecret;
+    if (await options.enqueueWebhook?.(projectId, tokenId, update, typeof telegramSecret === "string" ? telegramSecret : "")) {
+      res.writeHead(200).end(); return;
+    }
     const response = await (options.deliver ?? fetch)(`http://127.0.0.1:${9000 + tokenId}/webhook`, {
       method: "POST", headers, body, signal: AbortSignal.timeout(50_000), redirect: "error",
     });
@@ -54,13 +60,14 @@ export async function handleRunnerWebhook(req: IncomingMessage, res: ServerRespo
 }
 
 /** Создаёт сервер; отсутствие секрета отключает внутренний порт для прежних установок. */
-export async function startRunnerWebhookServer(isRunning: RunnerWebhookOptions["isRunning"], env = process.env): Promise<Server | undefined> {
+export async function startRunnerWebhookServer(isRunning: RunnerWebhookOptions["isRunning"], env = process.env,
+  enqueueWebhook?: RunnerWebhookOptions["enqueueWebhook"]): Promise<Server | undefined> {
   const secret = env.RUNNER_WEBHOOK_SECRET?.trim();
   if (!secret) return undefined;
   if (secret.length < 32) throw new Error("RUNNER_WEBHOOK_SECRET должен содержать минимум 32 символа");
   const port = Number(env.RUNNER_WEBHOOK_PORT ?? "9080");
   if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error("Некорректный RUNNER_WEBHOOK_PORT");
-  const server = createServer((req, res) => { void handleRunnerWebhook(req, res, { secret, isRunning }); });
+  const server = createServer((req, res) => { void handleRunnerWebhook(req, res, { secret, isRunning, enqueueWebhook }); });
   server.requestTimeout = 55_000;
   server.headersTimeout = 10_000;
   await new Promise<void>((resolve, reject) => { server.once("error", reject); server.listen(port, "::", resolve); });

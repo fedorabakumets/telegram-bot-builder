@@ -206,7 +206,10 @@ export const insertBotTokenSchema = z.object({
 });
 
 /** Тип записи токена бота */
-export type BotToken = typeof botTokens.$inferSelect;
+export type BotToken = typeof botTokens.$inferSelect & {
+  /** Безопасный признак сохранённого секрета вебхука в публичном ответе; не колонка БД. */
+  hasWebhookSecret?: boolean;
+};
 
 /** Тип для вставки токена бота */
 export type InsertBotToken = typeof botTokens.$inferInsert;

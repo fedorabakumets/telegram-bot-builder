@@ -175,7 +175,9 @@ async def main():
     _stop_event = asyncio.Event()
     _bot_stop_event = _stop_event
     _external_updates = globals().get('_worker_external_updates')
-    _external_mode = callable(_external_updates) and not WEBHOOK_URL
+    # Приём webhook в Node остаётся доступным, пока Python-обработчик спит.
+    _node_webhook = globals().get('_worker_webhook_ingress') == 'node'
+    _external_mode = callable(_external_updates) and (not WEBHOOK_URL or _node_webhook)
     _external_started = False
     _direct_state_committed = False
     if _external_mode and not _WORKER_EXTERNAL_UPDATES_SAFE:
@@ -371,7 +373,7 @@ async def main():
                 _worker_bot_ready()
 
         # Выбор режима запуска: webhook или polling
-        if WEBHOOK_URL:
+        if WEBHOOK_URL and not _external_mode:
             # Webhook режим — запускаем aiohttp сервер
             from aiohttp import web
             from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
@@ -405,7 +407,7 @@ async def main():
             _webhook_runner = None
             await bot.delete_webhook()
         elif _external_mode:
-            # Внешний приёмник владеет getUpdates и блокировкой; здесь только обработка.
+            # Внешний приёмник владеет polling/webhook и блокировкой; здесь только обработка.
             _external_started = True
             await dp.emit_startup(bot=bot, **{"dispatcher": dp, "bots": (bot,), **dp.workflow_data})
             await _notify_worker_ready()

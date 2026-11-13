@@ -7,10 +7,8 @@ import { parseLaunchPage } from './launch-page-query';
 import type { Request, Response } from "express";
 import { storage } from "../../../storages/storage";
 import { getOwnerIdFromRequest } from "../../../telegram/auth-middleware";
-import { workerManager } from "../../../bots/botWorkerManager";
-import { isWorkerPoolEnabled } from "../../../bots/isWorkerPoolEnabled";
 import { reconcileLaunchHistoryForToken } from "../../../bots/reconcileLaunchHistory";
-import { findActiveProcessForToken } from "../../../utils/findActiveProcessForToken";
+import { resolveActualBotStatus } from '../resolve-actual-bot-status';
 
 /**
  * Обрабатывает GET /api/tokens/:tokenId/launch-history
@@ -47,12 +45,13 @@ export async function handleGetLaunchHistory(req: Request, res: Response): Promi
     }
 
     const projectId = tokenRecord.projectId;
-    const activeProcess = findActiveProcessForToken(projectId, tokenId);
-    const isRunningInWorker = isWorkerPoolEnabled()
-      && workerManager.isBotRunning(projectId, tokenId);
-    const isLiveRunning = !!(activeProcess || isRunningInWorker);
-
-    await reconcileLaunchHistoryForToken(tokenId, isLiveRunning);
+    /** Удалённый процесс нельзя считать остановленным по отсутствию локального PID. */
+    const instance = await storage.getBotInstanceByToken(tokenId);
+    const actual = await resolveActualBotStatus(projectId, tokenId, instance, true);
+    /** Недоступность исполнителя и незавершённый запуск не закрывают историю. */
+    if (actual === 'running' || actual === 'stopped' || actual === 'error') {
+      await reconcileLaunchHistoryForToken(tokenId, actual === 'running');
+    }
 
     const history = await storage.getLaunchHistory(tokenId, page.limit, page.beforeId);
     res.json(history);

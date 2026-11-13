@@ -132,5 +132,7 @@ describe('версия протокола webhook', () => {
     assert.equal(polling, oldFingerprint);
     assert.equal(canReuseGeneratedCode(oldFingerprint, webhook, true), false);
     assert.equal(canReuseGeneratedCode(webhook, webhook, true), true);
+    const webhookSleep = buildGeneratedCodeFingerprint({ ...baseInput, webhookProtocolVersion: 2 });
+    assert.equal(canReuseGeneratedCode(webhook, webhookSleep, true), false);
   });
 });

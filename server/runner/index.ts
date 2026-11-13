@@ -60,7 +60,8 @@ async function main(): Promise<void> {
     },
   });
   /** HTTP принимает только подтверждённые регистрации; проверка проекта выполняется публичным API. */
-  const webhookServer = await startRunnerWebhookServer((projectId, tokenId) => workers.hasWebhook(projectId, tokenId));
+  const webhookServer = await startRunnerWebhookServer((projectId, tokenId) => workers.hasWebhook(projectId, tokenId), process.env,
+    (projectId, tokenId, update, secret) => workers.enqueueWebhook(projectId, tokenId, update, secret));
   const follower = followCommandStream(reader, runnerCommandStream(config.runnerId), (fields) => workers.handle(fields));
   await follower.ready;
   await publishRunnerSiteInfo(writer, readRunnerSiteInfo(config.runnerId));

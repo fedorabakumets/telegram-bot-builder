@@ -20,6 +20,8 @@ interface BotLaunchCardProps {
   onShowLogs: (id: number, startedAt: Date | string | null) => void;
   /** Крупная карточка текущего запуска */
   featured?: boolean;
+  /** Подтверждённая заморозка текущего запуска; прошлые записи не переопределяются */
+  frozen?: boolean;
   /** Строка внутри общего списка (без своей рамки) */
   embedded?: boolean;
 }
@@ -33,12 +35,13 @@ export function BotLaunchCard({
   record,
   onShowLogs,
   featured = false,
+  frozen = false,
   embedded = false,
 }: BotLaunchCardProps) {
-  const meta = getLaunchStatusMeta(record.status, record.errorMessage);
+  const meta = getLaunchStatusMeta(record.status, record.errorMessage, frozen);
   const duration = formatLaunchDurationLabel(record.startedAt, record.stoppedAt);
-  const isRunning = record.status === 'running';
-  const isError = record.status === 'error';
+  const isRunning = record.status === 'running' && !frozen;
+  const isError = record.status === 'error' || frozen;
 
   return (
     <div

@@ -32,6 +32,8 @@ export interface BotCanvasStatusInput {
  * @returns Статус для UI
  */
 export function resolveBotCanvasStatus(input: BotCanvasStatusInput): BotCanvasStatus {
+  /** Остановка процесса остаётся видимой даже при ограничении Telegram или отключённом токене. */
+  if (input.operation === 'stopping') return 'stopping';
   if (input.frozen) return 'frozen';
   if (input.authorizationError === 'unauthorized') return 'invalid';
   if (!isTokenActiveForBroadcast(input.isActive)) return 'inactive';

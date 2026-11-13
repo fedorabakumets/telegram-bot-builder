@@ -43,11 +43,24 @@ test('проверяет изменение по идентификатору и
 });
 
 test('при удалении учитывает наследуемый режим и запрещает неоднозначный пакет', () => {
-  assert.throws(() => validateRuntimeModeBatch([
+  assert.equal(validateRuntimeModeBatch([
     { action: 'delete', id: 7 },
-  ], rows, 'webhook', 'process'), /polling/);
+  ], rows, 'webhook', 'process'), true);
   assert.throws(() => validateRuntimeModeBatch([
     { action: 'update', key: 'BOT_POLLING_MODE', value: 'direct' },
     { action: 'update', key: 'BOT_POLLING_MODE', value: 'process' },
   ], rows, 'polling'), /один раз/);
+});
+
+test('атомарно принимает освобождение памяти и webhook в любом порядке', () => {
+  const mode = { action: 'update', key: 'BOT_POLLING_MODE', value: 'process' };
+  const launch = { action: 'update', key: 'LAUNCH_MODE', value: 'webhook' };
+  assert.equal(validateRuntimeModeBatch([mode, launch], rows, 'polling'), true);
+  assert.equal(validateRuntimeModeBatch([launch, mode], rows, 'polling'), true);
+});
+
+test('переключает уже сохранённый process на webhook без изменения режима', () => {
+  assert.equal(validateRuntimeModeBatch([
+    { action: 'update', key: 'LAUNCH_MODE', value: 'webhook' },
+  ], [{ id: 7, key: 'BOT_POLLING_MODE', value: 'process' }], 'polling'), false);
 });

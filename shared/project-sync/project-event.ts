@@ -53,6 +53,8 @@ export interface TokenUpdatedPayload {
   launchMode: string | null;
   /** Базовый URL webhook (не секрет) */
   webhookBaseUrl: string | null;
+  /** Секрет вебхука создан на сервере; само значение не передаётся. */
+  hasWebhookSecret?: boolean;
   /** Включён ли userbot */
   userbotEnabled: number | null;
 }
@@ -287,6 +289,7 @@ export const TOKEN_UPDATED_FIELD_KEYS = [
   'contentCache',
   'launchMode',
   'webhookBaseUrl',
+  'hasWebhookSecret',
   'userbotEnabled',
 ] as const;
 
@@ -319,6 +322,10 @@ export type TokenLikeForUpdatedPayload = {
   contentCache?: number | null;
   launchMode?: string | null;
   webhookBaseUrl?: string | null;
+  /** Сохранённый секрет доступен только серверной сборке безопасного снимка. */
+  webhookSecretToken?: string | null;
+  /** Безопасный признак для уже подготовленного публичного снимка. */
+  hasWebhookSecret?: boolean;
   userbotEnabled?: number | null;
 };
 
@@ -349,6 +356,9 @@ export function toTokenUpdatedPayload(token: TokenLikeForUpdatedPayload): TokenU
     contentCache: token.contentCache ?? null,
     launchMode: token.launchMode ?? null,
     webhookBaseUrl: token.webhookBaseUrl ?? null,
+    /** Сырой секрет используется лишь для вычисления признака и не копируется в снимок. */
+    hasWebhookSecret: token.webhookSecretToken !== undefined
+      ? Boolean(token.webhookSecretToken?.trim()) : token.hasWebhookSecret ?? false,
     userbotEnabled: token.userbotEnabled ?? null,
   };
 }

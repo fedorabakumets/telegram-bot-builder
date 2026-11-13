@@ -433,6 +433,8 @@ class BotWorker:
                 if not getattr(module, "_WORKER_EXTERNAL_UPDATES_SAFE", False):
                     raise RuntimeError("Фоновые возможности этого бота несовместимы с ondemand")
                 module._worker_external_updates = demand.feed
+                # Только Node ingress разрешает обработку webhook через внешнюю очередь.
+                module._worker_webhook_ingress = (ctx.env or {}).get('BOT_WEBHOOK_INGRESS')
                 startup_timing.mark("state_begin")
                 await demand.state.load_into(module)
                 startup_timing.mark("state_done")

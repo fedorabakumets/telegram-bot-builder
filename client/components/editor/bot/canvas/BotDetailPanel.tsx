@@ -123,6 +123,7 @@ export function BotDetailPanel({
               launchMode={token.launchMode ?? 'polling'}
               webhookBaseUrl={token.webhookBaseUrl ?? null}
               webhookSecretToken={token.webhookSecretToken ?? null}
+              hasWebhookSecret={token.hasWebhookSecret}
               canManage={canManage}
               showLaunchHistory={false}
               showCollaborators={false}

@@ -42,6 +42,8 @@ export function toPublicBotToken(token: BotToken): BotToken {
     ...token,
     token: maskBotToken(token.token),
     webhookSecretToken: null,
+    /** Наличие защиты показывается без передачи сохранённого секрета браузеру. */
+    hasWebhookSecret: Boolean(token.webhookSecretToken?.trim()),
     // Маска вместо null: UI видит, что секрет сохранён, и не стирает его при сохранении формы
     userbotApiHash: maskSecret(token.userbotApiHash),
     userbotSessionString: maskSecret(token.userbotSessionString),

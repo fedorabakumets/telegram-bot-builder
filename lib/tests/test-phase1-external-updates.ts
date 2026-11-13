@@ -9,7 +9,7 @@ import { generatePythonCode } from '../bot-generator';
 import { generateMain } from '../templates/main/main.renderer';
 
 /** Исполняет настоящий сгенерированный main с изолированными внешними зависимостями. */
-function executeMain(failure: string): string[] {
+function executeMain(failure: string, nodeWebhook = false): string[] {
   const code = generateMain({ userDatabaseEnabled: false });
   const python = existsSync('.venv/Scripts/python.exe') ? '.venv/Scripts/python.exe' : 'python';
   const script = `
@@ -60,7 +60,8 @@ namespace = dict(__name__="external_test", asyncio=asyncio,
     signal=types.SimpleNamespace(SIGTERM=15, SIGINT=2, signal=lambda *args: None),
     logging=types.SimpleNamespace(info=lambda *args: None, error=lambda *args: None),
     db_pool=None, dp=Dispatcher(), bot=Bot(), _redis_client=Redis(), _redis_connected=False,
-    TOKEN_ID=1, BOT_TOKEN="test", PROJECT_ID=1, WEBHOOK_URL="", WEBHOOK_PORT=9001,
+    TOKEN_ID=1, BOT_TOKEN="test", PROJECT_ID=1, WEBHOOK_URL="https://api.example" if payload.get("nodeWebhook") else "", WEBHOOK_PORT=9001,
+    _worker_webhook_ingress="node" if payload.get("nodeWebhook") else None,
     RedisStorage=lambda *args: object(), init_redis_client=init_redis_client,
     cleanup_user_data=cleanup_user_data, stale_update_filter_middleware=object(),
     _worker_external_updates=external, _worker_bot_ready=lambda: events.append("ready"))
@@ -81,7 +82,7 @@ except RuntimeError:
 print(json.dumps(events))
 `;
   const result = spawnSync(python, ['-c', script], {
-    input: JSON.stringify({ code, failure }), encoding: 'utf8', env: { ...process.env, PYTHONIOENCODING: 'utf-8' },
+    input: JSON.stringify({ code, failure, nodeWebhook }), encoding: 'utf8', env: { ...process.env, PYTHONIOENCODING: 'utf-8' },
   });
   assert.equal(result.status, 0, result.stderr || result.stdout);
   const lines = result.stdout.trim().split('\n');
@@ -113,7 +114,7 @@ test('обычная сборка поддерживает внешний при
   assert.ok(code.includes('if not WEBHOOK_URL and not _external_mode and _redis_connected'));
   assert.match(code, /if not _external_mode:\s+dp\.message\.middleware\(stale_update_filter_middleware\)/);
   assert.ok(code.includes('dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())'));
-  assert.ok(code.includes('if WEBHOOK_URL:'));
+  assert.ok(code.includes('if WEBHOOK_URL and not _external_mode:'));
 });
 
 /** Проверяет передачу признаков фоновой работы из настоящего графа в главный шаблон. */
@@ -158,5 +159,12 @@ test('direct подтверждает перенос состояния посл
 test('ошибка запуска direct не подтверждает удаление снимка состояния', () => {
   assert.deepEqual(executeMain('direct_get_me'), [
     'lock', 'direct_prepare', 'get_me', 'unlock', 'session_close',
+  ]);
+});
+
+/** Проверяет webhook пробуждение без bind сокета, регистрации и удаления webhook в Python. */
+test('Node webhook обрабатывает внешнюю очередь и сохраняет регистрацию после сна', () => {
+  assert.deepEqual(executeMain('', true), [
+    'get_me', 'startup', 'ready', 'external', 'shutdown', 'redis_close', 'session_close',
   ]);
 });
