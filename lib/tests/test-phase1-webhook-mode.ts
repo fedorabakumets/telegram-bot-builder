@@ -322,6 +322,16 @@ test('D02', 'в polling режиме условие валидации Redis п�
 // ИТОГИ
 // ════════════════════════════════════════════════════════════════════════════
 
+/** Проверяет единый секрет регистрации и проверки запроса, а также отложенное подтверждение доставки. */
+test('D03', 'webhook передаёт и проверяет секрет до подтверждения обработки', () => {
+  const code = generatePythonCode(makeCleanProject(makeMinimalNodes()) as any, {
+    botName: 'WebhookBot', userDatabaseEnabled: false, webhookUrl: 'https://example.com', projectId: 77,
+  });
+  ok(code.includes('WEBHOOK_SECRET_TOKEN = os.getenv("WEBHOOK_SECRET_TOKEN") or None'), 'секрет читается из окружения');
+  ok(code.includes('secret_token=WEBHOOK_SECRET_TOKEN'), 'секрет регистрируется в Telegram');
+  ok(code.includes('SimpleRequestHandler(dispatcher=dp, bot=bot, secret_token=WEBHOOK_SECRET_TOKEN, handle_in_background=False)'),
+    'обработчик проверяет секрет и дожидается обработки');
+});
 const passed = results.filter(r => r.passed).length;
 const failed = results.filter(r => !r.passed).length;
 

@@ -1,4 +1,5 @@
 /** @fileoverview Общий канал Python: ограниченный протокол, очистка секретов и последовательная запись stdin. */
+import { isSecretEnvironmentKey } from "../../utils/secret-environment-key";
 import { spawn } from "node:child_process";
 import { boundedLines, childEnvironment, killChildTree, redactChildEvent, redactChildLog } from "./pythonChildSupport";
 
@@ -94,7 +95,7 @@ export class SharedPythonTransport {
     const secrets = new Set<string>();
     if (typeof command.token === "string") secrets.add(command.token);
     for (const [key, value] of Object.entries((command.env ?? {}) as Record<string, unknown>)) {
-      if (/TOKEN|SECRET|PASSWORD|CREDENTIAL|AUTH|(?:^|_)KEY(?:$|_)|(?:DATABASE|REDIS)_URL/i.test(key)
+      if (isSecretEnvironmentKey(key)
         && typeof value === "string") secrets.add(value);
     }
     if (command.cmd === "start") this.secrets.set(String(command.activation_id), secrets);

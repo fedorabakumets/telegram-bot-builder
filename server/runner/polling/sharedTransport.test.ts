@@ -29,7 +29,7 @@ test("очистка секретов не меняет идентификато
     assert.equal(event.activation_id, activation);
     assert.equal(event.type, "process");
     assert.equal(event.event, "ready");
-    assert.equal(event.content, "[скрыто] [скрыто] [скрыто]");
+    assert.equal(event.content, "1234567890 [скрыто] [скрыто]");
   } finally { await transport.shutdown(); await unlink(fixture); await rmdir(directory); }
 });
 

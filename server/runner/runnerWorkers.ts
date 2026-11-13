@@ -17,6 +17,7 @@ import { parseWorkerSystemMessage } from "../bots/parseWorkerSystemMessage";
 import { pollingTimingMetrics } from "./polling/timingMetrics";
 import { RunnerBotModes, type RunnerBotMode } from "./runnerBotModes";
 import { RunnerRuntimeCounters } from "./runnerRuntimeCounters";
+import { runnerWebhookProject } from "./runnerWebhookProject";
 
 /** Снимок одного процесса воркера */
 export interface RunnerWorkerSnapshot {
@@ -59,6 +60,8 @@ export interface RunnerSnapshot {
 
 /** Запущенный воркер */
 interface RunnerWorker {
+  /** Проекты webhook-регистраций без адресов и секретов. */
+  webhookProjects: Map<number, number>;
   /** ID экземпляра от панели */
   instance: string;
   /** Реальные каналы выполнения логической группы. */
@@ -113,6 +116,11 @@ export class RunnerWorkers {
   /** Число запущенных воркеров */
   get size(): number {
     return this.workers.size;
+  }
+
+  /** Проверяет принадлежность подтверждённого webhook проекту перед внутренней доставкой. */
+  hasWebhook(projectId: number, tokenId: number): boolean {
+    return [...this.workers.values()].some(worker => worker.tokenIds.has(tokenId) && worker.webhookProjects.get(tokenId) === projectId);
   }
 
   /** Сопоставляет PID с воркерами и показывает размеры служебных коллекций без токенов и команд. */
@@ -215,6 +223,7 @@ export class RunnerWorkers {
               this.cachePruner.request();
               if (parsed.status === "error") worker.pendingTokenIds.delete(parsed.tokenId);
               worker.tokenIds.delete(parsed.tokenId);
+              worker.webhookProjects.delete(parsed.tokenId);
             }
           }
         } catch { /* Вывод воркера может быть обычным текстом. */ }
@@ -227,6 +236,7 @@ export class RunnerWorkers {
       }
     });
     const worker: RunnerWorker = {
+      webhookProjects: new Map(),
       instance, channel, queue: Promise.resolve(), builds: new RunnerBuildPins(), tokenIds: new Set(), pendingTokenIds: new Set(), modes: new RunnerBotModes(), counters: new RunnerRuntimeCounters(),
     };
     channel.pauseOutput(this.outputPaused);
@@ -284,7 +294,15 @@ export class RunnerWorkers {
         }
         if (prepared.fingerprint && prepared.tokenId !== undefined) worker.builds.prepare(prepared.tokenId, prepared.fingerprint);
         if (this.current(workerKey, instance) !== worker) return;
+        /** Проверка выполняется до запуска, чтобы ошибка адреса не оставила работающего бота без учёта. */
+        const webhookProject = runnerWebhookProject(JSON.parse(prepared.line));
         await worker.channel.sendAsync(prepared.line);
+        /** Доверяем только адресу, уже подготовленному API для конкретной записи токена. */
+        if (parsed.cmd === "start_bot") {
+          worker.webhookProjects.delete(parsed.token_id);
+          if (webhookProject !== undefined) worker.webhookProjects.set(parsed.token_id, webhookProject);
+        }
+        if (parsed.cmd === "stop_bot") worker.webhookProjects.delete(parsed.token_id);
         if (parsed.cmd === "start_bot" && (worker.pendingTokenIds.has(parsed.token_id) || worker.tokenIds.has(parsed.token_id))) {
           worker.modes.start(JSON.parse(prepared.line));
           if (worker.tokenIds.has(parsed.token_id)) worker.modes.observe(`bot_started:${parsed.token_id}`);

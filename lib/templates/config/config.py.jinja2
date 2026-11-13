@@ -125,6 +125,8 @@ _redis_client = None
 
 {# Webhook режим — включается если WEBHOOK_URL задан в окружении #}
 # Webhook режим — включается автоматически при наличии WEBHOOK_URL
+# Секрет передаётся Telegram и проверяется обработчиком входящих запросов.
+WEBHOOK_SECRET_TOKEN = os.getenv("WEBHOOK_SECRET_TOKEN") or None
 WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 WEBHOOK_PORT = int(os.getenv("WEBHOOK_PORT", "8080"))
 

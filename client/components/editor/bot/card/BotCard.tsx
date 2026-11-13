@@ -159,8 +159,8 @@ export function BotCard({
                 token={token}
                 toggleDatabaseMutation={toggleDatabaseMutation}
                 launchMode={token.launchMode ?? 'polling'}
-                webhookBaseUrl={token.webhookBaseUrl ?? null}
-                webhookSecretToken={token.webhookSecretToken ?? null}
+                webhookBaseUrl={pending.getPendingValue('WEBHOOK_BASE_URL') ?? token.webhookBaseUrl ?? null}
+                webhookSecretToken={pending.getPendingValue('WEBHOOK_SECRET_TOKEN') ?? token.webhookSecretToken ?? null}
                 canManage={canManage}
                 onPendingChange={(key, value) => pending.addChange({ action: 'update', type: 'system', key, value })}
               />

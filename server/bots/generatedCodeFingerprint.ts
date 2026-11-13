@@ -10,6 +10,8 @@ export const BOT_RUNTIME_PROTOCOL_VERSION = 1;
 
 /** Поля, влияющие на generatePythonCode при запуске бота */
 export interface GeneratedCodeInput {
+  /** Версия протокола секрета webhook; отсутствие сохраняет прежний отпечаток polling. */
+  webhookProtocolVersion?: number;
   /** sha256(JSON.stringify(project.data)) */
   projectDataChecksum: string;
   /** Имя проекта — влияет на имя файла */
@@ -51,6 +53,7 @@ export function checksumProjectData(projectData: unknown): string {
 export function buildGeneratedCodeFingerprint(input: GeneratedCodeInput): string {
   const payload = JSON.stringify({
     runtimeProtocolVersion: BOT_RUNTIME_PROTOCOL_VERSION,
+    ...(input.webhookProtocolVersion ? { webhookProtocolVersion: input.webhookProtocolVersion } : {}),
     projectDataChecksum: input.projectDataChecksum,
     projectName: input.projectName,
     userDatabaseEnabled: input.userDatabaseEnabled,

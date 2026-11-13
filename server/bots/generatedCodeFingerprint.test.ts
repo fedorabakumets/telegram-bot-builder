@@ -122,3 +122,15 @@ describe('canReuseGeneratedCode', () => {
     assert.strictEqual(canReuseGeneratedCode('old', fp, true), false);
   });
 });
+
+/** Проверяет обновление только сборок webhook при внедрении индивидуального секрета. */
+describe('версия протокола webhook', () => {
+  it('отвергает старую сборку для webhook и сохраняет отпечаток polling', () => {
+    const oldFingerprint = buildGeneratedCodeFingerprint(baseInput);
+    const polling = buildGeneratedCodeFingerprint({ ...baseInput, webhookProtocolVersion: undefined });
+    const webhook = buildGeneratedCodeFingerprint({ ...baseInput, webhookProtocolVersion: 1 });
+    assert.equal(polling, oldFingerprint);
+    assert.equal(canReuseGeneratedCode(oldFingerprint, webhook, true), false);
+    assert.equal(canReuseGeneratedCode(webhook, webhook, true), true);
+  });
+});

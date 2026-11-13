@@ -89,6 +89,12 @@ jobs:
       # Адресно проверяем отключение диагностики, реальные сеансы V8 и формат снимков памяти.
       - name: Диагностика памяти исполнителя
         run: node --import tsx --test server/runner/runnerHeapProfile.test.ts server/runner/runnerMemoryLinux.test.ts server/runner/runnerMemoryMonitor.test.ts
+      # Проверяем доставку между сервисами, секрет Telegram и читаемость безопасных журналов.
+      - name: Доставка webhook и маскировка секретов
+        run: node --import tsx --test server/runner/runnerWebhookServer.test.ts server/routes/telegramWebhookHandler.test.ts server/routes/telegramWebhookDelivery.test.ts server/routes/telegramWebhook.integration.test.ts server/bots/webhookBaseUrl.test.ts server/utils/secret-environment-key.test.ts
+      - run: node --import tsx --test server/bots/webhookSecret.test.ts server/bots/generatedCodeFingerprint.test.ts server/runner/runnerWebhookProject.test.ts
+      - run: python -m unittest discover -s server/python -p 'test_log_redaction.py' -v
+      - run: npx vitest run --project client client/components/editor/bot/card/use-bot-launch-settings.test.tsx
       - name: Потоки сборок, очистка кеша и обратное давление
         run: node --import tsx --test server/bots/workerChannel.test.ts server/runner/runnerBuildCache.test.ts server/runner/runnerBuildStream.test.ts server/runner/runnerCacheLifecycle.test.ts server/runner/runnerEventPublisher.test.ts
       # Приёмники проверяются на локальном HTTP-двойнике, без запросов к Telegram.

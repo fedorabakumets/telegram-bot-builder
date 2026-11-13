@@ -111,11 +111,10 @@ export async function stopBot(projectId: number, tokenId: number): Promise<{ suc
     const processKey = `${projectId}_${tokenId}`;
     const botProcess = botProcesses.get(processKey);
 
-    // При webhook режиме — снимаем webhook с Telegram перед остановкой процесса
-    // В polling режиме этот шаг пропускается
-    if (process.env.WEBHOOK_URL) {
+    /** Сохранённый режим бота определяет снятие webhook независимо от общего адреса API. */
+    const tokenRecord = await storage.getBotToken(tokenId);
+    if (tokenRecord?.launchMode === 'webhook') {
       try {
-        const tokenRecord = await storage.getBotToken(tokenId);
         if (tokenRecord?.token) {
           const deleteUrl = `${getTelegramApiBaseUrl()}/bot${tokenRecord.token}/deleteWebhook`;
           await fetch(deleteUrl, { signal: AbortSignal.timeout(5000) });
