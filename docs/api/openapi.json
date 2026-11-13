@@ -5298,13 +5298,20 @@
             "format": "uri",
             "example": "https://example.com",
             "description": "Базовый URL для публичных эндпоинтов; приоритет — API_BASE_URL на сервере"
+          },
+          "webhookBaseUrl": {
+            "type": "string",
+            "nullable": true,
+            "example": "https://example.com",
+            "description": "Серверный адрес вебхука; null означает отсутствие настройки"
           }
         },
         "required": [
           "telegramClientId",
           "telegramBotUsername",
           "skipAuth",
-          "apiBaseUrl"
+          "apiBaseUrl",
+          "webhookBaseUrl"
         ]
       },
       "SetupStatus": {

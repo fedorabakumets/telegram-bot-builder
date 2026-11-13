@@ -540,56 +540,63 @@
     },
     {
       "file": "server/admin/setup-runtime-settings-routes.ts",
-      "line": 39,
+      "line": 41,
       "method": "GET",
       "expression": "\"/admin/api/runtime-settings/:group\"",
       "resolvedPath": "/admin/api/runtime-settings/{group}"
     },
     {
       "file": "server/admin/setup-runtime-settings-routes.ts",
-      "line": 41,
+      "line": 43,
       "method": "GET",
       "expression": "\"/admin/api/runtime-settings/workers/status\"",
       "resolvedPath": "/admin/api/runtime-settings/workers/status"
     },
     {
       "file": "server/admin/setup-runtime-settings-routes.ts",
-      "line": 44,
+      "line": 46,
+      "method": "GET",
+      "expression": "\"/admin/api/runtime-settings/workers/counters\"",
+      "resolvedPath": "/admin/api/runtime-settings/workers/counters"
+    },
+    {
+      "file": "server/admin/setup-runtime-settings-routes.ts",
+      "line": 49,
       "method": "GET",
       "expression": "\"/admin/api/runtime-settings/workers/bots\"",
       "resolvedPath": "/admin/api/runtime-settings/workers/bots"
     },
     {
       "file": "server/admin/setup-runtime-settings-routes.ts",
-      "line": 47,
+      "line": 52,
       "method": "POST",
       "expression": "\"/admin/api/runtime-settings/workers/restart-pending\"",
       "resolvedPath": "/admin/api/runtime-settings/workers/restart-pending"
     },
     {
       "file": "server/admin/setup-runtime-settings-routes.ts",
-      "line": 51,
+      "line": 56,
       "method": "PUT",
       "expression": "\"/admin/api/runtime-settings/:group\"",
       "resolvedPath": "/admin/api/runtime-settings/{group}"
     },
     {
       "file": "server/admin/setup-runtime-settings-routes.ts",
-      "line": 52,
+      "line": 57,
       "method": "POST",
       "expression": "\"/admin/api/runtime-settings/platform/telegram/test\"",
       "resolvedPath": "/admin/api/runtime-settings/platform/telegram/test"
     },
     {
       "file": "server/admin/setup-runtime-settings-routes.ts",
-      "line": 53,
+      "line": 58,
       "method": "POST",
       "expression": "\"/admin/api/runtime-settings/backups/run\"",
       "resolvedPath": "/admin/api/runtime-settings/backups/run"
     },
     {
       "file": "server/admin/setup-runtime-settings-routes.ts",
-      "line": 54,
+      "line": 59,
       "method": "POST",
       "expression": "\"/admin/api/runtime-settings/backups/telegram/test\"",
       "resolvedPath": "/admin/api/runtime-settings/backups/telegram/test"
@@ -2179,7 +2186,7 @@
     },
     {
       "file": "server/routes/setupWebhookRoutes.ts",
-      "line": 37,
+      "line": 15,
       "method": "POST",
       "expression": "'/api/webhook/:projectId/:tokenId'",
       "resolvedPath": "/api/webhook/{projectId}/{tokenId}"
