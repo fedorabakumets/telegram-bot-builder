@@ -1,4 +1,5 @@
 /** @fileoverview Запуск временного Python-обработчика с секретами через stdin и ограниченным временем остановки. */
+import { isSecretEnvironmentKey } from "../../utils/secret-environment-key";
 import { spawn } from "node:child_process";
 import { boundedLines, childEnvironment, killChildTree, redactChildEvent, redactChildLog } from "./pythonChildSupport";
 
@@ -44,7 +45,7 @@ export interface PythonPollingChild {
 export async function startPythonPollingChild(options: PythonPollingChildOptions): Promise<PythonPollingChild> {
   if (options.signal?.aborted) throw new Error("Запуск обработчика отменён");
   const secretEnv = Object.entries((options.init.env ?? {}) as Record<string, unknown>)
-    .filter(([key]) => /TOKEN|SECRET|PASSWORD|CREDENTIAL|AUTH|(?:^|_)KEY(?:$|_)|(?:DATABASE|REDIS)_URL/i.test(key));
+    .filter(([key]) => isSecretEnvironmentKey(key));
   const secrets = [options.init.token, ...secretEnv.map(([, value]) => value)]
     .filter((value): value is string => typeof value === "string");
   const token = options.init.token;

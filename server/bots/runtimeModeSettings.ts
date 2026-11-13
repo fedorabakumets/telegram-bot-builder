@@ -1,5 +1,6 @@
 /** @fileoverview Чтение и атомарное сохранение режима в переменных конкретного бота. */
 
+import { resolveWebhookSecret } from './webhookSecretValue';
 import { and, eq } from 'drizzle-orm';
 import { botEnvVariables, botTokens } from '@shared/schema';
 import { db } from '../database/db';
@@ -21,7 +22,7 @@ export interface RuntimeModeChanges {
 
 /** Читает только безопасные поля настройки, проверяя привязку токена к проекту. */
 export async function getRuntimeModeSettings(tokenId: number, projectId?: number) {
-  const [token] = await db.select({ projectId: botTokens.projectId, launchMode: botTokens.launchMode })
+  const [token] = await db.select({ projectId: botTokens.projectId, launchMode: botTokens.launchMode, webhookSecretToken: botTokens.webhookSecretToken })
     .from(botTokens).where(eq(botTokens.id, tokenId));
   if (!token || (projectId !== undefined && token.projectId !== projectId)) return null;
   const variables = await db.select({ key: botEnvVariables.key, value: botEnvVariables.value })
@@ -39,7 +40,7 @@ export async function saveRuntimeMode(tokenId: number, value: unknown, projectId
 /** Атомарно проверяет итоговую комбинацию транспорта и режима под общей блокировкой токена. */
 export async function saveRuntimeModeSettings(tokenId: number, changes: RuntimeModeChanges, projectId?: number) {
   return db.transaction(async (tx) => {
-    const [token] = await tx.select({ projectId: botTokens.projectId, launchMode: botTokens.launchMode })
+    const [token] = await tx.select({ projectId: botTokens.projectId, launchMode: botTokens.launchMode, webhookSecretToken: botTokens.webhookSecretToken })
       .from(botTokens).where(eq(botTokens.id, tokenId)).for('update');
     if (!token || (projectId !== undefined && token.projectId !== projectId)) return null;
     const match = and(eq(botEnvVariables.tokenId, tokenId), eq(botEnvVariables.key, 'BOT_POLLING_MODE'));
@@ -59,6 +60,9 @@ export async function saveRuntimeModeSettings(tokenId: number, changes: RuntimeM
     }
     if (changes.launchMode !== undefined) {
       const { mode: ignoredMode, resetMode: ignoredReset, ...transport } = changes;
+      /** При включении вебхука пустое поле автоматически заменяется защищённым секретом. */
+      if (launchMode === 'webhook') transport.webhookSecretToken = resolveWebhookSecret(
+        transport.webhookSecretToken?.trim() ? transport.webhookSecretToken : token.webhookSecretToken);
       await tx.update(botTokens).set(transport).where(eq(botTokens.id, tokenId));
     }
     return settings;

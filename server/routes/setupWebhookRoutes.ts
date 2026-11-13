@@ -1,67 +1,21 @@
-/**
- * @fileoverview Роут приёма webhook-апдейтов от Telegram и проксирования в Python-процесс бота
- * @module server/routes/setupWebhookRoutes
- */
-
+/** @fileoverview Приём Telegram webhook с доставкой в локальный либо удалённый исполнитель. */
 import type { Express } from 'express';
+import { storage } from '../storages/storage';
+import { getProjectPlacement } from '../bots/botPlacement';
+import { createTelegramWebhookHandler } from './telegramWebhookHandler';
+import { deliverTelegramWebhook } from './telegramWebhookDelivery';
 
-/** Базовый порт для aiohttp серверов ботов */
-const BASE_WEBHOOK_PORT = 9000;
-
-/**
- * Вычисляет порт aiohttp сервера бота по tokenId.
- * Формула: BASE_WEBHOOK_PORT + tokenId
- * @param tokenId - Идентификатор токена бота
- * @returns Порт на котором слушает Python aiohttp сервер
- */
+/** Возвращает порт локального aiohttp обработчика по идентификатору токена. */
 export function getBotWebhookPort(tokenId: number): number {
-  return BASE_WEBHOOK_PORT + tokenId;
+  return 9000 + tokenId;
 }
 
-/**
- * Регистрирует роут приёма webhook-апдейтов от Telegram.
- *
- * Telegram шлёт POST на /api/webhook/:projectId/:tokenId,
- * Node.js проксирует тело запроса в Python aiohttp сервер бота
- * на localhost:{BASE_WEBHOOK_PORT + tokenId}/webhook.
- *
- * Роут работает всегда — webhook режим управляется настройками токена в БД.
- *
- * @param app - Экземпляр Express приложения
- */
+/** Регистрирует публичный маршрут Telegram с проверкой принадлежности бота проекту. */
 export function setupWebhookRoutes(app: Express): void {
-  /**
-   * POST /api/webhook/:projectId/:tokenId
-   * Принимает апдейт от Telegram и пересылает в Python-процесс бота
-   */
-  app.post('/api/webhook/:projectId/:tokenId', async (req, res) => {
-    const projectId = parseInt(req.params.projectId, 10);
-    const tokenId = parseInt(req.params.tokenId, 10);
-
-    if (isNaN(projectId) || isNaN(tokenId)) {
-      res.status(400).json({ message: 'Некорректные projectId или tokenId' });
-      return;
-    }
-
-    const botPort = getBotWebhookPort(tokenId);
-    const targetUrl = `http://localhost:${botPort}/webhook`;
-
-    try {
-      const response = await fetch(targetUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(req.body),
-        signal: AbortSignal.timeout(55_000), // Telegram ждёт ответ максимум 60 сек
-      });
-
-      res.status(response.status).end();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Неизвестная ошибка';
-      console.error(
-        `[Webhook] Ошибка проксирования апдейта → проект ${projectId}, токен ${tokenId}, порт ${botPort}: ${message}`
-      );
-      // Возвращаем 200 чтобы Telegram не повторял апдейт при недоступном боте
-      res.status(200).end();
-    }
-  });
+  app.post('/api/webhook/:projectId/:tokenId', createTelegramWebhookHandler({
+    getRecipient: (tokenId) => storage.getBotToken(tokenId),
+    deliver: (projectId, tokenId, body, secret) => deliverTelegramWebhook({
+      projectId, tokenId, body, secret, remote: getProjectPlacement(projectId).runnerId !== null,
+    }),
+  }));
 }

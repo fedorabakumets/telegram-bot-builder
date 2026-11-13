@@ -29,6 +29,11 @@ export const PublicConfigSchema = z
       example: "https://example.com",
       description: "Базовый URL для публичных эндпоинтов; приоритет — API_BASE_URL на сервере",
     }),
+    /** Адрес вебхука по умолчанию: API_BASE_URL, затем устаревший WEBHOOK_URL. */
+    webhookBaseUrl: z.string().nullable().openapi({
+      example: "https://example.com",
+      description: "Серверный адрес вебхука; null означает отсутствие настройки",
+    }),
   })
   .openapi("PublicConfig");
 

@@ -12,6 +12,7 @@ import type { Request, Response } from "express";
 import { getSetting } from "../../../services/app-settings.service";
 import { isSkipAuthEnabled } from "../utils/isSkipAuthEnabled";
 import { isPsqlBuiltinEnabled } from "../../../utils/isPsqlBuiltinEnabled";
+import { resolveWebhookBaseUrl } from "../../../bots/webhookBaseUrl";
 
 /**
  * Возвращает публичный базовый URL API для UI (hooks, превью).
@@ -50,6 +51,8 @@ export async function handlePublicConfig(req: Request, res: Response): Promise<v
     skipAuth: isSkipAuthEnabled(),
     /** Публичный базовый URL API (API_BASE_URL или origin запроса) */
     apiBaseUrl: resolvePublicApiBaseUrl(req),
+    /** Точный серверный адрес вебхука; origin запроса автоматически не подставляется. */
+    webhookBaseUrl: resolveWebhookBaseUrl(),
     /** Разрешён ли узлу psql_query режим builtin (БД платформы), PSQL_BUILTIN_ENABLED */
     psqlBuiltinEnabled: isPsqlBuiltinEnabled(),
   });

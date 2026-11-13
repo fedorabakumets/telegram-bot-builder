@@ -3,6 +3,7 @@ import { preserve } from "railway/iac";
 
 /** Фиксирует имена существующих переменных, сохраняя их значения на стороне Railway. */
 export const backendEnvironment = {
+  API_BASE_URL: preserve(),
   ADMIN_API_KEY: preserve(),
   AGENT_AUTO_AUTH_ALLOWED_IDS: preserve(),
   AGENT_AUTO_AUTH_ENABLED: preserve(),
@@ -39,6 +40,8 @@ export const runtimeEnvironment = {
   RUNNER_BROADCASTS_ENABLED: preserve(),
   RUNNER_ID: preserve(),
   RUNNER_REQUIRE_FENCE: preserve(),
+  /** Общий секрет приватной доставки webhook; создаётся в Railway до применения плана. */
+  RUNNER_WEBHOOK_SECRET: preserve(),
 };
 
 /** Фиксирует имена существующих переменных, сохраняя их значения на стороне Railway. */

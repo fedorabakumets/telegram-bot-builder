@@ -91,6 +91,8 @@ import {
 } from '../files/generatedCodeMeta';
 import { persistBotBuildForStart, restoreBotBuildForStart } from './builds/startBotBuildHooks';
 import { resolveRunnerBuildForStart } from './builds/runnerBuildForStart';
+import { ensureWebhookSecret } from './webhookSecret';
+import { resolveWebhookBaseUrl } from './webhookBaseUrl';
 
 
 
@@ -151,10 +153,15 @@ export async function startBot(
 
     // Проверяем Telegram до остановки существующего процесса и подготовки файлов.
     const launchMode = tokenRecord?.launchMode ?? 'polling';
-    const webhookBaseUrl = tokenRecord?.webhookBaseUrl ?? null;
+    /** Адрес соответствует серверному значению по умолчанию, показанному в настройках. */
     const effectiveWebhookUrl = launchMode === 'webhook'
-      ? (webhookBaseUrl || process.env.WEBHOOK_URL || null)
+      ? resolveWebhookBaseUrl(tokenRecord?.webhookBaseUrl)
       : null;
+    if (launchMode === 'webhook' && !effectiveWebhookUrl) {
+      return { success: false, error: 'Для webhook задайте публичный адрес API_BASE_URL или адрес в настройках бота' };
+    }
+    /** Секрет сохраняется до регистрации webhook и не зависит от окружения панели. */
+    const webhookSecret = launchMode === 'webhook' ? await ensureWebhookSecret(tokenId) : undefined;
     const telegramCheck = await checkTelegramBeforeStart(token, 'getMe');
     if (!telegramCheck.ok) {
       if (telegramCheck.unauthorized) {
@@ -292,6 +299,8 @@ export async function startBot(
 
     const generatorVersion = await getGeneratorVersion();
     const fingerprint = buildGeneratedCodeFingerprint({
+      /** Старые локальные и S3-сборки webhook не поддерживают обязательный секрет. */
+      webhookProtocolVersion: launchMode === 'webhook' ? 1 : undefined,
       projectDataChecksum: checksumProjectData(project.data),
       projectName: project.name,
       userDatabaseEnabled,
@@ -413,7 +422,7 @@ export async function startBot(
     const mediaRows = mediaUrls.length ? await storage.getMediaFilesByUrls(mediaUrls, projectId) : [];
     // Новые и динамические вложения также должны читаться через выбранное S3.
     const storageRequired = Boolean(await selectedMediaStorageId()) || mediaRows.some((media) => media.storageBackend === 's3');
-    botEnv = { ...botEnv, ...buildMediaRuntimeEnv(projectId, project.data, storageRequired) };
+    botEnv = { ...botEnv, ...(webhookSecret ? { WEBHOOK_SECRET_TOKEN: webhookSecret } : {}), ...buildMediaRuntimeEnv(projectId, project.data, storageRequired) };
     /** Удалённый исполнитель не должен подтверждать запуск без доступа к медиа. */
     const mediaError = validateMediaRuntimeEnv(botEnv);
     if (mediaError) return { success: false, error: mediaError };

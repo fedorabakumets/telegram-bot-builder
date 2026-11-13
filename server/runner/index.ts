@@ -23,6 +23,7 @@ import { closeBotCommandFence, commandFenceCounters } from "./runnerCommandFence
 import { redisQueueLength, startRunnerMemoryMonitor } from "./runnerMemoryMonitor";
 import { startRunnerHeapProfile } from "./runnerHeapProfile";
 import { createRunnerEventPublisher } from "./runnerEventPublisher";
+import { startRunnerWebhookServer } from "./runnerWebhookServer";
 
 /**
  * Подключается к Redis, принимает команды и останавливает воркеры по сигналу
@@ -58,6 +59,8 @@ async function main(): Promise<void> {
       console.error(`🛰️ Событие ${event.k} воркера ${event.w} не отправлено:`, error instanceof Error ? error.message : error);
     },
   });
+  /** HTTP принимает только подтверждённые регистрации; проверка проекта выполняется публичным API. */
+  const webhookServer = await startRunnerWebhookServer((projectId, tokenId) => workers.hasWebhook(projectId, tokenId));
   const follower = followCommandStream(reader, runnerCommandStream(config.runnerId), (fields) => workers.handle(fields));
   await follower.ready;
   await publishRunnerSiteInfo(writer, readRunnerSiteInfo(config.runnerId));
@@ -79,6 +82,7 @@ async function main(): Promise<void> {
   const stop = async (signal: string, lost = false) => {
     if (stopping) return;
     stopping = true;
+    webhookServer?.close();
     stopMemoryMonitor();
     stopWatching();
     console.log(`🛰️ ${signal}: останавливаем воркеры (${workers.size})`);

@@ -9,6 +9,7 @@ import { parse } from "dotenv";
 import { resolveBotDatabaseUrl, warnBotRuntimeIfNeeded } from "../bots/resolveBotDatabaseUrl";
 import { withTelegramBotApiUrl } from "./telegramBotApiEnv";
 import { withPollingRuntimeEnv } from "../bots/pollingRuntimeEnv";
+import { resolveWebhookBaseUrl } from "../bots/webhookBaseUrl";
 
 /** Как переменные попадают к боту: файл .env в папке бота или поле env в команде start_bot */
 export type BotEnvSource = "file" | "inline";
@@ -57,7 +58,8 @@ export async function buildBotEnvContent(botDir: string, projectId: number, toke
   const adminIds = project?.adminIds?.trim() || readLegacyAdminIds(botDir) || ADMIN_IDS_PLACEHOLDER;
 
   const launchMode = tokenRecord?.launchMode ?? "polling";
-  const webhookBaseUrl = tokenRecord?.webhookBaseUrl ?? null;
+  /** Файл и команда запуска используют одинаковое наследование публичного адреса. */
+  const webhookBaseUrl = resolveWebhookBaseUrl(tokenRecord?.webhookBaseUrl);
   const webhookPort = launchMode === "webhook" && webhookBaseUrl ? 9000 + tokenId : null;
 
   // Ссылки ${{VAR}} раскрываются только для разрешённых переменных сервера (botEnvPolicy)

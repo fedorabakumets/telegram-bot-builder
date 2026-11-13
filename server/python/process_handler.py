@@ -8,7 +8,7 @@ import signal
 import sys
 from pathlib import Path
 
-from process_handler_io import FRAME_LIMIT, child_environment, drain
+from process_handler_io import secret_environment_key, FRAME_LIMIT, child_environment, drain
 from process_memory import register_pid, unregister_pid
 from process_job import attach_job, close_job, add_process
 
@@ -82,8 +82,7 @@ async def run_process_handler(ctx, settings, log):
     values = dict(ctx.env or {})
     values["REDIS_URL"] = settings["redis_url"]
     secrets = [ctx.token] + [str(value) for key, value in values.items()
-                            if any(word in key.upper() for word in
-                                   ("TOKEN", "SECRET", "PASSWORD", "KEY", "URL"))]
+                            if secret_environment_key(key)]
     readers = [asyncio.create_task(drain(process.stdout, ctx.token_id, log, secrets, events, True, ready)),
                asyncio.create_task(drain(process.stderr, ctx.token_id, log, secrets, events))]
     waiter = asyncio.create_task(wait_exit(process))

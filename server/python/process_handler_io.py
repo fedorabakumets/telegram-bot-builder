@@ -17,6 +17,15 @@ def child_environment():
             "PYTHONIOENCODING": "utf-8", "PYTHONUNBUFFERED": "1"}
 
 
+def secret_environment_key(key):
+    """Отличает секреты доступа от идентификаторов, режимов и публичных адресов."""
+    key = key.upper()
+    if re.search(r"(?:^|_)(?:ID|MODE|ENABLED|PORT|HOST|BASE_URL)$", key):
+        return False
+    return bool(re.search(r"(?:^|_)(?:TOKEN|SECRET|PASSWORD|CREDENTIAL|KEY|HASH)(?:$|_)", key)
+                or re.search(r"(?:^|_)(?:SESSION_STRING|DATABASE_URL|REDIS_URL|AUTHORIZATION)$", key))
+
+
 def redact(content, secrets):
     """Убирает секреты и ограничивает размер строки перед журналированием."""
     text = str(content)

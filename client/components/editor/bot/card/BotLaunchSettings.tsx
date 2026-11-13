@@ -3,16 +3,14 @@
  * @module components/editor/bot/card/BotLaunchSettings
  */
 
-import { useState, useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Globe, KeyRound, Link2, Rocket, ShieldAlert } from 'lucide-react';
 import { cn } from '@/utils/utils';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useToast } from '@/hooks/use-toast';
-import { updateLaunchSettings, buildWebhookPreview } from './bot-launch-helpers';
+import { buildWebhookPreview } from './bot-launch-helpers';
 import type { LaunchMode, BotLaunchSettingsProps } from './bot-launch-helpers';
+import { useBotLaunchSettings } from './use-bot-launch-settings';
 
 /** Блок выбора режима запуска бота с сохранением в БД */
 export function BotLaunchSettings({
@@ -24,49 +22,11 @@ export function BotLaunchSettings({
   className,
   onPendingChange,
 }: BotLaunchSettingsProps) {
-  const [localMode, setLocalMode] = useState<LaunchMode>((launchMode as LaunchMode) ?? 'polling');
-  const [localBaseUrl, setLocalBaseUrl] = useState(webhookBaseUrl ?? '');
-  const [localSecret, setLocalSecret] = useState(webhookSecretToken ?? '');
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  /** Синхронизирует режим с общей очередью после отмены и при выборе другого бота. */
-  useEffect(() => { setLocalMode((launchMode as LaunchMode) ?? 'polling'); }, [launchMode, tokenId]);
-
-  /** Мутация сохранения настроек запуска */
-  const mutation = useMutation({
-    mutationFn: ({ mode, url, secret }: { mode: string; url: string | null; secret: string | null }) =>
-      updateLaunchSettings(projectId, tokenId, mode, url, secret),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/tokens`] });
-      toast({ title: 'Перезапустите бота чтобы применить изменения' });
-    },
-  });
-
-  /** Debounce-сохранение при изменении текстовых полей webhook (только без pending) */
-  useEffect(() => {
-    if (onPendingChange) return;
-    if (localMode !== 'webhook') return;
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      mutation.mutate({ mode: localMode, url: localBaseUrl || null, secret: localSecret || null });
-    }, 800);
-    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [localBaseUrl, localSecret]);
-
-  /** Обработчик смены режима — сохраняет немедленно или через pending */
-  function handleModeChange(value: LaunchMode) {
-    setLocalMode(value);
-    if (onPendingChange) {
-      onPendingChange('LAUNCH_MODE', value);
-    } else {
-      mutation.mutate({ mode: value, url: localBaseUrl || null, secret: localSecret || null });
-    }
-  }
-
-  const webhookPreview = buildWebhookPreview(localBaseUrl, projectId, tokenId);
+  const { localMode, localBaseUrl, localSecret, inheritedBaseUrl, effectiveBaseUrl,
+    handleModeChange, handleBaseUrlChange, handleSecretChange } = useBotLaunchSettings({
+      tokenId, projectId, launchMode, webhookBaseUrl, webhookSecretToken, onPendingChange,
+    });
+  const webhookPreview = buildWebhookPreview(effectiveBaseUrl, projectId, tokenId);
 
   return (
     <div className={cn('@container space-y-3 px-3.5 py-3', className)}>
@@ -123,24 +83,23 @@ export function BotLaunchSettings({
               <Input
                 id={`webhook-base-url-${tokenId}`}
                 value={localBaseUrl}
-                onChange={(e) => {
-                  setLocalBaseUrl(e.target.value);
-                  if (onPendingChange) onPendingChange('WEBHOOK_BASE_URL', e.target.value);
-                }}
-                placeholder="https://example.com"
+                onChange={(e) => handleBaseUrlChange(e.target.value)}
+                placeholder={inheritedBaseUrl || 'https://example.com'}
                 className="h-8 text-xs"
               />
+              <p className="text-xs text-muted-foreground">{localBaseUrl.trim()
+                ? 'Собственный адрес бота. Очистите поле, чтобы использовать адрес сервера.'
+                : inheritedBaseUrl ? `Адрес сервера: ${inheritedBaseUrl}` : 'Публичный адрес API не настроен. Укажите HTTPS-адрес.'}</p>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor={`webhook-secret-${tokenId}`} className="text-xs">Secret token</Label>
+              <Label htmlFor={`webhook-secret-${tokenId}`} className="text-xs">Защитный токен</Label>
               <Input
                 id={`webhook-secret-${tokenId}`}
                 value={localSecret}
-                onChange={(e) => {
-                  setLocalSecret(e.target.value);
-                  if (onPendingChange) onPendingChange('WEBHOOK_SECRET_TOKEN', e.target.value);
-                }}
-                placeholder="Секретный токен"
+                onChange={(e) => handleSecretChange(e.target.value)}
+                type="password"
+                autoComplete="new-password"
+                placeholder="Создаётся автоматически при запуске"
                 className="h-8 text-xs"
               />
             </div>

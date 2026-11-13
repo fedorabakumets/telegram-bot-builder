@@ -382,10 +382,10 @@ async def main():
             logging.info(f"🌐 Webhook режим: {full_webhook_url}")
             logging.info(f"🔌 Порт aiohttp: {WEBHOOK_PORT}")
 
-            await bot.set_webhook(full_webhook_url, allowed_updates=dp.resolve_used_update_types())
+            await bot.set_webhook(full_webhook_url, allowed_updates=dp.resolve_used_update_types(), secret_token=WEBHOOK_SECRET_TOKEN)
 
             app = web.Application()
-            SimpleRequestHandler(dispatcher=dp, bot=bot).register(app, path="/webhook")
+            SimpleRequestHandler(dispatcher=dp, bot=bot, secret_token=WEBHOOK_SECRET_TOKEN, handle_in_background=False).register(app, path="/webhook")
             setup_application(app, dp, bot=bot)
 {%- if hasApiTrigger %}
             register_api_trigger_routes(app)

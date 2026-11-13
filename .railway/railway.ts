@@ -22,9 +22,20 @@ export default defineRailway(() => {
   const tbbUploads = bucket("tbb-uploads", { region: "ams" });
   /** Хранит приватные снимки истории версий проектов. */
   const tbbProjectVersions = bucket("tbb-project-versions", { region: "ams" });
+  const botRuntime = service("bot runtime", {
+    source: telegramBotBuilder,
+    /** Принимает обновления в Node и лениво загружает общий Python для активных сценариев. */
+    env: { ...runtimeEnvironment, RUNNER_PROCESS_POLLING: "node", RUNNER_PROCESS_HANDLER: "shared", RUNNER_PYTHON_HOST: "unified", RUNNER_WEBHOOK_PORT: "9080" },
+    /** Исполнитель пересобирается только при изменении зависимостей управления ботами. */
+    build: { buildEnvironment: "V3", builder: "DOCKERFILE", dockerfilePath: "Dockerfile.runner", watchPatterns: ["/server/runner/**", "/server/redis/**", "/server/bots/**", "/server/services/runtime-overlay.ts", "/server/utils/**", "/server/python/**", "/requirements.txt", "/package.json", "/package-lock.json", "/tsconfig.node.json", "/Dockerfile.runner", "/.railway/railway.ts"] },
+    start: "node /app/runner.cjs",
+    replicas: { "europe-west4-drams3a": 1 },
+    deploy: { drainingSeconds: 0, overlapSeconds: 0 },
+    networking: { privateNetworkEndpoint: "bot-runtime" },
+  });
   const botBuilderBackend = service("bot builder backend", {
     /** Секреты и подключения сохраняются на стороне Railway. */
-    env: backendEnvironment,
+    env: { ...backendEnvironment, RUNNER_WEBHOOK_URL: "http://${{bot runtime.RAILWAY_PRIVATE_DOMAIN}}:9080", RUNNER_WEBHOOK_SECRET: botRuntime.env.RUNNER_WEBHOOK_SECRET },
     source: telegramBotBuilder,
     build: { buildEnvironment: "V3", builder: "DOCKERFILE", dockerfilePath: "Dockerfile.backend", watchPatterns: ["/server/**", "/lib/**", "/shared/**", "/client/utils/**", "/client/components/editor/sidebar/parsePythonCodeToJson.ts", "/scripts/**", "/migrations/**", "/assets/**", "/requirements.txt", "/package.json", "/package-lock.json", "/.npmrc", "/.dockerignore", "/tsconfig*.json", "/drizzle.config.ts", "/version.json", "/Dockerfile.backend", "/railway.backend.toml"] },
     start: "node dist/server/index.js",
@@ -34,17 +45,6 @@ export default defineRailway(() => {
     deploy: { drainingSeconds: 30, overlapSeconds: 0 },
     networking: { privateNetworkEndpoint: "botcraft-backend" },
     volumeMounts: { "/app/uploads": telegramBotBuilder_e3uVolume },
-  });
-  const botRuntime = service("bot runtime", {
-    source: telegramBotBuilder,
-    /** Принимает обновления в Node и лениво загружает общий Python для активных сценариев. */
-    env: { ...runtimeEnvironment, RUNNER_PROCESS_POLLING: "node", RUNNER_PROCESS_HANDLER: "shared", RUNNER_PYTHON_HOST: "unified" },
-    /** Исполнитель пересобирается только при изменении зависимостей управления ботами. */
-    build: { buildEnvironment: "V3", builder: "DOCKERFILE", dockerfilePath: "Dockerfile.runner", watchPatterns: ["/server/runner/**", "/server/redis/**", "/server/bots/**", "/server/services/runtime-overlay.ts", "/server/utils/**", "/server/python/**", "/requirements.txt", "/package.json", "/package-lock.json", "/tsconfig.node.json", "/Dockerfile.runner", "/.railway/railway.ts"] },
-    start: "node /app/runner.cjs",
-    replicas: { "europe-west4-drams3a": 1 },
-    deploy: { drainingSeconds: 0, overlapSeconds: 0 },
-    networking: { privateNetworkEndpoint: "bot-runtime" },
   });
   const botBuilderFrontend = service("bot builder frontend", {
     /** Сохраняет действующий адрес API и настройки публикации. */
