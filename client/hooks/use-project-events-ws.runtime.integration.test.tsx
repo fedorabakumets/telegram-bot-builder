@@ -1,6 +1,6 @@
 /** @fileoverview Проверки обновления режима бота через настоящую подписку WebSocket и кэш запросов. */
 import { act, cleanup, renderHook, waitFor } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { useProjectEventsWs } from './use-project-events-ws';
 import { useBotRuntimeSettings, type BotRuntimeSettings } from '@/components/editor/bot/card/use-bot-runtime-settings';
@@ -45,6 +45,46 @@ function setup() {
 }
 
 describe('сквозное обновление режима бота', () => {
+  it('по событию автоостанова перечитывает frozen-статус и окончание истории', async () => {
+    vi.stubGlobal('WebSocket', TestSocket);
+    let running = true;
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false, staleTime: Infinity } } });
+    const hook = renderHook(() => {
+      useProjectEventsWs(901);
+      return {
+        status: useQuery({ queryKey: ['/api/tokens/902/bot-status'],
+          queryFn: async () => ({ isRunning: running, frozen: true }) }),
+        history: useQuery({ queryKey: ['launch-history', 902],
+          queryFn: async () => [{ status: running ? 'running' : 'stopped' }] }),
+      };
+    }, {
+      /** Связывает обе подписки с одним кэшем, как карточка и история редактора. */
+      wrapper: ({ children }) => <QueryClientProvider client={client}>{children}</QueryClientProvider>,
+    });
+    await waitFor(() => expect(hook.result.current.history.data?.[0].status).toBe('running'));
+    running = false;
+    act(() => TestSocket.instances[0].onmessage?.({ data: JSON.stringify({
+      type: 'bot-stopped', projectId: 901, tokenId: 902,
+    }) }));
+    await waitFor(() => expect(hook.result.current.history.data?.[0].status).toBe('stopped'));
+    expect(hook.result.current.status.data).toEqual({ isRunning: false, frozen: true });
+  });
+  it('после замены токена перечитывает список и снимает прежнюю ошибку авторизации', async () => {
+    vi.stubGlobal('WebSocket', TestSocket);
+    let saved = { isActive: 0, authorizationError: 'unauthorized' as string | null };
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false, staleTime: Infinity } } });
+    const hook = renderHook(() => {
+      useProjectEventsWs(901);
+      return useQuery({ queryKey: ['/api/projects/901/tokens'], queryFn: async () => [{ ...saved }] });
+    }, {
+      /** Подключает кэш с неограниченной свежестью, чтобы обновление зависело именно от WS. */
+      wrapper: ({ children }) => <QueryClientProvider client={client}>{children}</QueryClientProvider>,
+    });
+    await waitFor(() => expect(hook.result.current.data?.[0].authorizationError).toBe('unauthorized'));
+    saved = { isActive: 1, authorizationError: null };
+    act(() => TestSocket.instances[0].updated());
+    await waitFor(() => expect(hook.result.current.data?.[0]).toEqual({ isActive: 1, authorizationError: null }));
+  });
   it('после события другой вкладки перечитывает сохранённый режим с сервера', async () => {
     const test = setup();
     await waitFor(() => expect(test.hook.result.current.query.data?.mode).toBe('direct'));

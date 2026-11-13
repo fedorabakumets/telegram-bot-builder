@@ -28,8 +28,8 @@ export interface ResolvedProjectTokens {
  * @returns Активные токены или ошибка
  */
 function keepActiveOrError(tokens: BotToken[], emptyError: string): ResolvedProjectTokens {
-  const active = tokens.filter((token) => isTokenActiveForBroadcast(token.isActive) && !isBotFrozen(token.projectId, token.id));
-  if (active.length === 0) return { tokens: [], error: tokens.some((token) => isBotFrozen(token.projectId, token.id)) ? 'Бот заморожен Telegram и недоступен для рассылки.' : emptyError };
+  const active = tokens.filter((token) => isTokenActiveForBroadcast(token.isActive) && !isBotFrozen(token.projectId, token.id, token.token));
+  if (active.length === 0) return { tokens: [], error: tokens.some((token) => isBotFrozen(token.projectId, token.id, token.token)) ? 'Бот заморожен Telegram и недоступен для рассылки.' : emptyError };
   return { tokens: active };
 }
 

@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useIsMutating } from '@tanstack/react-query';
 import { useBotControl } from '../bot-control-context';
 import { getBotServiceFailure } from './bot-service-failure';
-import { resolveBotCanvasStatus, type BotCanvasStatus } from './bot-canvas-status';
+import { resolveBotCanvasStatus, isFrozenCanvasStatus, type BotCanvasStatus } from './bot-canvas-status';
 
 /** Операция, ожидающая подтверждения статуса процесса. */
 type Operation = 'starting' | 'stopping' | 'restarting';
@@ -68,11 +68,11 @@ export function useBotVisualStatus(
   const awaitingConfirmation = completed && !commandError && !failure
     && isRunning !== (completed !== 'stopping') ? completed : null;
   const status = resolveBotCanvasStatus({ isActive, authorizationError, isRunning, frozen: server?.frozen,
-    unknown: server?.status === 'unknown',
+    unknown: !server || server.status === 'unknown',
     hasFailure: failure || (!isRunning && !!commandError),
     operation: operation ?? (!failure && !commandError ? waiting ?? awaitingConfirmation
       ?? (server?.status === 'starting' || server?.status === 'requested' ? 'starting' : null) : null) });
   /** Подтверждённый результат и отсутствие связи важнее старой ошибки команды. */
   const unresolvedError = commandError && server?.status !== 'unknown' && isRunning !== startLatest;
-  return unresolvedError && !operation && !waiting && status !== 'invalid' && status !== 'inactive' && status !== 'frozen' ? 'error' : status;
+  return unresolvedError && !operation && !waiting && status !== 'invalid' && status !== 'inactive' && !isFrozenCanvasStatus(status) ? 'error' : status;
 }

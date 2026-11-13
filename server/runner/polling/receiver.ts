@@ -1,6 +1,8 @@
 /** @fileoverview Лёгкий polling с сохранением пакета до подтверждения смещения Telegram. */
 import { setTimeout as sleep } from "node:timers/promises";
 import { requestUpdates, type PollResponse } from "./transport";
+import { TelegramTokenUnauthorized } from "./telegramUnauthorized";
+import { TelegramBotFrozen } from "./telegramFrozen";
 
 /** Событие Telegram с обязательным идентификатором. */
 export interface PollUpdate {
@@ -77,7 +79,7 @@ export async function runPollingReceiver(options: PollingReceiverOptions): Promi
       delay = 1_000;
     } catch (error) {
       if (signal.aborted) return;
-      if (error instanceof PollingRejected) throw error;
+      if (error instanceof PollingRejected || error instanceof TelegramTokenUnauthorized || error instanceof TelegramBotFrozen) throw error;
       await wait(delay, signal).catch(() => {});
       delay = Math.min(delay * 2, 30_000);
     }

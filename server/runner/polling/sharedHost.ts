@@ -98,7 +98,7 @@ export class SharedPollingHost {
   private event(event: Record<string, unknown>): void {
     if (event.type === "process") this.processObserver?.(event);
     if (event.type === "system") {
-      this.permanent.observe(event);
+      if (this.permanent.observe(event)) { this.closeIdle(); return; }
       const memory = typeof event.content === "string" ? /^memory_kb:(\d+)$/.exec(event.content) : null;
       if (memory) { this.memoryKb = Number(memory[1]); this.onMemory(this.memoryKb, this.actualPid); }
       else this.onEvent(event);
@@ -113,7 +113,7 @@ export class SharedPollingHost {
     }
     if (this.config.pythonHost === "unified" && !event.activation_id
       && (["worker_runtime_counters", "worker_memory_profile"].includes(String(event.type))
-        || (["stdout", "stderr"].includes(String(event.type)) && this.permanent.tokens.has(Number(event.token_id))))) {
+        || (["stdout", "stderr", "bot_runtime_error"].includes(String(event.type)) && this.permanent.tokens.has(Number(event.token_id))))) {
       this.onEvent(event); return;
     }
     const id = String(event.activation_id ?? "");

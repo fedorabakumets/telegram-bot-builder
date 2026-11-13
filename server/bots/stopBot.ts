@@ -35,7 +35,7 @@ import { processCleanups } from "../terminal/setupBotProcessListeners";
 import { storage } from '../storages/storage';
 import { flushBuffer } from '../terminal/botLogsBuffer';
 import { broadcastProjectEvent } from '../terminal/broadcastProjectEvent';
-import { clearActiveLaunchId } from '../terminal/activeLaunchIds';
+import { clearActiveLaunchId, getActiveLaunchId } from '../terminal/activeLaunchIds';
 import { markExpectedStop, clearExpectedStop } from './expectedStops';
 import { cancelBotStart } from './botStartState';
 
@@ -69,13 +69,32 @@ import { cancelBotStart } from './botStartState';
  * }
  * ```
  */
-export async function stopBot(projectId: number, tokenId: number): Promise<{ success: boolean; error?: string; }> {
-  cancelBotStart(tokenId);
-  // Чтобы WorkerPool не принял stop за OOM и не автоперезапустил
-  markExpectedStop(tokenId);
+export async function stopBot(projectId: number, tokenId: number, options?: { /** Запуск, который ещё разрешено остановить. */ expectedLaunchId?: number; /** Версия зафиксированного намерения остановки. */ expectedDesiredGeneration?: number }): Promise<{ success: boolean; error?: string; }> {
+  /** Запоздавшая ошибка старого запуска не останавливает новый процесс. */
+  if (options?.expectedLaunchId !== undefined && getActiveLaunchId(tokenId) !== options.expectedLaunchId) {
+    return { success: true };
+  }
   try {
+    /** Автоостановка не отменяет более новое намерение пользователя даже при прежнем launchId. */
+    if (options?.expectedDesiredGeneration !== undefined) {
+      const current = await storage.getBotInstanceByToken(tokenId);
+      if (!current || current.desiredStatus !== 'stopped'
+        || current.desiredGeneration !== options.expectedDesiredGeneration) return { success: true };
+    }
     /** Версия намерения защищает от запоздавшей остановки после нового запуска. */
     const commandFence = await resolveBotCommandFence(tokenId, 'stop');
+    if (options?.expectedLaunchId !== undefined && getActiveLaunchId(tokenId) !== options.expectedLaunchId) return { success: true };
+    if (options?.expectedDesiredGeneration !== undefined && commandFence
+      && commandFence.desiredGeneration !== options.expectedDesiredGeneration) return { success: true };
+    if (options?.expectedDesiredGeneration !== undefined && !commandFence) {
+      const current = await storage.getBotInstanceByToken(tokenId);
+      if (!current || current.desiredStatus !== 'stopped'
+        || current.desiredGeneration !== options.expectedDesiredGeneration) return { success: true };
+      if (options.expectedLaunchId !== undefined && getActiveLaunchId(tokenId) !== options.expectedLaunchId) return { success: true };
+    }
+    cancelBotStart(tokenId);
+    // Ожидаемая остановка отмечается только после проверки актуальности намерения.
+    markExpectedStop(tokenId);
     // ─── Режим воркера: остановка бота через worker pool ───
     if (isWorkerPoolEnabled()) {
       const confirmed = await workerManager.stopBot(projectId, tokenId, commandFence);

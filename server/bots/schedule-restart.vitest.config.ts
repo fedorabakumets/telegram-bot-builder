@@ -5,5 +5,6 @@ import path from 'node:path';
 /** Проверяется отмена запуска при явной остановке. */
 export default defineConfig({
   resolve: { alias: { '@shared': path.resolve('shared') } },
-  test: { environment: 'node', include: ['server/bots/scheduleBotRestart.test.ts'] },
+  test: { environment: 'node', include: ['server/bots/scheduleBotRestart.test.ts',
+    'server/bots/automaticBotStartAllowed.test.ts', 'server/bots/frozenRestore.test.ts'] },
 });

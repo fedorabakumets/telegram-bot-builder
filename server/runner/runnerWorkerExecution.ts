@@ -91,7 +91,9 @@ export class RunnerWorkerExecution {
       return;
     }
     if (this.nodeBots.has(command.token_id)) {
-      const stopped = await this.runtime?.dispatcher.stop(command.token_id);
+      const stopped = await (command.cmd === "stop_bot"
+        ? this.runtime?.dispatcher.stop(command.token_id)
+        : this.runtime?.dispatcher.stopForHandoff(command.token_id));
       this.nodeBots.delete(command.token_id);
       if (command.cmd === "stop_bot") {
         // Упавшая регистрация уже удалена диспетчером, но панели всё равно нужен ответ.
@@ -115,7 +117,7 @@ export class RunnerWorkerExecution {
     channel.pauseOutput(this.paused);
     this.legacy = channel;
     forwardWorkerEvents(channel, this.base, (event) => {
-      this.legacyRoutes.observe(event);
+      if (this.legacyRoutes.observe(event)) return;
       if (event.k === "exit" || event.k === "error") { void this.finish(event); return; }
       if (this.config.processPolling === "node" && event.k === "line" && event.l
         && event.l.includes('"worker_ready"')) return;

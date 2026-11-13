@@ -13,17 +13,19 @@ export class RunnerLegacyRoutes {
   started(tokenId: number): void { this.tokens.add(tokenId); }
 
   /** Учитывает только окончательные события старого воркера. */
-  observe(event: RunnerEvent): void {
-    if (event.k !== "line" || !event.l) return;
+  observe(event: RunnerEvent): boolean {
+    if (event.k !== "line" || !event.l) return false;
     try {
       const message = JSON.parse(event.l);
-      if (message.type !== "system") return;
-      const match = /^bot_(?:stopped|exited):(\d+)(?::.*)?$/.exec(message.content);
-      if (!match) return;
-      const tokenId = Number(match[1]);
-      this.tokens.delete(tokenId);
-      this.waiters.get(tokenId)?.();
+      if (message.type !== "system") return false;
+      const match = /^bot_(stopped|exited):(\d+)(?::(.*))?$/.exec(message.content);
+      if (!match) return false;
+      const tokenId = Number(match[2]), waiting = this.waiters.has(tokenId);
+      if (!waiting || match[1] === "stopped") this.tokens.delete(tokenId);
+      if (match[1] === "stopped") this.waiters.get(tokenId)?.();
+      return waiting && match[3] !== "error";
     } catch { /* Обычный вывод не относится к протоколу остановки. */ }
+    return false;
   }
 
   /** Ожидает подтверждение, исключая перекрытие старого и нового владельцев polling. */

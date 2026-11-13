@@ -12,7 +12,8 @@ test("webhook остаётся лёгкой регистрацией и проб
   const server = createServer(async (req, res) => {
     const chunks: Buffer[] = [];
     for await (const part of req) chunks.push(Buffer.from(part));
-    methods.push(req.url!.split("/").at(-1)!);
+    /** Последний сегмент URL совместим с целевой версией стандартной библиотеки проекта. */
+    methods.push(req.url!.split("/").pop()!);
     payloads.push(JSON.parse(Buffer.concat(chunks).toString("utf8")));
     res.setHeader("content-type", "application/json"); res.end('{"ok":true,"result":true}');
   });

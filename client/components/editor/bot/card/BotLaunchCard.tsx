@@ -22,6 +22,8 @@ interface BotLaunchCardProps {
   featured?: boolean;
   /** Подтверждённая заморозка текущего запуска; прошлые записи не переопределяются */
   frozen?: boolean;
+  /** Подтверждённое состояние текущего процесса; не применяется к прошлым запускам. */
+  liveStatus?: 'running' | 'stopping' | 'stopped' | 'error' | 'unknown';
   /** Строка внутри общего списка (без своей рамки) */
   embedded?: boolean;
 }
@@ -36,12 +38,14 @@ export function BotLaunchCard({
   onShowLogs,
   featured = false,
   frozen = false,
+  liveStatus,
   embedded = false,
 }: BotLaunchCardProps) {
-  const meta = getLaunchStatusMeta(record.status, record.errorMessage, frozen);
+  const status = liveStatus ?? record.status;
+  const meta = getLaunchStatusMeta(status, record.errorMessage, frozen);
   const duration = formatLaunchDurationLabel(record.startedAt, record.stoppedAt);
-  const isRunning = record.status === 'running' && !frozen;
-  const isError = record.status === 'error' || frozen;
+  const isRunning = status === 'running';
+  const isError = status === 'error';
 
   return (
     <div
@@ -73,6 +77,7 @@ export function BotLaunchCard({
             >
               {meta.label}
             </span>
+            {frozen && <span className="rounded-md border border-red-500/30 bg-red-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-red-400">Заморожен в Telegram</span>}
             <span className="text-xs text-muted-foreground">
               {formatRelativeRu(record.startedAt)}
               {duration ? ` · ${duration}` : ''}

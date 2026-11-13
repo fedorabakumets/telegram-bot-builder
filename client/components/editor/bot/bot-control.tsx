@@ -15,6 +15,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
 import { BotToken, BotProject } from '@shared/schema';
 import { type BotInfo } from './bot-types';
+import { resolveBotCanvasStatus } from './canvas/bot-canvas-status';
+import { BotRunStatusBadge } from './canvas/bot-run-status-badge';
 import { BotProfileSheet } from './profile/BotProfileSheet';
 import { BotControlPanel } from './panel/BotControlPanel';
 import { BotControlProvider } from './bot-control-context';
@@ -219,12 +221,16 @@ export function BotControl({ projectId, onBotStarted, onBotStopped, onBotDeleted
         </Badge>
       );
     }
-    if (token.isActive === 0) return <Badge variant="outline">Отключён</Badge>;
     // Ищем по tokenId (добавлен при маппинге) или через instance
     const status = allBotStatuses.find(
       s => s.tokenId === token.id || s.instance?.tokenId === token.id,
     );
-    if (status?.frozen) return <Badge variant="destructive">Заморожен</Badge>;
+    /** Общая модель сохраняет независимое состояние процесса при ограничении Telegram. */
+    if (status?.frozen) return <BotRunStatusBadge status={resolveBotCanvasStatus({
+      frozen: true, authorizationError: token.authorizationError, isActive: token.isActive,
+      isRunning: status.status === 'running', unknown: status.status === 'unknown',
+    })} />;
+    if (token.isActive === 0) return <Badge variant="outline">Отключён</Badge>;
     if (status?.status === 'running') {
       return (
         <Badge variant="default" className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border-green-200 dark:border-green-800">

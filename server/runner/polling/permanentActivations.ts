@@ -5,11 +5,15 @@ export class PermanentActivations {
   /** Ожидания окончательной остановки. */
   private readonly waiters = new Map<number, () => void>();
   /** Учитывает остановку, не принимая обычные строки за протокол. */
-  observe(event: Record<string, unknown>): void {
-    if (event.type !== "system" || typeof event.content !== "string") return;
-    const match = /^bot_(?:stopped|exited):(\d+)(?::.*)?$/.exec(event.content);
-    if (!match) return;
-    const id = Number(match[1]); this.tokens.delete(id); this.waiters.get(id)?.();
+  observe(event: Record<string, unknown>): boolean {
+    if (event.type !== "system" || typeof event.content !== "string") return false;
+    const match = /^bot_(stopped|exited):(\d+)(?::(.*))?$/.exec(event.content);
+    if (!match) return false;
+    const id = Number(match[2]), waiting = this.waiters.has(id);
+    // При передаче владельца ждём финальный ACK: exited может предшествовать bot_stopped.
+    if (!waiting || match[1] === "stopped") this.tokens.delete(id);
+    if (match[1] === "stopped") this.waiters.get(id)?.();
+    return waiting && match[3] !== "error";
   }
   /** Останавливает владельца до регистрации нового получателя обновлений. */
   async stop(tokenId: number, send: (command: Record<string, unknown>) => Promise<void>): Promise<void> {

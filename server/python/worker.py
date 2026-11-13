@@ -40,6 +40,7 @@ import bot_env_overlay
 import bot_env_snapshot
 import lazy_aiogram
 import worker_isolation as iso
+from worker_telegram_failure import current_failure_identity, frozen_event
 
 PROJECT_ID = int(os.environ.get("PROJECT_ID", "0"))
 
@@ -106,12 +107,23 @@ class WorkerLogHandler(logging.Handler):
             tid = iso.current_token_id.get()
             if tid == 0:
                 return
+            if record.exc_info and isinstance(record.exc_info[1], BaseException):
+                identity = current_failure_identity.get()
+                failure = frozen_event(record.exc_info[1], tid, identity[0], identity[1]) if identity else None
+                if failure:
+                    emit_runtime_error(failure)
             emit_log(tid, msg, "stderr" if record.levelno >= logging.WARNING else "stdout")
         except Exception:
             pass
 
 
 _root_handler_installed = False
+
+
+def emit_runtime_error(event):
+    """Пишет доверенный структурированный кадр отдельно от текста терминала."""
+    sys.stdout.write(json.dumps(event, ensure_ascii=False) + "\n")
+    sys.stdout.flush()
 
 
 def ensure_root_log_handler() -> None:
@@ -315,6 +327,7 @@ class BotWorker:
         """Загружает bot.py в изолированном namespace и вызывает main()."""
         token_id = ctx.token_id
         token_token = iso.current_token_id.set(token_id)
+        failure_token = current_failure_identity.set((ctx.token, (ctx.env or {}).get("BOT_LAUNCH_ID")))
         alias_prev: Dict[str, Any] = {}
         dotenv_guard = contextlib.ExitStack()
         overlay_on = False
@@ -470,6 +483,9 @@ class BotWorker:
             emit_log(token_id, "Бот остановлен (CancelledError)", "stdout")
             ctx.status = "stopped"
         except Exception as e:
+            failure = frozen_event(e, token_id, ctx.token, (ctx.env or {}).get("BOT_LAUNCH_ID"))
+            if failure:
+                emit_runtime_error(failure)
             from demand_tasks import FatalTaskCleanupError
             if isinstance(e, FatalTaskCleanupError):
                 emit_log(token_id, "Дочерняя задача не остановилась: аварийный перезапуск воркера для сохранения изоляции", "stderr")
@@ -499,6 +515,7 @@ class BotWorker:
                     del self.bots[token_id]
                 emit_system(f"bot_exited:{token_id}:{ctx.status}")
             iso.current_token_id.reset(token_token)
+            current_failure_identity.reset(failure_token)
 
     async def _stop_bot(self, data: Dict[str, Any]) -> None:
         """Останавливает бота: сначала graceful request_bot_stop, затем cancel."""

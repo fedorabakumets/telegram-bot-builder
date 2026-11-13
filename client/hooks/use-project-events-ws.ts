@@ -10,6 +10,8 @@ import type { ProjectEvent, StartOfflineProgressPayload } from '@shared/project-
 import { startOfflineProgressQueryKey } from '@/components/editor/bot/start-offline-progress-query';
 import { invalidateAllBotStatusQueries, invalidateBotStatusQueries } from '@/components/editor/bot/invalidate-bot-status-queries';
 import { invalidateRuntimeSettingsAfterReconnect, invalidateTokenRuntimeSettings } from './invalidate-token-runtime-settings';
+import { invalidateTokenMetadata } from './invalidate-token-metadata';
+import { invalidateBotLifecycle, invalidateLaunchHistories } from './invalidate-bot-lifecycle';
 
 /**
  * Опции хука подписки на события проекта
@@ -32,13 +34,9 @@ interface UseProjectEventsWsOptions {
 function invalidateProjectTokens(
   queryClient: ReturnType<typeof useQueryClient>,
   projectId: number,
+  tokenId?: number,
 ): void {
-  queryClient.invalidateQueries({
-    queryKey: [`/api/projects/${projectId}/tokens`],
-  });
-  /** Замена токена снимает ошибку профиля без перезагрузки страницы. */
-  queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/bot/info`] });
-  queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+  invalidateTokenMetadata(queryClient, projectId, tokenId);
 }
 
 /**
@@ -84,7 +82,11 @@ export function useProjectEventsWs(projectId: number, options?: UseProjectEvents
           return;
         }
         invalidateAllBotStatusQueries(queryClient);
+        /** Во время разрыва могли измениться блокировка Telegram и сам токен. */
+        invalidateProjectTokens(queryClient, projectId);
         invalidateRuntimeSettingsAfterReconnect(queryClient, projectId);
+        /** Автоостанов замороженного бота мог завершить историю во время разрыва WS. */
+        invalidateLaunchHistories(queryClient);
       };
 
       ws.onmessage = (event) => {
@@ -96,7 +98,7 @@ export function useProjectEventsWs(projectId: number, options?: UseProjectEvents
             || msg.type === 'token-deleted'
             || msg.type === 'token-updated'
           ) {
-            invalidateProjectTokens(queryClient, projectId);
+            invalidateProjectTokens(queryClient, projectId, msg.tokenId);
             invalidateTokenRuntimeSettings(queryClient, msg.projectId, msg.tokenId);
 
             if (msg.type === 'token-created' && msg.tokenId) {
@@ -106,11 +108,7 @@ export function useProjectEventsWs(projectId: number, options?: UseProjectEvents
           }
 
           if (msg.type === 'bot-started' || msg.type === 'bot-stopped' || msg.type === 'bot-error') {
-            if (msg.tokenId) {
-              queryClient.invalidateQueries({ queryKey: ['launch-history', msg.tokenId] });
-              invalidateBotStatusQueries(queryClient, msg.projectId, msg.tokenId);
-            }
-            queryClient.invalidateQueries({ queryKey: [`/api/projects/${msg.projectId}/bot/info`] });
+            invalidateBotLifecycle(queryClient, msg.projectId, msg.tokenId);
           }
 
           if (msg.type === 'start-offline-progress') {

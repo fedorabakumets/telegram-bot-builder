@@ -27,6 +27,8 @@ export interface BotTokenListItem {
     isDefault: number | null;
     /** Флаг активности токена (0 = неактивен, 1 = активен) */
     isActive: number | null;
+    /** Подтверждённый отказ Telegram, отличающий недействительный токен от ручного отключения. */
+    authorizationError: string | null;
     /** Идентификатор проекта, которому принадлежит токен */
     projectId: number;
     /**
@@ -49,6 +51,7 @@ export function toBotTokenListItem(token: BotToken): BotTokenListItem {
         botFirstName: token.botFirstName,
         isDefault: token.isDefault,
         isActive: token.isActive,
+        authorizationError: token.authorizationError ?? null,
         projectId: token.projectId,
         messagesRetentionDays: token.messagesRetentionDays ?? 0,
     };

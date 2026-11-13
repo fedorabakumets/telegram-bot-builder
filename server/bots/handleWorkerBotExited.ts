@@ -11,6 +11,7 @@ import { isWorkerCleanExit } from './isWorkerCleanExit';
 import { formatBotRuntimeError, formatBotRuntimeErrorShort } from './formatBotRuntimeError';
 import { isRuntimeTokenUnauthorized } from './is-runtime-token-unauthorized';
 import { markBotTokenUnauthorized } from './mark-bot-token-unauthorized';
+import { isFrozenBotError } from './frozenBotStatus';
 import { isUnexpectedBotExit } from './isUnexpectedBotExit';
 import { isExpectedStop } from './expectedStops';
 import { isServerShuttingDown } from './serverShutdownState';
@@ -63,6 +64,16 @@ export async function handleWorkerBotExited(
         : `Бот завершился: ${statusStr}`)
     : null;
 
+  /** Причина отказа не должна теряться из-за независимой ошибки записи истории. */
+  const unauthorized = isRuntimeTokenUnauthorized(runtimeError);
+  if (observedToken && unauthorized && (globalThis as { __dbPoolActive?: boolean }).__dbPoolActive !== false) {
+    try {
+      await markBotTokenUnauthorized(projectId, tokenId, observedToken);
+    } catch {
+      console.error(`[WorkerExit] Не удалось сохранить отказ авторизации project=${projectId} token=${tokenId}`);
+    }
+  }
+
   try {
     if ((globalThis as { __dbPoolActive?: boolean }).__dbPoolActive === false) {
       console.log(`[WorkerExit] Пропуск БД (пул закрыт) project=${projectId} token=${tokenId}`);
@@ -92,10 +103,6 @@ export async function handleWorkerBotExited(
         });
       }
 
-      if (observedToken && isRuntimeTokenUnauthorized(runtimeError)) {
-        await markBotTokenUnauthorized(projectId, tokenId, observedToken);
-      }
-
       // Не удаляем общий ключ: его уже мог получить другой запуск этого токена.
     }
   } catch (err) {
@@ -117,7 +124,7 @@ export async function handleWorkerBotExited(
   );
 
   if (
-    isUnexpectedBotExit({
+    !unauthorized && !isFrozenBotError(runtimeError) && isUnexpectedBotExit({
       tokenId,
       exitStatus,
       intentionalWorkerKill,

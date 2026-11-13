@@ -14,6 +14,7 @@ import { ChildMemoryLedger } from "./memoryLedger";
 import { PollingTiming } from "./timing";
 import { SharedPollingHost } from "./sharedHost";
 import { WebhookIngress } from "./webhookIngress";
+import { runtimeFailureEvent } from "./runtimeFailureEvent";
 /** Реальный диспетчер группы без постоянного Python-процесса. */
 export class ProcessPollingRuntime {
   /** Соединения для каждого явно настроенного хранилища бота. */
@@ -34,7 +35,6 @@ export class ProcessPollingRuntime {
   readonly dispatcher: NodePollingDispatcher;
   /** Входящие webhook сохраняются тем же диспетчером без фонового polling. */
   readonly webhook = new WebhookIngress(bot => this.client(bot), tokenId => this.dispatcher.wake(tokenId));
-
   /** @param config - Пути исполнителя. @param emit - Передача очищенных строк панели. */
   constructor(private readonly config: RunnerConfig, private readonly emit: (line: string) => void, maximum = 0, sharedHost?: SharedPollingHost) {
     this.memory = new ChildMemoryLedger(memoryKb => this.emit(JSON.stringify({
@@ -42,12 +42,13 @@ export class ProcessPollingRuntime {
     })));
     if (config.processHandler !== "isolated") this.shared = sharedHost ?? new SharedPollingHost(config, event => {
       if (Number.isSafeInteger(event.token_id)) this.timing.handled(Number(event.token_id), event);
-      if (event.type === "stdout" || event.type === "stderr") this.emit(JSON.stringify(event));
+      if (["stdout", "stderr", "bot_runtime_error"].includes(String(event.type))) this.emit(JSON.stringify(event));
     }, memoryKb => this.emit(JSON.stringify({ type: "system", content: `memory_kb:${memoryKb + this.memory.total()}` })));
     if (sharedHost) sharedHost.processObserver = event => {
       if (Number.isSafeInteger(event.token_id)) this.timing.handled(Number(event.token_id), event);
     };
     this.dispatcher = new NodePollingDispatcher({
+      onError: (bot, error) => { const event = runtimeFailureEvent(bot, error); if (event) this.emit(event); },
       hasPending: async (bot) => new DemandQueue(await this.client(bot), telegramPollingId(bot.token)).hasPending(),
       receive: async (bot, signal, wake, ready) => {
         if (bot.webhook) return this.webhook.receive(bot, signal, ready, () => this.dispatcher.quiesceChild(bot.tokenId));
@@ -65,7 +66,6 @@ export class ProcessPollingRuntime {
           ? `bot_stopped:${bot.tokenId}` : `bot_exited:${bot.tokenId}:error` })),
     }, this.shared ? { kind: "unlimited" } : maximum);
   }
-
   /** Подключается без бесконечной автономной очереди и скрывает адрес при ошибке. */
   private client(bot: PollingBot): Promise<Redis> {
     const url = bot.env.REDIS_URL;
@@ -96,7 +96,7 @@ export class ProcessPollingRuntime {
         onEvent: (event) => {
           this.timing.handled(bot.tokenId, event);
           if (event.type === "process" && event.event === "memory") memory.record(event.memory_kb);
-          if (event.type === "stdout" || event.type === "stderr") this.emit(JSON.stringify(event));
+          if (["stdout", "stderr", "bot_runtime_error"].includes(String(event.type))) this.emit(JSON.stringify(event));
         },
         onLog: (content) => this.emit(JSON.stringify({ type: "stderr", token_id: bot.tokenId, content })),
       });
