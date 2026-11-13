@@ -123,7 +123,7 @@ test('A02', 'без webhookUrl → set_webhook находится только �
     userDatabaseEnabled: false,
     });
   // set_webhook должен быть только внутри if WEBHOOK_URL: ветки
-  const ifWebhookIdx = code.indexOf('if WEBHOOK_URL:');
+  const ifWebhookIdx = code.indexOf('if WEBHOOK_URL and not _external_mode:');
   const setWebhookIdx = code.indexOf('set_webhook');
   ok(ifWebhookIdx !== -1, 'if WEBHOOK_URL: должен быть в коде');
   ok(setWebhookIdx === -1 || setWebhookIdx > ifWebhookIdx,
@@ -137,7 +137,7 @@ test('A03', 'без webhookUrl → SimpleRequestHandler находится то�
     userDatabaseEnabled: false,
     });
   // SimpleRequestHandler должен быть только внутри if WEBHOOK_URL: ветки
-  const ifWebhookIdx = code.indexOf('if WEBHOOK_URL:');
+  const ifWebhookIdx = code.indexOf('if WEBHOOK_URL and not _external_mode:');
   const handlerIdx = code.indexOf('SimpleRequestHandler');
   ok(ifWebhookIdx !== -1, 'if WEBHOOK_URL: должен быть в коде');
   ok(handlerIdx === -1 || handlerIdx > ifWebhookIdx,

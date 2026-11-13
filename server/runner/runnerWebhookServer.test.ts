@@ -5,9 +5,10 @@ import { test } from "node:test";
 import { handleRunnerWebhook, startRunnerWebhookServer, type RunnerWebhookOptions } from "./runnerWebhookServer";
 
 /** Поднимает настоящий HTTP для проверки потока запроса и освобождает сокеты. */
-async function fixture(run: (url: string, calls: Array<{ url: string; init?: RequestInit }>) => Promise<void>, status = 202): Promise<void> {
+async function fixture(run: (url: string, calls: Array<{ url: string; init?: RequestInit }>) => Promise<void>, status = 202,
+  enqueueWebhook?: RunnerWebhookOptions["enqueueWebhook"]): Promise<void> {
   const calls: Array<{ url: string; init?: RequestInit }> = [];
-  const options: RunnerWebhookOptions = { secret: "a".repeat(40), isRunning: (projectId, id) => projectId === 12 && id === 58,
+  const options: RunnerWebhookOptions = { secret: "a".repeat(40), isRunning: (projectId, id) => projectId === 12 && id === 58, enqueueWebhook,
     deliver: (async (url: string | URL | Request, init?: RequestInit) => {
       calls.push({ url: String(url), init });
       if (status === 0) throw new Error("недоступен");
@@ -62,4 +63,31 @@ test("неправильные ID, JSON и большой пакет не дос
 test("порт отключён без секрета и слабый секрет запрещён", async () => {
   assert.equal(await startRunnerWebhookServer(() => true, {}), undefined);
   await assert.rejects(startRunnerWebhookServer(() => true, { RUNNER_WEBHOOK_SECRET: "weak" }), /32/);
+});
+
+test("спящий webhook подтверждается только после сохранения без обращения к Python", async () => {
+  let persist!: () => void;
+  const pending = new Promise<void>(resolve => { persist = resolve; });
+  let entered!: () => void;
+  const called = new Promise<void>(resolve => { entered = resolve; });
+  await fixture(async (url, calls) => {
+    let complete = false;
+    const response = fetch(`${url}/internal/webhook/12/58`, { method: "POST", headers, body: '{"update_id":123}' })
+      .then(value => { complete = true; return value; });
+    await called;
+    assert.equal(complete, false);
+    persist();
+    assert.equal((await response).status, 200);
+    assert.equal(calls.length, 0);
+  }, 202, async (projectId, tokenId, update, secret) => {
+    assert.deepEqual([projectId, tokenId, update, secret], [12, 58, { update_id: 123 }, "telegram_secret"]);
+    entered(); await pending; return true;
+  });
+});
+
+test("сбой записи webhook не подтверждается и не запускает прямую доставку", async () => {
+  await fixture(async (url, calls) => {
+    assert.equal((await fetch(`${url}/internal/webhook/12/58`, { method: "POST", headers, body: '{"update_id":123}' })).status, 503);
+    assert.equal(calls.length, 0);
+  }, 202, async () => { throw new Error("Redis недоступен"); });
 });

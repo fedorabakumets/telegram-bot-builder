@@ -57,6 +57,8 @@ export const PublicBotTokenSchema = z
     webhookBaseUrl: z.string().nullable().optional(),
     /** webhookSecretToken всегда null в public */
     webhookSecretToken: z.null().optional(),
+    /** Признак существующего секрета без раскрытия значения. */
+    hasWebhookSecret: z.boolean().optional(),
     /** Userbot вкл. 0/1 */
     userbotEnabled: z.number().nullable().optional(),
     /** API ID (не секрет) */

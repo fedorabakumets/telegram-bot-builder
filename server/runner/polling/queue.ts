@@ -1,6 +1,7 @@
 /** @fileoverview Совместимая с Python надёжная Redis-очередь Telegram-обновлений. */
 import type { Redis } from "ioredis";
 import { ACK, ENQUEUE, OFFSET, PEEK } from "./queueScripts";
+import { ENQUEUE_WEBHOOK } from "./webhookQueueScript";
 
 /** Обновление Telegram с обязательным номером доставки. */
 export interface PollingUpdate {
@@ -18,6 +19,10 @@ export interface DemandQueueOptions {
   maxBytes?: number;
   /** Изолированный префикс для интеграционных тестов; в работе не задаётся. */
   keyPrefix?: string;
+  /** Время хранения принятых webhook ID после доставки, по умолчанию двое суток. */
+  webhookRetentionSeconds?: number;
+  /** Защитный предел истории повторов; переполнение требует повторить доставку. */
+  maxWebhookHistory?: number;
 }
 
 /** Переполнение требует повторить пакет до следующего getUpdates. */
@@ -34,6 +39,10 @@ export class DemandQueue {
   private readonly maxPending: number;
   /** Предел суммарного размера обновлений. */
   private readonly maxBytes: number;
+  /** Отдельная история webhook остаётся после подтверждения обновления Python. */
+  readonly webhookSeenKey: string;
+  /** Срок и предел истории повторов webhook. */
+  private readonly webhookLimits: readonly [number, number];
 
   /** Настраивает очередь на внешнем общем соединении Redis, не управляя его закрытием. */
   constructor(private readonly redis: Redis, tokenId: number, options: DemandQueueOptions = {}) {
@@ -45,6 +54,21 @@ export class DemandQueue {
     }
     const prefix = `${options.keyPrefix ?? "tbb:demand"}:{${tokenId}}`;
     this.keys = ["pending", "payloads", "offset", "bytes", "sequence", "received"].map(part => `${prefix}:${part}`);
+    this.webhookSeenKey = `${prefix}:webhook-seen`;
+    this.webhookLimits = [options.webhookRetentionSeconds ?? 172800, options.maxWebhookHistory ?? 1_000_000];
+    if (!this.webhookLimits.every(value => Number.isSafeInteger(value) && value > 0)) {
+      throw new Error("Ограничения истории webhook должны быть положительными целыми числами");
+    }
+  }
+
+  /** Принимает webhook в любом порядке и подавляет повторы даже после подтверждения Python. */
+  async enqueueWebhook(update: PollingUpdate): Promise<void> {
+    if (!update || !Number.isSafeInteger(update.update_id) || update.update_id < 0) {
+      throw new Error("Обновление должно содержать целочисленный update_id");
+    }
+    const result = await this.redis.eval(ENQUEUE_WEBHOOK, 7, ...this.keys, this.webhookSeenKey,
+      String(update.update_id), JSON.stringify(update), this.maxPending, this.maxBytes, ...this.webhookLimits);
+    if (!result) throw new QueueFullError();
   }
 
   /** Записывает весь пакет либо оставляет очередь и подтверждённое смещение неизменными. */

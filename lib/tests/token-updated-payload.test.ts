@@ -45,6 +45,7 @@ function testNoSecretsInPayload(): void {
   const payload = toTokenUpdatedPayload(dirty);
   const json = JSON.stringify(payload);
   assert.equal(payload.messagesRetentionDays, 7);
+  assert.equal(payload.hasWebhookSecret, true);
   assert.ok(!('token' in payload));
   assert.ok(!json.includes('SECRET'));
   assert.ok(!json.includes('whsec'));
@@ -59,6 +60,7 @@ function testPickChangedSettings(): void {
   const after = { ...base, messagesRetentionDays: 0 };
   const changed = pickChangedSettings(base, after);
   assert.deepEqual(changed, ['messagesRetentionDays']);
+  assert.deepEqual(pickChangedSettings(base, { ...base, webhookSecretToken: 'created' }), ['hasWebhookSecret']);
 }
 
 testNoSecretsInPayload();

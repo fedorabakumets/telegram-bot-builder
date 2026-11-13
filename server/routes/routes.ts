@@ -1410,6 +1410,11 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
    * Обновление настроек режима запуска для токена бота
    * PUT /api/projects/:projectId/tokens/:tokenId/launch-settings
    */
+  /** Раскрывает секрет только по явному запросу пользователя с проверкой владения ботом. */
+  app.get("/api/projects/:projectId/tokens/:tokenId/webhook-secret/reveal", requireTokenOwnership, async (req, res) => {
+    const { revealWebhookSecret } = await import('./botTokens/reveal-webhook-secret');
+    await revealWebhookSecret(req, res);
+  });
   app.put("/api/projects/:projectId/tokens/:tokenId/launch-settings", requireTokenOwnership, requireBotSettingBody("launch-settings"), async (req, res) => {
     try {
       const tokenId = parseInt(req.params.tokenId);

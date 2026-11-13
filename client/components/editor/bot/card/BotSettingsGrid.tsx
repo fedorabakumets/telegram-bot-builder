@@ -59,6 +59,8 @@ interface BotSettingsGridProps {
   webhookBaseUrl: string | null;
   /** Секретный токен webhook */
   webhookSecretToken: string | null;
+  /** Секрет вебхука сохранён на сервере и не раскрывается клиенту. */
+  hasWebhookSecret?: boolean;
   /** Колбэк для добавления изменения в pending */
   onPendingChange?: (key: string, value: string) => void;
   /** Показывать блок истории запусков (на холсте история — отдельная вкладка) */
@@ -90,6 +92,7 @@ export function BotSettingsGrid({
   launchMode,
   webhookBaseUrl,
   webhookSecretToken,
+  hasWebhookSecret,
   canManage,
   onPendingChange,
   showLaunchHistory = true,
@@ -115,6 +118,7 @@ export function BotSettingsGrid({
           launchMode={pendingLaunchMode ?? launchMode}
           webhookBaseUrl={webhookBaseUrl}
           webhookSecretToken={webhookSecretToken}
+          hasWebhookSecret={hasWebhookSecret}
           onPendingChange={onPendingChange}
         />
         <BotRuntimeModeSettings projectId={projectId} tokenId={tokenId} canManage={canManage}

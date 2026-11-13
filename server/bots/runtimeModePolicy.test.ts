@@ -1,4 +1,4 @@
-/** @fileoverview Адресные проверки приоритетов режима и запрета сна при вебхуке. */
+/** @fileoverview Адресные проверки приоритетов режима и освобождения памяти при вебхуке. */
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
@@ -30,10 +30,19 @@ describe('сохранённый режим обработчика', () => {
   it('принимает все три режима для polling', () => {
     for (const mode of ['direct', 'ondemand', 'process'] as const) validateRuntimeMode(mode, 'polling');
   });
-  it('при вебхуке разрешает только постоянную работу', () => {
+  it('при вебхуке разрешает постоянную работу и освобождение процесса', () => {
     validateRuntimeMode('direct', 'webhook');
+    validateRuntimeMode('process', 'webhook');
     assert.throws(() => validateRuntimeMode('ondemand', 'webhook'));
-    assert.throws(() => validateRuntimeMode('process', 'webhook'));
+  });
+  it('сохраняет индивидуальный process при переключении транспорта на webhook', () => {
+    const settings = resolveRuntimeModeSettings([{ key: 'BOT_POLLING_MODE', value: 'process' }], 'webhook', {
+      BOT_POLLING_MODE: 'direct',
+    }, 58);
+    assert.equal(settings.mode, 'process');
+    assert.equal(settings.source, 'bot');
+    assert.equal(settings.launchMode, 'webhook');
+    validateRuntimeMode(settings.mode, settings.launchMode);
   });
   it('учитывает серверный список только при отсутствии индивидуального режима', () => {
     const env = { BOT_POLLING_MODE: 'process', BOT_ON_DEMAND_TOKEN_IDS: '31, 32' };

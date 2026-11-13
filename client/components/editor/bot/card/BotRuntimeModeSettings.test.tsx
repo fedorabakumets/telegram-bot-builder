@@ -55,4 +55,22 @@ describe('режим обработчика в общей форме настр�
     expect(control.value).toBe('direct');
     expect(control.disabled).toBe(true);
   });
+
+  it('разрешает освобождение памяти для webhook и отключает только неподдерживаемый сон', () => {
+    const onPendingChange = vi.fn();
+    render(<BotRuntimeModeSettings projectId={12} tokenId={58} canManage launchMode="webhook" onPendingChange={onPendingChange} />);
+    expect((screen.getByRole('option', { name: 'Всегда активен' }) as HTMLOptionElement).disabled).toBe(false);
+    expect((screen.getByRole('option', { name: 'Освобождает память после простоя' }) as HTMLOptionElement).disabled).toBe(false);
+    expect((screen.getByRole('option', { name: 'Засыпает при простое' }) as HTMLOptionElement).disabled).toBe(true);
+    fireEvent.change(screen.getByLabelText('Режим'), { target: { value: 'process' } });
+    expect(onPendingChange).toHaveBeenCalledWith('BOT_POLLING_MODE', 'process');
+  });
+
+  it('объясняет очередь webhook, пробуждение и ограничение фоновых задач', () => {
+    server.mode = 'process';
+    render(<BotRuntimeModeSettings projectId={12} tokenId={58} canManage launchMode="webhook" />);
+    expect(screen.getByText(/Входящий webhook сохраняет сообщение в очереди/)).toBeTruthy();
+    expect(screen.getByText(/Для расписаний и фоновых задач выберите/)).toBeTruthy();
+    expect(screen.getByText(/когда больше не нужен другим ботам/)).toBeTruthy();
+  });
 });

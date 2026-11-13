@@ -46,6 +46,10 @@ export class RunnerWorkerExecution {
   }
   /** PID только действительно запущенного общего Python; виртуальная группа PID не имеет. */
   get pid(): number | undefined { return this.unified?.counters().pid ?? this.legacy?.pid; }
+  /** Сохраняет обновление спящего webhook-сценария; false оставляет прежнюю прямую доставку Python. */
+  enqueueWebhook(projectId: number, tokenId: number, update: unknown, secret: string): Promise<boolean> {
+    return this.runtime?.webhook.enqueue(projectId, tokenId, update, secret) ?? Promise.resolve(false);
+  }
   /** Сообщает реальные каналы и дочерние PID без деления общей памяти Node между ботами. */
   memoryCounters() {
     return { unifiedHost: this.unified?.counters() ?? null, execution: this.unified ? "unified" : this.config.processPolling === "node" ? "mixed" : "python",
@@ -64,6 +68,8 @@ export class RunnerWorkerExecution {
     if (this.closed) throw new Error("Группа исполнителя уже остановлена");
     const command = JSON.parse(line) as ProcessStartCommand;
     if (command.cmd === "shutdown") return this.shutdown();
+    if (command.cmd === "start_bot" && command.webhook_url && usesNodePolling(command) && this.config.processPolling !== "node")
+      throw new Error("Сон webhook требует RUNNER_PROCESS_POLLING=node");
     if (command.cmd === "start_bot" && this.config.processPolling === "node" && usesNodePolling(command)) {
       const isolated = this.config.processHandler === "isolated";
       const bot = processPollingBot(command, this.base.w, this.base.i, isolated);

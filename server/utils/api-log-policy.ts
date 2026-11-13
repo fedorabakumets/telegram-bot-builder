@@ -15,5 +15,6 @@ export function apiLogPath(url: string): string {
  * @returns Признак допустимости журналирования тела
  */
 export function mayLogApiResponse(path: string): boolean {
-  return !path.startsWith('/api/auth/agent/') && path !== '/api/runtime/media/invoice-link';
+  return !path.startsWith('/api/auth/agent/') && path !== '/api/runtime/media/invoice-link'
+    && !/\/webhook-secret\/reveal\/?$/.test(path);
 }

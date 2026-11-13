@@ -4,6 +4,7 @@
  */
 
 import { useMemo, useState } from 'react';
+import { useBotControl } from '../bot-control-context';
 import { ChevronDown, History } from 'lucide-react';
 import { useLaunchHistory } from '../hooks/use-launch-history';
 import { useActiveTerminals } from '../contexts/ActiveTerminalsContext';
@@ -39,6 +40,8 @@ export function BotLaunchHistory({
   compact = false,
   isLiveRunning = false,
 }: BotLaunchHistoryProps) {
+  const { allBotStatuses } = useBotControl();
+  const frozen = allBotStatuses.some((entry) => (entry.tokenId ?? entry.instance?.tokenId) === tokenId && entry.frozen);
   const { history, isLoading } = useLaunchHistory(tokenId);
   const { openHistoryTab } = useActiveTerminals();
   const detailTab = useBotDetailTabOptional();
@@ -82,7 +85,7 @@ export function BotLaunchHistory({
         <h3 className="px-0.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
           Текущий
         </h3>
-        <BotLaunchCard record={current} onShowLogs={handleShowLogs} featured />
+        <BotLaunchCard record={current} onShowLogs={handleShowLogs} featured frozen={frozen && isLiveRunning} />
       </div>
 
       {past.length > 0 && (

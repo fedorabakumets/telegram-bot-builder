@@ -13,7 +13,7 @@ import { telegramPollingId } from "./runtimeSettings";
 import { ChildMemoryLedger } from "./memoryLedger";
 import { PollingTiming } from "./timing";
 import { SharedPollingHost } from "./sharedHost";
-
+import { WebhookIngress } from "./webhookIngress";
 /** Реальный диспетчер группы без постоянного Python-процесса. */
 export class ProcessPollingRuntime {
   /** Соединения для каждого явно настроенного хранилища бота. */
@@ -32,6 +32,8 @@ export class ProcessPollingRuntime {
   private stopping?: Promise<void>;
   /** Диспетчер регистраций и пробуждений. */
   readonly dispatcher: NodePollingDispatcher;
+  /** Входящие webhook сохраняются тем же диспетчером без фонового polling. */
+  readonly webhook = new WebhookIngress(bot => this.client(bot), tokenId => this.dispatcher.wake(tokenId));
 
   /** @param config - Пути исполнителя. @param emit - Передача очищенных строк панели. */
   constructor(private readonly config: RunnerConfig, private readonly emit: (line: string) => void, maximum = 0, sharedHost?: SharedPollingHost) {
@@ -48,6 +50,7 @@ export class ProcessPollingRuntime {
     this.dispatcher = new NodePollingDispatcher({
       hasPending: async (bot) => new DemandQueue(await this.client(bot), telegramPollingId(bot.token)).hasPending(),
       receive: async (bot, signal, wake, ready) => {
+        if (bot.webhook) return this.webhook.receive(bot, signal, ready, () => this.dispatcher.quiesceChild(bot.tokenId));
         const client = await this.client(bot);
         await withPollingLease(client, bot.token, signal, async (owned) => {
           ready();

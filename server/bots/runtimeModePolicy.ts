@@ -18,10 +18,10 @@ export function parseRuntimeMode(value: unknown): RuntimeMode {
   return value;
 }
 
-/** Отклоняет сон обработчика при получении обновлений через вебхук. */
+/** Разрешает освобождение процесса для вебхука, сохраняя запрет неподдерживаемого сна внутри процесса. */
 export function validateRuntimeMode(mode: RuntimeMode, launchMode: string): void {
-  if (launchMode === 'webhook' && mode !== 'direct') {
-    throw new RuntimeModeValidationError('Режимы со сном доступны только при получении сообщений через polling');
+  if (launchMode === 'webhook' && mode === 'ondemand') {
+    throw new RuntimeModeValidationError('Для webhook выберите постоянную работу или освобождение памяти; сон обработчика доступен только через polling');
   }
 }
 

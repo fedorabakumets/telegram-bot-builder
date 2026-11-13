@@ -56,6 +56,18 @@ test("ошибочные настройки отклоняются до откр
   assert.throws(() => telegramPollingId("fake:token"));
 });
 
+test("webhook process сохраняет проект и внешний приёмник без отдельного polling", () => {
+  const input = command();
+  input.project_id = 12;
+  input.webhook_url = "https://api.example/";
+  input.env!.WEBHOOK_SECRET_TOKEN = "test-secret";
+  const bot = processPollingBot(input, "0", "i", false);
+  assert.deepEqual(bot.webhook, { url: "https://api.example/api/webhook/12/31", secret: "test-secret" });
+  assert.equal(bot.projectId, 12);
+  assert.equal(bot.env.BOT_WEBHOOK_INGRESS, "node");
+  assert.equal(usesNodePolling(input), true);
+});
+
 /** Устаревший предел отдельных процессов не должен ограничивать общий интерпретатор. */
 test("общий обработчик игнорирует предел процессов, сохраняя проверки простоя и Redis", () => {
   for (const value of ["4", "0", "100", "1.5", "не число"]) {

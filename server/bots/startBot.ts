@@ -300,7 +300,7 @@ export async function startBot(
     const generatorVersion = await getGeneratorVersion();
     const fingerprint = buildGeneratedCodeFingerprint({
       /** Старые локальные и S3-сборки webhook не поддерживают обязательный секрет. */
-      webhookProtocolVersion: launchMode === 'webhook' ? 1 : undefined,
+      webhookProtocolVersion: launchMode === 'webhook' ? 2 : undefined,
       projectDataChecksum: checksumProjectData(project.data),
       projectName: project.name,
       userDatabaseEnabled,

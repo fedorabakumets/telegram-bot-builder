@@ -27,7 +27,7 @@ interface BotRuntimeModeSettingsProps {
 const MODES = [
   { value: 'direct', label: 'Всегда активен', description: 'Обработчик постоянно в памяти. Ответ без ожидания пробуждения.' },
   { value: 'ondemand', label: 'Засыпает при простое', description: 'Сценарий выгружается после простоя. Общие библиотеки остаются в памяти; первый ответ может задержаться.' },
-  { value: 'process', label: 'Освобождает память после простоя', description: 'Процесс обработчика завершается после простоя. При следующем сообщении запускается заново, поэтому первый ответ может задержаться.' },
+  { value: 'process', label: 'Освобождает память после простоя', description: 'Обработчик выгружается после простоя. Общий процесс завершается, когда больше не нужен другим ботам. Следующее сообщение пробуждает обработчик; первый ответ может задержаться.' },
 ] as const;
 
 /**
@@ -64,14 +64,14 @@ export function BotRuntimeModeSettings({ projectId, tokenId, canManage, launchMo
               <SelectValue placeholder="Выберите режим работы" />
             </SelectTrigger>
             <SelectContent>
-              {MODES.map((mode) => <SelectItem key={mode.value} value={mode.value} disabled={webhook && mode.value !== 'direct'} className="text-xs">{mode.label}</SelectItem>)}
+              {MODES.map((mode) => <SelectItem key={mode.value} value={mode.value} disabled={webhook && mode.value === 'ondemand'} className="text-xs">{mode.label}</SelectItem>)}
             </SelectContent>
           </Select>
         )}
         <div id={descriptionId} className="space-y-1 text-xs leading-relaxed text-muted-foreground">
           {selected && <p>{selected.description}</p>}
-          {webhook && <p>Для webhook доступен режим «Всегда активен». Режимы со сном работают с polling.</p>}
-          {value && value !== 'direct' && <p>Общий приёмник продолжает работать. Нулевой расход памяти не гарантируется. Для расписаний и фоновых задач выберите «Всегда активен».</p>}
+          {webhook && <p>Webhook поддерживает «Всегда активен» и «Освобождает память после простоя». Режим «Засыпает при простое» доступен только для polling.</p>}
+          {value && value !== 'direct' && <p>{webhook ? 'Входящий webhook сохраняет сообщение в очереди и пробуждает обработчик.' : 'Общий приёмник продолжает получать сообщения.'} Нулевой расход памяти не гарантируется. Для расписаний и фоновых задач выберите «Всегда активен».</p>}
           <p>Изменение применяется после сохранения и перезапуска бота.</p>
           {query.data?.source !== 'bot' && query.data && <p>Сейчас используется {query.data.source === 'server' ? 'настройка сервера' : 'режим по умолчанию'}.</p>}
           {!canManage && <p>Изменять режим может владелец или участник с правом управления.</p>}

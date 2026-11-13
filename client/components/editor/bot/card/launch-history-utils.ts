@@ -19,12 +19,19 @@ export interface LaunchStatusMeta {
  * Мета статуса запуска для UI в стиле Railway
  * @param status - running | stopped | error
  * @param errorMessage - Текст ошибки
+ * @param frozen - Подтверждённое ограничение Telegram для текущего запуска
  * @returns Мета для бейджа и футера
  */
 export function getLaunchStatusMeta(
   status: string,
   errorMessage?: string | null,
+  frozen = false,
 ): LaunchStatusMeta {
+  if (frozen) return {
+    label: 'Заморожен',
+    badgeClass: 'bg-red-500/15 text-red-400 border-red-500/30',
+    footer: 'Telegram ограничил бота. Запущенный процесс можно остановить.',
+  };
   if (status === 'running') {
     return {
       label: 'Онлайн',

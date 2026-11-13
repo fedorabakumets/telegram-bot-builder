@@ -66,6 +66,8 @@ export const TokenUpdatedPayloadSchema = z
     contentCache: z.number().nullable(),
     launchMode: z.string().nullable(),
     webhookBaseUrl: z.string().nullable(),
+    /** Наличие защиты без передачи секрета вебхука. */
+    hasWebhookSecret: z.boolean().optional(),
     userbotEnabled: z.number().nullable(),
   })
   .openapi("TokenUpdatedPayload");
