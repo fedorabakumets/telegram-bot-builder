@@ -11,9 +11,9 @@ function record(value: unknown): Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
 }
 
-/** Копирует только разрешённые конечные неотрицательные числа. */
-function numbers(value: unknown, keys: string[]): Record<string, number> {
-  const source = record(value), result: Record<string, number> = {};
+/** Копирует разрешённые числа, сохраняя имена полей и возможность отсутствия измерения. */
+function numbers<Key extends string>(value: unknown, keys: readonly Key[]): Partial<Record<Key, number>> {
+  const source = record(value), result: Partial<Record<Key, number>> = {};
   for (const key of keys) {
     const number = source[key];
     if (typeof number === "number" && Number.isFinite(number) && number >= 0 && number <= Number.MAX_SAFE_INTEGER) result[key] = number;
@@ -26,8 +26,9 @@ function sanitize(value: unknown) {
   const source = record(value);
   const bots = (Array.isArray(source.bots) ? source.bots : []).slice(0, 100).flatMap(value => {
     const row = record(value), numeric = numbers(row, ["tokenId", "moduleCount", "rootTaskPending"]);
-    if (!Number.isSafeInteger(numeric.tokenId) || numeric.tokenId <= 0) return [];
-    const measured: Record<string, Record<string, number>> = {};
+    if (typeof numeric.tokenId !== "number" || !Number.isSafeInteger(numeric.tokenId) || numeric.tokenId <= 0) return [];
+    /** Отсутствующее или отклонённое измерение не подменяется нулём. */
+    const measured: Record<string, Partial<Record<"count" | "shallowBytes", number>>> = {};
     const original = record(row.containers);
     for (const key of containers) if (Object.prototype.hasOwnProperty.call(original, key)) measured[key] = numbers(original[key], ["count", "shallowBytes"]);
     return [{ ...numeric, containers: measured, pools: numbers(row.pools, ["count", "size", "idle"]) }];

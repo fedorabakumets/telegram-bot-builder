@@ -239,6 +239,21 @@ function syntax(code: string, label: string) {
   ok(r.ok, `Ñèíòàêñè÷åñêàÿ îøèáêà Python:\n${r.error}`);
 }
 
+/**
+ * Извлекает функцию Python до следующего блока верхнего уровня, без лимита длины.
+ * @param code - Сгенерированный Python-код
+ * @param name - Имя функции верхнего уровня
+ * @returns Полное определение функции вместе с её телом
+ */
+function pythonFunction(code: string, name: string): string {
+  const lines = code.split(/\r?\n/);
+  const start = lines.findIndex(line => line.startsWith(`async def ${name}(`) || line.startsWith(`def ${name}(`));
+  ok(start !== -1, `Функция ${name} не найдена`);
+  let end = start + 1;
+  while (end < lines.length && !/^\S/.test(lines[end])) end++;
+  return lines.slice(start, end).join('\n');
+}
+
 // --- ×åòûðå êëþ÷åâûõ ôèêñà ---------------------------------------------------
 
 /** Ïðîâåðÿåò íàëè÷èå âñåõ ÷åòûð¸õ èñïðàâëåíèé óòå÷åê ïàìÿòè â êîäå */
@@ -440,7 +455,7 @@ test('C02', 'cleanup_user_data ñîäåðæèò while True:', () => {
   const code = gen(p, 'C02');
   const fnIdx = code.indexOf('async def cleanup_user_data()');
   ok(fnIdx !== -1, 'cleanup_user_data íå íàéäåíà');
-  const fnBody = code.slice(fnIdx, fnIdx + 800);
+  const fnBody = pythonFunction(code, 'cleanup_user_data');
   ok(fnBody.includes('while True:'), 'while True: íå íàéäåíî â cleanup_user_data');
 });
 
@@ -455,7 +470,7 @@ test('C04', 'cleanup_user_data ñîäåðæèò time.monotonic()', () => {
   const code = gen(p, 'C04');
   const fnIdx = code.indexOf('async def cleanup_user_data()');
   ok(fnIdx !== -1, 'cleanup_user_data íå íàéäåíà');
-  const fnBody = code.slice(fnIdx, fnIdx + 800);
+  const fnBody = pythonFunction(code, 'cleanup_user_data');
   ok(fnBody.includes('time.monotonic()'), 'time.monotonic() íå íàéäåíî â cleanup_user_data');
 });
 
@@ -476,7 +491,7 @@ test('C07', 'cleanup_user_data ñîäåðæèò logging.debug', () => {
   const code = gen(p, 'C07');
   const fnIdx = code.indexOf('async def cleanup_user_data()');
   ok(fnIdx !== -1, 'cleanup_user_data íå íàéäåíà');
-  const fnBody = code.slice(fnIdx, fnIdx + 800);
+  const fnBody = pythonFunction(code, 'cleanup_user_data');
   ok(fnBody.includes('logging.debug'), 'logging.debug íå íàéäåíî â cleanup_user_data');
 });
 
@@ -485,7 +500,7 @@ test('C08', 'cleanup_user_data uses USER_DATA_TTL and _user_last_seen', () => {
   const code = gen(p, 'C08');
   const cleanupIdx = code.indexOf('async def cleanup_user_data');
   ok(cleanupIdx !== -1, 'cleanup_user_data not found');
-  const cleanupBody = code.slice(cleanupIdx, cleanupIdx + 800);
+  const cleanupBody = pythonFunction(code, 'cleanup_user_data');
   ok(cleanupBody.includes('USER_DATA_TTL') && cleanupBody.includes('_user_last_seen'), 'TTL cleanup logic missing');
 });
 
@@ -544,6 +559,20 @@ test('C14', 'cleanup_user_data ïðèñóòñòâóåò ïðè ïðîåêòå ñ
   ]);
   const code = gen(p, 'C14');
   ok(code.includes('async def cleanup_user_data()'), 'cleanup_user_data îòñóòñòâóåò ïðè condition');
+});
+
+/** Проверяет, что рост функции не скрывает логирование и соседняя функция не даёт ложный успех. */
+test('C16', 'Полное тело очистки включает логирование после длинного блока', () => {
+  const padding = '    # Дополнительная операция обслуживания\n'.repeat(40);
+  const code = `async def cleanup_user_data() -> None:\n${padding}    logging.debug("очистка")\ndef neighbour():\n    pass\n`;
+  ok(pythonFunction(code, 'cleanup_user_data').includes('logging.debug'), 'Логирование за пределами 800 символов потеряно');
+});
+
+/** Проверяет изоляцию тела функции от соседних определений и их логирования. */
+test('C17', 'Логирование соседней функции не считается логированием очистки', () => {
+  const code = 'async def cleanup_user_data() -> None:\n    pass\n\ndef neighbour():\n    logging.debug("сосед")\n';
+  ok(!pythonFunction(code, 'cleanup_user_data').includes('logging.debug'), 'Захвачено тело соседней функции');
+  ok(pythonFunction('async def cleanup_user_data():\n    pass', 'cleanup_user_data').includes('pass'), 'Потеряна функция в конце файла');
 });
 
 test('C15', 'Ñèíòàêñèñ Python OK ïðè íàëè÷èè cleanup_user_data', () => {

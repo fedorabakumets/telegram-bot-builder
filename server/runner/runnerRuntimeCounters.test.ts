@@ -12,6 +12,9 @@ test("сохраняются только известные числовые п
   assert.equal(counters.ingest(frame, 1000), true);
   frame.bots[0].containers._user_var_locks.count = 999;
   const sample = counters.snapshot(2000)!;
+  /** Разрешённые поля остаются доступны в типе снимка и содержат исходные измерения. */
+  assert.equal(sample.bots[0].moduleCount, 2);
+  assert.equal(sample.bots[0].rootTaskPending, 1);
   assert.equal(sample.bots[0].containers._user_var_locks.count, 7);
   assert.equal(JSON.stringify(sample).includes("SECRET"), false);
   sample.bots[0].containers._user_var_locks.count = 888;
@@ -40,6 +43,7 @@ test("числа проверяются, строки ограничиваютс
   assert.equal(sample.botsTruncated, true);
   assert.deepEqual(sample.bots[0].containers.user_data, {});
   assert.equal(sample.bots[0].moduleCount, undefined);
+  assert.equal(sample.bots[0].rootTaskPending, undefined);
   counters.ingest(frame, 2000, 262_145);
   assert.equal(counters.snapshot(2000)!.receivedAt, 1000);
 });
