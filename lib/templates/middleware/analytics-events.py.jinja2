@@ -49,10 +49,19 @@ class _AnalyticsSecretLogFilter(logging.Filter):
 
 
 def _analytics_install_log_filter():
-    """Устанавливает маскирование на действующие стандартные обработчики журнала."""
+    """Переиспользует общий фильтр, чьи функции не удерживают пространство имён бота."""
+    from types import FunctionType as _AnalyticsFunctionType
+    shared = getattr(logging, '_botcraft_analytics_secret_filter_v1', None)
+    if shared is None:
+        # Отдельные globals исключают ссылку метода на весь выгруженный сценарий.
+        namespace = {'__builtins__': __builtins__, 'logging': logging}
+        namespace['_analytics_safe_value'] = _AnalyticsFunctionType(_analytics_safe_value.__code__, namespace)
+        method = _AnalyticsFunctionType(_AnalyticsSecretLogFilter.filter.__code__, namespace)
+        shared = type('_BotcraftAnalyticsSecretLogFilter', (logging.Filter,), {'filter': method})()
+        logging._botcraft_analytics_secret_filter_v1 = shared
     for handler in logging.getLogger().handlers:
-        if not any(isinstance(item, _AnalyticsSecretLogFilter) for item in handler.filters):
-            handler.addFilter(_AnalyticsSecretLogFilter())
+        if shared not in handler.filters:
+            handler.addFilter(shared)
 
 
 def _analytics_event(kind, key, user_id, chat, occurred_at=None, directed=False):

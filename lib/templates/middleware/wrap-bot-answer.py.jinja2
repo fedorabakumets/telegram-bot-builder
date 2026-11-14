@@ -5,15 +5,62 @@
   Вызывается один раз при старте через _wrap_message_answer(bot).
 #}
 
+def _message_answer_router(method_name, original, registry):
+    """Создаёт общий маршрутизатор без ссылки на словарь выгружаемого сценария."""
+    import types as _types
+
+    async def route(message, *args, **kwargs):
+        """Выбирает журналирование только для бота, которому принадлежит сообщение."""
+        owner = getattr(message, 'bot', None)
+        handlers = registry.get(getattr(owner, 'id', None))
+        if handlers is not None:
+            return await handlers[method_name](message, *args, **kwargs)
+        kwargs.pop('node_id', None)
+        return await original(message, *args, **kwargs)
+
+    # Обычная вложенная функция сохраняла бы globals первого загруженного бота.
+    return _types.FunctionType(route.__code__, {'__builtins__': __builtins__},
+                               route.__name__, route.__defaults__, route.__closure__)
+
+
+_message_answer_registration = None
+
+
+def _unwrap_message_answer(bot_instance=None):
+    """Удаляет только регистрацию этой активации, сохраняя соседние сценарии."""
+    global _message_answer_registration
+    registration = _message_answer_registration
+    if registration is None:
+        return
+    registry, owner_id, handlers = registration
+    if bot_instance is not None and getattr(bot_instance, 'id', None) != owner_id:
+        return
+    if registry.get(owner_id) is handlers:
+        registry.pop(owner_id, None)
+    _message_answer_registration = None
+
+
 def _wrap_message_answer(bot_instance):
-    """Патчит Message.answer и Message.answer_photo для автоматического логирования исходящих"""
+    """Регистрирует пять обработчиков текущего бота в общем маршрутизаторе."""
+    global _message_answer_registration
     from aiogram.types import Message as _Message
 
-    _orig_answer = _Message.answer
-    _orig_answer_photo = _Message.answer_photo
-    _orig_answer_video = _Message.answer_video
-    _orig_answer_audio = _Message.answer_audio
-    _orig_answer_document = _Message.answer_document
+    _unwrap_message_answer()
+    shared = getattr(_Message, '_botcraft_answer_router_v1', None)
+    if shared is None:
+        names = ('answer', 'answer_photo', 'answer_video', 'answer_audio', 'answer_document')
+        originals = {name: getattr(_Message, name) for name in names}
+        registry = {}
+        shared = (originals, registry)
+        _Message._botcraft_answer_router_v1 = shared
+        for name in names:
+            setattr(_Message, name, _message_answer_router(name, originals[name], registry))
+    originals, registry = shared
+    _orig_answer = originals['answer']
+    _orig_answer_photo = originals['answer_photo']
+    _orig_answer_video = originals['answer_video']
+    _orig_answer_audio = originals['answer_audio']
+    _orig_answer_document = originals['answer_document']
 
     async def _patched_answer(self, text, *args, node_id=None, **kwargs):
         result = await _orig_answer(self, text, *args, **kwargs)
@@ -194,9 +241,9 @@ def _wrap_message_answer(bot_instance):
             logging.warning(f"Ошибка при вызове outgoing_message_trigger handlers: {_omt_outer_e}")
         return result
 
-    _Message.answer = _patched_answer
-    _Message.answer_photo = _patched_answer_photo
-    _Message.answer_video = _patched_answer_video
-    _Message.answer_audio = _patched_answer_audio
-    _Message.answer_document = _patched_answer_document
-
+    owner_id = bot_instance.id
+    handlers = {'answer': _patched_answer, 'answer_photo': _patched_answer_photo,
+                'answer_video': _patched_answer_video, 'answer_audio': _patched_answer_audio,
+                'answer_document': _patched_answer_document}
+    registry[owner_id] = handlers
+    _message_answer_registration = (registry, owner_id, handlers)

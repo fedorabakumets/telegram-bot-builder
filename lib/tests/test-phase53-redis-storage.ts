@@ -335,7 +335,7 @@ test('H03', '_RedisLogHandler класс присутствует', () => {
 test('H04', '_RedisLogHandler регистрируется только если Redis доступен', () => {
   ok(codeNoDb.includes('if _redis_client is not None'), 'проверка _redis_client is not None не найдена');
   // Регистрация handler должна быть после проверки
-  const idx = codeNoDb.indexOf('logging.getLogger().addHandler(_redis_log_handler)');
+  const idx = codeNoDb.indexOf('logging.getLogger().addHandler(_redis_log_router)');
   ok(idx !== -1, 'addHandler не найден');
 });
 

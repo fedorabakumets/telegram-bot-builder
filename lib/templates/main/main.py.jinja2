@@ -503,6 +503,20 @@ async def main():
                 pass
         _background_tasks.clear()
 
+        # Снимаем только регистрации этого бота, включая запуск без общего воркера.
+        await asyncio.sleep(0)
+        for _cleanup_name in ("_unwrap_message_answer", "_cleanup_redis_log_handler", "_cleanup_media_original"):
+            _cleanup_hook = globals().get(_cleanup_name)
+            if callable(_cleanup_hook):
+                try:
+                    _cleanup_result = _cleanup_hook()
+                    if __import__('inspect').isawaitable(_cleanup_result):
+                        await _cleanup_result
+                except BaseException:
+                    logging.warning(f"Не удалось выполнить очистку {_cleanup_name}")
+        _cleanup_hook = None
+        _cleanup_result = None
+
         # Останавливаем webhook-сервер если он был запущен (освобождаем порт)
         if _webhook_runner:
             try:

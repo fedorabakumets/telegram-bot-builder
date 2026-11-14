@@ -9,7 +9,7 @@ import { generatePythonCode } from '../bot-generator';
 import { generateMain } from '../templates/main/main.renderer';
 
 /** Исполняет настоящий сгенерированный main с изолированными внешними зависимостями. */
-function executeMain(failure: string, nodeWebhook = false): string[] {
+function executeMain(failure: string, nodeWebhook = false, cleanupHooks = false): string[] {
   const code = generateMain({ userDatabaseEnabled: false });
   const python = existsSync('.venv/Scripts/python.exe') ? '.venv/Scripts/python.exe' : 'python';
   const script = `
@@ -58,7 +58,7 @@ async def external(dp, bot, stop_event):
     if payload["failure"] == "external": raise RuntimeError("Проверка ошибки обработки")
 namespace = dict(__name__="external_test", asyncio=asyncio,
     signal=types.SimpleNamespace(SIGTERM=15, SIGINT=2, signal=lambda *args: None),
-    logging=types.SimpleNamespace(info=lambda *args: None, error=lambda *args: None),
+    logging=types.SimpleNamespace(info=lambda *args: None, error=lambda *args: None, warning=lambda *args: None),
     db_pool=None, dp=Dispatcher(), bot=Bot(), _redis_client=Redis(), _redis_connected=False,
     TOKEN_ID=1, BOT_TOKEN="test", PROJECT_ID=1, WEBHOOK_URL="https://api.example" if payload.get("nodeWebhook") else "", WEBHOOK_PORT=9001,
     _worker_webhook_ingress="node" if payload.get("nodeWebhook") else None,
@@ -74,6 +74,13 @@ if payload["failure"].startswith("direct_"):
     namespace.pop("_worker_external_updates")
     namespace["_worker_direct_prepare"] = direct_prepare
     namespace["_worker_direct_commit"] = direct_commit
+if payload.get("cleanupHooks"):
+    def unwrap():
+        events.append("unwrap")
+        raise RuntimeError("Ошибка очистки не мешает соседним ресурсам")
+    async def cleanup_log(): events.append("cleanup_log")
+    namespace.update(_unwrap_message_answer=unwrap, _cleanup_redis_log_handler=cleanup_log,
+        _cleanup_media_original=lambda: events.append("cleanup_media"))
 exec(compile(payload["code"], "generated-main.py", "exec"), namespace)
 try:
     asyncio.run(namespace["main"]())
@@ -82,12 +89,22 @@ except RuntimeError:
 print(json.dumps(events))
 `;
   const result = spawnSync(python, ['-c', script], {
-    input: JSON.stringify({ code, failure, nodeWebhook }), encoding: 'utf8', env: { ...process.env, PYTHONIOENCODING: 'utf-8' },
+    input: JSON.stringify({ code, failure, nodeWebhook, cleanupHooks }), encoding: 'utf8', env: { ...process.env, PYTHONIOENCODING: 'utf-8' },
   });
   assert.equal(result.status, 0, result.stderr || result.stdout);
   const lines = result.stdout.trim().split('\n');
   return JSON.parse(lines[lines.length - 1]!);
 }
+
+/** Очищает регистрации даже при ошибке отдельного хука и отказе запуска. */
+test('main снимает независимые регистрации при сне и ошибке запуска', () => {
+  for (const failure of ['', 'direct_get_me']) {
+    const events = executeMain(failure, false, true);
+    assert.ok(events.indexOf('unwrap') < events.indexOf('cleanup_log'));
+    assert.ok(events.indexOf('cleanup_log') < events.indexOf('cleanup_media'));
+    assert.ok(events.indexOf('cleanup_media') < events.indexOf('session_close'));
+  }
+});
 
 /** Проверяет startup, готовность, обработку и освобождение реальных веток main. */
 for (const failure of ['', 'external', 'shutdown']) {

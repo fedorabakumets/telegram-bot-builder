@@ -1,10 +1,12 @@
-"""Проверяет асинхронный загрузчик медиа с подставным сервером хранения."""
+"""@fileoverview Проверяет загрузчик медиа, аренды и очистку отдельной активации."""
 import asyncio
+import gc
 import os
 import pathlib
 import subprocess
 import sys
 import tempfile
+import weakref
 from aiohttp import web
 
 source = pathlib.Path(sys.argv[1]).read_text(encoding='utf-8')
@@ -14,6 +16,48 @@ exec(compile(source, 'generated_media.py', 'exec'), namespace)
 
 async def main():
     """Проверяет кэш, версии, изоляцию, лимит и ошибки загрузки."""
+    def released_namespace(root):
+        """Доказывает, что atexit больше не удерживает выгруженный модуль."""
+        class Marker:
+            """Слабая метка жизненного цикла глобальных данных сценария."""
+        scope = {'PROJECT_ID': 12, '__file__': __file__, 'marker': Marker()}
+        reference = weakref.ref(scope['marker'])
+        exec(compile(source, 'generated_media.py', 'exec'), scope)
+        scope['_media_private_cache'](pathlib.Path(root))
+        assert scope['_cleanup_media_original']() is True
+        return reference
+    with tempfile.TemporaryDirectory() as marker_root:
+        reference = released_namespace(marker_root)
+        gc.collect()
+        assert reference() is None
+    with tempfile.TemporaryDirectory() as cleanup_root:
+        isolated = {'PROJECT_ID': 12, '__file__': __file__}
+        exec(compile(source, 'generated_media.py', 'exec'), isolated)
+        private = isolated['_media_private_cache'](pathlib.Path(cleanup_root))
+        manual = pathlib.Path(cleanup_root) / 'manual.txt'
+        manual.write_text('сохранить', encoding='utf-8')
+        owned = private / 'leased.media'
+        owned.write_bytes(b'media')
+        ready, release = asyncio.Event(), asyncio.Event()
+        async def hold_cleanup_lease():
+            """Удерживает собственный файл до завершения задачи отправки."""
+            isolated['_media_lease'](owned)
+            ready.set()
+            await release.wait()
+        holder = asyncio.create_task(hold_cleanup_lease())
+        await ready.wait()
+        assert isolated['_cleanup_media_original']() is False
+        assert owned.exists() and manual.exists()
+        release.set()
+        await holder
+        assert isolated['_cleanup_media_original']() is True
+        assert not private.exists() and manual.exists()
+        assert not isolated['_media_cleanup_registered']
+        assert not isolated['_media_task_leases'] and not isolated['_media_path_leases']
+        assert isolated['_cleanup_media_original']() is True
+        recreated = isolated['_media_private_cache'](pathlib.Path(cleanup_root))
+        assert recreated != private and recreated.exists()
+        assert isolated['_cleanup_media_original']() is True
     state = {'body': b'first', 'version': 'one', 'gets': 0, 'status': 200}
     async def handler(request):
         """Имитирует поток исходного файла и проверяет доступ к проекту."""

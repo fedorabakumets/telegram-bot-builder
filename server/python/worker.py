@@ -331,6 +331,7 @@ class BotWorker:
         alias_prev: Dict[str, Any] = {}
         dotenv_guard = contextlib.ExitStack()
         overlay_on = False
+        module = None
         from bot_task_scope import BotTaskScope
         task_scope = BotTaskScope()
         task_scope.enter()
@@ -503,6 +504,8 @@ class BotWorker:
             except BaseException:
                 emit_log(token_id, "Не удалось остановить задачи сценария: аварийное завершение для сохранения изоляции", "stderr")
                 os._exit(70)
+            from worker_unload_hooks import cleanup_module_hooks
+            await cleanup_module_hooks(module, lambda message: emit_log(token_id, message, "stderr"))
             if alias_prev:
                 iso.restore_short_aliases(alias_prev)
             dotenv_guard.close()

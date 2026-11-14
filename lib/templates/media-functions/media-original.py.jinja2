@@ -12,6 +12,24 @@ _media_download_locks = {}
 _media_cache_directories = {}
 _media_task_leases = {}
 _media_path_leases = {}
+_media_cleanup_registered = False
+
+def _cleanup_media_original():
+    """Удаляет только собственные временные каталоги после завершения отправок."""
+    global _media_cleanup_registered
+    for task in tuple(_media_task_leases):
+        if task.done():
+            _media_release_task(task)
+    if _media_task_leases or _media_path_leases:
+        return False
+    for directory in tuple(_media_cache_directories.values()):
+        _media_shutil.rmtree(directory, ignore_errors=True)
+    _media_cache_directories.clear()
+    _media_download_locks.clear()
+    if _media_cleanup_registered:
+        _media_atexit.unregister(_cleanup_media_original)
+        _media_cleanup_registered = False
+    return True
 
 def _media_release_task(task):
     """Освобождает файлы после полного завершения или отмены задачи отправки."""
@@ -50,12 +68,15 @@ def _media_evict(directory, limit, incoming):
 
 def _media_private_cache(root):
     """Создаёт отдельный каталог процесса и удаляет его при завершении."""
+    global _media_cleanup_registered
     root.mkdir(mode=0o700, parents=True, exist_ok=True)
     key = str(root.resolve())
     if key not in _media_cache_directories:
         directory = _MediaPath(_media_tempfile.mkdtemp(prefix='process-', dir=root))
         _media_cache_directories[key] = directory
-        _media_atexit.register(_media_shutil.rmtree, directory, ignore_errors=True)
+        if not _media_cleanup_registered:
+            _media_atexit.register(_cleanup_media_original)
+            _media_cleanup_registered = True
     return _media_cache_directories[key]
 
 class MediaOriginalError(Exception):

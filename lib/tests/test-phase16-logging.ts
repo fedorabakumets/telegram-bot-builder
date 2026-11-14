@@ -279,6 +279,11 @@ test('C07', 'userDatabaseEnabled: true → синтаксис OK', () => {
 
 console.log('── Блок D: _wrap_message_answer ──────────────────────────────────');
 
+/** Проверяет жизненный цикл общего класса aiogram без сети и Telegram-токенов. */
+test('D00', 'Общий Message не удерживает модули и не смешивает журналирование ботов', () => {
+  execSync('python lib/tests/fixtures/test-message-answer-lifecycle.py', { stdio: 'pipe' });
+});
+
 test('D01', 'userDatabaseEnabled: true → ЕСТЬ def _wrap_message_answer', () => {
   const code = genDB(makeSimpleProject(), 'd01');
   ok(code.includes('def _wrap_message_answer'), 'def _wrap_message_answer должен быть в коде');
@@ -331,29 +336,29 @@ test('D10', 'userDatabaseEnabled: true → _patched_answer_photo вызывае�
   ok(code.includes('save_message_to_api'), 'save_message_to_api должен вызываться');
 });
 
-test('D11', 'userDatabaseEnabled: true → _Message.answer = _patched_answer', () => {
+test('D11', 'userDatabaseEnabled: true → Реестр answer: _patched_answer', () => {
   const code = genDB(makeSimpleProject(), 'd11');
-  ok(code.includes('_Message.answer = _patched_answer'), '_Message.answer = _patched_answer должен быть в коде');
+  ok(code.includes("'answer': _patched_answer"), 'Реестр answer: _patched_answer должен быть в коде');
 });
 
-test('D12', 'userDatabaseEnabled: true → _Message.answer_photo = _patched_answer_photo', () => {
+test('D12', 'userDatabaseEnabled: true → Реестр answer_photo: _patched_answer_photo', () => {
   const code = genDB(makeSimpleProject(), 'd12');
-  ok(code.includes('_Message.answer_photo = _patched_answer_photo'), '_Message.answer_photo = _patched_answer_photo должен быть');
+  ok(code.includes("'answer_photo': _patched_answer_photo"), 'Реестр answer_photo: _patched_answer_photo должен быть');
 });
 
-test('D13', 'userDatabaseEnabled: true → _Message.answer_video = _patched_answer_video', () => {
+test('D13', 'userDatabaseEnabled: true → Реестр answer_video: _patched_answer_video', () => {
   const code = genDB(makeSimpleProject(), 'd13');
-  ok(code.includes('_Message.answer_video = _patched_answer_video'), '_Message.answer_video = _patched_answer_video должен быть');
+  ok(code.includes("'answer_video': _patched_answer_video"), 'Реестр answer_video: _patched_answer_video должен быть');
 });
 
-test('D14', 'userDatabaseEnabled: true → _Message.answer_audio = _patched_answer_audio', () => {
+test('D14', 'userDatabaseEnabled: true → Реестр answer_audio: _patched_answer_audio', () => {
   const code = genDB(makeSimpleProject(), 'd14');
-  ok(code.includes('_Message.answer_audio = _patched_answer_audio'), '_Message.answer_audio = _patched_answer_audio должен быть');
+  ok(code.includes("'answer_audio': _patched_answer_audio"), 'Реестр answer_audio: _patched_answer_audio должен быть');
 });
 
-test('D15', 'userDatabaseEnabled: true → _Message.answer_document = _patched_answer_document', () => {
+test('D15', 'userDatabaseEnabled: true → Реестр answer_document: _patched_answer_document', () => {
   const code = genDB(makeSimpleProject(), 'd15');
-  ok(code.includes('_Message.answer_document = _patched_answer_document'), '_Message.answer_document = _patched_answer_document должен быть');
+  ok(code.includes("'answer_document': _patched_answer_document"), 'Реестр answer_document: _patched_answer_document должен быть');
 });
 
 test('D16', 'userDatabaseEnabled: true → синтаксис Python OK', () => {

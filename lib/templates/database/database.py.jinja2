@@ -192,6 +192,13 @@ async def init_database():
             await conn.execute('SELECT public.mark_analytics_runtime_v2($1, $2)', PROJECT_ID, TOKEN_ID)
         logging.info("✅ База данных инициализирована; аналитика v2")
     except Exception as e:
+        # Ошибка проверки после create_pool не должна оставлять живой потерянный пул.
+        if db_pool is not None:
+            import asyncio as _database_cleanup_asyncio
+            try:
+                await _database_cleanup_asyncio.wait_for(db_pool.close(), timeout=5)
+            except Exception:
+                db_pool.terminate()
         logging.warning(f"⚠️ Не удалось подключиться к БД: {e}. Используем локальное хранилище.")
         db_pool = None
 
