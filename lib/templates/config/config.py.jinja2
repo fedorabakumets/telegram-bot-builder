@@ -157,16 +157,30 @@ async def init_redis_client():
     _base_delay = 0.25
     _last_error = None
     for _attempt in range(1, _max_attempts + 1):
+        _attempt_client = None
         try:
-            _redis_client = _redis_lib.from_url(
+            _attempt_client = _redis_lib.from_url(
                 REDIS_URL,
                 decode_responses=False,
                 socket_connect_timeout=2,
             )
-            await _redis_client.ping()
+            await _attempt_client.ping()
+            _redis_client = _attempt_client
             logging.info("🔴 Redis подключён успешно")
             return True
-        except Exception as e:
+        except BaseException as e:
+            # Неуспешная попытка владеет своим клиентом и закрывает его до повтора.
+            if _attempt_client is not None:
+                try:
+                    await _asyncio_redis.wait_for(_attempt_client.aclose(), timeout=2)
+                except Exception:
+                    try:
+                        await _asyncio_redis.wait_for(_attempt_client.connection_pool.disconnect(), timeout=2)
+                    except Exception:
+                        pass
+            # Отмена не является временной ошибкой и не запускает следующую попытку.
+            if not isinstance(e, Exception):
+                raise
             _last_error = e
             _redis_client = None
             if _attempt >= _max_attempts:

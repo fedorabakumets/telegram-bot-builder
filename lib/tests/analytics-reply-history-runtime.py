@@ -77,6 +77,7 @@ class ReplyHistoryTests(unittest.IsolatedAsyncioTestCase):
         from aiogram.types import Message, KeyboardButton, ReplyKeyboardMarkup
         originals = {name: getattr(Message, name) for name in
             ('answer', 'answer_photo', 'answer_video', 'answer_audio', 'answer_document')}
+        router_before = getattr(Message, '_botcraft_answer_router_v1', None)
 
         async def original_answer(message, text, **kwargs):
             """Сохраняет минимальный ответ так же, как ранний session middleware."""
@@ -85,16 +86,23 @@ class ReplyHistoryTests(unittest.IsolatedAsyncioTestCase):
 
         try:
             Message.answer = original_answer
-            scope['_wrap_message_answer'](NS())
-            await Message.answer(runtime['message'](), 'Проверка', node_id='answer-test',
+            # Сообщение и регистрация принадлежат одному конкретному Telegram-боту.
+            owner = runtime['Bot']()
+            scope['_wrap_message_answer'](owner)
+            await Message.answer(runtime['message'](bot=owner), 'Проверка', node_id='answer-test',
                 reply_markup=ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text='Ответ')]]))
             await asyncio.gather(*tuple(scope['_analytics_persistence_tasks']))
             self.assertEqual(self.conn.rows[0]['message_data']['buttons'], [{'text': 'Ответ'}])
             self.assertEqual(self.conn.rows[0]['node_id'], 'answer-test')
             self.assertEqual((len(self.conn.events), len(self.conn.rows), self.conn.counters), (1, 1, 1))
         finally:
+            scope['_unwrap_message_answer']()
             for name, value in originals.items():
                 setattr(Message, name, value)
+            if router_before is None:
+                delattr(Message, '_botcraft_answer_router_v1')
+            else:
+                Message._botcraft_answer_router_v1 = router_before
 
     async def test_inline_response_remains_authoritative(self):
         """Повторная обёртка не обрезает дополнительные поля inline-кнопки Telegram."""

@@ -185,7 +185,8 @@ test('B07', '_lock_acquired инициализируется до try', () => {
 test('B08', 'init_redis_client делает retry с backoff', () => {
   const idx = codeNoDb.indexOf('async def init_redis_client');
   ok(idx !== -1, 'init_redis_client не найден');
-  const body = codeNoDb.slice(idx, idx + 2000);
+  /** Берём всю функцию: очистка отменённых подключений не должна обрезать проверку backoff. */
+  const body = codeNoDb.slice(idx).split('\nasync def ')[0];
   ok(body.includes('_max_attempts'), 'retry _max_attempts не найден');
   ok(body.includes('socket_connect_timeout'), 'socket_connect_timeout не найден');
   ok(body.includes('_asyncio_redis.sleep'), 'backoff sleep не найден');
@@ -335,7 +336,7 @@ test('H03', '_RedisLogHandler класс присутствует', () => {
 test('H04', '_RedisLogHandler регистрируется только если Redis доступен', () => {
   ok(codeNoDb.includes('if _redis_client is not None'), 'проверка _redis_client is not None не найдена');
   // Регистрация handler должна быть после проверки
-  const idx = codeNoDb.indexOf('logging.getLogger().addHandler(_redis_log_handler)');
+  const idx = codeNoDb.indexOf('logging.getLogger().addHandler(_redis_log_router)');
   ok(idx !== -1, 'addHandler не найден');
 });
 

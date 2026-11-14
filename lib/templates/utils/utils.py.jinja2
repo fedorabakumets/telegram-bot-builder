@@ -695,20 +695,87 @@ async def _publish_log_to_redis(level: str, message: str) -> None:
         pass
 
 
+def _dispatch_redis_log_record(self, record):
+    """Маршрутизирует запись только текущему боту без ссылки на namespace сценария."""
+    isolation = _sys.modules.get("worker_isolation")
+    if isolation is not None:
+        token_id = isolation.current_token_id.get()
+        relay = _routes.get(token_id)
+    else:
+        relay = next(iter(_routes.values()), None) if len(_routes) == 1 else None
+    if relay is not None:
+        relay.handle(record)
+
+
 class _RedisLogHandler(logging.Handler):
-    """Logging handler для публикации логов в Redis Pub/Sub канал."""
+    """Принадлежащий боту передатчик: корневой журнал хранит лишь слабую ссылку."""
+
+    def __init__(self):
+        """Создаёт реестр публикаций, освобождаемых вместе с этим ботом."""
+        super().__init__(logging.INFO)
+        self.tasks = set()
+        self.stopped = False
 
     def emit(self, record: logging.LogRecord) -> None:
-        """Публикует запись лога в Redis асинхронно через create_task."""
+        """Публикует запись в контексте её владельца и учитывает незавершённую задачу."""
+        if self.stopped:
+            return
         try:
             loop = asyncio.get_running_loop()
-            loop.create_task(_publish_log_to_redis(record.levelname, self.format(record)))
+            task = loop.create_task(_publish_log_to_redis(record.levelname, self.format(record)))
+            self.tasks.add(task)
+            task.add_done_callback(self.tasks.discard)
         except RuntimeError:
-            pass  # Event loop не запущен — пропускаем
+            pass
 
 
-# Регистрируем handler если Redis доступен
+_redis_log_handler = None
+_redis_log_router = None
+
+
+async def _cleanup_redis_log_handler():
+    """Снимает собственную регистрацию и завершает публикации при сне или остановке."""
+    global _redis_log_handler, _redis_log_router
+    relay, router = _redis_log_handler, _redis_log_router
+    _redis_log_handler = None
+    _redis_log_router = None
+    if relay is None:
+        return
+    relay.stopped = True
+    if router is not None:
+        routes = router._botcraft_redis_routes
+        if routes.get(TOKEN_ID) is relay:
+            routes.pop(TOKEN_ID, None)
+        if not routes:
+            logging.getLogger().removeHandler(router)
+            router.close()
+            if getattr(logging, "_botcraft_redis_log_router", None) is router:
+                delattr(logging, "_botcraft_redis_log_router")
+    tasks = list(relay.tasks)
+    for task in tasks:
+        task.cancel()
+    if tasks:
+        await asyncio.gather(*tasks, return_exceptions=True)
+    relay.tasks.clear()
+    relay.close()
+
+
 if _redis_client is not None:
+    import sys as _redis_log_sys
+    import types as _redis_log_types
+    import weakref as _redis_log_weakref
+    _redis_log_router = getattr(logging, "_botcraft_redis_log_router", None)
+    if _redis_log_router is None:
+        _redis_log_router = logging.Handler(logging.INFO)
+        _redis_log_routes = _redis_log_weakref.WeakValueDictionary()
+        # Функция корневого журнала не удерживает globals первого загруженного бота.
+        _redis_log_emit = _redis_log_types.FunctionType(
+            _dispatch_redis_log_record.__code__,
+            {"_sys": _redis_log_sys, "_routes": _redis_log_routes},
+            "_dispatch_redis_log_record")
+        _redis_log_router.emit = _redis_log_types.MethodType(_redis_log_emit, _redis_log_router)
+        _redis_log_router._botcraft_redis_routes = _redis_log_routes
+        logging._botcraft_redis_log_router = _redis_log_router
+        logging.getLogger().addHandler(_redis_log_router)
     _redis_log_handler = _RedisLogHandler()
-    _redis_log_handler.setLevel(logging.INFO)
-    logging.getLogger().addHandler(_redis_log_handler)
+    _redis_log_router._botcraft_redis_routes[TOKEN_ID] = _redis_log_handler
