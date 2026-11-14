@@ -169,7 +169,7 @@
     "@asteasolutions/zod-to-openapi": "^9.1.0",
     "@aws-sdk/client-s3": "3.1076.0",
     "@aws-sdk/s3-request-presigner": "3.1076.0",
-    "@hookform/resolvers": "^5.2.2",
+    "@hookform/resolvers": "^7.0.3",
     "@jridgewell/trace-mapping": "^0.3.31",
     "@modelcontextprotocol/sdk": "^1.32.2",
     "@monaco-editor/react": "^4.7.0",
