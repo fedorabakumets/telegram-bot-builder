@@ -73,8 +73,11 @@ jobs:
       # Проверяем освобождение ресурсов сгенерированного сценария без изменения истории и FSM.
       - name: Освобождение журналирования, медиа и неуспешных подключений
         run: node --import tsx --test lib/tests/test-phase16-logging.ts lib/tests/test-phase83-analytics-events.ts lib/tests/test-phase-media-original.ts lib/tests/test-phase-resource-init-cleanup.ts
-      # Ошибка или отмена одного закрытия не должна оставлять остальные ресурсы сценария открытыми.
+      # Проверяем независимые попытки очистки, общий бюджет и обработку ошибок завершения.
       - run: npx tsx lib/tests/test-phase-main-cleanup-resources.ts
+      # Безопасные настройки передаются локальному, удалённому и Docker-исполнителю без секретов панели.
+      - name: Окружение пула БД, polling и медиа
+        run: node --import tsx --test server/bots/databaseRuntimeEnv.test.ts server/bots/pollingRuntimeEnv.test.ts server/bots/mediaRuntimeEnv.test.ts
       # Проверяем снятие подписок Redis и освобождение активаций рядом с постоянным ботом.
       - run: npx vitest run --project lib lib/templates/utils/redis-log-lifecycle.test.ts
       - run: python -m unittest discover -s server/python -p 'test_worker_unload_hooks.py' -v
@@ -94,7 +97,7 @@ jobs:
         env:
           LOCAL_DATABASE_TEST_URL: postgres://postgres:postgres@127.0.0.1:5432/postgres
           LOCAL_REDIS_TEST_URL: redis://127.0.0.1:6379
-      # Короткий полный граф проверяет реальную БД и Redis; Telegram заменён локальным HTTP-сервером.
+      # Короткий полный граф проверяет реальную БД и Redis; подменяется сетевой транспорт Telegram.
       - name: Полный сценарий, сон и освобождение ресурсов
         run: npx tsx tools/runtime_full_resources_probe.ts --database tbb_full_probe_ci --cycles 2 --idle 1 --final-collect --real-bytecode-cache
         env:

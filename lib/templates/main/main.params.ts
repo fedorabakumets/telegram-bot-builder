@@ -25,6 +25,8 @@ export interface MainTemplateParams {
   hasScheduleTrigger?: boolean;
   /** Есть ли api_trigger ноды */
   hasApiTrigger?: boolean;
+  /** Есть ли ноды пользовательского Telegram-клиента, требующие запуска и остановки Telethon */
+  hasUserbotNodes?: boolean;
   /** URL вебхука (если задан — включается webhook режим) */
   webhookUrl?: string | null;
   /** Порт aiohttp сервера для webhook режима */

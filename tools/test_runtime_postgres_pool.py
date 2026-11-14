@@ -36,10 +36,11 @@ def generated_init():
     """Получает реальную функцию инициализации из штатного генератора."""
     script = "import {generateDatabase} from './lib/templates/database/database.renderer'; console.log(JSON.stringify(generateDatabase({userDatabaseEnabled:true,botRuntimeRole:true})))"
     result = subprocess.run(['node', 'node_modules/tsx/dist/cli.mjs', '--eval', script],
-                            cwd=ROOT, capture_output=True, text=True, encoding='utf-8', check=True)
+                            cwd=ROOT, capture_output=True, text=True, encoding='utf-8', check=True, timeout=20)
     tree = ast.parse(json.loads(result.stdout))
     functions = [node for node in tree.body if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
                  and node.name in ('init_database', '_database_pool_idle_seconds')]
+    assert {node.name for node in functions} == {'init_database', '_database_pool_idle_seconds'}
     return compile(ast.fix_missing_locations(ast.Module(body=functions, type_ignores=[])), '<generated-init>', 'exec')
 
 
@@ -93,8 +94,11 @@ async def main():
             await asyncio.gather(*(burst(namespace) for namespace in namespaces))
             expanded = await count()
             assert expanded == 12, expanded
-            await asyncio.sleep(1.2)
-            shrunk = await count()
+            for _ in range(100):
+                shrunk = await count()
+                if shrunk <= 2:
+                    break
+                await asyncio.sleep(0.05)
             assert shrunk <= 2, shrunk
             await asyncio.gather(*(burst(namespace) for namespace in namespaces))
             pool = namespaces[0]['db_pool']
