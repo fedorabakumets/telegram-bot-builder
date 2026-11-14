@@ -83,6 +83,11 @@ jobs:
       - run: python -m unittest discover -s server/python -p 'test_worker_unload_hooks.py' -v
       # Обновление aiogram не должно вернуть удержание Update и выгруженных ботов глобальным LRU.
       - run: python -m unittest discover -s server/python -p 'test_aiogram_update_cache.py' -v
+      # Снимки не прогревают модели, не раскрывают данные и не удерживают выгруженные globals.
+      - run: python -m unittest discover -s server/python -p 'test_worker_runtime_counters.py' -v
+      - run: python -m unittest discover -s server/python -p 'test_worker_memory_observability.py' -v
+      # Повтор безопасного чтения Redis прекращается при остановке, отмене или потере приёмника.
+      - run: python -m unittest discover -s server/python -p 'test_redis_queue_retry.py' -v
       - run: python -m unittest discover -s server/python -p 'test_shared_activation_memory.py' -v
       # Проверяем порядок lazy-импортов, настоящий Dispatcher и доставку через локальный Redis.
       - run: python -m unittest discover -s tools -p 'test_runtime_memory_import_order.py' -v
@@ -97,6 +102,8 @@ jobs:
         env:
           LOCAL_DATABASE_TEST_URL: postgres://postgres:postgres@127.0.0.1:5432/postgres
           LOCAL_REDIS_TEST_URL: redis://127.0.0.1:6379
+      # Фоновые роли отдельно проверяют чтение кешей, изоляцию медиа и выполнение расписаний.
+      - run: npx tsx tools/test_runtime_background_fixture.ts
       # Короткий полный граф проверяет реальную БД и Redis; подменяется сетевой транспорт Telegram.
       - name: Полный сценарий, сон и освобождение ресурсов
         run: npx tsx tools/runtime_full_resources_probe.ts --database tbb_full_probe_ci --cycles 2 --idle 1 --final-collect --real-bytecode-cache

@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "declaredBeforeLongRun": true,
+  "workload": {"platform": "Linux", "bots": 50, "permanentBots": 4, "warmupCyclesPerBot": 50, "cyclesPerBotPerBatch": 1000, "batches": 3, "freshProcessRepeats": 1},
+  "constraints": {"naturalGC": true, "forcedGCInMain": false, "profilersInMain": false, "realPostgres": true, "realRedis": true, "realDispatcher": true, "controlledTelegramTransport": true, "productionTokens": false},
+  "control": {"minimumSeconds": 120, "minimumSamples": 25, "maximumIntervalSeconds": 5, "maximumRangeKiB": 8192},
+  "memory": {"metrics": ["rssKiB", "pssKiB", "anonymousKiB"], "minimumToleranceKiB": 2048, "controlNoiseMultiplier": 3, "lateLoadFraction": 0.5, "minimumLateSamplesPerBatch": 10, "settledSamplesPerBatch": 10, "minimumSettlingSeconds": 60, "poolIdleMultiplier": 2, "toleranceFormula": "max(2048, 3 * (control_p95 - control_p05))", "residualSpreadMustFitTolerance": true, "positiveLateSlopeExceedingTolerance": "inconclusive; all three batches means fail"},
+  "functional": {"missingEvents": 0, "duplicateEvents": 0, "crossBotEvents": 0, "unexpectedErrors": 0, "postStopOwnedConnections": 0, "postStopOwnedTasks": 0, "supportedModelChangesAfterWarmup": 0},
+  "performance": {"sameEnvironmentABRequired": true, "maximumCpuPerEventRatio": 1.2, "maximumP95LatencyRatio": 1.2, "absoluteLatencyAllowanceSeconds": 0.001},
+  "externalEvidenceRequired": ["fresh_process_repeat", "background_tasks", "cold_start", "error_cancel_stop", "all_control_graphs", "diagnostic_profiler_ab", "instrumentation_overhead", "before_after_graph", "versions_commands_hashes", "targeted_tests", "affected_builds", "current_commit_ci"]
+}

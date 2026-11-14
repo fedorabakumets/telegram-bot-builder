@@ -8,6 +8,7 @@ from demand_state import DemandState
 from demand_state_codec import StateSerializationError
 from demand_tasks import update_tasks
 from redis.exceptions import RedisError
+from redis_queue_retry import peek_with_retry
 
 
 class ProcessChildFeed:
@@ -27,7 +28,10 @@ class ProcessChildFeed:
 
         deadline = time.monotonic() + self.idle
         while not self.stopping.is_set() and not stop_event.is_set():
-            update = await self.queue.peek()
+            # Временная потеря Redis не подтверждает событие и не завершает регистрацию.
+            update = await peek_with_retry(self.queue, (self.stopping, stop_event))
+            if self.stopping.is_set() or stop_event.is_set():
+                return
             if update is None:
                 if time.monotonic() >= deadline:
                     self.idled = True
