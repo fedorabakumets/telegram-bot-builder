@@ -1,0 +1,81 @@
+# @fileoverview Проверяет передачу переменных окружения и подключение к PostgreSQL через Docker Compose.
+name: Compose environment issue 41
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'docker-compose.yml'
+      - 'Dockerfile'
+      - 'server/database/**'
+      - '.github/workflows/compose-env-issue-41.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        node_env: [development, production]
+    env:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: telegram_bot_builder
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/telegram_bot_builder
+      PGHOST: db
+      PGPORT: '5432'
+      PGDATABASE: telegram_bot_builder
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGSSLMODE: disable
+      NODE_ENV: ${{ matrix.node_env }}
+      SESSION_SECRET: compose-issue-41-test-secret
+      ADMIN_API_KEY: compose-issue-41-test-admin-key
+      REDIS_URL: redis://redis:6379
+      PORT: '5000'
+      HOST: 0.0.0.0
+    steps:
+      - uses: actions/checkout@v7
+      - name: Собрать образ приложения
+        run: docker compose build app
+      - name: Проверить режим разработки без dev-зависимостей в образе
+        if: matrix.node_env == 'development'
+        run: |
+          docker compose up -d --wait db redis
+          docker compose run --rm --no-deps --entrypoint node app -e '
+            const { Client } = require("pg");
+            if (process.env.NODE_ENV !== "development" || process.env.PGSSLMODE !== "disable") process.exit(1);
+            const client = new Client({ connectionString: process.env.DATABASE_URL, ssl: false });
+            client.connect().then(() => client.query("SELECT 1")).then(() => client.end()).catch(error => { console.error(error); process.exit(1); });
+          '
+      - name: Запустить приложение и базы данных
+        if: matrix.node_env == 'production'
+        run: docker compose up -d --no-build app
+      - name: Проверить переданные значения и запуск без SSL
+        if: matrix.node_env == 'production'
+        shell: bash
+        run: |
+          docker compose exec -T app sh -c 'test "$PGSSLMODE" = disable && test "$NODE_ENV" = "${{ matrix.node_env }}"'
+          for attempt in {1..60}; do
+            if docker compose logs app | grep -q 'sslEnabled: false' && curl -s -o /dev/null http://127.0.0.1:5000/; then
+              exit 0
+            fi
+            if ! docker compose ps --status running --services | grep -qx app; then
+              docker compose logs app
+              exit 1
+            fi
+            sleep 2
+          done
+          docker compose logs app
+          exit 1
+      - name: Показать журналы при сбое
+        if: failure()
+        run: docker compose logs app db redis
+      - name: Остановить контейнеры
+        if: always()
+        run: docker compose down -v
