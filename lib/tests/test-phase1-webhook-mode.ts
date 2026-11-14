@@ -105,6 +105,9 @@ console.log('╚═════════════════════�
 
 console.log('── Блок A: Polling режим (без webhookUrl) ────────────────────────');
 
+/** Запуск сохраняет разрешённые обновления и различает сигналы воркера и отдельного процесса. */
+const managedPollingPattern = /asyncio\.create_task\(dp\.start_polling\(\s*bot,\s*allowed_updates=dp\.resolve_used_update_types\(\),\s*handle_signals=not globals\(\)\.get\('_worker_manages_signals', False\)\s*\)\)/;
+
 /** Проверяет запуск polling как управляемой фоновой задачи. */
 test('A01', 'без webhookUrl → polling запускается как фоновая задача', () => {
   const p = makeCleanProject(makeMinimalNodes());
@@ -112,8 +115,8 @@ test('A01', 'без webhookUrl → polling запускается как фон�
     botName: 'PollingBot',
     userDatabaseEnabled: false,
     });
-  ok(code.includes('asyncio.create_task(dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types()))'),
-    'polling должен запускаться как управляемая задача с разрешёнными обновлениями');
+  ok(managedPollingPattern.test(code),
+    'polling сохраняет разрешённые обновления, сигналы отдельного запуска и управление сигналами воркера');
 });
 
 test('A02', 'без webhookUrl → set_webhook находится только внутри if WEBHOOK_URL блока', () => {
@@ -240,7 +243,7 @@ test('B06', 'с webhookUrl → polling находится в else ветке', (
   });
   const webhookEndIdx = code.indexOf('await bot.delete_webhook()');
   const pollingBranchIdx = code.indexOf('        else:\n            # Polling режим', webhookEndIdx);
-  const pollingIdx = code.indexOf('asyncio.create_task(dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types()))');
+  const pollingIdx = code.search(managedPollingPattern);
   ok(webhookEndIdx !== -1, 'завершение webhook должно быть в коде');
   ok(pollingBranchIdx > webhookEndIdx, 'ветка polling должна следовать за webhook');
   ok(pollingIdx > pollingBranchIdx, 'polling должен запускаться внутри else ветки');

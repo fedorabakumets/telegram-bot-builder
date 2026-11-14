@@ -130,7 +130,8 @@ test('обычная сборка поддерживает внешний при
   assert.ok(code.includes('_WORKER_EXTERNAL_UPDATES_SAFE = True'));
   assert.ok(code.includes('if not WEBHOOK_URL and not _external_mode and _redis_connected'));
   assert.match(code, /if not _external_mode:\s+dp\.message\.middleware\(stale_update_filter_middleware\)/);
-  assert.ok(code.includes('dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())'));
+  /** Воркер управляет сигналами сам; отдельный запуск сохраняет обработку сигналов aiogram. */
+  assert.match(code, /dp\.start_polling\(\s*bot,\s*allowed_updates=dp\.resolve_used_update_types\(\),\s*handle_signals=not globals\(\)\.get\('_worker_manages_signals', False\)\s*\)/);
   assert.ok(code.includes('if WEBHOOK_URL and not _external_mode:'));
 });
 

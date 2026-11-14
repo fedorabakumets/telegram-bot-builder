@@ -142,6 +142,8 @@ async def exercise(source, args):
     pg_url = local_url(pg_source, args.database)
     redis_url = local_url(redis_source, '14')
     observer = await asyncpg.connect(pg_url)
+    pg_capacity = int(await observer.fetchval('SHOW max_connections'))
+    peak_pg_connections = 1
     # Родительские сущности минимальны; функции аналитики берутся из настоящих миграций.
     await observer.execute('CREATE TABLE IF NOT EXISTS bot_projects(id integer PRIMARY KEY); '
                            'CREATE TABLE IF NOT EXISTS bot_tokens(id integer PRIMARY KEY, project_id integer); '
@@ -267,6 +269,7 @@ async def exercise(source, args):
         ctx.project_id = 987654321
         ctx.env = {'DATABASE_URL': pg_url, 'REDIS_URL': redis_url,
                    'PROJECT_ID': '987654321', 'BOT_ENV_SOURCE': 'inline', 'LOG_LEVEL': 'WARNING',
+                   'BOT_DB_POOL_IDLE_SECONDS': '60',
                    'ANALYTICS_SPOOL_DIR': os.environ['ANALYTICS_SPOOL_DIR']}
         async def ingress(dp, bot, stop):
             """Оставляет приём событий внешнему контролируемому Dispatcher-вводу."""
@@ -295,6 +298,7 @@ async def exercise(source, args):
                 raise AssertionError('Число живых активаций превысило безопасный предел наблюдения')
             latencies.append(time.monotonic() - activation_started)
             assert namespace.get('db_pool') is not None, 'Полный сценарий не подключился к PostgreSQL'
+            assert namespace['_database_pool_idle_seconds']() == 60, 'Параметр простоя пула отличается от плана'
             async def verify_scope():
                 """Проверяет реальный setup RLS после выдачи соединения настоящим пулом."""
                 async with namespace['db_pool'].acquire() as connection:
@@ -331,6 +335,7 @@ async def exercise(source, args):
 
     async def await_persistence(group):
         """Ждёт настоящие записи аналитики и истории до выгрузки, сохраняя ограниченный таймаут."""
+        nonlocal peak_pg_connections
         deadline = time.monotonic() + args.flush_timeout
         while True:
             complete = True
@@ -339,6 +344,8 @@ async def exercise(source, args):
                 totals = {row['token_id']: row['total'] for row in rows}
                 complete = complete and all(totals.get(key, 0) == sequences[key] * 2 for key in group)
             if complete:
+                peak_pg_connections = max(peak_pg_connections, await observer.fetchval('SELECT count(*) FROM pg_stat_activity WHERE datname=current_database()'))
+                assert peak_pg_connections < pg_capacity, 'Проба исчерпала вместимость локального PostgreSQL'
                 return
             if time.monotonic() >= deadline:
                 raise TimeoutError('Реальные записи не завершились до выгрузки')
@@ -370,6 +377,7 @@ async def exercise(source, args):
         frame = {'stage': stage, 'pid': os.getpid(), **memory_details(), 'pools': pools,
                  'background': {str(key): background_snapshot(ns) for key, (ns, _) in active.items() if key in role_tokens.values()} if background_sources else {},
                  'pgConnectionsIncludingObserver': connections, 'redisClients': owned_redis,
+                 'peakPgConnectionsIncludingObserver': peak_pg_connections, 'postgresMaxConnections': pg_capacity,
                  'redisTotalServerClients': len(redis_connections),
                  'tasks': len(asyncio.all_tasks()), 'sent': sum(sent.values()),
                  'analyticsEvents': await observer.fetchval('SELECT count(*) FROM analytics_events_v2'),
@@ -443,7 +451,7 @@ async def exercise(source, args):
                               'backgroundGeneratedSha256': {role: hashlib.sha256(value.encode()).hexdigest() for role, value in background_sources.items()},
                               'runtimeFilesSha256': {name: hashlib.sha256((ROOT / 'server/python' / name).read_bytes()).hexdigest() for name in ('worker.py', 'aiogram_update_cache.py', 'lazy_aiogram.py', 'worker_runtime_model_counters.py', 'worker_namespace_counters.py', 'worker_runtime_counters.py')},
                               'probeFilesSha256': {name: hashlib.sha256((ROOT / 'tools' / name).read_bytes()).hexdigest() for name in ('runtime_full_resources_probe.py', 'runtime_full_resources_probe.ts', 'runtime_background_fixture.py', 'runtime_background_fixture.ts')},
-                              'concurrency': args.concurrency, 'poolIdleSeconds': 60}), flush=True)
+                              'concurrency': args.concurrency, 'poolIdleSeconds': 60, 'postgresMaxConnections': pg_capacity}), flush=True)
             print(json.dumps({'testTokenBase': token_base, 'permanentRoleTokens': role_tokens}), flush=True)
             if background_metadata:
                 print(json.dumps({'backgroundFixture': background_metadata}), flush=True)
