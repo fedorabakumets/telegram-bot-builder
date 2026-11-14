@@ -86,4 +86,7 @@ def enable() -> bool:
             cls.__pydantic_parent_namespace__ = shared_namespace(
                 captured, cls.__pydantic_parent_namespace__ or {}
             )
+    # Getter не должен удерживать контексты ботов даже при ленивой сборке моделей.
+    import aiogram_update_cache
+    aiogram_update_cache.apply()
     return True

@@ -123,6 +123,19 @@ async def save_user_data_to_db(user_id: int, variable_name: str, variable_value)
 {{ get_moscow_time_macro() }}
 
 {%- if userDatabaseEnabled %}
+def _database_pool_idle_seconds():
+    """Возвращает положительный срок простоя до суток, по умолчанию 60 секунд."""
+    import math as _database_math
+    import os as _database_os
+    try:
+        seconds = float(_database_os.getenv("BOT_DB_POOL_IDLE_SECONDS", "60"))
+    except (TypeError, ValueError):
+        return 60.0
+    if not _database_math.isfinite(seconds) or not 0 < seconds <= 86400:
+        return 60.0
+    return seconds
+
+
 async def init_database():
     """Инициализация подключения к базе данных и создание таблиц"""
     global db_pool
@@ -136,10 +149,15 @@ async def init_database():
                 str(TOKEN_ID),
             )
         db_pool = await asyncpg.create_pool(
-            DATABASE_URL, min_size=1, max_size=10, init=_set_bot_runtime_scope, setup=_set_bot_runtime_scope
+            DATABASE_URL, min_size=1, max_size=10,
+            max_inactive_connection_lifetime=_database_pool_idle_seconds(),
+            init=_set_bot_runtime_scope, setup=_set_bot_runtime_scope
         )
 {%- else %}
-        db_pool = await asyncpg.create_pool(DATABASE_URL, min_size=1, max_size=10)
+        db_pool = await asyncpg.create_pool(
+            DATABASE_URL, min_size=1, max_size=10,
+            max_inactive_connection_lifetime=_database_pool_idle_seconds()
+        )
         async with db_pool.acquire() as conn:
             await conn.execute("""
                 CREATE TABLE IF NOT EXISTS bot_users (
