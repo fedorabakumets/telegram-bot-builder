@@ -82,3 +82,85 @@ asyncio.run(run())
 `;
   expect(() => execFileSync('python', ['-c', script], { stdio: 'pipe' })).not.toThrow();
 });
+
+/** Нагружает маршрутизацию сорока сценариями с параллельными контекстами и частичной выгрузкой. */
+it('доставляет 1000 публикаций сорока ботам без смешения и освобождает все регистрации', () => {
+  const utils = generateUtils(validParamsDisabled);
+  const suffix = utils.slice(utils.indexOf('async def _publish_log_to_redis'));
+  const script = `import asyncio, contextvars, gc, json, logging, sys, types, weakref
+source = ${JSON.stringify(suffix)}
+root = logging.getLogger()
+root.setLevel(logging.INFO)
+baseline = len(root.handlers)
+isolation = types.ModuleType('worker_isolation')
+isolation.current_token_id = contextvars.ContextVar('stress_token', default=0)
+sys.modules['worker_isolation'] = isolation
+class Marker:
+    """Отслеживает освобождение словаря globals сценария."""
+    pass
+class Redis:
+    """Имитирует асинхронную доставку, сохраняя канал и владельца записи."""
+    def __init__(self):
+        self.rows = []
+    async def publish(self, channel, payload):
+        await asyncio.sleep(0)
+        self.rows.append((channel, json.loads(payload)))
+def load(token, redis):
+    """Создаёт отдельную генерацию модуля для одного владельца."""
+    module = types.ModuleType('stress_bot_' + str(token))
+    module.sentinel = Marker()
+    module.__dict__.update(asyncio=asyncio, logging=logging, _redis_client=redis, PROJECT_ID=12, TOKEN_ID=token)
+    exec(source, module.__dict__)
+    return module
+async def emit(token, count, phase):
+    """Порождает задачи публикации с наследованием только своего контекста."""
+    marker = isolation.current_token_id.set(token)
+    try:
+        for index in range(count):
+            root.info(str(token) + ':' + phase + ':' + str(index))
+            await asyncio.sleep(0)
+    finally:
+        isolation.current_token_id.reset(marker)
+async def settle(modules):
+    """Дожидается всех созданных публикаций без временных задержек."""
+    tasks = [task for module in modules.values() for task in module._redis_log_handler.tasks]
+    if tasks:
+        await asyncio.gather(*tasks)
+async def run():
+    """Проверяет параллельную нагрузку, половинную выгрузку и финальную очистку."""
+    clients = {token: Redis() for token in range(1, 41)}
+    modules = {token: load(token, clients[token]) for token in clients}
+    refs = [weakref.ref(module.sentinel) for module in modules.values()]
+    assert len(root.handlers) == baseline + 1
+    await asyncio.gather(*(emit(token, 25, 'first') for token in clients))
+    await emit(0, 5, 'unscoped')
+    await settle(modules)
+    assert sum(len(client.rows) for client in clients.values()) == 1000
+    for token, client in clients.items():
+        assert len(client.rows) == 25
+        assert all(channel == 'bot:logs:12:' + str(token) and row['tokenId'] == token
+                   and row['message'].startswith(str(token) + ':first:') for channel, row in client.rows)
+    for token in range(1, 21):
+        module = modules.pop(token)
+        await module._cleanup_redis_log_handler()
+    del module
+    gc.collect()
+    assert all(ref() is None for ref in refs[:20])
+    await asyncio.gather(*(emit(token, 10, 'second') for token in range(1, 41)))
+    await settle(modules)
+    for token, client in clients.items():
+        assert len(client.rows) == (25 if token <= 20 else 35)
+    relays = [module._redis_log_handler for module in modules.values()]
+    await asyncio.gather(*(module._cleanup_redis_log_handler() for module in modules.values()))
+    assert all(not relay.tasks and relay.stopped for relay in relays)
+    modules.clear()
+    relays.clear()
+    gc.collect()
+    assert all(ref() is None for ref in refs)
+    assert len(root.handlers) == baseline
+    assert not hasattr(logging, '_botcraft_redis_log_router')
+    assert len(asyncio.all_tasks()) == 1
+asyncio.run(run())
+`;
+  expect(() => execFileSync('python', ['-c', script], { stdio: 'pipe' })).not.toThrow();
+});

@@ -168,7 +168,7 @@ async def init_redis_client():
             _redis_client = _attempt_client
             logging.info("🔴 Redis подключён успешно")
             return True
-        except Exception as e:
+        except BaseException as e:
             # Неуспешная попытка владеет своим клиентом и закрывает его до повтора.
             if _attempt_client is not None:
                 try:
@@ -178,6 +178,9 @@ async def init_redis_client():
                         await _asyncio_redis.wait_for(_attempt_client.connection_pool.disconnect(), timeout=2)
                     except Exception:
                         pass
+            # Отмена не является временной ошибкой и не запускает следующую попытку.
+            if not isinstance(e, Exception):
+                raise
             _last_error = e
             _redis_client = None
             if _attempt >= _max_attempts:

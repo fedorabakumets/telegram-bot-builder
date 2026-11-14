@@ -13,6 +13,8 @@ on:
       - 'railway.*.toml'
       - 'scripts/*split*'
       - 'scripts/build-server.mjs'
+      - 'tools/runtime*'
+      - 'tools/test_runtime*'
       - 'vite.config.ts'
       - 'package*.json'
       - 'requirements.txt'
@@ -75,6 +77,13 @@ jobs:
       - run: npx vitest run --project lib lib/templates/utils/redis-log-lifecycle.test.ts
       - run: python -m unittest discover -s server/python -p 'test_worker_unload_hooks.py' -v
       - run: python -m unittest discover -s server/python -p 'test_shared_activation_memory.py' -v
+      # Проверяем порядок lazy-импортов, настоящий Dispatcher и доставку через локальный Redis.
+      - run: python -m unittest discover -s tools -p 'test_runtime_memory_import_order.py' -v
+      - run: python -m unittest discover -s tools -p 'test_runtime_stress_redis.py' -v
+        env:
+          TBB_STRESS_REDIS_URL: redis://127.0.0.1:6379
+      # Проверяем отмену и ошибки инициализации без тяжёлого полного стресс-прогона.
+      - run: npx tsx tools/runtime-resource-init-stress.ts 25
       # Проверяем настоящий stdin воркера и изоляцию окружений при холодной компиляции.
       - run: python -m unittest discover -s server/python -p 'test_worker_overlay_process.py' -v
         env:

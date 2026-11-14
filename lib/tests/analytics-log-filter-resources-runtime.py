@@ -48,6 +48,29 @@ class FilterResourcesTest(unittest.TestCase):
         self.assertEqual(len(self.handler.filters), 1)
         self.assertTrue(all(reference() is None for reference in references))
 
+    def test_forty_simultaneous_bots_remain_isolated_and_collectible(self):
+        """Сорок живых сценариев делят фильтр, сохраняют свои данные и освобождаются вместе."""
+        namespaces, references = [], []
+        for token_id in range(1, 41):
+            namespace = self.install()
+            namespace.update(TOKEN_ID=token_id, user_data={token_id: 'личные данные'}, payload=Payload())
+            references.append(weakref.ref(namespace['payload']))
+            namespaces.append(namespace)
+        self.assertEqual(len(self.handler.filters), 1)
+        shared = self.handler.filters[0]
+        self.assertNotIn('TOKEN_ID', shared.filter.__globals__)
+        self.assertNotIn('user_data', shared.filter.__globals__)
+        for token_id, namespace in enumerate(namespaces, 1):
+            self.assertEqual(namespace['user_data'], {token_id: 'личные данные'})
+            record = logging.LogRecord('test', logging.INFO, '', 0,
+                'Бот %s: link_private_%s', (token_id, token_id), None)
+            self.assertTrue(self.handler.filter(record))
+            self.assertEqual(record.getMessage(), f'Бот {token_id}: link_[скрыто]')
+        del namespace
+        namespaces.clear()
+        gc.collect()
+        self.assertTrue(all(reference() is None for reference in references))
+
     def test_shared_filter_masks_messages_and_exceptions(self):
         """Общий фильтр сохраняет маскирование сообщения, стека и исключения."""
         self.install()
