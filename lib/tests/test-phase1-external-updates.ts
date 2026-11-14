@@ -151,31 +151,31 @@ for (const [type, data] of [
 
 /** Проверяет отказ от внешней обработки без надёжного хранилища состояния. */
 test('недоступный Redis не включает обработчик или локальное FSM', () => {
-  assert.deepEqual(executeMain('redis'), ['session_close']);
+  assert.deepEqual(executeMain('redis'), ['redis_close', 'session_close']);
 });
 
 /** Отказ переноса состояния должен прервать direct после захвата, до чтения обновлений. */
 test('переключение на direct подготавливает состояние под общей блокировкой', () => {
-  assert.deepEqual(executeMain('direct_prepare'), ['lock', 'direct_prepare', 'unlock', 'session_close']);
+  assert.deepEqual(executeMain('direct_prepare'), ['lock', 'direct_prepare', 'unlock', 'redis_close', 'session_close']);
   assert.ok(generateMain({}).includes('_WORKER_DIRECT_PREPARE_PROTOCOL = 1'));
 });
 
 /** Не скрывает отсутствие владения при недоступном Redis во время перехода на direct. */
 test('перенос direct получает явное отсутствие блокировки при ошибке Redis', () => {
-  assert.deepEqual(executeMain('direct_no_lease'), ['direct_prepare_without_lease', 'session_close']);
+  assert.deepEqual(executeMain('direct_no_lease'), ['direct_prepare_without_lease', 'redis_close', 'session_close']);
 });
 
 /** Снимок удаляется после готовности Telegram и startup диспетчера, до сигнала готовности. */
 test('direct подтверждает перенос состояния после успешного запуска', () => {
   assert.deepEqual(executeMain('direct_success'), [
-    'lock', 'direct_prepare', 'get_me', 'startup', 'direct_commit', 'ready', 'unlock', 'session_close',
+    'lock', 'direct_prepare', 'get_me', 'startup', 'direct_commit', 'ready', 'unlock', 'redis_close', 'session_close',
   ]);
 });
 
 /** Неудачный getMe сохраняет снимок для следующего запуска. */
 test('ошибка запуска direct не подтверждает удаление снимка состояния', () => {
   assert.deepEqual(executeMain('direct_get_me'), [
-    'lock', 'direct_prepare', 'get_me', 'unlock', 'session_close',
+    'lock', 'direct_prepare', 'get_me', 'unlock', 'redis_close', 'session_close',
   ]);
 });
 

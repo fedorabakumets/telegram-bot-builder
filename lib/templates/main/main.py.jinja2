@@ -492,91 +492,114 @@ async def main():
         raise
     finally:
         _bot_stop_event = None
-        # Отменяем все фоновые задачи перед закрытием ресурсов
+        _cleanup_cancelled = False
+        # Первые стадии не расходуют резерв независимого закрытия транспортов.
+        _cleanup_started = asyncio.get_running_loop().time()
+        _cleanup_deadline = _cleanup_started + 6.0
+
+        async def _cleanup_step(name, action, fallback=None):
+            """Независимо освобождает ресурс; отмену повторно передаёт после остальных этапов."""
+            nonlocal _cleanup_cancelled
+            pending = None
+            failed = False
+            try:
+                result = action()
+                if __import__('inspect').isawaitable(result):
+                    pending = asyncio.ensure_future(result)
+                    done, _ = await asyncio.wait((pending,), timeout=min(5.0, max(0.0, _cleanup_deadline - asyncio.get_running_loop().time())))
+                    if not done:
+                        raise asyncio.TimeoutError()
+                    await pending
+            except asyncio.CancelledError:
+                _cleanup_cancelled = True
+                failed = True
+            except Exception:
+                failed = True
+                logging.warning(f"Не удалось завершить очистку: {name}")
+            finally:
+                if pending is not None and not pending.done():
+                    pending.cancel()
+                    try:
+                        done, _ = await asyncio.wait((pending,), timeout=min(1.0, max(0.0, _cleanup_deadline - asyncio.get_running_loop().time())))
+                        if done and not pending.cancelled():
+                            pending.exception()
+                        elif not done:
+                            logging.warning(f"Задача очистки не остановилась: {name}")
+                    except asyncio.CancelledError:
+                        _cleanup_cancelled = True
+                if failed and fallback:
+                    try:
+                        fallback()
+                    except Exception:
+                        logging.warning(f"Не удалось принудительно освободить: {name}")
+
+        # Каждая стадия выполняется независимо от ошибок предыдущей.
         for _task in _background_tasks:
             if not _task.done():
                 _task.cancel()
         if _background_tasks:
-            try:
-                await asyncio.gather(*_background_tasks, return_exceptions=True)
-            except Exception:
-                pass
+            await _cleanup_step("фоновые задачи", lambda: asyncio.gather(*_background_tasks, return_exceptions=True))
         _background_tasks.clear()
-
-        # Снимаем только регистрации этого бота, включая запуск без общего воркера.
-        await asyncio.sleep(0)
         for _cleanup_name in ("_unwrap_message_answer", "_cleanup_redis_log_handler", "_cleanup_media_original"):
             _cleanup_hook = globals().get(_cleanup_name)
             if callable(_cleanup_hook):
-                try:
-                    _cleanup_result = _cleanup_hook()
-                    if __import__('inspect').isawaitable(_cleanup_result):
-                        await _cleanup_result
-                except BaseException:
-                    logging.warning(f"Не удалось выполнить очистку {_cleanup_name}")
+                await _cleanup_step(_cleanup_name, _cleanup_hook)
         _cleanup_hook = None
-        _cleanup_result = None
-
-        # Останавливаем webhook-сервер если он был запущен (освобождаем порт)
         if _webhook_runner:
-            try:
-                await _webhook_runner.cleanup()
-            except Exception:
-                pass
+            await _cleanup_step("webhook", _webhook_runner.cleanup)
         {%- if hasScheduleTrigger %}
-        # Останавливаем фоновые schedule-задачи
-        try:
-            await _cancel_schedule_tasks()
-        except Exception:
-            pass
+        await _cleanup_step("расписание", _cancel_schedule_tasks)
         {%- endif %}
-
         {%- if userDatabaseEnabled %}
-        await _analytics_drain_pending()
+        await _cleanup_step("аналитика", _analytics_drain_pending)
         if db_pool:
-            await db_pool.close()
+            await _cleanup_step("PostgreSQL", db_pool.close, db_pool.terminate)
         {%- endif %}
 
-        # Освобождаем Redis lock при завершении (только в polling режиме — в webhook lock не устанавливался)
+        async def _release_shutdown_lock():
+            """Снимает только принадлежащую этому запуску блокировку polling."""
+            _released = await _redis_client.eval(
+                "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end",
+                1, _lock_key, _lock_owner,
+            )
+            if _released:
+                logging.info("🔓 Redis lock освобождён")
+
+        # Сон не публикует остановку зарегистрированного бота.
         if not WEBHOOK_URL and _redis_connected and _redis_client is not None and _lock_acquired:
-            try:
-                _released = await _redis_client.eval(
-                    "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end",
-                    1, _lock_key, _lock_owner,
-                )
-                if _released:
-                    logging.info("🔓 Redis lock освобождён")
-            except Exception:
-                pass
-
-        # Сон обработчика не является остановкой зарегистрированного бота.
+            await _cleanup_step("блокировка Redis", _release_shutdown_lock)
         if not _external_mode and _redis_connected and _redis_client is not None:
-            try:
-                import json as _json
-                await _redis_client.publish(
-                    f"bot:stopped:{PROJECT_ID}:{TOKEN_ID}",
-                    _json.dumps({"projectId": PROJECT_ID, "tokenId": TOKEN_ID, "timestamp": __import__('datetime').datetime.now().isoformat()})
-                )
-            except Exception:
-                pass
-
-        # Завершаем жизненный цикл диспетчера после сохранения аналитики и закрываем Redis.
-        try:
-            if _external_started:
-                try:
-                    await dp.emit_shutdown(bot=bot, **{"dispatcher": dp, "bots": (bot,), **dp.workflow_data})
-                finally:
-                    if _redis_client is not None:
-                        await _redis_client.aclose()
-        finally:
-            await bot.session.close()
-
+            import json as _json
+            await _cleanup_step("событие остановки", lambda: _redis_client.publish(
+                f"bot:stopped:{PROJECT_ID}:{TOKEN_ID}",
+                _json.dumps({"projectId": PROJECT_ID, "tokenId": TOKEN_ID, "timestamp": __import__('datetime').datetime.now().isoformat()})
+            ))
+        if _external_started:
+            await _cleanup_step("dispatcher", lambda: dp.emit_shutdown(
+                bot=bot, **{"dispatcher": dp, "bots": (bot,), **dp.workflow_data}
+            ))
+        # Транспорты закрываются параллельно после drain/lock/shutdown, в общем бюджете 10с.
+        _cleanup_deadline = _cleanup_started + 10.0
+        _transport_cleanup = []
+        if _redis_client is not None:
+            _transport_cleanup.append(_cleanup_step("Redis", _redis_client.aclose))
+        _transport_cleanup.append(_cleanup_step("HTTP", bot.session.close))
 {%- if hasUserbotNodes %}
-        # Отключаем Telethon userbot
         if userbot_client and userbot_client.is_connected():
-            await userbot_client.disconnect()
-            logging.info("🟣 Telethon userbot отключён")
+            _transport_cleanup.append(_cleanup_step("Telethon", userbot_client.disconnect))
 {%- endif %}
+        _transport_cleanup_task = asyncio.gather(*_transport_cleanup)
+        # Отмена владельца не отменяет ещё не начавшиеся закрытия соседних транспортов.
+        while not _transport_cleanup_task.done():
+            try:
+                await asyncio.shield(_transport_cleanup_task)
+            except asyncio.CancelledError:
+                _cleanup_cancelled = True
+        _transport_cleanup_task.result()
+        _transport_cleanup.clear()
+        if _cleanup_cancelled:
+            raise asyncio.CancelledError
+
 
 
 if __name__ == "__main__":

@@ -341,6 +341,9 @@ class BotWorker:
             # Отметки активны только внутри временного обработчика.
             startup_timing.mark("aiogram_begin")
             lazy_aiogram.enable()
+            # Защита нужна также при обычном импорте и отключённой ленивой сборке.
+            import aiogram_update_cache
+            aiogram_update_cache.apply()
             startup_timing.mark("aiogram_done")
             emit_log(token_id, "─── Начало загрузки бота ───", "stdout")
             bot_path = Path(ctx.bot_file)

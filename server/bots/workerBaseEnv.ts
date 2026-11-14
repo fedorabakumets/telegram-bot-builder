@@ -10,6 +10,7 @@
 
 import { canShareServerEnv, getEnvPassthrough, isServerEnvDenied } from "./botEnvPolicy";
 import { POLLING_RUNTIME_ENV } from "./pollingRuntimeEnv";
+import { DATABASE_RUNTIME_ENV } from "./databaseRuntimeEnv";
 
 /** Технические переменные ОС и Python (имена сравниваются в верхнем регистре) */
 export const WORKER_TECH_ENV: readonly string[] = [
@@ -28,6 +29,7 @@ export const WORKER_TUNING_ENV: readonly string[] = [
   "MAX_UPDATE_AGE_SECONDS", "DISABLE_ASYNC_LOG", "LOG_LEVEL",
   "ANALYTICS_SPOOL_DIR",
   ...POLLING_RUNTIME_ENV,
+  ...DATABASE_RUNTIME_ENV,
 ];
 
 /** Системные адреса панели, которые бот получает и так (слой 2) */

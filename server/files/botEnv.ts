@@ -9,6 +9,7 @@ import { parse } from "dotenv";
 import { resolveBotDatabaseUrl, warnBotRuntimeIfNeeded } from "../bots/resolveBotDatabaseUrl";
 import { withTelegramBotApiUrl } from "./telegramBotApiEnv";
 import { withPollingRuntimeEnv } from "../bots/pollingRuntimeEnv";
+import { withDatabaseRuntimeEnv } from "../bots/databaseRuntimeEnv";
 import { resolveWebhookBaseUrl } from "../bots/webhookBaseUrl";
 
 /** Как переменные попадают к боту: файл .env в папке бота или поле env в команде start_bot */
@@ -63,7 +64,8 @@ export async function buildBotEnvContent(botDir: string, projectId: number, toke
   const webhookPort = launchMode === "webhook" && webhookBaseUrl ? 9000 + tokenId : null;
 
   // Ссылки ${{VAR}} раскрываются только для разрешённых переменных сервера (botEnvPolicy)
-  const customVariables = withPollingRuntimeEnv(withTelegramBotApiUrl(resolveBotEnvVariables(await storage.getEnvVariables(tokenId))));
+  /** Настройки пула передаются удалённому исполнителю вместе с окружением бота. */
+  const customVariables = withDatabaseRuntimeEnv(withPollingRuntimeEnv(withTelegramBotApiUrl(resolveBotEnvVariables(await storage.getEnvVariables(tokenId)))));
   const { isRailwayProject, railwayBotEnvDefaults } = await import("../bots/railway/railwayConfig");
   // Боту на Railway адреса панели недоступны — подставляем адреса из RAILWAY_BOT_*
   const remoteDefaults = isRailwayProject(projectId) ? railwayBotEnvDefaults() : {};

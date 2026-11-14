@@ -32,6 +32,7 @@ class Resource:
         self.mode = self.owner['mode']
         self.finished = False
         self.connection_pool = self
+        self.owner['resources'].append(self)
         created += 1
         active += 1
         peak = max(peak, active)
@@ -96,10 +97,14 @@ def from_url(*args, **kwargs):
 
 
 def function_code(text, name):
-    """Компилирует фактическую функцию генератора без импортов приложения."""
-    node = next(item for item in ast.parse(text).body
-                if isinstance(item, ast.AsyncFunctionDef) and item.name == name)
-    return compile(ast.Module(body=[node], type_ignores=[]), '<generated>', 'exec')
+    """Компилирует настоящую функцию и её настройку пула без подмены логики генератора."""
+    names = {name}
+    if name == 'init_database':
+        names.add('_database_pool_idle_seconds')
+    nodes = [item for item in ast.parse(text).body
+             if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)) and item.name in names]
+    assert {item.name for item in nodes} == names, ('Не найдены функции генератора', names)
+    return compile(ast.Module(body=nodes, type_ignores=[]), '<generated>', 'exec')
 
 
 async def check_slot(namespace, name, mode):
@@ -107,6 +112,7 @@ async def check_slot(namespace, name, mode):
     marker = current.set(namespace)
     namespace['mode'] = mode
     namespace['entered'] = asyncio.Event()
+    namespace['resources'] = []
     try:
         task = asyncio.create_task(namespace[name]())
         if mode == 'cancel':
@@ -116,13 +122,19 @@ async def check_slot(namespace, name, mode):
             assert isinstance(result[0], asyncio.CancelledError)
         else:
             await task
+        assert namespace['entered'].is_set(), (name, mode, 'Проверка ресурса не выполнялась')
         key = 'db_pool' if name == 'init_database' else '_redis_client'
         if mode == 'success':
             assert namespace[key] is not None
             await namespace[key].close()
             namespace[key] = None
         assert namespace[key] is None
+        expected = 8 if name == 'init_redis_client' and mode in ('failure', 'close_failure') else 1
+        resources = namespace['resources']
+        assert len(resources) == expected, (name, mode, len(resources), expected)
+        assert all(resource.finished for resource in resources), (name, mode, 'Ресурс не закрыт')
     finally:
+        namespace.pop('resources', None)
         current.reset(marker)
 
 

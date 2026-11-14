@@ -814,22 +814,63 @@ test('F01', 'finally: ïðèñóòñòâóåò â main()', () => {
   ok(mainBody.includes('finally:'), 'finally: íå íàéäåíî â main()');
 });
 
-test('F02', 'await bot.session.close() ïðèñóòñòâóåò â finally', () => {
-  const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')]);
-  const code = gen(p, 'F02');
-  ok(code.includes('await bot.session.close()'), 'await bot.session.close() íå íàéäåíî');
+/**
+ * Извлекает внешний finally main, исключая совпадения в других функциях.
+ * @param code - Полный сгенерированный Python
+ * @returns Тело освобождения ресурсов
+ */
+function mainCleanupBody(code: string): string {
+  const main = code.indexOf('async def main()');
+  const start = code.indexOf('    finally:\n        _bot_stop_event = None', main);
+  ok(main >= 0 && start > main, 'Внешний finally main не найден');
+  return code.slice(start).split('\n\nif __name__')[0];
+}
+
+/**
+ * Проверяет передачу закрытия в реально ожидаемый этап очистки, включая параллельный хвост.
+ * @param code - Сгенерированный Python
+ * @param resource - Закрываемый ресурс
+ * @returns Признак наличия ожидаемого пути закрытия
+ */
+function hasAwaitedResourceCleanup(code: string, resource: 'http' | 'database'): boolean {
+  const body = mainCleanupBody(code);
+  const awaitedAction = body.includes('result = action()')
+    && body.includes('pending = asyncio.ensure_future(result)') && body.includes('await pending');
+  if (!awaitedAction) return false;
+  if (resource === 'database') {
+    return /\n        if db_pool:\n            await _cleanup_step\("PostgreSQL", db_pool\.close, db_pool\.terminate\)/.test(body);
+  }
+  return /\n        _transport_cleanup\.append\(_cleanup_step\("HTTP", bot\.session\.close\)\)/.test(body)
+    && body.includes('_transport_cleanup_task = asyncio.gather(*_transport_cleanup)')
+    && body.includes('await asyncio.shield(_transport_cleanup_task)')
+    && body.includes('_transport_cleanup_task.result()');
+}
+
+/** Проверяет закрытие HTTP через ожидаемый ограниченный этап настоящего finally. */
+test('F02', 'HTTP закрывается в ожидаемом параллельном хвосте finally', () => {
+  const code = gen(makeCleanProject([makeStartNode(), makeMessageNode('msg1')]), 'F02');
+  ok(hasAwaitedResourceCleanup(code, 'http'), 'Ожидаемое закрытие bot.session в finally не найдено');
 });
 
-test('F03', 'Ïðè DB âêëþ÷¸í: await db_pool.close() ïðèñóòñòâóåò â finally', () => {
-  const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')], true);
-  const code = genDB(p, 'F03');
-  ok(code.includes('await db_pool.close()'), 'await db_pool.close() íå íàéäåíî ïðè DB=true');
+/** Проверяет закрытие пула с аварийным terminate при включённой БД. */
+test('F03', 'При DB=true finally ожидает закрытие PostgreSQL с terminate', () => {
+  const code = genDB(makeCleanProject([makeStartNode(), makeMessageNode('msg1')], true), 'F03');
+  ok(hasAwaitedResourceCleanup(code, 'database'), 'Ожидаемое закрытие db_pool в finally не найдено');
 });
 
-test('F04', 'Ïðè DB âûêëþ÷åí: db_pool.close() ÍÅ ïðèñóòñòâóåò', () => {
-  const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')], false);
-  const code = gen(p, 'F04');
-  ok(!code.includes('db_pool.close()'), 'db_pool.close() íàéäåíî ïðè DB=false — ëèøíèé êîä');
+/** Проверяет отсутствие пути закрытия несуществующего пула при выключенной БД. */
+test('F04', 'При DB=false finally не обращается к db_pool.close', () => {
+  const code = gen(makeCleanProject([makeStartNode(), makeMessageNode('msg1')], false), 'F04');
+  ok(!/db_pool\.close\b/.test(mainCleanupBody(code)), 'Закрытие db_pool найдено при DB=false');
+});
+
+/** Мутации предотвращают ложный успех при неисполненном или не ожидаемом закрытии. */
+test('F11', 'Упоминания close вне finally и без await не проходят проверку', () => {
+  const code = genDB(makeCleanProject([makeStartNode(), makeMessageNode('msg1')], true), 'F11');
+  ok(!hasAwaitedResourceCleanup(code.replace('await pending', 'pending'), 'database'), 'Неожидаемый cleanup принят');
+  ok(!hasAwaitedResourceCleanup(code.replace('await asyncio.shield(_transport_cleanup_task)', 'asyncio.shield(_transport_cleanup_task)'), 'http'), 'Неожидаемый хвост принят');
+  const removed = code.replace('db_pool.close, db_pool.terminate', 'db_pool.other_close, db_pool.terminate');
+  ok(!hasAwaitedResourceCleanup(removed + '\n# await db_pool.close()\n', 'database'), 'Упоминание вне finally принято за закрытие');
 });
 
 test('F05', 'finally èä¸ò ÏÎÑËÅ except áëîêîâ (ïîðÿäîê èíäåêñîâ)', () => {

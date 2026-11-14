@@ -126,13 +126,15 @@ describe('main.py.jinja2 шаблон', () => {
       it('должен включать bot.session.close()', () => {
         const result = generateMain(validParamsDisabled);
 
-        assert.ok(result.includes('await bot.session.close()'));
+        // HTTP освобождается отдельным этапом даже после ошибки другого ресурса.
+        assert.ok(result.includes('_cleanup_step("HTTP", bot.session.close)'));
       });
 
       it('должен включать db_pool.close() при БД', () => {
         const result = generateMain(validParamsEnabled);
 
-        assert.ok(result.includes('await db_pool.close()'));
+        // Ошибка закрытия пула включает принудительное освобождение.
+        assert.ok(result.includes('await _cleanup_step("PostgreSQL", db_pool.close, db_pool.terminate)'));
       });
 
       it('должен включать asyncio.run(main())', () => {
