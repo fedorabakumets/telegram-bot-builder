@@ -141,13 +141,19 @@ async def init_database():
     global db_pool
     try:
 {%- if botRuntimeRole %}
-        async def _set_bot_runtime_scope(conn):
+        async def _set_bot_runtime_scope(conn, _project_id=str(PROJECT_ID), _token_id=str(TOKEN_ID)):
             """Выставляет проект и токен бота на каждом соединении пула."""
             await conn.execute(
                 "SELECT set_config('app.project_id', $1, false), set_config('app.token_id', $2, false)",
-                str(PROJECT_ID),
-                str(TOKEN_ID),
+                _project_id,
+                _token_id,
             )
+        # Закрытый пул не должен удерживать весь сценарий через глобалы служебной функции.
+        from types import FunctionType as _database_scope_function
+        _set_bot_runtime_scope = _database_scope_function(
+            _set_bot_runtime_scope.__code__, {"__builtins__": {}},
+            _set_bot_runtime_scope.__name__, _set_bot_runtime_scope.__defaults__
+        )
         db_pool = await asyncpg.create_pool(
             DATABASE_URL, min_size=1, max_size=10,
             max_inactive_connection_lifetime=_database_pool_idle_seconds(),

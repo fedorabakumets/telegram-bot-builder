@@ -69,6 +69,51 @@ async def check(ns):
   });
 }
 
+test('RLS callback сохраняет область бота без удержания его глобального пространства', () => {
+  execute(generateDatabase({ userDatabaseEnabled: true, botRuntimeRole: true }), 'init_database', `
+import gc, weakref
+class Marker: pass
+class Resource:
+    scope = None
+    def acquire(self): return self
+    async def __aenter__(self): return self
+    async def __aexit__(self, *args): pass
+    async def execute(self, query, *values):
+        if 'set_config' in query: self.scope = values
+callbacks, resources = [], []
+async def create_pool(*args, **kwargs):
+    assert kwargs['init'] is kwargs['setup']
+    callback = kwargs['setup']
+    assert callback.__globals__ == {'__builtins__': {}}
+    assert callback.__closure__ is None
+    resource = Resource()
+    await kwargs['init'](resource)
+    resource.scope = ('wrong', 'wrong')
+    await callback(resource)
+    assert resource.scope == callback.__defaults__
+    callbacks.append(callback)
+    resources.append(resource)
+    return resource
+namespace.update(db_pool=None, DATABASE_URL='fake', PROJECT_ID=1, TOKEN_ID=2,
+                 asyncpg=types.SimpleNamespace(create_pool=create_pool))
+async def check(ns):
+    async def activate(project, token):
+        owner = dict(ns, PROJECT_ID=project, TOKEN_ID=token, marker=Marker())
+        owner['init_database'] = types.FunctionType(ns['init_database'].__code__, owner)
+        await owner['init_database']()
+        assert owner['db_pool'] is resources[-1]
+        return weakref.ref(owner['marker'])
+    markers = [await activate(77, 7), await activate(88, 8)]
+    assert [callback.__defaults__ for callback in callbacks] == [('77', '7'), ('88', '8')]
+    gc.collect()
+    assert all(marker() is None for marker in markers)
+    for callback, resource in zip(callbacks, resources):
+        resource.scope = ('wrong', 'wrong')
+        await callback(resource)
+        assert resource.scope == callback.__defaults__
+`);
+});
+
 /** Выполняет извлечённую из генератора функцию с контролируемыми ресурсами. */
 function execute(code: string, name: string, fixture: string): void {
   const script = `import ast, asyncio, logging, sys, types, unittest.mock\n` +

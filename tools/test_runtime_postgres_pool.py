@@ -36,7 +36,9 @@ def generated_init():
     """Получает реальную функцию инициализации из штатного генератора."""
     script = "import {generateDatabase} from './lib/templates/database/database.renderer'; console.log(JSON.stringify(generateDatabase({userDatabaseEnabled:true,botRuntimeRole:true})))"
     result = subprocess.run(['node', 'node_modules/tsx/dist/cli.mjs', '--eval', script],
-                            cwd=ROOT, capture_output=True, text=True, encoding='utf-8', check=True, timeout=20)
+                            cwd=ROOT, capture_output=True, text=True, encoding='utf-8', timeout=20)
+    if result.returncode:
+        raise RuntimeError('Генератор тестового пула завершился с ошибкой: ' + result.stderr[-4000:])
     tree = ast.parse(json.loads(result.stdout))
     functions = [node for node in tree.body if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
                  and node.name in ('init_database', '_database_pool_idle_seconds')]

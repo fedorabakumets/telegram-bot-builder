@@ -11,6 +11,7 @@ from demand_state import DemandState
 from demand_tasks import update_tasks, FatalTaskCleanupError
 from demand_state_codec import StateSerializationError
 from redis.exceptions import RedisError
+from redis_queue_retry import peek_with_retry
 
 
 class DemandSession:
@@ -61,7 +62,7 @@ class DemandSession:
                 self.wakeup.clear()
                 if self.stopping.is_set():
                     break
-                if await self.queue.peek() is None:
+                if await peek_with_retry(self.queue, (self.stopping,), self.receiver) is None:
                     continue
                 async with active_slot(self.semaphore, self.receiver, self.stopping) as acquired:
                     if not acquired:
@@ -102,7 +103,10 @@ class DemandSession:
 
         while not self.stopping.is_set() and not stop_event.is_set():
             self.wakeup.clear()
-            update = await self.queue.peek()
+            # Ошибка чтения не выгружает обработчик и не подтверждает исходное событие.
+            update = await peek_with_retry(self.queue, (self.stopping, stop_event), self.receiver)
+            if self.stopping.is_set() or stop_event.is_set():
+                return
             if update is not None:
                 parsed = Update.model_validate(update, context={"bot": bot})
                 try:

@@ -398,6 +398,8 @@ class BotWorker:
                 startup_timing.mark("bytecode_done")
 
                 module = types.ModuleType(f"bot_{token_id}")
+                import worker_namespace_counters
+                worker_namespace_counters.register(module)
                 module.__file__ = str(bot_path)
                 module.__package__ = f"bot_{token_id}_pkg"
 
@@ -444,6 +446,7 @@ class BotWorker:
                     emit_system(f"bot_started:{token_id}")
 
             module._worker_bot_ready = bot_ready
+            module._worker_manages_signals = True  # Сигналами общего процесса владеет воркер, а не бот.
             if demand is not None:
                 if not getattr(module, "_WORKER_EXTERNAL_UPDATES_PROTOCOL", False):
                     raise RuntimeError("Пересоберите бота: отсутствует протокол внешних обновлений")
@@ -515,6 +518,8 @@ class BotWorker:
             if overlay_on:
                 bot_env_overlay.unregister(token_id)
             iso.cleanup_bot_modules(token_id, ctx.bot_dir)
+            import worker_namespace_counters
+            worker_namespace_counters.unloaded(module)
             ctx.module = None
             if demand is None:
                 if token_id in self.bots and self.bots[token_id] is ctx:

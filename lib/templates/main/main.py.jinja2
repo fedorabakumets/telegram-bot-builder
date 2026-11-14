@@ -432,7 +432,11 @@ async def main():
             dp.startup.register(_notify_worker_ready)
             while _conflict_attempt < _max_conflict_retries:
                 try:
-                    _polling_task = asyncio.create_task(dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types()))
+                    # В общем воркере диспетчер не регистрирует сигналы отдельного бота в цикле событий.
+                    _polling_task = asyncio.create_task(dp.start_polling(
+                        bot, allowed_updates=dp.resolve_used_update_types(),
+                        handle_signals=not globals().get('_worker_manages_signals', False)
+                    ))
                     _background_tasks.append(_polling_task)
                     _stop_wait = asyncio.create_task(_stop_event.wait())
                     try:

@@ -4,6 +4,8 @@ import json
 import sys
 import time
 import types
+import asyncio
+import gc
 from itertools import islice
 
 MAX_BOTS = 100
@@ -64,6 +66,17 @@ def _bot_row(token_id, ctx, modules):
 def snapshot(bots):
     """Возвращает ограниченный снимок; shallowBytes не является RSS или владением памятью."""
     started = time.monotonic()
+    import worker_runtime_model_counters
+    import worker_namespace_counters
+    diagnostics = worker_runtime_model_counters.snapshot()
+    diagnostics.update(worker_namespace_counters.snapshot())
+    diagnostics["gcCounts"] = gc.get_count()
+    diagnostics["gcCollections"] = [row["collections"] for row in gc.get_stats()]
+    try:
+        # Снимок раз в десять секунд: O(числа задач), без стека и содержимого coroutine.
+        diagnostics["pendingAsyncioTasks"] = len(asyncio.all_tasks())
+    except RuntimeError:
+        diagnostics["pendingAsyncioTasks"] = None
     modules = list(islice(sys.modules.items(), MAX_MODULES))
     classes, complete = set(), 0
     package = sys.modules.get("aiogram.types")
@@ -75,7 +88,7 @@ def snapshot(bots):
                     complete += int(vars(value).get("__pydantic_complete__") is True)
     rows = [_bot_row(token_id, ctx, modules)
             for token_id, ctx in islice(bots.items(), MAX_BOTS)]
-    return {"type": "worker_runtime_counters", "schemaVersion": 1,
+    return {"type": "worker_runtime_counters", "schemaVersion": 2, **diagnostics,
             "timestamp": time.time(), "scope": "known_module_containers_shallow",
             "botsTotal": len(bots), "botsTruncated": len(bots) > MAX_BOTS,
             "modulesTruncated": len(sys.modules) > MAX_MODULES,
