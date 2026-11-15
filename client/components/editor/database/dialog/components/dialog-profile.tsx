@@ -36,7 +36,7 @@ function profileDate(value?: string | Date | null): string | null {
 }
 
 /**
- * Показывает сведения открытого чата в самостоятельной боковой панели.
+ * Показывает сведения пользователя, группы или бота в боковой панели.
  * @param props - Свойства панели профиля.
  * @returns Панель с аватаром и доступными сведениями.
  */
@@ -52,10 +52,10 @@ export function DialogProfile({ user, projectId, tokenId, onClose, children }: D
   const groupPhoto = isGroup && user.avatarUrl && user.avatarUrl !== failedAvatar;
 
   return (
-    <aside aria-label={isGroup ? 'Профиль группы' : 'Профиль пользователя'}
+    <aside aria-label={isGroup ? 'Профиль группы' : user.isBot ? 'Профиль бота' : 'Профиль пользователя'}
       className="flex h-full min-h-0 w-full flex-col bg-background">
       <div className="flex h-12 shrink-0 items-center justify-between border-b px-4">
-        <h2 className="text-sm font-semibold">{isGroup ? 'О группе' : 'О пользователе'}</h2>
+        <h2 className="text-sm font-semibold">{isGroup ? 'О группе' : user.isBot ? 'О боте' : 'О пользователе'}</h2>
         <button type="button" onClick={onClose} aria-label="Закрыть профиль"
           className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
           <X className="h-4 w-4" />
@@ -76,7 +76,7 @@ export function DialogProfile({ user, projectId, tokenId, onClose, children }: D
             <div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted text-muted-foreground">
               <Users className="h-9 w-9" />
             </div>
-          ) : <UserAvatar key={`${user.userId}:${tokenId}`} messageType="user" user={user} projectId={projectId} tokenId={tokenId} size={80} onPhotoClick={setPhotoSrc} />}
+          ) : <UserAvatar key={`${user.userId}:${tokenId}`} messageType={user.isBot ? "bot" : "user"} user={user} projectId={projectId} tokenId={tokenId} size={80} onPhotoClick={setPhotoSrc} />}
           <h3 className="mt-4 max-w-full break-words text-base font-semibold">{title}</h3>
           {isGroup && <p className="mt-1 text-sm text-muted-foreground">{groupType}</p>}
           <p className="mt-1 text-sm text-muted-foreground">
@@ -88,7 +88,7 @@ export function DialogProfile({ user, projectId, tokenId, onClose, children }: D
           <h3 className="text-xs font-medium text-muted-foreground">Информация</h3>
           <div className="flex items-start gap-3 text-sm">
             <UserRound className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-            <div className="min-w-0"><div className="text-xs text-muted-foreground">Telegram ID</div><div className="break-all">{user.userId}</div></div>
+            <div className="min-w-0"><div className="text-xs text-muted-foreground">Telegram ID</div><div className="break-all">{user.userId === "bot" ? "Неизвестен" : user.userId}</div></div>
           </div>
           {registered && !isGroup && <div className="flex items-start gap-3 text-sm">
             <CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />

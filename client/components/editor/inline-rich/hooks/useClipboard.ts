@@ -5,6 +5,7 @@
 
 import { useCallback, RefObject } from 'react';
 import type { ToastFn } from '../utils/toast-types';
+import { copyRichHtml } from '../utils/copy-rich-html';
 
 /**
  * Параметры хука useClipboard
@@ -28,13 +29,14 @@ export function useClipboard({
   const copyFormatted = useCallback(() => {
     if (!editorRef.current) return;
 
-    const html = editorRef.current.innerHTML;
-    navigator.clipboard.writeText(html).then(() => {
+    copyRichHtml(editorRef.current.innerHTML).then((formatted) => {
       toast({
         title: "Скопировано",
-        description: "Форматированный текст скопирован в буфер обмена",
+        description: formatted ? "Форматированный текст скопирован в буфер обмена" : "Текст скопирован без форматирования",
         variant: "default"
       });
+    }).catch(() => {
+      toast({ title: "Не удалось скопировать", description: "Разрешите доступ к буферу обмена и повторите попытку", variant: "destructive" });
     });
   }, [editorRef, toast]);
 

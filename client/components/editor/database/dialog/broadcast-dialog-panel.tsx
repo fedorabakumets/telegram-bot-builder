@@ -3,19 +3,18 @@
  * @module editor/database/dialog/broadcast-dialog-panel
  */
 
+import type { Broadcast, BroadcastCampaign, Button as MessageButton } from '@shared/schema';
 import { useState, useRef, useEffect, useMemo } from 'react';
-import { Megaphone, X, Send, FilePlus2, FileKey2 } from 'lucide-react';
+import { Megaphone, X } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDeleteBroadcast } from '@/components/editor/broadcast/hooks/use-delete-broadcast';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { CompactInlineEditor } from '@/components/editor/inline-rich/compact-inline-editor';
-import { MultiMediaSelector } from '@/components/editor/properties/media/multi-media-selector';
-import { FileIdInput } from '@/components/editor/properties/media/file-id-input';
 import { useBroadcasts } from '@/components/editor/broadcast/hooks/use-broadcasts';
 import { useBroadcastCampaigns } from '@/components/editor/broadcast/hooks/use-broadcast-campaigns';
 import { NewBroadcastModal } from '@/components/editor/broadcast/wizard/new-broadcast-modal';
+import { DialogInput } from './components/dialog-input';
 import { BroadcastMessageBubble } from './components/broadcast-message-bubble';
 import { BroadcastCampaignBubble } from './components/broadcast-campaign-bubble';
 import { BroadcastDeleteConfirm } from './components/broadcast-delete-confirm';
@@ -42,19 +41,16 @@ export interface BroadcastDialogPanelProps {
  * @returns JSX элемент панели рассылок
  */
 export function BroadcastDialogPanel({ projectId, selectedTokenId, onClose, hideHeader }: BroadcastDialogPanelProps) {
-  const [messageText, setMessageText] = useState('');
-  /** Список URL выбранных медиафайлов */
-  const [mediaUrls, setMediaUrls] = useState<string[]>([]);
-  /** Флаг видимости медиаселектора */
-  const [showMedia, setShowMedia] = useState(false);
-  /** Флаг видимости блока ввода Telegram file_id */
-  const [showFileId, setShowFileId] = useState(false);
-  /** Тип медиа для file_id */
-  const [fileIdMediaType, setFileIdMediaType] = useState<'photo' | 'video' | 'audio' | 'document'>('photo');
   const [modalOpen, setModalOpen] = useState(false);
   const [prefillText, setPrefillText] = useState('');
   /** Медиа для передачи в модалку */
   const [prefillMedia, setPrefillMedia] = useState<string[]>([]);
+  /** Кнопки нового сообщения, передаваемые в мастер рассылки. */
+  const [prefillButtons, setPrefillButtons] = useState<MessageButton[]>([]);
+  /** Раскладка кнопок подготовленного сообщения. */
+  const [prefillButtonsPerRow, setPrefillButtonsPerRow] = useState(0);
+  /** Исходное сообщение для повторной рассылки */
+  const [repeatSource, setRepeatSource] = useState<Broadcast | BroadcastCampaign | null>(null);
   /** ID рассылки, которая сейчас удаляется */
   const [deletingId, setDeletingId] = useState<number | null>(null);
   /** ID рассылки, которая сейчас редактируется */
@@ -118,20 +114,31 @@ export function BroadcastDialogPanel({ projectId, selectedTokenId, onClose, hide
     }, 100);
   }, [isLoading, timeline.length]);
 
-  /** Открыть модалку с предзаполненным текстом и медиа */
-  const handleSend = () => {
-    if (!messageText.trim()) return;
-    setPrefillText(messageText.trim());
-    setPrefillMedia([...mediaUrls]);
+  /** Открывает мастер с содержимым общего редактора, не отправляя рассылку. */
+  const handleSend = (text: string, urls: string[], buttons: MessageButton[], perRow: number) => {
+    setRepeatSource(null);
+    setPrefillText(text);
+    setPrefillMedia(urls);
+    setPrefillButtons(buttons);
+    setPrefillButtonsPerRow(perRow);
     setModalOpen(true);
   };
 
-  /** Повторить рассылку — открыть модалку с текстом выбранной рассылки */
+  /** Открывает новую рассылку с исходным ботом, текстом, медиа и кнопками */
   const handleRepeat = (broadcastId: number) => {
     const b = broadcasts.find((br) => br.id === broadcastId);
     if (!b) return;
+    setRepeatSource(b);
     setPrefillText(b.messageText ?? '');
     setPrefillMedia(Array.isArray(b.mediaUrls) ? b.mediaUrls : []);
+    setModalOpen(true);
+  };
+
+  /** Предзаполняет новую рассылку содержимым общей кампании. */
+  const handleRepeatCampaign = (campaign: BroadcastCampaign) => {
+    setRepeatSource(campaign);
+    setPrefillText(campaign.messageText ?? "");
+    setPrefillMedia(campaign.mediaUrls ?? []);
     setModalOpen(true);
   };
 
@@ -145,10 +152,7 @@ export function BroadcastDialogPanel({ projectId, selectedTokenId, onClose, hide
     setModalOpen(false);
     setPrefillText('');
     setPrefillMedia([]);
-    setMessageText('');
-    setMediaUrls([]);
-    setShowMedia(false);
-    setShowFileId(false);
+    setRepeatSource(null);
     setTimeout(() => refetchAll(), 500);
   };
 
@@ -188,6 +192,7 @@ export function BroadcastDialogPanel({ projectId, selectedTokenId, onClose, hide
                 <BroadcastCampaignBubble
                   key={item.key}
                   campaign={item.campaign}
+                  onRepeat={handleRepeatCampaign}
                   projectId={projectId}
                   onRefetch={refetchAll}
                 />
@@ -210,70 +215,10 @@ export function BroadcastDialogPanel({ projectId, selectedTokenId, onClose, hide
 
       <Separator />
 
-      {/* Зона ввода */}
-      <div className="flex-shrink-0 overflow-y-auto p-2 space-y-2">
-        {/* Размеры редактора совпадают с редактором личного сообщения. */}
-        <div className="[&_[contenteditable=true]]:!min-h-[64px] [&>div>div:first-child]:flex-nowrap [&>div>div:first-child]:overflow-x-auto">
-          <CompactInlineEditor
-            value={messageText}
-            onChange={setMessageText}
-            placeholder="Текст рассылки..."
-          />
-        </div>
-
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex min-w-0 flex-wrap items-center gap-1" role="group" aria-label="Дополнения к рассылке">
-            {/* Кнопка прикрепления медиафайлов */}
-            <Button
-              variant={showMedia ? 'secondary' : 'ghost'}
-              size="sm"
-              onClick={() => { setShowMedia((v) => !v); setShowFileId(false); }}
-              title="Прикрепить медиафайл"
-              aria-label="Прикрепить медиафайл"
-              aria-expanded={showMedia}
-              className="h-9 gap-2 px-2 aria-expanded:bg-blue-100 aria-expanded:text-blue-700 dark:aria-expanded:bg-blue-500/20 dark:aria-expanded:text-blue-300"
-            >
-              <FilePlus2 className="w-4 h-4" />
-              <span>Файл</span>
-              {mediaUrls.length > 0 && (
-                <span className="ml-1 text-xs font-semibold">{mediaUrls.length}</span>
-              )}
-            </Button>
-
-            {/* Кнопка Telegram file_id */}
-            <Button
-              variant={showFileId ? 'secondary' : 'ghost'}
-              size="sm"
-              onClick={() => { setShowFileId((v) => !v); setShowMedia(false); }}
-              title="Добавить Telegram file_id"
-              aria-label="Добавить Telegram file_id"
-              aria-expanded={showFileId}
-              className="h-9 gap-2 px-2 aria-expanded:bg-blue-100 aria-expanded:text-blue-700 dark:aria-expanded:bg-blue-500/20 dark:aria-expanded:text-blue-300"
-            >
-              <FileKey2 className="w-4 h-4" />
-              <span>file_id</span>
-            </Button>
-          </div>
-
-          <Button size="sm" onClick={handleSend} disabled={!messageText.trim()}>
-            <Send className="w-4 h-4 sm:mr-1" />
-            <span className="hidden sm:inline">Отправить рассылку</span>
-            <span className="sm:hidden">Отправить</span>
-          </Button>
-        </div>
-
-        {/* Панели вложений открываются под соответствующими кнопками. */}
-        {showMedia && (
-          <div className="border rounded-md p-2 bg-muted/30 max-h-48 overflow-y-auto">
-            <MultiMediaSelector projectId={projectId} value={mediaUrls} onChange={setMediaUrls} label="" />
-          </div>
-        )}
-        {showFileId && (
-          <div className="border rounded-md p-3 bg-violet-50/30 dark:bg-violet-900/10 border-violet-200/60 dark:border-violet-700/60 max-h-64 overflow-y-auto">
-            <FileIdInput projectId={projectId} mediaType={fileIdMediaType} onMediaTypeChange={setFileIdMediaType}
-              onAdd={(entry) => { setMediaUrls((prev) => [...prev, entry]); setShowFileId(false); }} />
-          </div>
-        )}
+      {/* Общий редактор сохраняет одинаковое поведение сообщений и рассылок. */}
+      <div className="flex-shrink-0 overflow-y-auto">
+        <DialogInput projectId={projectId} isPending={false} onSend={handleSend}
+          sendLabel="Отправить рассылку" placeholder="Текст рассылки..." />
       </div>
 
       {/* Подтверждение удаления одиночной рассылки */}
@@ -291,14 +236,17 @@ export function BroadcastDialogPanel({ projectId, selectedTokenId, onClose, hide
 
       {/* Модалка создания рассылки с предзаполненным текстом и медиа */}
       <NewBroadcastModal
-        key={prefillText + prefillMedia.join(',')}
+        key={`${repeatSource?.id ?? 'new'}:${prefillText}:${prefillMedia.join(',')}`}
         open={modalOpen}
         onClose={handleModalClose}
         projectId={projectId}
-        tokenId={selectedTokenId}
+        tokenId={repeatSource && "tokenId" in repeatSource ? repeatSource.tokenId : selectedTokenId}
+        initialTokenIds={repeatSource ? ("tokenIds" in repeatSource ? repeatSource.tokenIds : [repeatSource.tokenId]) : undefined}
         refetch={refetchAll}
         initialMessageText={prefillText}
         initialMediaUrls={prefillMedia}
+        initialButtons={repeatSource?.buttons ?? prefillButtons}
+        initialButtonsPerRow={repeatSource?.buttonsPerRow ?? prefillButtonsPerRow}
       />
     </div>
   );

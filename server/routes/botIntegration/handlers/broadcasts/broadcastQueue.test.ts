@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   storage: { getBroadcastById: vi.fn(), getBroadcastResults: vi.fn(), getUsersForBroadcast: vi.fn(), updateBroadcast: vi.fn(),
     createBroadcastResult: vi.fn(), createBotMessage: vi.fn() },
-  event: vi.fn(), send: vi.fn(), pause: vi.fn(), sync: vi.fn(), unauthorized: vi.fn(),
+  event: vi.fn(), send: vi.fn(), pause: vi.fn(), sync: vi.fn(), unauthorized: vi.fn(), preflight: vi.fn(),
 }));
 vi.mock("../../../../storages/storage", () => ({ storage: mocks.storage }));
 vi.mock("../../../../terminal/broadcastProjectEvent", () => ({ broadcastProjectEvent: mocks.event }));
@@ -11,6 +11,7 @@ vi.mock("../messages/send-telegram-message", () => ({ sendTelegramMessage: mocks
 vi.mock("../messages/telegram-message-limiter", () => ({ pauseTelegramMessages: mocks.pause }));
 vi.mock("../messages/replace-variables", () => ({ replaceVariablesInText: async ({ text }: { text: string }) => text }));
 vi.mock("../messages/build-media-files", () => ({ buildMediaFiles: () => [] }));
+vi.mock("./preflight-broadcast-media", () => ({ preflightBroadcastMedia: mocks.preflight }));
 vi.mock("../messages/extract-buttons", () => ({ extractButtonsFromNode: () => [] }));
 vi.mock("./sync-campaign-aggregates", () => ({ syncCampaignAggregates: mocks.sync }));
 vi.mock("./record-broadcast-unauthorized", () => ({ recordBroadcastUnauthorized: mocks.unauthorized }));
@@ -27,6 +28,7 @@ describe("Общие счётчики пользователей и групп",
   beforeEach(() => {
     vi.clearAllMocks();
     activeBroadcasts.clear();
+    mocks.preflight.mockResolvedValue(undefined);
     mocks.storage.getBroadcastById.mockResolvedValue({ id: 1, projectId: 4, tokenId: 2,
       messageText: "Текст", filters: { groupIds: ["-1", "-1", "-2"] }, campaignId: 9 });
     mocks.storage.getUsersForBroadcast.mockResolvedValue([]);
@@ -91,5 +93,21 @@ describe("Общие счётчики пользователей и групп",
     await runBroadcastQueue(1, "test-token");
     expect(mocks.send).toHaveBeenCalledTimes(2);
     expect(finalUpdate()).toMatchObject({ status: "done", sentCount: 4, deliveredCount: 3, failedCount: 1 });
+  });
+  it("останавливает общую ошибку вложения до отправок и сохраняет прогресс восстановления", async () => {
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    mocks.storage.getUsersForBroadcast.mockResolvedValue([{ userId: "42" }, { userId: "43" }]);
+    mocks.storage.getBroadcastResults.mockResolvedValue([{ userId: "42", status: "sent" }]);
+    mocks.preflight.mockRejectedValueOnce(new Error("Файл отсутствует"));
+    await runBroadcastQueue(1, "test-token");
+    expect(mocks.send).not.toHaveBeenCalled();
+    expect(finalUpdate()).toMatchObject({ status: "failed", sentCount: 1, deliveredCount: 1, failedCount: 0 });
+    expect(mocks.storage.createBroadcastResult).toHaveBeenCalledWith({ broadcastId: 1,
+      userId: "__broadcast_media__", status: "failed", errorMessage: "[broadcast_media] Файл отсутствует" });
+    /** Индекс последнего события совместим с целевой библиотекой проекта. */
+    const lastEvent = mocks.event.mock.calls[mocks.event.mock.calls.length - 1];
+    expect(lastEvent?.[1].data.abortReason).toBe("media_unavailable");
+    expect(activeBroadcasts.has(1)).toBe(false);
+    log.mockRestore();
   });
 });

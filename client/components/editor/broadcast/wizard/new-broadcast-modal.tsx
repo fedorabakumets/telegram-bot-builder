@@ -42,6 +42,12 @@ interface NewBroadcastModalProps {
   initialMessageText?: string;
   /** Предзаполненные медиафайлы (опционально) */
   initialMediaUrls?: string[];
+  /** Предзаполненные кнопки исходного сообщения */
+  initialButtons?: NewBroadcastFormData['buttons'];
+  /** Число кнопок в строке исходного сообщения */
+  initialButtonsPerRow?: number;
+  /** Боты исходной рассылки для предварительного выбора. */
+  initialTokenIds?: number[];
 }
 
 /** Начальные данные формы */
@@ -65,13 +71,16 @@ const STEP_TITLES = ['Аудитория', 'Сообщение', 'Подтвер
  * @param props - Свойства компонента
  * @returns JSX элемент модального окна
  */
-export function NewBroadcastModal({ open, onClose, projectId, tokenId, refetch, initialMessageText, initialMediaUrls }: NewBroadcastModalProps) {
+export function NewBroadcastModal({ open, onClose, projectId, tokenId, refetch, initialMessageText, initialMediaUrls, initialButtons, initialButtonsPerRow, initialTokenIds }: NewBroadcastModalProps) {
   const botStatuses = useFrozenBots(projectId);
   const [step, setStep] = useState<1 | 2 | 3 | 'progress'>(1);
   const [formData, setFormData] = useState<NewBroadcastFormData>({
     ...INITIAL_FORM,
     messageText: initialMessageText ?? '',
     mediaUrls: initialMediaUrls ?? [],
+    buttons: initialButtons ?? [],
+    buttonsPerRow: initialButtonsPerRow ?? 0,
+    tokenIds: initialTokenIds ?? [],
   });
   const [createdBroadcast, setCreatedBroadcast] = useState<Broadcast | null>(null);
   /** ID большой рассылки, если отправка идёт сразу от нескольких ботов */
@@ -84,9 +93,12 @@ export function NewBroadcastModal({ open, onClose, projectId, tokenId, refetch, 
         ...prev,
         ...(initialMessageText ? { messageText: initialMessageText } : {}),
         ...(initialMediaUrls ? { mediaUrls: initialMediaUrls } : {}),
+        buttons: initialButtons ?? [],
+        buttonsPerRow: initialButtonsPerRow ?? 0,
+        ...(initialTokenIds ? { tokenIds: initialTokenIds } : {}),
       }));
     }
-  }, [open, initialMessageText, initialMediaUrls]);
+  }, [open, initialMessageText, initialMediaUrls, initialButtons, initialButtonsPerRow, initialTokenIds]);
 
   const updateForm = (data: Partial<NewBroadcastFormData>) => {
     setFormData((prev) => ({ ...prev, ...data }));

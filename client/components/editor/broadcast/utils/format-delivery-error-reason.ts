@@ -5,6 +5,10 @@
 
 /** Известные тексты Telegram → понятная подпись */
 const TELEGRAM_REASON_LABELS: Array<[RegExp, string]> = [
+  [/\[broadcast_media\]|ENOENT|no such file|NoSuchKey|media.*(?:unavailable|not found)|вложени.*недоступ/i, 'Вложение недоступно'],
+  [/ECONNRESET|ECONNREFUSED|ETIMEDOUT|ENOTFOUND|fetch failed|network|socket hang up|timed? ?out/i, 'Ошибка соединения'],
+  [/can't parse entities|cannot parse entities|unsupported start tag/i, 'Ошибка форматирования сообщения'],
+  [/wrong file|failed to get HTTP URL content|file reference|file_id/i, 'Telegram не смог загрузить вложение'],
   [/blocked by the user|user is blocked|bot was blocked/i, 'Заблокировал бота'],
   [/user is deactivated|deleted account/i, 'Аккаунт удалён'],
   [/chat not found|peer_id_invalid/i, 'Чат или пользователь не найден'],
@@ -14,6 +18,7 @@ const TELEGRAM_REASON_LABELS: Array<[RegExp, string]> = [
   [/bot was kicked|kicked from/i, 'Бота исключили из чата'],
   [/forbidden/i, 'Telegram запретил отправку'],
   [/unauthorized/i, 'Токен бота недействителен'],
+  [/bad request/i, 'Telegram отклонил сообщение'],
 ];
 
 /**

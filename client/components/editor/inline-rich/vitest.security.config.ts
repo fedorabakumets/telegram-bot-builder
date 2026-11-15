@@ -6,6 +6,7 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     include: ['client/components/editor/inline-rich/html-converter.security.test.tsx',
-      'client/components/editor/inline-rich/utils/paste-rich-html.test.ts'],
+      'client/components/editor/inline-rich/utils/paste-rich-html.test.ts',
+      'client/components/editor/inline-rich/utils/copy-rich-html.test.ts'],
   },
 });

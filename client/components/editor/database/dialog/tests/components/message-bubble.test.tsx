@@ -10,7 +10,7 @@
 
 /// <reference types="vitest/globals" />
 
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { MessageBubble } from '../../components/message-bubble';
 import type { BotMessageWithMedia } from '../../types';
 import type { UserBotData } from '@/types/bot';
@@ -51,6 +51,14 @@ function createTestUser(overrides: Partial<UserBotData> = {}): UserBotData {
 }
 
 describe('MessageBubble', () => {
+  it.each(['user', 'bot'] as const)('открывает профиль %s по аватару в личном диалоге', (type) => {
+    const onOpenMember = vi.fn();
+    const message = createTestMessage({ messageType: type });
+    render(<MessageBubble message={message} index={0} user={createTestUser()} bot={createTestUser()} projectId={1} onOpenMember={onOpenMember} />);
+    fireEvent.click(screen.getByRole('button', { name: type === 'bot' ? 'Открыть профиль бота' : 'Открыть профиль 123' }));
+    expect(onOpenMember).toHaveBeenCalledWith(message);
+  });
+
   describe('Отображение типов сообщений', () => {
     it('должен рендерить сообщение от бота', () => {
       const message = createTestMessage({ messageType: 'bot' });
