@@ -55,6 +55,8 @@ export class SharedPythonTransport {
       let event: Record<string, unknown>;
       try { event = JSON.parse(text); } catch { options.onLog?.(redactChildLog(text, this.activeSecrets())); return; }
       if (!event || typeof event !== "object" || Array.isArray(event)) return;
+      // Только Node вправе сообщать смерть хоста: сценарий не может подделать эту причину stdout-кадром.
+      if (event.type === "worker_host_crash") return;
       if (event.type === "process" && event.event === "ready" && !event.activation_id) resolveReady();
       const cleaned = redactChildEvent(event, this.activeSecrets()) as Record<string, unknown>;
       // Метаданные известного запуска не являются текстом лога: их очистка ломает маршрутизацию.

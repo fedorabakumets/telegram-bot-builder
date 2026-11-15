@@ -10,6 +10,10 @@ import { resolveRunnerRedisUrl } from "./resolveRunnerRedisUrl";
 import { startBot } from "./startBot";
 import { stopBot } from "./stopBot";
 import { claimBuildLinkRetry, isBuildLinkExpired } from "./claimBuildLinkRetry";
+import { HOST_CRASH_PREFIX } from "./workerExitDiagnostic";
+import { scheduleBotRestart } from "./scheduleBotRestart";
+import { automaticBotStartAllowed } from "./automaticBotStartAllowed";
+import { refuseInactiveBotStart } from "./refuse-inactive-bot-start";
 
 /** Итог одного прохода сверки. */
 export interface ReconcileResult {
@@ -79,13 +83,22 @@ async function runReconcile(): Promise<ReconcileResult> {
     if (!getProjectPlacement(instance.projectId).runnerId) continue;
     const desired = instance.desiredStatus ?? (instance.status === "running" ? "running" : "stopped");
     const expiredBuildLink = isBuildLinkExpired(instance.errorMessage);
-    const recoverable = !instance.errorMessage || instance.errorMessage === "__server_restart__" || expiredBuildLink;
+    // Только доверенный машинный признак общей аварии допускает восстановление непустой ошибки.
+    const infrastructure = instance.errorMessage?.startsWith(HOST_CRASH_PREFIX) === true;
+    const recoverable = !instance.errorMessage || instance.errorMessage === "__server_restart__" || expiredBuildLink || infrastructure;
     if (desired === "running" && !occupied.has(tokenId) && recoverable) {
       const current = await storage.getBotInstanceByToken(tokenId);
-      if (!current || current.desiredGeneration !== instance.desiredGeneration || current.desiredStatus === "stopped") continue;
+      if (!current || current.desiredGeneration !== instance.desiredGeneration || current.desiredStatus === "stopped" ||
+          current.errorMessage !== instance.errorMessage) continue;
       if (expiredBuildLink && !await claimBuildLinkRetry(instance.id, instance.desiredGeneration)) continue;
       const token = await storage.getBotToken(tokenId);
-      if (!token?.token || token.isActive === 0) continue;
+      if (!token?.token || refuseInactiveBotStart(token.isActive, token.authorizationError) ||
+          !await automaticBotStartAllowed(instance.projectId, tokenId)) continue;
+      if (infrastructure) {
+        // Планировщик разделяет общий лимит и очередь с немедленным восстановлением после аварии.
+        await scheduleBotRestart(instance.projectId, tokenId, "worker_host_crash", { infrastructure: true });
+        continue;
+      }
       const started = await startBot(instance.projectId, token.token, tokenId, { reuseGeneratedCode: true });
       if (started.success) result.started++;
       else result.failed++;

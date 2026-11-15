@@ -112,7 +112,7 @@ class WorkerLogHandler(logging.Handler):
                 failure = frozen_event(record.exc_info[1], tid, identity[0], identity[1]) if identity else None
                 if failure:
                     emit_runtime_error(failure)
-            emit_log(tid, msg, "stderr" if record.levelno >= logging.WARNING else "stdout")
+            emit_log(tid, msg, "stderr" if record.levelno >= logging.WARNING else "stdout", record.levelname)
         except Exception:
             pass
 
@@ -139,12 +139,12 @@ def ensure_root_log_handler() -> None:
     _root_handler_installed = True
 
 
-def emit_log(token_id: int, content: str, stream: str = "stdout") -> None:
-    """Отправляет строку лога в stdout как JSON с timestamp."""
+def emit_log(token_id: int, content: str, stream: str = "stdout", level: str = None) -> None:
+    """Отправляет JSON с временем и отдельным уровнем, чтобы WARNING не стал причиной остановки."""
     try:
         ts = datetime.now().strftime("%H:%M:%S")
         line = json.dumps(
-            {"token_id": token_id, "type": stream, "content": f"[{ts}] {content}"},
+            {"token_id": token_id, "type": stream, "content": f"[{ts}] {content}", "level": level},
             ensure_ascii=False,
         )
         sys.stdout.write(line + "\n")
@@ -152,7 +152,7 @@ def emit_log(token_id: int, content: str, stream: str = "stdout") -> None:
     except Exception:
         try:
             line = json.dumps(
-                {"token_id": token_id, "type": stream, "content": content},
+                {"token_id": token_id, "type": stream, "content": content, "level": level},
                 ensure_ascii=True,
             )
             sys.stdout.write(line + "\n")

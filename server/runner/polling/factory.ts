@@ -42,7 +42,7 @@ export class ProcessPollingRuntime {
     })));
     if (config.processHandler !== "isolated") this.shared = sharedHost ?? new SharedPollingHost(config, event => {
       if (Number.isSafeInteger(event.token_id)) this.timing.handled(Number(event.token_id), event);
-      if (["stdout", "stderr", "bot_runtime_error"].includes(String(event.type))) this.emit(JSON.stringify(event));
+      if (["stdout", "stderr", "bot_runtime_error", "worker_host_crash"].includes(String(event.type))) this.emit(JSON.stringify(event));
     }, memoryKb => this.emit(JSON.stringify({ type: "system", content: `memory_kb:${memoryKb + this.memory.total()}` })));
     if (sharedHost) sharedHost.processObserver = event => {
       if (Number.isSafeInteger(event.token_id)) this.timing.handled(Number(event.token_id), event);

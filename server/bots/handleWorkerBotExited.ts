@@ -7,8 +7,6 @@
 import { storage } from '../storages/storage';
 import { broadcastProjectEvent } from '../terminal/broadcastProjectEvent';
 import { getActiveLaunchId, clearActiveLaunchId } from '../terminal/activeLaunchIds';
-import { isWorkerCleanExit } from './isWorkerCleanExit';
-import { formatBotRuntimeError, formatBotRuntimeErrorShort } from './formatBotRuntimeError';
 import { isRuntimeTokenUnauthorized } from './is-runtime-token-unauthorized';
 import { markBotTokenUnauthorized } from './mark-bot-token-unauthorized';
 import { isFrozenBotError } from './frozenBotStatus';
@@ -16,6 +14,7 @@ import { isUnexpectedBotExit } from './isUnexpectedBotExit';
 import { isExpectedStop } from './expectedStops';
 import { isServerShuttingDown } from './serverShutdownState';
 import { scheduleBotRestart } from './scheduleBotRestart';
+import { isInfrastructureHostCrash, resolveWorkerExitError } from './workerExitDiagnostic';
 
 /**
  * Смерть всего python-процесса (exit code / signal), а не штатный bot_exited из asyncio.
@@ -53,16 +52,12 @@ export async function handleWorkerBotExited(
     isProcessDeathExit(exitStatus) && !processDeathUnexpected;
 
   const statusStr = String(exitStatus);
-  const isError = statusStr === 'error' || !isWorkerCleanExit(exitStatus);
+  const errorMessage = resolveWorkerExitError(exitStatus, runtimeError, processDeathUnexpected);
+  const isError = errorMessage !== null;
   const launchStatus = isError ? 'error' : 'stopped';
   const wsType = isError ? 'bot-error' : 'bot-stopped';
-  const errorMessage = isError
-    ? (runtimeError
-      ? formatBotRuntimeError(runtimeError)
-      : statusStr === 'error'
-        ? 'Бот завершился с ошибкой'
-        : `Бот завершился: ${statusStr}`)
-    : null;
+  /** Инфраструктурный сбой восстанавливается отдельно от пользовательского повтора ошибок бота. */
+  const infrastructure = isError && isInfrastructureHostCrash(runtimeError, processDeathUnexpected);
 
   /** Причина отказа не должна теряться из-за независимой ошибки записи истории. */
   const unauthorized = isRuntimeTokenUnauthorized(runtimeError);
@@ -119,7 +114,7 @@ export async function handleWorkerBotExited(
 
   console.log(
     `[WorkerExit] project=${projectId} token=${tokenId} status=${statusStr} → WS ${wsType}${
-      isError && runtimeError ? ` (${formatBotRuntimeErrorShort(runtimeError)})` : ''
+      isError && errorMessage ? ` (${errorMessage.split('\n')[0]})` : ''
     }`,
   );
 
@@ -132,6 +127,6 @@ export async function handleWorkerBotExited(
       expectedStop,
     })
   ) {
-    await scheduleBotRestart(projectId, tokenId, statusStr);
+    await scheduleBotRestart(projectId, tokenId, statusStr, { infrastructure });
   }
 }
