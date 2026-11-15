@@ -1668,6 +1668,21 @@
     "author": ""
   },
   {
+    "path": "development/shared-handler-crash-recovery",
+    "title": "Диагностика и восстановление общего обработчика",
+    "excerpt": "Неожиданное завершение общего Python передаётся как отдельное служебное событие",
+    "parts": [
+      "development",
+      "shared-handler-crash-recovery"
+    ],
+    "folder_titles": {
+      "development": "🛠️ Разработка"
+    },
+    "updated_at": "2026-11-15T10:07:18+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
     "path": "development/unified-python-host",
     "title": "Общий Python-хост постоянных и временных ботов",
     "excerpt": "Настройка `RUNNER_PYTHON_HOST` задаёт топологию Python в исполнителе. Она не меняет сохранённый режим бота, транспорт, группировку или тайме",
