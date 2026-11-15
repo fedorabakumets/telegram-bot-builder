@@ -33,9 +33,10 @@ class SharedProtocol:
             token_id = frame.get("token_id")
             original_runtime_error({**frame, "activation_id": self.active.get(token_id)})
 
-        def log(token_id, content, stream="stdout"):
-            """Передаёт лог только владельцу соответствующего запуска."""
+        def log(token_id, content, stream="stdout", level=None):
+            """Передаёт лог владельцу запуска вместе с отдельным уровнем Python logging."""
             print(json.dumps({"type": stream, "content": content,
+                              "level": level,
                               "token_id": token_id,
                               "activation_id": self.active.get(token_id)},
                              ensure_ascii=False), flush=True)
