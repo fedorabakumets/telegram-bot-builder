@@ -51,14 +51,15 @@ export function CampaignBotRow({
 }: CampaignBotRowProps) {
   const status = live?.status ?? item.status;
   const totalCount = live?.totalCount ?? item.totalCount ?? 0;
-  const doneCount = status === 'running'
-    ? (live?.sentCount ?? item.sentCount ?? 0)
-    : (live?.deliveredCount ?? item.deliveredCount ?? 0);
+  /** Обработанные получатели включают ошибки и не равны успешным отправкам. */
+  const processedCount = live?.sentCount ?? item.sentCount ?? 0;
+  const deliveredCount = live?.deliveredCount ?? item.deliveredCount ?? 0;
   const failedCount = live?.failedCount ?? item.failedCount ?? 0;
   const blockedCount = live?.blockedCount ?? item.blockedCount ?? 0;
   const deletedCount = live?.deletedCount ?? item.deletedCount ?? 0;
   const problemCount = failedCount + blockedCount + deletedCount;
-  const tokenInvalid = live?.abortReason === 'unauthorized' || status === 'failed';
+  /** Общая ошибка рассылки не означает отозванный токен. */
+  const tokenInvalid = live?.abortReason === 'unauthorized';
   const canExpand = problemCount > 0 || tokenInvalid;
   const badge = getCampaignStatusBadge(status);
   const ExpandIcon = isOpen ? ChevronUp : ChevronDown;
@@ -76,8 +77,8 @@ export function CampaignBotRow({
             ? <ExpandIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
             : <Bot className="h-3.5 w-3.5 shrink-0 text-violet-500" />}
           <span className="truncate text-xs font-medium text-foreground">{botLabel}</span>
-          <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">
-            {doneCount}/{totalCount}
+          <span className="text-[11px] tabular-nums text-muted-foreground">
+            Обработано {processedCount}/{totalCount} · Доставлено {deliveredCount}
           </span>
         </button>
         <span className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium ${badge.className}`}>
@@ -110,7 +111,7 @@ export function CampaignBotRow({
       )}
       {problemCount > 0 && !isOpen && (
         <button type="button" className="mt-1.5 w-full text-left" onClick={onToggle}>
-          <DeliveryProblemChips blocked={blockedCount} deleted={deletedCount} failed={failedCount} />
+          <DeliveryProblemChips blocked={blockedCount} deleted={deletedCount} failed={failedCount} showLabels />
         </button>
       )}
       {isOpen && (

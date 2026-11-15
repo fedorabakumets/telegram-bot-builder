@@ -81,8 +81,19 @@ export function DialogsTabContent({
   /** Название исходной группы для профиля автора. */
   const [profileMemberGroup, setProfileMemberGroup] = useState<string | null>(null);
 
-  /** Открывает автора сообщения по сохранённым данным Telegram. */
+  /** Открывает собеседника, автора группового сообщения или выбранного бота. */
   const openMemberProfile = (message: BotMessageWithMedia) => {
+    if (message.messageType === 'bot') {
+      const token = projectTokens.find((item) => item.id === (message.tokenId ?? resolvedTokenId));
+      setProfileMemberGroup(null);
+      setProfileUser({ userId: 'bot', isBot: true, firstName: token?.botFirstName ?? token?.name ?? 'Бот', userName: token?.botUsername });
+      return;
+    }
+    if (selectedUser && !selectedUser.isGroup && !String(selectedUser.userId).startsWith('-')) {
+      setProfileMemberGroup(null);
+      setProfileUser(selectedUser);
+      return;
+    }
     const id = String(message.userId ?? '');
     if (!/^[1-9]\d*$/.test(id)) return;
     const data = message.messageData as { from_user?: { first_name?: string; last_name?: string; username?: string } } | null;

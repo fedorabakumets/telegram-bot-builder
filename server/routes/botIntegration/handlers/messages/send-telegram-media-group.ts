@@ -6,9 +6,8 @@
  */
 import { getTelegramApiBaseUrl } from '../../../../utils/telegram-api-url';
 
-import { existsSync, readFileSync } from 'fs';
-import { basename } from 'path';
-import { resolveOwnedMediaPath, assertRemoteMediaReference } from './media-reference-security';
+import { assertRemoteMediaReference } from './media-reference-security';
+import { readOwnedMediaBuffer } from './owned-media-content';
 import type { SendMediaFile } from "./extract-media";
 import type { TelegramSendResult, TelegramMessage } from "./send-telegram-message";
 import { sendTelegramMessage } from "./send-telegram-message";
@@ -76,12 +75,10 @@ export async function sendTelegramMediaGroup(
   for (const [idx, item] of supported.entries()) {
     let mediaRef = item.url;
     if (isLocalPath(item.url)) {
-      const absolutePath = await resolveOwnedMediaPath(item.url, projectId);
-      if (!existsSync(absolutePath)) {
-        throw new Error(`Файл не найден на диске: ${absolutePath}`);
-      }
+      /** Получаем байты через зарегистрированное хранилище вместо предположения о локальном файле. */
+      const { fileName, buffer } = await readOwnedMediaBuffer(item.url, projectId);
       const field = `file${idx}`;
-      files.push({ field, fileName: basename(absolutePath), buffer: readFileSync(absolutePath) });
+      files.push({ field, fileName, buffer });
       mediaRef = `attach://${field}`;
     } else { await assertRemoteMediaReference(item.url); }
 

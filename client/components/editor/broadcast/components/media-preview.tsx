@@ -3,6 +3,8 @@
  * Используется в StepConfirm и BroadcastDetail для единообразного отображения.
  */
 
+import { MediaPreviewContent } from './media-preview-content';
+
 /**
  * Проверяет, является ли URL изображением по расширению
  * @param url - URL файла
@@ -112,28 +114,8 @@ export function MediaPreviewItem({ urlOrFileId, projectId, tokenId }: MediaPrevi
 
   if (fileIdEntry?.fileId && projectId) {
     const src = buildProxyUrl(fileIdEntry.fileId, projectId, tokenId);
-    if (fileIdEntry.mediaType === 'video') {
-      return (
-        <video
-          src={src}
-          controls
-          className="max-h-40 w-full max-w-xs rounded-lg"
-          preload="metadata"
-        />
-      );
-    }
-    if (fileIdEntry.mediaType === 'audio') {
-      return <audio src={src} controls className="w-full max-w-xs" preload="metadata" />;
-    }
-    if (fileIdEntry.mediaType === 'photo') {
-      return (
-        <img
-          src={src}
-          alt="Фото"
-          className="max-h-40 object-cover rounded-lg"
-          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-        />
-      );
+    if (fileIdEntry.mediaType === 'video' || fileIdEntry.mediaType === 'audio' || fileIdEntry.mediaType === 'photo') {
+      return <MediaPreviewContent src={src} kind={fileIdEntry.mediaType} name="Вложение Telegram" />;
     }
     return (
       <span className="inline-flex items-center gap-1 text-xs bg-muted/40 rounded px-2 py-1">
@@ -164,31 +146,10 @@ export function MediaPreviewItem({ urlOrFileId, projectId, tokenId }: MediaPrevi
     }
   }
 
-  // Обычный URL — изображение
-  if (isImageUrl(urlOrFileId)) {
-    return (
-      <img
-        src={urlOrFileId}
-        alt="Медиа"
-        className="max-h-40 object-cover rounded-lg"
-        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-      />
-    );
-  }
-
-  if (isVideoUrl(urlOrFileId)) {
-    return (
-      <video
-        src={urlOrFileId}
-        controls
-        className="max-h-40 w-full max-w-xs rounded-lg"
-        preload="metadata"
-      />
-    );
-  }
-
-  if (isAudioUrl(urlOrFileId)) {
-    return <audio src={urlOrFileId} controls className="w-full max-w-xs" preload="metadata" />;
+  /** Определяем тип превью, сохраняя имя файла при сетевой ошибке. */
+  const kind = isImageUrl(urlOrFileId) ? 'photo' : isVideoUrl(urlOrFileId) ? 'video' : isAudioUrl(urlOrFileId) ? 'audio' : null;
+  if (kind) {
+    return <MediaPreviewContent src={urlOrFileId} kind={kind} name={basename(urlOrFileId)} />;
   }
 
   // Остальные файлы — иконка + имя

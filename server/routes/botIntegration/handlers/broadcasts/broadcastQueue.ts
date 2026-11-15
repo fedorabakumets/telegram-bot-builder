@@ -22,6 +22,8 @@ import {
 import { recordBroadcastUnauthorized } from "./record-broadcast-unauthorized";
 import { isBroadcastStopped } from "./is-broadcast-stopped";
 import { isBotUnauthorized } from "@shared/broadcast-unauthorized";
+import { BROADCAST_MEDIA_RESULT_USER_ID, BROADCAST_MEDIA_ERROR_PREFIX } from "@shared/broadcast-media-error";
+import { preflightBroadcastMedia } from "./preflight-broadcast-media";
 import type { InlineButton } from "../messages/extract-buttons";
 import type { SendMediaFile } from "../messages/extract-media";
 
@@ -112,6 +114,7 @@ async function emitProgress(
   totalCount: number,
   status: "running" | "stopped" | "done" | "failed",
   campaignId: number | null = null,
+  abortReason?: "unauthorized" | "media_unavailable",
 ): Promise<void> {
   await broadcastProjectEvent(projectId, {
     type: "broadcast-progress",
@@ -125,7 +128,7 @@ async function emitProgress(
       deletedCount: counts.deletedCount,
       totalCount,
       status,
-      abortReason: status === "failed" ? "unauthorized" : undefined,
+      abortReason,
       ...(campaignId !== null ? { campaignId } : {}),
     },
     timestamp: new Date().toISOString(),
@@ -162,7 +165,9 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
 
     const users = await storage.getUsersForBroadcast(projectId, tokenId, filters as Parameters<typeof storage.getUsersForBroadcast>[2]);
     const completed = Array.from(new Map(
-      (await storage.getBroadcastResults(broadcastId)).map((result) => [result.userId, result]),
+      (await storage.getBroadcastResults(broadcastId))
+        .filter(result => result.userId !== BROADCAST_MEDIA_RESULT_USER_ID)
+        .map((result) => [result.userId, result]),
     ).values());
     const delivered = new Set(completed.map((result) => result.userId));
 
@@ -196,6 +201,20 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
       blockedCount,
       deletedCount,
     });
+
+    /** Общая недоступность вложения останавливает задачу до обращений к получателям. */
+    try {
+      await preflightBroadcastMedia(mediaFiles, projectId);
+    } catch (error) {
+      const description = error instanceof Error ? error.message : String(error);
+      await storage.createBroadcastResult({ broadcastId, userId: BROADCAST_MEDIA_RESULT_USER_ID,
+        status: "failed", errorMessage: BROADCAST_MEDIA_ERROR_PREFIX + description });
+      await storage.updateBroadcast(broadcastId, { status: "failed", finishedAt: new Date(), ...snapshotCounts() });
+      await emitProgress(projectId, broadcastId, snapshotCounts(), totalCount, "failed", campaignId, "media_unavailable");
+      await syncCampaignAggregates(campaignId);
+      console.error(`[broadcastQueue] Недоступно вложение рассылки ${broadcastId}:`, description);
+      return;
+    }
 
     // Обрабатываем пользователей батчами
     for (let i = 0; i < users.length; i += BATCH_SIZE) {
@@ -387,6 +406,7 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
       totalCount,
       finalStatus,
       campaignId,
+      tokenInvalid ? "unauthorized" : undefined,
     );
     await syncCampaignAggregates(campaignId);
   } catch (error) {

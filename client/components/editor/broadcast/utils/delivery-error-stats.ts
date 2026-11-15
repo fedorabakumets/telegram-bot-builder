@@ -48,7 +48,7 @@ export function countDeliveryErrorBreakdown(
   let deleted = 0;
   let failed = 0;
   for (const r of results) {
-    if (isBotUnauthorizedResult(r.userId)) continue;
+    if (isBotUnauthorizedResult(r.userId) || r.userId === '__broadcast_media__') continue;
     if (r.status === 'blocked') blocked += 1;
     else if (r.status === 'not_found') deleted += 1;
     else failed += 1;

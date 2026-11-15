@@ -3,9 +3,10 @@
  * @module client/components/editor/broadcast/wizard/step-message
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { ChevronDown, FileKey2, ImagePlus, MousePointerClick } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { usePastedMedia } from '@/components/editor/database/dialog/hooks/use-pasted-media';
 import { CompactInlineEditor } from '@/components/editor/inline-rich/compact-inline-editor';
 import { MultiMediaSelector } from '@/components/editor/properties/media/multi-media-selector';
 import { FileIdInput } from '@/components/editor/properties/media/file-id-input';
@@ -57,11 +58,21 @@ export function StepMessage({ projectId, formData, onChange, onNext, onBack }: S
     [project?.data],
   );
 
+  /** Ссылка сохраняет актуальные вложения при параллельных загрузках. */
+  const latestMedia = useRef(formData.mediaUrls);
+  latestMedia.current = formData.mediaUrls;
+  const { onPasteCapture, isUploading } = usePastedMedia(projectId, (urls) => {
+    latestMedia.current = [...latestMedia.current, ...urls];
+    onChange({ mediaUrls: latestMedia.current });
+    setShowMedia(true);
+  });
+
   /** Валидация по лимитам Telegram */
   const validation = useMemo(() => validateBroadcastMessage(formData), [formData]);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5" onPasteCapture={onPasteCapture}>
+      {isUploading && <p role="status" className="text-xs text-muted-foreground">Загрузка вложений…</p>}
       <div className="space-y-2">
         <p className="text-sm font-medium">Текст сообщения</p>
         <CompactInlineEditor
@@ -152,7 +163,7 @@ export function StepMessage({ projectId, formData, onChange, onNext, onBack }: S
         <Button variant="ghost" onClick={onBack}>← Назад</Button>
         <Button
           onClick={onNext}
-          disabled={!validation.isValid}
+          disabled={!validation.isValid || isUploading}
           className="bg-primary text-primary-foreground hover:bg-primary/90"
         >
           Далее →

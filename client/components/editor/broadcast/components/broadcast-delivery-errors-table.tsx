@@ -6,6 +6,7 @@
 import { Ban, CircleAlert, Search, UserX } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { formatDeliveryErrorReason } from '../utils/format-delivery-error-reason';
+import { deliveryErrorDetails } from '../utils/delivery-error-details';
 import type { BroadcastResult } from '../types';
 
 /**
@@ -76,11 +77,17 @@ export function BroadcastDeliveryErrorsTable({
                 <Icon className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${className}`} />
                 <span className="min-w-0">
                   <span className="block truncate font-mono text-xs tabular-nums text-muted-foreground">
-                    {r.userId}
+                    {r.userId === '__broadcast_media__' ? 'Вложение рассылки' : r.userId}
                   </span>
                   <span className="block truncate text-xs text-foreground">
                     {formatDeliveryErrorReason(r.status, r.errorMessage)}
                   </span>
+                  {r.errorMessage && (
+                    <details className="mt-1 text-xs text-muted-foreground" onClick={(event) => event.stopPropagation()}>
+                      <summary className="cursor-pointer">Подробности</summary>
+                      <p className="whitespace-pre-wrap break-all">{deliveryErrorDetails(r.errorMessage)}</p>
+                    </details>
+                  )}
                 </span>
               </div>
             );

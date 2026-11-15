@@ -3,13 +3,15 @@
  * @module editor/database/dialog/components/campaign-bubble-actions
  */
 
-import { Loader2, Pencil, Square, Trash2 } from 'lucide-react';
+import { Loader2, Pencil, Repeat2, Square, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 /**
  * Пропсы компонента CampaignBubbleActions
  */
 interface CampaignBubbleActionsProps {
+  /** Открыть новую рассылку с содержимым кампании. */
+  onRepeat?: () => void;
   /** Показывать ли кнопку редактирования текста */
   showEdit: boolean;
   /** Показывать ли кнопку удаления */
@@ -35,6 +37,7 @@ interface CampaignBubbleActionsProps {
  * @returns JSX элемент с кнопками действий
  */
 export function CampaignBubbleActions({
+  onRepeat,
   showEdit,
   showDelete,
   isRunning,
@@ -46,6 +49,11 @@ export function CampaignBubbleActions({
 }: CampaignBubbleActionsProps) {
   return (
     <div className="flex flex-col gap-0.5 self-center mr-1">
+      {onRepeat && (
+        <Button type="button" variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground" onClick={onRepeat} title="Повторить рассылку" aria-label="Повторить рассылку">
+          <Repeat2 className="h-3 w-3" />
+        </Button>
+      )}
       {showEdit && (
         <Button
           variant="ghost"

@@ -1,15 +1,19 @@
 /**
- * @fileoverview Кнопки правки и удаления пузыря одиночной рассылки
+ * @fileoverview Кнопки повтора, правки и удаления пузыря одиночной рассылки
  * @module editor/database/dialog/components/broadcast-bubble-actions
  */
 
-import { Loader2, Pencil, Trash2 } from 'lucide-react';
+import { Loader2, Pencil, Repeat2, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 /**
  * Пропсы кнопок действий одиночной рассылки
  */
 interface BroadcastBubbleActionsProps {
+  /** Показать кнопку повтора */
+  showRepeat: boolean;
+  /** Открыть новую рассылку по образцу */
+  onRepeat: () => void;
   /** Показать кнопку правки */
   showEdit: boolean;
   /** Показать кнопку удаления */
@@ -23,21 +27,35 @@ interface BroadcastBubbleActionsProps {
 }
 
 /**
- * Иконки слева от пузыря: правка и удаление
+ * Иконки слева от пузыря: повтор, правка и удаление
  * @param props - Свойства кнопок
  * @returns JSX элемент
  */
 export function BroadcastBubbleActions({
+  showRepeat,
+  onRepeat,
   showEdit,
   showDelete,
   isDeleting,
   onStartEdit,
   onDelete,
 }: BroadcastBubbleActionsProps) {
-  if (!showEdit && !showDelete) return null;
+  if (!showRepeat && !showEdit && !showDelete) return null;
 
   return (
     <div className="mr-1 flex flex-col gap-0.5 self-center">
+      {showRepeat && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6 shrink-0 text-muted-foreground hover:bg-muted hover:text-foreground"
+          onClick={onRepeat}
+          title="Повторить рассылку"
+          aria-label="Повторить рассылку"
+        >
+          <Repeat2 className="h-3 w-3" />
+        </Button>
+      )}
       {showEdit && (
         <Button
           variant="ghost"

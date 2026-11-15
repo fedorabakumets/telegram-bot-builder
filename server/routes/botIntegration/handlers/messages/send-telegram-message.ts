@@ -5,9 +5,8 @@
  */
 import { getTelegramApiBaseUrl } from '../../../../utils/telegram-api-url';
 
-import { existsSync, readFileSync } from 'fs';
-import { basename } from 'path';
-import { resolveOwnedMediaPath, assertRemoteMediaReference } from './media-reference-security';
+import { assertRemoteMediaReference } from './media-reference-security';
+import { assertOwnedMediaAvailable, readOwnedMediaBuffer } from './owned-media-content';
 import type { SendMediaFile } from "./extract-media";
 import type { InlineButton } from "./extract-buttons";
 import { fetchWithProxy } from "../../../../utils/telegram-proxy";
@@ -117,7 +116,7 @@ export async function sendTelegramMessage(
 ): Promise<TelegramSendResult> {
   /** Проверяем весь пакет до первого внешнего действия. */
   for (const media of mediaFiles) {
-    if (isLocalPath(media.url)) await resolveOwnedMediaPath(media.url, projectId);
+    if (isLocalPath(media.url)) await assertOwnedMediaAvailable(media.url, projectId);
     else await assertRemoteMediaReference(media.url);
   }
   const hasMedia = mediaFiles.length > 0;
@@ -237,15 +236,8 @@ async function sendMediaMessage(
     let response: Response;
 
     if (isLocalPath(media.url)) {
-      // Локальный файл — читаем с диска и отправляем через multipart/form-data
-      const absolutePath = await resolveOwnedMediaPath(media.url, projectId);
-
-      if (!existsSync(absolutePath)) {
-        throw new Error(`Файл не найден на диске: ${absolutePath}`);
-      }
-
-      const fileBuffer = readFileSync(absolutePath);
-      const fileName = basename(absolutePath);
+      /** Читаем оригинал из хранилища записи, включая S3 и нестандартный локальный каталог. */
+      const { buffer: fileBuffer, fileName } = await readOwnedMediaBuffer(media.url, projectId);
 
       const fields: Record<string, string | undefined> = {
         chat_id: chatId,

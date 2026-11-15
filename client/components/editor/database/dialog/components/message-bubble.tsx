@@ -58,7 +58,7 @@ interface MessageBubbleProps {
   showSource?: boolean;
   /** Узлы проекта для выбора цели действия goto в редакторе кнопок */
   availableNodes?: NodeWithSheet[];
-  /** Открывает профиль автора группового сообщения. */
+  /** Открывает профиль бота или автора сообщения в любом диалоге. */
   onOpenMember?: (message: BotMessageWithMedia) => void;
 }
 
@@ -113,8 +113,8 @@ export function MessageBubble({
 }: MessageBubbleProps) {
   const isBot = message.messageType === 'bot';
   const isUser = message.messageType === 'user';
-  /** Открывать профиль можно только для известного личного Telegram ID. */
-  const canOpenMember = !!isGroupDialog && isUser && /^[1-9]\d*$/.test(String(message.userId ?? '')) && !!onOpenMember;
+  /** Профиль бота и автора доступен как в личном, так и в групповом диалоге. */
+  const canOpenMember = !!onOpenMember && (isBot || (isUser && /^[1-9]\d*$/.test(String(message.userId ?? ''))));
   const messageType: 'bot' | 'user' = isBot ? 'bot' : 'user';
 
   /** Состояние наведения курсора на блок сообщения */
@@ -192,12 +192,12 @@ export function MessageBubble({
       data-testid={`dialog-message-${message.messageType}-${index}`}
     >
       <div
-        className={`flex items-start gap-2 max-w-[85%] ${isBot ? 'flex-row-reverse' : 'flex-row'}`}
+        className={`flex items-start gap-2 min-w-0 ${isEditMode ? 'w-full max-w-full flex-col' : `max-w-[85%] ${isBot ? 'flex-row-reverse' : 'flex-row'}`}`}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        {canOpenMember ? <button type="button" aria-label={`Открыть профиль ${getSenderName(message) ?? message.userId}`} onClick={() => onOpenMember?.(message)} className="shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><MessageAvatar
-          messageType={messageType} user={user} projectId={projectId} tokenId={tokenId ?? message.tokenId}
+        {canOpenMember ? <button type="button" aria-label={isBot ? "Открыть профиль бота" : `Открыть профиль ${getSenderName(message) ?? message.userId}`} onClick={() => onOpenMember?.(message)} className="shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><MessageAvatar
+          messageType={messageType} user={isUser ? user : null} bot={isBot ? bot : null} projectId={projectId} tokenId={tokenId ?? message.tokenId}
         /></button> : <MessageAvatar
           messageType={messageType}
           user={isUser ? user : null}
@@ -240,7 +240,7 @@ export function MessageBubble({
           )}
         </div>
 
-        <div className="flex flex-col gap-1 min-w-0" onDoubleClick={isBot && message.id > 0 && !!message.telegramMessageId && !!onEdit ? handleOpenEdit : undefined}>
+        <div className={`flex flex-col gap-1 min-w-0 ${isEditMode ? "w-full" : ""}`} onDoubleClick={isBot && message.id > 0 && !!message.telegramMessageId && !!onEdit ? handleOpenEdit : undefined}>
           {showSource && isGroupSource(message.chatType) && (
             <span className="text-[10px] font-medium text-muted-foreground px-1 break-words">
               {`Группа: ${message.sourceChatTitle || message.chatId}`}
@@ -259,9 +259,9 @@ export function MessageBubble({
             tokenId={message.tokenId ?? undefined}
           />
 
-          {/* Режим редактирования: CompactInlineEditor с поддержкой форматирования */}
+          {/* Редактор занимает доступную ширину панели без фиксированного минимума. */}
           {isEditMode ? (
-            <div className="flex flex-col gap-1 min-w-[260px]">
+            <div className="flex w-full min-w-0 flex-col gap-1">
               <CompactInlineEditor
                 value={editText}
                 onChange={setEditText}
@@ -275,7 +275,7 @@ export function MessageBubble({
                 buttonsPerRow={editButtonsPerRow}
                 onButtonsPerRowChange={setEditButtonsPerRow}
               />
-              <div className="flex gap-1 justify-end">
+              <div className="flex flex-wrap gap-1 justify-end">
                 <Button
                   size="sm"
                   variant="default"

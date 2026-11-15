@@ -5,6 +5,7 @@
 
 import { useMemo, useState } from 'react';
 import { parseHTML } from '@/components/editor/inline-rich/utils/formatting-parser';
+import { MediaPreviewList } from '@/components/editor/broadcast/components/media-preview';
 import { BroadcastDeliveryErrors } from '@/components/editor/broadcast/components/broadcast-delivery-errors';
 import { BroadcastUnauthorizedHint } from '@/components/editor/broadcast/components/broadcast-unauthorized-hint';
 import { useBroadcastLiveProgress } from '@/components/editor/broadcast/hooks/use-broadcast-live-progress';
@@ -26,7 +27,7 @@ interface BroadcastMessageBubbleProps {
   onDelete?: (broadcastId: number) => void;
   /** Идёт ли удаление этой рассылки */
   isDeleting?: boolean;
-  /** Колбэк повтора рассылки (открывает wizard с тем же текстом) */
+  /** Колбэк повтора рассылки: открывает форму с исходным текстом и вложениями */
   onRepeat?: (broadcastId: number) => void;
   /** Колбэк редактирования рассылки */
   onEdit?: (broadcastId: number, newText: string) => void;
@@ -35,7 +36,7 @@ interface BroadcastMessageBubbleProps {
 }
 
 /**
- * Пузырь одиночной рассылки: текст, те же чипы статистики, что у большой рассылки,
+ * Пузырь одиночной рассылки: текст, вложения, повтор и чипы статистики,
  * и раскрываемый список ошибок доставки.
  * @param props - Свойства компонента
  * @returns JSX элемент пузыря рассылки
@@ -43,12 +44,12 @@ interface BroadcastMessageBubbleProps {
 export function BroadcastMessageBubble({
   broadcast,
   projectId,
+  onRepeat,
   onDelete,
   isDeleting,
   onEdit,
   isEditing,
 }: BroadcastMessageBubbleProps) {
-  const [isHovered, setIsHovered] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [editText, setEditText] = useState(broadcast.messageText ?? '');
@@ -57,14 +58,13 @@ export function BroadcastMessageBubble({
   const liveStatus = progressEvent?.status ?? broadcast.status;
   const isRunning = liveStatus === 'running';
   const totalCount = progressEvent?.totalCount ?? broadcast.totalCount ?? 0;
-  const doneCount = isRunning
-    ? (progressEvent?.sentCount ?? broadcast.sentCount ?? 0)
-    : (progressEvent?.deliveredCount ?? broadcast.deliveredCount ?? 0);
+  const processedCount = progressEvent?.sentCount ?? broadcast.sentCount ?? 0;
+  const deliveredCount = progressEvent?.deliveredCount ?? broadcast.deliveredCount ?? 0;
   const failedCount = progressEvent?.failedCount ?? broadcast.failedCount ?? 0;
   const blockedCount = progressEvent?.blockedCount ?? broadcast.blockedCount ?? 0;
   const deletedCount = progressEvent?.deletedCount ?? broadcast.deletedCount ?? 0;
   const problemCount = failedCount + blockedCount + deletedCount;
-  const tokenInvalid = liveStatus === 'failed' || progressEvent?.abortReason === 'unauthorized';
+  const tokenInvalid = progressEvent?.abortReason === 'unauthorized';
   const badge = getCampaignStatusBadge(liveStatus);
 
   const content = useMemo(() => {
@@ -73,14 +73,13 @@ export function BroadcastMessageBubble({
   }, [broadcast.messageText]);
 
   return (
-    <div
-      className="flex justify-end"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
+    /** Действия доступны постоянно и не меняют расположение при наведении. */
+    <div className="flex justify-end">
       <BroadcastBubbleActions
-        showEdit={!!onEdit && isHovered && !isDeleting && !editMode}
-        showDelete={!!onDelete && (isHovered || !!isDeleting) && !editMode}
+        showRepeat={!!onRepeat && !isDeleting && !editMode}
+        onRepeat={() => onRepeat?.(broadcast.id)}
+        showEdit={!!onEdit && !isDeleting && !editMode}
+        showDelete={!!onDelete && !editMode}
         isDeleting={!!isDeleting}
         onStartEdit={() => { setEditText(broadcast.messageText ?? ''); setEditMode(true); }}
         onDelete={() => onDelete?.(broadcast.id)}
@@ -99,16 +98,18 @@ export function BroadcastMessageBubble({
             onCancel={() => { setEditMode(false); setEditText(broadcast.messageText ?? ''); }}
             isSaving={isEditing}
           />
-        ) : content && (
+        ) : (content || (broadcast.mediaUrls?.length ?? 0) > 0) && (
           <div className="rounded-lg bg-gradient-to-br from-violet-100 to-fuchsia-50 px-3 py-2 text-violet-900 dark:from-violet-900/50 dark:to-fuchsia-900/30 dark:text-violet-100">
-            <p className="whitespace-pre-wrap break-words text-sm">{content}</p>
+            <MediaPreviewList mediaUrls={broadcast.mediaUrls ?? []} projectId={projectId} tokenId={broadcast.tokenId} compact />
+            {content && <p className="whitespace-pre-wrap break-words text-sm">{content}</p>}
           </div>
         )}
 
         <CampaignBubbleMeta
           createdAt={broadcast.createdAt}
           isLiveRunning={isRunning}
-          doneCount={doneCount}
+          processedCount={processedCount}
+          deliveredCount={deliveredCount}
           totalCount={totalCount}
           blockedCount={blockedCount}
           deletedCount={deletedCount}

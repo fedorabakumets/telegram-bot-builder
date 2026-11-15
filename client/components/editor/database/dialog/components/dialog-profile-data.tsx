@@ -42,7 +42,7 @@ export function DialogProfileData({ user, projectId, tokenId, memberGroup, onClo
   const isGroup = !!user.isGroup || String(user.userId).startsWith('-');
   const query = useQuery({
     queryKey: ['dialog-profile', projectId, tokenId, String(user.userId), isGroup],
-    enabled: !!projectId && !!tokenId && !!user.userId,
+    enabled: !user.isBot && !!projectId && !!tokenId && !!user.userId,
     queryFn: async ({ signal }): Promise<UserBotData | SavedGroup | null> => {
       const url = isGroup ? `/api/projects/${projectId}/groups?tokenId=${tokenId}` : `/api/projects/${projectId}/users/${encodeURIComponent(String(user.userId))}?tokenId=${tokenId}`;
       const response = await fetch(url, { credentials: 'include', signal });

@@ -27,6 +27,8 @@ import type { BroadcastCampaign } from '@shared/schema';
 interface BroadcastCampaignBubbleProps {
   /** Данные большой рассылки */
   campaign: BroadcastCampaign;
+  /** Открывает новую рассылку с содержимым кампании. */
+  onRepeat?: (campaign: BroadcastCampaign) => void;
   /** Идентификатор проекта */
   projectId: number;
   /** Колбэк обновления ленты рассылок */
@@ -45,8 +47,8 @@ export function BroadcastCampaignBubble({
   campaign,
   projectId,
   onRefetch,
+  onRepeat,
 }: BroadcastCampaignBubbleProps) {
-  const [isHovered, setIsHovered] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [editText, setEditText] = useState(campaign.messageText ?? '');
@@ -70,13 +72,13 @@ export function BroadcastCampaignBubble({
   const deleteMutation = useDeleteBroadcastCampaign({ projectId, refetch: refreshAll });
   const stopMutation = useStopBroadcastCampaign({ projectId, refetch: refreshAll });
 
-  const totalCount = totals?.totalCount || campaign.totalCount || 0;
+  const totalCount = totals?.totalCount ?? campaign.totalCount ?? 0;
   const failedCount = totals?.failedCount ?? campaign.failedCount ?? 0;
   const blockedCount = totals?.blockedCount ?? campaign.blockedCount ?? 0;
   const deletedCount = totals?.deletedCount ?? campaign.deletedCount ?? 0;
-  const doneCount = isLiveRunning
-    ? (totals?.sentCount ?? campaign.sentCount ?? 0)
-    : (totals?.deliveredCount ?? campaign.deliveredCount ?? 0);
+  /** Обработанные получатели и успешные отправки имеют отдельные счётчики. */
+  const processedCount = totals?.sentCount ?? campaign.sentCount ?? 0;
+  const deliveredCount = totals?.deliveredCount ?? campaign.deliveredCount ?? 0;
   const badge = getCampaignStatusBadge(isLiveRunning ? 'running' : campaign.status);
   const botCount = campaign.tokenIds?.length ?? broadcasts.length;
 
@@ -94,14 +96,12 @@ export function BroadcastCampaignBubble({
   };
 
   return (
-    <div
-      className="flex justify-end"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
+    /** Действия доступны постоянно и не меняют расположение при наведении. */
+    <div className="flex justify-end">
       <CampaignBubbleActions
-        showEdit={isHovered && !editMode && !deleteMutation.isPending}
-        showDelete={(isHovered || deleteMutation.isPending) && !editMode}
+        onRepeat={onRepeat && !editMode && !deleteMutation.isPending ? () => onRepeat(campaign) : undefined}
+        showEdit={!editMode && !deleteMutation.isPending}
+        showDelete={!editMode}
         isRunning={isLiveRunning}
         isDeleting={deleteMutation.isPending}
         isStopping={stopMutation.isPending}
@@ -152,7 +152,8 @@ export function BroadcastCampaignBubble({
           createdAt={campaign.createdAt}
           botCount={botCount}
           isLiveRunning={isLiveRunning}
-          doneCount={doneCount}
+          processedCount={processedCount}
+          deliveredCount={deliveredCount}
           totalCount={totalCount}
           blockedCount={blockedCount}
           deletedCount={deletedCount}

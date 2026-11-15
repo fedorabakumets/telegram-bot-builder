@@ -18,8 +18,10 @@ interface CampaignBubbleMetaProps {
   botCount?: number;
   /** Идёт ли отправка */
   isLiveRunning: boolean;
-  /** Доставлено / обработано */
-  doneCount: number;
+  /** Число обработанных получателей, включая ошибки */
+  processedCount: number;
+  /** Число успешных отправок в Telegram */
+  deliveredCount: number;
   /** Всего получателей */
   totalCount: number;
   /** Заблокировали бота */
@@ -49,7 +51,8 @@ export function CampaignBubbleMeta({
   createdAt,
   botCount,
   isLiveRunning,
-  doneCount,
+  processedCount,
+  deliveredCount,
   totalCount,
   blockedCount = 0,
   deletedCount = 0,
@@ -89,13 +92,16 @@ export function CampaignBubbleMeta({
         </span>
       </span>
       <span className="mt-1.5 flex flex-wrap items-center gap-1">
+        <span className="text-[11px] tabular-nums text-muted-foreground">
+          Обработано {processedCount}/{totalCount}
+        </span>
         <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 px-1.5 py-0.5 text-[11px] font-medium tabular-nums text-emerald-700 dark:text-emerald-400">
           {isLiveRunning
             ? <Loader2 className="h-3 w-3 animate-spin" />
             : <CheckCircle2 className="h-3 w-3" />}
-          {doneCount}/{totalCount}
+          Доставлено {deliveredCount}
         </span>
-        <DeliveryProblemChips blocked={blockedCount} deleted={deletedCount} failed={failedCount} />
+        <DeliveryProblemChips blocked={blockedCount} deleted={deletedCount} failed={failedCount} showLabels />
       </span>
     </button>
   );

@@ -16,6 +16,8 @@ import { LinkInputRow } from './components/LinkInputRow';
 export interface CompactInlineEditorProps extends Omit<InlineRichEditorProps, 'enableMarkdown' | 'availableVariables'> {
   /** Показывать ли статистику */
   showStats?: boolean;
+  /** Размещать панель форматирования на всю ширину сетки ввода сообщения. */
+  composerLayout?: boolean;
 }
 
 /**
@@ -24,7 +26,7 @@ export interface CompactInlineEditorProps extends Omit<InlineRichEditorProps, 'e
  * @param props - Свойства компонента
  * @returns JSX элемент компактного редактора
  */
-export function CompactInlineEditor({ showStats = false, ...props }: CompactInlineEditorProps) {
+export function CompactInlineEditor({ showStats = false, composerLayout = false, ...props }: CompactInlineEditorProps) {
   const {
     editorRef, wordCount, charCount,
     undo, redo, canUndo, canRedo,
@@ -35,7 +37,8 @@ export function CompactInlineEditor({ showStats = false, ...props }: CompactInli
   } = useInlineRichEditor({ ...props, enableMarkdown: false });
 
   return (
-    <div className="space-y-1.5">
+    <div className={composerLayout ? "contents" : "space-y-1.5"}>
+      <div className={composerLayout ? "col-span-3 row-start-1 min-w-0" : "contents"}>
       <Toolbar
         compact
         formatOptions={formatOptions}
@@ -47,8 +50,10 @@ export function CompactInlineEditor({ showStats = false, ...props }: CompactInli
         copyFormatted={copyFormatted}
         activeFormats={activeFormats}
       />
+      </div>
 
       {/* Строка ввода URL — появляется между тулбаром и редактором */}
+      {linkPopover.isOpen && <div className={composerLayout ? "col-span-3 row-start-2 min-w-0" : "contents"}>
       <LinkInputRow
         isOpen={linkPopover.isOpen}
         currentUrl={linkPopover.currentUrl}
@@ -56,7 +61,9 @@ export function CompactInlineEditor({ showStats = false, ...props }: CompactInli
         onRemove={linkPopover.removeLink}
         onClose={linkPopover.closeLinkPopover}
       />
+      </div>}
 
+      <div className={composerLayout ? "col-start-2 row-start-3 min-w-0" : "contents"}>
       <EditorContent
         value={props.value}
         onInput={handleInput}
@@ -75,6 +82,7 @@ export function CompactInlineEditor({ showStats = false, ...props }: CompactInli
           </div>
         )}
       </EditorContent>
+      </div>
     </div>
   );
 }

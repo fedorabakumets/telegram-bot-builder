@@ -39,7 +39,7 @@ const ROW_OPTIONS = [
 ];
 
 /**
- * Компонент редактирования инлайн-кнопок сообщения диалога.
+ * Редактор инлайн-кнопок с переносом инструментов внутри узкой панели.
  * @param props - Свойства компонента
  * @returns JSX элемент списка кнопок с возможностью добавления
  */
@@ -95,7 +95,7 @@ export function DialogButtonsEditor({ buttons, onChange, availableNodes, buttons
   const hasCallbackButton = buttons.some((b) => b.action === 'default');
 
   return (
-    <div className="space-y-2">
+    <div className="min-w-0 space-y-2 [&_[data-button-id]]:min-w-0 [&_[data-button-id]_.flex]:flex-wrap">
       {buttons.map((button) => (
         <ButtonCard
           key={button.id}
@@ -124,9 +124,9 @@ export function DialogButtonsEditor({ buttons, onChange, availableNodes, buttons
 
       {/* Селектор раскладки кнопок по рядам — показываем только при 2+ кнопках */}
       {onButtonsPerRowChange && buttons.length >= 2 && (
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs text-muted-foreground whitespace-nowrap">Кнопок в ряду:</span>
-          <div className="flex gap-1">
+          <div className="flex flex-wrap gap-1">
             {ROW_OPTIONS.map((opt) => (
               <UIButton
                 key={opt.value}
