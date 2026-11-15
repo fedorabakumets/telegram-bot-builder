@@ -6,7 +6,7 @@ import type { RunnerConfig } from "../runnerConfig";
 import type { PollingBot } from "./dispatcherTypes";
 import type { PythonPollingChild } from "./pythonChild";
 import { SharedPythonTransport, type SharedTransportOptions } from "./sharedTransport";
-
+import { reportSharedHostCrash, sharedHostMemory, type SharedHostExit } from "./sharedHostCrash";
 /** Отдельная активация, которую нельзя перепутать с повторным запуском того же бота. */
 interface Activation {
   /** Идентификатор бота. */
@@ -18,7 +18,6 @@ interface Activation {
   /** Завершение сценария и очистки состояния. */
   finish(result: { code: number | null; signal: string | null }): void;
 }
-
 /** Общий интерпретатор существует только пока есть запускающиеся или активные сценарии. */
 export class SharedPollingHost {
   /** Лениво созданный транспорт общего интерпретатора. */
@@ -40,7 +39,7 @@ export class SharedPollingHost {
   /** Наблюдатель замеров временных активаций при внешнем владельце хоста. */
   processObserver?: (event: Record<string, unknown>) => void;
   /** Сбой процесса с постоянными ботами требует восстановления всей группы. */
-  onPermanentCrash?: () => void;
+  onPermanentCrash?: (result: SharedHostExit) => void;
   /** Принимает безопасные события и отдельно общую память; launch используется в адресных тестах. */
   constructor(private readonly config: RunnerConfig,
     private readonly onEvent: (event: Record<string, unknown>) => void,
@@ -50,6 +49,7 @@ export class SharedPollingHost {
   private getTransport(): SharedPythonTransport {
     if (this.closed) throw new Error("Общий обработчик остановлен");
     if (this.transport) return this.transport;
+    const memoryBefore = sharedHostMemory();
     const transport = new SharedPythonTransport({ ...(this.launch ?? { command: this.config.pythonPath,
       args: ["-u", join(dirname(this.config.workerScript), "process_child_guard.py"),
         join(dirname(this.config.workerScript), this.config.pythonHost === "unified" ? "unified_worker.py" : "shared_worker.py")], env: process.env }),
@@ -60,6 +60,8 @@ export class SharedPollingHost {
     transport.pauseOutput(this.paused);
     void transport.done.then(result => {
       if (this.transport !== transport) return;
+      const failedTokens = [...this.permanent.tokens, ...[...this.activations.values()].map(entry => entry.tokenId)];
+      if (!this.closed && failedTokens.length) reportSharedHostCrash(this.onEvent, failedTokens, result, this.actualPid ?? transport.pid, memoryBefore);
       for (const entry of this.activations.values()) {
         entry.fail(new Error("Общий обработчик завершился")); entry.finish({ ...result, code: result.code || 1 });
       }
@@ -67,7 +69,7 @@ export class SharedPollingHost {
       for (const tokenId of this.permanent.tokens) this.onEvent({ type: "system", content: `bot_exited:${tokenId}:error` });
       this.activations.clear(); this.permanent.clear(); this.memoryKb = 0; this.actualPid = undefined; this.onMemory(0);
       if (this.transport === transport) this.transport = undefined;
-      if (permanentFailed && !this.closed) this.onPermanentCrash?.();
+      if (permanentFailed && !this.closed) this.onPermanentCrash?.(result);
     });
     return transport;
   }
@@ -136,7 +138,6 @@ export class SharedPollingHost {
       activations: this.activations, getTransport: () => this.getTransport(),
       closeIdle: () => this.closeIdle(), pauseOutput: paused => this.pauseOutput(paused) }, bot, signal);
   }
-
   /** Возвращает общий RSS отдельно от количества активных сценариев. */
   counters() { return { shared: true, pid: this.transport?.pid, actualPid: this.actualPid,
     memoryKb: this.memoryKb, activeHandlers: this.activations.size, handlerTokenIds: [...this.activations.values()].map(item => item.tokenId), permanentTokenIds: [...this.permanent.tokens] }; }

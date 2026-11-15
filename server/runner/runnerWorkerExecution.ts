@@ -10,7 +10,6 @@ import { validateProcessBuild } from "./polling/validateBuild";
 import { RunnerLegacyRoutes } from "./runnerLegacyRoutes";
 import { SharedPollingHost } from "./polling/sharedHost";
 import { RunnerMemoryTotals } from "./runnerMemoryTotals";
-
 /** Разделяет маршруты выполнения без выдачи виртуальной группы за Python-процесс. */
 export class RunnerWorkerExecution {
   /** Старый общий Python запускается только при необходимости. */
@@ -40,7 +39,9 @@ export class RunnerWorkerExecution {
       if (event.type === "process" || (event.type === "system" && event.content === "worker_ready")) return;
       this.emit({ ...this.base, k: "line", l: JSON.stringify(event) });
     }, memoryKb => this.emit({ ...this.base, k: "line", l: JSON.stringify({ type: "system", content: `memory_kb:${memoryKb}` }) }));
-    if (this.unified) this.unified.onPermanentCrash = () => { void this.finish({ ...this.base, k: "exit", c: "1" }); };
+    if (this.unified) this.unified.onPermanentCrash = result => {
+      void this.finish({ ...this.base, k: "exit", c: String(result.code), s: result.signal ?? undefined });
+    };
     if (config.processPolling !== "node") this.ensureLegacy();
     else queueMicrotask(() => { if (!this.closed) this.system("worker_ready"); });
   }
@@ -138,7 +139,6 @@ export class RunnerWorkerExecution {
     })();
     return this.terminating;
   }
-
   /** Немедленно завершает общий процесс и отменяет временные обработчики. */
   kill(): void {
     this.closed = true;
@@ -147,7 +147,6 @@ export class RunnerWorkerExecution {
     if (this.legacy) this.legacy.kill();
     else void this.finish({ ...this.base, k: "exit", s: "SIGKILL" });
   }
-
   /** Дожидается остановки всех настоящих процессов группы. */
   async shutdown(): Promise<void> {
     if (this.terminating) return this.terminating;

@@ -6,5 +6,6 @@ import path from 'node:path';
 export default defineConfig({
   resolve: { alias: { '@shared': path.resolve('shared') } },
   test: { environment: 'node', include: ['server/bots/scheduleBotRestart.test.ts',
+    'server/bots/infrastructure-restart.test.ts',
     'server/bots/automaticBotStartAllowed.test.ts', 'server/bots/frozenRestore.test.ts'] },
 });

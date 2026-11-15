@@ -6,6 +6,7 @@
 
 import type { LocalWorkerChannel } from "../bots/localWorkerChannel";
 import type { RunnerEvent } from "../redis/workerStreams";
+import { isChildHostCrashLine } from "./polling/sharedHostCrash";
 
 /**
  * Пересылает вывод и завершение процесса воркера событиями
@@ -20,7 +21,9 @@ export function forwardWorkerEvents(
   emit: (event: RunnerEvent) => void,
   onGone: () => void,
 ): void {
-  channel.on("line", (line: string) => emit({ ...base, k: "line", l: line }));
+  channel.on("line", (line: string) => {
+    if (!isChildHostCrashLine(line)) emit({ ...base, k: "line", l: line });
+  });
   channel.on("stderr", (text: string) => emit({ ...base, k: "stderr", l: text }));
   channel.on("exit", (code: number | null, signal: string | null) => {
     onGone();

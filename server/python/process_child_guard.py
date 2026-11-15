@@ -60,4 +60,11 @@ def main():
 
 
 if __name__ == "__main__":
-    os._exit(main())
+    result = main()
+    # Сохраняем настоящий сигнал дочернего процесса вместо превращения -9 в код 247.
+    if os.name != "nt" and result < 0:
+        child_signal = -result
+        if child_signal not in (signal.SIGKILL, signal.SIGSTOP):
+            signal.signal(child_signal, signal.SIG_DFL)
+        os.kill(os.getpid(), child_signal)
+    os._exit(result)

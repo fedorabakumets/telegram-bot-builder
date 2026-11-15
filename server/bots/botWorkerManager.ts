@@ -42,6 +42,7 @@ import { isRuntimeTokenUnauthorized } from './is-runtime-token-unauthorized';
 import { isFrozenBotError } from './frozenBotStatus';
 import { handleRuntimeTokenFrozen } from './handle-runtime-token-frozen';
 import { getActiveLaunchId } from '../terminal/activeLaunchIds';
+import { isBotDiagnosticError, parseWorkerHostCrash } from './workerBotDiagnostics';
 
 /** Задержка перед killWorker когда activeBots пуст (мс) */
 const WORKER_DRAIN_MS = 2_000;
@@ -66,6 +67,14 @@ interface WorkerMessage {
   tokenFingerprint?: unknown;
   /** Идентификатор запуска, зафиксированный источником ошибки. */
   launch_id?: unknown;
+  /** Уровень записи Python logging, отделённый от текста stderr. */
+  level?: unknown;
+  /** Код завершения общего обработчика. */
+  exit_code?: unknown;
+  /** Сигнал завершения общего обработчика. */
+  signal?: unknown;
+  /** Измерения контейнера при завершении общего обработчика. */
+  diagnostics?: unknown;
 }
 
 /** Команда для отправки воркеру через stdin */
@@ -220,6 +229,8 @@ class BotWorkerManager extends EventEmitter {
 
   /** Последняя stderr-ошибка бота для errorMessage в БД */
   private lastBotErrors = new Map<number, string>();
+  /** Подтверждённая причина смерти общего процесса имеет приоритет над обычным stderr. */
+  private workerHostCrashes = new Map<number, string>();
   /** Фиксация запрета восстановления должна завершиться до публикации выхода. */
   private frozenIntentWrites = new Map<number, Promise<void>>();
 
@@ -417,6 +428,8 @@ class BotWorkerManager extends EventEmitter {
 
       // Строки stdout (JSON протокол)
       channel.on("line", (line: string) => {
+        /** Запоздавший кадр старого канала не должен менять состояние уже заменённого воркера. */
+        if (this.workers.get(projectId) !== worker) return;
         if (this.workerVerbose) {
           console.log(`🏭 [WorkerPool:${projectId}] stdout: ${line.substring(0, 200)}`);
         }
@@ -512,6 +525,15 @@ class BotWorkerManager extends EventEmitter {
    * @param msg - Распарсенное сообщение
    */
   private handleWorkerMessage(projectId: number, msg: WorkerMessage): void {
+    /** Служебная причина процесса хранится отдельно: строка бота не может подменить её. */
+    if (msg.type === 'worker_host_crash') {
+      const reason = parseWorkerHostCrash(msg);
+      const botProjectId = msg.token_id === undefined ? undefined : this.tokenProjects.get(msg.token_id);
+      if (reason && msg.token_id !== undefined && botProjectId !== undefined && this.keyOf(botProjectId) === projectId) {
+        this.workerHostCrashes.set(msg.token_id, reason);
+      }
+      return;
+    }
     /** Отказ авторизации обрабатывается до выхода, независимо от последующих логов. */
     if (msg.type === 'bot_runtime_error' && msg.token_id !== undefined) {
       const botProjectId = this.tokenProjects.get(msg.token_id);
@@ -551,12 +573,14 @@ class BotWorkerManager extends EventEmitter {
     if (msg.token_id !== undefined && msg.token_id > 0) {
       const content = redactSecrets(msg.content || "");
       if (msg.type === "stderr") {
+        const diagnosticError = isBotDiagnosticError(content, msg.level);
         /** Последующие строки очистки не затирают подтверждённый отказ Telegram. */
-        if (!isRuntimeTokenUnauthorized(this.lastBotErrors.get(msg.token_id)) && !isFrozenBotError(this.lastBotErrors.get(msg.token_id))) {
+        if (diagnosticError && !isRuntimeTokenUnauthorized(this.lastBotErrors.get(msg.token_id)) && !isFrozenBotError(this.lastBotErrors.get(msg.token_id))) {
           this.lastBotErrors.set(msg.token_id, content);
         }
         const preview = content.replace(/^\[\d{2}:\d{2}:\d{2}\]\s*/, "").split("\n")[0];
-        console.error(`🏭 [WorkerPool:${projectId}] бот ${msg.token_id} ошибка: ${preview}`);
+        const log = diagnosticError ? console.error : console.warn;
+        log(`🏭 [WorkerPool:${projectId}] бот ${msg.token_id} ${diagnosticError ? 'ошибка' : 'предупреждение'}: ${preview}`);
       }
       // Ключ общего воркера не является ID проекта и не подходит для маршрутизации логов.
       const botProjectId = this.tokenProjects.get(msg.token_id);
@@ -589,6 +613,7 @@ class BotWorkerManager extends EventEmitter {
 
     if (ev.kind === "bot_started" && ev.tokenId !== undefined) {
       this.lastBotErrors.delete(ev.tokenId);
+      this.workerHostCrashes.delete(ev.tokenId);
       worker?.activeBots.add(ev.tokenId);
       console.log(`🏭 [WorkerPool:${projectId}] бот ${ev.tokenId} запущен`);
       this.emit("bot-started", this.projectOf(ev.tokenId, projectId), ev.tokenId);
@@ -598,11 +623,19 @@ class BotWorkerManager extends EventEmitter {
     if ((ev.kind === "bot_exited" || ev.kind === "bot_stopped") && ev.tokenId !== undefined) {
       worker?.activeBots.delete(ev.tokenId);
       const status = ev.status || "stopped";
-      const runtimeError = this.lastBotErrors.get(ev.tokenId);
+      const stderrError = this.lastBotErrors.get(ev.tokenId);
+      /** Подтверждённый отказ Telegram остаётся окончательным даже при последующей смерти процесса. */
+      const telegramFailure = isRuntimeTokenUnauthorized(stderrError) || isFrozenBotError(stderrError);
+      const hostCrash = this.workerHostCrashes.get(ev.tokenId);
+      const runtimeError = telegramFailure ? stderrError : hostCrash ?? stderrError;
+      const processDeathUnexpected = Boolean(hostCrash) && !telegramFailure;
       this.lastBotErrors.delete(ev.tokenId);
+      this.workerHostCrashes.delete(ev.tokenId);
       if (status === "error") {
+        /** Причина смерти общего процесса не является ошибкой первоначального запуска. */
         const short = runtimeError
-          ? formatBotRuntimeErrorShort(runtimeError)
+          ? processDeathUnexpected ? runtimeError : formatBotRuntimeErrorShort(runtimeError)
+            .replace(/^Ошибка запуска:\s*/, 'Ошибка выполнения: ')
           : "Бот завершился с ошибкой";
         console.error(`🏭 [WorkerPool:${projectId}] бот ${ev.tokenId} остановлен: ${short}`);
       } else {
@@ -616,7 +649,7 @@ class BotWorkerManager extends EventEmitter {
       /** Ожидаем запись намерения, но не подтверждение stop_bot, приходящее этим же каналом. */
       const publishExit = () => {
         if (this.frozenIntentWrites.get(tokenId) === pendingFreeze) this.frozenIntentWrites.delete(tokenId);
-        this.emit('bot-exited', botProjectId, tokenId, status, runtimeError, false, observedToken);
+        this.emit('bot-exited', botProjectId, tokenId, status, runtimeError, processDeathUnexpected, observedToken);
       };
       if (pendingFreeze) void pendingFreeze.then(publishExit);
       else publishExit();

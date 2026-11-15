@@ -12,18 +12,23 @@ const state = vi.hoisted(() => ({
   start: vi.fn(async () => ({ success: true })),
   stop: vi.fn(async () => ({ success: true })),
   claim: vi.fn(async () => true),
+  restart: vi.fn(async () => undefined),
+  allowed: true,
+  token: { token: "token", isActive: 1, authorizationError: null as string | null },
 }));
 
 vi.mock("../storages/storage", () => ({ storage: {
   getAllBotInstances: async () => state.instances,
   getBotInstanceByToken: async (tokenId: number) => state.instances.find((i) => i.tokenId === tokenId),
-  getBotToken: async () => ({ token: "token", isActive: 1 }),
+  getBotToken: async () => state.token,
 } }));
 vi.mock("./remoteRunnerHub", () => ({ RemoteRunnerHub: { get: async () => ({ inspect: async () => ({ workers: state.workers }) }) } }));
 vi.mock("./botPlacement", () => ({ getProjectPlacement: () => ({ runnerId: "runner-1", railwayProjectId: null }) }));
 vi.mock("./resolveRunnerRedisUrl", () => ({ resolveRunnerRedisUrl: () => "redis://test" }));
 vi.mock("./startBot", () => ({ startBot: state.start }));
 vi.mock("./stopBot", () => ({ stopBot: state.stop }));
+vi.mock("./scheduleBotRestart", () => ({ scheduleBotRestart: state.restart }));
+vi.mock("./automaticBotStartAllowed", () => ({ automaticBotStartAllowed: async () => state.allowed }));
 vi.mock("./claimBuildLinkRetry", () => ({
   claimBuildLinkRetry: state.claim,
   isBuildLinkExpired: (error: string | null) => error?.includes("TBB_BUILD_LINK_EXPIRED:") === true,
@@ -37,6 +42,9 @@ beforeEach(() => {
   state.start.mockClear();
   state.stop.mockClear();
   state.claim.mockClear();
+  state.restart.mockClear();
+  state.allowed = true;
+  state.token = { token: "token", isActive: 1, authorizationError: null };
 });
 
 describe("сверка исполнителя", () => {
@@ -85,5 +93,29 @@ describe("сверка исполнителя", () => {
     await reconcileBotDesiredState();
     expect(state.start).not.toHaveBeenCalled();
     expect(state.claim).toHaveBeenCalledTimes(1);
+  });
+
+  /** Авария общего процесса использует общий ограниченный планировщик даже без автоповторов бота. */
+  it("передаёт инфраструктурную аварию планировщику вместо прямого запуска", async () => {
+    state.instances = [{ id: 1, projectId: 7, tokenId: 9, status: "error", desiredStatus: "running", desiredGeneration: 2,
+      errorMessage: "[worker_host_crash] Общий обработчик завершился: code=null, signal=SIGKILL" }];
+    await reconcileBotDesiredState();
+    expect(state.restart).toHaveBeenCalledWith(7, 9, "worker_host_crash", { infrastructure: true });
+    expect(state.start).not.toHaveBeenCalled();
+  });
+
+  /** Старое предупреждение и запреты токена не превращаются в разрешение восстановления. */
+  it("не восстанавливает предупреждение, замороженный или отозванный токен", async () => {
+    state.instances = [{ id: 1, projectId: 7, tokenId: 9, status: "error", desiredStatus: "running", desiredGeneration: 2,
+      errorMessage: "Ошибка запуска: WARNING DeepLink fallback" }];
+    await reconcileBotDesiredState();
+    state.instances[0].errorMessage = "[worker_host_crash] Общий обработчик завершился";
+    state.allowed = false;
+    await reconcileBotDesiredState();
+    state.allowed = true;
+    state.token.authorizationError = "unauthorized";
+    await reconcileBotDesiredState();
+    expect(state.restart).not.toHaveBeenCalled();
+    expect(state.start).not.toHaveBeenCalled();
   });
 });
