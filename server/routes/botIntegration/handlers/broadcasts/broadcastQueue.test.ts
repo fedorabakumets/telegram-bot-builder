@@ -104,7 +104,9 @@ describe("Общие счётчики пользователей и групп",
     expect(finalUpdate()).toMatchObject({ status: "failed", sentCount: 1, deliveredCount: 1, failedCount: 0 });
     expect(mocks.storage.createBroadcastResult).toHaveBeenCalledWith({ broadcastId: 1,
       userId: "__broadcast_media__", status: "failed", errorMessage: "[broadcast_media] Файл отсутствует" });
-    expect(mocks.event.mock.calls.at(-1)?.[1].data.abortReason).toBe("media_unavailable");
+    /** Индекс последнего события совместим с целевой библиотекой проекта. */
+    const lastEvent = mocks.event.mock.calls[mocks.event.mock.calls.length - 1];
+    expect(lastEvent?.[1].data.abortReason).toBe("media_unavailable");
     expect(activeBroadcasts.has(1)).toBe(false);
     log.mockRestore();
   });
