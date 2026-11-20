@@ -4,6 +4,7 @@
  */
 
 import { botCanvasStatusLabel, isFrozenCanvasStatus, type BotCanvasStatus } from './bot-canvas-status';
+import { statusAppearance } from '@shared/status-appearance';
 
 /** Пропсы бейджа */
 interface BotRunStatusBadgeProps {
@@ -23,6 +24,10 @@ export function BotRunStatusBadge({ status }: BotRunStatusBadgeProps): React.JSX
   const starting = status === 'starting' || status === 'restarting';
   const stopping = status === 'stopping';
   const neutral = !online && !invalid && !failed && !starting && !stopping;
+  /** Причина ограничения совпадает с селектором, а состояние процесса остаётся в подсказке. */
+  const label = isFrozenCanvasStatus(status) ? 'Заморожен' : invalid ? 'Ошибка токена'
+    : online ? 'Активен' : botCanvasStatusLabel(status);
+  const appearance = invalid || online || isFrozenCanvasStatus(status) ? statusAppearance(label) : undefined;
   return (
     <span
       role="status"
@@ -30,9 +35,9 @@ export function BotRunStatusBadge({ status }: BotRunStatusBadgeProps): React.JSX
         ? 'Процесс ещё работает. Сервер автоматически остановит его после ограничения Telegram.'
         : botCanvasStatusLabel(status)}
       aria-live="polite"
+      style={appearance && { ...appearance, borderColor: `${appearance.color}4d` }}
       className={[
         'inline-flex max-w-full items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px] font-semibold tracking-wide',
-        !invalid && 'uppercase',
         online && 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
         (invalid || failed) && 'bg-red-500/10 text-red-500 border-red-500/30',
         starting && 'bg-sky-500/10 text-sky-400 border-sky-500/30',
@@ -43,6 +48,7 @@ export function BotRunStatusBadge({ status }: BotRunStatusBadgeProps): React.JSX
       <span
         data-status={status}
         aria-hidden="true"
+        style={appearance && { backgroundColor: appearance.color }}
         className={[
           'bot-status-dot h-1.5 w-1.5 shrink-0 rounded-full',
           online && 'bg-emerald-400',
@@ -52,7 +58,7 @@ export function BotRunStatusBadge({ status }: BotRunStatusBadgeProps): React.JSX
           neutral && 'bg-muted-foreground/50',
         ].filter(Boolean).join(' ')}
       />
-      <span className="min-w-0 whitespace-normal">{botCanvasStatusLabel(status)}</span>
+      <span className="min-w-0 whitespace-normal">{label}</span>
     </span>
   );
 }

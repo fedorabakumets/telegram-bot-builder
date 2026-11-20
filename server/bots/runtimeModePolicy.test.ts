@@ -50,4 +50,26 @@ describe('сохранённый режим обработчика', () => {
     assert.equal(resolveRuntimeModeSettings([], 'polling', env, 35).mode, 'direct');
     assert.equal(resolveRuntimeModeSettings([{ key: 'BOT_POLLING_MODE', value: 'ondemand' }], 'polling', env, 35).mode, 'ondemand');
   });
+  it('при наследовании применяет проектный режим вместо старого значения бота и серверного фильтра', () => {
+    const variables = [{ key: 'BOT_POLLING_MODE', value: 'ondemand' }];
+    const env = { BOT_POLLING_MODE: 'direct', BOT_ON_DEMAND_TOKEN_IDS: '31' };
+    const settings = resolveRuntimeModeSettings(variables, 'webhook', env, 35, 'process', true);
+    assert.equal(settings.mode, 'process');
+    assert.equal(settings.source, 'project');
+    validateRuntimeMode(settings.mode, settings.launchMode);
+  });
+  it('после выхода из наследования уважает собственный режим и сохраняет поведение старых ботов', () => {
+    const variables = [{ key: 'BOT_POLLING_MODE', value: 'ondemand' }];
+    for (const inherited of [false, undefined]) {
+      const settings = resolveRuntimeModeSettings(variables, 'polling', {}, 35, 'process', inherited);
+      assert.equal(settings.mode, 'ondemand');
+      assert.equal(settings.source, 'bot');
+    }
+  });
+  it('при наследовании от проекта без настройки включает сон независимо от сервера', () => {
+    const variables = [{ key: 'BOT_POLLING_MODE', value: 'direct' }];
+    const settings = resolveRuntimeModeSettings(variables, 'polling', { BOT_POLLING_MODE: 'direct' }, 35, null, true);
+    assert.equal(settings.mode, 'process');
+    assert.equal(settings.source, 'project');
+  });
 });

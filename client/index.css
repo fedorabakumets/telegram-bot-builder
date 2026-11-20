@@ -1,5 +1,5 @@
 /**
- * @file index.css
+ * @fileoverview Глобальные стили приложения telegram-bot-builder
  * @brief Глобальные стили для приложения Telegram Bot Builder
  *
  * Этот файл содержит:
@@ -18,6 +18,7 @@
 
 /* Font Awesome icons via CDN */
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
+@import './styles/checkboxes.css';
 
 /* Директивы Tailwind CSS для включения соответствующих стилей */
 /* @tailwind base - включает базовые стили для сброса и нормализации */
@@ -1051,106 +1052,6 @@
     0 0 4px hsl(var(--muted) / 0.3);
 }
 
-/* Enhanced Checkbox Styling for Dark Theme */
-.dark input[type="checkbox"] {
-  appearance: none;
-  width: 1.2rem;
-  height: 1.2rem;
-  border: 3px solid hsl(var(--border) / 0.8);
-  border-radius: 0.375rem;
-  background: hsl(var(--background));
-  position: relative;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 
-    0 0 0 1px hsl(var(--border) / 0.4),
-    0 2px 4px hsl(var(--background) / 0.3),
-    inset 0 1px 2px hsl(var(--muted) / 0.2);
-}
-
-.dark input[type="checkbox"]:hover {
-  border-color: hsl(var(--primary) / 0.8);
-  box-shadow: 
-    0 0 0 3px hsl(var(--primary) / 0.3),
-    0 0 8px hsl(var(--primary) / 0.2),
-    0 2px 4px hsl(var(--background) / 0.3);
-  transform: scale(1.08);
-}
-
-.dark input[type="checkbox"]:checked {
-  background: hsl(var(--primary));
-  border-color: hsl(var(--primary));
-  box-shadow: 
-    0 0 0 3px hsl(var(--primary) / 0.4),
-    0 0 10px hsl(var(--primary) / 0.3),
-    0 2px 6px hsl(var(--background) / 0.3),
-    inset 0 1px 2px hsl(var(--primary) / 0.2);
-}
-
-.dark input[type="checkbox"]:checked::before {
-  content: '✓';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: hsl(var(--primary-foreground));
-  font-size: 0.875rem;
-  font-weight: 900;
-  line-height: 1;
-  text-shadow: 0 1px 2px hsl(var(--primary) / 0.3);
-}
-
-.dark input[type="checkbox"]:focus {
-  outline: none;
-  box-shadow: 
-    0 0 0 3px hsl(var(--ring) / 0.3),
-    0 0 0 6px hsl(var(--ring) / 0.15),
-    0 2px 4px hsl(var(--background) / 0.3);
-}
-
-.dark input[type="checkbox"]:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-  filter: grayscale(0.5);
-}
-
-/* Enhanced Radix Checkbox Styling for Dark Theme */
-.dark [role="checkbox"] {
-  border: 3px solid hsl(var(--border) / 0.8);
-  background: hsl(var(--background));
-  box-shadow: 
-    0 0 0 1px hsl(var(--border) / 0.4),
-    0 2px 4px hsl(var(--background) / 0.3),
-    inset 0 1px 2px hsl(var(--muted) / 0.2);
-  transition: all 0.2s ease;
-}
-
-.dark [role="checkbox"]:hover {
-  border-color: hsl(var(--primary) / 0.8);
-  box-shadow: 
-    0 0 0 3px hsl(var(--primary) / 0.3),
-    0 0 8px hsl(var(--primary) / 0.2),
-    0 2px 4px hsl(var(--background) / 0.3);
-  transform: scale(1.08);
-}
-
-.dark [role="checkbox"][data-state="checked"] {
-  background: hsl(var(--primary));
-  border-color: hsl(var(--primary));
-  box-shadow: 
-    0 0 0 3px hsl(var(--primary) / 0.4),
-    0 0 10px hsl(var(--primary) / 0.3),
-    0 2px 6px hsl(var(--background) / 0.3),
-    inset 0 1px 2px hsl(var(--primary) / 0.2);
-}
-
-.dark [role="checkbox"][data-state="checked"]:hover {
-  box-shadow: 
-    0 0 0 3px hsl(var(--primary) / 0.5),
-    0 0 12px hsl(var(--primary) / 0.4),
-    0 2px 6px hsl(var(--background) / 0.3);
-}
-
 /* Enhanced Token Settings & Settings Panel Containers */
 .dark .toggle-container {
   background: hsl(var(--card) / 0.4);
@@ -1182,93 +1083,6 @@
   color: hsl(var(--muted-foreground) / 0.8);
   font-size: 0.875rem;
   text-shadow: 0 1px 1px hsl(var(--background) / 0.1);
-}
-
-/* Light Theme Enhancements for Checkboxes and Switches */
-input[type="checkbox"] {
-  appearance: none;
-  width: 1rem;
-  height: 1rem;
-  border: 2px solid hsl(var(--border));
-  border-radius: 0.25rem;
-  background: hsl(var(--background));
-  position: relative;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 
-    0 1px 2px hsl(var(--muted-foreground) / 0.1),
-    0 0 0 1px hsl(var(--border) / 0.3);
-}
-
-input[type="checkbox"]:hover {
-  border-color: hsl(var(--primary) / 0.6);
-  box-shadow: 
-    0 0 0 2px hsl(var(--primary) / 0.2),
-    0 1px 2px hsl(var(--muted-foreground) / 0.1);
-  transform: scale(1.05);
-}
-
-input[type="checkbox"]:checked {
-  background: hsl(var(--primary));
-  border-color: hsl(var(--primary));
-  box-shadow: 
-    0 0 0 2px hsl(var(--primary) / 0.3),
-    0 0 4px hsl(var(--primary) / 0.2),
-    0 1px 2px hsl(var(--muted-foreground) / 0.1);
-}
-
-input[type="checkbox"]:checked::before {
-  content: '✓';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: hsl(var(--primary-foreground));
-  font-size: 0.75rem;
-  font-weight: bold;
-  line-height: 1;
-}
-
-input[type="checkbox"]:focus {
-  outline: none;
-  box-shadow: 
-    0 0 0 2px hsl(var(--ring) / 0.2),
-    0 0 0 4px hsl(var(--ring) / 0.1),
-    0 1px 2px hsl(var(--muted-foreground) / 0.1);
-}
-
-/* Enhanced Radix Checkbox Light Theme */
-[role="checkbox"] {
-  border: 2px solid hsl(var(--border));
-  background: hsl(var(--background));
-  box-shadow: 
-    0 1px 2px hsl(var(--muted-foreground) / 0.1),
-    0 0 0 1px hsl(var(--border) / 0.3);
-  transition: all 0.2s ease;
-}
-
-[role="checkbox"]:hover {
-  border-color: hsl(var(--primary) / 0.6);
-  box-shadow: 
-    0 0 0 2px hsl(var(--primary) / 0.2),
-    0 1px 2px hsl(var(--muted-foreground) / 0.1);
-  transform: scale(1.05);
-}
-
-[role="checkbox"][data-state="checked"] {
-  background: hsl(var(--primary));
-  border-color: hsl(var(--primary));
-  box-shadow: 
-    0 0 0 2px hsl(var(--primary) / 0.3),
-    0 0 4px hsl(var(--primary) / 0.2),
-    0 1px 2px hsl(var(--muted-foreground) / 0.1);
-}
-
-[role="checkbox"][data-state="checked"]:hover {
-  box-shadow: 
-    0 0 0 2px hsl(var(--primary) / 0.4),
-    0 0 6px hsl(var(--primary) / 0.3),
-    0 1px 2px hsl(var(--muted-foreground) / 0.1);
 }
 
 /* Enhanced Switch Light Theme */

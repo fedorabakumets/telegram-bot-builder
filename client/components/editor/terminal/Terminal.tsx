@@ -12,6 +12,8 @@ import { TerminalOutput } from './TerminalOutput';
 import { TerminalLogsToolbar } from './TerminalLogsToolbar';
 import { TerminalLogDetail } from './TerminalLogDetail';
 import { TerminalLogNotFound } from './TerminalLogNotFound';
+import { TerminalLogsContextBar } from './TerminalLogsContextBar';
+import { TerminalRepeatedErrors } from './TerminalRepeatedErrors';
 import { copyTerminalOutput, saveTerminalOutput } from './terminalUtils';
 import { TerminalHandle, TerminalProps } from './terminalTypes';
 import { useTerminalTheme } from './useTerminalTheme';
@@ -168,14 +170,25 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>((props, ref) =
   const currentMatchLineId = matchIndices.length > 0
     ? visibleLines[matchIndices[currentMatchIndex]]?.id
     : undefined;
+  /** Остановленный процесс оставляет сохранённый вывод последнего запуска. */
+  const launchLabel = props.isBotRunning === false ? 'Последний запуск' : 'Текущий запуск';
 
   return (
     <div
       className={`overflow-hidden ${themeClasses.terminalBgClass} ${themeClasses.terminalTextClass} font-mono text-sm w-full h-full flex flex-col ${isVisible ? 'opacity-100' : 'hidden'}`}
     >
+      <TerminalLogsContextBar
+        title={periodState.range ? 'Логи за период' : launchLabel}
+        botName={props.botName}
+        statusLabel={props.isBotRunning ? 'Онлайн' : 'Офлайн'}
+        errorCount={stderrCount(lines)}
+        errorsSelected={filter === 'stderr'}
+        onShowErrors={() => { closeDetail(); setFilter('stderr'); }}
+      />
       <TerminalLogsToolbar
         periodControl={projectId && tokenId ? <TerminalPeriodPicker
           period={periodState.period} range={periodState.range}
+          launchLabel={launchLabel}
           onChange={value => { closeDetail(); periodState.selectPeriod(value); }}
           onCustomRange={value => { closeDetail(); periodState.selectCustom(value); }}
         /> : undefined}
@@ -195,9 +208,12 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>((props, ref) =
         onSave={(format) => saveTerminalOutput(visibleLines, format)}
       />
       <TerminalPeriodSummary state={periodState} />
+      <TerminalRepeatedErrors lines={lines} onOpenLine={setSelectedLineId} />
       <div className="flex-1 overflow-hidden min-h-0 flex">
         <div className="flex-1 min-w-0">
           <TerminalOutput
+            live={!periodState.range && props.isBotRunning !== false}
+            streamKey={logKey ?? undefined}
             showDate={periodState.showDate}
             emptyMessage={periodState.isLoading ? 'Загрузка логов…' : periodState.error
               ? 'Не удалось загрузить логи. Нажмите «Обновить период».'
@@ -219,6 +235,8 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>((props, ref) =
           selectedLine ? (
             <TerminalLogDetail
               line={selectedLine}
+              lines={lines}
+              onSelectLine={setSelectedLineId}
               tokenId={tokenId}
               onClose={closeDetail}
               onPrev={handleDetailPrev}

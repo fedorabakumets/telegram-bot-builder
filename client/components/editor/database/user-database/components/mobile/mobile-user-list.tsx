@@ -14,6 +14,12 @@ import { MobileUserCard } from './mobile-user-card';
  * Пропсы компонента MobileUserList
  */
 interface MobileUserListProps {
+  /** Общая мутация удаления из карточки и таблицы. */
+  deleteUserMutation?: import('react').ComponentProps<typeof import('../desktop/desktop-actions-cell').DesktopActionsCell>['deleteUserMutation'];
+  /** Проект для загрузки аватара. */
+  projectId?: number;
+  /** Выбранный бот для загрузки аватара. */
+  tokenId?: number | null;
   /** Список пользователей */
   users: UserBotData[];
   /** Соответствие переменных вопросам сценария. */
@@ -80,8 +86,11 @@ export function MobileUserList(props: MobileUserListProps): React.JSX.Element {
     <div className="w-full space-y-3">
       {users.map((user, index) => (
         <MobileUserCard
-          key={user.id || index}
+          key={user.userId}
           user={user}
+          deleteUserMutation={props.deleteUserMutation}
+          projectId={props.projectId}
+          tokenId={props.tokenId}
           variableToQuestionMap={variableToQuestionMap}
           index={index}
           formatUserName={formatUserName}

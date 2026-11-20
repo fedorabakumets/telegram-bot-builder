@@ -3,6 +3,7 @@ import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { expect, it, vi } from 'vitest';
 import type { AnalyticsV2Snapshot, AnalyticsV2Source } from '@shared/analytics/v2';
+import { sourceColor } from '@shared/source-color';
 import { AnalyticsReportSources } from './analytics-report-sources';
 
 vi.mock('recharts', () => ({ ResponsiveContainer: () => null, ComposedChart: () => null, Line: () => null, Area: () => null, Bar: () => null,
@@ -21,12 +22,12 @@ function snapshot(): AnalyticsV2Snapshot {
 it('показывает сравнение каждого источника, включая отсутствующий сейчас, и не вычисляет процент от нуля', () => {
   const data = snapshot();
   const view = render(<AnalyticsReportSources snapshot={data} />);
-  const distribution = within(screen.getByRole('heading', { name: 'Распределение по источникам' }).closest('section')!);
+  const distribution = within(screen.getByRole('heading', { name: /^Распределение по источникам/ }).closest('section')!);
   expect(distribution.getByRole('button', { name: /Общий/ })).toHaveTextContent('+1 (+50%) к предыдущему периоду · по сохранённым данным');
   expect(distribution.getByRole('button', { name: /Новый/ })).toHaveTextContent('+1 к предыдущему периоду');
   expect(distribution.getByRole('button', { name: /Новый/ })).not.toHaveTextContent('% к предыдущему периоду');
   expect(distribution.getByRole('button', { name: /Прежний/ })).toHaveTextContent('-4');
-  const graph = within(screen.getByRole('heading', { name: 'Динамика источников' }).closest('section')!);
+  const graph = within(screen.getByRole('heading', { name: /^Динамика источников/ }).closest('section')!);
   expect(graph.getByText(/-2 .*к предыдущему периоду/)).toHaveTextContent('по сохранённым данным');
   view.rerender(<AnalyticsReportSources snapshot={{ ...data, previous: null, previous_sources: null }} />);
   expect(screen.queryByText(/к предыдущему периоду/)).not.toBeInTheDocument();
@@ -40,14 +41,22 @@ it('оставляет доступным прошлый источник при
   expect(row).toHaveTextContent('-4');
   expect(row).not.toHaveTextContent('NaN');
 });
-it('сохраняет выбранный источник при увеличении и закрытии распределения', () => {
-  render(<AnalyticsReportSources snapshot={snapshot()} />);
-  const card = within(screen.getByRole('heading', { name: 'Распределение по источникам' }).closest('section')!);
+/** Обновление снимка сохраняет открытые подробности существующего источника. */
+it('сохраняет выбранный источник при обновлении распределения', () => {
+  const data = snapshot();
+  const view = render(<AnalyticsReportSources snapshot={data} />);
+  const card = within(screen.getByRole('heading', { name: /^Распределение по источникам/ }).closest('section')!);
   fireEvent.click(card.getByRole('button', { name: /Общий/ }));
-  fireEvent.click(card.getByRole('button', { name: 'Развернуть график: Распределение по источникам' }));
-  const dialog = within(screen.getByRole('dialog', { name: 'Распределение по источникам' }));
-  expect(dialog.getByRole('button', { name: /Общий/ })).toHaveAttribute('aria-pressed', 'true');
-  expect(dialog.getByText('Количество')).toBeInTheDocument();
-  fireEvent.click(dialog.getByRole('button', { name: 'Закрыть график' }));
+  view.rerender(<AnalyticsReportSources snapshot={{ ...data, sources: [source('Общий', 5)] }} />);
   expect(card.getByRole('button', { name: /Общий/ })).toHaveAttribute('aria-pressed', 'true');
+  expect(card.getByText('Количество')).toBeInTheDocument();
+});
+/** Цвет источника не меняется при перестановке и исчезновении других источников. */
+it('использует общий с таблицей цвет независимо от позиции источника', () => {
+  const data = snapshot();
+  const view = render(<AnalyticsReportSources snapshot={data} />);
+  const marker = () => screen.getByRole('button', { name: /^Общий/ }).querySelector('[aria-hidden="true"]');
+  expect(marker()).toHaveStyle({ color: sourceColor('Общий') });
+  view.rerender(<AnalyticsReportSources snapshot={{ ...data, sources: [source('Другой', 100), source('Общий',1)] }} />);
+  expect(marker()).toHaveStyle({ color: sourceColor('Общий') });
 });

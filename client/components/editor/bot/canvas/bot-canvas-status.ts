@@ -4,6 +4,7 @@
  */
 
 import { isTokenActiveForBroadcast } from '@shared/broadcast-unauthorized';
+import { botShortStatusLabel } from '@shared/bot-availability-label';
 
 /** Статус, который видит пользователь на карточке и в шапке */
 export type BotCanvasStatus = 'online' | 'offline' | 'unknown' | 'inactive' | 'invalid' | 'frozen_running' | 'frozen_stopped' | 'frozen_unknown' | 'failed' | 'error' | 'starting' | 'stopping' | 'restarting';
@@ -35,7 +36,7 @@ export function resolveBotCanvasStatus(input: BotCanvasStatusInput): BotCanvasSt
   /** Остановка процесса остаётся видимой даже при ограничении Telegram или отключённом токене. */
   if (input.operation === 'stopping') return 'stopping';
   if (input.authorizationError === 'unauthorized') return 'invalid';
-  if (input.frozen) {
+  if (input.frozen || botShortStatusLabel(input.authorizationError, input.isActive) === 'Заморожен') {
     if (input.unknown) return 'frozen_unknown';
     return input.isRunning ? 'frozen_running' : 'frozen_stopped';
   }

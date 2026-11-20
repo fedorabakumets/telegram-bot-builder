@@ -28,6 +28,8 @@ export interface UserBotData {
   projectId?: number;
   /** Идентификатор токена бота */
   tokenId?: number;
+  /** Боты с сохранённой перепиской и отдельными состояниями этого пользователя. */
+  botMemberships?: import('@shared/user-bot-membership').UserBotMembership[];
   /** Имя пользователя в Telegram (@username без @) */
   userName?: string | null;
   /** Имя */

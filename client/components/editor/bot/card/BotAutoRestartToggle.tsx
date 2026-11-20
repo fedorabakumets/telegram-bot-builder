@@ -1,152 +1,96 @@
-/**
- * @fileoverview Переключатель автоперезапуска бота при краше
- * Позволяет включить/выключить автоперезапуск и задать максимальное число попыток.
- * @module BotAutoRestartToggle
- */
-
-import { Switch } from '@/components/ui/switch';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+/** @fileoverview Независимые настройки включения и лимита автоперезапуска бота. */
 import { RefreshCw } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { apiRequest } from '@/queryClient';
+import { BotRuntimeSelect, RESTART_ATTEMPT_OPTIONS } from './BotRuntimeSelect';
+import { resolveBotAutoRestart } from '@shared/bot-execution-settings';
+import type { BotProject, BotToken } from '@shared/schema';
 import { SettingCard } from './SettingCard';
 
-/** Пропсы компонента переключателя автоперезапуска */
+/** Изменяемые поля автоперезапуска. */
+type RestartKey = 'AUTO_RESTART' | 'MAX_RESTART_ATTEMPTS';
+
+/** Свойства настройки автоперезапуска. */
 interface BotAutoRestartToggleProps {
-  /** ID проекта */
+  /** Идентификатор проекта. */
   projectId: number;
-  /** ID токена */
-  tokenId: number;
-  /** Включён ли автоперезапуск (1 — да, 0/null — нет) */
-  autoRestart: number | null;
-  /** Максимальное количество попыток перезапуска */
-  maxRestartAttempts: number | null;
-  /** Дополнительный CSS-класс */
-  className?: string;
-  /** Колбэк для pending (если передан — не сохраняет мгновенно) */
-  onPendingChange?: (autoRestart: string, maxAttempts: string) => void;
+  /** Индивидуальные значения и признаки наследования бота. */
+  token: Pick<BotToken, 'id' | 'autoRestart' | 'maxRestartAttempts' | 'inheritAutoRestart' | 'inheritMaxRestartAttempts'>;
+  /** Проектные значения. */
+  defaults: Pick<BotProject, 'defaultAutoRestart' | 'defaultMaxRestartAttempts'>;
+  /** Может ли пользователь менять настройки. */
+  canManage: boolean;
+  /** Выбор источника или флага в общей очереди. */
+  pendingAutoRestart?: string;
+  /** Выбор источника или лимита в общей очереди. */
+  pendingMaxAttempts?: string;
+  /** Выполняется сохранение общего черновика. */
+  settingsSaving?: boolean;
+  /** Регистрирует только изменённое поле. */
+  onPendingChange?: (key: RestartKey, value: string) => void;
 }
 
 /**
- * Отправляет запрос на обновление настроек автоперезапуска
- * @param projectId - ID проекта
- * @param tokenId - ID токена
- * @param autoRestart - Флаг включения (0/1)
- * @param maxRestartAttempts - Максимум попыток
- */
-async function updateAutoRestart(
-  projectId: number,
-  tokenId: number,
-  autoRestart: number,
-  maxRestartAttempts: number,
-): Promise<void> {
-  const res = await fetch(`/api/projects/${projectId}/tokens/${tokenId}/auto-restart`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ autoRestart, maxRestartAttempts }),
-  });
-  if (!res.ok) throw new Error('Ошибка обновления автоперезапуска');
-}
-
-/**
- * Переключатель автоперезапуска бота при краше
- * @param props - Свойства компонента
- * @returns JSX элемент
+ * Позволяет настроить включение и число попыток отдельно друг от друга.
+ * @param props - Значения, права и очередь сохранения.
+ * @returns Контролы автоперезапуска.
  */
 export function BotAutoRestartToggle({
-  projectId,
-  tokenId,
-  autoRestart,
-  maxRestartAttempts,
-  className = '',
-  onPendingChange,
+  projectId, token, defaults, canManage, pendingAutoRestart, pendingMaxAttempts, settingsSaving, onPendingChange,
 }: BotAutoRestartToggleProps) {
-  const [localEnabled, setLocalEnabled] = useState(autoRestart === 1);
-  const [localAttempts, setLocalAttempts] = useState(maxRestartAttempts ?? 3);
   const queryClient = useQueryClient();
-
-  useEffect(() => {
-    setLocalEnabled(autoRestart === 1);
-    setLocalAttempts(maxRestartAttempts ?? 3);
-  }, [autoRestart, maxRestartAttempts]);
-
-  /** Мутация обновления настроек автоперезапуска */
   const mutation = useMutation({
-    mutationFn: ({ ar, ma }: { ar: number; ma: number }) =>
-      updateAutoRestart(projectId, tokenId, ar, ma),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/tokens`] });
+    mutationFn: async ({ key, value }: { key: RestartKey; value: string }) => {
+      const field = key === 'AUTO_RESTART' ? 'autoRestart' : 'maxRestartAttempts';
+      return apiRequest('PUT', `/api/projects/${projectId}/tokens/${token.id}/auto-restart`, {
+        [field]: value === 'inherit' ? value : Number(value),
+      });
     },
-    onError: () => {
-      // Откатываем локальный стейт при ошибке
-      setLocalEnabled(autoRestart === 1);
-      setLocalAttempts(maxRestartAttempts ?? 3);
-    },
+    onSuccess: () => Promise.all([
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/tokens`] }),
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/bot/launch-default`] }),
+    ]),
   });
+  const enabled = pendingAutoRestart ?? (token.inheritAutoRestart ? 'inherit' : String(token.autoRestart ?? 0));
+  const attempts = pendingMaxAttempts ?? (token.inheritMaxRestartAttempts ? 'inherit' : String(token.maxRestartAttempts ?? 3));
+  const effective = resolveBotAutoRestart(defaults, {
+    inheritAutoRestart: enabled === 'inherit',
+    autoRestart: Number(enabled),
+    inheritMaxRestartAttempts: attempts === 'inherit',
+    maxRestartAttempts: Number(attempts),
+  });
+  const disabled = !canManage || settingsSaving || mutation.isPending;
+
+  /**
+   * Добавляет изменение в общую форму или сохраняет отдельное поле.
+   * @param key - Ключ изменённого поля.
+   * @param value - Значение или признак наследования.
+   */
+  function change(key: RestartKey, value: string) {
+    if (onPendingChange) onPendingChange(key, value);
+    else mutation.mutate({ key, value });
+  }
 
   return (
     <SettingCard
       icon={RefreshCw}
       title="Перезапуск при сбое"
-      description={
-        localEnabled
-          ? 'Бот автоматически перезапустится если упадёт с ошибкой'
-          : 'Бот останется выключенным после сбоя'
-      }
-      active={localEnabled}
-      className={className}
-      action={
-        <Switch
-          id={`auto-restart-${tokenId}`}
-          aria-label="Перезапуск при сбое"
-          checked={localEnabled}
-          onCheckedChange={(checked) => {
-            setLocalEnabled(checked);
-            if (onPendingChange) {
-              onPendingChange(checked ? '1' : '0', String(localAttempts));
-            } else {
-              mutation.mutate({ ar: checked ? 1 : 0, ma: localAttempts });
-            }
-          }}
-          disabled={mutation.isPending}
-        />
-      }
+      description={effective.autoRestart ? 'Бот перезапустится после сбоя' : 'Бот останется выключенным после сбоя'}
+      active={effective.autoRestart}
     >
-      {localEnabled && (
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs text-muted-foreground">Максимум попыток</span>
-          <Select
-            value={String(localAttempts)}
-            onValueChange={(val) => {
-              const ma = parseInt(val);
-              setLocalAttempts(ma);
-              if (onPendingChange) {
-                onPendingChange('1', String(ma));
-              } else {
-                mutation.mutate({ ar: 1, ma });
-              }
-            }}
-            disabled={mutation.isPending}
-          >
-            <SelectTrigger className="h-7 w-28 text-xs">
-              <SelectValue placeholder="Попыток" />
-            </SelectTrigger>
-            <SelectContent>
-              {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
-                <SelectItem key={n} value={String(n)} className="text-xs">
-                  {n} {n === 1 ? 'попытка' : n < 5 ? 'попытки' : 'попыток'}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      )}
+      <div className="space-y-2">
+        <BotRuntimeSelect label="Перезапуск при сбое" value={enabled} disabled={disabled}
+          options={[
+            { value: 'inherit', label: `Как в проекте · ${defaults.defaultAutoRestart === 1 ? 'Включено' : 'Выключено'}` },
+            { value: '1', label: 'Включено для бота' },
+            { value: '0', label: 'Выключено для бота' },
+          ]} onChange={(value) => change('AUTO_RESTART', value)} />
+        <BotRuntimeSelect label="Максимум попыток перезапуска" value={attempts} disabled={disabled}
+          options={[{ value: 'inherit', label: `Как в проекте · лимит ${defaults.defaultMaxRestartAttempts ?? 3}` }, ...RESTART_ATTEMPT_OPTIONS]}
+          onChange={(value) => change('MAX_RESTART_ATTEMPTS', value)} />
+        {!effective.autoRestart && <p className="text-xs text-muted-foreground">Лимит действует при включённом перезапуске.</p>}
+        {mutation.error && <p role="alert" className="text-xs text-destructive">{mutation.error.message}</p>}
+      </div>
     </SettingCard>
   );
 }

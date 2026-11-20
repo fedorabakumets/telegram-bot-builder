@@ -2,11 +2,12 @@
  * @fileoverview Маршруты интеграции с ботами: диалоги, группы, файлы
  * @module setupBotIntegrationRoutes
  */
-
 import { getBotUserDataHandler } from './botUsers/handlers/getBotUserDataHandler';
 import { getMessageFileSize } from './botIntegration/handlers/botData/get-message-file-size';
 import { durableProjectAction } from "./durable-project-action";
 import type { Express } from "express";
+import { rateLimit } from 'express-rate-limit';
+import { UsersRateLimitStore } from './userProjectsTokens/users-rate-limit-store';
 import { requireProjectAccess } from "../middleware/requireProjectAccess";
 import { requireMediaFileOwnership } from "../middleware/requireMediaFileOwnership";
 import { getBotDataHandler, getAvatarHandler } from "./botIntegration/handlers/botData";
@@ -35,6 +36,8 @@ import { listDialogsHandler } from './dialogs/list-dialogs-handler';
 import { searchDialogMessagesHandler } from './dialogs/search-dialog-messages-handler';
 import { getDialogMessagesHandler } from './dialogs/get-dialog-messages-handler';
 import { checkPrivateChatAccessHandler } from './dialogs/check-private-chat-access-handler';
+import { checkTelegramBotsHandler, getActiveTelegramBotCheckHandler } from './users/check-telegram-bots-handler';
+import { registerCheckHistoryRoutes } from './check-history/routes';
 import {
   cancelChatAccessCheckHandler,
   getActiveChatAccessCheckHandler,
@@ -47,22 +50,45 @@ import {
  * @returns void
  */
 export function setupBotIntegrationRoutes(app: Express) {
+  /** Общая квота для чтения карточек, диалогов и данных бота до проверки доступа к проекту. */
+  const readLimit = rateLimit({
+    windowMs: 60_000, limit: 240, store: new UsersRateLimitStore('bot-integration-read'),
+    standardHeaders: 'draft-7', legacyHeaders: false,
+    message: { message: 'Слишком много запросов к диалогам и данным бота. Повторите позже.' },
+  });
+  /** Загрузка нескольких аватаров списком использует отдельную квоту. */
+  const avatarLimit = rateLimit({
+    windowMs: 60_000, limit: 600, store: new UsersRateLimitStore('bot-integration-avatar'),
+    standardHeaders: 'draft-7', legacyHeaders: false,
+    message: { message: 'Слишком много запросов аватаров. Повторите позже.' },
+  });
+  /** Отправка текста и сообщений из узлов использует общую квоту до проверки проекта. */
+  const sendLimit = rateLimit({
+    windowMs: 60_000, limit: 120, store: new UsersRateLimitStore('bot-integration-send'),
+    standardHeaders: 'draft-7', legacyHeaders: false,
+    message: { message: 'Слишком много запросов отправки сообщений. Повторите позже.' },
+  });
+  registerCheckHistoryRoutes(app);
+  app.get('/api/projects/:projectId/telegram-bot-checks/active', requireProjectAccess, getActiveTelegramBotCheckHandler);
+  /** Ручная проверка самих ботов не отправляет сообщения и не меняет статусы пользователей. */
+  app.post('/api/projects/:projectId/telegram-bot-checks', requireProjectAccess, checkTelegramBotsHandler);
   /** Точная карточка пользователя с переменными выбранного бота. */
-  app.get('/api/projects/:projectId/users/:userId', requireProjectAccess, getBotUserDataHandler);
-  app.get('/api/projects/:projectId/dialogs', requireProjectAccess, listDialogsHandler);
+  app.get('/api/projects/:projectId/users/:userId', readLimit, requireProjectAccess, getBotUserDataHandler);
+  app.get('/api/projects/:projectId/dialogs', readLimit, requireProjectAccess, listDialogsHandler);
   /** Поиск сохранённого текста требует разрешения на проект и явного токена. */
-  app.get('/api/projects/:projectId/dialogs/messages/search', requireProjectAccess, searchDialogMessagesHandler);
+  app.get('/api/projects/:projectId/dialogs/messages/search', readLimit, requireProjectAccess, searchDialogMessagesHandler);
   /** История конкретного чата требует разрешения на проект и явного токена. */
-  app.get('/api/projects/:projectId/dialogs/:chatId/messages', requireProjectAccess, getDialogMessagesHandler);
+  app.get('/api/projects/:projectId/dialogs/:chatId/messages', readLimit, requireProjectAccess, getDialogMessagesHandler);
   /** Проверяет личный чат без отправки сообщения пользователю. */
   app.post('/api/projects/:projectId/dialogs/:chatId/check-access', requireProjectAccess, checkPrivateChatAccessHandler);
   /** Массовая проверка личных диалогов выбранного бота. */
   app.post('/api/projects/:projectId/chat-access-checks', requireProjectAccess, startChatAccessCheckHandler);
   app.get('/api/projects/:projectId/chat-access-checks/active', requireProjectAccess, getActiveChatAccessCheckHandler);
   app.post('/api/projects/:projectId/chat-access-checks/:jobId/cancel', requireProjectAccess, cancelChatAccessCheckHandler);
-  app.get("/api/projects/:projectId/bot/data", requireProjectAccess, getBotDataHandler);
+  app.get("/api/projects/:projectId/bot/data", readLimit, requireProjectAccess, getBotDataHandler);
   app.get(
     "/api/projects/:projectId/users/:userId/avatar",
+    avatarLimit,
     requireProjectAccess,
     getAvatarHandler,
   );
@@ -103,11 +129,13 @@ export function setupBotIntegrationRoutes(app: Express) {
   );
   app.post(
     "/api/projects/:projectId/users/:userId/send-message",
+    sendLimit,
     requireProjectAccess,
     durableProjectAction(sendMessageHandler, "send_dialog_message"),
   );
   app.post(
     "/api/projects/:projectId/users/:userId/send-node-message",
+    sendLimit,
     requireProjectAccess,
     durableProjectAction(sendNodeMessageHandler, "send_node_message"),
   );

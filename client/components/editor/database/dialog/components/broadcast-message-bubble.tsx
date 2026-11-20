@@ -13,6 +13,7 @@ import { getCampaignStatusBadge } from '../utils/campaign-status-badge';
 import { BroadcastBubbleActions } from './broadcast-bubble-actions';
 import { BroadcastBubbleEditForm } from './broadcast-bubble-edit-form';
 import { CampaignBubbleMeta } from './campaign-bubble-meta';
+import { BroadcastKeyboardPreview } from './broadcast-keyboard-preview';
 import type { Broadcast } from '@shared/schema';
 
 /**
@@ -30,7 +31,7 @@ interface BroadcastMessageBubbleProps {
   /** Колбэк повтора рассылки: открывает форму с исходным текстом и вложениями */
   onRepeat?: (broadcastId: number) => void;
   /** Колбэк редактирования рассылки */
-  onEdit?: (broadcastId: number, newText: string) => void;
+  onEdit?: (broadcastId: number, newText: string) => Promise<boolean>;
   /** Идёт ли редактирование этой рассылки */
   isEditing?: boolean;
 }
@@ -90,10 +91,10 @@ export function BroadcastMessageBubble({
           <BroadcastBubbleEditForm
             value={editText}
             onChange={setEditText}
-            onSave={() => {
+            onSave={async () => {
               if (!editText.trim() || !onEdit) return;
-              onEdit(broadcast.id, editText.trim());
-              setEditMode(false);
+              const saved = await onEdit(broadcast.id, editText.trim());
+              if (saved) setEditMode(false);
             }}
             onCancel={() => { setEditMode(false); setEditText(broadcast.messageText ?? ''); }}
             isSaving={isEditing}
@@ -105,6 +106,8 @@ export function BroadcastMessageBubble({
           </div>
         )}
 
+        {/* Сохранённая клавиатура видна и при просмотре, и при правке текста. */}
+        <BroadcastKeyboardPreview buttons={broadcast.buttons} buttonsPerRow={broadcast.buttonsPerRow} broadcastId={broadcast.id} />
         <CampaignBubbleMeta
           createdAt={broadcast.createdAt}
           isLiveRunning={isRunning}

@@ -66,6 +66,7 @@ import {
   VersionsPanel,
 } from './editor/lazy-panels';
 import { ProjectNotFound } from '@/components/editor/project-not-found';
+import { ProjectLoadFailure } from '@/components/editor/project-load-error';
 import { AdaptiveHeader } from '@/components/editor/header/adaptive-header';
 import { useArchiveProjectMutation } from '@/components/editor/sidebar/hooks/use-archive-project-mutation';
 import type { BotProjectWithArchive } from '@/components/editor/sidebar/hooks/use-projects-query';
@@ -500,7 +501,8 @@ export default function Editor() {
   const {
     currentProject,
     firstProject,
-    isProjectNotFound: projectNotFound
+    isProjectNotFound: projectNotFound,
+    isProjectLoadError: projectLoadError
   } = useProjectLoader({ projectId });
 
   // Активный проект
@@ -1640,6 +1642,8 @@ export default function Editor() {
     </Suspense>
   ) : null;
 
+  /** Временный сбой сервера или сессии не означает, что проект удалён. */
+  if (projectLoadError && !activeProject) return <ProjectLoadFailure />;
   // Показываем компонент 404 если проект не найден
   if (projectNotFound) {
     return <ProjectNotFound />;
@@ -1660,8 +1664,10 @@ export default function Editor() {
 
   // Функция рендеринга содержимого для гибкого макета
   const renderFlexibleLayoutContent = () => {
+    /** В этом макете основные переходы и действия уже выведены в AppSidebar. */
     const headerContent = (
       <AdaptiveHeader
+        hasWorkspaceSidebar
         config={layoutConfig}
         projectName={activeProject.name}
         projects={allProjects.map((p) => ({ id: p.id, name: p.name }))}
@@ -1884,7 +1890,7 @@ export default function Editor() {
                   projectName={activeProject.name}
                   onOpenDialogPanel={handleOpenDialogPanel}
                   onOpenUserDetailsPanel={handleOpenUserDetailsPanel}
-                  onNavigateToDialog={(user) => { setPendingDialogUser(user); handleTabChange('dialogs'); }}
+                  onNavigateToDialog={(user) => { if (user.tokenId) setSelectedDatabaseTokenId(user.tokenId); setPendingDialogUser(user); handleTabChange('dialogs'); }}
                   selectedTokenId={selectedDatabaseTokenId}
                   onSelectToken={setSelectedDatabaseTokenId}
                   allProjects={allProjects.map((p) => ({ id: p.id, name: p.name }))}
@@ -2322,7 +2328,7 @@ export default function Editor() {
                       projectName={activeProject.name}
                       onOpenDialogPanel={handleOpenDialogPanel}
                       onOpenUserDetailsPanel={handleOpenUserDetailsPanel}
-                      onNavigateToDialog={(user) => { setPendingDialogUser(user); handleTabChange('dialogs'); }}
+                      onNavigateToDialog={(user) => { if (user.tokenId) setSelectedDatabaseTokenId(user.tokenId); setPendingDialogUser(user); handleTabChange('dialogs'); }}
                       selectedTokenId={selectedDatabaseTokenId}
                       onSelectToken={setSelectedDatabaseTokenId}
                       allProjects={allProjects.map((p) => ({ id: p.id, name: p.name }))}

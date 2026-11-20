@@ -85,7 +85,7 @@ export function DialogInput({ isPending, projectId, availableNodes, onSend, send
   };
 
   return (
-    <div className="space-y-2 p-2" onPasteCapture={onPasteCapture}>
+    <div className="dialogs-composer space-y-2 p-2" onPasteCapture={onPasteCapture}>
       {/* Панель форматирования использует всю ширину над строкой ввода. */}
       <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-end gap-2">
         <DialogAttachmentMenu

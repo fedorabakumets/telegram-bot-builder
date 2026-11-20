@@ -145,22 +145,22 @@ describe('DialogHeader', () => {
       expect(outerDiv).toHaveClass('border-b');
     });
 
-    it('должен применять стили к иконке', () => {
+    /** Проверяет размеры и цвет иконки из темы. */
+    it('использует приглушённый цвет для иконки сообщения', () => {
       render(<DialogHeader {...defaultProps} />, { wrapper: createWrapper() });
 
       const icon = screen.getByTestId('message-square-icon');
       expect(icon).toHaveClass('w-3.5');
       expect(icon).toHaveClass('h-3.5');
-      expect(icon).toHaveClass('text-white');
+      expect(icon).toHaveClass('text-muted-foreground');
     });
 
-    it('должен применять градиент к контейнеру иконки', () => {
-      const { container } = render(<DialogHeader {...defaultProps} />, { wrapper: createWrapper() });
+    /** Проверяет оформление подложки именно у иконки сообщения. */
+    it('использует приглушённый фон и скругление для подложки иконки', () => {
+      render(<DialogHeader {...defaultProps} />, { wrapper: createWrapper() });
 
-      const iconContainer = container.querySelector('.rounded-full');
-      expect(iconContainer).toHaveClass('bg-gradient-to-br');
-      expect(iconContainer).toHaveClass('from-blue-500');
-      expect(iconContainer).toHaveClass('to-purple-500');
+      const iconContainer = screen.getByTestId('message-square-icon').parentElement;
+      expect(iconContainer).toHaveClass('rounded-lg', 'bg-muted');
     });
   });
 

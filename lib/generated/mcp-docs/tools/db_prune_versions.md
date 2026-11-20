@@ -9,6 +9,7 @@
 
 ```json
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "project_id": {
@@ -16,31 +17,29 @@
       "description": "Числовой ID проекта из URL редактора"
     },
     "keep": {
-      "type": "number",
-      "description": "Сколько последних версий (по дате) сохранить"
+      "description": "Сколько последних версий (по дате) сохранить",
+      "type": "number"
     },
     "kind": {
+      "description": "Удалять только версии этого вида",
       "type": "string",
       "enum": [
         "auto",
         "manual"
-      ],
-      "description": "Удалять только версии этого вида"
+      ]
     },
     "author_kind": {
+      "description": "Удалять только версии этого типа автора",
       "type": "string",
       "enum": [
         "agent",
         "user"
-      ],
-      "description": "Удалять только версии этого типа автора"
+      ]
     }
   },
   "required": [
     "project_id"
-  ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  ]
 }
 ```
 
@@ -77,6 +76,7 @@
 
 ```json
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "data": {
@@ -146,11 +146,13 @@
             },
             "projectId": {
               "type": "integer",
-              "exclusiveMinimum": 0
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             },
             "revision": {
               "type": "integer",
-              "minimum": 0
+              "minimum": 0,
+              "maximum": 9007199254740991
             }
           },
           "required": [
@@ -160,6 +162,9 @@
         },
         "sideEffects": {
           "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
           "additionalProperties": {}
         }
       },
@@ -176,10 +181,10 @@
     }
   },
   "required": [
+    "data",
     "execution"
   ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  "additionalProperties": false
 }
 ```
 

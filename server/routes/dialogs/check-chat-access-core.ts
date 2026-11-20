@@ -8,6 +8,7 @@ import { storage } from '../../storages/storage';
 import { fetchWithProxy } from '../../utils/telegram-proxy';
 import { saveChatAccess } from './access-store';
 import { classifyChatAction, type ChatAccessProbe } from './check-chat-access-classify';
+import { refreshPrivateChatProfile } from './refresh-private-chat-profile';
 
 /**
  * Вызывает sendChatAction и классифицирует ответ, ничего не сохраняя.
@@ -42,10 +43,12 @@ export async function probePrivateChatAccess(botToken: string, chatId: string): 
  * @param tokenId - Токен бота
  * @param chatId - Личный чат
  * @param probe - Уже классифицированный результат
+ * @param botToken - Необязательный секрет для независимого обновления профиля через getChat.
  * @returns Сохранённый статус и время проверки
  */
 export async function persistChatAccessOutcome(
   projectId: number, tokenId: number, chatId: string, probe: ChatAccessProbe,
+  botToken?: string,
 ) {
   const access = await saveChatAccess(projectId, tokenId, chatId, probe.status);
   const userId = Number(chatId);
@@ -59,6 +62,10 @@ export async function persistChatAccessOutcome(
     await storage.markBotUserBlocked(projectId, tokenId, userId);
   } else if (probe.kind === 'deleted') {
     await storage.markBotUserDeleted(projectId, tokenId, userId);
+  }
+  /** getChat не подтверждает возможность отправки и не подменяет исход проверки. */
+  if (botToken && !['unauthorized', 'retry', 'deleted'].includes(probe.kind)) {
+    await refreshPrivateChatProfile(projectId, tokenId, chatId, botToken);
   }
   return access;
 }

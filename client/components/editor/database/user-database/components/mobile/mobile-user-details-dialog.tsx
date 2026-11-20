@@ -51,7 +51,7 @@ export function MobileUserDetailsDialog({ user, name, open, onOpenChange, variab
             <MobileUserBadges user={user} />
             <p className="text-sm tabular-nums">Сообщений: {user.interactionCount ?? 0}</p>
           </div>
-          <UserDates createdAt={user.createdAt} updatedAt={getUserUpdatedAt(user)} lastInteraction={user.lastInteraction} />
+          <UserDates firstSavedMessageAt={user.firstSavedMessageAt} createdAt={user.createdAt} updatedAt={getUserUpdatedAt(user)} lastInteraction={user.lastInteraction} />
           <UserTags tags={getUserTags(user)} />
           <section className="space-y-3">
             <h3 className="text-sm font-medium">Сохранённые данные · {entries.length}</h3>

@@ -9,6 +9,7 @@
 
 ```json
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "project_id": {
@@ -21,7 +22,8 @@
       "properties": {
         "tokenId": {
           "type": "integer",
-          "exclusiveMinimum": 0
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
         },
         "marker": {
           "type": "string",
@@ -59,7 +61,8 @@
         "exchangeRateDate": {
           "anyOf": [
             {
-              "$ref": "#/properties/data/properties/day"
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
             },
             {
               "type": "null"
@@ -67,24 +70,26 @@
           ]
         },
         "note": {
+          "default": "",
           "type": "string",
-          "maxLength": 2000,
-          "default": ""
+          "maxLength": 2000
         },
         "untilDay": {
-          "$ref": "#/properties/data/properties/day"
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
         },
         "allocation": {
+          "default": "single",
           "type": "string",
           "enum": [
             "single",
             "equal"
-          ],
-          "default": "single"
+          ]
         },
         "requestId": {
           "type": "string",
-          "format": "uuid"
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
         }
       },
       "required": [
@@ -102,9 +107,7 @@
   "required": [
     "project_id",
     "data"
-  ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  ]
 }
 ```
 
@@ -132,6 +135,7 @@
 
 ```json
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "data": {
@@ -201,11 +205,13 @@
             },
             "projectId": {
               "type": "integer",
-              "exclusiveMinimum": 0
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             },
             "revision": {
               "type": "integer",
-              "minimum": 0
+              "minimum": 0,
+              "maximum": 9007199254740991
             }
           },
           "required": [
@@ -215,6 +221,9 @@
         },
         "sideEffects": {
           "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
           "additionalProperties": {}
         }
       },
@@ -231,10 +240,10 @@
     }
   },
   "required": [
+    "data",
     "execution"
   ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  "additionalProperties": false
 }
 ```
 

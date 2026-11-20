@@ -9,7 +9,7 @@ interface WorkspaceTabHeadingProps {
   /** Короткое название раздела. */
   title: string;
   /** Описание назначения или следующего шага. */
-  description: string;
+  description?: string;
   /** Иконка раздела из основной навигации. */
   icon: ReactNode;
   /** Дополнительные действия справа от заголовка. */
@@ -29,7 +29,7 @@ export function WorkspaceTabHeading({ title, description, icon, actions }: Works
           <span aria-hidden="true" className="shrink-0 text-primary [&>svg]:h-5 [&>svg]:w-5">{icon}</span>
           <h2 className="text-balance text-xl font-semibold">{title}</h2>
         </div>
-        <p className="max-w-2xl text-pretty text-base text-muted-foreground">{description}</p>
+        {description && <p className="max-w-2xl text-pretty text-base text-muted-foreground">{description}</p>}
       </div>
       {actions && <div className="shrink-0">{actions}</div>}
     </header>

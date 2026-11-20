@@ -11,6 +11,7 @@ import { parseHTML } from '@/components/editor/inline-rich/utils/formatting-pars
 import { useBroadcastCampaignDetail } from '@/components/editor/broadcast/hooks/use-broadcast-campaign-detail';
 import { useCampaignLiveProgress } from '@/components/editor/broadcast/hooks/use-campaign-live-progress';
 import { useDeleteBroadcastCampaign } from '@/components/editor/broadcast/hooks/use-delete-broadcast-campaign';
+import { isBroadcastEditComplete } from '@/components/editor/broadcast/hooks/edit-result';
 import { useEditBroadcastCampaign } from '@/components/editor/broadcast/hooks/use-edit-broadcast-campaign';
 import { useStopBroadcastCampaign } from '@/components/editor/broadcast/hooks/use-stop-broadcast-campaign';
 import { pluralizeBots } from '@/components/editor/broadcast/utils/format-bot-label';
@@ -18,6 +19,7 @@ import { CampaignBotsList } from './campaign-bots-list';
 import { CampaignBubbleActions } from './campaign-bubble-actions';
 import { CampaignBubbleMeta } from './campaign-bubble-meta';
 import { BroadcastDeleteConfirm } from './broadcast-delete-confirm';
+import { BroadcastKeyboardPreview } from './broadcast-keyboard-preview';
 import { getCampaignStatusBadge } from '../utils/campaign-status-badge';
 import type { BroadcastCampaign } from '@shared/schema';
 
@@ -89,10 +91,14 @@ export function BroadcastCampaignBubble({
   }, [campaign.messageText]);
 
   /** Сохранить новый текст сразу во всех ботах */
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (!editText.trim()) return;
-    editMutation.mutate({ campaignId: campaign.id, messageText: editText.trim() });
-    setEditMode(false);
+    try {
+      const result = await editMutation.mutateAsync({ campaignId: campaign.id, messageText: editText.trim() });
+      if (isBroadcastEditComplete(result)) setEditMode(false);
+    } catch {
+      // Ошибку показывает хук; оставляем текст доступным для повторного сохранения.
+    }
   };
 
   return (
@@ -147,6 +153,8 @@ export function BroadcastCampaignBubble({
           </div>
         )}
 
+        {/* Клавиатура кампании сохраняется при изменении текста. */}
+        <BroadcastKeyboardPreview buttons={campaign.buttons} buttonsPerRow={campaign.buttonsPerRow} broadcastId={campaign.id} />
         {/* Мета-информация: дата, суммарные счётчики, статус */}
         <CampaignBubbleMeta
           createdAt={campaign.createdAt}

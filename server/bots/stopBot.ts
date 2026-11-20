@@ -130,9 +130,11 @@ export async function stopBot(projectId: number, tokenId: number, options?: { /*
     const processKey = `${projectId}_${tokenId}`;
     const botProcess = botProcesses.get(processKey);
 
-    /** Сохранённый режим бота определяет снятие webhook независимо от общего адреса API. */
-    const tokenRecord = await storage.getBotToken(tokenId);
-    if (tokenRecord?.launchMode === 'webhook') {
+    /** Снимаем webhook текущего экземпляра, даже если уже выбран polling для следующего запуска. */
+    const [tokenRecord, instance] = await Promise.all([
+      storage.getBotToken(tokenId), storage.getBotInstanceByToken(tokenId),
+    ]);
+    if ((instance?.launchMode ?? tokenRecord?.launchMode) === 'webhook') {
       try {
         if (tokenRecord?.token) {
           const deleteUrl = `${getTelegramApiBaseUrl()}/bot${tokenRecord.token}/deleteWebhook`;
@@ -140,7 +142,8 @@ export async function stopBot(projectId: number, tokenId: number, options?: { /*
           console.log(`🔗 Webhook удалён для токена ${tokenId}`);
         }
       } catch (webhookError) {
-        console.log(`⚠️ Не удалось удалить webhook для токена ${tokenId}:`, webhookError);
+        /** Передаёт идентификатор отдельно от шаблона сообщения. */
+        console.log('⚠️ Не удалось удалить webhook для токена %s:', tokenId, webhookError);
       }
     }
 
@@ -179,7 +182,7 @@ export async function stopBot(projectId: number, tokenId: number, options?: { /*
         console.log(`Процессы для бота ${projectId} (токен ${tokenId}) не найдены`);
       }
     } catch (error) {
-      console.log(`Ошибка при поиске процессов для бота ${projectId} (токен ${tokenId}):`, error);
+      console.log('Ошибка при поиске процессов для бота %s (токен %s):', projectId, tokenId, error);
     }
 
     // Если процесс был в памяти - завершаем его мягко

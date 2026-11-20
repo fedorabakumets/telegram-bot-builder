@@ -1,0 +1,21 @@
+/** @fileoverview Компактная колонка переменных и отдельная панель ответов без скролла внутри таблицы. */
+/** Более плотные колонки помещают таблицу в среднюю рабочую область. */
+.users-workspace .users-table-frame tbody td { vertical-align: top; }
+.users-variables-cell { min-width: 120px; max-width: 173px; }
+.users-variables { min-width: 0; font-size: 12px; line-height: 16px; }
+.users-variables-preview { display: grid; gap: 4px; }
+.users-variables-preview > div { display: flex; min-width: 0; gap: 8px; }
+.users-variables-preview dt { max-width: 45%; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted-foreground); }
+.users-variables-preview dd { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/** Текстовый переход не меняет высоту строки и повторяет спокойные действия таблицы. */
+.users-workspace .users-table-frame td .users-variables-toggle,
+.users-variables-toggle { display: flex; align-items: center; gap: 8px; margin-top: 8px; padding: 0; border: 0; background: transparent; color: var(--muted-foreground); font-size: 12px; line-height: 16px; }
+.users-variables-toggle svg { width: 14px; height: 14px; }
+.users-workspace .users-table-frame td .users-variables-toggle:hover,
+.users-variables-toggle:hover { color: var(--foreground); background: transparent; border: 0; }
+/** Весь список прокручивается в отдельной панели, не растягивая таблицу. */
+.users-variables-values { display: flex; flex-direction: column; gap: 12px; }
+.users-variables-values > article { padding: 12px; border-radius: 8px; }
+.users-variables-values > article > div:first-child { margin-bottom: 8px; }
+.users-variables-values :is(p, span) { overflow-wrap: anywhere; }
+.users-variables-values img { max-width: 100%; }

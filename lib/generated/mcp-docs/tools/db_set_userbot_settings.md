@@ -9,55 +9,61 @@
 
 ```json
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "project_id": {
       "type": "integer",
       "exclusiveMinimum": 0,
+      "maximum": 9007199254740991,
       "description": "ID проекта"
     },
     "token_id": {
       "type": "integer",
       "exclusiveMinimum": 0,
+      "maximum": 9007199254740991,
       "description": "ID токена из db_list_bot_tokens"
     },
     "enabled": {
-      "type": "number",
-      "enum": [
-        0,
-        1
+      "anyOf": [
+        {
+          "type": "number",
+          "const": 0
+        },
+        {
+          "type": "number",
+          "const": 1
+        }
       ],
       "description": "Включить режим: 0 или 1"
     },
     "api_id": {
+      "description": "API ID; null или пустая строка очищают значение",
       "type": [
         "string",
         "null"
-      ],
-      "description": "API ID; null или пустая строка очищают значение"
+      ]
     },
     "api_hash": {
+      "description": "API Hash; null, пустая строка или маска сохраняют секрет",
       "type": [
         "string",
         "null"
-      ],
-      "description": "API Hash; null, пустая строка или маска сохраняют секрет"
+      ]
     },
     "session_string": {
+      "description": "Готовая сессия; null, пустая строка или маска сохраняют секрет",
       "type": [
         "string",
         "null"
-      ],
-      "description": "Готовая сессия; null, пустая строка или маска сохраняют секрет"
+      ]
     }
   },
   "required": [
     "project_id",
     "token_id",
     "enabled"
-  ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  ]
 }
 ```
 
@@ -85,6 +91,7 @@
 
 ```json
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "data": {
@@ -154,11 +161,13 @@
             },
             "projectId": {
               "type": "integer",
-              "exclusiveMinimum": 0
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             },
             "revision": {
               "type": "integer",
-              "minimum": 0
+              "minimum": 0,
+              "maximum": 9007199254740991
             }
           },
           "required": [
@@ -168,6 +177,9 @@
         },
         "sideEffects": {
           "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
           "additionalProperties": {}
         }
       },
@@ -184,10 +196,10 @@
     }
   },
   "required": [
+    "data",
     "execution"
   ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  "additionalProperties": false
 }
 ```
 

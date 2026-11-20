@@ -41,7 +41,7 @@ export function registerProjectMessagesPatchPaths(
       "потом у нас в БД, UI обновляется по WebSocket.\n\n" +
       "Только сообщения бота (не пользователя) с известным Telegram id. " +
       "Тело: обязательный `messageText`; опционально `buttons` / `buttonsPerRow` " +
-      "(пустой массив кнопок снимает клавиатуру).\n\n" +
+      "(отсутствие buttons сохраняет клавиатуру, пустой массив явно снимает её).\n\n" +
       "Query `tokenId` — каким ботом слать edit " +
       "(иначе дефолтный/первый токен проекта).\n\n" +
       "**Auth:** cookie или Bearer PAT + доступ к проекту.\n\n" +

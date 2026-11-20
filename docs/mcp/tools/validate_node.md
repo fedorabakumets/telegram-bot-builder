@@ -9,23 +9,25 @@
 
 ```json
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "node": {
       "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
       "additionalProperties": {},
       "description": "Объект ноды { id, type, position, data }"
     },
     "type": {
-      "type": "string",
-      "description": "Ожидаемый тип для сверки"
+      "description": "Ожидаемый тип для сверки",
+      "type": "string"
     }
   },
   "required": [
     "node"
-  ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  ]
 }
 ```
 
@@ -62,6 +64,7 @@
 
 ```json
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "data": {
@@ -131,11 +134,13 @@
             },
             "projectId": {
               "type": "integer",
-              "exclusiveMinimum": 0
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             },
             "revision": {
               "type": "integer",
-              "minimum": 0
+              "minimum": 0,
+              "maximum": 9007199254740991
             }
           },
           "required": [
@@ -145,6 +150,9 @@
         },
         "sideEffects": {
           "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
           "additionalProperties": {}
         }
       },
@@ -161,10 +169,10 @@
     }
   },
   "required": [
+    "data",
     "execution"
   ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  "additionalProperties": false
 }
 ```
 

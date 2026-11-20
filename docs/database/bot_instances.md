@@ -14,6 +14,7 @@
 | project_id | integer | - | NO | - | [bot_projects.id](./bot_projects.md) | Идентификатор проекта (ссылка на bot_projects.id) |
 | token_id | integer | - | NO | - | [bot_tokens.id](./bot_tokens.md) | Идентификатор токена (ссылка на bot_tokens.id) |
 | status | text | - | NO | - | - | Статус экземпляра ("running", "stopped", "error") |
+| launch_mode | text | - | YES | - | - | Способ получения обновлений, выбранный при запуске экземпляра. |
 | desired_status | text | - | YES | - | - | Желаемое состояние; null сохраняет поведение старых записей |
 | desired_generation | integer | `0` | NO | - | - | Версия намерения для защиты от устаревших команд |
 | desired_updated_at | timestamp | - | YES | - | - | Время последнего изменения намерения |

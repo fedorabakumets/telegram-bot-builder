@@ -7,28 +7,23 @@
  * @module BotDatabaseToggle
  */
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Switch } from '@/components/ui/switch';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Database, ChevronDown } from 'lucide-react';
 import { SettingCard } from './SettingCard';
+import { useProjectDatabaseSetting } from '../project/use-project-database-setting';
 
+/** Свойства настройки, общей для всех ботов проекта. */
 interface BotDatabaseToggleProps {
   /** ID проекта */
   projectId: number;
-  /** ID токена */
-  tokenId: number;
-  /** Включена ли база данных (1 — да, 0/null — нет) */
+  /** Включена ли база данных в проекте (1 — да, 0/null — нет). */
   userDatabaseEnabled: number | null;
-  /** Мутация переключения базы данных */
-  toggleDatabaseMutation: {
-    isPending: boolean;
-    mutate: (enabled: boolean) => void;
-  };
+  /** Может ли пользователь менять настройки проекта. */
+  canManage: boolean;
   /** Дополнительный CSS-класс для управления col-span */
   className?: string;
-  /** Колбэк для pending (если передан — не сохраняет мгновенно) */
-  onPendingChange?: (key: string, value: string) => void;
 }
 
 /**
@@ -37,46 +32,31 @@ interface BotDatabaseToggleProps {
  * @returns JSX элемент
  */
 export function BotDatabaseToggle({
-  tokenId,
+  projectId,
   userDatabaseEnabled,
-  toggleDatabaseMutation,
+  canManage,
   className = '',
-  onPendingChange,
-}: Omit<BotDatabaseToggleProps, 'projectId'> & { projectId?: number }) {
-  const isEnabled = userDatabaseEnabled === 1;
-  /** Локальное оптимистичное состояние тумблера (двигается сразу по клику) */
-  const [localEnabled, setLocalEnabled] = useState(isEnabled);
+}: BotDatabaseToggleProps) {
+  const { enabled, disabled, setEnabled } = useProjectDatabaseSetting(projectId, userDatabaseEnabled, canManage);
   /** Открыт ли спойлер с пояснением */
   const [infoOpen, setInfoOpen] = useState(false);
-
-  // Синхронизируем локальное состояние при изменении пропа извне
-  useEffect(() => {
-    setLocalEnabled(isEnabled);
-  }, [isEnabled]);
 
   return (
     <SettingCard
       icon={Database}
       title="База данных пользователей"
-      description={localEnabled ? 'Профили и история сообщений сохраняются' : 'Бот работает без базы данных'}
-      active={localEnabled}
+      description={enabled ? 'Боты проекта сохраняют профили и историю сообщений' : 'Боты проекта работают без базы данных'}
+      active={enabled}
       className={className}
-      testId="database-toggle-container-bot-card"
+      testId="database-toggle-container-project"
       action={
         <Switch
-          id={`db-toggle-bot-${tokenId}`}
-          data-testid="switch-database-toggle-bot-card"
+          id={`db-toggle-project-${projectId}`}
+          data-testid="switch-database-toggle-project"
           aria-label="База данных пользователей"
-          checked={localEnabled}
-          onCheckedChange={(checked) => {
-            setLocalEnabled(checked);
-            if (onPendingChange) {
-              onPendingChange('USER_DATABASE', checked ? '1' : '0');
-            } else {
-              toggleDatabaseMutation.mutate(checked);
-            }
-          }}
-          disabled={toggleDatabaseMutation.isPending}
+          checked={enabled}
+          onCheckedChange={setEnabled}
+          disabled={disabled}
         />
       }
     >
@@ -91,7 +71,7 @@ export function BotDatabaseToggle({
         <CollapsibleContent className="pt-1.5">
           <div className="text-[11px] leading-relaxed text-muted-foreground/80 space-y-1.5">
             <p>
-              Включает сбор данных в PostgreSQL. Бот начинает сохранять
+              Включает сбор данных в PostgreSQL. Боты проекта сохраняют
               <b> профили пользователей</b> (id, имя, @username, язык, premium,
               источник перехода) и <b>историю их сообщений</b>.
             </p>
@@ -101,7 +81,7 @@ export function BotDatabaseToggle({
               Когда выключена — бот ничего не записывает и работает без БД.
             </p>
             <p className="text-muted-foreground/60">
-              После переключения перезапустите бота, чтобы изменения применились.
+              Изменение применяется при следующем запуске ботов.
             </p>
           </div>
         </CollapsibleContent>

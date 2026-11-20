@@ -48,7 +48,7 @@ export function CampaignBubbleActions({
   onRequestDelete,
 }: CampaignBubbleActionsProps) {
   return (
-    <div className="flex flex-col gap-0.5 self-center mr-1">
+    <div className="dialogs-broadcast-actions flex flex-col gap-0.5 self-center mr-1">
       {onRepeat && (
         <Button type="button" variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground" onClick={onRepeat} title="Повторить рассылку" aria-label="Повторить рассылку">
           <Repeat2 className="h-3 w-3" />
@@ -73,6 +73,7 @@ export function CampaignBubbleActions({
           onClick={onStopAll}
           disabled={isStopping}
           title="Остановить у всех ботов"
+          data-action="stop"
         >
           {isStopping ? <Loader2 className="h-3 w-3 animate-spin" /> : <Square className="h-3 w-3" />}
         </Button>
@@ -85,6 +86,7 @@ export function CampaignBubbleActions({
           onClick={onRequestDelete}
           disabled={isDeleting}
           title="Удалить рассылку у всех ботов"
+          data-action="delete"
         >
           {isDeleting ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
         </Button>

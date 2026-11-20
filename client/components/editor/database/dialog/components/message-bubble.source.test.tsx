@@ -1,5 +1,5 @@
 /** @fileoverview Проверки явной подписи источника сообщений общей истории. */
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { expect, it, vi } from 'vitest';
 import { MessageBubble } from './message-bubble';
 import type { BotMessageWithMedia } from '../types';
@@ -35,4 +35,20 @@ it('не добавляет подпись «Личка» к личным соо
   render(<MessageBubble index={0} showSource message={message({ chatType: 'private' })} />);
   expect(screen.queryByText('Личка')).not.toBeInTheDocument();
   expect(screen.getByText('Привет')).toBeInTheDocument();
+});
+
+/** Действия не монтируются заново при наведении и доступны с клавиатуры. */
+it('сохраняет элементы действий при наведении и фокусе', () => {
+  const { container } = render(<MessageBubble index={0}
+    message={message({ messageType: 'bot', telegramMessageId: 100 })}
+    onEdit={vi.fn()} onDelete={vi.fn()} />);
+  const edit = screen.getByRole('button', { name: 'Редактировать сообщение' });
+  const actions = screen.getByRole('group', { name: 'Действия с сообщением' });
+  const shell = container.querySelector('.dialog-message-shell')!;
+  fireEvent.mouseEnter(shell);
+  expect(screen.getByRole('button', { name: 'Редактировать сообщение' })).toBe(edit);
+  fireEvent.mouseLeave(shell);
+  edit.focus();
+  expect(edit).toHaveFocus();
+  expect(screen.getByRole('group', { name: 'Действия с сообщением' })).toBe(actions);
 });

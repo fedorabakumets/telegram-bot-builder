@@ -13,6 +13,8 @@ import { loadBotGenerator } from '../../utils/load-bot-generator';
 import { isPsqlBuiltinEnabled } from '../../utils/isPsqlBuiltinEnabled';
 import { isPsqlPanelDsnDenied } from '../../utils/isPsqlPanelDsnDenied';
 import { isBotRuntimeActive } from '../../bots/resolveBotDatabaseUrl';
+import { botGeneratorSettings } from '../../bots/botGeneratorSettings';
+import { resolveBotInheritedSettings, resolveProjectBotSettings } from '../../../shared/bot-inherited-settings';
 
 /**
  * Генерирует Python код для проекта
@@ -39,26 +41,13 @@ export async function handleGenerateCode(req: Request, res: Response): Promise<v
       return;
     }
 
-    // Читаем настройку catch-all обработчиков из первого токена проекта.
-    // Если токен недоступен — дефолт true (catch-all включены).
-    let catchAllHandlers = true;
-    let trackUserBlocks = true;
-    let trackGroupMembership = true;
-    // Защита контента из первого токена проекта (дефолт false — защита выключена).
-    let protectContent = false;
-    // Живое обновление контента из первого токена проекта (дефолт false).
-    let contentCache = false;
+    /** Предпросмотр использует настройки первого бота, а без него — настройки проекта. */
+    let settings = resolveProjectBotSettings(project.botSettingDefaults);
     try {
       const tokens = await storage.getBotTokensByProject(projectId);
-      if (tokens.length > 0) {
-        catchAllHandlers = tokens[0].catchAllHandlers !== 0;
-        trackUserBlocks = tokens[0].trackUserBlocks !== 0;
-        trackGroupMembership = tokens[0].trackGroupMembership !== 0;
-        protectContent = tokens[0].protectContent === 1;
-        contentCache = tokens[0].contentCache === 1;
-      }
+      if (tokens.length > 0) settings = resolveBotInheritedSettings(project.botSettingDefaults, tokens[0]);
     } catch {
-      // ignore — остаётся дефолт false
+      // При недоступном списке ботов остаются данные проекта.
     }
 
     const botDataForGenerator = project.data as any;
@@ -223,11 +212,7 @@ export async function handleGenerateCode(req: Request, res: Response): Promise<v
       userDatabaseEnabled,
       enableLogging,
       projectId,
-      catchAllHandlers,
-      trackUserBlocks,
-      trackGroupMembership,
-      protectContent,
-      contentCache,
+      ...botGeneratorSettings(settings),
       telegramFileIds,
       thumbnailFileIds,
       thumbnailUrls,

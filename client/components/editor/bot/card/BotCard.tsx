@@ -57,7 +57,7 @@ export function BotCard({
   const {
     editingField, editValue, setEditValue, handleSaveEdit, handleCancelEdit,
     handleStartEdit, getStatusBadge, startBotMutation, stopBotMutation,
-    deleteBotMutation, toggleDatabaseMutation, currentElapsedSeconds,
+    deleteBotMutation, currentElapsedSeconds,
     allBotStatuses, setSelectedProject, setSelectedBotInfo, setSelectedTokenId,
     setIsProfileSheetOpen, queryClient,
   } = useBotControl();
@@ -118,6 +118,7 @@ export function BotCard({
             isCollapsed={isCollapsed} onToggleCollapse={handleToggleCollapse}
             showTimer={isThisTokenRunning}
             currentElapsedSeconds={currentElapsedSeconds}
+            projectLaunchMode={project.defaultLaunchMode}
           />
 
           <div className={`transition-all duration-200 overflow-hidden ${isCollapsed ? 'hidden' : ''}`}>
@@ -152,15 +153,20 @@ export function BotCard({
               <BotSettingsGrid
                 pendingRuntimeMode={pending.getPendingValue('BOT_POLLING_MODE')}
                 pendingLaunchMode={pending.getPendingValue('LAUNCH_MODE')}
+                pendingAutoRestart={pending.getPendingValue('AUTO_RESTART')}
+                pendingMaxAttempts={pending.getPendingValue('MAX_RESTART_ATTEMPTS')}
+                restartDefaults={project}
+                inheritedDefaults={project.botSettingDefaults}
+                getPendingValue={pending.getPendingValue}
                 settingsSaving={pending.isSaving}
                 projectId={project.id} tokenId={token.id}
                 botName={token.name ?? `Бот ${token.id}`}
                 userDatabaseEnabled={project.userDatabaseEnabled}
                 token={token}
-                toggleDatabaseMutation={toggleDatabaseMutation}
-                launchMode={token.launchMode ?? 'polling'}
-                webhookBaseUrl={pending.getPendingValue('WEBHOOK_BASE_URL') ?? token.webhookBaseUrl ?? null}
-                webhookSecretToken={pending.getPendingValue('WEBHOOK_SECRET_TOKEN') ?? token.webhookSecretToken ?? null}
+                launchMode={token.inheritLaunchMode ? 'inherit' : token.launchMode}
+                projectLaunchMode={project.defaultLaunchMode}
+                webhookBaseUrl={token.webhookBaseUrl ?? null}
+                webhookSecretToken={token.webhookSecretToken ?? null}
                 hasWebhookSecret={token.hasWebhookSecret}
                 canManage={canManage}
                 onPendingChange={(key, value) => pending.addChange({ action: 'update', type: 'system', key, value })}

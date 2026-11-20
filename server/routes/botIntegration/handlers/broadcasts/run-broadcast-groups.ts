@@ -31,7 +31,7 @@ export interface GroupQueueActions {
   /** Учитывает и сохраняет единственный окончательный результат. */
   record: (groupId: string, result: GroupSendResult) => Promise<void>;
   /** Записывает историю после успешной доставки. */
-  history: (groupId: string) => Promise<void>;
+  history: (groupId: string, result: GroupSendResult) => Promise<void>;
   /** Сохраняет счётчики и публикует актуальный прогресс. */
   progress: () => Promise<void>;
   /** Записывает ошибку побочного действия. */
@@ -70,7 +70,7 @@ export async function runBroadcastGroups(groupIds: readonly string[], actions: G
     }
     if (result.ok) {
       try {
-        await actions.history(groupId);
+        await actions.history(groupId, result);
       } catch (error) {
         actions.log(error);
       }

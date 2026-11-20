@@ -1,0 +1,24 @@
+/** @fileoverview Вторая строка показателей повторяет компактную статистику шапки пользователей. */
+.users-availability-card { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 8px 16px; margin: 0 24px; padding: 0 0 12px; border-bottom: 1px solid var(--border); }
+.users-availability-line { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.users-availability-line > dl { display: flex; flex: 1; min-width: 0; flex-wrap: wrap; align-items: center; gap: 8px 24px; font-size: 12px; line-height: 16px; }
+.users-availability-line > dl > div { display: flex; align-items: baseline; gap: 8px; }
+.users-availability-card dt { color: var(--muted-foreground); }
+.users-availability-card dd { font-weight: 500; color: var(--foreground); font-variant-numeric: tabular-nums; }
+/** Показатели остаются слева и не зависят от высоты колонки действий. */
+.users-availability-summary { display: flex; min-width: 0; flex-direction: column; gap: 12px; padding-top: 8px; }
+.users-availability-card :is(.analytics-access-check-trigger,.users-telegram-bot-check,.users-cleanup-trigger) { display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 4px 12px; border: 1px solid var(--border); border-radius: 8px; background: transparent; color: var(--muted-foreground); font-size: 12px; line-height: 20px; box-shadow: none; }
+.users-availability-card :is(.analytics-access-check-trigger,.users-telegram-bot-check,.users-cleanup-trigger):hover { background: #151517; }
+.users-telegram-bot-check svg { width: 14px; height: 14px; }
+.users-telegram-bot-check:disabled { opacity: .45; cursor: default; }
+.users-telegram-bot-check:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+@container (max-width: 799px) { .users-availability-card { margin-inline: 16px; } }
+
+/** Две колонки: удаления слева, проверки справа; в каждой две кнопки друг под другом. */
+.users-availability-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 8px; width: 488px; max-width: 100%; justify-self: end; }
+.users-availability-action-column { display: flex; min-width: 0; flex-direction: column; gap: 8px; }
+.users-availability-actions :is(.analytics-access-check-trigger,.users-telegram-bot-check,.users-cleanup-trigger) { width: 100%; justify-content: flex-start; }
+/** На узкой панели колонка действий переносится под показатели без изменения порядка. */
+@container (max-width: 599px) { .users-availability-card { grid-template-columns: minmax(0, 1fr); } }
+/** Все иконки действий имеют одинаковый размер независимо от исходного компонента кнопки. */
+.users-availability-actions svg { width: 14px; height: 14px; flex-shrink: 0; }

@@ -10,14 +10,13 @@ import { AnalyticsReportButtons } from './analytics-report-buttons';
 import { AnalyticsReportSources } from './analytics-report-sources';
 import { AnalyticsReportLeaders, AnalyticsUserLeaders } from './analytics-report-leaders';
 import { AnalyticsReportDistribution } from './analytics-report-distribution';
-import { AnalyticsAccessCheckPanel } from './analytics-access-check-panel';
 /**
  * Составляет отчёты общего периода; активность отдельно показывает всех взаимодействовавших и вернувшихся.
  * @param props - Согласованный снимок всех показателей.
  * @returns Разделы аналитики с общей методикой.
  */
 export function AnalyticsReportContent({ snapshot }: { /** Снимок выбранной области. */ snapshot: AnalyticsV2Snapshot }) {
-  const { current, composition, availability } = snapshot;
+  const { current, composition } = snapshot;
   return <>
     <AnalyticsCollapsibleSection title="Аудитория и активность">
     <AnalyticsReportOverview snapshot={snapshot} />
@@ -37,12 +36,7 @@ export function AnalyticsReportContent({ snapshot }: { /** Снимок выбр
     <AnalyticsReportLeaders snapshot={snapshot} />
     </AnalyticsCollapsibleSection>
     <AnalyticsReportButtons snapshot={snapshot} />
-    <AnalyticsCollapsibleSection title="Состав и доступность аудитории" description="За всё время">
-    <section className="analytics-card analytics-report-card analytics-availability-card border rounded-2xl"><header><h3 className="text-lg font-semibold"><AnalyticsHeadingHint label="Доступность личных сообщений" /></h3></header>
-      <AnalyticsReportSummary items={[[ 'Доступны для сообщений', availability.available ], [ 'Заблокировали бота', availability.blocked ], [ 'Удалённые аккаунты', availability.deleted ]]} />
-      <p className="text-sm text-muted-foreground">{availability.checked_at ? `Проверено: ${new Date(availability.checked_at).toLocaleString('ru-RU', { timeZone: snapshot.range.timezone })}` : 'Дата проверки неизвестна · последние известные статусы'}</p>
-      <AnalyticsAccessCheckPanel projectId={snapshot.project_id} tokenId={snapshot.token_id} totalUsers={current.audience.total_users} showSummary={false} />
-    </section>
+    <AnalyticsCollapsibleSection title="Состав аудитории" description="За всё время">
     {/* Сетка распределений сохраняет две колонки в рабочей панели. */}
     <div className="analytics-report-grid analytics-audience-distribution-grid"><AnalyticsReportDistribution compact title="Telegram Premium" items={[{ id: 'premium', label: 'Premium', count: composition.premium }, { id: 'regular', label: 'Без Premium', count: composition.regular }, { id: 'unknown', label: 'Не определено', count: composition.unknown }]} />
       <AnalyticsReportDistribution compact title="Языки Telegram" items={composition.languages.map(item => ({ id: item.code, label: item.code === 'unknown' ? 'Не определён' : item.code, count: item.count }))} /></div>

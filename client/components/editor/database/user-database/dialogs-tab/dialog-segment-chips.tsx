@@ -3,7 +3,6 @@
  * @module client/.../dialogs-tab/dialog-segment-chips
  */
 
-import { cn } from '@/utils/utils';
 import type { DialogKind } from './dialog-kind';
 
 /** Пункты сегмента */
@@ -35,7 +34,7 @@ export function DialogSegmentChips({
 }: DialogSegmentChipsProps): React.JSX.Element {
   return (
     <div
-      className="flex items-center gap-1.5 overflow-x-auto scrollbar-none px-3 py-2 border-b border-border/50 flex-shrink-0"
+      className="dialogs-segments"
       role="tablist"
       aria-label="Тип диалогов"
     >
@@ -48,13 +47,7 @@ export function DialogSegmentChips({
             role="tab"
             aria-selected={selected}
             onClick={() => onChange(segment.id)}
-            className={cn(
-              'shrink-0 rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-              selected
-                ? 'bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-200'
-                : 'bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground'
-            )}
+            className="dialogs-segment"
           >
             {segment.label}
           </button>

@@ -20,14 +20,18 @@ interface PreparedBotEnv {
  * @param botDir - Папка бота.
  * @param projectId - Идентификатор проекта.
  * @param tokenId - Идентификатор токена.
+ * @param launch - Снимок базового адреса при запуске.
  * @returns Словарь для команды запуска и необязательный путь к .env.
  */
 export async function prepareBotEnv(
   botDir: string,
   projectId: number,
   tokenId: number,
+  launch?: Parameters<typeof buildBotEnvContent>[3],
 ): Promise<PreparedBotEnv> {
-  const content = await buildBotEnvContent(botDir, projectId, tokenId);
+  const content = launch
+    ? await buildBotEnvContent(botDir, projectId, tokenId, launch)
+    : await buildBotEnvContent(botDir, projectId, tokenId);
   // Не используем process.env: секреты панели не должны попасть в словарь бота.
   const env = parseBotEnv(content);
   if (getBotEnvSource() === "inline" || isRemoteProject(projectId)) {

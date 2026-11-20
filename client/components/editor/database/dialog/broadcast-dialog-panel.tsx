@@ -7,6 +7,8 @@ import type { Broadcast, BroadcastCampaign, Button as MessageButton } from '@sha
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { Megaphone, X } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useToast } from '@/hooks/use-toast';
+import { getBroadcastEditNotice, isBroadcastEditComplete, type BroadcastEditResult } from '@/components/editor/broadcast/hooks/edit-result';
 import { useDeleteBroadcast } from '@/components/editor/broadcast/hooks/use-delete-broadcast';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -41,6 +43,7 @@ export interface BroadcastDialogPanelProps {
  * @returns JSX элемент панели рассылок
  */
 export function BroadcastDialogPanel({ projectId, selectedTokenId, onClose, hideHeader }: BroadcastDialogPanelProps) {
+  const { toast } = useToast();
   const [modalOpen, setModalOpen] = useState(false);
   const [prefillText, setPrefillText] = useState('');
   /** Медиа для передачи в модалку */
@@ -95,8 +98,10 @@ export function BroadcastDialogPanel({ projectId, selectedTokenId, onClose, hide
         credentials: 'include',
       });
       if (!res.ok) throw new Error('Ошибка редактирования рассылки');
-      return res.json();
+      return res.json() as Promise<BroadcastEditResult>;
     },
+    onSuccess: (result) => toast(getBroadcastEditNotice(result)),
+    onError: () => toast({ title: 'Не удалось изменить рассылку', description: 'Проверьте соединение и повторите сохранение.', variant: 'destructive' }),
     onMutate: ({ broadcastId }) => setEditingId(broadcastId),
     onSettled: () => {
       setEditingId(null);
@@ -144,7 +149,7 @@ export function BroadcastDialogPanel({ projectId, selectedTokenId, onClose, hide
 
   /** Редактировать рассылку — вызвать PUT-запрос */
   const handleEdit = (broadcastId: number, newText: string) => {
-    editMutation.mutate({ broadcastId, messageText: newText });
+    return editMutation.mutateAsync({ broadcastId, messageText: newText }).then(isBroadcastEditComplete).catch(() => false);
   };
 
   /** Закрытие модалки — очистка и рефетч с задержкой */

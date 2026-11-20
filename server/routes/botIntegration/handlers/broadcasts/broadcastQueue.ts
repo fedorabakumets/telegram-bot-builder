@@ -5,6 +5,7 @@
 
 import { normalizeBroadcastGroupIds, countBroadcastRecipients } from "./broadcast-recipient-total";
 import { runBroadcastGroups } from "./run-broadcast-groups";
+import { saveBroadcastHistory } from "./save-broadcast-history";
 import { saveBroadcastGroupMessage } from "./save-broadcast-group-message";
 import { storage } from "../../../../storages/storage";
 import { broadcastProjectEvent } from "../../../../terminal/broadcastProjectEvent";
@@ -247,44 +248,36 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
           const result = await sendBroadcastMessage(token, user.userId, text, mediaFiles, inlineButtons, buttonsPerRow, projectId);
 
           if (result.ok) {
+            /** Подтверждённая доставка не повторяется при сбое сохранения истории или уведомления. */
+            sent = true;
+            delivered.add(user.userId);
             deliveredCount++;
             sentCount++;
             await storage.createBroadcastResult({ broadcastId, userId: user.userId, status: "sent", telegramMessageId: result.messageId ?? null });
             // Записываем сообщение в историю диалога чтобы оно было видно в панели диалога
-            await storage.createBotMessage({
-              projectId,
-              tokenId,
-              userId: user.userId,
-              messageType: "bot",
-              messageText: text,
-              messageData: {
-                sentFromBroadcast: true,
-                broadcastId,
-                // URL и тип первого медиафайла для отображения в диалоге
-                ...(mediaFiles.length > 0
-                  ? { broadcastMediaUrl: mediaFiles[0].url, broadcastMediaType: mediaFiles[0].type }
-                  : {}),
-                // Инлайн-кнопки для отображения в истории диалога
-                ...(rawButtons.length > 0 ? { buttons: rawButtons } : {}),
-              },
-            });
-            // Публикуем WS-событие чтобы диалог и список обновились в реальном времени
-            await broadcastProjectEvent(projectId, {
-              type: "new-message",
-              projectId,
-              tokenId,
-              data: {
-                id: 0,
+            try {
+              await saveBroadcastHistory({
+                projectId,
+                tokenId,
                 userId: user.userId,
+                telegramMessageId: result.messageId ?? null,
                 messageType: "bot",
                 messageText: text,
-                messageData: { sentFromBroadcast: true, broadcastId },
-                nodeId: null,
-                createdAt: new Date().toISOString(),
-              },
-              timestamp: new Date().toISOString(),
-            });
-            sent = true;
+                messageData: {
+                  sentFromBroadcast: true,
+                  broadcastId,
+                  buttonsPerRow,
+                  // URL и тип первого медиафайла для отображения в диалоге
+                  ...(mediaFiles.length > 0
+                    ? { broadcastMediaUrl: mediaFiles[0].url, broadcastMediaType: mediaFiles[0].type }
+                    : {}),
+                  // Инлайн-кнопки для отображения в истории диалога
+                  ...(rawButtons.length > 0 ? { buttons: rawButtons } : {}),
+                },
+              });
+            } catch {
+              console.error(`[broadcastQueue] Не удалось сохранить историю или уведомить о доставке рассылки ${broadcastId}`);
+            }
           } else if (isBotUnauthorized(result.errorCode, result.description)) {
             if (tokenId != null) {
               await recordBroadcastUnauthorized(broadcastId, tokenId, result.description, token);
@@ -373,7 +366,7 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
           status: result.ok ? "sent" : "failed", telegramMessageId: result.messageId ?? null,
           errorMessage: result.ok ? undefined : result.description });
       },
-      history: groupId => saveBroadcastGroupMessage(projectId, tokenId, broadcastId, groupId, messageText, rawButtons),
+      history: (groupId, result) => saveBroadcastGroupMessage(projectId, tokenId, broadcastId, groupId, messageText, rawButtons, result.messageId, buttonsPerRow, mediaFiles[0]),
       progress: async () => {
         await storage.updateBroadcast(broadcastId, snapshotCounts());
         await emitProgress(projectId, broadcastId, snapshotCounts(), totalCount,

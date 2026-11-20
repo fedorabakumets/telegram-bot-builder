@@ -16,7 +16,7 @@ export function validateRuntimeModeRename(previousKey: string, nextKey: unknown)
 export async function writeRuntimeModeEnv(tokenId: number, projectId: number, mode: unknown, resetMode = false) {
   const settings = await saveRuntimeModeSettings(tokenId, resetMode ? { resetMode } : { mode }, projectId);
   if (!settings) throw Object.assign(new Error('Токен не найден'), { status: 404 });
-  void emitTokenUpdated({ projectId, tokenId, changedFields: ['pollingMode'], source: 'api' })
+  void emitTokenUpdated({ projectId, tokenId, changedFields: ['pollingMode', 'inheritSleepMode'], source: 'api' })
     .catch(() => console.error('[runtime-settings] Не удалось уведомить подписчиков'));
   if (resetMode) return undefined;
   return (await storage.getEnvVariables(tokenId)).find((row) => row.key === 'BOT_POLLING_MODE');

@@ -43,7 +43,7 @@ export function BroadcastBubbleActions({
   if (!showRepeat && !showEdit && !showDelete) return null;
 
   return (
-    <div className="mr-1 flex flex-col gap-0.5 self-center">
+    <div className="dialogs-broadcast-actions mr-1 flex flex-col gap-0.5 self-center">
       {showRepeat && (
         <Button
           variant="ghost"
@@ -75,6 +75,7 @@ export function BroadcastBubbleActions({
           onClick={onDelete}
           disabled={isDeleting}
           title="Удалить рассылку"
+          data-action="delete"
         >
           {isDeleting ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
         </Button>

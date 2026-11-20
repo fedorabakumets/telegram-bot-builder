@@ -1,0 +1,50 @@
+/** @fileoverview Общая компоновка адаптивной шапки рабочих вкладок. */
+.workspace-adaptive-header { display: grid; grid-template-columns: auto minmax(0,1fr) auto; gap: 12px; align-items: center; min-width: 0; color: var(--foreground); }
+.workspace-adaptive-header .workspace-tab-heading { display: contents; }
+.workspace-adaptive-header .workspace-tab-heading > div:first-child { grid-column: 1; grid-row: 1; }
+.workspace-adaptive-header .workspace-tab-heading > div:first-child > p { display: none; }
+.workspace-adaptive-header .workspace-tab-heading > div:last-child:not(:first-child) { grid-column: 3; grid-row: 1; }
+.workspace-adaptive-header > [role='group'] { grid-column: 2; grid-row: 1; min-width: 0; }
+/** Общая область сохраняет естественную ширину выбранных названий. */
+.workspace-adaptive-header > [role='group'] { display: flex; align-items: center; flex-wrap: nowrap; gap: 12px; width: auto; margin: 0; }
+.workspace-adaptive-header > [role='group'] > div { flex: 0 1 auto; min-width: 0; width: auto; }
+.workspace-adaptive-header > [role='group'] [role='combobox'] { width: max-content; max-width: 100%; min-width: 0; height: 32px; font-size: 14px; font-weight: 400; line-height: 20px; }
+.workspace-adaptive-header .workspace-tab-heading h2 { margin: 0; font-size: 20px; line-height: 28px; font-weight: 600; white-space: nowrap; }
+.workspace-adaptive-header .workspace-tab-heading > div:first-child { display: block; }
+.workspace-adaptive-header .workspace-tab-heading > div:first-child > div > span > svg { color: #3b82f6; width: 20px; height: 20px; }
+/** Терминал и адаптивные шапки используют общий контраст действий. */
+:is(.workspace-adaptive-header,.terminal-workspace-header) .workspace-tab-actions > :is(a,button)[aria-label],
+.workspace-adaptive-header > [role='group'] [role='combobox'] { color: var(--foreground); }
+:is(.workspace-adaptive-header,.terminal-workspace-header) .workspace-tab-actions svg.lucide,
+.workspace-adaptive-header > [role='group'] svg.lucide { color: var(--foreground); opacity: 1; stroke-width: 1.5; }
+/** Три режима подписей определяются общим измерением доступного места. */
+.workspace-adaptive-header .workspace-tab-actions > :is(a,button) { width: auto; min-width: 32px; height: 32px; padding-inline: 8px; flex-shrink: 0; }
+/** Наведение меняет только рамку и текст, не размеры шапки. */
+.workspace-adaptive-header :is(.workspace-tab-actions > a,.workspace-tab-actions > button,[role='combobox']) { transform: none; transition-property: color, background-color, border-color; }
+.workspace-adaptive-header :is(.workspace-tab-actions > a,.workspace-tab-actions > button,[role='combobox']):hover { transform: none; color: var(--foreground); background: transparent; border-color: #52525b; }
+.workspace-adaptive-header .workspace-tab-actions { display: flex; align-items: center; gap: 8px; }
+/** Дополнительные подписи открываются независимо по фактической ширине шапки. */
+.workspace-adaptive-header [data-workspace-label] { display: none; }
+.workspace-adaptive-header[data-extra-labels~='view'] [data-workspace-label='view'],
+.workspace-adaptive-header[data-extra-labels~='connect'] [data-workspace-label='connect'],
+.workspace-adaptive-header[data-extra-labels~='bulk'] [data-workspace-label='bulk'] { display: inline; }
+:is(.workspace-adaptive-header,.terminal-workspace-header) .workspace-tab-actions > :is(a,button) { gap: 8px; font-size: 14px; font-weight: 400; }
+.workspace-adaptive-header[data-compact-actions='true'] .workspace-tab-actions > :is(a,button) { width: 32px; padding-inline: 0; }
+.workspace-adaptive-header[data-compact-actions='true'] .workspace-tab-actions > :is(a,button) > span { display: none; }
+/** Раскрытый текст документации всегда получает собственную ширину вместе с отступами. */
+.workspace-adaptive-header[data-compact-actions][data-documentation-label='true'] .workspace-tab-actions > a { width: auto; padding-inline: 8px; }
+.workspace-adaptive-header[data-compact-actions][data-documentation-label='true'] .workspace-tab-actions > a > span { display: inline; }
+.workspace-adaptive-header[data-compact-actions='false'] .workspace-tab-actions > :is(a,button) > span,
+.workspace-adaptive-header[data-documentation-label='true'] .workspace-tab-actions > a > span { display: inline; }
+@container (max-width: 799px) {
+  .workspace-adaptive-header { grid-template-columns: minmax(0,1fr) auto; }
+  .workspace-adaptive-header .workspace-tab-heading > div:last-child:not(:first-child) { grid-column: 2; }
+  .workspace-adaptive-header > [role='group'] { grid-column: 1 / -1; grid-row: 2; }
+  .workspace-adaptive-header > [role='group'] { flex-wrap: wrap; }
+  .workspace-adaptive-header > [role='group'] > div { flex: 1 1 160px; }
+  .workspace-adaptive-header > [role='group'] [role='combobox'] { width: 100%; }
+}
+@container (max-width: 479px) {
+  .workspace-adaptive-header { gap: 8px; }
+  .workspace-adaptive-header > [role='group'] [role='combobox'] { height: 40px; font-size: 12px; }
+}

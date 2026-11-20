@@ -1,20 +1,28 @@
 /**
  * @fileoverview Компактная карточка пользователя с переходами к данным и переписке.
  */
+import { UserContactOrigin } from '../desktop/user-contact-origin';
 import { useState } from 'react';
 import { VariableToQuestionMap } from '../../types';
-import { MobileUserDetailsDialog } from './mobile-user-details-dialog';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { MessageSquare } from 'lucide-react';
 import { UserBotData } from '@shared/schema';
 import { MobileUserHeader } from './mobile-user-header';
 import { MobileUserBadges } from './mobile-user-badges';
 import { MobileUserStats } from './mobile-user-stats';
 import { MobileUserDataPreview } from './mobile-user-data-preview';
+import { MobileBotBreakdown } from './mobile-bot-breakdown';
+import { UserBotsToggle } from '../desktop/user-bots-toggle';
+import { shouldToggleUserRow } from '../../utils/should-toggle-user-row';
+import { DesktopActionsCell } from '../desktop/desktop-actions-cell';
 
 /** Свойства компактной карточки пользователя. */
 interface MobileUserCardProps {
+  /** Те же действия удаления, что доступны в широкой таблице. */
+  deleteUserMutation?: import('react').ComponentProps<typeof DesktopActionsCell>['deleteUserMutation'];
+  /** Проект для аватара. */
+  projectId?: number;
+  /** Выбранный бот для аватара. */
+  tokenId?: number | null;
   /** Данные пользователя. */
   user: UserBotData;
   /** Соответствие переменных вопросам сценария. */
@@ -35,30 +43,25 @@ interface MobileUserCardProps {
  * @returns Карточка пользователя.
  */
 export function MobileUserCard(props: MobileUserCardProps): React.JSX.Element {
-  const { user, index, onNavigateToDialog, onOpenUserDetailsPanel } = props;
-  const [detailsOpen, setDetailsOpen] = useState(false);
-  /** Открывает внешнюю панель либо локальный профиль пользователя. */
-  const openDetails = () => onOpenUserDetailsPanel ? onOpenUserDetailsPanel(user) : setDetailsOpen(true);
+  const { user, index } = props;
+  const [botsExpanded, setBotsExpanded] = useState(false);
+  const botCount = props.tokenId == null ? user.botMemberships?.length ?? 0 : 0;
   return (
-    <Card className="rounded-lg border-border/60 p-4 shadow-none" data-testid={`user-card-mobile-${index}`}>
+    <Card className="rounded-lg border-border/60 p-4 shadow-none" data-testid={`user-card-mobile-${index}`}
+      data-expandable={botCount > 1 || undefined}
+      onClick={event => { if (botCount > 1 && shouldToggleUserRow(event)) setBotsExpanded(value => !value); }}>
       <div className="space-y-3">
         <div className="flex items-start gap-3">
           <MobileUserHeader {...props} />
-          {onNavigateToDialog && (
-            <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 text-muted-foreground"
-              onClick={() => onNavigateToDialog(user)}
-              aria-label={`Открыть диалог: ${props.formatUserName(user)}`} title="Открыть диалог">
-              <MessageSquare className="h-4 w-4" aria-hidden="true" />
-            </Button>
-          )}
+          {props.deleteUserMutation && <DesktopActionsCell inCard user={user} index={index} formatUserName={props.formatUserName} deleteUserMutation={props.deleteUserMutation} />}
         </div>
         <MobileUserBadges user={user} />
+        <UserContactOrigin user={user} />
         <MobileUserStats user={user} />
-        <MobileUserDataPreview user={user} onOpenUserDetailsPanel={openDetails} />
+        <MobileUserDataPreview user={user} variableToQuestionMap={props.variableToQuestionMap} />
+        {botCount > 1 && <UserBotsToggle userId={user.userId} count={botCount} expanded={botsExpanded} onToggle={() => setBotsExpanded(value => !value)} />}
+        {botCount > 1 && botsExpanded && <div data-user-bot-details><MobileBotBreakdown user={user} variableToQuestionMap={props.variableToQuestionMap} onNavigate={props.onNavigateToDialog} /></div>}
       </div>
-      {!onOpenUserDetailsPanel && detailsOpen && (
-        <MobileUserDetailsDialog user={user} name={props.formatUserName(user)} open={detailsOpen} onOpenChange={setDetailsOpen} variableToQuestionMap={props.variableToQuestionMap} />
-      )}
     </Card>
   );
 }

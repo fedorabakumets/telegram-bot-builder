@@ -8,8 +8,9 @@
  */
 
 import { db } from "./db";
-import { botTokens } from "@shared/schema";
-import { sql, gt } from "drizzle-orm";
+import { botProjects, botTokens } from "@shared/schema";
+import { eq, sql, gt } from "drizzle-orm";
+import { getEffectiveMessageRetentionDaysSql } from "./messageRetentionDays";
 
 /** Интервал запуска очистки — каждый час */
 const CLEANUP_INTERVAL_MS = 60 * 60 * 1000;
@@ -25,13 +26,15 @@ let cleanupTimerId: ReturnType<typeof setInterval> | null = null;
  * @returns Суммарное число удалённых строк
  */
 async function deleteExpiredMessages(): Promise<number> {
+  const effectiveDays = getEffectiveMessageRetentionDaysSql();
   const tokens = await db
     .select({
       id: botTokens.id,
-      days: botTokens.messagesRetentionDays,
+      days: effectiveDays,
     })
     .from(botTokens)
-    .where(gt(botTokens.messagesRetentionDays, 0));
+    .innerJoin(botProjects, eq(botProjects.id, botTokens.projectId))
+    .where(gt(effectiveDays, 0));
 
   let totalDeleted = 0;
 
@@ -48,6 +51,11 @@ async function deleteExpiredMessages(): Promise<number> {
           SELECT id FROM bot_messages
           WHERE token_id = ${token.id}
             AND created_at < NOW() - (${days} * INTERVAL '1 day')
+            AND EXISTS (
+              SELECT 1 FROM ${botTokens}
+              JOIN ${botProjects} ON ${botProjects.id} = ${botTokens.projectId}
+              WHERE ${botTokens.id} = ${token.id} AND ${effectiveDays} = ${days}
+            )
           ORDER BY id
           LIMIT ${BATCH_LIMIT}
         )

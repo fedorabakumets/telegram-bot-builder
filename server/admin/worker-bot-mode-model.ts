@@ -20,8 +20,10 @@ export interface WorkerBotModeRecord {
   status: string | null;
   /** Последнее намерение запуска. */
   desiredStatus: string | null;
-  /** Собственная переменная режима без остальных переменных бота. */
+  /** Выбранный режим бота или проекта без остальных переменных. */
   configuredMode: string | null;
+  /** Признак наследования режима сна. */
+  inheritsSleepMode?: boolean;
 }
 /** Свежая телеметрия запуска, привязанная к идентификатору бота. */
 export interface WorkerBotActualMode {
@@ -61,7 +63,8 @@ export function toWorkerBotRuntimeRow(record: WorkerBotModeRecord,
   const activity = actual?.activity ?? (status === 'error' ? 'error' : !running ? 'stopped' : 'unknown');
   return { tokenId: record.tokenId, projectId: record.projectId, projectName: record.projectName,
     botName: record.botName, botUsername: record.botUsername, configuredMode, effectiveMode: selected?.mode ?? null,
-    configurationError, source: selected?.source ?? (record.configuredMode !== null ? 'bot' : 'server'),
+    configurationError, source: record.inheritsSleepMode && record.configuredMode !== null
+      ? 'project' : selected?.source ?? (record.configuredMode !== null ? 'bot' : 'server'),
     launchMode, status, desiredStatus: record.desiredStatus,
     actualMode, workerKey: actual?.workerKey ?? null, activity, restartRequired,
     transportCompatible: selected !== null && (launchMode !== 'webhook' || selected.mode === 'direct') };

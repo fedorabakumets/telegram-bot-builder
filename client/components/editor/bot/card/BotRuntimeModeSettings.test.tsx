@@ -4,11 +4,15 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { BotRuntimeModeSettings } from './BotRuntimeModeSettings';
 
 /** Управляемые серверные данные вместо сетевых запросов. */
-const server = vi.hoisted(() => ({ mode: 'direct', mutate: vi.fn() }));
+const server = vi.hoisted(() => ({
+  mode: 'direct', inheritSleepMode: false, projectSleepMode: 'process', mutate: vi.fn(),
+}));
 vi.mock('./use-bot-runtime-settings', () => ({
   /** Возвращает последний снимок, полученный после серверного события. */
   useBotRuntimeSettings: () => ({
-    query: { data: { mode: server.mode, source: 'bot', launchMode: 'polling' }, isLoading: false, isError: false },
+    query: { data: { mode: server.mode, source: 'bot', launchMode: 'polling',
+      inheritSleepMode: server.inheritSleepMode, projectSleepMode: server.projectSleepMode,
+    }, isLoading: false, isError: false },
     mutation: { mutate: server.mutate, isPending: false },
   }),
 }));
@@ -18,7 +22,7 @@ vi.mock('./SettingCard', () => ({
 }));
 vi.mock('@/components/ui/select', () => ({
   /** Заменяет портальный контрол нативным выбором для проверки состояния формы. */
-  Select: ({ value, onValueChange, disabled, children }: any) => <select aria-label="Режим" value={value} disabled={disabled} onChange={(event) => onValueChange(event.target.value)}>{children}</select>,
+  Select: ({ value, onValueChange, disabled, children }: any) => <select aria-label="Режим" value={value} disabled={disabled} onChange={(event) => onValueChange(event.target.value)}>{value === '' && <option value="" hidden />}{children}</select>,
   /** Исключает декоративный триггер из тестового выбора. */
   SelectTrigger: () => null,
   /** Исключает декоративное отображение текущего значения. */
@@ -29,7 +33,7 @@ vi.mock('@/components/ui/select', () => ({
   SelectItem: ({ children, value, disabled }: any) => <option value={value} disabled={disabled}>{children}</option>,
 }));
 
-afterEach(() => { cleanup(); server.mode = 'direct'; vi.clearAllMocks(); });
+afterEach(() => { cleanup(); server.mode = 'direct'; server.inheritSleepMode = false; vi.clearAllMocks(); });
 
 describe('режим обработчика в общей форме настроек', () => {
   it('сохраняет выбор после серверного обновления и отменяет вместе с общей очередью', () => {
@@ -43,7 +47,8 @@ describe('режим обработчика в общей форме настр�
     view.rerender(<BotRuntimeModeSettings {...props} pendingRuntimeMode="process" />);
     expect((screen.getByLabelText('Режим') as HTMLSelectElement).value).toBe('process');
     view.rerender(<BotRuntimeModeSettings {...props} pendingRuntimeMode={undefined} />);
-    expect((screen.getByLabelText('Режим') as HTMLSelectElement).value).toBe('ondemand');
+    expect((screen.getByLabelText('Режим') as HTMLSelectElement).value).toBe('');
+    expect(screen.getByText(/Прежний режим действует/)).toBeTruthy();
     expect(server.mutate).not.toHaveBeenCalled();
   });
 
@@ -56,14 +61,25 @@ describe('режим обработчика в общей форме настр�
     expect(control.disabled).toBe(true);
   });
 
-  it('разрешает освобождение памяти для webhook и отключает только неподдерживаемый сон', () => {
+  it('предлагает наследование и два индивидуальных режима для webhook', () => {
     const onPendingChange = vi.fn();
     render(<BotRuntimeModeSettings projectId={12} tokenId={58} canManage launchMode="webhook" onPendingChange={onPendingChange} />);
-    expect((screen.getByRole('option', { name: 'Всегда активен' }) as HTMLOptionElement).disabled).toBe(false);
-    expect((screen.getByRole('option', { name: 'Освобождает память после простоя' }) as HTMLOptionElement).disabled).toBe(false);
-    expect((screen.getByRole('option', { name: 'Засыпает при простое' }) as HTMLOptionElement).disabled).toBe(true);
+    expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual(['Как в проекте · Да', 'Нет', 'Да']);
     fireEvent.change(screen.getByLabelText('Режим'), { target: { value: 'process' } });
     expect(onPendingChange).toHaveBeenCalledWith('BOT_POLLING_MODE', 'process');
+  });
+
+  it('показывает наследуемый режим и регистрирует возврат к нему отдельным значением', () => {
+    server.mode = 'process';
+    server.inheritSleepMode = true;
+    const onPendingChange = vi.fn();
+    const props = { projectId: 12, tokenId: 58, canManage: true, launchMode: 'polling', onPendingChange };
+    const view = render(<BotRuntimeModeSettings {...props} />);
+    expect((screen.getByLabelText('Режим') as HTMLSelectElement).value).toBe('inherit');
+    view.rerender(<BotRuntimeModeSettings {...props} pendingRuntimeMode="direct" />);
+    fireEvent.change(screen.getByLabelText('Режим'), { target: { value: 'inherit' } });
+    expect(onPendingChange).toHaveBeenLastCalledWith('BOT_POLLING_MODE', 'inherit');
+    expect(server.mutate).not.toHaveBeenCalled();
   });
 
   it('объясняет очередь webhook, пробуждение и ограничение фоновых задач', () => {
@@ -71,6 +87,6 @@ describe('режим обработчика в общей форме настр�
     render(<BotRuntimeModeSettings projectId={12} tokenId={58} canManage launchMode="webhook" />);
     expect(screen.getByText(/Входящий webhook сохраняет сообщение в очереди/)).toBeTruthy();
     expect(screen.getByText(/Для расписаний и фоновых задач выберите/)).toBeTruthy();
-    expect(screen.getByText(/когда больше не нужен другим ботам/)).toBeTruthy();
+    expect(screen.getByText(/Первое сообщение пробуждает обработчик/)).toBeTruthy();
   });
 });

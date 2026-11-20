@@ -23,8 +23,20 @@ export function invalidateTokenRuntimeSettings(queryClient: QueryClient, project
  */
 export function invalidateRuntimeSettingsAfterReconnect(queryClient: QueryClient, projectId?: number): void {
   const project = projectId == null ? '\\d+' : String(projectId);
-  const pattern = new RegExp(`^/api/projects/${project}/tokens(?:/\\d+/(?:runtime-settings|env-variables))?$`);
+  /** Общие настройки и индивидуальные снимки обновляются вместе. */
+  const pattern = new RegExp(`^/api/projects/${project}/(?:tokens(?:/\\d+/(?:runtime-settings|env-variables|settings))?|bot/(?:runtime-defaults|launch-default|setting-defaults))$`);
   void queryClient.invalidateQueries({
     predicate: (query) => typeof query.queryKey[0] === 'string' && pattern.test(query.queryKey[0]),
   });
+}
+
+/**
+ * Перечитывает настройки проекта и зависящие от них карточки ботов.
+ * @param queryClient - Клиент кэша запросов.
+ * @param projectId - Идентификатор изменённого проекта.
+ */
+export function invalidateProjectRuntimeDefaults(queryClient: QueryClient, projectId: number): void {
+  void queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+  void queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}`] });
+  invalidateRuntimeSettingsAfterReconnect(queryClient, projectId);
 }

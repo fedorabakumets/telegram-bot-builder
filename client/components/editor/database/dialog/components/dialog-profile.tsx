@@ -20,6 +20,8 @@ export interface DialogProfileProps {
   onClose: () => void;
   /** Дополнительные сведения, загруженные родительским компонентом. */
   children?: ReactNode;
+  /** Действия карточки сразу после имени и фотографии. */
+  actions?: ReactNode;
 }
 
 /**
@@ -31,7 +33,7 @@ function profileDate(value?: string | Date | null): string | null {
   if (!value) return null;
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? null : new Intl.DateTimeFormat('ru-RU', {
-    day: 'numeric', month: 'long', year: 'numeric',
+    day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Moscow',
   }).format(date);
 }
 
@@ -40,7 +42,7 @@ function profileDate(value?: string | Date | null): string | null {
  * @param props - Свойства панели профиля.
  * @returns Панель с аватаром и доступными сведениями.
  */
-export function DialogProfile({ user, projectId, tokenId, onClose, children }: DialogProfileProps) {
+export function DialogProfile({ user, projectId, tokenId, onClose, children, actions }: DialogProfileProps) {
   const [failedAvatar, setFailedAvatar] = useState<string | null>(null);
   /** Адрес фотографии пользователя или группы, открытой на весь экран. */
   const [photoSrc, setPhotoSrc] = useState<string | null>(null);
@@ -82,10 +84,11 @@ export function DialogProfile({ user, projectId, tokenId, onClose, children }: D
           <p className="mt-1 text-sm text-muted-foreground">
             {user.userName ? `@${user.userName.replace(/^@/, '')}` : 'Username неизвестен'}
           </p>
-          {!isGroup && user.isBlocked && <span className="mt-3 rounded-md bg-amber-500/10 px-2 py-1 text-xs text-amber-600 dark:text-amber-400">Заблокировал бота</span>}
+          {actions && <div className="mt-4 flex w-full min-w-0 flex-col gap-2 text-left">{actions}</div>}
         </div>
         <div className="space-y-4 border-t px-5 py-4">
           <h3 className="text-xs font-medium text-muted-foreground">Информация</h3>
+          <p className="text-[11px] text-muted-foreground">Время указано по Москве.</p>
           <div className="flex items-start gap-3 text-sm">
             <UserRound className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
             <div className="min-w-0"><div className="text-xs text-muted-foreground">Telegram ID</div><div className="break-all">{user.userId === "bot" ? "Неизвестен" : user.userId}</div></div>

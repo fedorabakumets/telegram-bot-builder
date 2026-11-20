@@ -9,6 +9,7 @@
 
 ```json
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "project_id": {
@@ -42,16 +43,17 @@
       ]
     },
     "from": {
+      "description": "Включённая ISO-дата с часовым поясом; требует to, исключает period.",
       "type": "string",
-      "maxLength": 40,
-      "description": "Включённая ISO-дата с часовым поясом; требует to, исключает period."
+      "maxLength": 40
     },
     "to": {
+      "description": "Исключённая ISO-дата с часовым поясом.",
       "type": "string",
-      "maxLength": 40,
-      "description": "Исключённая ISO-дата с часовым поясом."
+      "maxLength": 40
     },
     "step": {
+      "description": "Независимый фиксированный шаг; 30d — 30 суток, до 500 точек.",
       "type": "string",
       "enum": [
         "1m",
@@ -60,16 +62,13 @@
         "1d",
         "7d",
         "30d"
-      ],
-      "description": "Независимый фиксированный шаг; 30d — 30 суток, до 500 точек."
+      ]
     }
   },
   "required": [
     "project_id",
     "metric"
-  ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  ]
 }
 ```
 
@@ -107,6 +106,7 @@
 
 ```json
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "data": {
@@ -176,11 +176,13 @@
             },
             "projectId": {
               "type": "integer",
-              "exclusiveMinimum": 0
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             },
             "revision": {
               "type": "integer",
-              "minimum": 0
+              "minimum": 0,
+              "maximum": 9007199254740991
             }
           },
           "required": [
@@ -190,6 +192,9 @@
         },
         "sideEffects": {
           "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
           "additionalProperties": {}
         }
       },
@@ -206,10 +211,10 @@
     }
   },
   "required": [
+    "data",
     "execution"
   ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  "additionalProperties": false
 }
 ```
 

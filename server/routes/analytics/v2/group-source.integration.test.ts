@@ -1,6 +1,7 @@
 /** @fileoverview Источник группы берётся только из первого настоящего callback в проверенной области бота. */
 import { beforeAll, afterAll, expect, it } from 'vitest';
 import { createAnalyticsTestDatabase } from './test-database';
+import { userSourceSql } from '../../users/user-directory-sql';
 import { readAnalyticsV2Snapshot } from './snapshot';
 const database = createAnalyticsTestDatabase();
 beforeAll(async () => {
@@ -44,4 +45,27 @@ it('сохраняет ID при переименовании, разделяе�
   expect((await snapshot()).sources.find(s => s.id === 'group:11:-1001')?.label).toBe('Группа · Новое название');
   expect((await snapshot(12)).sources.find(s => s.id === 'group:12:-1001')?.label).toBe('Группа · Другая группа');
   expect((await snapshot(null)).sources.find(s => s.id === 'group:12:-1001')).toBeUndefined();
+});
+
+/** Таблица, фильтрация и аналитика используют одно первое действие в области проекта. */
+it('возвращает таблице источник группы и личного сообщения по правилам аналитики', async () => {
+  const result = await database.pool.query(`SELECT u.user_id,${userSourceSql} source
+    FROM (VALUES ('100',NULL::text,NULL::text),('101',NULL,NULL),('103',NULL,NULL)) u(user_id,deep_link_param,referrer_id) ORDER BY u.user_id`, [1,11]);
+  expect(result.rows).toEqual([
+    { user_id: '100', source: 'Группа · Новое название' },
+    { user_id: '101', source: 'Без источника' },
+    { user_id: '103', source: 'Группа · -1002' },
+  ]);
+  const other = await database.pool.query(`SELECT ${userSourceSql} source FROM (VALUES ('100',NULL::text,NULL::text)) u(user_id,deep_link_param,referrer_id)`, [1,12]);
+  expect(other.rows[0].source).toBe('Группа · Другая группа');
+});
+
+/** Отсутствие аналитики не скрывает сохранённые реквизиты ссылки и приглашения. */
+it('использует ссылку, затем пригласившего, затем понятную подпись без источника', async () => {
+  const result = await database.pool.query(`SELECT u.user_id,${userSourceSql} source FROM
+    (VALUES ('900',' campaign ','42'),('901','direct','42'),('902',NULL,'43'),('903','direct',NULL))
+    u(user_id,deep_link_param,referrer_id) ORDER BY u.user_id`, [1,11]);
+  expect(result.rows.map(row => row.source)).toEqual([
+    'Ссылка · campaign','Приглашение · 42','Приглашение · 43','Источник не сохранён',
+  ]);
 });

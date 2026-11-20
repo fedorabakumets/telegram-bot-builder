@@ -9,6 +9,7 @@
 
 ```json
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "project_id": {
@@ -16,9 +17,10 @@
       "description": "Числовой ID проекта из URL редактора"
     },
     "ops": {
+      "minItems": 1,
       "type": "array",
       "items": {
-        "anyOf": [
+        "oneOf": [
           {
             "type": "object",
             "properties": {
@@ -118,8 +120,7 @@
                     "required": [
                       "x",
                       "y"
-                    ],
-                    "additionalProperties": false
+                    ]
                   },
                   "data": {
                     "type": "object",
@@ -307,7 +308,7 @@
                           "required": [
                             "mode"
                           ],
-                          "additionalProperties": true
+                          "additionalProperties": {}
                         }
                       },
                       "timezone": {
@@ -344,13 +345,13 @@
                         "type": "string"
                       },
                       "keyboardType": {
+                        "default": "none",
                         "type": "string",
                         "enum": [
                           "reply",
                           "inline",
                           "none"
-                        ],
-                        "default": "none"
+                        ]
                       },
                       "keyboardNodeId": {
                         "type": "string"
@@ -387,6 +388,7 @@
                               "type": "string"
                             },
                             "action": {
+                              "default": "goto",
                               "type": "string",
                               "enum": [
                                 "goto",
@@ -401,8 +403,7 @@
                                 "web_app",
                                 "request_managed_bot",
                                 "pay"
-                              ],
-                              "default": "goto"
+                              ]
                             },
                             "copyText": {
                               "type": "string"
@@ -423,21 +424,21 @@
                               "type": "boolean"
                             },
                             "buttonType": {
+                              "default": "normal",
                               "type": "string",
                               "enum": [
                                 "normal",
                                 "option",
                                 "complete"
-                              ],
-                              "default": "normal"
+                              ]
                             },
                             "skipDataCollection": {
-                              "type": "boolean",
-                              "default": false
+                              "default": false,
+                              "type": "boolean"
                             },
                             "hideAfterClick": {
-                              "type": "boolean",
-                              "default": false
+                              "default": false,
+                              "type": "boolean"
                             },
                             "customCallbackData": {
                               "type": "string"
@@ -463,68 +464,67 @@
                           "required": [
                             "id",
                             "text"
-                          ],
-                          "additionalProperties": false
-                        },
-                        "default": []
+                          ]
+                        }
                       },
                       "shuffleButtons": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "enableDynamicButtons": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "dynamicButtons": {
                         "type": "object",
                         "properties": {
                           "sourceVariable": {
-                            "type": "string",
-                            "default": ""
+                            "default": "",
+                            "type": "string"
                           },
                           "arrayPath": {
-                            "type": "string",
-                            "default": ""
+                            "default": "",
+                            "type": "string"
                           },
                           "textTemplate": {
-                            "type": "string",
-                            "default": ""
+                            "default": "",
+                            "type": "string"
                           },
                           "callbackTemplate": {
-                            "type": "string",
-                            "default": ""
+                            "default": "",
+                            "type": "string"
                           },
                           "styleMode": {
+                            "default": "none",
                             "type": "string",
                             "enum": [
                               "field",
                               "template",
                               "none"
-                            ],
-                            "default": "none"
+                            ]
                           },
                           "styleField": {
-                            "type": "string",
-                            "default": ""
+                            "default": "",
+                            "type": "string"
                           },
                           "styleTemplate": {
-                            "type": "string",
-                            "default": ""
+                            "default": "",
+                            "type": "string"
                           },
                           "columns": {
+                            "default": 2,
                             "type": "number",
                             "minimum": 1,
-                            "maximum": 6,
-                            "default": 2
+                            "maximum": 6
                           }
                         },
-                        "additionalProperties": true
+                        "additionalProperties": {}
                       },
                       "keyboardLayout": {
                         "type": "object",
                         "properties": {
                           "rows": {
+                            "default": [],
                             "type": "array",
                             "items": {
                               "type": "object",
@@ -538,80 +538,77 @@
                               },
                               "required": [
                                 "buttonIds"
-                              ],
-                              "additionalProperties": false
-                            },
-                            "default": []
+                              ]
+                            }
                           },
                           "columns": {
+                            "default": 2,
                             "type": "number",
                             "minimum": 1,
-                            "maximum": 6,
-                            "default": 2
+                            "maximum": 6
                           },
                           "autoLayout": {
-                            "type": "boolean",
-                            "default": true
+                            "default": true,
+                            "type": "boolean"
                           }
-                        },
-                        "additionalProperties": false
+                        }
                       },
                       "oneTimeKeyboard": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "resizeKeyboard": {
-                        "type": "boolean",
-                        "default": true
+                        "default": true,
+                        "type": "boolean"
                       },
                       "markdown": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "formatMode": {
+                        "default": "none",
                         "type": "string",
                         "enum": [
                           "html",
                           "markdown",
                           "none"
-                        ],
-                        "default": "none"
+                        ]
                       },
                       "disableLinkPreview": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "synonyms": {
+                        "default": [],
                         "type": "array",
                         "items": {
                           "type": "string"
-                        },
-                        "default": []
+                        }
                       },
                       "matchMode": {
+                        "default": "exact",
                         "type": "string",
                         "enum": [
                           "exact",
                           "contains",
                           "fuzzy"
-                        ],
-                        "default": "exact"
+                        ]
                       },
                       "adminOnly": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "requiresAuth": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "showInMenu": {
-                        "type": "boolean",
-                        "default": true
+                        "default": true,
+                        "type": "boolean"
                       },
                       "saveCommandArgsTo": {
-                        "type": "string",
-                        "default": ""
+                        "default": "",
+                        "type": "string"
                       },
                       "commandTimeout": {
                         "type": "number"
@@ -623,11 +620,11 @@
                         "type": "number"
                       },
                       "customParameters": {
+                        "default": [],
                         "type": "array",
                         "items": {
                           "type": "string"
-                        },
-                        "default": []
+                        }
                       },
                       "targetMessageId": {
                         "type": "string"
@@ -636,6 +633,7 @@
                         "type": "string"
                       },
                       "messageIdSource": {
+                        "default": "last_message",
                         "type": "string",
                         "enum": [
                           "manual",
@@ -648,8 +646,7 @@
                           "last_n",
                           "custom",
                           "last"
-                        ],
-                        "default": "last_message"
+                        ]
                       },
                       "messageIdManual": {
                         "type": "string"
@@ -658,12 +655,12 @@
                         "type": "string"
                       },
                       "chatIdSource": {
+                        "default": "current_chat",
                         "type": "string",
                         "enum": [
                           "current_chat",
                           "custom"
-                        ],
-                        "default": "current_chat"
+                        ]
                       },
                       "chatIdManual": {
                         "type": "string"
@@ -672,21 +669,21 @@
                         "type": "boolean"
                       },
                       "bulkDelete": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "bulkMessageIdsVariable": {
                         "type": "string"
                       },
                       "sourceMessageIdSource": {
+                        "default": "current_message",
                         "type": "string",
                         "enum": [
                           "current_message",
                           "last_message",
                           "manual",
                           "variable"
-                        ],
-                        "default": "current_message"
+                        ]
                       },
                       "sourceMessageNodeId": {
                         "type": "string"
@@ -698,29 +695,30 @@
                         "type": "string"
                       },
                       "disableNotification": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "hideAuthor": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "targetChatId": {
                         "type": "string"
                       },
                       "targetChatIdSource": {
+                        "default": "manual",
                         "type": "string",
                         "enum": [
                           "manual",
                           "variable",
                           "admin_ids"
-                        ],
-                        "default": "manual"
+                        ]
                       },
                       "targetChatVariableName": {
                         "type": "string"
                       },
                       "targetChatTargets": {
+                        "default": [],
                         "type": "array",
                         "items": {
                           "type": "object",
@@ -729,13 +727,13 @@
                               "type": "string"
                             },
                             "targetChatIdSource": {
+                              "default": "manual",
                               "type": "string",
                               "enum": [
                                 "manual",
                                 "variable",
                                 "admin_ids"
-                              ],
-                              "default": "manual"
+                              ]
                             },
                             "targetChatId": {
                               "type": "string"
@@ -756,10 +754,8 @@
                           },
                           "required": [
                             "id"
-                          ],
-                          "additionalProperties": false
-                        },
-                        "default": []
+                          ]
+                        }
                       },
                       "targetThreadId": {
                         "type": "string"
@@ -778,6 +774,7 @@
                         "type": "string"
                       },
                       "userIdSource": {
+                        "default": "last_message",
                         "type": "string",
                         "enum": [
                           "manual",
@@ -786,8 +783,7 @@
                           "current_user",
                           "reply_user",
                           "custom"
-                        ],
-                        "default": "last_message"
+                        ]
                       },
                       "userIdManual": {
                         "type": "string"
@@ -829,14 +825,14 @@
                         "type": "string"
                       },
                       "mapService": {
+                        "default": "custom",
                         "type": "string",
                         "enum": [
                           "yandex",
                           "google",
                           "2gis",
                           "custom"
-                        ],
-                        "default": "custom"
+                        ]
                       },
                       "yandexMapUrl": {
                         "type": "string"
@@ -848,18 +844,18 @@
                         "type": "string"
                       },
                       "mapZoom": {
+                        "default": 15,
                         "type": "number",
                         "minimum": 1,
-                        "maximum": 20,
-                        "default": 15
+                        "maximum": 20
                       },
                       "showDirections": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "generateMapPreview": {
-                        "type": "boolean",
-                        "default": true
+                        "default": true,
+                        "type": "boolean"
                       },
                       "phoneNumber": {
                         "type": "string"
@@ -880,19 +876,19 @@
                         "type": "string"
                       },
                       "options": {
+                        "default": [],
                         "type": "array",
                         "items": {
                           "type": "string"
-                        },
-                        "default": []
+                        }
                       },
                       "allowsMultipleAnswers": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "anonymousVoting": {
-                        "type": "boolean",
-                        "default": true
+                        "default": true,
+                        "type": "boolean"
                       },
                       "emoji": {
                         "type": "string"
@@ -916,6 +912,7 @@
                         "type": "string"
                       },
                       "inputType": {
+                        "default": "text",
                         "type": "string",
                         "enum": [
                           "text",
@@ -929,18 +926,18 @@
                           "location",
                           "contact",
                           "any"
-                        ],
-                        "default": "text"
+                        ]
                       },
                       "responseType": {
+                        "default": "text",
                         "type": "string",
                         "enum": [
                           "text",
                           "buttons"
-                        ],
-                        "default": "text"
+                        ]
                       },
                       "responseOptions": {
+                        "default": [],
                         "type": "array",
                         "items": {
                           "type": "object",
@@ -955,13 +952,13 @@
                               "type": "string"
                             },
                             "action": {
+                              "default": "goto",
                               "type": "string",
                               "enum": [
                                 "goto",
                                 "command",
                                 "url"
-                              ],
-                              "default": "goto"
+                              ]
                             },
                             "target": {
                               "type": "string"
@@ -973,14 +970,12 @@
                           "required": [
                             "id",
                             "text"
-                          ],
-                          "additionalProperties": false
-                        },
-                        "default": []
+                          ]
+                        }
                       },
                       "allowMultipleSelection": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "multiSelectVariable": {
                         "type": "string"
@@ -1001,8 +996,8 @@
                         "type": "string"
                       },
                       "inputRequired": {
-                        "type": "boolean",
-                        "default": true
+                        "default": true,
+                        "type": "boolean"
                       },
                       "inputTimeout": {
                         "type": "number"
@@ -1017,8 +1012,8 @@
                         "type": "string"
                       },
                       "enableConditionalMessages": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "conditionalMessages": {
                         "type": "array",
@@ -1029,6 +1024,7 @@
                               "type": "string"
                             },
                             "condition": {
+                              "default": "user_data_exists",
                               "type": "string",
                               "enum": [
                                 "user_data_exists",
@@ -1037,26 +1033,25 @@
                                 "user_data_contains",
                                 "first_time",
                                 "returning_user"
-                              ],
-                              "default": "user_data_exists"
+                              ]
                             },
                             "variableName": {
                               "type": "string"
                             },
                             "variableNames": {
+                              "default": [],
                               "type": "array",
                               "items": {
                                 "type": "string"
-                              },
-                              "default": []
+                              }
                             },
                             "logicOperator": {
+                              "default": "AND",
                               "type": "string",
                               "enum": [
                                 "AND",
                                 "OR"
-                              ],
-                              "default": "AND"
+                              ]
                             },
                             "expectedValue": {
                               "type": "string"
@@ -1065,61 +1060,145 @@
                               "type": "string"
                             },
                             "formatMode": {
+                              "default": "text",
                               "type": "string",
                               "enum": [
                                 "text",
                                 "markdown",
                                 "html"
-                              ],
-                              "default": "text"
+                              ]
                             },
                             "keyboardType": {
+                              "default": "none",
                               "type": "string",
                               "enum": [
                                 "reply",
                                 "inline",
                                 "none"
-                              ],
-                              "default": "none"
+                              ]
                             },
                             "buttons": {
                               "type": "array",
                               "items": {
-                                "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/buttons/items"
-                              },
-                              "default": []
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "text": {
+                                    "type": "string"
+                                  },
+                                  "action": {
+                                    "default": "goto",
+                                    "type": "string",
+                                    "enum": [
+                                      "goto",
+                                      "command",
+                                      "url",
+                                      "contact",
+                                      "location",
+                                      "selection",
+                                      "complete",
+                                      "default",
+                                      "copy_text",
+                                      "web_app",
+                                      "request_managed_bot",
+                                      "pay"
+                                    ]
+                                  },
+                                  "copyText": {
+                                    "type": "string"
+                                  },
+                                  "webAppUrl": {
+                                    "type": "string"
+                                  },
+                                  "target": {
+                                    "type": "string"
+                                  },
+                                  "url": {
+                                    "type": "string"
+                                  },
+                                  "requestContact": {
+                                    "type": "boolean"
+                                  },
+                                  "requestLocation": {
+                                    "type": "boolean"
+                                  },
+                                  "buttonType": {
+                                    "default": "normal",
+                                    "type": "string",
+                                    "enum": [
+                                      "normal",
+                                      "option",
+                                      "complete"
+                                    ]
+                                  },
+                                  "skipDataCollection": {
+                                    "default": false,
+                                    "type": "boolean"
+                                  },
+                                  "hideAfterClick": {
+                                    "default": false,
+                                    "type": "boolean"
+                                  },
+                                  "customCallbackData": {
+                                    "type": "string"
+                                  },
+                                  "style": {
+                                    "type": "string",
+                                    "enum": [
+                                      "primary",
+                                      "success",
+                                      "danger"
+                                    ]
+                                  },
+                                  "suggestedBotName": {
+                                    "type": "string"
+                                  },
+                                  "suggestedBotUsername": {
+                                    "type": "string"
+                                  },
+                                  "selectionGroup": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "text"
+                                ]
+                              }
                             },
                             "resizeKeyboard": {
-                              "type": "boolean",
-                              "default": true
+                              "default": true,
+                              "type": "boolean"
                             },
                             "oneTimeKeyboard": {
-                              "type": "boolean",
-                              "default": false
+                              "default": false,
+                              "type": "boolean"
                             },
                             "collectUserInput": {
-                              "type": "boolean",
-                              "default": false
+                              "default": false,
+                              "type": "boolean"
                             },
                             "enableTextInput": {
-                              "type": "boolean",
-                              "default": false
+                              "default": false,
+                              "type": "boolean"
                             },
                             "enablePhotoInput": {
-                              "type": "boolean",
-                              "default": false
+                              "default": false,
+                              "type": "boolean"
                             },
                             "enableVideoInput": {
-                              "type": "boolean",
-                              "default": false
+                              "default": false,
+                              "type": "boolean"
                             },
                             "enableAudioInput": {
-                              "type": "boolean",
-                              "default": false
+                              "default": false,
+                              "type": "boolean"
                             },
                             "enableDocumentInput": {
-                              "type": "boolean",
-                              "default": false
+                              "default": false,
+                              "type": "boolean"
                             },
                             "inputVariable": {
                               "type": "string"
@@ -1137,8 +1216,8 @@
                               "type": "string"
                             },
                             "waitForTextInput": {
-                              "type": "boolean",
-                              "default": false
+                              "default": false,
+                              "type": "boolean"
                             },
                             "textInputVariable": {
                               "type": "string"
@@ -1147,47 +1226,45 @@
                               "type": "string"
                             },
                             "priority": {
-                              "type": "number",
-                              "default": 0
+                              "default": 0,
+                              "type": "number"
                             }
                           },
                           "required": [
                             "id",
                             "messageText"
-                          ],
-                          "additionalProperties": false
-                        },
-                        "default": []
+                          ]
+                        }
                       },
                       "fallbackMessage": {
                         "type": "string"
                       },
                       "saveToDatabase": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "allowSkip": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "collectUserInput": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "inputTargetNodeId": {
                         "type": "string"
                       },
                       "inputButtonType": {
+                        "default": "inline",
                         "type": "string",
                         "enum": [
                           "inline",
                           "reply"
-                        ],
-                        "default": "inline"
+                        ]
                       },
                       "enableAutoTransition": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "autoTransitionTo": {
                         "type": "string"
@@ -1208,37 +1285,43 @@
                         "type": "string"
                       },
                       "appendVariable": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "saveMediaMetadata": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "mediaMetadataSuffixes": {
+                        "default": [],
                         "type": "array",
                         "items": {
                           "type": "string"
-                        },
-                        "default": []
+                        }
                       },
                       "mediaMetadataCustomNames": {
+                        "default": {},
                         "type": "object",
-                        "additionalProperties": {
+                        "propertyNames": {
                           "type": "string"
                         },
-                        "default": {}
+                        "additionalProperties": {
+                          "type": "string"
+                        }
                       },
                       "variableFilters": {
+                        "default": {},
                         "type": "object",
-                        "additionalProperties": {
+                        "propertyNames": {
                           "type": "string"
                         },
-                        "default": {}
+                        "additionalProperties": {
+                          "type": "string"
+                        }
                       },
                       "enableUserActions": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "actionTrigger": {
                         "type": "string",
@@ -1269,8 +1352,8 @@
                         "type": "string"
                       },
                       "silentAction": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "mimeType": {
                         "type": "string"
@@ -1342,48 +1425,48 @@
                         "type": "string"
                       },
                       "canChangeInfo": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "canDeleteMessages": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "canBanUsers": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "canInviteUsers": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "canPinMessages": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "canAddAdmins": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "canRestrictMembers": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "canPromoteMembers": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "canManageVideoChats": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "canManageTopics": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "isAnonymous": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "canManageChat": {
                         "type": "boolean"
@@ -1404,8 +1487,8 @@
                         "type": "boolean"
                       },
                       "canSendMessages": {
-                        "type": "boolean",
-                        "default": true
+                        "default": true,
+                        "type": "boolean"
                       },
                       "canSendAudios": {
                         "type": "boolean"
@@ -1429,28 +1512,28 @@
                         "type": "boolean"
                       },
                       "canSendPolls": {
-                        "type": "boolean",
-                        "default": true
+                        "default": true,
+                        "type": "boolean"
                       },
                       "canSendOtherMessages": {
-                        "type": "boolean",
-                        "default": true
+                        "default": true,
+                        "type": "boolean"
                       },
                       "canAddWebPagePreviews": {
-                        "type": "boolean",
-                        "default": true
+                        "default": true,
+                        "type": "boolean"
                       },
                       "canChangeGroupInfo": {
-                        "type": "boolean",
-                        "default": true
+                        "default": true,
+                        "type": "boolean"
                       },
                       "canInviteUsers2": {
-                        "type": "boolean",
-                        "default": true
+                        "default": true,
+                        "type": "boolean"
                       },
                       "canPinMessages2": {
-                        "type": "boolean",
-                        "default": true
+                        "default": true,
+                        "type": "boolean"
                       },
                       "untilDate": {
                         "type": "number"
@@ -1459,76 +1542,76 @@
                         "type": "string"
                       },
                       "adminUserIdSource": {
+                        "default": "last_message",
                         "type": "string",
                         "enum": [
                           "manual",
                           "variable",
                           "last_message"
-                        ],
-                        "default": "last_message"
+                        ]
                       },
                       "adminUserVariableName": {
                         "type": "string"
                       },
                       "can_manage_chat": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "can_post_messages": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "can_edit_messages": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "can_delete_messages": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "can_post_stories": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "can_edit_stories": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "can_delete_stories": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "can_manage_video_chats": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "can_restrict_members": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "can_promote_members": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "can_change_info": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "can_invite_users": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "can_pin_messages": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "can_manage_topics": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "is_anonymous": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "can_manage_direct_messages": {
                         "type": "boolean"
@@ -1543,23 +1626,23 @@
                         "type": "string"
                       },
                       "adminChatIdSource": {
+                        "default": "current_chat",
                         "type": "string",
                         "enum": [
                           "manual",
                           "variable",
                           "current_chat"
-                        ],
-                        "default": "current_chat"
+                        ]
                       },
                       "adminChatVariableName": {
                         "type": "string"
                       },
                       "attachedMedia": {
+                        "default": [],
                         "type": "array",
                         "items": {
                           "type": "string"
-                        },
-                        "default": []
+                        }
                       },
                       "sendAsGifUrls": {
                         "type": "array",
@@ -1577,23 +1660,23 @@
                         "type": "boolean"
                       },
                       "broadcastApiType": {
+                        "default": "bot",
                         "type": "string",
                         "enum": [
                           "bot",
                           "client"
-                        ],
-                        "default": "bot"
+                        ]
                       },
                       "broadcastTargetNode": {
                         "type": "string"
                       },
                       "enableBroadcast": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "enableConfirmation": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "confirmationText": {
                         "type": "string"
@@ -1605,27 +1688,27 @@
                         "type": "string"
                       },
                       "sessionName": {
-                        "type": "string",
-                        "default": "user_session"
+                        "default": "user_session",
+                        "type": "string"
                       },
                       "sessionCreated": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "textSynonyms": {
+                        "default": [],
                         "type": "array",
                         "items": {
                           "type": "string"
-                        },
-                        "default": []
+                        }
                       },
                       "textMatchType": {
+                        "default": "exact",
                         "type": "string",
                         "enum": [
                           "exact",
                           "contains"
-                        ],
-                        "default": "exact"
+                        ]
                       },
                       "variable": {
                         "type": "string"
@@ -1634,12 +1717,12 @@
                         "type": "string"
                       },
                       "forumChatIdSource": {
+                        "default": "manual",
                         "type": "string",
                         "enum": [
                           "manual",
                           "variable"
-                        ],
-                        "default": "manual"
+                        ]
                       },
                       "forumChatVariableName": {
                         "type": "string"
@@ -1675,17 +1758,17 @@
                         "type": "string"
                       },
                       "skipIfExists": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "imtChatTypeFilter": {
+                        "default": "any",
                         "type": "string",
                         "enum": [
                           "any",
                           "private",
                           "group"
-                        ],
-                        "default": "any"
+                        ]
                       },
                       "imtGroupChatId": {
                         "type": "string"
@@ -1698,8 +1781,8 @@
                         ]
                       },
                       "imtStopOnFlag": {
-                        "type": "boolean",
-                        "default": true
+                        "default": true,
+                        "type": "boolean"
                       },
                       "groupChatId": {
                         "type": "string"
@@ -1721,13 +1804,13 @@
                         "type": "string"
                       },
                       "memberEventType": {
+                        "default": "join",
                         "type": "string",
                         "enum": [
                           "join",
                           "leave",
                           "both"
-                        ],
-                        "default": "join"
+                        ]
                       },
                       "saveJoinedUserIdTo": {
                         "type": "string"
@@ -1742,6 +1825,7 @@
                         "type": "string"
                       },
                       "branches": {
+                        "default": [],
                         "type": "array",
                         "items": {
                           "type": "object",
@@ -1750,8 +1834,8 @@
                               "type": "string"
                             },
                             "label": {
-                              "type": "string",
-                              "default": ""
+                              "default": "",
+                              "type": "string"
                             },
                             "operator": {
                               "type": "string",
@@ -1806,12 +1890,11 @@
                             "id",
                             "operator",
                             "value"
-                          ],
-                          "additionalProperties": false
-                        },
-                        "default": []
+                          ]
+                        }
                       },
                       "parallelBranches": {
+                        "default": [],
                         "type": "array",
                         "items": {
                           "type": "object",
@@ -1820,8 +1903,8 @@
                               "type": "string"
                             },
                             "label": {
-                              "type": "string",
-                              "default": ""
+                              "default": "",
+                              "type": "string"
                             },
                             "target": {
                               "type": "string"
@@ -1832,22 +1915,20 @@
                           },
                           "required": [
                             "id"
-                          ],
-                          "additionalProperties": false
-                        },
-                        "default": []
+                          ]
+                        }
                       },
                       "maxConcurrent": {
-                        "type": "number",
-                        "default": 5
+                        "default": 5,
+                        "type": "number"
                       },
                       "awaitAll": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "skipIfRunning": {
-                        "type": "boolean",
-                        "default": true
+                        "default": true,
+                        "type": "boolean"
                       },
                       "counterKey": {
                         "type": "string"
@@ -1856,6 +1937,7 @@
                         "type": "string"
                       },
                       "messageSendRecipients": {
+                        "default": [],
                         "type": "array",
                         "items": {
                           "type": "object",
@@ -1864,13 +1946,13 @@
                               "type": "string"
                             },
                             "type": {
+                              "default": "user",
                               "type": "string",
                               "enum": [
                                 "user",
                                 "chat_id",
                                 "admin_ids"
-                              ],
-                              "default": "user"
+                              ]
                             },
                             "chatId": {
                               "type": "string"
@@ -1879,8 +1961,8 @@
                               "type": "string"
                             },
                             "isGroup": {
-                              "type": "boolean",
-                              "default": false
+                              "default": false,
+                              "type": "boolean"
                             },
                             "botToken": {
                               "type": "string"
@@ -1888,10 +1970,8 @@
                           },
                           "required": [
                             "id"
-                          ],
-                          "additionalProperties": false
-                        },
-                        "default": []
+                          ]
+                        }
                       },
                       "messageSendTarget": {
                         "type": "string"
@@ -1906,6 +1986,7 @@
                         "type": "string"
                       },
                       "httpRequestMethod": {
+                        "default": "GET",
                         "type": "string",
                         "enum": [
                           "GET",
@@ -1913,8 +1994,7 @@
                           "PUT",
                           "PATCH",
                           "DELETE"
-                        ],
-                        "default": "GET"
+                        ]
                       },
                       "httpRequestHeaders": {
                         "type": "string"
@@ -1923,8 +2003,8 @@
                         "type": "string"
                       },
                       "httpRequestTimeout": {
-                        "type": "number",
-                        "default": 30
+                        "default": 30,
+                        "type": "number"
                       },
                       "httpRequestResponseVariable": {
                         "type": "string"
@@ -1957,15 +2037,16 @@
                         "type": "string"
                       },
                       "httpRequestBodyFormat": {
+                        "default": "json",
                         "type": "string",
                         "enum": [
                           "json",
                           "form-urlencoded",
                           "raw"
-                        ],
-                        "default": "json"
+                        ]
                       },
                       "httpRequestAuthType": {
+                        "default": "none",
                         "type": "string",
                         "enum": [
                           "none",
@@ -1973,8 +2054,7 @@
                           "bearer",
                           "header",
                           "query"
-                        ],
-                        "default": "none"
+                        ]
                       },
                       "httpRequestAuthBearerToken": {
                         "type": "string"
@@ -1998,73 +2078,74 @@
                         "type": "string"
                       },
                       "httpRequestResponseFormat": {
+                        "default": "autodetect",
                         "type": "string",
                         "enum": [
                           "autodetect",
                           "json",
                           "text",
                           "file"
-                        ],
-                        "default": "autodetect"
+                        ]
                       },
                       "httpRequestIgnoreHttpErrors": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "httpRequestIgnoreSsl": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "httpRequestFollowRedirects": {
-                        "type": "boolean",
-                        "default": true
+                        "default": true,
+                        "type": "boolean"
                       },
                       "httpRequestEnablePagination": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "httpRequestPaginationMode": {
+                        "default": "interactive",
                         "type": "string",
                         "enum": [
                           "interactive",
                           "fetch_all"
-                        ],
-                        "default": "interactive"
+                        ]
                       },
                       "httpRequestPaginationOffsetVar": {
                         "type": "string"
                       },
                       "httpRequestPaginationTotalField": {
-                        "type": "string",
-                        "default": "count"
+                        "default": "count",
+                        "type": "string"
                       },
                       "httpRequestPaginationItemsField": {
-                        "type": "string",
-                        "default": "items"
+                        "default": "items",
+                        "type": "string"
                       },
                       "httpRequestPaginationLimit": {
-                        "type": "number",
-                        "default": 10
+                        "default": 10,
+                        "type": "number"
                       },
                       "httpRequestPaginationMaxPages": {
-                        "type": "number",
-                        "default": 20
+                        "default": 20,
+                        "type": "number"
                       },
                       "httpRequestBatchEnabled": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "httpRequestBatchSource": {
                         "type": "string"
                       },
                       "httpRequestBatchItemVar": {
-                        "type": "string",
-                        "default": "item"
+                        "default": "item",
+                        "type": "string"
                       },
                       "httpRequestBatchResultVariable": {
                         "type": "string"
                       },
                       "httpRequestBatchResultFields": {
+                        "default": [],
                         "type": "array",
                         "items": {
                           "type": "object",
@@ -2079,21 +2160,22 @@
                           "required": [
                             "key",
                             "value"
-                          ],
-                          "additionalProperties": false
-                        },
-                        "default": []
+                          ]
+                        }
                       },
                       "attachedMediaThumbnails": {
+                        "default": {},
                         "type": "object",
-                        "additionalProperties": {
+                        "propertyNames": {
                           "type": "string"
                         },
-                        "default": {}
+                        "additionalProperties": {
+                          "type": "string"
+                        }
                       },
                       "query": {
-                        "type": "string",
-                        "default": ""
+                        "default": "",
+                        "type": "string"
                       },
                       "connectionSource": {
                         "type": "string",
@@ -2110,10 +2192,11 @@
                         "type": "string"
                       },
                       "saveResultTo": {
-                        "type": "string",
-                        "default": ""
+                        "default": "",
+                        "type": "string"
                       },
                       "resultFormat": {
+                        "default": "first_row",
                         "type": "string",
                         "enum": [
                           "json",
@@ -2124,14 +2207,14 @@
                           "scalar",
                           "count",
                           "random_row"
-                        ],
-                        "default": "first_row"
+                        ]
                       },
                       "textTemplate": {
-                        "type": "string",
-                        "default": ""
+                        "default": "",
+                        "type": "string"
                       },
                       "assignments": {
+                        "default": [],
                         "type": "array",
                         "items": {
                           "type": "object",
@@ -2146,6 +2229,7 @@
                               "type": "string"
                             },
                             "mode": {
+                              "default": "text",
                               "type": "string",
                               "enum": [
                                 "text",
@@ -2171,18 +2255,18 @@
                                 "trim",
                                 "length",
                                 "array_concat"
-                              ],
-                              "default": "text"
+                              ]
                             },
                             "lookupTable": {
-                              "type": "string",
-                              "default": ""
+                              "default": "",
+                              "type": "string"
                             },
                             "lookupField": {
-                              "type": "string",
-                              "default": ""
+                              "default": "",
+                              "type": "string"
                             },
                             "lookupWhere": {
+                              "default": [],
                               "type": "array",
                               "items": {
                                 "type": "object",
@@ -2197,125 +2281,122 @@
                                 "required": [
                                   "field",
                                   "value"
-                                ],
-                                "additionalProperties": false
-                              },
-                              "default": []
+                                ]
+                              }
                             },
                             "replaceWith": {
-                              "type": "string",
-                              "default": ""
+                              "default": "",
+                              "type": "string"
                             },
                             "pattern": {
-                              "type": "string",
-                              "default": ""
+                              "default": "",
+                              "type": "string"
                             },
                             "regexGroup": {
-                              "type": "string",
-                              "default": "0"
+                              "default": "0",
+                              "type": "string"
                             },
                             "maxValue": {
-                              "type": "string",
-                              "default": ""
+                              "default": "",
+                              "type": "string"
                             },
                             "separator": {
-                              "type": "string",
-                              "default": ""
+                              "default": "",
+                              "type": "string"
                             },
                             "jsonPath": {
-                              "type": "string",
-                              "default": ""
+                              "default": "",
+                              "type": "string"
                             },
                             "startIndex": {
-                              "type": "string",
-                              "default": "0"
+                              "default": "0",
+                              "type": "string"
                             },
                             "endIndex": {
-                              "type": "string",
-                              "default": ""
+                              "default": "",
+                              "type": "string"
                             },
                             "conditionVariable": {
-                              "type": "string",
-                              "default": ""
+                              "default": "",
+                              "type": "string"
                             },
                             "conditionOperator": {
-                              "type": "string",
-                              "default": "equals"
+                              "default": "equals",
+                              "type": "string"
                             },
                             "conditionValue": {
-                              "type": "string",
-                              "default": ""
+                              "default": "",
+                              "type": "string"
                             },
                             "trueValue": {
-                              "type": "string",
-                              "default": ""
+                              "default": "",
+                              "type": "string"
                             },
                             "falseValue": {
-                              "type": "string",
-                              "default": ""
+                              "default": "",
+                              "type": "string"
                             },
                             "concatWith": {
-                              "type": "string",
-                              "default": ""
+                              "default": "",
+                              "type": "string"
                             },
                             "skipIfEmpty": {
-                              "type": "string",
-                              "default": ""
+                              "default": "",
+                              "type": "string"
                             },
                             "persistToDb": {
-                              "type": "boolean",
-                              "default": true
+                              "default": true,
+                              "type": "boolean"
                             }
                           },
                           "required": [
                             "id",
                             "variable",
                             "value"
-                          ],
-                          "additionalProperties": false
-                        },
-                        "default": []
+                          ]
+                        }
                       },
                       "convertFileMode": {
+                        "default": "toFile",
                         "type": "string",
                         "enum": [
                           "toFile"
-                        ],
-                        "default": "toFile"
+                        ]
                       },
                       "convertFileInputVariable": {
-                        "type": "string",
-                        "default": ""
+                        "default": "",
+                        "type": "string"
                       },
                       "convertFileFormat": {
+                        "default": "csv",
                         "type": "string",
                         "enum": [
                           "csv",
                           "json"
-                        ],
-                        "default": "csv"
+                        ]
                       },
                       "convertFileFileName": {
-                        "type": "string",
-                        "default": "export_{date}.csv"
+                        "default": "export_{date}.csv",
+                        "type": "string"
                       },
                       "convertFileCsvDelimiter": {
-                        "type": "string",
-                        "default": ","
+                        "default": ",",
+                        "type": "string"
                       },
                       "convertFileIncludeHeaderRow": {
-                        "type": "boolean",
-                        "default": true
+                        "default": true,
+                        "type": "boolean"
                       },
                       "convertFileOutputVariable": {
-                        "type": "string",
-                        "default": ""
+                        "default": "",
+                        "type": "string"
                       },
                       "code": {
-                        "type": "string",
-                        "default": ""
+                        "default": "",
+                        "type": "string"
                       },
                       "apiMethod": {
+                        "default": "POST",
                         "type": "string",
                         "enum": [
                           "GET",
@@ -2323,51 +2404,51 @@
                           "PUT",
                           "PATCH",
                           "DELETE"
-                        ],
-                        "default": "POST"
+                        ]
                       },
                       "apiPath": {
-                        "type": "string",
-                        "default": ""
+                        "default": "",
+                        "type": "string"
                       },
                       "apiSecretToken": {
-                        "type": "string",
-                        "default": ""
+                        "default": "",
+                        "type": "string"
                       },
                       "apiSaveBodyTo": {
-                        "type": "string",
-                        "default": ""
+                        "default": "",
+                        "type": "string"
                       },
                       "apiSaveQueryTo": {
-                        "type": "string",
-                        "default": ""
+                        "default": "",
+                        "type": "string"
                       },
                       "apiSaveHeadersTo": {
-                        "type": "string",
-                        "default": ""
+                        "default": "",
+                        "type": "string"
                       },
                       "apiParseJson": {
-                        "type": "boolean",
-                        "default": true
+                        "default": true,
+                        "type": "boolean"
                       },
                       "apiResponseStatusCode": {
-                        "type": "number",
-                        "default": 200
+                        "default": 200,
+                        "type": "number"
                       },
                       "apiResponseBody": {
-                        "type": "string",
-                        "default": "{\"ok\":true}"
+                        "default": "{\"ok\":true}",
+                        "type": "string"
                       },
                       "apiResponseContentType": {
+                        "default": "application/json",
                         "type": "string",
                         "enum": [
                           "application/json",
                           "text/plain",
                           "text/html"
-                        ],
-                        "default": "application/json"
+                        ]
                       },
                       "apiResponseHeaders": {
+                        "default": [],
                         "type": "array",
                         "items": {
                           "type": "object",
@@ -2382,24 +2463,23 @@
                           "required": [
                             "key",
                             "value"
-                          ],
-                          "additionalProperties": false
-                        },
-                        "default": []
+                          ]
+                        }
                       },
                       "invoiceTitle": {
-                        "type": "string",
-                        "default": ""
+                        "default": "",
+                        "type": "string"
                       },
                       "invoiceDescription": {
-                        "type": "string",
-                        "default": ""
+                        "default": "",
+                        "type": "string"
                       },
                       "invoiceAmount": {
-                        "type": "string",
-                        "default": "1"
+                        "default": "1",
+                        "type": "string"
                       },
                       "invoicePrices": {
+                        "default": [],
                         "type": "array",
                         "items": {
                           "type": "object",
@@ -2418,261 +2498,259 @@
                             "id",
                             "label",
                             "amount"
-                          ],
-                          "additionalProperties": false
-                        },
-                        "default": []
+                          ]
+                        }
                       },
                       "invoiceCurrency": {
-                        "type": "string",
-                        "default": "XTR"
+                        "default": "XTR",
+                        "type": "string"
                       },
                       "invoiceProviderSource": {
-                        "type": "string",
-                        "default": "inline"
+                        "default": "inline",
+                        "type": "string"
                       },
                       "invoiceProviderToken": {
-                        "type": "string",
-                        "default": ""
+                        "default": "",
+                        "type": "string"
                       },
                       "invoiceProviderTokenEnv": {
-                        "type": "string",
-                        "default": "PAYMENT_PROVIDER_TOKEN"
+                        "default": "PAYMENT_PROVIDER_TOKEN",
+                        "type": "string"
                       },
                       "invoiceNeedName": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "invoiceNeedEmail": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "invoiceNeedPhone": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "invoiceNeedShipping": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "invoiceIsFlexible": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "invoiceSendPhoneToProvider": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "invoiceSendEmailToProvider": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "invoiceProtectContent": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "invoiceMaxTipAmount": {
-                        "type": "string",
-                        "default": ""
+                        "default": "",
+                        "type": "string"
                       },
                       "invoiceSuggestedTipAmounts": {
-                        "type": "string",
-                        "default": ""
+                        "default": "",
+                        "type": "string"
                       },
                       "invoiceProviderData": {
-                        "type": "string",
-                        "default": ""
+                        "default": "",
+                        "type": "string"
                       },
                       "invoiceStartParameter": {
-                        "type": "string",
-                        "default": ""
+                        "default": "",
+                        "type": "string"
                       },
                       "invoiceSubscription": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "invoicePhotoUrl": {
-                        "type": "string",
-                        "default": ""
+                        "default": "",
+                        "type": "string"
                       },
                       "invoicePhotoSize": {
-                        "type": "string",
-                        "default": ""
+                        "default": "",
+                        "type": "string"
                       },
                       "invoicePhotoWidth": {
-                        "type": "string",
-                        "default": ""
+                        "default": "",
+                        "type": "string"
                       },
                       "invoicePhotoHeight": {
-                        "type": "string",
-                        "default": ""
+                        "default": "",
+                        "type": "string"
                       },
                       "invoiceMessageThreadId": {
-                        "type": "string",
-                        "default": ""
+                        "default": "",
+                        "type": "string"
                       },
                       "invoiceDirectMessagesTopicId": {
-                        "type": "string",
-                        "default": ""
+                        "default": "",
+                        "type": "string"
                       },
                       "invoiceDisableNotification": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "invoiceReplyToMessageId": {
-                        "type": "string",
-                        "default": ""
+                        "default": "",
+                        "type": "string"
                       },
                       "invoiceMessageEffectId": {
-                        "type": "string",
-                        "default": ""
+                        "default": "",
+                        "type": "string"
                       },
                       "invoiceAllowPaidBroadcast": {
-                        "type": "boolean",
-                        "default": false
+                        "default": false,
+                        "type": "boolean"
                       },
                       "invoiceSuggestedPostParams": {
-                        "type": "string",
-                        "default": ""
+                        "default": "",
+                        "type": "string"
                       },
                       "invoicePayload": {
-                        "type": "string",
-                        "default": ""
+                        "default": "",
+                        "type": "string"
                       },
                       "savePaymentAmountTo": {
-                        "type": "string",
-                        "default": ""
+                        "default": "",
+                        "type": "string"
                       },
                       "savePaymentChargeIdTo": {
-                        "type": "string",
-                        "default": ""
+                        "default": "",
+                        "type": "string"
                       },
                       "saveOrderNameTo": {
-                        "type": "string",
-                        "default": ""
+                        "default": "",
+                        "type": "string"
                       },
                       "saveOrderEmailTo": {
-                        "type": "string",
-                        "default": ""
+                        "default": "",
+                        "type": "string"
                       },
                       "saveOrderPhoneTo": {
-                        "type": "string",
-                        "default": ""
+                        "default": "",
+                        "type": "string"
                       },
                       "saveInvoiceLinkTo": {
-                        "type": "string",
-                        "default": ""
+                        "default": "",
+                        "type": "string"
                       },
                       "afterPaymentTo": {
-                        "type": "string",
-                        "default": ""
+                        "default": "",
+                        "type": "string"
                       },
                       "preCheckoutMode": {
-                        "type": "string",
-                        "default": "always"
+                        "default": "always",
+                        "type": "string"
                       },
                       "preCheckoutVariable": {
-                        "type": "string",
-                        "default": ""
+                        "default": "",
+                        "type": "string"
                       },
                       "preCheckoutOperator": {
-                        "type": "string",
-                        "default": "filled"
+                        "default": "filled",
+                        "type": "string"
                       },
                       "preCheckoutValue": {
-                        "type": "string",
-                        "default": ""
+                        "default": "",
+                        "type": "string"
                       },
                       "preCheckoutValue2": {
-                        "type": "string",
-                        "default": ""
+                        "default": "",
+                        "type": "string"
                       },
                       "preCheckoutErrorMessage": {
-                        "type": "string",
-                        "default": ""
+                        "default": "",
+                        "type": "string"
                       },
                       "refundUserSource": {
-                        "type": "string",
-                        "default": "current_user"
+                        "default": "current_user",
+                        "type": "string"
                       },
                       "refundUserId": {
-                        "type": "string",
-                        "default": ""
+                        "default": "",
+                        "type": "string"
                       },
                       "refundChargeId": {
-                        "type": "string",
-                        "default": ""
+                        "default": "",
+                        "type": "string"
                       },
                       "refundMsgEmpty": {
-                        "type": "string",
-                        "default": "Пожалуйста, укажите код покупки: /back КОД"
+                        "default": "Пожалуйста, укажите код покупки: /back КОД",
+                        "type": "string"
                       },
                       "refundMsgNotFound": {
-                        "type": "string",
-                        "default": "Такой код покупки не найден. Проверьте данные и попробуйте снова."
+                        "default": "Такой код покупки не найден. Проверьте данные и попробуйте снова.",
+                        "type": "string"
                       },
                       "refundMsgAlreadyRefunded": {
-                        "type": "string",
-                        "default": "За эту покупку уже ранее был произведён возврат."
+                        "default": "За эту покупку уже ранее был произведён возврат.",
+                        "type": "string"
                       },
                       "refundEmptyTarget": {
-                        "type": "string",
-                        "default": ""
+                        "default": "",
+                        "type": "string"
                       },
                       "refundNotFoundTarget": {
-                        "type": "string",
-                        "default": ""
+                        "default": "",
+                        "type": "string"
                       },
                       "refundAlreadyRefundedTarget": {
-                        "type": "string",
-                        "default": ""
+                        "default": "",
+                        "type": "string"
                       },
                       "subscriptionUserSource": {
-                        "type": "string",
-                        "default": "current_user"
+                        "default": "current_user",
+                        "type": "string"
                       },
                       "subscriptionUserId": {
-                        "type": "string",
-                        "default": ""
+                        "default": "",
+                        "type": "string"
                       },
                       "subscriptionChargeId": {
-                        "type": "string",
-                        "default": ""
+                        "default": "",
+                        "type": "string"
                       },
                       "subscriptionAction": {
-                        "type": "string",
-                        "default": "cancel"
+                        "default": "cancel",
+                        "type": "string"
                       },
                       "subscriptionMsgEmpty": {
-                        "type": "string",
-                        "default": "Укажите код покупки подписки"
+                        "default": "Укажите код покупки подписки",
+                        "type": "string"
                       },
                       "subscriptionMsgError": {
-                        "type": "string",
-                        "default": "Не удалось изменить автопродление. Проверьте код покупки."
+                        "default": "Не удалось изменить автопродление. Проверьте код покупки.",
+                        "type": "string"
                       },
                       "subscriptionEmptyTarget": {
-                        "type": "string",
-                        "default": ""
+                        "default": "",
+                        "type": "string"
                       },
                       "subscriptionErrorTarget": {
-                        "type": "string",
-                        "default": ""
+                        "default": "",
+                        "type": "string"
                       },
                       "saveStarBalanceTo": {
-                        "type": "string",
-                        "default": "star_balance"
+                        "default": "star_balance",
+                        "type": "string"
                       },
                       "balanceMsgError": {
-                        "type": "string",
-                        "default": "Не удалось получить баланс звёзд"
+                        "default": "Не удалось получить баланс звёзд",
+                        "type": "string"
                       },
                       "balanceErrorTarget": {
-                        "type": "string",
-                        "default": ""
+                        "default": "",
+                        "type": "string"
                       }
                     },
-                    "additionalProperties": true
+                    "additionalProperties": {}
                   }
                 },
                 "required": [
@@ -2681,7 +2759,7 @@
                   "position",
                   "data"
                 ],
-                "additionalProperties": true
+                "additionalProperties": {}
               },
               "sheet_id": {
                 "type": "string",
@@ -2702,1360 +2780,2736 @@
                 "const": "update_node"
               },
               "node_id": {
-                "$ref": "#/properties/ops/items/anyOf/0/properties/sheet_id"
+                "type": "string",
+                "minLength": 1
               },
               "patch": {
                 "type": "object",
                 "properties": {
                   "type": {
-                    "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/type"
+                    "type": "string",
+                    "enum": [
+                      "start",
+                      "message",
+                      "command",
+                      "command_trigger",
+                      "text_trigger",
+                      "incoming_message_trigger",
+                      "incoming_callback_trigger",
+                      "outgoing_message_trigger",
+                      "group_message_trigger",
+                      "member_trigger",
+                      "callback_trigger",
+                      "managed_bot_updated_trigger",
+                      "schedule_trigger",
+                      "api_trigger",
+                      "sticker",
+                      "voice",
+                      "animation",
+                      "location",
+                      "contact",
+                      "pin_message",
+                      "unpin_message",
+                      "delete_message",
+                      "forward_message",
+                      "ban_user",
+                      "unban_user",
+                      "mute_user",
+                      "unmute_user",
+                      "kick_user",
+                      "promote_user",
+                      "demote_user",
+                      "admin_rights",
+                      "photo",
+                      "video",
+                      "audio",
+                      "document",
+                      "keyboard",
+                      "input",
+                      "condition",
+                      "broadcast",
+                      "client_auth",
+                      "media",
+                      "create_forum_topic",
+                      "http_request",
+                      "get_managed_bot_token",
+                      "answer_callback_query",
+                      "edit_message",
+                      "set_variable",
+                      "psql_query",
+                      "convert_file",
+                      "loop",
+                      "bot_table",
+                      "delay",
+                      "api_response",
+                      "userbot_message",
+                      "userbot_click_button",
+                      "userbot_inline_query",
+                      "userbot_edit_trigger",
+                      "parallel_split",
+                      "stop_processing",
+                      "rate_counter",
+                      "code",
+                      "comment",
+                      "send_invoice",
+                      "create_invoice_link",
+                      "refund_stars",
+                      "edit_star_subscription",
+                      "get_star_balance",
+                      "successful_payment_trigger"
+                    ]
                   },
                   "position": {
-                    "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/position"
+                    "type": "object",
+                    "properties": {
+                      "x": {
+                        "type": "number"
+                      },
+                      "y": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "x",
+                      "y"
+                    ]
                   },
                   "data": {
                     "type": "object",
                     "properties": {
                       "userbotEntity": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/userbotEntity"
+                        "type": "string"
                       },
                       "userbotEntitySource": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/userbotEntitySource"
+                        "type": "string"
                       },
                       "userbotEntityVariable": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/userbotEntityVariable"
+                        "type": "string"
                       },
                       "userbotRecipients": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/userbotRecipients"
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
                       },
                       "messageId": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/messageId"
+                        "type": "string"
                       },
                       "clickMode": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/clickMode"
+                        "type": "string",
+                        "enum": [
+                          "text",
+                          "data",
+                          "index"
+                        ]
                       },
                       "clickDelivery": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/clickDelivery"
+                        "type": "string",
+                        "enum": [
+                          "fire_and_forget",
+                          "await"
+                        ]
                       },
                       "clickValue": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/clickValue"
+                        "type": "string"
                       },
                       "responseStrategy": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/responseStrategy"
+                        "type": "string",
+                        "enum": [
+                          "first",
+                          "longest",
+                          "regex_match",
+                          "last",
+                          "edit",
+                          "new_message"
+                        ]
                       },
                       "responseWaitSeconds": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/responseWaitSeconds"
+                        "type": "number"
                       },
                       "responseFilterRegex": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/responseFilterRegex"
+                        "type": "string"
                       },
                       "responseFloorMessageIdVar": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/responseFloorMessageIdVar"
+                        "type": "string"
                       },
                       "saveAlertTo": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/saveAlertTo"
+                        "type": "string"
                       },
                       "saveButtonsTo": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/saveButtonsTo"
+                        "type": "string"
                       },
                       "saveHasMediaTo": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/saveHasMediaTo"
+                        "type": "string"
                       },
                       "saveMediaTo": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/saveMediaTo"
+                        "type": "string"
                       },
                       "saveResponseIdTo": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/saveResponseIdTo"
+                        "type": "string"
                       },
                       "saveResponseTextTo": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/saveResponseTextTo"
+                        "type": "string"
                       },
                       "botUsername": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/botUsername"
+                        "type": "string"
                       },
                       "targetChat": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/targetChat"
+                        "type": "string"
                       },
                       "sendToSameChat": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/sendToSameChat"
+                        "type": "boolean"
                       },
                       "resultIndex": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/resultIndex"
+                        "type": "string"
                       },
                       "saveResultTitleTo": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/saveResultTitleTo"
+                        "type": "string"
                       },
                       "saveResultDescTo": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/saveResultDescTo"
+                        "type": "string"
                       },
                       "filterType": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/filterType"
+                        "type": "string",
+                        "enum": [
+                          "any",
+                          "contains",
+                          "regex"
+                        ]
                       },
                       "filterValue": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/filterValue"
+                        "type": "string"
                       },
                       "saveTextTo": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/saveTextTo"
+                        "type": "string"
                       },
                       "saveChatIdTo": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/saveChatIdTo"
+                        "type": "string"
                       },
                       "saveSenderIdTo": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/saveSenderIdTo"
+                        "type": "string"
                       },
                       "command": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/command"
+                        "type": "string"
                       },
                       "deepLinkParam": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/deepLinkParam"
+                        "type": "string"
                       },
                       "deepLinkMatchMode": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/deepLinkMatchMode"
+                        "type": "string",
+                        "enum": [
+                          "exact",
+                          "startsWith"
+                        ]
                       },
                       "deepLinkSaveToVar": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/deepLinkSaveToVar"
+                        "type": "boolean"
                       },
                       "deepLinkVarName": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/deepLinkVarName"
+                        "type": "string"
                       },
                       "commentColor": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/commentColor"
+                        "type": "string",
+                        "enum": [
+                          "yellow",
+                          "blue",
+                          "green",
+                          "pink",
+                          "gray"
+                        ]
                       },
                       "rules": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/rules"
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "mode": {
+                              "type": "string",
+                              "enum": [
+                                "interval",
+                                "weekday",
+                                "monthday",
+                                "cron"
+                              ]
+                            },
+                            "intervalMinutes": {
+                              "type": "number"
+                            },
+                            "days": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "hour": {
+                              "type": "number"
+                            },
+                            "minute": {
+                              "type": "number"
+                            },
+                            "monthDays": {
+                              "type": "array",
+                              "items": {
+                                "type": "number"
+                              }
+                            },
+                            "cronExpression": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "mode"
+                          ],
+                          "additionalProperties": {}
+                        }
                       },
                       "timezone": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/timezone"
+                        "type": "string"
                       },
                       "runOnStart": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/runOnStart"
+                        "type": "boolean"
                       },
                       "enabled": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/enabled"
+                        "type": "boolean"
                       },
                       "description": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/description"
+                        "type": "string"
                       },
                       "messageText": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/messageText"
+                        "type": "string"
                       },
                       "imageUrl": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/imageUrl"
+                        "type": "string"
                       },
                       "videoUrl": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/videoUrl"
+                        "type": "string"
                       },
                       "audioUrl": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/audioUrl"
+                        "type": "string"
                       },
                       "documentUrl": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/documentUrl"
+                        "type": "string"
                       },
                       "documentName": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/documentName"
+                        "type": "string"
                       },
                       "mediaCaption": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/mediaCaption"
+                        "type": "string"
                       },
                       "keyboardType": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/keyboardType"
+                        "default": "none",
+                        "type": "string",
+                        "enum": [
+                          "reply",
+                          "inline",
+                          "none"
+                        ]
                       },
                       "keyboardNodeId": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/keyboardNodeId"
+                        "type": "string"
                       },
                       "seconds": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/seconds"
+                        "type": "string"
                       },
                       "unit": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/unit"
+                        "type": "string",
+                        "enum": [
+                          "seconds",
+                          "minutes",
+                          "hours",
+                          "days",
+                          "weeks"
+                        ]
                       },
                       "mode": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/mode"
+                        "type": "string",
+                        "enum": [
+                          "blocking",
+                          "background"
+                        ]
                       },
                       "buttons": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/buttons"
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "text": {
+                              "type": "string"
+                            },
+                            "action": {
+                              "default": "goto",
+                              "type": "string",
+                              "enum": [
+                                "goto",
+                                "command",
+                                "url",
+                                "contact",
+                                "location",
+                                "selection",
+                                "complete",
+                                "default",
+                                "copy_text",
+                                "web_app",
+                                "request_managed_bot",
+                                "pay"
+                              ]
+                            },
+                            "copyText": {
+                              "type": "string"
+                            },
+                            "webAppUrl": {
+                              "type": "string"
+                            },
+                            "target": {
+                              "type": "string"
+                            },
+                            "url": {
+                              "type": "string"
+                            },
+                            "requestContact": {
+                              "type": "boolean"
+                            },
+                            "requestLocation": {
+                              "type": "boolean"
+                            },
+                            "buttonType": {
+                              "default": "normal",
+                              "type": "string",
+                              "enum": [
+                                "normal",
+                                "option",
+                                "complete"
+                              ]
+                            },
+                            "skipDataCollection": {
+                              "default": false,
+                              "type": "boolean"
+                            },
+                            "hideAfterClick": {
+                              "default": false,
+                              "type": "boolean"
+                            },
+                            "customCallbackData": {
+                              "type": "string"
+                            },
+                            "style": {
+                              "type": "string",
+                              "enum": [
+                                "primary",
+                                "success",
+                                "danger"
+                              ]
+                            },
+                            "suggestedBotName": {
+                              "type": "string"
+                            },
+                            "suggestedBotUsername": {
+                              "type": "string"
+                            },
+                            "selectionGroup": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "text"
+                          ]
+                        }
                       },
                       "shuffleButtons": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/shuffleButtons"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "enableDynamicButtons": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/enableDynamicButtons"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "dynamicButtons": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/dynamicButtons"
+                        "type": "object",
+                        "properties": {
+                          "sourceVariable": {
+                            "default": "",
+                            "type": "string"
+                          },
+                          "arrayPath": {
+                            "default": "",
+                            "type": "string"
+                          },
+                          "textTemplate": {
+                            "default": "",
+                            "type": "string"
+                          },
+                          "callbackTemplate": {
+                            "default": "",
+                            "type": "string"
+                          },
+                          "styleMode": {
+                            "default": "none",
+                            "type": "string",
+                            "enum": [
+                              "field",
+                              "template",
+                              "none"
+                            ]
+                          },
+                          "styleField": {
+                            "default": "",
+                            "type": "string"
+                          },
+                          "styleTemplate": {
+                            "default": "",
+                            "type": "string"
+                          },
+                          "columns": {
+                            "default": 2,
+                            "type": "number",
+                            "minimum": 1,
+                            "maximum": 6
+                          }
+                        },
+                        "additionalProperties": {}
                       },
                       "keyboardLayout": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/keyboardLayout"
+                        "type": "object",
+                        "properties": {
+                          "rows": {
+                            "default": [],
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "buttonIds": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  }
+                                }
+                              },
+                              "required": [
+                                "buttonIds"
+                              ]
+                            }
+                          },
+                          "columns": {
+                            "default": 2,
+                            "type": "number",
+                            "minimum": 1,
+                            "maximum": 6
+                          },
+                          "autoLayout": {
+                            "default": true,
+                            "type": "boolean"
+                          }
+                        }
                       },
                       "oneTimeKeyboard": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/oneTimeKeyboard"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "resizeKeyboard": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/resizeKeyboard"
+                        "default": true,
+                        "type": "boolean"
                       },
                       "markdown": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/markdown"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "formatMode": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/formatMode"
+                        "default": "none",
+                        "type": "string",
+                        "enum": [
+                          "html",
+                          "markdown",
+                          "none"
+                        ]
                       },
                       "disableLinkPreview": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/disableLinkPreview"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "synonyms": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/synonyms"
+                        "default": [],
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
                       },
                       "matchMode": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/matchMode"
+                        "default": "exact",
+                        "type": "string",
+                        "enum": [
+                          "exact",
+                          "contains",
+                          "fuzzy"
+                        ]
                       },
                       "adminOnly": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/adminOnly"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "requiresAuth": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/requiresAuth"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "showInMenu": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/showInMenu"
+                        "default": true,
+                        "type": "boolean"
                       },
                       "saveCommandArgsTo": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/saveCommandArgsTo"
+                        "default": "",
+                        "type": "string"
                       },
                       "commandTimeout": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/commandTimeout"
+                        "type": "number"
                       },
                       "cooldownTime": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/cooldownTime"
+                        "type": "number"
                       },
                       "maxUsagesPerDay": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/maxUsagesPerDay"
+                        "type": "number"
                       },
                       "customParameters": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/customParameters"
+                        "default": [],
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
                       },
                       "targetMessageId": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/targetMessageId"
+                        "type": "string"
                       },
                       "sourceMessageId": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/sourceMessageId"
+                        "type": "string"
                       },
                       "messageIdSource": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/messageIdSource"
+                        "default": "last_message",
+                        "type": "string",
+                        "enum": [
+                          "manual",
+                          "variable",
+                          "last_message",
+                          "current_message",
+                          "last_bot_message",
+                          "reply_message",
+                          "range_from_reply",
+                          "last_n",
+                          "custom",
+                          "last"
+                        ]
                       },
                       "messageIdManual": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/messageIdManual"
+                        "type": "string"
                       },
                       "lastNCount": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/lastNCount"
+                        "type": "string"
                       },
                       "chatIdSource": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/chatIdSource"
+                        "default": "current_chat",
+                        "type": "string",
+                        "enum": [
+                          "current_chat",
+                          "custom"
+                        ]
                       },
                       "chatIdManual": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/chatIdManual"
+                        "type": "string"
                       },
                       "ignoreErrors": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/ignoreErrors"
+                        "type": "boolean"
                       },
                       "bulkDelete": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/bulkDelete"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "bulkMessageIdsVariable": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/bulkMessageIdsVariable"
+                        "type": "string"
                       },
                       "sourceMessageIdSource": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/sourceMessageIdSource"
+                        "default": "current_message",
+                        "type": "string",
+                        "enum": [
+                          "current_message",
+                          "last_message",
+                          "manual",
+                          "variable"
+                        ]
                       },
                       "sourceMessageNodeId": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/sourceMessageNodeId"
+                        "type": "string"
                       },
                       "sourceMessageVariableName": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/sourceMessageVariableName"
+                        "type": "string"
                       },
                       "variableName": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/variableName"
+                        "type": "string"
                       },
                       "disableNotification": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/disableNotification"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "hideAuthor": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/hideAuthor"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "targetChatId": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/targetChatId"
+                        "type": "string"
                       },
                       "targetChatIdSource": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/targetChatIdSource"
+                        "default": "manual",
+                        "type": "string",
+                        "enum": [
+                          "manual",
+                          "variable",
+                          "admin_ids"
+                        ]
                       },
                       "targetChatVariableName": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/targetChatVariableName"
+                        "type": "string"
                       },
                       "targetChatTargets": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/targetChatTargets"
+                        "default": [],
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "targetChatIdSource": {
+                              "default": "manual",
+                              "type": "string",
+                              "enum": [
+                                "manual",
+                                "variable",
+                                "admin_ids"
+                              ]
+                            },
+                            "targetChatId": {
+                              "type": "string"
+                            },
+                            "targetChatVariableName": {
+                              "type": "string"
+                            },
+                            "targetChatType": {
+                              "type": "string",
+                              "enum": [
+                                "user",
+                                "group"
+                              ]
+                            },
+                            "targetThreadId": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "id"
+                          ]
+                        }
                       },
                       "targetThreadId": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/targetThreadId"
+                        "type": "string"
                       },
                       "targetThreadIdSource": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/targetThreadIdSource"
+                        "type": "string",
+                        "enum": [
+                          "manual",
+                          "variable"
+                        ]
                       },
                       "targetThreadIdVariable": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/targetThreadIdVariable"
+                        "type": "string"
                       },
                       "targetUserId": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/targetUserId"
+                        "type": "string"
                       },
                       "userIdSource": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/userIdSource"
+                        "default": "last_message",
+                        "type": "string",
+                        "enum": [
+                          "manual",
+                          "variable",
+                          "last_message",
+                          "current_user",
+                          "reply_user",
+                          "custom"
+                        ]
                       },
                       "userIdManual": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/userIdManual"
+                        "type": "string"
                       },
                       "userVariableName": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/userVariableName"
+                        "type": "string"
                       },
                       "targetGroupId": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/targetGroupId"
+                        "type": "string"
                       },
                       "stickerUrl": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/stickerUrl"
+                        "type": "string"
                       },
                       "stickerFileId": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/stickerFileId"
+                        "type": "string"
                       },
                       "voiceUrl": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/voiceUrl"
+                        "type": "string"
                       },
                       "animationUrl": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/animationUrl"
+                        "type": "string"
                       },
                       "latitude": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/latitude"
+                        "type": "number"
                       },
                       "longitude": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/longitude"
+                        "type": "number"
                       },
                       "title": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/title"
+                        "type": "string"
                       },
                       "address": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/address"
+                        "type": "string"
                       },
                       "foursquareId": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/foursquareId"
+                        "type": "string"
                       },
                       "foursquareType": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/foursquareType"
+                        "type": "string"
                       },
                       "mapService": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/mapService"
+                        "default": "custom",
+                        "type": "string",
+                        "enum": [
+                          "yandex",
+                          "google",
+                          "2gis",
+                          "custom"
+                        ]
                       },
                       "yandexMapUrl": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/yandexMapUrl"
+                        "type": "string"
                       },
                       "googleMapUrl": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/googleMapUrl"
+                        "type": "string"
                       },
                       "gisMapUrl": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/gisMapUrl"
+                        "type": "string"
                       },
                       "mapZoom": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/mapZoom"
+                        "default": 15,
+                        "type": "number",
+                        "minimum": 1,
+                        "maximum": 20
                       },
                       "showDirections": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/showDirections"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "generateMapPreview": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/generateMapPreview"
+                        "default": true,
+                        "type": "boolean"
                       },
                       "phoneNumber": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/phoneNumber"
+                        "type": "string"
                       },
                       "firstName": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/firstName"
+                        "type": "string"
                       },
                       "lastName": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/lastName"
+                        "type": "string"
                       },
                       "userId": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/userId"
+                        "type": "number"
                       },
                       "vcard": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/vcard"
+                        "type": "string"
                       },
                       "question": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/question"
+                        "type": "string"
                       },
                       "options": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/options"
+                        "default": [],
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
                       },
                       "allowsMultipleAnswers": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/allowsMultipleAnswers"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "anonymousVoting": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/anonymousVoting"
+                        "default": true,
+                        "type": "boolean"
                       },
                       "emoji": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/emoji"
+                        "type": "string"
                       },
                       "mediaDuration": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/mediaDuration"
+                        "type": "number"
                       },
                       "width": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/width"
+                        "type": "number"
                       },
                       "height": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/height"
+                        "type": "number"
                       },
                       "performer": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/performer"
+                        "type": "string"
                       },
                       "fileSize": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/fileSize"
+                        "type": "number"
                       },
                       "filename": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/filename"
+                        "type": "string"
                       },
                       "inputType": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/inputType"
+                        "default": "text",
+                        "type": "string",
+                        "enum": [
+                          "text",
+                          "number",
+                          "email",
+                          "phone",
+                          "photo",
+                          "video",
+                          "audio",
+                          "document",
+                          "location",
+                          "contact",
+                          "any"
+                        ]
                       },
                       "responseType": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/responseType"
+                        "default": "text",
+                        "type": "string",
+                        "enum": [
+                          "text",
+                          "buttons"
+                        ]
                       },
                       "responseOptions": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/responseOptions"
+                        "default": [],
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "text": {
+                              "type": "string"
+                            },
+                            "value": {
+                              "type": "string"
+                            },
+                            "action": {
+                              "default": "goto",
+                              "type": "string",
+                              "enum": [
+                                "goto",
+                                "command",
+                                "url"
+                              ]
+                            },
+                            "target": {
+                              "type": "string"
+                            },
+                            "url": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "text"
+                          ]
+                        }
                       },
                       "allowMultipleSelection": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/allowMultipleSelection"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "multiSelectVariable": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/multiSelectVariable"
+                        "type": "string"
                       },
                       "continueButtonText": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/continueButtonText"
+                        "type": "string"
                       },
                       "continueButtonTarget": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/continueButtonTarget"
+                        "type": "string"
                       },
                       "inputVariable": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/inputVariable"
+                        "type": "string"
                       },
                       "inputPrompt": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/inputPrompt"
+                        "type": "string"
                       },
                       "inputValidation": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/inputValidation"
+                        "type": "string"
                       },
                       "inputRequired": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/inputRequired"
+                        "default": true,
+                        "type": "boolean"
                       },
                       "inputTimeout": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/inputTimeout"
+                        "type": "number"
                       },
                       "inputTimeoutMessage": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/inputTimeoutMessage"
+                        "type": "string"
                       },
                       "inputRetryMessage": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/inputRetryMessage"
+                        "type": "string"
                       },
                       "inputSuccessMessage": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/inputSuccessMessage"
+                        "type": "string"
                       },
                       "enableConditionalMessages": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/enableConditionalMessages"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "conditionalMessages": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/conditionalMessages"
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "condition": {
+                              "default": "user_data_exists",
+                              "type": "string",
+                              "enum": [
+                                "user_data_exists",
+                                "user_data_equals",
+                                "user_data_not_exists",
+                                "user_data_contains",
+                                "first_time",
+                                "returning_user"
+                              ]
+                            },
+                            "variableName": {
+                              "type": "string"
+                            },
+                            "variableNames": {
+                              "default": [],
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "logicOperator": {
+                              "default": "AND",
+                              "type": "string",
+                              "enum": [
+                                "AND",
+                                "OR"
+                              ]
+                            },
+                            "expectedValue": {
+                              "type": "string"
+                            },
+                            "messageText": {
+                              "type": "string"
+                            },
+                            "formatMode": {
+                              "default": "text",
+                              "type": "string",
+                              "enum": [
+                                "text",
+                                "markdown",
+                                "html"
+                              ]
+                            },
+                            "keyboardType": {
+                              "default": "none",
+                              "type": "string",
+                              "enum": [
+                                "reply",
+                                "inline",
+                                "none"
+                              ]
+                            },
+                            "buttons": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "text": {
+                                    "type": "string"
+                                  },
+                                  "action": {
+                                    "default": "goto",
+                                    "type": "string",
+                                    "enum": [
+                                      "goto",
+                                      "command",
+                                      "url",
+                                      "contact",
+                                      "location",
+                                      "selection",
+                                      "complete",
+                                      "default",
+                                      "copy_text",
+                                      "web_app",
+                                      "request_managed_bot",
+                                      "pay"
+                                    ]
+                                  },
+                                  "copyText": {
+                                    "type": "string"
+                                  },
+                                  "webAppUrl": {
+                                    "type": "string"
+                                  },
+                                  "target": {
+                                    "type": "string"
+                                  },
+                                  "url": {
+                                    "type": "string"
+                                  },
+                                  "requestContact": {
+                                    "type": "boolean"
+                                  },
+                                  "requestLocation": {
+                                    "type": "boolean"
+                                  },
+                                  "buttonType": {
+                                    "default": "normal",
+                                    "type": "string",
+                                    "enum": [
+                                      "normal",
+                                      "option",
+                                      "complete"
+                                    ]
+                                  },
+                                  "skipDataCollection": {
+                                    "default": false,
+                                    "type": "boolean"
+                                  },
+                                  "hideAfterClick": {
+                                    "default": false,
+                                    "type": "boolean"
+                                  },
+                                  "customCallbackData": {
+                                    "type": "string"
+                                  },
+                                  "style": {
+                                    "type": "string",
+                                    "enum": [
+                                      "primary",
+                                      "success",
+                                      "danger"
+                                    ]
+                                  },
+                                  "suggestedBotName": {
+                                    "type": "string"
+                                  },
+                                  "suggestedBotUsername": {
+                                    "type": "string"
+                                  },
+                                  "selectionGroup": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "text"
+                                ]
+                              }
+                            },
+                            "resizeKeyboard": {
+                              "default": true,
+                              "type": "boolean"
+                            },
+                            "oneTimeKeyboard": {
+                              "default": false,
+                              "type": "boolean"
+                            },
+                            "collectUserInput": {
+                              "default": false,
+                              "type": "boolean"
+                            },
+                            "enableTextInput": {
+                              "default": false,
+                              "type": "boolean"
+                            },
+                            "enablePhotoInput": {
+                              "default": false,
+                              "type": "boolean"
+                            },
+                            "enableVideoInput": {
+                              "default": false,
+                              "type": "boolean"
+                            },
+                            "enableAudioInput": {
+                              "default": false,
+                              "type": "boolean"
+                            },
+                            "enableDocumentInput": {
+                              "default": false,
+                              "type": "boolean"
+                            },
+                            "inputVariable": {
+                              "type": "string"
+                            },
+                            "photoInputVariable": {
+                              "type": "string"
+                            },
+                            "videoInputVariable": {
+                              "type": "string"
+                            },
+                            "audioInputVariable": {
+                              "type": "string"
+                            },
+                            "documentInputVariable": {
+                              "type": "string"
+                            },
+                            "waitForTextInput": {
+                              "default": false,
+                              "type": "boolean"
+                            },
+                            "textInputVariable": {
+                              "type": "string"
+                            },
+                            "nextNodeAfterInput": {
+                              "type": "string"
+                            },
+                            "priority": {
+                              "default": 0,
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "messageText"
+                          ]
+                        }
                       },
                       "fallbackMessage": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/fallbackMessage"
+                        "type": "string"
                       },
                       "saveToDatabase": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/saveToDatabase"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "allowSkip": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/allowSkip"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "collectUserInput": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/collectUserInput"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "inputTargetNodeId": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/inputTargetNodeId"
+                        "type": "string"
                       },
                       "inputButtonType": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/inputButtonType"
+                        "default": "inline",
+                        "type": "string",
+                        "enum": [
+                          "inline",
+                          "reply"
+                        ]
                       },
                       "enableAutoTransition": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/enableAutoTransition"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "autoTransitionTo": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/autoTransitionTo"
+                        "type": "string"
                       },
                       "sourceNodeId": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/sourceNodeId"
+                        "type": "string"
                       },
                       "minLength": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/minLength"
+                        "type": "number"
                       },
                       "maxLength": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/maxLength"
+                        "type": "number"
                       },
                       "placeholder": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/placeholder"
+                        "type": "string"
                       },
                       "defaultValue": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/defaultValue"
+                        "type": "string"
                       },
                       "appendVariable": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/appendVariable"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "saveMediaMetadata": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/saveMediaMetadata"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "mediaMetadataSuffixes": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/mediaMetadataSuffixes"
+                        "default": [],
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
                       },
                       "mediaMetadataCustomNames": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/mediaMetadataCustomNames"
+                        "default": {},
+                        "type": "object",
+                        "propertyNames": {
+                          "type": "string"
+                        },
+                        "additionalProperties": {
+                          "type": "string"
+                        }
                       },
                       "variableFilters": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/variableFilters"
+                        "default": {},
+                        "type": "object",
+                        "propertyNames": {
+                          "type": "string"
+                        },
+                        "additionalProperties": {
+                          "type": "string"
+                        }
                       },
                       "enableUserActions": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/enableUserActions"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "actionTrigger": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/actionTrigger"
+                        "type": "string",
+                        "enum": [
+                          "join",
+                          "leave",
+                          "message",
+                          "button_click",
+                          "custom"
+                        ]
                       },
                       "triggerText": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/triggerText"
+                        "type": "string"
                       },
                       "userActionType": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/userActionType"
+                        "type": "string",
+                        "enum": [
+                          "message",
+                          "command",
+                          "button",
+                          "media"
+                        ]
                       },
                       "actionTag": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/actionTag"
+                        "type": "string"
                       },
                       "actionMessage": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/actionMessage"
+                        "type": "string"
                       },
                       "silentAction": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/silentAction"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "mimeType": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/mimeType"
+                        "type": "string"
                       },
                       "stickerSetName": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/stickerSetName"
+                        "type": "string"
                       },
                       "fileName": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/fileName"
+                        "type": "string"
                       },
                       "city": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/city"
+                        "type": "string"
                       },
                       "country": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/country"
+                        "type": "string"
                       },
                       "enableTextInput": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/enableTextInput"
+                        "type": "boolean"
                       },
                       "enablePhotoInput": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/enablePhotoInput"
+                        "type": "boolean"
                       },
                       "enableVideoInput": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/enableVideoInput"
+                        "type": "boolean"
                       },
                       "enableAudioInput": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/enableAudioInput"
+                        "type": "boolean"
                       },
                       "enableDocumentInput": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/enableDocumentInput"
+                        "type": "boolean"
                       },
                       "photoInputVariable": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/photoInputVariable"
+                        "type": "string"
                       },
                       "videoInputVariable": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/videoInputVariable"
+                        "type": "string"
                       },
                       "audioInputVariable": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/audioInputVariable"
+                        "type": "string"
                       },
                       "documentInputVariable": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/documentInputVariable"
+                        "type": "string"
                       },
                       "name": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/name"
+                        "type": "string"
                       },
                       "label": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/label"
+                        "type": "string"
                       },
                       "checkmarkSymbol": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/checkmarkSymbol"
+                        "type": "string"
                       },
                       "multiSelectCheckmark": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/multiSelectCheckmark"
+                        "type": "string"
                       },
                       "radioSelectedSymbol": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/radioSelectedSymbol"
+                        "type": "string"
                       },
                       "radioUnselectedSymbol": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/radioUnselectedSymbol"
+                        "type": "string"
                       },
                       "duration": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/duration"
+                        "type": "number"
                       },
                       "muteDuration": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/muteDuration"
+                        "type": "number"
                       },
                       "reason": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/reason"
+                        "type": "string"
                       },
                       "canChangeInfo": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/canChangeInfo"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "canDeleteMessages": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/canDeleteMessages"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "canBanUsers": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/canBanUsers"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "canInviteUsers": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/canInviteUsers"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "canPinMessages": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/canPinMessages"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "canAddAdmins": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/canAddAdmins"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "canRestrictMembers": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/canRestrictMembers"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "canPromoteMembers": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/canPromoteMembers"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "canManageVideoChats": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/canManageVideoChats"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "canManageTopics": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/canManageTopics"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "isAnonymous": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/isAnonymous"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "canManageChat": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/canManageChat"
+                        "type": "boolean"
                       },
                       "canPostMessages": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/canPostMessages"
+                        "type": "boolean"
                       },
                       "canEditMessages": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/canEditMessages"
+                        "type": "boolean"
                       },
                       "canManageDirectMessages": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/canManageDirectMessages"
+                        "type": "boolean"
                       },
                       "canManageTags": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/canManageTags"
+                        "type": "boolean"
                       },
                       "canSendWelcomeMessages": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/canSendWelcomeMessages"
+                        "type": "boolean"
                       },
                       "canSendMessages": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/canSendMessages"
+                        "default": true,
+                        "type": "boolean"
                       },
                       "canSendAudios": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/canSendAudios"
+                        "type": "boolean"
                       },
                       "canSendDocuments": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/canSendDocuments"
+                        "type": "boolean"
                       },
                       "canSendPhotos": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/canSendPhotos"
+                        "type": "boolean"
                       },
                       "canSendVideos": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/canSendVideos"
+                        "type": "boolean"
                       },
                       "canSendVideoNotes": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/canSendVideoNotes"
+                        "type": "boolean"
                       },
                       "canSendVoiceNotes": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/canSendVoiceNotes"
+                        "type": "boolean"
                       },
                       "canReactToMessages": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/canReactToMessages"
+                        "type": "boolean"
                       },
                       "canSendPolls": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/canSendPolls"
+                        "default": true,
+                        "type": "boolean"
                       },
                       "canSendOtherMessages": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/canSendOtherMessages"
+                        "default": true,
+                        "type": "boolean"
                       },
                       "canAddWebPagePreviews": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/canAddWebPagePreviews"
+                        "default": true,
+                        "type": "boolean"
                       },
                       "canChangeGroupInfo": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/canChangeGroupInfo"
+                        "default": true,
+                        "type": "boolean"
                       },
                       "canInviteUsers2": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/canInviteUsers2"
+                        "default": true,
+                        "type": "boolean"
                       },
                       "canPinMessages2": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/canPinMessages2"
+                        "default": true,
+                        "type": "boolean"
                       },
                       "untilDate": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/untilDate"
+                        "type": "number"
                       },
                       "adminTargetUserId": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/adminTargetUserId"
+                        "type": "string"
                       },
                       "adminUserIdSource": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/adminUserIdSource"
+                        "default": "last_message",
+                        "type": "string",
+                        "enum": [
+                          "manual",
+                          "variable",
+                          "last_message"
+                        ]
                       },
                       "adminUserVariableName": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/adminUserVariableName"
+                        "type": "string"
                       },
                       "can_manage_chat": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/can_manage_chat"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "can_post_messages": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/can_post_messages"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "can_edit_messages": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/can_edit_messages"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "can_delete_messages": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/can_delete_messages"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "can_post_stories": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/can_post_stories"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "can_edit_stories": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/can_edit_stories"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "can_delete_stories": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/can_delete_stories"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "can_manage_video_chats": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/can_manage_video_chats"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "can_restrict_members": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/can_restrict_members"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "can_promote_members": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/can_promote_members"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "can_change_info": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/can_change_info"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "can_invite_users": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/can_invite_users"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "can_pin_messages": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/can_pin_messages"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "can_manage_topics": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/can_manage_topics"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "is_anonymous": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/is_anonymous"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "can_manage_direct_messages": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/can_manage_direct_messages"
+                        "type": "boolean"
                       },
                       "can_manage_tags": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/can_manage_tags"
+                        "type": "boolean"
                       },
                       "can_send_welcome_messages": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/can_send_welcome_messages"
+                        "type": "boolean"
                       },
                       "adminChatId": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/adminChatId"
+                        "type": "string"
                       },
                       "adminChatIdSource": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/adminChatIdSource"
+                        "default": "current_chat",
+                        "type": "string",
+                        "enum": [
+                          "manual",
+                          "variable",
+                          "current_chat"
+                        ]
                       },
                       "adminChatVariableName": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/adminChatVariableName"
+                        "type": "string"
                       },
                       "attachedMedia": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/attachedMedia"
+                        "default": [],
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
                       },
                       "sendAsGifUrls": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/sendAsGifUrls"
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
                       },
                       "text": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/text"
+                        "type": "string"
                       },
                       "action": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/action"
+                        "type": "string"
                       },
                       "waitForTextInput": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/waitForTextInput"
+                        "type": "boolean"
                       },
                       "broadcastApiType": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/broadcastApiType"
+                        "default": "bot",
+                        "type": "string",
+                        "enum": [
+                          "bot",
+                          "client"
+                        ]
                       },
                       "broadcastTargetNode": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/broadcastTargetNode"
+                        "type": "string"
                       },
                       "enableBroadcast": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/enableBroadcast"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "enableConfirmation": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/enableConfirmation"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "confirmationText": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/confirmationText"
+                        "type": "string"
                       },
                       "successMessage": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/successMessage"
+                        "type": "string"
                       },
                       "errorMessage": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/errorMessage"
+                        "type": "string"
                       },
                       "sessionName": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/sessionName"
+                        "default": "user_session",
+                        "type": "string"
                       },
                       "sessionCreated": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/sessionCreated"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "textSynonyms": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/textSynonyms"
+                        "default": [],
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
                       },
                       "textMatchType": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/textMatchType"
+                        "default": "exact",
+                        "type": "string",
+                        "enum": [
+                          "exact",
+                          "contains"
+                        ]
                       },
                       "variable": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/variable"
+                        "type": "string"
                       },
                       "forumChatId": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/forumChatId"
+                        "type": "string"
                       },
                       "forumChatIdSource": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/forumChatIdSource"
+                        "default": "manual",
+                        "type": "string",
+                        "enum": [
+                          "manual",
+                          "variable"
+                        ]
                       },
                       "forumChatVariableName": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/forumChatVariableName"
+                        "type": "string"
                       },
                       "topicName": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/topicName"
+                        "type": "string"
                       },
                       "topicIconColor": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/topicIconColor"
+                        "type": "string"
                       },
                       "saveThreadIdTo": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/saveThreadIdTo"
+                        "type": "string"
                       },
                       "saveMessageIdTo": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/saveMessageIdTo"
+                        "type": "string"
                       },
                       "saveBotIdTo": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/saveBotIdTo"
+                        "type": "string"
                       },
                       "saveBotUsernameTo": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/saveBotUsernameTo"
+                        "type": "string"
                       },
                       "saveBotNameTo": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/saveBotNameTo"
+                        "type": "string"
                       },
                       "saveCreatorIdTo": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/saveCreatorIdTo"
+                        "type": "string"
                       },
                       "saveCreatorUsernameTo": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/saveCreatorUsernameTo"
+                        "type": "string"
                       },
                       "filterByUserId": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/filterByUserId"
+                        "type": "string"
                       },
                       "skipIfExists": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/skipIfExists"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "imtChatTypeFilter": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/imtChatTypeFilter"
+                        "default": "any",
+                        "type": "string",
+                        "enum": [
+                          "any",
+                          "private",
+                          "group"
+                        ]
                       },
                       "imtGroupChatId": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/imtGroupChatId"
+                        "type": "string"
                       },
                       "imtGroupChatIdSource": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/imtGroupChatIdSource"
+                        "type": "string",
+                        "enum": [
+                          "manual",
+                          "variable"
+                        ]
                       },
                       "imtStopOnFlag": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/imtStopOnFlag"
+                        "default": true,
+                        "type": "boolean"
                       },
                       "groupChatId": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/groupChatId"
+                        "type": "string"
                       },
                       "groupChatIdSource": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/groupChatIdSource"
+                        "type": "string",
+                        "enum": [
+                          "manual",
+                          "variable"
+                        ]
                       },
                       "groupChatVariableName": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/groupChatVariableName"
+                        "type": "string"
                       },
                       "threadIdVariable": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/threadIdVariable"
+                        "type": "string"
                       },
                       "resolvedUserIdVariable": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/resolvedUserIdVariable"
+                        "type": "string"
                       },
                       "memberEventType": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/memberEventType"
+                        "default": "join",
+                        "type": "string",
+                        "enum": [
+                          "join",
+                          "leave",
+                          "both"
+                        ]
                       },
                       "saveJoinedUserIdTo": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/saveJoinedUserIdTo"
+                        "type": "string"
                       },
                       "saveJoinedUsernameTo": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/saveJoinedUsernameTo"
+                        "type": "string"
                       },
                       "saveLeftUserIdTo": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/saveLeftUserIdTo"
+                        "type": "string"
                       },
                       "saveLeftUsernameTo": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/saveLeftUsernameTo"
+                        "type": "string"
                       },
                       "branches": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/branches"
+                        "default": [],
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "label": {
+                              "default": "",
+                              "type": "string"
+                            },
+                            "operator": {
+                              "type": "string",
+                              "enum": [
+                                "filled",
+                                "empty",
+                                "equals",
+                                "not_equals",
+                                "contains",
+                                "not_contains",
+                                "starts_with",
+                                "ends_with",
+                                "matches_regex",
+                                "greater_than",
+                                "less_than",
+                                "between",
+                                "is_even",
+                                "is_odd",
+                                "divisible_by",
+                                "else",
+                                "is_private",
+                                "is_group",
+                                "is_channel",
+                                "is_admin",
+                                "is_premium",
+                                "is_bot",
+                                "is_subscribed",
+                                "is_not_subscribed"
+                              ]
+                            },
+                            "value": {
+                              "type": "string"
+                            },
+                            "value2": {
+                              "type": "string"
+                            },
+                            "valueRegex": {
+                              "type": "string"
+                            },
+                            "target": {
+                              "type": "string"
+                            },
+                            "subscriptionMode": {
+                              "type": "string",
+                              "enum": [
+                                "all",
+                                "any"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "operator",
+                            "value"
+                          ]
+                        }
                       },
                       "parallelBranches": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/parallelBranches"
+                        "default": [],
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "label": {
+                              "default": "",
+                              "type": "string"
+                            },
+                            "target": {
+                              "type": "string"
+                            },
+                            "onErrorTarget": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "id"
+                          ]
+                        }
                       },
                       "maxConcurrent": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/maxConcurrent"
+                        "default": 5,
+                        "type": "number"
                       },
                       "awaitAll": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/awaitAll"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "skipIfRunning": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/skipIfRunning"
+                        "default": true,
+                        "type": "boolean"
                       },
                       "counterKey": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/counterKey"
+                        "type": "string"
                       },
                       "windowSeconds": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/windowSeconds"
+                        "type": "string"
                       },
                       "messageSendRecipients": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/messageSendRecipients"
+                        "default": [],
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "type": {
+                              "default": "user",
+                              "type": "string",
+                              "enum": [
+                                "user",
+                                "chat_id",
+                                "admin_ids"
+                              ]
+                            },
+                            "chatId": {
+                              "type": "string"
+                            },
+                            "threadId": {
+                              "type": "string"
+                            },
+                            "isGroup": {
+                              "default": false,
+                              "type": "boolean"
+                            },
+                            "botToken": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "id"
+                          ]
+                        }
                       },
                       "messageSendTarget": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/messageSendTarget"
+                        "type": "string"
                       },
                       "messageSendChatId": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/messageSendChatId"
+                        "type": "string"
                       },
                       "messageSendThreadId": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/messageSendThreadId"
+                        "type": "string"
                       },
                       "httpRequestUrl": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/httpRequestUrl"
+                        "type": "string"
                       },
                       "httpRequestMethod": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/httpRequestMethod"
+                        "default": "GET",
+                        "type": "string",
+                        "enum": [
+                          "GET",
+                          "POST",
+                          "PUT",
+                          "PATCH",
+                          "DELETE"
+                        ]
                       },
                       "httpRequestHeaders": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/httpRequestHeaders"
+                        "type": "string"
                       },
                       "httpRequestBody": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/httpRequestBody"
+                        "type": "string"
                       },
                       "httpRequestTimeout": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/httpRequestTimeout"
+                        "default": 30,
+                        "type": "number"
                       },
                       "httpRequestResponseVariable": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/httpRequestResponseVariable"
+                        "type": "string"
                       },
                       "httpRequestResponseJsonPath": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/httpRequestResponseJsonPath"
+                        "type": "string"
                       },
                       "httpRequestResponseExtractTo": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/httpRequestResponseExtractTo"
+                        "type": "string"
                       },
                       "httpRequestStatusVariable": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/httpRequestStatusVariable"
+                        "type": "string"
                       },
                       "botIdSource": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/botIdSource"
+                        "type": "string"
                       },
                       "botIdVariable": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/botIdVariable"
+                        "type": "string"
                       },
                       "botIdManual": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/botIdManual"
+                        "type": "string"
                       },
                       "saveTokenTo": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/saveTokenTo"
+                        "type": "string"
                       },
                       "saveErrorTo": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/saveErrorTo"
+                        "type": "string"
                       },
                       "httpRequestQueryParams": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/httpRequestQueryParams"
+                        "type": "string"
                       },
                       "httpRequestBodyFormat": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/httpRequestBodyFormat"
+                        "default": "json",
+                        "type": "string",
+                        "enum": [
+                          "json",
+                          "form-urlencoded",
+                          "raw"
+                        ]
                       },
                       "httpRequestAuthType": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/httpRequestAuthType"
+                        "default": "none",
+                        "type": "string",
+                        "enum": [
+                          "none",
+                          "basic",
+                          "bearer",
+                          "header",
+                          "query"
+                        ]
                       },
                       "httpRequestAuthBearerToken": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/httpRequestAuthBearerToken"
+                        "type": "string"
                       },
                       "httpRequestAuthBasicUsername": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/httpRequestAuthBasicUsername"
+                        "type": "string"
                       },
                       "httpRequestAuthBasicPassword": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/httpRequestAuthBasicPassword"
+                        "type": "string"
                       },
                       "httpRequestAuthHeaderName": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/httpRequestAuthHeaderName"
+                        "type": "string"
                       },
                       "httpRequestAuthHeaderValue": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/httpRequestAuthHeaderValue"
+                        "type": "string"
                       },
                       "httpRequestAuthQueryName": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/httpRequestAuthQueryName"
+                        "type": "string"
                       },
                       "httpRequestAuthQueryValue": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/httpRequestAuthQueryValue"
+                        "type": "string"
                       },
                       "httpRequestResponseFormat": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/httpRequestResponseFormat"
+                        "default": "autodetect",
+                        "type": "string",
+                        "enum": [
+                          "autodetect",
+                          "json",
+                          "text",
+                          "file"
+                        ]
                       },
                       "httpRequestIgnoreHttpErrors": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/httpRequestIgnoreHttpErrors"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "httpRequestIgnoreSsl": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/httpRequestIgnoreSsl"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "httpRequestFollowRedirects": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/httpRequestFollowRedirects"
+                        "default": true,
+                        "type": "boolean"
                       },
                       "httpRequestEnablePagination": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/httpRequestEnablePagination"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "httpRequestPaginationMode": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/httpRequestPaginationMode"
+                        "default": "interactive",
+                        "type": "string",
+                        "enum": [
+                          "interactive",
+                          "fetch_all"
+                        ]
                       },
                       "httpRequestPaginationOffsetVar": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/httpRequestPaginationOffsetVar"
+                        "type": "string"
                       },
                       "httpRequestPaginationTotalField": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/httpRequestPaginationTotalField"
+                        "default": "count",
+                        "type": "string"
                       },
                       "httpRequestPaginationItemsField": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/httpRequestPaginationItemsField"
+                        "default": "items",
+                        "type": "string"
                       },
                       "httpRequestPaginationLimit": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/httpRequestPaginationLimit"
+                        "default": 10,
+                        "type": "number"
                       },
                       "httpRequestPaginationMaxPages": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/httpRequestPaginationMaxPages"
+                        "default": 20,
+                        "type": "number"
                       },
                       "httpRequestBatchEnabled": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/httpRequestBatchEnabled"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "httpRequestBatchSource": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/httpRequestBatchSource"
+                        "type": "string"
                       },
                       "httpRequestBatchItemVar": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/httpRequestBatchItemVar"
+                        "default": "item",
+                        "type": "string"
                       },
                       "httpRequestBatchResultVariable": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/httpRequestBatchResultVariable"
+                        "type": "string"
                       },
                       "httpRequestBatchResultFields": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/httpRequestBatchResultFields"
+                        "default": [],
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "key": {
+                              "type": "string"
+                            },
+                            "value": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "key",
+                            "value"
+                          ]
+                        }
                       },
                       "attachedMediaThumbnails": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/attachedMediaThumbnails"
+                        "default": {},
+                        "type": "object",
+                        "propertyNames": {
+                          "type": "string"
+                        },
+                        "additionalProperties": {
+                          "type": "string"
+                        }
                       },
                       "query": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/query"
+                        "default": "",
+                        "type": "string"
                       },
                       "connectionSource": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/connectionSource"
+                        "type": "string",
+                        "enum": [
+                          "builtin",
+                          "env",
+                          "custom"
+                        ]
                       },
                       "connectionEnvVar": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/connectionEnvVar"
+                        "type": "string"
                       },
                       "connectionString": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/connectionString"
+                        "type": "string"
                       },
                       "saveResultTo": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/saveResultTo"
+                        "default": "",
+                        "type": "string"
                       },
                       "resultFormat": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/resultFormat"
+                        "default": "first_row",
+                        "type": "string",
+                        "enum": [
+                          "json",
+                          "text",
+                          "first_row",
+                          "affected",
+                          "all_rows",
+                          "scalar",
+                          "count",
+                          "random_row"
+                        ]
                       },
                       "textTemplate": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/textTemplate"
+                        "default": "",
+                        "type": "string"
                       },
                       "assignments": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/assignments"
+                        "default": [],
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "variable": {
+                              "type": "string"
+                            },
+                            "value": {
+                              "type": "string"
+                            },
+                            "mode": {
+                              "default": "text",
+                              "type": "string",
+                              "enum": [
+                                "text",
+                                "expression",
+                                "lookup",
+                                "str_replace",
+                                "json_push",
+                                "json_format",
+                                "random",
+                                "random_item",
+                                "array_item",
+                                "timestamp",
+                                "format_duration",
+                                "format_number",
+                                "regex_extract",
+                                "extract_number",
+                                "split_get",
+                                "json_get",
+                                "substring",
+                                "conditional",
+                                "lowercase",
+                                "uppercase",
+                                "trim",
+                                "length",
+                                "array_concat"
+                              ]
+                            },
+                            "lookupTable": {
+                              "default": "",
+                              "type": "string"
+                            },
+                            "lookupField": {
+                              "default": "",
+                              "type": "string"
+                            },
+                            "lookupWhere": {
+                              "default": [],
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "field": {
+                                    "type": "string"
+                                  },
+                                  "value": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "field",
+                                  "value"
+                                ]
+                              }
+                            },
+                            "replaceWith": {
+                              "default": "",
+                              "type": "string"
+                            },
+                            "pattern": {
+                              "default": "",
+                              "type": "string"
+                            },
+                            "regexGroup": {
+                              "default": "0",
+                              "type": "string"
+                            },
+                            "maxValue": {
+                              "default": "",
+                              "type": "string"
+                            },
+                            "separator": {
+                              "default": "",
+                              "type": "string"
+                            },
+                            "jsonPath": {
+                              "default": "",
+                              "type": "string"
+                            },
+                            "startIndex": {
+                              "default": "0",
+                              "type": "string"
+                            },
+                            "endIndex": {
+                              "default": "",
+                              "type": "string"
+                            },
+                            "conditionVariable": {
+                              "default": "",
+                              "type": "string"
+                            },
+                            "conditionOperator": {
+                              "default": "equals",
+                              "type": "string"
+                            },
+                            "conditionValue": {
+                              "default": "",
+                              "type": "string"
+                            },
+                            "trueValue": {
+                              "default": "",
+                              "type": "string"
+                            },
+                            "falseValue": {
+                              "default": "",
+                              "type": "string"
+                            },
+                            "concatWith": {
+                              "default": "",
+                              "type": "string"
+                            },
+                            "skipIfEmpty": {
+                              "default": "",
+                              "type": "string"
+                            },
+                            "persistToDb": {
+                              "default": true,
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "variable",
+                            "value"
+                          ]
+                        }
                       },
                       "convertFileMode": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/convertFileMode"
+                        "default": "toFile",
+                        "type": "string",
+                        "enum": [
+                          "toFile"
+                        ]
                       },
                       "convertFileInputVariable": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/convertFileInputVariable"
+                        "default": "",
+                        "type": "string"
                       },
                       "convertFileFormat": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/convertFileFormat"
+                        "default": "csv",
+                        "type": "string",
+                        "enum": [
+                          "csv",
+                          "json"
+                        ]
                       },
                       "convertFileFileName": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/convertFileFileName"
+                        "default": "export_{date}.csv",
+                        "type": "string"
                       },
                       "convertFileCsvDelimiter": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/convertFileCsvDelimiter"
+                        "default": ",",
+                        "type": "string"
                       },
                       "convertFileIncludeHeaderRow": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/convertFileIncludeHeaderRow"
+                        "default": true,
+                        "type": "boolean"
                       },
                       "convertFileOutputVariable": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/convertFileOutputVariable"
+                        "default": "",
+                        "type": "string"
                       },
                       "code": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/code"
+                        "default": "",
+                        "type": "string"
                       },
                       "apiMethod": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/apiMethod"
+                        "default": "POST",
+                        "type": "string",
+                        "enum": [
+                          "GET",
+                          "POST",
+                          "PUT",
+                          "PATCH",
+                          "DELETE"
+                        ]
                       },
                       "apiPath": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/apiPath"
+                        "default": "",
+                        "type": "string"
                       },
                       "apiSecretToken": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/apiSecretToken"
+                        "default": "",
+                        "type": "string"
                       },
                       "apiSaveBodyTo": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/apiSaveBodyTo"
+                        "default": "",
+                        "type": "string"
                       },
                       "apiSaveQueryTo": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/apiSaveQueryTo"
+                        "default": "",
+                        "type": "string"
                       },
                       "apiSaveHeadersTo": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/apiSaveHeadersTo"
+                        "default": "",
+                        "type": "string"
                       },
                       "apiParseJson": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/apiParseJson"
+                        "default": true,
+                        "type": "boolean"
                       },
                       "apiResponseStatusCode": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/apiResponseStatusCode"
+                        "default": 200,
+                        "type": "number"
                       },
                       "apiResponseBody": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/apiResponseBody"
+                        "default": "{\"ok\":true}",
+                        "type": "string"
                       },
                       "apiResponseContentType": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/apiResponseContentType"
+                        "default": "application/json",
+                        "type": "string",
+                        "enum": [
+                          "application/json",
+                          "text/plain",
+                          "text/html"
+                        ]
                       },
                       "apiResponseHeaders": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/apiResponseHeaders"
+                        "default": [],
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "key": {
+                              "type": "string"
+                            },
+                            "value": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "key",
+                            "value"
+                          ]
+                        }
                       },
                       "invoiceTitle": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/invoiceTitle"
+                        "default": "",
+                        "type": "string"
                       },
                       "invoiceDescription": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/invoiceDescription"
+                        "default": "",
+                        "type": "string"
                       },
                       "invoiceAmount": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/invoiceAmount"
+                        "default": "1",
+                        "type": "string"
                       },
                       "invoicePrices": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/invoicePrices"
+                        "default": [],
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "label": {
+                              "type": "string"
+                            },
+                            "amount": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "label",
+                            "amount"
+                          ]
+                        }
                       },
                       "invoiceCurrency": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/invoiceCurrency"
+                        "default": "XTR",
+                        "type": "string"
                       },
                       "invoiceProviderSource": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/invoiceProviderSource"
+                        "default": "inline",
+                        "type": "string"
                       },
                       "invoiceProviderToken": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/invoiceProviderToken"
+                        "default": "",
+                        "type": "string"
                       },
                       "invoiceProviderTokenEnv": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/invoiceProviderTokenEnv"
+                        "default": "PAYMENT_PROVIDER_TOKEN",
+                        "type": "string"
                       },
                       "invoiceNeedName": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/invoiceNeedName"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "invoiceNeedEmail": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/invoiceNeedEmail"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "invoiceNeedPhone": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/invoiceNeedPhone"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "invoiceNeedShipping": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/invoiceNeedShipping"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "invoiceIsFlexible": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/invoiceIsFlexible"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "invoiceSendPhoneToProvider": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/invoiceSendPhoneToProvider"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "invoiceSendEmailToProvider": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/invoiceSendEmailToProvider"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "invoiceProtectContent": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/invoiceProtectContent"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "invoiceMaxTipAmount": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/invoiceMaxTipAmount"
+                        "default": "",
+                        "type": "string"
                       },
                       "invoiceSuggestedTipAmounts": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/invoiceSuggestedTipAmounts"
+                        "default": "",
+                        "type": "string"
                       },
                       "invoiceProviderData": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/invoiceProviderData"
+                        "default": "",
+                        "type": "string"
                       },
                       "invoiceStartParameter": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/invoiceStartParameter"
+                        "default": "",
+                        "type": "string"
                       },
                       "invoiceSubscription": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/invoiceSubscription"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "invoicePhotoUrl": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/invoicePhotoUrl"
+                        "default": "",
+                        "type": "string"
                       },
                       "invoicePhotoSize": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/invoicePhotoSize"
+                        "default": "",
+                        "type": "string"
                       },
                       "invoicePhotoWidth": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/invoicePhotoWidth"
+                        "default": "",
+                        "type": "string"
                       },
                       "invoicePhotoHeight": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/invoicePhotoHeight"
+                        "default": "",
+                        "type": "string"
                       },
                       "invoiceMessageThreadId": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/invoiceMessageThreadId"
+                        "default": "",
+                        "type": "string"
                       },
                       "invoiceDirectMessagesTopicId": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/invoiceDirectMessagesTopicId"
+                        "default": "",
+                        "type": "string"
                       },
                       "invoiceDisableNotification": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/invoiceDisableNotification"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "invoiceReplyToMessageId": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/invoiceReplyToMessageId"
+                        "default": "",
+                        "type": "string"
                       },
                       "invoiceMessageEffectId": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/invoiceMessageEffectId"
+                        "default": "",
+                        "type": "string"
                       },
                       "invoiceAllowPaidBroadcast": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/invoiceAllowPaidBroadcast"
+                        "default": false,
+                        "type": "boolean"
                       },
                       "invoiceSuggestedPostParams": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/invoiceSuggestedPostParams"
+                        "default": "",
+                        "type": "string"
                       },
                       "invoicePayload": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/invoicePayload"
+                        "default": "",
+                        "type": "string"
                       },
                       "savePaymentAmountTo": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/savePaymentAmountTo"
+                        "default": "",
+                        "type": "string"
                       },
                       "savePaymentChargeIdTo": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/savePaymentChargeIdTo"
+                        "default": "",
+                        "type": "string"
                       },
                       "saveOrderNameTo": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/saveOrderNameTo"
+                        "default": "",
+                        "type": "string"
                       },
                       "saveOrderEmailTo": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/saveOrderEmailTo"
+                        "default": "",
+                        "type": "string"
                       },
                       "saveOrderPhoneTo": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/saveOrderPhoneTo"
+                        "default": "",
+                        "type": "string"
                       },
                       "saveInvoiceLinkTo": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/saveInvoiceLinkTo"
+                        "default": "",
+                        "type": "string"
                       },
                       "afterPaymentTo": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/afterPaymentTo"
+                        "default": "",
+                        "type": "string"
                       },
                       "preCheckoutMode": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/preCheckoutMode"
+                        "default": "always",
+                        "type": "string"
                       },
                       "preCheckoutVariable": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/preCheckoutVariable"
+                        "default": "",
+                        "type": "string"
                       },
                       "preCheckoutOperator": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/preCheckoutOperator"
+                        "default": "filled",
+                        "type": "string"
                       },
                       "preCheckoutValue": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/preCheckoutValue"
+                        "default": "",
+                        "type": "string"
                       },
                       "preCheckoutValue2": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/preCheckoutValue2"
+                        "default": "",
+                        "type": "string"
                       },
                       "preCheckoutErrorMessage": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/preCheckoutErrorMessage"
+                        "default": "",
+                        "type": "string"
                       },
                       "refundUserSource": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/refundUserSource"
+                        "default": "current_user",
+                        "type": "string"
                       },
                       "refundUserId": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/refundUserId"
+                        "default": "",
+                        "type": "string"
                       },
                       "refundChargeId": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/refundChargeId"
+                        "default": "",
+                        "type": "string"
                       },
                       "refundMsgEmpty": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/refundMsgEmpty"
+                        "default": "Пожалуйста, укажите код покупки: /back КОД",
+                        "type": "string"
                       },
                       "refundMsgNotFound": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/refundMsgNotFound"
+                        "default": "Такой код покупки не найден. Проверьте данные и попробуйте снова.",
+                        "type": "string"
                       },
                       "refundMsgAlreadyRefunded": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/refundMsgAlreadyRefunded"
+                        "default": "За эту покупку уже ранее был произведён возврат.",
+                        "type": "string"
                       },
                       "refundEmptyTarget": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/refundEmptyTarget"
+                        "default": "",
+                        "type": "string"
                       },
                       "refundNotFoundTarget": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/refundNotFoundTarget"
+                        "default": "",
+                        "type": "string"
                       },
                       "refundAlreadyRefundedTarget": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/refundAlreadyRefundedTarget"
+                        "default": "",
+                        "type": "string"
                       },
                       "subscriptionUserSource": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/subscriptionUserSource"
+                        "default": "current_user",
+                        "type": "string"
                       },
                       "subscriptionUserId": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/subscriptionUserId"
+                        "default": "",
+                        "type": "string"
                       },
                       "subscriptionChargeId": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/subscriptionChargeId"
+                        "default": "",
+                        "type": "string"
                       },
                       "subscriptionAction": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/subscriptionAction"
+                        "default": "cancel",
+                        "type": "string"
                       },
                       "subscriptionMsgEmpty": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/subscriptionMsgEmpty"
+                        "default": "Укажите код покупки подписки",
+                        "type": "string"
                       },
                       "subscriptionMsgError": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/subscriptionMsgError"
+                        "default": "Не удалось изменить автопродление. Проверьте код покупки.",
+                        "type": "string"
                       },
                       "subscriptionEmptyTarget": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/subscriptionEmptyTarget"
+                        "default": "",
+                        "type": "string"
                       },
                       "subscriptionErrorTarget": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/subscriptionErrorTarget"
+                        "default": "",
+                        "type": "string"
                       },
                       "saveStarBalanceTo": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/saveStarBalanceTo"
+                        "default": "star_balance",
+                        "type": "string"
                       },
                       "balanceMsgError": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/balanceMsgError"
+                        "default": "Не удалось получить баланс звёзд",
+                        "type": "string"
                       },
                       "balanceErrorTarget": {
-                        "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/data/properties/balanceErrorTarget"
+                        "default": "",
+                        "type": "string"
                       }
                     },
-                    "additionalProperties": true
+                    "additionalProperties": {}
                   }
                 },
                 "additionalProperties": false
               },
               "sheet_id": {
-                "$ref": "#/properties/ops/items/anyOf/0/properties/sheet_id"
+                "type": "string",
+                "minLength": 1
               }
             },
             "required": [
@@ -4073,10 +5527,12 @@
                 "const": "remove_node"
               },
               "node_id": {
-                "$ref": "#/properties/ops/items/anyOf/0/properties/sheet_id"
+                "type": "string",
+                "minLength": 1
               },
               "sheet_id": {
-                "$ref": "#/properties/ops/items/anyOf/0/properties/sheet_id"
+                "type": "string",
+                "minLength": 1
               }
             },
             "required": [
@@ -4093,13 +5549,16 @@
                 "const": "connect_nodes"
               },
               "from_id": {
-                "$ref": "#/properties/ops/items/anyOf/0/properties/sheet_id"
+                "type": "string",
+                "minLength": 1
               },
               "to_id": {
-                "$ref": "#/properties/ops/items/anyOf/0/properties/sheet_id"
+                "type": "string",
+                "minLength": 1
               },
               "sheet_id": {
-                "$ref": "#/properties/ops/items/anyOf/0/properties/sheet_id"
+                "type": "string",
+                "minLength": 1
               },
               "branch": {
                 "type": "string"
@@ -4129,19 +5588,28 @@
                 "const": "disconnect_nodes"
               },
               "from_id": {
-                "$ref": "#/properties/ops/items/anyOf/0/properties/sheet_id"
+                "type": "string",
+                "minLength": 1
               },
               "to_id": {
-                "$ref": "#/properties/ops/items/anyOf/0/properties/sheet_id"
+                "type": "string",
+                "minLength": 1
               },
               "sheet_id": {
-                "$ref": "#/properties/ops/items/anyOf/0/properties/sheet_id"
+                "type": "string",
+                "minLength": 1
               },
               "branch": {
-                "$ref": "#/properties/ops/items/anyOf/3/properties/branch"
+                "type": "string"
               },
               "port_type": {
-                "$ref": "#/properties/ops/items/anyOf/3/properties/port_type"
+                "type": "string",
+                "enum": [
+                  "auto-transition",
+                  "trigger-next",
+                  "button-goto",
+                  "input-target"
+                ]
               }
             },
             "required": [
@@ -4159,16 +5627,31 @@
                 "const": "move_node"
               },
               "node_id": {
-                "$ref": "#/properties/ops/items/anyOf/0/properties/sheet_id"
+                "type": "string",
+                "minLength": 1
               },
               "to_sheet_id": {
-                "$ref": "#/properties/ops/items/anyOf/0/properties/sheet_id"
+                "type": "string",
+                "minLength": 1
               },
               "from_sheet_id": {
-                "$ref": "#/properties/ops/items/anyOf/0/properties/sheet_id"
+                "type": "string",
+                "minLength": 1
               },
               "position": {
-                "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/position"
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "type": "number"
+                  },
+                  "y": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "x",
+                  "y"
+                ]
               }
             },
             "required": [
@@ -4186,13 +5669,27 @@
                 "const": "duplicate_node"
               },
               "node_id": {
-                "$ref": "#/properties/ops/items/anyOf/0/properties/sheet_id"
+                "type": "string",
+                "minLength": 1
               },
               "sheet_id": {
-                "$ref": "#/properties/ops/items/anyOf/0/properties/sheet_id"
+                "type": "string",
+                "minLength": 1
               },
               "position": {
-                "$ref": "#/properties/ops/items/anyOf/0/properties/node/properties/position"
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "type": "number"
+                  },
+                  "y": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "x",
+                  "y"
+                ]
               }
             },
             "required": [
@@ -4212,7 +5709,8 @@
                 "type": "string"
               },
               "id": {
-                "$ref": "#/properties/ops/items/anyOf/0/properties/sheet_id"
+                "type": "string",
+                "minLength": 1
               }
             },
             "required": [
@@ -4228,7 +5726,8 @@
                 "const": "rename_sheet"
               },
               "sheet_id": {
-                "$ref": "#/properties/ops/items/anyOf/0/properties/sheet_id"
+                "type": "string",
+                "minLength": 1
               },
               "name": {
                 "type": "string"
@@ -4249,7 +5748,8 @@
                 "const": "remove_sheet"
               },
               "sheet_id": {
-                "$ref": "#/properties/ops/items/anyOf/0/properties/sheet_id"
+                "type": "string",
+                "minLength": 1
               }
             },
             "required": [
@@ -4266,7 +5766,8 @@
                 "const": "duplicate_sheet"
               },
               "sheet_id": {
-                "$ref": "#/properties/ops/items/anyOf/0/properties/sheet_id"
+                "type": "string",
+                "minLength": 1
               }
             },
             "required": [
@@ -4283,7 +5784,8 @@
                 "const": "set_active_sheet"
               },
               "sheet_id": {
-                "$ref": "#/properties/ops/items/anyOf/0/properties/sheet_id"
+                "type": "string",
+                "minLength": 1
               }
             },
             "required": [
@@ -4294,24 +5796,21 @@
           }
         ]
       },
-      "minItems": 1,
       "description": "Проверяемый пакет операций; update/remove без sheet_id ищут узел по листам"
     },
     "commit_message": {
-      "type": "string",
-      "description": "Заметка к версии (ручной чекпоинт)"
+      "description": "Заметка к версии (ручной чекпоинт)",
+      "type": "string"
     },
     "skip_validation": {
-      "type": "boolean",
-      "description": "Пропустить валидацию перед записью (для легаси с битыми ссылками; style:default уже принимается)"
+      "description": "Пропустить валидацию перед записью (для легаси с битыми ссылками; style:default уже принимается)",
+      "type": "boolean"
     }
   },
   "required": [
     "project_id",
     "ops"
-  ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  ]
 }
 ```
 
@@ -4339,6 +5838,7 @@
 
 ```json
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "data": {
@@ -4408,11 +5908,13 @@
             },
             "projectId": {
               "type": "integer",
-              "exclusiveMinimum": 0
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             },
             "revision": {
               "type": "integer",
-              "minimum": 0
+              "minimum": 0,
+              "maximum": 9007199254740991
             }
           },
           "required": [
@@ -4422,6 +5924,9 @@
         },
         "sideEffects": {
           "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
           "additionalProperties": {}
         }
       },
@@ -4438,10 +5943,10 @@
     }
   },
   "required": [
+    "data",
     "execution"
   ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  "additionalProperties": false
 }
 ```
 

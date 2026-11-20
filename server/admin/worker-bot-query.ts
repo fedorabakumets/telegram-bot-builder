@@ -7,14 +7,19 @@ import type { WorkerBotListQuery } from './worker-bot-request';
 
 /** Читает страницу, общее количество и одну пакетную выборку последних экземпляров. */
 export async function queryWorkerBots(query: WorkerBotListQuery) {
-  const ownMode = sql<string | null>`(select value from bot_env_variables where token_id = ${botTokens.id}
-    and key = 'BOT_POLLING_MODE' order by id desc limit 1)`;
+  /** Проектный режим подставляется до серверного значения по умолчанию. */
+  const ownMode = sql<string | null>`case when ${botTokens.inheritSleepMode} then coalesce(${botProjects.defaultSleepMode}, 'process')
+    else (select value from bot_env_variables where token_id = ${botTokens.id}
+    and key = 'BOT_POLLING_MODE' order by id desc limit 1) end`;
   const inherited = runtimeEnv('BOT_POLLING_MODE') || 'direct';
   const selected = (runtimeEnv('BOT_ON_DEMAND_TOKEN_IDS') || '').split(',').map(value => value.trim()).filter(Boolean);
   const fallback = selected.length
     ? sql`case when ${botTokens.id}::text in (${sql.join(selected.map(value => sql`${value}`), sql`, `)}) then ${inherited} else 'direct' end`
     : sql`${inherited}`;
   const effective = sql`coalesce(${ownMode}, ${fallback})`;
+  /** Транспорт следующего запуска учитывает индивидуальный выбор и настройку проекта. */
+  const launchMode = sql<string>`case when ${botTokens.inheritLaunchMode} then ${botProjects.defaultLaunchMode}
+    else coalesce(${botTokens.launchMode}, 'polling') end`;
   const pattern = `%${query.search.replace(/[\\%_]/g, '\\$&')}%`;
   /** Последний экземпляр определяет включение без исключения спящих сценариев. */
   const enabled = sql`coalesce((select desired_status = 'running' or status in ('running', 'starting')
@@ -26,7 +31,7 @@ export async function queryWorkerBots(query: WorkerBotListQuery) {
     db.select({ total: count() }).from(botTokens).innerJoin(botProjects, eq(botTokens.projectId, botProjects.id)).where(filter),
     db.select({ tokenId: botTokens.id, projectId: botProjects.id, projectName: botProjects.name,
       ownerId: botProjects.ownerId, botName: sql<string>`coalesce(${botTokens.botFirstName}, ${botTokens.name})`,
-      botUsername: botTokens.botUsername, launchMode: botTokens.launchMode, configuredMode: ownMode })
+      botUsername: botTokens.botUsername, launchMode, configuredMode: ownMode, inheritsSleepMode: botTokens.inheritSleepMode })
       .from(botTokens).innerJoin(botProjects, eq(botTokens.projectId, botProjects.id)).where(filter)
       .orderBy(asc(botTokens.id)).limit(query.pageSize).offset((query.page - 1) * query.pageSize),
   ]);

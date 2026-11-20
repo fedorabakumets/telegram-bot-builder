@@ -92,9 +92,9 @@ export function registerProjectTokensLogLaunchPaths(
     tags: ["project-tokens"],
     summary: "Режим запуска polling/webhook",
     description:
-      "`launchMode` polling|webhook; опционально `webhookBaseUrl`, `webhookSecretToken`. " +
-      "При смене webhook→polling вызывается Telegram `deleteWebhook`. " +
-      "**Риск:** ответ может вернуть `webhookSecretToken`.\n\n" +
+      "Передайте хотя бы одно поле. `launchMode` принимает polling, webhook или inherit. " +
+      "`webhookBaseUrl` принимает адрес, null для адреса сервера или inherit для настройки проекта. " +
+      "Транспорт применяется при следующем запуске. Секрет в ответе отсутствует.\n\n" +
       "**Auth:** `requireTokenOwnership`. WS `token-updated`.\n\n" +
       "```bash\ncurl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/launch-settings \\\n" +
       "  -b cookies.txt -H 'Content-Type: application/json' \\\n" +
@@ -119,8 +119,9 @@ export function registerProjectTokensLogLaunchPaths(
             example: {
               success: true,
               launchMode: "polling",
+              inheritLaunchMode: false,
               webhookBaseUrl: null,
-              webhookSecretToken: null,
+              inheritBotSettings: [],
             },
           },
         },

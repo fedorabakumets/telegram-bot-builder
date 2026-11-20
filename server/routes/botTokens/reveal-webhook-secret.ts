@@ -3,8 +3,8 @@ import type { Request, Response } from 'express';
 import { storage } from '../../storages/storage';
 import { getOwnerIdFromRequest } from '../../telegram/auth-middleware';
 
-/** Возвращает секрет только для указанного проекта без сохранения в HTTP-кеше. */
-export async function revealWebhookSecret(req: Request, res: Response): Promise<void> {
+/** Возвращает выбранный секрет владельцу проекта без сохранения в HTTP-кеше. */
+async function revealSecret(req: Request, res: Response, field: 'token' | 'webhookSecretToken'): Promise<void> {
   res.setHeader('Cache-Control', 'no-store, private');
   res.setHeader('Pragma', 'no-cache');
   try {
@@ -18,11 +18,22 @@ export async function revealWebhookSecret(req: Request, res: Response): Promise<
     if (!req.isAdminRequest && (actorId === null || project?.ownerId !== actorId)) {
       res.status(403).json({ message: 'Показать токен может только владелец проекта' }); return;
     }
-    if (!token.webhookSecretToken) {
+    if (!token[field]) {
       res.status(404).json({ message: 'Защитный токен ещё не создан' }); return;
     }
-    res.json({ value: token.webhookSecretToken });
+    /** Редактор получает сохранённое значение, включая маску в старых записях. */
+    res.json({ value: token[field] });
   } catch {
     res.status(500).json({ message: 'Не удалось получить защитный токен' });
   }
+}
+
+/** Раскрывает защитный токен вебхука владельцу проекта. */
+export function revealWebhookSecret(req: Request, res: Response): Promise<void> {
+  return revealSecret(req, res, 'webhookSecretToken');
+}
+
+/** Раскрывает токен бота при явном входе в редактирование. */
+export function revealBotToken(req: Request, res: Response): Promise<void> {
+  return revealSecret(req, res, 'token');
 }

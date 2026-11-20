@@ -2,9 +2,18 @@
  * @fileoverview Имя пользователя и его идентификатор Telegram в компактной карточке.
  */
 import { UserBotData } from '@shared/schema';
+import { UserDialogAvatar } from '../desktop/user-dialog-avatar';
+import { UserIdentity } from '../desktop/user-summary';
+import { FoundBroadcastCheckbox } from '../found-broadcast-actions';
 
 /** Свойства заголовка карточки. */
 interface MobileUserHeaderProps {
+  /** Переход во вкладку переписки. */
+  onNavigateToDialog?: (user: UserBotData) => void;
+  /** Проект для загрузки аватара. */
+  projectId?: number;
+  /** Выбранный бот для загрузки аватара. */
+  tokenId?: number | null;
   /** Данные пользователя. */
   user: UserBotData;
   /** Форматирует имя пользователя. */
@@ -16,11 +25,14 @@ interface MobileUserHeaderProps {
  * @param props - Данные пользователя и форматирование имени.
  * @returns Заголовок карточки.
  */
-export function MobileUserHeader({ user, formatUserName }: MobileUserHeaderProps): React.JSX.Element {
+export function MobileUserHeader({ user, projectId, tokenId, onNavigateToDialog }: MobileUserHeaderProps): React.JSX.Element {
+  /** Общий переход с фотографии и username. */
+  const openDialog = onNavigateToDialog ? () => onNavigateToDialog(user) : undefined;
   return (
-    <div className="min-w-0 flex-1">
-      <div className="break-words text-sm font-medium leading-5">{formatUserName(user)}</div>
-      <div className="mt-1 break-all text-xs text-muted-foreground tabular-nums">Telegram ID: {user.userId}</div>
+    <div className="flex min-w-0 flex-1 items-center gap-3">
+      <FoundBroadcastCheckbox userId={user.userId} name={user.firstName} username={user.userName} />
+      <UserDialogAvatar user={user} projectId={projectId} tokenId={tokenId} size={36} onOpenDialog={openDialog} />
+      <UserIdentity user={user} onOpenDialog={openDialog} />
     </div>
   );
 }

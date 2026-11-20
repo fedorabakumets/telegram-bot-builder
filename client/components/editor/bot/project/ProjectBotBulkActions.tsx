@@ -6,7 +6,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { Play, RefreshCw } from 'lucide-react';
+import { Play, RotateCw } from 'lucide-react';
 import {
   startOfflineProgressQueryKey,
   type StartOfflineProgressCache,
@@ -31,6 +31,8 @@ export interface ProjectBotBulkActionsProps {
   onStartOfflineAll?: () => void;
   /** Идёт массовый старт офлайн */
   isStartingOffline?: boolean;
+  /** Делегирует видимость подписей общей адаптивной шапке. */
+  adaptiveLabels?: boolean;
 }
 
 /**
@@ -47,6 +49,7 @@ export function ProjectBotBulkActions({
   offlineCount = 0,
   onStartOfflineAll,
   isStartingOffline,
+  adaptiveLabels = false,
 }: ProjectBotBulkActionsProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const { data: progress } = useQuery<StartOfflineProgressCache | undefined>({
@@ -65,30 +68,32 @@ export function ProjectBotBulkActions({
 
   return (
     <>
-      <div className="flex items-center gap-1 sm:gap-1.5 flex-shrink-0">
+      <div className={adaptiveLabels ? 'flex shrink-0 items-center gap-0.5' : 'flex shrink-0 items-center gap-1 sm:gap-1.5'}>
         <Button
           variant="ghost"
           size="sm"
-          className="h-7 px-1.5 sm:px-2 text-xs text-muted-foreground"
+          className={adaptiveLabels ? 'h-8 min-w-8 gap-1.5 px-2 text-xs text-muted-foreground' : 'h-7 px-1.5 text-xs text-muted-foreground sm:px-2'}
           onClick={onRestartAll}
           disabled={isRestartingAll || isStartingOffline}
           aria-label="Перезапустить всех запущенных ботов проекта"
         >
-          <RefreshCw className={`w-3 h-3 sm:mr-1 ${isRestartingAll ? 'animate-spin' : ''}`} />
-          <span className="hidden sm:inline">
+          {/* Стрелка по часовой отличает перезапуск от обновления данных. */}
+          <RotateCw className={`h-3 w-3 ${adaptiveLabels ? '' : 'sm:mr-1'} ${isRestartingAll ? 'motion-safe:animate-spin' : ''}`} />
+          {/* Подпись можно скрыть в компактной шапке; у кнопки есть доступное имя. */}
+          <span data-workspace-label={adaptiveLabels ? 'bulk' : undefined} className={adaptiveLabels ? undefined : 'hidden sm:inline'}>
             {isRestartingAll ? 'Перезапуск...' : 'Перезапустить'}
           </span>
         </Button>
         <Button
           variant="ghost"
           size="sm"
-          className="h-7 px-1.5 sm:px-2 text-xs text-muted-foreground"
+          className={adaptiveLabels ? 'h-8 min-w-8 gap-1.5 px-2 text-xs text-muted-foreground' : 'h-7 px-1.5 text-xs text-muted-foreground sm:px-2'}
           onClick={() => setConfirmOpen(true)}
           disabled={offlineCount === 0 || isStartingOffline || isRestartingAll}
           aria-label="Запустить офлайн-ботов проекта"
         >
-          <Play className={`w-3 h-3 sm:mr-1 ${isStartingOffline ? 'animate-pulse' : ''}`} />
-          <span className="hidden sm:inline">
+          <Play className={`h-3 w-3 ${adaptiveLabels ? '' : 'sm:mr-1'} ${isStartingOffline ? 'animate-pulse' : ''}`} />
+          <span data-workspace-label={adaptiveLabels ? 'bulk' : undefined} className={adaptiveLabels ? undefined : 'hidden sm:inline'}>
             {isStartingOffline
               ? (progressLabel ? `Запуск ${progressLabel}` : 'Запуск...')
               : offlineCount > 0

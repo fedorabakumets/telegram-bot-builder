@@ -22,7 +22,7 @@ interface DesktopEmptyRowProps {
 export function DesktopEmptyRow({ searchQuery }: DesktopEmptyRowProps): React.JSX.Element {
   return (
     <TableRow>
-      <TableCell colSpan={3} className="text-center py-12 text-muted-foreground">
+      <TableCell colSpan={8} className="text-center py-12 text-muted-foreground">
         <div className="flex flex-col items-center gap-2">
           <Users className="w-8 h-8 opacity-50" aria-hidden="true" />
           <span>{searchQuery ? 'Пользователи не найдены' : 'Пока нет пользователей'}</span>

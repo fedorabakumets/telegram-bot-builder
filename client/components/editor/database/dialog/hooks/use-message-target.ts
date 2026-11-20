@@ -8,8 +8,9 @@ import './message-target.css';
  * @param messageId - Целевое сообщение
  * @param loading - Загружается ли контекст
  * @param count - Число отрисованных сообщений
+ * @param highlight - Добавлять ли временный фон строки помимо прокрутки
  */
-export function useMessageTarget(root: RefObject<HTMLDivElement>, messageId: number | null, loading: boolean, count: number) {
+export function useMessageTarget(root: RefObject<HTMLDivElement>, messageId: number | null, loading: boolean, count: number, highlight = true) {
   const shown = useRef<number | null>(null);
   useLayoutEffect(() => {
     if (!messageId) { shown.current = null; return; }
@@ -17,8 +18,9 @@ export function useMessageTarget(root: RefObject<HTMLDivElement>, messageId: num
     const element = root.current?.querySelector<HTMLElement>(`[data-message-id="${messageId}"]`);
     if (!element) return;
     element.scrollIntoView({ block: 'center', behavior: 'instant' });
-    element.classList.add('dialog-message-target');
     shown.current = messageId;
+    if (!highlight) return;
+    element.classList.add('dialog-message-target');
     /** Снимает временный акцент без изменения выбранного сообщения и прокрутки. */
     const clear = () => element.classList.remove('dialog-message-target');
     const timer = window.setTimeout(clear, 3000);
@@ -30,5 +32,5 @@ export function useMessageTarget(root: RefObject<HTMLDivElement>, messageId: num
       element.removeEventListener('keydown', clear);
       clear();
     };
-  }, [root, messageId, loading, count]);
+  }, [root, messageId, loading, count, highlight]);
 }

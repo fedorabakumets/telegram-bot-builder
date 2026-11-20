@@ -17,8 +17,8 @@
  * @module server/routes/media/upload-storage-helper
  */
 
-import { readFile, unlink } from "fs/promises";
-import { join } from "path";
+import { constants } from "node:fs";
+import { lstat, open, unlink } from "node:fs/promises";
 
 import { and, eq, sql } from "drizzle-orm";
 
@@ -29,6 +29,7 @@ import type { StorageBackend, StorageRegistry } from "../../storage/storage-back
 import { LOCAL_DEFAULT_ID } from "../../storage/storage-config";
 import { getDbBackupsStorageId } from "../../database/backups/dbBackupConfig";
 import { getUploadsStorageId } from "../../storage/uploads-storage";
+import { getUploadStagingKey, resolveUploadStagingPath } from "../../files/upload-staging-path";
 
 /** Результат записи загруженного файла в целевой бэкенд */
 export interface UploadPersistResult {
@@ -102,11 +103,7 @@ export function resolveUploadBackend(
  * @returns Относительный ключ вида `{projectId}/{date}/{filename}`
  */
 export function deriveObjectKey(filePath: string): string {
-  const uploadsDir = join(process.cwd(), "uploads");
-  return filePath
-    .replace(uploadsDir, "")
-    .replace(/\\/g, "/")
-    .replace(/^\/+/, "");
+  return getUploadStagingKey(filePath);
 }
 
 /**
@@ -140,8 +137,12 @@ export async function persistUploadToBackend(
   defaultFilePath: string,
   defaultUrl: string,
 ): Promise<UploadPersistResult> {
+  /** Проверяет источник до регистрации или доступа к содержимому. */
+  const staged = await resolveUploadStagingPath(file.path);
+  if (!(await lstat(staged.path)).isFile()) throw new Error("Файл загрузки недоступен");
   // Локальный дефолт: файл уже на диске — ничего не перезаписываем.
   if (isLocalDefault(backend)) {
+    if (getUploadStagingKey(defaultFilePath) !== staged.key) throw new Error("Путь файла не совпадает с загрузкой");
     return {
       filePath: defaultFilePath,
       url: defaultUrl,
@@ -151,19 +152,20 @@ export async function persistUploadToBackend(
   }
 
   // S3 либо нестандартная локальная папка: пишем буфер во внешний бэкенд.
-  const key = deriveObjectKey(file.path);
-  const buffer = await readFile(file.path);
+  const { key } = staged;
+  const handle = await open(staged.path, constants.O_RDONLY | (constants.O_NOFOLLOW || 0));
+  const buffer = await handle.readFile().finally(() => handle.close());
   let stored;
   try {
     stored = await backend.put(key, buffer, file.mimetype);
   } catch (err) {
-    await unlink(file.path).catch(() => undefined);
+    await unlink(staged.path).catch(() => undefined);
     throw new StorageBackendWriteError(backend.backend, err);
   }
 
   // Временный файл multer больше не нужен — удаляем (ENOENT игнорируем).
   try {
-    await unlink(file.path);
+    await unlink(staged.path);
   } catch {
     /* отсутствие временного файла не критично */
   }

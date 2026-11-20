@@ -1,0 +1,59 @@
+/** @fileoverview Нейтральные поверхности, типографика и состояния диалогов по эталону аналитики. */
+@font-face { font-family: Manrope; src: url('../../../../../assets/fonts/manrope-variable.ttf') format('truetype'); font-style: normal; font-weight: 200 800; font-display: swap; }
+:is(.dialogs-workspace, .dialogs-overlay) {
+  --background: #fafafa;
+  --foreground: #202024;
+  --card: #fff;
+  --muted: #f0f0f2;
+  --muted-foreground: #62626b;
+  --border: #dddde2;
+  --primary: #27272b;
+  --primary-foreground: #fafafa;
+  --popover: var(--card);
+  --popover-foreground: var(--foreground);
+  --accent: var(--muted);
+  --accent-foreground: var(--foreground);
+  --input: var(--border);
+  --ring: #71717a;
+  font-family: Manrope, Geist, sans-serif;
+  font-variant-numeric: tabular-nums;
+  color: var(--foreground);
+  background: var(--background);
+}
+.dark :is(.dialogs-workspace, .dialogs-overlay) {
+  --background: #09090b;
+  --foreground: #ededf0;
+  --card: #09090b;
+  --muted: #151517;
+  --muted-foreground: #a1a1aa;
+  --border: #29292e;
+  --primary: #e4e4e7;
+  --primary-foreground: #18181b;
+  color-scheme: dark;
+}
+:is(.dialogs-workspace, .dialogs-overlay) :is(input, textarea, [role='combobox'], [contenteditable='true']) {
+  background: var(--background); color: var(--foreground); border-color: var(--border); border-radius: 8px; box-shadow: none;
+}
+:is(.dialogs-workspace, .dialogs-overlay) :is(button, a, input, textarea, [role='combobox'], [contenteditable='true']):focus-visible {
+  outline: 2px solid var(--ring); outline-offset: 3px;
+}
+:is(.dialogs-workspace, .dialogs-overlay) :is(button, input, textarea):disabled { opacity: .45; cursor: not-allowed; }
+.dialogs-workspace .dialogs-action { min-height: 32px; border-radius: 8px; color: var(--foreground); }
+.dialogs-workspace .dialogs-action:hover { background: var(--muted); }
+/** Рассылка сохраняет стандартный размер кнопки действий общей шапки. */
+.dialogs-workspace .dialogs-new-broadcast { height: 32px; min-height: 32px; gap: 8px; border-color: var(--border); background: transparent; color: var(--foreground); font-size: 14px; font-weight: 500; border-radius: 8px; box-shadow: none; }
+.dialogs-workspace .dialogs-new-broadcast:hover { background: var(--muted); }
+/** Сообщения сохраняют прежние цвета; вкладка задаёт только форму пузырей. */
+.dialogs-workspace .dialog-message-text { border: 1px solid var(--border); border-radius: 12px; }
+.dialogs-workspace .dialog-message-buttons > :is(a, div) { background: transparent; border-color: var(--border); color: var(--foreground); border-radius: 8px; padding: 6px 8px; }
+.dialogs-workspace .dialog-message-buttons > a:hover { background: var(--muted); }
+.dialogs-workspace .dialogs-composer .col-span-3.row-start-1 > div { background: var(--card); border-color: var(--border); border-radius: 8px; }
+.dialogs-workspace .dialogs-composer .col-start-2.row-start-3 > div { background: var(--background); border-color: var(--border); border-radius: 8px; }
+.dialogs-workspace .dialogs-composer .col-span-3.row-start-1 button:hover { background: var(--muted); color: var(--foreground); }
+/** Строки данных используют тот же ритм и разделители, что таблицы аналитики. */
+:is(.dialogs-workspace, .dialogs-overlay) table { width: 100%; font-size: 13px; line-height: 20px; border-collapse: collapse; }
+:is(.dialogs-workspace, .dialogs-overlay) :is(th, td) { padding: 8px 12px; border-bottom: 1px solid var(--border); }
+:is(.dialogs-workspace, .dialogs-overlay) th { color: var(--muted-foreground); font-size: 12px; font-weight: 500; text-align: left; }
+:is(.dialogs-workspace, .dialogs-overlay) tbody tr:hover { background: var(--muted); }
+/** Выпадающие меню используют общий класс users-portal без отдельной серой подсветки. */
+@media (prefers-reduced-motion: reduce) { .dialogs-workspace *, .dialogs-overlay * { transition: none !important; animation: none !important; } }

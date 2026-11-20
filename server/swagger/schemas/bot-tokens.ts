@@ -5,6 +5,7 @@
 
 import "./common";
 import { z } from "zod";
+import { BOT_INHERITED_SETTING_KEYS } from "../../../shared/bot-inherited-settings";
 
 /** Тело PUT messages-retention */
 export const UpdateMessagesRetentionRequestSchema = z
@@ -23,11 +24,12 @@ export const UpdateMessagesRetentionRequestSchema = z
         z.literal(90),
         z.literal(180),
         z.literal(365),
+        z.literal("inherit"),
       ])
       .openapi({
         example: 60,
         description:
-          "0 = безлимит; иначе 7/30/60/90/180/365. Чистится только bot_messages, не аналитика.",
+          "0 — безлимит, 7/30/60/90/180/365 — срок, inherit — использовать настройку проекта.",
       }),
   })
   .openapi("UpdateMessagesRetentionRequest");
@@ -37,8 +39,10 @@ export const UpdateMessagesRetentionResponseSchema = z
   .object({
     /** Флаг успеха */
     success: z.literal(true).openapi({ example: true }),
-    /** Сохранённый срок в днях */
+    /** Действующий срок в днях. */
     messagesRetentionDays: z.number().int().openapi({ example: 60 }),
+    /** Поля, использующие значение проекта. */
+    inheritBotSettings: z.array(z.enum(BOT_INHERITED_SETTING_KEYS)),
   })
   .openapi("UpdateMessagesRetentionResponse");
 

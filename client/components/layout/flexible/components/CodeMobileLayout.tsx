@@ -46,7 +46,11 @@ export function CodeMobileLayout({ panelContent, editorContent }: CodeMobileLayo
 
   if (isDesktop) {
     return (
-      <ResizablePanelGroup direction="horizontal" className="h-full">
+      <CodeViewNavigationContext.Provider value={{ openCodeView: null, headerTarget }}>
+      <div className="flex h-full min-h-0 flex-col bg-background">
+      {/* Внешние поля задаёт общая шапка, а контейнер только принимает её. */}
+      <div ref={setHeaderTarget} className="code-panel shrink-0" />
+      <ResizablePanelGroup direction="horizontal" className="min-h-0 flex-1">
         <ResizablePanel id="code-panel-left" order={1} defaultSize={30} minSize={15} maxSize={50} className="overflow-hidden">
           <div className="h-full w-full bg-background overflow-hidden flex flex-col">
             {panelContent}
@@ -59,13 +63,16 @@ export function CodeMobileLayout({ panelContent, editorContent }: CodeMobileLayo
           </div>
         </ResizablePanel>
       </ResizablePanelGroup>
+      </div>
+      </CodeViewNavigationContext.Provider>
     );
   }
 
   return (
     <CodeViewNavigationContext.Provider value={{ openCodeView: openEditor, headerTarget }}>
     <div className="flex flex-col h-full">
-      <div ref={setHeaderTarget} className="code-panel shrink-0 px-4 pt-4" />
+      {/* Мобильный контейнер также использует поля общей шапки. */}
+      <div ref={setHeaderTarget} className="code-panel shrink-0" />
       {/* Панель вкладок */}
       <div role="group" aria-label="Просмотр файлов проекта" className="flex shrink-0 gap-2 border-b border-border bg-background p-3">
         <button

@@ -5,6 +5,9 @@
 
 import { Send } from 'lucide-react';
 
+/** Адрес чата сообщества BotCraft. */
+export const TELEGRAM_CHAT_URL = 'https://t.me/bot_builder_chat';
+
 /**
  * Свойства компонента приглашения в чат
  */
@@ -24,7 +27,7 @@ export function TelegramChatInvite({ onClick, variant = 'mobile' }: TelegramChat
   if (variant === 'desktop') {
     return (
       <a
-        href="https://t.me/bot_builder_chat"
+        href={TELEGRAM_CHAT_URL}
         target="_blank"
         rel="noopener noreferrer"
         className="inline-flex items-center gap-1 whitespace-nowrap text-blue-600 dark:text-blue-300 hover:underline font-semibold"
@@ -43,7 +46,7 @@ export function TelegramChatInvite({ onClick, variant = 'mobile' }: TelegramChat
         Присоединяйтесь к нашему чату в Telegram:
       </p>
       <a
-        href="https://t.me/bot_builder_chat"
+        href={TELEGRAM_CHAT_URL}
         target="_blank"
         rel="noopener noreferrer"
         className="text-blue-600 dark:text-blue-300 hover:underline font-semibold text-sm"

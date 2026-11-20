@@ -4,6 +4,8 @@
  * Виртуальный элемент «Рассылка» — только в сегменте «Все».
  */
 
+import { UserDirectoryControls, useDirectoryControls } from '../content/user-directory-controls';
+import { DialogListFilters } from './dialog-list-filters';
 import { useEffect, useRef, useState } from 'react';
 import { Search, MessageSquare, Megaphone } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -14,6 +16,10 @@ import { DialogListItem } from './dialog-list-item';
 import { DialogSegmentChips } from './dialog-segment-chips';
 import type { DialogKind } from './dialog-kind';
 import { useSyncGroups } from '../hooks/use-sync-groups';
+import type { MessagePeriod } from '@shared/message-period';
+import { FoundBroadcastProvider } from '../components/found-broadcast-context';
+import { FoundBroadcastActions, FoundBroadcastCheckbox, FoundBroadcastToggle } from '../components/found-broadcast-actions';
+import { useProjectTokens } from '@/hooks/use-project-tokens';
 
 /**
  * Пропсы компонента DialogList
@@ -25,8 +31,12 @@ interface DialogListProps {
   selectedTokenId?: number | null;
   /** ID выбранного пользователя */
   selectedUserId?: string | null;
+  /** Бот открытой переписки для различения одинаковых пользователей у разных ботов. */
+  selectedUserTokenId?: number | null;
   /** Обработчик выбора пользователя */
-  onSelectUser: (user: UserBotData) => void;
+  onSelectUser: (user: UserBotData, searchTerm?: string, period?: MessagePeriod) => void;
+  /** Сразу обновляет период в уже открытой переписке. */
+  onMessagePeriodChange?: (period: MessagePeriod) => void;
   /** Обработчик клика по виртуальному элементу «Рассылка» */
   onSelectBroadcast?: () => void;
   /** Флаг активности виртуального элемента «Рассылка» */
@@ -38,19 +48,43 @@ interface DialogListProps {
  * @param props - Пропсы компонента
  * @returns JSX элемент списка диалогов
  */
-export function DialogList({
+export function DialogList(props: DialogListProps): React.JSX.Element {
+  return <UserDirectoryControls key={props.projectId} audience="dialogs"><DialogListContent {...props} /></UserDirectoryControls>;
+}
+
+/**
+ * Сохраняет состояние списка и фильтров отдельно от вкладки пользователей.
+ * @param props - Выбранная область переписок и обработчики выбора.
+ * @returns Список с поиском, фильтрами и сегментами.
+ */
+function DialogListContent({
   projectId,
   selectedTokenId,
   selectedUserId,
+  selectedUserTokenId,
   onSelectUser,
+  onMessagePeriodChange,
   onSelectBroadcast,
   isBroadcastSelected,
 }: DialogListProps): React.JSX.Element {
   const [search, setSearch] = useState('');
   const [dialogKind, setDialogKind] = useState<DialogKind>('all');
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const controls = useDirectoryControls();
+  /** Общая выдача подписывает каждую переписку её ботом без запросов на отдельную строку. */
+  const tokens = useProjectTokens([projectId])[0]?.tokens ?? [];
+  const botLabels = new Map(tokens.map(token => [token.id,
+    token.botUsername ? `@${token.botUsername}` : token.botFirstName || token.name || `Бот #${token.id}`]));
+  const messageFrom = controls?.advanced.messageFrom;
+  const messageTo = controls?.advanced.messageTo;
+  /** Изменение времени применяется и к списку, и к открытой переписке без подтверждения. */
+  useEffect(() => { onMessagePeriodChange?.({ messageFrom, messageTo }); }, [messageFrom, messageTo, onMessagePeriodChange]);
+  /** В группах и каналах сохранённые ограничения профиля не меняют список и пустое состояние. */
+  const hasProfileFilters = (dialogKind === 'all' || dialogKind === 'users') && Boolean(controls?.source
+    || (controls?.status ?? 'all') !== 'all' || (controls?.premium ?? 'all') !== 'all'
+    || Object.values(controls?.advanced ?? {}).some(value => value !== undefined && value !== ''));
 
-  const { allUsers, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
+  const { allUsers, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, usersError, refetch } =
     useInfiniteUsers({
       projectId,
       selectedTokenId,
@@ -58,10 +92,11 @@ export function DialogList({
       sortBy: 'lastInteraction',
       sortDir: 'desc',
       dialogKind,
+      dialogUserFilters: true,
     });
 
-  /** Синк названий/аватарок для групп, видимых в текущем списке */
-  const { statuses } = useSyncGroups(projectId, selectedTokenId, allUsers);
+  /** В общей области доступ групп проверяют карточки с собственным ботом, без подстановки бота по умолчанию. */
+  const { statuses } = useSyncGroups(projectId, selectedTokenId, selectedTokenId == null ? [] : allUsers);
 
   /** Последняя рассылка для превью в виртуальном элементе */
   const { previewText: broadcastPreview, progress: broadcastProgress } = useBroadcastRowPreview({
@@ -90,9 +125,10 @@ export function DialogList({
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   return (
+    <FoundBroadcastProvider projectId={projectId} tokenId={selectedTokenId} search={search} audience="dialogs">
     <div className="flex flex-col h-full min-h-0">
-      <div className="p-3 border-b border-border/50 flex-shrink-0">
-        <div className="relative">
+      <div className="dialogs-list-search flex-shrink-0">
+        <div className="flex items-center gap-2"><div className="relative min-w-0 flex-1">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             value={search}
@@ -101,27 +137,25 @@ export function DialogList({
             aria-label="Поиск диалогов"
             className="pl-8 h-9 text-sm bg-background"
           />
-        </div>
+        </div>{(dialogKind === 'all' || dialogKind === 'users') && <FoundBroadcastToggle />}</div>
       </div>
 
+      <DialogListFilters projectId={projectId} tokenId={selectedTokenId ?? null} search={search} dialogKind={dialogKind} />
       <DialogSegmentChips value={dialogKind} onChange={setDialogKind} />
+      {(dialogKind === 'all' || dialogKind === 'users') && <div className="shrink-0 border-b border-border px-4 py-2 empty:hidden">
+        <FoundBroadcastActions />
+      </div>}
 
       <div className="flex-1 overflow-y-auto min-h-0">
         {showBroadcastRow && (
           <button
             type="button"
             onClick={onSelectBroadcast}
-            className={[
-              'w-full flex items-center gap-3 px-3 py-3 text-left',
-              'transition-colors border-b border-border/30',
-              'hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-              isBroadcastSelected
-                ? 'bg-gradient-to-r from-violet-50 to-fuchsia-50 dark:from-violet-950/20 dark:to-fuchsia-950/10'
-                : '',
-            ].join(' ')}
+            aria-pressed={!!isBroadcastSelected}
+            className="dialogs-list-row"
           >
-            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-violet-200 to-fuchsia-200 dark:from-violet-800 dark:to-fuchsia-800 flex items-center justify-center">
-              <Megaphone className="w-5 h-5 text-violet-600 dark:text-violet-300" />
+            <div className="dialogs-row-symbol flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center">
+              <Megaphone className="w-5 h-5" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-baseline justify-between gap-2">
@@ -137,10 +171,16 @@ export function DialogList({
           <div className="flex items-center justify-center h-24">
             <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
           </div>
+        ) : usersError ? (
+          /** Сбой запроса не означает, что сохранённая история диалогов отсутствует. */
+          <div role="alert" className="flex min-h-24 flex-col items-center justify-center gap-2 px-4 py-4 text-center text-sm text-muted-foreground">
+            <span>Не удалось загрузить диалоги</span>
+            <button type="button" className="rounded-lg border border-border px-3 py-1.5 hover:text-foreground" onClick={() => refetch()}>Повторить</button>
+          </div>
         ) : allUsers.length === 0 ? (
           <div className="flex min-h-24 flex-col items-center justify-center gap-2 px-4 py-4 text-center text-muted-foreground">
             <MessageSquare className="h-6 w-6 opacity-40" />
-            <span className="text-sm">{search.trim() ? 'Диалоги не найдены' : 'Нет диалогов'}</span>
+            <span className="text-sm">{hasProfileFilters ? 'Диалоги по выбранным фильтрам не найдены' : search.trim() ? 'Диалоги не найдены' : 'Нет диалогов'}</span>
             {dialogKind === 'channels' && !search.trim() && (
               <span className="max-w-64 text-xs leading-relaxed">Сообщения каналов пока не записываются. В будущем они появятся здесь.</span>
             )}
@@ -148,15 +188,21 @@ export function DialogList({
         ) : (
           <>
             {allUsers.map((user, index) => (
-              <DialogListItem
+              <div key={`${user.tokenId ?? selectedTokenId}:${user.userId}-${index}`} className="flex min-w-0 items-center">
+              {!(user as UserBotData & { isGroup?: boolean }).isGroup && <div className="pl-2 empty:hidden">
+                <FoundBroadcastCheckbox userId={user.userId} name={user.firstName} username={user.userName} />
+              </div>}
+              <div className="min-w-0 flex-1"><DialogListItem
                 key={`${user.userId}-${index}`}
                 user={user}
-                isSelected={selectedUserId === String(user.userId)}
-                onClick={() => onSelectUser(user)}
+                isSelected={selectedUserId === String(user.userId) && (selectedTokenId != null || !(user as UserBotData & { isGroup?: boolean }).isGroup || selectedUserTokenId === user.tokenId)}
+                onClick={() => onSelectUser(user, search, { messageFrom: controls?.advanced.messageFrom, messageTo: controls?.advanced.messageTo })}
                 projectId={projectId}
-                tokenId={selectedTokenId}
+                tokenId={selectedTokenId ?? user.tokenId}
+                botLabel={selectedTokenId == null ? dialogBotLabel(user, botLabels) : undefined}
                 groupSyncStatus={statuses[String(user.userId)]}
-              />
+              /></div>
+              </div>
             ))}
 
             <div ref={sentinelRef} className="h-1" />
@@ -170,5 +216,23 @@ export function DialogList({
         )}
       </div>
     </div>
+    </FoundBroadcastProvider>
   );
+}
+
+/**
+ * Подписывает общую карточку числом ботов либо именем единственного бота.
+ * @param user - Пользователь с сохранёнными связями, без потери метаданных при выборе
+ * @param labels - Подписи ботов текущего проекта
+ * @returns Краткая подпись принадлежности переписки
+ */
+function dialogBotLabel(user: UserBotData, labels: Map<number, string>): string {
+  const ids = [...new Set(user.botMemberships?.map(bot => bot.tokenId) ?? [])];
+  if (ids.length > 1) {
+    const tail = ids.length % 100;
+    const word = tail >= 11 && tail <= 14 ? 'ботов' : ids.length % 10 === 1 ? 'бот' : ids.length % 10 >= 2 && ids.length % 10 <= 4 ? 'бота' : 'ботов';
+    return `${ids.length} ${word}`;
+  }
+  const tokenId = ids[0] ?? user.tokenId;
+  return labels.get(tokenId!) ?? `Бот #${tokenId ?? '—'}`;
 }

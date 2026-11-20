@@ -8,6 +8,7 @@ export const updateBotProjectSchema = insertBotProjectSchema.pick({
   sortOrder: true, restartOnUpdate: true,
 }).partial();
 /** Запрещённые поля обслуживаются отдельными маршрутами с дополнительной авторизацией. */
-export const privilegedProjectFields = ['ownerId', 'sessionId', 'botToken', 'adminIds',
+export const privilegedProjectFields = ['ownerId', 'sessionId', 'botToken', 'adminIds', 'defaultLaunchMode',
+ 'defaultSleepMode', 'defaultAutoRestart', 'defaultMaxRestartAttempts', 'botSettingDefaults',
  'lastExportedGoogleSheetId', 'lastExportedGoogleSheetUrl', 'lastExportedAt',
  'lastExportedStructureSheetId', 'lastExportedStructureSheetUrl', 'lastExportedStructureAt', 'revision', 'id', 'createdAt', 'updatedAt'] as const;

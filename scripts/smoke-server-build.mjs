@@ -94,7 +94,8 @@ async function main() {
   fixture.pathname = `/${database}`;
   const port = await freePort();
   base = `http://127.0.0.1:${port}`;
-  const environment = { ...process.env, NODE_ENV: 'production', PORT: String(port), DATABASE_URL: fixture.toString(),
+  /** Локальная привязка разрешает тестовой сборке сессионную cookie по HTTP. */
+  const environment = { ...process.env, NODE_ENV: 'production', PORT: String(port), HOST: '127.0.0.1', API_BASE_URL: base, DATABASE_URL: fixture.toString(),
     REDIS_URL: '', SKIP_AUTH: 'true', COOKIE_SECURE: 'false', PGSSLMODE: 'disable', BOT_RUNTIME_ENABLED: 'false',
     BOT_DATABASE_URL: '', DB_BACKUP_INTERVAL_HOURS: '0', DB_BACKUP_TARGETS: '', STORAGE_BACKEND: 'local',
     UPLOADS_STORAGE_ID: '', TELEGRAM_PROXY_URL: '', HTTP_PROXY: '', HTTPS_PROXY: '', ALL_PROXY: '',

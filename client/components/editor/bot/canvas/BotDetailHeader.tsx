@@ -13,6 +13,7 @@ import { BotStatusMotion } from './BotStatusMotion';
 import { getBotProfileLabels } from './bot-profile-labels';
 import { BotRunStatusBadge } from './bot-run-status-badge';
 import type { BotToken } from '@shared/schema';
+import { UsersTelegramBotCheckButton } from '@/components/editor/database/user-database/content/users-telegram-bot-check-button';
 
 /** Пропсы шапки detail-панели */
 interface BotDetailHeaderProps {
@@ -102,6 +103,9 @@ export function BotDetailHeader({
         )}
       </div>
       <div className="flex shrink-0 items-center divide-x divide-border/60 overflow-hidden rounded-md border border-border/60 bg-card">
+        {/* Проверка Telegram относится только к открытому боту. */}
+        <UsersTelegramBotCheckButton projectId={projectId} tokenId={token.id}
+          iconButtonClassName={`${ACTION_BTN} inline-flex shrink-0 items-center justify-center hover:bg-accent`} />
         <Button
           type="button"
           size="icon"

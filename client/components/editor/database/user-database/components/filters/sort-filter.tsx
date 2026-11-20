@@ -6,6 +6,7 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowUpDown } from 'lucide-react';
 import { SortField, SortDirection } from '../../types';
+import { useDirectoryControls } from '../../content/user-directory-controls';
 
 /**
  * Пропсы компонента SortFilter
@@ -29,12 +30,14 @@ export function SortFilter({
   sortDirection,
   onChange,
 }: SortFilterProps): React.JSX.Element {
+  const controls = useDirectoryControls();
   return (
     <Select
-      value={`${sortField}-${sortDirection}`}
+      value={`${controls?.field ?? sortField}-${controls?.field ? controls.direction : sortDirection}`}
       onValueChange={(value) => {
         const [field, direction] = value.split('-') as [SortField, SortDirection];
         onChange(field, direction);
+        controls?.sort(field, direction);
       }}
     >
       <SelectTrigger
@@ -50,8 +53,16 @@ export function SortFilter({
       <SelectContent className="users-portal">
         <SelectItem value="lastInteraction-desc">Сначала активные</SelectItem>
         <SelectItem value="lastInteraction-asc">Давно не заходили</SelectItem>
-        <SelectItem value="interactionCount-desc">Больше сообщений</SelectItem>
-        <SelectItem value="interactionCount-asc">Меньше сообщений</SelectItem>
+        <SelectItem value="incomingMessageCount-desc">Больше сообщений</SelectItem>
+        <SelectItem value="incomingMessageCount-asc">Меньше сообщений</SelectItem>
+        <SelectItem value="buttonClickCount-desc">Больше нажатий</SelectItem>
+        <SelectItem value="buttonClickCount-asc">Меньше нажатий</SelectItem>
+        <SelectItem value="acquisitionSource-asc">Источник: меньше пользователей</SelectItem>
+        <SelectItem value="acquisitionSource-desc">Источник: больше пользователей</SelectItem>
+        <SelectItem value="variableCount-asc">Меньше переменных</SelectItem>
+        <SelectItem value="variableCount-desc">Больше переменных</SelectItem>
+        <SelectItem value="userStatus-asc">Статус А–Я</SelectItem>
+        <SelectItem value="userStatus-desc">Статус Я–А</SelectItem>
         <SelectItem value="createdAt-desc">Сначала новые</SelectItem>
         <SelectItem value="createdAt-asc">Сначала старые</SelectItem>
         <SelectItem value="firstName-asc">Имя А-Я</SelectItem>

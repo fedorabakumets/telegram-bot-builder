@@ -9,6 +9,7 @@
 
 ```json
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "project_id": {
@@ -20,11 +21,13 @@
       "type": "object",
       "properties": {
         "version": {
+          "default": 1,
           "type": "number",
-          "const": 1,
-          "default": 1
+          "const": 1
         },
         "tables": {
+          "minItems": 1,
+          "maxItems": 50,
           "type": "array",
           "items": {
             "type": "object",
@@ -35,13 +38,13 @@
                 "maxLength": 255
               },
               "columns": {
+                "minItems": 1,
                 "type": "array",
                 "items": {
                   "type": "string",
                   "minLength": 1,
                   "maxLength": 255
-                },
-                "minItems": 1
+                }
               },
               "columnSettings": {
                 "type": "array",
@@ -49,11 +52,12 @@
                   "type": "object",
                   "properties": {
                     "displayName": {
+                      "default": "",
                       "type": "string",
-                      "maxLength": 255,
-                      "default": ""
+                      "maxLength": 255
                     },
                     "dataType": {
+                      "default": "text",
                       "type": "string",
                       "enum": [
                         "text",
@@ -61,12 +65,11 @@
                         "date",
                         "boolean",
                         "link"
-                      ],
-                      "default": "text"
+                      ]
                     },
                     "required": {
-                      "type": "boolean",
-                      "default": false
+                      "default": false,
+                      "type": "boolean"
                     },
                     "min": {
                       "type": "number"
@@ -75,16 +78,17 @@
                       "type": "number"
                     },
                     "maxLength": {
+                      "default": 10000,
                       "type": "integer",
                       "minimum": 1,
-                      "maximum": 10000,
-                      "default": 10000
+                      "maximum": 10000
                     }
                   },
                   "additionalProperties": false
                 }
               },
               "rows": {
+                "maxItems": 200,
                 "type": "array",
                 "items": {
                   "type": "array",
@@ -92,25 +96,20 @@
                     "type": "string",
                     "maxLength": 10000
                   }
-                },
-                "maxItems": 200
+                }
               }
             },
             "required": [
               "name",
               "columns",
               "rows"
-            ],
-            "additionalProperties": false
-          },
-          "minItems": 1,
-          "maxItems": 50
+            ]
+          }
         }
       },
       "required": [
         "tables"
-      ],
-      "additionalProperties": false
+      ]
     },
     "mode": {
       "type": "string",
@@ -123,18 +122,17 @@
       "type": "boolean"
     },
     "request_id": {
+      "description": "UUID попытки: результатом станет постоянная квитанция ID; unknown не повторять.",
       "type": "string",
       "format": "uuid",
-      "description": "UUID попытки: результатом станет постоянная квитанция ID; unknown не повторять."
+      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
     }
   },
   "required": [
     "project_id",
     "bundle",
     "mode"
-  ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  ]
 }
 ```
 
@@ -184,6 +182,7 @@
 
 ```json
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "data": {
@@ -253,11 +252,13 @@
             },
             "projectId": {
               "type": "integer",
-              "exclusiveMinimum": 0
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             },
             "revision": {
               "type": "integer",
-              "minimum": 0
+              "minimum": 0,
+              "maximum": 9007199254740991
             }
           },
           "required": [
@@ -267,6 +268,9 @@
         },
         "sideEffects": {
           "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
           "additionalProperties": {}
         }
       },
@@ -283,10 +287,10 @@
     }
   },
   "required": [
+    "data",
     "execution"
   ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  "additionalProperties": false
 }
 ```
 

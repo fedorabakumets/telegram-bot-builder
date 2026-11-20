@@ -23,15 +23,18 @@ export async function searchDialogMessagesHandler(req: Request, res: Response): 
   catch { res.status(400).json({ error: 'Некорректный курсор или изменены фильтры поиска' }); return; }
   try {
     const { tokenId, limit, chatId, chatType, query: text } = parsed.data;
-    const token = await storage.getBotToken(tokenId);
-    if (!token || token.projectId !== projectId) {
-      res.status(404).json({ error: 'Бот не найден в проекте' }); return;
+    /** Общая история уже ограничена проектом и личным чатом в проверенных фильтрах. */
+    if (tokenId !== undefined) {
+      const token = await storage.getBotToken(tokenId);
+      if (!token || token.projectId !== projectId) {
+        res.status(404).json({ error: 'Бот не найден в проекте' }); return;
+      }
     }
     const { rows } = await pool.query(query.sql, query.values);
     const messages = rows.slice(0, limit).map(mapDialogMessage);
     const last = messages[messages.length - 1];
     const hasMore = rows.length > limit;
-    res.json({ ok: true, project_id: projectId, token_id: tokenId, query: text,
+    res.json({ ok: true, project_id: projectId, token_id: tokenId ?? null, query: text,
       chat_id: chatId ?? null, chat_type: chatType ?? null, messages, has_more: hasMore,
       next_cursor: hasMore && last ? encodeMessageCursor({ scope: query.scope,
         time: last.created_at, id: last.id as number }) : null });

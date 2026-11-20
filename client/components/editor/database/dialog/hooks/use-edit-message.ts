@@ -16,6 +16,8 @@ interface UseEditMessageParams {
   projectId: number;
   /** Идентификатор выбранного токена бота */
   selectedTokenId?: number | null;
+  /** Находит исходного бота сообщения в объединённой истории. */
+  resolveMessageTokenId?: (messageId: number) => number | null | undefined;
   /** Колбэк оптимистичного обновления текста сообщения */
   onOptimisticEdit: (messageId: number, newText: string) => void;
   /** Колбэк восстановления оригинального текста при ошибке */
@@ -62,6 +64,7 @@ interface EditMessageResponse {
 export function useEditMessage({
   projectId,
   selectedTokenId,
+  resolveMessageTokenId,
   onOptimisticEdit,
   onRollback,
   onEdited,
@@ -75,7 +78,8 @@ export function useEditMessage({
      * @returns Ответ сервера
      */
     mutationFn: async ({ messageId, messageText, buttons, buttonsPerRow }: EditMessageVariables) => {
-      const tokenParam = selectedTokenId != null ? `?tokenId=${selectedTokenId}` : '';
+      const messageTokenId = resolveMessageTokenId?.(messageId) ?? selectedTokenId;
+      const tokenParam = messageTokenId != null ? `?tokenId=${messageTokenId}` : '';
       const url = `/api/projects/${projectId}/messages/${messageId}${tokenParam}`;
 
       const response = await fetch(url, {
@@ -98,8 +102,10 @@ export function useEditMessage({
       onOptimisticEdit(messageId, messageText);
     },
 
-    onSuccess: () => {
-      toast({ title: 'Сообщение изменено', description: 'Текст сообщения успешно обновлён' });
+    onSuccess: (result) => {
+      toast(result.success && result.editedInTelegram
+        ? { title: 'Сообщение изменено в Telegram' }
+        : { title: 'Telegram не подтвердил изменение', description: 'Сообщение на сайте обновлено, но изменение в Telegram не подтверждено.', variant: 'destructive' });
       onEdited?.();
     },
 

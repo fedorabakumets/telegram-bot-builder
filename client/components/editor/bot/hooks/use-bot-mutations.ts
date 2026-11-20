@@ -5,7 +5,6 @@
  * - startBot — запуск бота
  * - stopBot — остановка бота
  * - deleteBot — удаление токена
- * - toggleDatabase — переключение базы данных
  * - createBot — создание токена
  * - parseBotInfo — получение информации о боте по токену
  * - updateBotInfo — обновление поля информации о боте
@@ -25,8 +24,6 @@ import { invalidateBotStatusQueries } from '../invalidate-bot-status-queries';
  * Параметры хука мутаций ботов
  */
 interface UseBotMutationsParams {
-  /** ID текущего проекта */
-  projectId: number;
   /** Все токены в плоском массиве */
   allTokensFlat: (BotToken & { projectId: number })[];
   /** Callback при запуске бота */
@@ -51,7 +48,6 @@ interface UseBotMutationsParams {
  * Хук для всех мутаций управления ботами
  */
 export function useBotMutations({
-  projectId,
   allTokensFlat,
   onBotStarted,
   onBotStopped,
@@ -121,23 +117,6 @@ export function useBotMutations({
     },
     onError: (error: Error) => {
       toast({ title: 'Ошибка при удалении бота', description: error.message, variant: 'destructive' });
-    },
-  });
-
-  const toggleDatabaseMutation = useMutation({
-    mutationFn: (enabled: boolean) =>
-      apiRequest('PUT', `/api/projects/${projectId}`, { userDatabaseEnabled: enabled ? 1 : 0 }),
-    onSuccess: (_, enabled) => {
-      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}`] });
-      toast({
-        title: enabled ? 'База данных включена' : 'База данных выключена',
-        description: enabled
-          ? 'Функции работы с базой данных будут генерироваться в коде бота.'
-          : 'Функции работы с базой данных НЕ будут генерироваться в коде бота.',
-      });
-    },
-    onError: () => {
-      toast({ title: 'Ошибка', description: 'Не удалось изменить настройку базы данных', variant: 'destructive' });
     },
   });
 
@@ -307,7 +286,6 @@ export function useBotMutations({
     startBotMutation,
     stopBotMutation,
     deleteBotMutation,
-    toggleDatabaseMutation,
     createBotMutation,
     parseBotInfoMutation,
     updateBotInfoMutation,

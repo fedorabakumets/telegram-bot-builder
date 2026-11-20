@@ -9,6 +9,7 @@
 
 ```json
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "project_id": {
@@ -17,12 +18,16 @@
       "maximum": 9007199254740991
     },
     "items": {
+      "minItems": 1,
+      "maxItems": 100,
       "type": "array",
       "items": {
         "type": "object",
         "properties": {
           "id": {
-            "$ref": "#/properties/project_id"
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
           },
           "source": {
             "type": "string",
@@ -36,19 +41,14 @@
         "required": [
           "id",
           "source"
-        ],
-        "additionalProperties": false
-      },
-      "minItems": 1,
-      "maxItems": 100
+        ]
+      }
     }
   },
   "required": [
     "project_id",
     "items"
-  ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  ]
 }
 ```
 
@@ -66,7 +66,22 @@
 
 ## Пример вызова
 
-Безопасный универсальный пример не сгенерирован. Используйте точную схему и данные пользователя; секреты в документацию не подставляются.
+```json
+{
+  "action_id": "db_delete_project_files",
+  "args": {
+    "project_id": 1,
+    "items": [
+      {
+        "id": 1,
+        "source": "incoming"
+      }
+    ]
+  }
+}
+```
+
+Структурный пример проверен Zod; ID и данные замените реальными.
 
 ## Ответ и ошибки
 
@@ -76,6 +91,7 @@
 
 ```json
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "data": {
@@ -145,11 +161,13 @@
             },
             "projectId": {
               "type": "integer",
-              "exclusiveMinimum": 0
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             },
             "revision": {
               "type": "integer",
-              "minimum": 0
+              "minimum": 0,
+              "maximum": 9007199254740991
             }
           },
           "required": [
@@ -159,6 +177,9 @@
         },
         "sideEffects": {
           "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
           "additionalProperties": {}
         }
       },
@@ -175,10 +196,10 @@
     }
   },
   "required": [
+    "data",
     "execution"
   ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  "additionalProperties": false
 }
 ```
 

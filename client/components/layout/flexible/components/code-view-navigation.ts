@@ -6,7 +6,7 @@ import { createContext, useContext } from 'react';
 /** Общая навигация и место заголовка мобильной вкладки кода. */
 interface CodeViewNavigation {
   /** Обработчик перехода к редактору. */
-  openCodeView: () => void;
+  openCodeView: (() => void) | null;
   /** Контейнер заголовка над переключателем режимов. */
   headerTarget: HTMLDivElement | null;
 }

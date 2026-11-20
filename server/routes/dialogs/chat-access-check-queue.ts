@@ -15,14 +15,12 @@ import {
   updateChatAccessCheckJob,
 } from './chat-access-check-job-store';
 import { listPrivateUserIds } from './chat-access-check-audience';
+import { startChatAccessJobLease } from './chat-access-job-lease';
 import { runWithChatAccessPace } from './chat-access-check-pace';
-
 /** Сколько раз повторять один чат при 429. */
 const RETRY_LIMIT = 4;
-
 /** jobId → флаг остановки, читается отменой. */
 export const activeChatAccessChecks = new Map<number, 'running' | 'stopped'>();
-
 /**
  * Пауза между запросами к Telegram.
  * @param ms - Миллисекунды
@@ -31,7 +29,6 @@ export const activeChatAccessChecks = new Map<number, 'running' | 'stopped'>();
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
-
 /**
  * Публикует безопасный прогресс в WebSocket проекта.
  * @param job - Текущие счётчики
@@ -64,7 +61,7 @@ async function checkOne(botToken: string, job: ChatAccessCheckJobView, chatId: s
     await sleep((probe.retryAfter ?? 1) * 1000);
   }
   const toSave = probe.kind === 'retry' ? { kind: 'error' as const, status: 'error' as const } : probe;
-  await persistChatAccessOutcome(job.projectId, job.tokenId, chatId, toSave);
+  await persistChatAccessOutcome(job.projectId, job.tokenId, chatId, toSave, probe.kind === 'retry' ? undefined : botToken);
   return toSave.kind;
 }
 
@@ -75,9 +72,9 @@ async function checkOne(botToken: string, job: ChatAccessCheckJobView, chatId: s
  * @param counts - Последние счётчики
  * @returns Завершение
  */
-async function finish(jobId: number, status: ChatAccessCheckStatus, counts: ChatAccessCheckJobView) {
+async function finish(jobId: number, status: ChatAccessCheckStatus, counts: ChatAccessCheckJobView, failureReason?: string) {
   const saved = await updateChatAccessCheckJob(jobId, {
-    status, finishedAt: new Date(),
+    status, finishedAt: new Date(), failureReason: failureReason ?? null,
     processedCount: counts.processedCount, availableCount: counts.availableCount,
     kickedCount: counts.kickedCount, deletedCount: counts.deletedCount, errorCount: counts.errorCount,
   });
@@ -96,12 +93,15 @@ export async function runChatAccessCheckQueue(jobId: number, botToken: string): 
     if (existing) await finish(jobId, 'cancelled', existing);
     return;
   }
+  const release = await startChatAccessJobLease(jobId, () => activeChatAccessChecks.set(jobId,'stopped'));
+  if (!release) return;
   activeChatAccessChecks.set(jobId, 'running');
+  let latest: ChatAccessCheckJobView | null = null;
   try {
     const job = await getChatAccessCheckJobUnscoped(jobId);
     if (!job) return;
     const users = await listPrivateUserIds(job.projectId, job.tokenId);
-    const counts = { ...job, totalCount: users.length };
+    const counts = { ...job, totalCount: users.length }; latest = counts;
     await updateChatAccessCheckJob(jobId, { totalCount: users.length });
     let halt: 'unauthorized' | null = null;
     await runWithChatAccessPace(users, async (chatId) => {
@@ -132,7 +132,7 @@ export async function runChatAccessCheckQueue(jobId: number, botToken: string): 
       }
     }, () => halt !== null || activeChatAccessChecks.get(jobId) === 'stopped');
     if (halt === 'unauthorized') {
-      await finish(jobId, 'failed', counts);
+      await finish(jobId, 'failed', counts, 'unauthorized');
       return;
     }
     if (activeChatAccessChecks.get(jobId) === 'stopped') {
@@ -142,8 +142,8 @@ export async function runChatAccessCheckQueue(jobId: number, botToken: string): 
     await finish(jobId, 'completed', counts);
   } catch {
     const existing = await getChatAccessCheckJobUnscoped(jobId);
-    if (existing) await finish(jobId, 'failed', existing);
+    if (latest || existing) await finish(jobId, 'failed', latest || existing!, 'worker_error');
   } finally {
-    activeChatAccessChecks.delete(jobId);
+    release(); activeChatAccessChecks.delete(jobId);
   }
 }

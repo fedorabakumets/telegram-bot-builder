@@ -16,13 +16,11 @@ export function resolveBroadcastErrorStatus(
   description?: string,
 ): "blocked" | "not_found" | "failed" {
   const text = (description ?? "").toLowerCase();
-  if (text.includes("deactivated") || text.includes("user is deleted")) {
+  if (text.includes("user is deactivated") || text.includes("user_deactivated") || text.includes("user is deleted")) {
     return "not_found";
   }
-  if (errorCode === 400 && text.includes("chat not found")) {
-    return "not_found";
-  }
-  if (errorCode === 403) {
+  /** Отказ токена, отключение бота и отсутствие чата не подтверждают блокировку пользователем. */
+  if (errorCode === 403 && text.includes("bot was blocked by the user")) {
     return "blocked";
   }
   return "failed";

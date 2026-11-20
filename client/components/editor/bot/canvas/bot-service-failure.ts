@@ -24,6 +24,8 @@ export function getBotServiceFailure(
   if (!status || status.status === 'running') return null;
   const err = status.instance?.errorMessage?.trim();
   if (err === '__server_restart__') return null;
+  /** Служебная причина штатной остановки не является ошибкой запуска. */
+  if (status.status === 'stopped' && (err === 'Процесс завершен' || err === 'Синхронизация: процесс не найден')) return null;
   const isError = status.status === 'error' || !!err;
   if (!isError) return null;
   const at = status.instance?.stoppedAt ?? status.instance?.startedAt;

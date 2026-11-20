@@ -62,19 +62,6 @@ export function BotManagementInterface({
     sortedEntries.find((e) => e.project.id === currentProjectId) ?? sortedEntries[0];
 
   if (viewMode === 'canvas' && activeEntry) {
-    if (activeEntry.tokens.length === 0) {
-      return (
-        <div className="h-full p-4 sm:p-6">
-          <EmptyBotsState
-            onAddBot={() => {
-              setProjectForNewBot(activeEntry.project.id);
-              setShowAddBot(true);
-            }}
-          />
-        </div>
-      );
-    }
-
     return (
       <div className="flex h-full min-h-0 flex-col p-0 sm:p-0">
         <div className="min-h-0 flex-1">

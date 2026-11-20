@@ -3,7 +3,7 @@
  * @module auth/utils/sessionUtils.test
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import type { Request } from "express";
 import { destroySession, saveSession, regenerateSession } from "./sessionUtils";
 
@@ -43,5 +43,25 @@ describe("sessionUtils", () => {
 
     await expect(saveSession(req)).resolves.toBeUndefined();
     await expect(regenerateSession(req)).resolves.toBeUndefined();
+  });
+
+  it("после создания новой сессии сохраняет вход по прямому локальному HTTP", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+    vi.stubEnv("COOKIE_SECURE", undefined);
+    vi.stubEnv("API_BASE_URL", undefined);
+    vi.stubEnv("WEBHOOK_BASE_URL", undefined);
+    vi.stubEnv("RAILWAY_PUBLIC_DOMAIN", undefined);
+    vi.stubEnv("RAILWAY_STATIC_URL", undefined);
+    const cookie = { secure: true, httpOnly: true, sameSite: "none" };
+    const req = {
+      secure: false,
+      headers: { host: "127.0.0.1:5000" },
+      socket: { localAddress: "127.0.0.1", remoteAddress: "127.0.0.1" },
+      session: { cookie, regenerate: (cb: () => void) => cb() },
+    } as unknown as Request;
+    try {
+      await regenerateSession(req);
+      expect(cookie).toEqual({ secure: false, httpOnly: true, sameSite: "lax" });
+    } finally { vi.unstubAllEnvs(); }
   });
 });

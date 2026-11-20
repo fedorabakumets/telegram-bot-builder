@@ -10,7 +10,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useState, useRef, useEffect } from 'react';
 import { useUpdateProjectName } from '@/components/editor/bot/project/use-update-project-name';
 import { BotValidation } from '../types/bot-validation';
-import { CodePanelHeader } from './CodePanelHeader';
+import { CodePanelHeader, CodePanelShortcuts } from './CodePanelHeader';
 import { CodeFormatTabs } from './CodeFormatTabs';
 import { CodeActions } from './CodeActions';
 import { CodeArchiveAction } from './CodeArchiveAction';
@@ -211,9 +211,11 @@ export function CodePanel({
 
   return (
     <div className="code-panel code-panel-scroll h-full overflow-auto bg-background">
+      {/* Шапка и список получают поля независимо, в том числе без верхнего слота. */}
+      <CodePanelHeader projectId={projectIds?.[0] ?? 0} projects={projects} onProjectChange={onProjectChange} onRefresh={onRefresh} isRefreshing={isLoading} />
       <div className="workspace-tab-frame">
         <div className="code-panel-stack workspace-tab-content space-y-6">
-          <CodePanelHeader projectId={projectIds?.[0] ?? 0} projects={projects} onProjectChange={onProjectChange} onRefresh={onRefresh} isRefreshing={isLoading} />
+          <CodePanelShortcuts />
 
           {botDataArray.map((_botData, index) => {
             const content = getCurrentContent(index);

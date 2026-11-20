@@ -21,11 +21,14 @@ import { hasButtons, getButtons, hasButtonClicked, getButtonText } from '../util
 import type { NodeWithSheet } from '../utils/node-utils';
 import { isGroupSource } from '../utils/dialog-message-source';
 import { SystemMessage } from './system-message';
+import './message-actions.css';
 
 /**
  * Свойства компонента сообщения
  */
 interface MessageBubbleProps {
+  /** Поисковая фраза для мягкой подсветки найденного слова. */
+  highlightTerm?: string;
   /** Сообщение для отображения */
   message: BotMessageWithMedia;
   /** Индекс сообщения в списке */
@@ -49,7 +52,7 @@ interface MessageBubbleProps {
     originalText: string,
     buttons?: ButtonType[],
     buttonsPerRow?: number,
-  ) => void;
+  ) => Promise<boolean>;
   /** Идёт ли сохранение редактирования */
   isEditing?: boolean;
   /** Флаг группового диалога — показывает имя отправителя над сообщением */
@@ -108,6 +111,7 @@ function getSenderName(message: BotMessageWithMedia): string | null {
  * @returns JSX элемент сообщения
  */
 export function MessageBubble({
+  highlightTerm,
   message, index, user, bot, projectId, tokenId,
   onDelete, isDeleting, onEdit, isEditing, isGroupDialog, showSource, availableNodes, onOpenMember,
 }: MessageBubbleProps) {
@@ -117,8 +121,6 @@ export function MessageBubble({
   const canOpenMember = !!onOpenMember && (isBot || (isUser && /^[1-9]\d*$/.test(String(message.userId ?? ''))));
   const messageType: 'bot' | 'user' = isBot ? 'bot' : 'user';
 
-  /** Состояние наведения курсора на блок сообщения */
-  const [isHovered, setIsHovered] = useState(false);
   /** Режим inline-редактирования */
   const [isEditMode, setIsEditMode] = useState(false);
   /** Текущий текст в редакторе (HTML) */
@@ -142,9 +144,9 @@ export function MessageBubble({
     : message.messageText;
 
   /** Показывать ли кнопку удаления */
-  const showDeleteButton = isBot && message.id > 0 && !!message.telegramMessageId && !!onDelete && (isHovered || isDeleting) && !isEditMode;
+  const showDeleteButton = isBot && message.id > 0 && !!message.telegramMessageId && !!onDelete && !isEditMode;
   /** Показывать ли кнопку редактирования */
-  const showEditButton = isBot && message.id > 0 && !!message.telegramMessageId && !!onEdit && (isHovered || isEditing) && !isEditMode;
+  const showEditButton = isBot && message.id > 0 && !!message.telegramMessageId && !!onEdit && !isEditMode;
 
   /** Открывает режим редактирования — передаём HTML как есть в редактор */
   const handleOpenEdit = () => {
@@ -157,10 +159,10 @@ export function MessageBubble({
   };
 
   /** Сохраняет отредактированный текст и кнопки */
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!onEdit) return;
-    onEdit(message.id, editText, displayText ?? '', editButtons, editButtonsPerRow);
-    setIsEditMode(false);
+    const saved = await onEdit(message.id, editText, displayText ?? '', editButtons, editButtonsPerRow);
+    if (saved) setIsEditMode(false);
   };
 
   /** Отменяет редактирование */
@@ -192,9 +194,7 @@ export function MessageBubble({
       data-testid={`dialog-message-${message.messageType}-${index}`}
     >
       <div
-        className={`flex items-start gap-2 min-w-0 ${isEditMode ? 'w-full max-w-full flex-col' : `max-w-[85%] ${isBot ? 'flex-row-reverse' : 'flex-row'}`}`}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
+        className={`dialog-message-shell flex items-start gap-2 min-w-0 ${isEditMode ? 'w-full max-w-full flex-col' : `max-w-[85%] ${isBot ? 'flex-row-reverse' : 'flex-row'}`}`}
       >
         {canOpenMember ? <button type="button" aria-label={isBot ? "Открыть профиль бота" : `Открыть профиль ${getSenderName(message) ?? message.userId}`} onClick={() => onOpenMember?.(message)} className="shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><MessageAvatar
           messageType={messageType} user={isUser ? user : null} bot={isBot ? bot : null} projectId={projectId} tokenId={tokenId ?? message.tokenId}
@@ -206,13 +206,15 @@ export function MessageBubble({
           tokenId={tokenId ?? message.tokenId}
         />}
 
-        {/* Кнопки действий — между аватаром и пузырём, видны при наведении */}
-        <div className="flex flex-col gap-0.5 self-center">
+        {/* Место для действий сохраняется при наведении и клавиатурном фокусе. */}
+        {(showEditButton || showDeleteButton) && <div className="dialog-message-actions" role="group"
+          aria-label="Действия с сообщением" data-busy={isEditing || isDeleting}>
           {showEditButton && (
             <Button
               variant="ghost"
               size="icon"
-              className="h-6 w-6 shrink-0 text-muted-foreground hover:text-blue-500 hover:bg-blue-500/10"
+              className="dialog-message-action"
+              aria-label="Редактировать сообщение"
               onClick={handleOpenEdit}
               disabled={isEditing}
               title="Редактировать сообщение"
@@ -227,7 +229,9 @@ export function MessageBubble({
             <Button
               variant="ghost"
               size="icon"
-              className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+              className="dialog-message-action"
+              data-action="delete"
+              aria-label="Удалить сообщение"
               onClick={() => onDelete(message.id)}
               disabled={isDeleting}
               title="Удалить сообщение"
@@ -238,7 +242,7 @@ export function MessageBubble({
             }
             </Button>
           )}
-        </div>
+        </div>}
 
         <div className={`flex flex-col gap-1 min-w-0 ${isEditMode ? "w-full" : ""}`} onDoubleClick={isBot && message.id > 0 && !!message.telegramMessageId && !!onEdit ? handleOpenEdit : undefined}>
           {showSource && isGroupSource(message.chatType) && (
@@ -275,7 +279,7 @@ export function MessageBubble({
                 buttonsPerRow={editButtonsPerRow}
                 onButtonsPerRowChange={setEditButtonsPerRow}
               />
-              <div className="flex flex-wrap gap-1 justify-end">
+              <div className="dialogs-edit-actions flex flex-wrap gap-1 justify-end">
                 <Button
                   size="sm"
                   variant="default"
@@ -299,7 +303,7 @@ export function MessageBubble({
               </div>
             </div>
           ) : (
-            <FormattedText text={displayText} messageType={messageType} />
+            <FormattedText text={displayText} messageType={messageType} highlightTerm={highlightTerm} />
           )}
 
           {isBot && hasButtons(message) && (

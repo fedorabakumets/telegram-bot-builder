@@ -3,9 +3,13 @@
  */
 import { Button } from '@/components/ui/button';
 import { UserBotData } from '@shared/schema';
+import { UserVariables } from '../details/user-variables';
+import type { VariableToQuestionMap } from '../../types';
 
 /** Свойства превью пользовательских данных. */
 interface MobileUserDataPreviewProps {
+  /** Подписи вопросов сценария. */
+  variableToQuestionMap?: VariableToQuestionMap;
   /** Данные пользователя. */
   user: UserBotData;
   /** Открывает полные сведения о пользователе. */
@@ -13,36 +17,17 @@ interface MobileUserDataPreviewProps {
 }
 
 /**
- * Получает безопасное краткое представление значения.
- * @param value - Сохранённое значение поля.
- * @returns Текст значения для превью.
- */
-function formatPreviewValue(value: unknown): string {
-  if (value === null || value === undefined) return 'Нет значения';
-  if (typeof value === 'object') {
-    if ('value' in value) return formatPreviewValue(value.value);
-    return Array.isArray(value) ? `Элементов: ${value.length}` : 'Составные данные';
-  }
-  return String(value);
-}
-
-/**
- * Показывает первое сохранённое поле, не выдавая его за последний ответ.
+ * Показывает переменные с раскрытием ответов и переходом к полным сведениям.
  * @param props - Пользователь и обработчик открытия подробностей.
  * @returns Строка превью и переход к данным.
  */
-export function MobileUserDataPreview({ user, onOpenUserDetailsPanel }: MobileUserDataPreviewProps): React.JSX.Element {
+export function MobileUserDataPreview({ user, onOpenUserDetailsPanel, variableToQuestionMap }: MobileUserDataPreviewProps): React.JSX.Element {
   const entries = user.userData && typeof user.userData === 'object' && !Array.isArray(user.userData)
     ? Object.entries(user.userData) : [];
-  const firstEntry = entries[0];
   return (
-    <div className="flex min-w-0 items-center gap-3 border-t border-border/60 pt-3">
+    <div className="flex min-w-0 items-start gap-3 border-t border-border/60 pt-3">
       <div className="min-w-0 flex-1 text-xs text-muted-foreground">
-        {firstEntry ? (
-          <div className="truncate" title={`${firstEntry[0]}: ${formatPreviewValue(firstEntry[1])}`}>
-            {firstEntry[0]}: <span className="text-foreground">{formatPreviewValue(firstEntry[1])}</span>
-          </div>
-        ) : 'Нет сохранённых данных'}
+        <UserVariables user={user} variableToQuestionMap={variableToQuestionMap} />
       </div>
       {onOpenUserDetailsPanel && (
         <Button variant="ghost" size="sm" className="h-8 shrink-0 px-2 text-xs"

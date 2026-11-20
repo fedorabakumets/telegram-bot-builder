@@ -15,6 +15,8 @@ interface UseDeleteMessageParams {
   projectId: number;
   /** Идентификатор выбранного токена бота */
   selectedTokenId?: number | null;
+  /** Находит исходного бота сообщения в объединённой истории. */
+  resolveMessageTokenId?: (messageId: number) => number | null | undefined;
   /** Колбэк оптимистичного скрытия сообщения по id */
   onOptimisticRemove: (messageId: number) => void;
   /** Колбэк восстановления сообщения при ошибке */
@@ -45,6 +47,7 @@ interface DeleteMessageResponse {
 export function useDeleteMessage({
   projectId,
   selectedTokenId,
+  resolveMessageTokenId,
   onOptimisticRemove,
   onRollback,
   onDeleted,
@@ -58,7 +61,8 @@ export function useDeleteMessage({
      * @returns Ответ сервера
      */
     mutationFn: async (messageId: number) => {
-      const tokenParam = selectedTokenId != null ? `?tokenId=${selectedTokenId}` : '';
+      const messageTokenId = resolveMessageTokenId?.(messageId) ?? selectedTokenId;
+      const tokenParam = messageTokenId != null ? `?tokenId=${messageTokenId}` : '';
       const url = `/api/projects/${projectId}/messages/${messageId}${tokenParam}`;
 
       const response = await fetch(url, {

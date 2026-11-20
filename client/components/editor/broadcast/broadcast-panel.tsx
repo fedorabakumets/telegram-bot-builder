@@ -3,7 +3,7 @@
  * @module client/components/editor/broadcast/broadcast-panel
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Plus, Radio } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -32,6 +32,7 @@ const PAGE_LIMIT = 20;
  */
 export function BroadcastPanel({ projectId, selectedTokenId, onSelectToken, allProjects, onProjectChange }: BroadcastPanelProps) {
   const [modalOpen, setModalOpen] = useState(false);
+  const createBroadcastButton = useRef<HTMLButtonElement>(null);
   const [selectedBroadcast, setSelectedBroadcast] = useState<Broadcast | null>(null);
   const [page, setPage] = useState(1);
 
@@ -77,33 +78,36 @@ export function BroadcastPanel({ projectId, selectedTokenId, onSelectToken, allP
 
   return (
     <div className="flex flex-col h-full bg-background">
-      {/* Шапка с градиентом */}
+      {/** Шапка использует общую высоту, отступы и адаптивную строку выбора. */}
       <TabHeader
         icon={<Radio className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />}
         title="Рассылки"
         actions={
-          <Button size="sm" className="gap-1.5" onClick={() => setModalOpen(true)}>
-            <Plus className="h-4 w-4" />
-            <span className="hidden sm:inline">Новая рассылка</span>
-            <span className="sm:hidden">Новая</span>
+          <Button type="button" size="sm" className="h-8 min-w-8 shrink-0 gap-1.5 px-2"
+            ref={createBroadcastButton} aria-label="Новая рассылка" title="Новая рассылка" onClick={() => setModalOpen(true)}>
+            <Plus className="h-4 w-4" aria-hidden />
+            <span className="hidden @[480px]:inline">Новая рассылка</span>
           </Button>
         }
       >
-        {allProjects && allProjects.length > 1 && onProjectChange && (
-          <ProjectSelector
-            projects={allProjects}
-            selectedProjectId={projectId}
-            onSelect={(id) => { onSelectToken?.(null); onProjectChange(id); }}
-          />
-        )}
-        {tokens.length > 0 && (
-          <BotTokenSelector
-            projectId={projectId}
-            tokens={tokens}
-            selectedTokenId={selectedTokenId ?? null}
-            onSelect={(id) => onSelectToken?.(id)}
-          />
-        )}
+        <div className="flex min-w-0 max-w-full items-center gap-2">
+          {allProjects && allProjects.length > 1 && onProjectChange && (
+            <ProjectSelector
+              projects={allProjects}
+              selectedProjectId={projectId}
+              ariaLabel="Проект рассылок"
+              onSelect={(id) => { onSelectToken?.(null); onProjectChange(id); }}
+            />
+          )}
+          {tokens.length > 0 && (
+            <BotTokenSelector
+              projectId={projectId}
+              tokens={tokens}
+              selectedTokenId={selectedTokenId ?? null}
+              onSelect={(id) => onSelectToken?.(id)}
+            />
+          )}
+        </div>
       </TabHeader>
 
       {/* Баннер устаревшей вкладки */}
@@ -169,6 +173,7 @@ export function BroadcastPanel({ projectId, selectedTokenId, onSelectToken, allP
 
       <NewBroadcastModal
         open={modalOpen}
+        returnFocusRef={createBroadcastButton}
         onClose={() => setModalOpen(false)}
         projectId={projectId}
         tokenId={selectedTokenId}

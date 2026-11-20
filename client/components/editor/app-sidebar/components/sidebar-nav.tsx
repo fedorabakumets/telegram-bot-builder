@@ -32,7 +32,7 @@ interface NavItem {
 }
 
 /** Список активных пунктов навигации */
-const NAV_ITEMS: NavItem[] = [
+export const SIDEBAR_NAV_ITEMS: readonly NavItem[] = [
   { tab: 'editor',    label: 'Редактор',   icon: LayoutDashboard },
   { tab: 'bot',       label: 'Бот',        icon: Bot },
   { tab: 'terminal', label: 'Терминал',  icon: Terminal },
@@ -52,13 +52,16 @@ const NAV_ITEMS: NavItem[] = [
  */
 export function SidebarNav({ currentTab, onTabChange, isCollapsed }: SidebarNavProps) {
   return (
-    <nav className="flex flex-col gap-1">
-      {NAV_ITEMS.map(({ tab, label, icon: Icon }) => {
+    <nav aria-label="Разделы проекта" className="flex flex-col gap-1">
+      {SIDEBAR_NAV_ITEMS.map(({ tab, label, icon: Icon }) => {
         const isActive = currentTab === tab;
         return (
           <Button
             key={tab}
             variant="ghost"
+            aria-label={label}
+            aria-current={isActive ? 'page' : undefined}
+            title={isCollapsed ? label : undefined}
             onClick={() => onTabChange(tab)}
             className={cn(
               'w-full justify-start gap-2 h-9 px-2',

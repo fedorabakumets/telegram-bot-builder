@@ -1,7 +1,7 @@
 <!-- @fileoverview Автоматическая карточка реального действия MCP. -->
 # `db_edit_dialog_message`
 
-Изменяет отправленное сообщение Telegram и сохранённую историю.
+Изменяет отправленное сообщение Telegram и сохранённую историю. Если buttons не переданы, клавиатура сохраняется; buttons: [] явно удаляет кнопки.
 
 Раздел: dialogs. Транспорт: http, stdio.
 
@@ -9,6 +9,7 @@
 
 ```json
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "project_id": {
@@ -17,17 +18,22 @@
       "maximum": 9007199254740991
     },
     "token_id": {
-      "$ref": "#/properties/project_id"
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
     },
     "message_id": {
-      "$ref": "#/properties/project_id"
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
     },
     "messageText": {
+      "default": "",
       "type": "string",
-      "maxLength": 4096,
-      "default": ""
+      "maxLength": 4096
     },
     "buttons": {
+      "maxItems": 100,
       "type": "array",
       "items": {
         "type": "object",
@@ -39,6 +45,7 @@
             "type": "string"
           },
           "action": {
+            "default": "goto",
             "type": "string",
             "enum": [
               "goto",
@@ -53,8 +60,7 @@
               "web_app",
               "request_managed_bot",
               "pay"
-            ],
-            "default": "goto"
+            ]
           },
           "copyText": {
             "type": "string"
@@ -75,21 +81,21 @@
             "type": "boolean"
           },
           "buttonType": {
+            "default": "normal",
             "type": "string",
             "enum": [
               "normal",
               "option",
               "complete"
-            ],
-            "default": "normal"
+            ]
           },
           "skipDataCollection": {
-            "type": "boolean",
-            "default": false
+            "default": false,
+            "type": "boolean"
           },
           "hideAfterClick": {
-            "type": "boolean",
-            "default": false
+            "default": false,
+            "type": "boolean"
           },
           "customCallbackData": {
             "type": "string"
@@ -115,26 +121,20 @@
         "required": [
           "id",
           "text"
-        ],
-        "additionalProperties": false
-      },
-      "maxItems": 100,
-      "default": []
+        ]
+      }
     },
     "buttonsPerRow": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 8,
-      "default": 0
+      "maximum": 8
     }
   },
   "required": [
     "project_id",
     "token_id",
     "message_id"
-  ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  ]
 }
 ```
 
@@ -152,7 +152,19 @@
 
 ## Пример вызова
 
-Безопасный универсальный пример не сгенерирован. Используйте точную схему и данные пользователя; секреты в документацию не подставляются.
+```json
+{
+  "action_id": "db_edit_dialog_message",
+  "args": {
+    "project_id": 1,
+    "token_id": 1,
+    "message_id": 1,
+    "messageText": ""
+  }
+}
+```
+
+Структурный пример проверен Zod; ID и данные замените реальными.
 
 ## Ответ и ошибки
 
@@ -162,6 +174,7 @@
 
 ```json
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "data": {
@@ -231,11 +244,13 @@
             },
             "projectId": {
               "type": "integer",
-              "exclusiveMinimum": 0
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             },
             "revision": {
               "type": "integer",
-              "minimum": 0
+              "minimum": 0,
+              "maximum": 9007199254740991
             }
           },
           "required": [
@@ -245,6 +260,9 @@
         },
         "sideEffects": {
           "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
           "additionalProperties": {}
         }
       },
@@ -261,10 +279,10 @@
     }
   },
   "required": [
+    "data",
     "execution"
   ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  "additionalProperties": false
 }
 ```
 

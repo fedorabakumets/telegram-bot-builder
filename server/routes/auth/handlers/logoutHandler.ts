@@ -23,7 +23,7 @@ export async function handleLogout(req: Request, res: Response): Promise<void> {
         await removeSession(req);
         await destroySession(req);
 
-        const secure = shouldUseSecureSessionCookie();
+        const secure = shouldUseSecureSessionCookie(req);
         res.clearCookie(SESSION_COOKIE_NAME, {
             path: "/",
             httpOnly: true,

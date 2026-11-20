@@ -8,18 +8,18 @@
 | [bot_builds](./bot_builds.md) | 11 | Сборка бота: сжатый сгенерированный `.py` лежит в хранилище (local/S3), здесь — только метаданные. Одна сборка на пару (токен, отпечаток). |
 | [bot_env_variables](./bot_env_variables.md) | 7 | Таблица пользовательских переменных окружения бота Хранит кастомные key=value переменные, привязанные к конкретному токену |
 | [bot_groups](./bot_groups.md) | 25 | Таблица групп бота |
-| [bot_instances](./bot_instances.md) | 15 | Таблица запущенных экземпляров ботов  ВАЖНО: После изменения этой схемы необходимо применить миграцию к базе данных! |
+| [bot_instances](./bot_instances.md) | 16 | Таблица запущенных экземпляров ботов  ВАЖНО: После изменения этой схемы необходимо применить миграцию к базе данных! |
 | [bot_launch_history](./bot_launch_history.md) | 8 | Таблица истории запусков ботов — накапливает все запуски |
 | [bot_logs](./bot_logs.md) | 7 | Таблица логов ботов — хранит строки вывода stdout/stderr/status |
 | [bot_message_media](./bot_message_media.md) | 6 | Таблица связи сообщений с медиафайлами |
 | [bot_messages](./bot_messages.md) | 13 | Таблица истории сообщений между ботом и пользователями |
-| [bot_projects](./bot_projects.md) | 19 | Таблица проектов ботов |
+| [bot_projects](./bot_projects.md) | 24 | Таблица проектов ботов |
 | [bot_table_columns](./bot_table_columns.md) | 5 | Таблица bot_table_columns — колонки пользовательской таблицы |
 | [bot_table_rows](./bot_table_rows.md) | 4 | Таблица bot_table_rows — строки пользовательской таблицы (данные в JSONB) |
 | [bot_tables](./bot_tables.md) | 4 | Таблица bot_tables — пользовательские таблицы проекта |
 | [bot_templates](./bot_templates.md) | 28 | Таблица сценариев ботов |
-| [bot_tokens](./bot_tokens.md) | 40 | Таблица токенов ботов |
-| [bot_users](./bot_users.md) | 19 | Таблица пользователей бота |
+| [bot_tokens](./bot_tokens.md) | 45 | Таблица токенов ботов |
+| [bot_users](./bot_users.md) | 20 | Таблица пользователей бота |
 | [broadcast_campaigns](./broadcast_campaigns.md) | 19 | Таблица кампаний рассылок — одна запись на «большую рассылку», дочерние записи хранятся в broadcasts с ссылкой campaign_id |
 | [broadcast_results](./broadcast_results.md) | 7 | Таблица результатов рассылки — по одной записи на каждого получателя |
 | [broadcasts](./broadcasts.md) | 20 | Таблица рассылок — хранит задания на массовую отправку сообщений. Рассылка может быть дочерней записью кампании («большой рассылки») — тогда заполнен campaignId |

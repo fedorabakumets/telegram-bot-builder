@@ -41,3 +41,29 @@ test('SPA, streaming proxy, cookies, private files and unavailable backend', asy
 test('rejects backend credentials and paths', () => {
   for (const backendUrl of ['file:///tmp', 'http://user:secret@localhost', 'http://localhost/api']) assert.throws(() => createFrontendServer({ backendUrl, distPath: '.' }));
 });
+
+/** Проверяет, что локальный вход сохраняет режим прямого HTTP, а проксированный запрос — нет. */
+test('различает прямой локальный HTTP и вход через внешний прокси', async () => {
+  const host = process.env.HOST;
+  const backend = http.createServer((req, res) => res.end(JSON.stringify(req.headers)));
+  const backendUrl = await listen(backend);
+  const frontend = createFrontendServer({ backendUrl, distPath: '.' });
+  const frontendUrl = await listen(frontend);
+  try {
+    process.env.HOST = '127.0.0.1';
+    const direct = await (await fetch(frontendUrl + '/api/auth/me')).json();
+    assert.equal(direct['x-forwarded-proto'], undefined);
+    const forwarded = await (await fetch(frontendUrl + '/api/auth/me', {
+      headers: { 'x-forwarded-proto': 'https' },
+    })).json();
+    assert.equal(forwarded['x-forwarded-proto'], 'https');
+    process.env.HOST = '0.0.0.0';
+    const publicListener = await (await fetch(frontendUrl + '/api/auth/me')).json();
+    assert.equal(publicListener['x-forwarded-proto'], 'http');
+  } finally {
+    if (host === undefined) delete process.env.HOST;
+    else process.env.HOST = host;
+    await close(frontend);
+    await close(backend);
+  }
+});

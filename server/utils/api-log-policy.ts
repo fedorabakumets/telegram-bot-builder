@@ -16,5 +16,5 @@ export function apiLogPath(url: string): string {
  */
 export function mayLogApiResponse(path: string): boolean {
   return !path.startsWith('/api/auth/agent/') && path !== '/api/runtime/media/invoice-link'
-    && !/\/webhook-secret\/reveal\/?$/.test(path);
+    && !/\/(?:webhook-secret|tokens\/\d+)\/reveal\/?$/.test(path);
 }

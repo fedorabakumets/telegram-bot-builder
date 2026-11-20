@@ -37,8 +37,21 @@ export async function safeExternalRequest(source: string, method: 'HEAD' | 'GET'
   if (!records.length || records.some(record => !isPublicAddress(record.address))) throw new Error('Внутренние адреса недоступны');
   const chosen = records[0];
   const response = await new Promise<http.IncomingMessage>((resolve, reject) => {
-    const client = url.protocol === 'https:' ? https : http;
-    const req = client.request(url, { method, timeout: 30000, family: chosen.family, lookup: (_host, _options, cb) => cb(null, chosen.address, chosen.family as 4 | 6) }, resolve);
+    const secure = url.protocol === 'https:';
+    const client = secure ? https : http;
+    /** Соединение устанавливается с проверенным IP; исходное имя нужно только для HTTP и проверки TLS. */
+    const options: https.RequestOptions = {
+      hostname: chosen.address,
+      family: chosen.family,
+      port: url.port || undefined,
+      path: url.pathname + url.search,
+      headers: { Host: url.host },
+      ...(secure && !isIP(hostname) ? { servername: hostname } : {}),
+      method,
+      timeout: 30000,
+      agent: false,
+    };
+    const req = client.request(options, resolve);
     req.on('error', reject);
     req.on('timeout', () => req.destroy(new Error('Превышено время ожидания')));
     req.end();

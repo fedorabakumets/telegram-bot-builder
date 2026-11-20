@@ -3,7 +3,7 @@
  * @module components/support/support-chat-button
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Loader2, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -19,18 +19,33 @@ import { SupportMessageList } from './support-message-list';
 import { SUPPORT_THREAD_QUERY_KEY, useMarkSupportRead, useSendSupportMessage, useSupportThread } from './hooks/use-support-chat';
 import { useSupportSocket } from './hooks/use-support-socket';
 
+/** Свойства кнопки и панели поддержки. */
+interface SupportChatButtonProps {
+  /** Позволяет открыть ту же переписку из обычной кнопки или пункта меню. */
+  renderTrigger?: (open: (trigger?: HTMLElement) => void, unread: number) => ReactNode;
+}
+
 /**
  * Кнопка «Чат поддержки»: показывает непрочитанные ответы и открывает переписку.
  * Рендерить только для пользователей, вошедших через Telegram.
+ * @param props - Свойства кнопки и панели поддержки.
  * @returns JSX элемент кнопки с панелью
  */
-export function SupportChatButton() {
+export function SupportChatButton({ renderTrigger }: SupportChatButtonProps = {}) {
   const [isOpen, setIsOpen] = useState(false);
+  /** Возвращает фокус в шапку после закрытия переписки. */
+  const triggerRef = useRef<HTMLElement | undefined>(undefined);
   const { toast } = useToast();
   const socketConnected = useSupportSocket('/api/support/ws', SUPPORT_THREAD_QUERY_KEY);
   const { data, isLoading, error } = useSupportThread(true, socketConnected);
   const sendMessage = useSendSupportMessage();
   const unread = data?.thread?.unreadByUser ?? 0;
+
+  /** Запоминает доступный элемент, открывший панель, и показывает переписку. */
+  const open = (trigger?: HTMLElement) => {
+    triggerRef.current = trigger;
+    setIsOpen(true);
+  };
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -57,10 +72,10 @@ export function SupportChatButton() {
 
   return (
     <>
-      <Button
+      {renderTrigger ? renderTrigger(open, unread) : <Button
         size="icon"
         variant="ghost"
-        onClick={() => setIsOpen(true)}
+        onClick={(event) => open(event.currentTarget)}
         className="relative h-7 w-7 text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
         title="Чат поддержки"
         data-testid="button-support-chat"
@@ -71,10 +86,15 @@ export function SupportChatButton() {
             {unread > 9 ? '9+' : unread}
           </span>
         )}
-      </Button>
+      </Button>}
 
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
-        <SheetContent side="right" className="flex w-full flex-col gap-0 p-0 sm:max-w-md">
+        <SheetContent side="right" className="flex w-full flex-col gap-0 p-0 sm:max-w-md"
+          onCloseAutoFocus={(event) => {
+            if (!triggerRef.current?.isConnected) return;
+            event.preventDefault();
+            triggerRef.current.focus();
+          }}>
           <SheetHeader className="border-b px-4 py-3 text-left">
             <SheetTitle>Поддержка BotCraft</SheetTitle>
             <SheetDescription>

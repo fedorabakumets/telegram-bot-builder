@@ -14,6 +14,8 @@ import { DesktopTableRow } from './desktop-table-row';
  * Пропсы компонента DesktopTable
  */
 interface DesktopTableProps {
+  /** Подписи вопросов для сохранённых переменных. */
+  variableToQuestionMap?: import('../../types').VariableToQuestionMap;
   /** Список пользователей */
   users: UserBotData[];
   /** Поисковый запрос */
@@ -84,9 +86,11 @@ export function DesktopTable(props: DesktopTableProps): React.JSX.Element {
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   return (
-    <div className="rounded-lg border border-border bg-background overflow-hidden w-full">
+    <div className="users-table-frame rounded-xl border border-border bg-background overflow-hidden w-full">
       <div className="overflow-x-auto">
         <Table className="w-full" aria-label="Пользователи бота" aria-busy={isFetchingNextPage}>
+          {/* Пропорции выравнивают таблицу с рабочей областью и резервируют место для источника. */}
+          <colgroup>{[20, 12, 14, 10, 9, 17, 10, 8].map((width, index) => <col key={index} style={{ width: `${width}%` }} />)}</colgroup>
           <DesktopTableHeader visibleColumns={visibleColumns} />
           <TableBody>
             {users.length === 0 ? (
@@ -94,7 +98,8 @@ export function DesktopTable(props: DesktopTableProps): React.JSX.Element {
             ) : (
               users.map((user, index) => (
                 <DesktopTableRow
-                  key={user.id || index}
+                  variableToQuestionMap={props.variableToQuestionMap}
+                  key={user.userId}
                   user={user}
                   index={index}
                   visibleColumns={visibleColumns}

@@ -1,0 +1,19 @@
+/** @fileoverview Встроенные дополнительные фильтры с теми же полями и рамками, что и аналитика. */
+.users-advanced-bar { grid-column: 1 / -1; }
+.users-advanced-bar button { height: 32px; gap: 8px; border-radius: 8px; color: var(--muted-foreground); background: transparent; box-shadow: none; }
+.users-advanced-bar button:hover { color: var(--foreground); background: #151517; }
+.users-advanced-inline { border-top: 1px solid var(--border); padding-top: 16px; }
+.users-advanced-inline :is(input, [role='combobox']), .users-advanced-menu :is(input, [role='combobox']) { min-width: 0; height: 40px; border: 1px solid var(--border); border-radius: 8px; background: var(--background); box-shadow: none; color-scheme: dark; }
+.users-advanced-inline fieldset { min-width: 0; }
+.users-advanced-inline button { height: 40px; }
+.users-advanced-inline input:focus-visible { outline: 2px solid #3b82f6; outline-offset: 2px; }
+/** Размеры, цвет текста и наведение повторяют основные селекторы источника и Premium. */
+.users-advanced-bar .users-advanced-selector { height: 40px; color: var(--foreground); }
+.users-advanced-selector:hover { background: transparent !important; border-color: #52525b; }
+@container (min-width: 1200px) {
+  .users-advanced-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+/** В маленьком окне нативный календарь не обрезается узкой половиной меню. */
+@media (max-width: 379px) {
+  .users-range-grid[data-date='true'] { grid-template-columns: minmax(0, 1fr); }
+}

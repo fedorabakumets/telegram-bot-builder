@@ -94,7 +94,13 @@ import { persistBotBuildForStart, restoreBotBuildForStart } from './builds/start
 import { resolveRunnerBuildForStart } from './builds/runnerBuildForStart';
 import { bindFrozenBotIdentity } from './frozenBotStatus';
 import { ensureWebhookSecret } from './webhookSecret';
+import { resolveBotLaunchMode } from '../../shared/bot-launch-mode';
+import { resolveBotInheritedSettings } from '../../shared/bot-inherited-settings';
+import { botGeneratorSettings } from './botGeneratorSettings';
+import { recordBotInstanceLaunch, recordBotInstanceLaunchFailure } from './recordBotInstanceLaunch';
+import type { BotCommandFence } from './botWorkerManager';
 import { resolveWebhookBaseUrl } from './webhookBaseUrl';
+import { resolveStoredBotAutoRestart } from './resolveStoredBotAutoRestart';
 
 
 
@@ -143,9 +149,12 @@ export async function startBot(
   const shouldClearLogs = options?.clearLogs !== false; // по умолчанию true
   if (!beginBotStart(tokenId)) return { success: false, error: 'Бот уже запускается' };
   const startRevision = getBotStartRevision(tokenId);
+  let pendingInstanceId: number | undefined;
+  let commandFence: BotCommandFence | undefined;
+  let launchError = BOT_START_CANCELLED_ERROR;
   try {
     /** Версия намерения фиксируется до подготовки сборки бота. */
-    const commandFence = await resolveBotCommandFence(tokenId, 'start');
+    commandFence = await resolveBotCommandFence(tokenId, 'start');
     const tokenRecord = await storage.getBotToken(tokenId);
     /** Другой Telegram-бот не наследует ограничение прежнего владельца слота. */
     if (tokenRecord?.token) bindFrozenBotIdentity(projectId, tokenId, tokenRecord.token);
@@ -155,11 +164,16 @@ export async function startBot(
       return { success: false, error: inactiveError };
     }
 
-    // Проверяем Telegram до остановки существующего процесса и подготовки файлов.
-    const launchMode = tokenRecord?.launchMode ?? 'polling';
+    const project = await storage.getBotProject(projectId);
+    if (!project) return { success: false, error: "Проект не найден" };
+
+    /** Сохранённые настройки определяют режим нового экземпляра на весь цикл запуска. */
+    const launchMode = resolveBotLaunchMode(project.defaultLaunchMode, tokenRecord?.launchMode, tokenRecord?.inheritLaunchMode);
+    const effectiveSettings = resolveBotInheritedSettings(project.botSettingDefaults, tokenRecord);
+    const generatorSettings = botGeneratorSettings(effectiveSettings);
     /** Адрес соответствует серверному значению по умолчанию, показанному в настройках. */
     const effectiveWebhookUrl = launchMode === 'webhook'
-      ? resolveWebhookBaseUrl(tokenRecord?.webhookBaseUrl)
+      ? resolveWebhookBaseUrl(effectiveSettings.webhookBaseUrl)
       : null;
     if (launchMode === 'webhook' && !effectiveWebhookUrl) {
       return { success: false, error: 'Для webhook задайте публичный адрес API_BASE_URL или адрес в настройках бота' };
@@ -184,11 +198,6 @@ export async function startBot(
       return { success: false, error: BOT_START_CANCELLED_ERROR };
     }
     if (!lockAvailable) return { success: false, error: BOT_LOCK_BUSY_ERROR };
-
-    const project = await storage.getBotProject(projectId);
-    if (!project) {
-      return { success: false, error: "Проект не найден" };
-    }
 
     const disabledTypes = await getDisabledNodeTypes();
     const disabledHits = findDisabledNodesInProject(project.data, disabledTypes);
@@ -308,12 +317,7 @@ export async function startBot(
       projectDataChecksum: checksumProjectData(project.data),
       projectName: project.name,
       userDatabaseEnabled,
-      saveIncomingMedia: tokenRecord?.saveIncomingMedia === 1,
-      catchAllHandlers: tokenRecord?.catchAllHandlers !== 0,
-      trackUserBlocks: tokenRecord?.trackUserBlocks !== 0,
-      trackGroupMembership: tokenRecord?.trackGroupMembership !== 0,
-      protectContent: tokenRecord?.protectContent === 1,
-      contentCache: tokenRecord?.contentCache === 1,
+      ...generatorSettings,
       psqlBuiltinEnabled: isPsqlBuiltinEnabled(),
       psqlPanelDsnDenied: isPsqlPanelDsnDenied(),
       botRuntimeRole: isBotRuntimeActive(),
@@ -339,6 +343,9 @@ export async function startBot(
     let assets: string[];
     /** Окружение бота при BOT_ENV_SOURCE=inline; undefined — бот читает .env */
     let botEnv: Record<string, string> | undefined;
+    /** Файл и команда используют те же настройки проекта, что были выбраны для запуска. */
+    const launch = { webhookBaseUrl: effectiveWebhookUrl, settings: effectiveSettings,
+      sleep: { defaultMode: project.defaultSleepMode, inherited: tokenRecord?.inheritSleepMode } };
 
     if (reuse) {
       console.log(`♻️ Файлы бота взяты готовыми: projectId=${projectId}, tokenId=${tokenId}`);
@@ -349,7 +356,7 @@ export async function startBot(
         projectId,
         tokenId,
         customFileName,
-        { skipCodeAndData: true },
+        { skipCodeAndData: true, launch },
       ));
     } else {
       console.log(`🔧 Генерация кода бота:`);
@@ -385,12 +392,7 @@ export async function startBot(
         enableLogging: false,
         enableGroupHandlers: false,
         groups: [],
-        saveIncomingMedia: tokenRecord?.saveIncomingMedia === 1,
-        catchAllHandlers: tokenRecord?.catchAllHandlers !== 0,
-        trackUserBlocks: tokenRecord?.trackUserBlocks !== 0,
-        trackGroupMembership: tokenRecord?.trackGroupMembership !== 0,
-        protectContent: tokenRecord?.protectContent === 1,
-        contentCache: tokenRecord?.contentCache === 1,
+        ...generatorSettings,
         thumbnailUrls,
         psqlBuiltinEnabled: isPsqlBuiltinEnabled(),
         psqlPanelDsnDenied: isPsqlPanelDsnDenied(),
@@ -411,6 +413,7 @@ export async function startBot(
         projectId,
         tokenId,
         customFileName,
+        { launch },
       ));
 
       writeGeneratedCodeMeta(botDir, {
@@ -513,6 +516,8 @@ export async function startBot(
 
       try {
         if (getBotStartRevision(tokenId) !== startRevision) throw new Error(BOT_START_CANCELLED_ERROR);
+        pendingInstanceId = await recordBotInstanceLaunch({ projectId, tokenId, token, launchMode, status: 'starting' }, commandFence);
+        if (getBotStartRevision(tokenId) !== startRevision) throw new Error(BOT_START_CANCELLED_ERROR);
         await workerManager.startBot(projectId, token, tokenId, mainFile, {
           fence: commandFence,
           webhook: { webhookUrl: effectiveWebhookUrl ?? undefined, webhookPort: 9000 + tokenId },
@@ -523,6 +528,7 @@ export async function startBot(
       } catch (workerError) {
         console.error(`🏭 [WorkerPool] Ошибка запуска бота через воркер:`, workerError);
         const errMsg = workerError instanceof Error ? workerError.message : 'Ошибка воркера';
+        launchError = errMsg;
         if (launchId !== undefined) {
           try {
             await storage.updateLaunchHistory(launchId, {
@@ -538,25 +544,9 @@ export async function startBot(
         return { success: false, error: errMsg };
       }
 
-      // Сохраняем в БД как обычно
-      const existingBotInstance = await storage.getBotInstanceByToken(tokenId);
-      if (existingBotInstance) {
-        await storage.updateBotInstance(existingBotInstance.id, {
-          status: 'running',
-          token,
-          processId: `worker_${projectId}`,
-          errorMessage: null,
-          startedAt: new Date()
-        });
-      } else {
-        await storage.createBotInstance({
-          projectId,
-          tokenId,
-          status: 'running',
-          token,
-          processId: `worker_${projectId}`,
-        });
-      }
+      if (getBotStartRevision(tokenId) !== startRevision) return { success: false, error: BOT_START_CANCELLED_ERROR };
+      await recordBotInstanceLaunch({ projectId, tokenId, token, launchMode, status: 'running', processId: `worker_${projectId}` }, commandFence);
+      pendingInstanceId = undefined;
 
       // Рассылаем событие о запуске бота
       void broadcastProjectEvent(projectId, {
@@ -572,6 +562,8 @@ export async function startBot(
     // Запускаем бота
     const pythonPath = process.env.PYTHON_PATH ||
       (process.platform === 'win32' ? 'python' : 'python3');
+    if (getBotStartRevision(tokenId) !== startRevision) return { success: false, error: BOT_START_CANCELLED_ERROR };
+    pendingInstanceId = await recordBotInstanceLaunch({ projectId, tokenId, token, launchMode, status: 'starting' }, commandFence);
     if (getBotStartRevision(tokenId) !== startRevision) return { success: false, error: BOT_START_CANCELLED_ERROR };
     const botProcess = spawn(pythonPath, [mainFile], {
       stdio: ['pipe', 'pipe', 'pipe'],
@@ -644,25 +636,9 @@ export async function startBot(
       timestamp: new Date().toISOString(),
     });
 
-    // Создаем или обновляем запись в базе данных для конкретного токена
-    const existingBotInstance = await storage.getBotInstanceByToken(tokenId);
-    if (existingBotInstance) {
-      await storage.updateBotInstance(existingBotInstance.id, {
-        status: 'running',
-        token,
-        processId,
-        errorMessage: null,
-        startedAt: new Date()
-      });
-    } else {
-      await storage.createBotInstance({
-        projectId,
-        tokenId,
-        status: 'running',
-        token,
-        processId,
-      });
-    }
+    if (getBotStartRevision(tokenId) !== startRevision) return { success: false, error: BOT_START_CANCELLED_ERROR };
+    await recordBotInstanceLaunch({ projectId, tokenId, token, launchMode, status: 'running', processId }, commandFence);
+    pendingInstanceId = undefined;
 
     // Обрабатываем события процесса
     botProcess.on('error', async (error) => {
@@ -746,25 +722,32 @@ export async function startBot(
       if (isCrash && (globalThis as any).__dbPoolActive !== false) {
         try {
           const tokenRecord = await storage.getBotToken(tokenId);
-    /** Другой Telegram-бот не наследует ограничение прежнего владельца слота. */
-    if (tokenRecord?.token) bindFrozenBotIdentity(projectId, tokenId, tokenRecord.token);
-          if (tokenRecord?.autoRestart === 1) {
+          /** Другой Telegram-бот не наследует ограничение прежнего владельца слота. */
+          if (tokenRecord?.token) bindFrozenBotIdentity(projectId, tokenId, tokenRecord.token);
+          const restart = tokenRecord && await resolveStoredBotAutoRestart(projectId, tokenRecord);
+          if (restart?.autoRestart) {
             /** Запоминает намерение, чтобы поздний таймер не отменил ручную остановку. */
             const restartInstance = await storage.getBotInstanceByToken(tokenId);
             const restartGeneration = restartInstance?.desiredGeneration;
-            const maxAttempts = tokenRecord.maxRestartAttempts ?? 3;
+            const maxAttempts = restart.maxRestartAttempts;
             const delay = getRestartDelay(tokenId, maxAttempts);
             if (delay !== null) {
               incrementRestartCounter(tokenId);
               const attempt = getRestartCounter(tokenId)?.attempts ?? 1;
               console.log(`🔄 Автоперезапуск бота ${tokenId} через ${delay / 1000}с (попытка ${attempt}/${maxAttempts})`);
-              setTimeout(async () => {
-                // Проверяем что бот не был запущен вручную за это время
-                const currentInstance = await storage.getBotInstanceByToken(tokenId);
-                if (currentInstance?.status !== 'running' && currentInstance?.desiredStatus !== 'stopped' &&
-                    (restartGeneration === undefined || currentInstance?.desiredGeneration === restartGeneration)) {
-                  await startBot(projectId, token, tokenId);
-                }
+              setTimeout(() => {
+                void (async () => {
+                  /** Отмена наследуемого автоперезапуска действует и на уже поставленный таймер. */
+                  const latestToken = await storage.getBotToken(tokenId);
+                  if (!latestToken || latestToken.token !== token) return;
+                  const settings = await resolveStoredBotAutoRestart(projectId, latestToken);
+                  if (!settings.autoRestart || attempt > settings.maxRestartAttempts) return;
+                  const currentInstance = await storage.getBotInstanceByToken(tokenId);
+                  if (currentInstance?.status !== 'running' && currentInstance?.desiredStatus !== 'stopped' &&
+                      (restartGeneration === undefined || currentInstance?.desiredGeneration === restartGeneration)) {
+                    await startBot(projectId, token, tokenId);
+                  }
+                })().catch(error => console.error('Ошибка автоперезапуска:', error));
               }, delay);
             } else {
               console.log(`❌ Автоперезапуск бота ${tokenId} исчерпан (${maxAttempts} попыток)`);
@@ -779,8 +762,14 @@ export async function startBot(
     return { success: true, processId };
   } catch (error) {
     console.error('Ошибка запуска бота:', error);
-    return { success: false, error: error instanceof Error ? error.message : 'Неизвестная ошибка' };
+    launchError = error instanceof Error ? error.message : 'Неизвестная ошибка';
+    return { success: false, error: launchError };
   } finally {
+    if (pendingInstanceId !== undefined && getBotStartRevision(tokenId) === startRevision) {
+      await recordBotInstanceLaunchFailure(pendingInstanceId, commandFence, launchError).catch((error) => {
+        console.error('Ошибка сохранения состояния запуска бота:', error);
+      });
+    }
     finishBotStart(tokenId);
   }
 }

@@ -37,7 +37,8 @@ export async function checkPrivateChatAccessHandler(req: Request, res: Response)
     const toSave: ChatAccessProbe = probe.kind === 'retry' || probe.kind === 'unauthorized'
       ? { kind: 'error', status: 'error' }
       : probe;
-    const access = await persistChatAccessOutcome(projectId, tokenId, chatId, toSave);
+    const access = await persistChatAccessOutcome(projectId, tokenId, chatId, toSave,
+      probe.kind === 'retry' || probe.kind === 'unauthorized' ? undefined : botToken.token);
     const blocked = probe.kind === 'kicked';
     const known = probe.kind === 'available' || probe.kind === 'kicked' || probe.kind === 'deleted';
     res.status(known ? 200 : 400).json({ checked: true, blocked, ...access });

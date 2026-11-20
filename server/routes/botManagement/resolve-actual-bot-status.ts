@@ -58,9 +58,12 @@ export async function resolveActualBotStatus(
   }
   if (isBotStarting(tokenId)) return 'starting';
   if (instance?.status === 'error') return 'error';
-  /** Записанная ошибка завершения не является новой командой запуска. */
+  /** Служебные причины остановки не превращают остановленный процесс в аварию. */
+  const stopReason = instance?.errorMessage?.trim();
+  const serviceStop = stopReason === '__server_restart__' || stopReason === 'Процесс завершен'
+    || stopReason === 'Синхронизация: процесс не найден';
   if (instance?.status === 'stopped' && instance.desiredStatus === 'running'
-    && instance.errorMessage?.trim() && instance.errorMessage !== '__server_restart__') return 'error';
+    && stopReason && !serviceStop) return 'error';
   if (placement.runnerId && instance?.desiredStatus === 'running') return 'requested';
   if (instance?.status === 'requested' || instance?.status === 'starting') return instance.status;
   return 'stopped';

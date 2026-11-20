@@ -9,6 +9,7 @@
 
 ```json
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "project_id": {
@@ -18,6 +19,7 @@
       "type": "number"
     },
     "filters": {
+      "maxItems": 5,
       "type": "array",
       "items": {
         "type": "object",
@@ -48,10 +50,8 @@
         "required": [
           "column_id",
           "operator"
-        ],
-        "additionalProperties": false
-      },
-      "maxItems": 5
+        ]
+      }
     },
     "limit": {
       "type": "integer",
@@ -60,7 +60,8 @@
     },
     "offset": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "maximum": 9007199254740991
     },
     "sort": {
       "type": "string"
@@ -76,9 +77,7 @@
     "project_id",
     "table_id",
     "filters"
-  ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  ]
 }
 ```
 
@@ -106,6 +105,7 @@
 
 ```json
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "data": {
@@ -175,11 +175,13 @@
             },
             "projectId": {
               "type": "integer",
-              "exclusiveMinimum": 0
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             },
             "revision": {
               "type": "integer",
-              "minimum": 0
+              "minimum": 0,
+              "maximum": 9007199254740991
             }
           },
           "required": [
@@ -189,6 +191,9 @@
         },
         "sideEffects": {
           "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
           "additionalProperties": {}
         }
       },
@@ -205,10 +210,10 @@
     }
   },
   "required": [
+    "data",
     "execution"
   ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  "additionalProperties": false
 }
 ```
 

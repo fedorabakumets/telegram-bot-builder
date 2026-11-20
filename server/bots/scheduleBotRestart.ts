@@ -14,6 +14,7 @@ import { getBotStartRevision } from './botStartState';
 import { automaticBotStartAllowed } from './automaticBotStartAllowed';
 import { isServerShuttingDown } from './serverShutdownState';
 import { hasPendingBotRestart, queueBotRestart, reserveBotRestart } from './botRestartAttempt';
+import { resolveStoredBotAutoRestart } from './resolveStoredBotAutoRestart';
 
 /** Различает восстановление инфраструктуры и повторы ошибки самого бота. */
 export interface BotRestartOptions {
@@ -44,7 +45,9 @@ export async function scheduleBotRestart(
 
   try {
     const tokenRecord = await storage.getBotToken(tokenId);
-    if (!tokenRecord || (!options.infrastructure && tokenRecord.autoRestart !== 1)) {
+    if (!tokenRecord) return;
+    const { autoRestart, maxRestartAttempts: maxAttempts } = await resolveStoredBotAutoRestart(projectId, tokenRecord);
+    if (!options.infrastructure && !autoRestart) {
       console.log(
         `[AutoRestart] Пропуск token=${tokenId}: autoRestart выключен`,
       );
@@ -65,7 +68,6 @@ export async function scheduleBotRestart(
         (options.infrastructure && requestedInstance?.desiredStatus !== 'running')) return;
     const requestedGeneration = requestedInstance?.desiredGeneration;
 
-    const maxAttempts = tokenRecord.maxRestartAttempts ?? 3;
     const delay = getRestartDelay(tokenId, maxAttempts);
     if (delay === null) {
       console.log(

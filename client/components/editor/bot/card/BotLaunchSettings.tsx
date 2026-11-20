@@ -5,11 +5,12 @@
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Globe, KeyRound, Link2, Rocket, ShieldAlert } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { BotLaunchModePicker } from './BotLaunchModePicker';
+import { KeyRound, Rocket, ShieldAlert } from 'lucide-react';
 import { cn } from '@/utils/utils';
-import { buildWebhookPreview } from './bot-launch-helpers';
-import type { LaunchMode, BotLaunchSettingsProps } from './bot-launch-helpers';
+import { buildWebhookPreview, effectiveLaunchMode } from './bot-launch-helpers';
+import type { BotLaunchSettingsProps } from './bot-launch-helpers';
 import { useBotLaunchSettings } from './use-bot-launch-settings';
 import { WebhookSecretReveal } from './WebhookSecretReveal';
 
@@ -18,17 +19,22 @@ export function BotLaunchSettings({
   tokenId,
   projectId,
   launchMode,
+  projectLaunchMode,
+  projectWebhookBaseUrl,
+  addressDisabled,
   webhookBaseUrl,
   webhookSecretToken,
   hasWebhookSecret,
   className,
   onPendingChange,
 }: BotLaunchSettingsProps) {
-  const { localMode, localBaseUrl, localSecret, inheritedBaseUrl, effectiveBaseUrl,
+  const { localMode, localBaseUrl, localSecret, inheritedBaseUrl, serverBaseUrl, effectiveBaseUrl,
     handleModeChange, handleBaseUrlChange, handleSecretChange } = useBotLaunchSettings({
-      tokenId, projectId, launchMode, webhookBaseUrl, webhookSecretToken, onPendingChange,
+      tokenId, projectId, launchMode, webhookBaseUrl, projectWebhookBaseUrl, webhookSecretToken, onPendingChange,
     });
   const webhookPreview = buildWebhookPreview(effectiveBaseUrl, projectId, tokenId);
+  const effectiveMode = effectiveLaunchMode(localMode, projectLaunchMode);
+  const projectModeLabel = projectLaunchMode === 'webhook' ? 'Webhook' : 'Polling';
 
   return (
     <div className={cn('@container space-y-3 px-3.5 py-3', className)}>
@@ -38,60 +44,49 @@ export function BotLaunchSettings({
         </div>
         <div className="min-w-0 flex-1 pt-0.5">
           <p className="text-sm font-medium text-foreground">Режим запуска</p>
-          <p className="mt-0.5 text-xs text-muted-foreground">Polling или webhook</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {effectiveMode === 'webhook' ? 'Webhook' : 'Polling'} · {localMode === 'inherit' ? 'из проекта' : 'задан для бота'}
+          </p>
         </div>
       </div>
 
       <div className="pl-10 space-y-3">
-        <RadioGroup
-          value={localMode}
-          onValueChange={(v) => handleModeChange(v as LaunchMode)}
-          className="grid gap-2 sm:grid-cols-2"
-        >
-          {([
-            { value: 'polling' as const, title: 'Polling', description: 'Long-polling', icon: Globe },
-            { value: 'webhook' as const, title: 'Webhook', description: 'Входящий webhook', icon: Link2 },
-          ] as const).map(({ value, title, description, icon: Icon }) => (
-            <div
-              key={value}
-              className={cn(
-                'flex cursor-pointer items-start gap-2.5 rounded-md border px-3 py-2.5 transition-colors',
-                localMode === value
-                  ? 'border-border bg-muted/40'
-                  : 'border-border/50 hover:bg-muted/20',
-              )}
-              onClick={() => handleModeChange(value)}
-            >
-              <RadioGroupItem value={value} id={`launch-mode-${value}-${tokenId}`} className="mt-0.5" />
-              <div className="min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <Icon className="h-3.5 w-3.5 text-muted-foreground" />
-                  <span className="text-sm font-medium text-foreground">{title}</span>
-                </div>
-                <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
-              </div>
-            </div>
-          ))}
-        </RadioGroup>
+        {/* Общий выбор транспорта проекта и бота. */}
+        <BotLaunchModePicker value={localMode} onChange={handleModeChange} projectModeLabel={projectModeLabel} />
 
-        {localMode === 'webhook' && (
+        {effectiveMode === 'webhook' && (
           <div className="space-y-3 rounded-md border border-border/50 bg-muted/20 p-3">
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <ShieldAlert className="h-3.5 w-3.5 shrink-0" />
               <span>Применится при следующем запуске</span>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor={`webhook-base-url-${tokenId}`} className="text-xs">Базовый URL</Label>
-              <Input
-                id={`webhook-base-url-${tokenId}`}
-                value={localBaseUrl}
-                onChange={(e) => handleBaseUrlChange(e.target.value)}
-                placeholder={inheritedBaseUrl || 'https://example.com'}
-                className="h-8 text-xs"
-              />
-              <p className="text-xs text-muted-foreground">{localBaseUrl.trim()
-                ? 'Собственный адрес бота. Очистите поле, чтобы использовать адрес сервера.'
-                : inheritedBaseUrl ? `Адрес сервера: ${inheritedBaseUrl}` : 'Публичный адрес API не настроен. Укажите HTTPS-адрес.'}</p>
+              <p className="text-xs font-medium">Базовый адрес webhook</p>
+              <Select value={localBaseUrl === 'inherit' ? 'inherit' : 'own'} disabled={addressDisabled}
+                onValueChange={(source) => handleBaseUrlChange(source === 'inherit' ? 'inherit' : '')}>
+                <SelectTrigger className="min-h-8 w-full text-xs" aria-label="Источник базового адреса webhook"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="inherit">Как в проекте</SelectItem>
+                  <SelectItem value="own">Задать для бота</SelectItem>
+                </SelectContent>
+              </Select>
+              {localBaseUrl === 'inherit' ? (
+                <p className="break-all text-xs text-muted-foreground">
+                  {inheritedBaseUrl ? `Базовый адрес: ${inheritedBaseUrl}` : 'Публичный адрес webhook не настроен.'}
+                </p>
+              ) : (
+                <>
+                  <Input
+                    aria-label="Базовый адрес webhook для бота"
+                    disabled={addressDisabled}
+                    value={localBaseUrl}
+                    onChange={(event) => handleBaseUrlChange(event.target.value)}
+                    placeholder={serverBaseUrl || 'https://example.com'}
+                    className="h-8 text-xs"
+                  />
+                  <p className="text-xs text-muted-foreground">Пустое поле использует адрес сервера.</p>
+                </>
+              )}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor={`webhook-secret-${tokenId}`} className="text-xs">Защитный токен</Label>

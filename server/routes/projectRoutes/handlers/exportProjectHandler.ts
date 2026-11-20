@@ -15,6 +15,8 @@ import { isPsqlBuiltinEnabled } from "../../../utils/isPsqlBuiltinEnabled";
 import { isPsqlPanelDsnDenied } from "../../../utils/isPsqlPanelDsnDenied";
 import { isBotRuntimeActive } from "../../../bots/resolveBotDatabaseUrl";
 import { exportProjectArchive, prepareArchiveMedia } from "./exportProjectArchive";
+import { botGeneratorSettings } from "../../../bots/botGeneratorSettings";
+import { resolveProjectBotSettings } from "../../../../shared/bot-inherited-settings";
 
 /**
  * Обрабатывает запрос на экспорт проекта
@@ -51,6 +53,7 @@ export async function exportProjectHandler(req: Request, res: Response): Promise
             botName: project.name,
             projectId: id,
             userDatabaseEnabled,
+            ...botGeneratorSettings(resolveProjectBotSettings(project.botSettingDefaults)),
             psqlBuiltinEnabled: isPsqlBuiltinEnabled(),
             psqlPanelDsnDenied: isPsqlPanelDsnDenied(),
             botRuntimeRole: isBotRuntimeActive(),

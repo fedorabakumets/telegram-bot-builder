@@ -478,7 +478,7 @@ curl -s -X DELETE http://localhost:5000/api/projects/42/tokens/7 -b cookies.txt
 
 **Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
-`autoRestart` 0|1, `maxRestartAttempts` 1–10.
+Передайте хотя бы одно поле. `autoRestart` принимает 0 или 1, `maxRestartAttempts` принимает 1–10. Значение `inherit` возвращает наследование выбранного поля.
 
 **Auth:** `requireTokenOwnership`. WS `token-updated`. Флаги попадают в env бота при следующем запуске.
 
@@ -517,7 +517,9 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/auto-restart \
 {
   "success": true,
   "autoRestart": 1,
-  "maxRestartAttempts": 3
+  "maxRestartAttempts": 3,
+  "inheritAutoRestart": false,
+  "inheritMaxRestartAttempts": false
 }
 ```
 
@@ -916,7 +918,7 @@ curl -s http://localhost:5000/api/projects/42/tokens/7/env-variables/15/reveal \
 
 **Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
-`launchMode` polling|webhook; опционально `webhookBaseUrl`, `webhookSecretToken`. При смене webhook→polling вызывается Telegram `deleteWebhook`. **Риск:** ответ может вернуть `webhookSecretToken`.
+Передайте хотя бы одно поле. `launchMode` принимает polling, webhook или inherit. `webhookBaseUrl` принимает адрес, null для адреса сервера или inherit для настройки проекта. Транспорт применяется при следующем запуске. Секрет в ответе отсутствует.
 
 **Auth:** `requireTokenOwnership`. WS `token-updated`.
 
@@ -955,8 +957,9 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/launch-settings \
 {
   "success": true,
   "launchMode": "polling",
+  "inheritLaunchMode": false,
   "webhookBaseUrl": null,
-  "webhookSecretToken": null
+  "inheritBotSettings": []
 }
 ```
 

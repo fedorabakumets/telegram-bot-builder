@@ -46,7 +46,7 @@ export function registerBroadcastTools(server: McpServer): void {
       _meta: { botcraft: { section: 'broadcasts', effect: 'external' } },
     }, async ({ project_id, resource_id }) => result(await requestBroadcast(project_id, resource, 'POST', `/${resource_id}/stop`)));
     server.registerTool(`db_edit_${noun}`, {
-      description: 'Изменяет текст уже отправленных сообщений рассылки в Telegram. Возможны частичные результаты.',
+      description: 'Изменяет текст уже отправленных сообщений рассылки в Telegram, сохраняя клавиатуру. Проверяйте edited/failed: ok означает обработку запроса, возможны частичные результаты.',
       inputSchema: { project_id: id, resource_id: id, ...(campaign ? editBroadcastCampaignBodySchema.shape : editBroadcastBodySchema.shape) },
       annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: true },
       _meta: { botcraft: { section: 'broadcasts', effect: 'external' } },

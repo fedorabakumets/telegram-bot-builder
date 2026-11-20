@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import type { Request, Response } from 'express';
 import { createTelegramWebhookHandler } from './telegramWebhookHandler';
+import { getWebhookRecipient } from './webhookRecipient';
 
 /** Параметры моделирования входящего webhook. */
 interface TestOptions {
@@ -62,4 +63,32 @@ test('сбой или непринятое обновление получает
   assert.equal((await request({ failure: true })).status, 503);
   for (const status of [302, 404, 500, 503]) assert.equal((await request({ status })).status, 503);
   assert.equal((await request({ status: 403 })).status, 403);
+});
+
+test('доставка использует режим запущенного экземпляра до следующего запуска', async () => {
+  let configured = 'polling';
+  let active = 'webhook';
+  let status = 'running';
+  const storage = {
+    getBotToken: async () => ({ projectId: 12, launchMode: 'polling', inheritLaunchMode: true, webhookSecretToken: 'test-secret' }),
+    getBotInstanceByToken: async () => ({ status, launchMode: active }),
+    getBotProject: async () => ({ defaultLaunchMode: configured }),
+  };
+  assert.equal((await getWebhookRecipient(storage, 58))?.launchMode, 'webhook');
+  configured = 'webhook';
+  active = 'polling';
+  assert.equal((await getWebhookRecipient(storage, 58))?.launchMode, 'polling');
+  status = 'starting';
+  active = 'webhook';
+  assert.equal((await getWebhookRecipient(storage, 58))?.launchMode, 'webhook');
+  status = 'stopped';
+  assert.equal((await getWebhookRecipient(storage, 58))?.launchMode, 'webhook');
+});
+
+test('сохраняет индивидуальный режим старой записи без признака наследования', async () => {
+  assert.equal((await getWebhookRecipient({
+    getBotToken: async () => ({ projectId: 12, launchMode: 'polling' }),
+    getBotInstanceByToken: async () => undefined,
+    getBotProject: async () => ({ defaultLaunchMode: 'webhook' }),
+  }, 58))?.launchMode, 'polling');
 });

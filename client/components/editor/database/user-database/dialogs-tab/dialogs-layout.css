@@ -1,0 +1,44 @@
+/** @fileoverview Отступы шапки, списка и переписки, согласованные с вкладкой аналитики. */
+.dialogs-workspace { container: dialogs / inline-size; }
+/** Общая шапка управляет селекторами и подписями; здесь сгруппированы действия диалогов. */
+.dialogs-heading-actions { display: flex; align-items: center; gap: 8px; }
+.dialogs-conversation-heading { display: none; }
+.dialogs-workspace-body { margin: 0 24px 24px; gap: 16px; }
+.dialogs-list-column, .dialogs-chat-column, .dialogs-mobile-body { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.dialogs-list-column { width: 320px; }
+.dialogs-list-search { padding: 16px; border-bottom: 1px solid var(--border); }
+.dialogs-list-search input { height: 36px; font-size: 14px; }
+.dialogs-segments { display: flex; flex-wrap: wrap; gap: 4px 16px; padding: 0 16px; border-bottom: 1px solid var(--border); }
+.dialogs-segment { position: relative; min-height: 36px; padding: 8px 0; border: 0; border-radius: 0; background: transparent; color: var(--muted-foreground); font-size: 13px; line-height: 20px; font-weight: 400; }
+.dialogs-segment[aria-selected='true'], .dialogs-segment:hover { color: var(--foreground); }
+.dialogs-segment[aria-selected='true']::after { content: ''; position: absolute; inset: auto 0 0; height: 2px; background: currentColor; }
+.dialogs-list-row { width: 100%; display: flex; align-items: center; gap: 12px; padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border); border-left: 2px solid transparent; background: transparent; }
+.dialogs-list-row:hover { background: var(--muted); }
+.dialogs-list-row[aria-pressed='true'] { background: var(--muted); border-left-color: var(--foreground); }
+.dialogs-list-row .dialogs-row-symbol { background: var(--muted); color: var(--muted-foreground); }
+.dialogs-kind-label { display: none; }
+.dialogs-conversation-heading { align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; margin: 0 24px 12px; padding: 8px 16px; border-bottom: 1px solid var(--border); }
+.dialogs-conversation-heading > div { min-width: 0; }
+.dialogs-chat-column > div { background: transparent; }
+.dialogs-workspace .dialogs-composer { padding: 16px; }
+/** Кнопка отправки сохраняет прежний синий акцент конструктора в обеих темах. */
+.dialogs-workspace .dialogs-composer [data-testid='dialog-panel-button-send'] { background: hsl(207, 90%, 54%); color: hsl(211, 100%, 99%); border: 1px solid transparent; border-radius: 8px; }
+.dark .dialogs-workspace .dialogs-composer [data-testid='dialog-panel-button-send'] { background: hsl(207, 90%, 60%); }
+.dialogs-workspace .dialogs-composer [data-testid='dialog-panel-button-send']:hover { filter: brightness(.9); }
+@media (min-width: 768px) { .dialogs-conversation-heading { display: flex; } }
+/** Переключение колонок зависит от ширины панели, включая разделённую рабочую область. */
+@container dialogs (max-width: 767px) {
+  .dialogs-workspace-body { display: none; }
+  .dialogs-mobile-body { display: flex; margin: 0 16px 16px; }
+  .dialogs-conversation-heading { display: none; }
+}
+/** Ширина списка переписки меняется независимо от общей шапки. */
+@container dialogs (max-width: 799px) {
+  .dialogs-list-column { width: 280px; }
+}
+@container dialogs (max-width: 479px) {
+  .dialogs-heading-actions .dialogs-new-broadcast { width: 32px; padding-inline: 0; }
+  .dialogs-new-broadcast > span { display: none; }
+  .dialogs-mobile-body { margin: 0 16px 16px; }
+  .dialogs-list-search, .dialogs-workspace .dialogs-composer { padding: 12px; }
+}

@@ -106,9 +106,16 @@ export async function deleteSingleMessageHandler(
 
     // Удаляем из Telegram — только при успехе удаляем из БД
     const tokenId = getRequestTokenId(req);
-    const { selectedToken } = await resolveEffectiveProjectToken(projectId, tokenId);
+    /** Сообщение Telegram удаляет только его бот; явный другой бот не подменяет отправителя. */
+    if (tokenId != null && message.tokenId && tokenId !== message.tokenId) {
+      res.status(400).json({ message: "Сообщение относится к другому боту" });
+      return;
+    }
+    const { selectedToken } = await resolveEffectiveProjectToken(projectId, message.tokenId ?? tokenId);
 
-    if (!selectedToken?.token) {
+    /** Резервный бот не заменяет удалённого отправителя и не может принадлежать другому проекту. */
+    if (!selectedToken?.token || selectedToken.projectId !== projectId
+      || (message.tokenId && selectedToken.id !== message.tokenId)) {
       res.status(400).json({ message: "Токен бота не найден для этого проекта" });
       return;
     }

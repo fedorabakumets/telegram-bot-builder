@@ -3,9 +3,10 @@
  * @module TerminalOutput
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { TerminalLogRow } from './TerminalLogRow';
 import { LOG_ROW_GRID } from './terminal-output-format';
+import { useTerminalOutputScroll } from './use-terminal-output-scroll';
 
 /** Строка вывода терминала */
 interface TerminalLine {
@@ -21,6 +22,10 @@ interface TerminalLine {
 
 /** Пропсы компонента вывода терминала */
 interface TerminalOutputProps {
+  /** Считать новые строки в режиме текущего потока */
+  live?: boolean;
+  /** Ключ потока для сброса паузы при переключении */
+  streamKey?: string;
   /** Показывать дату рядом со временем при просмотре нескольких дней */
   showDate?: boolean;
   /** Подпись пустой таблицы или состояния загрузки */
@@ -50,20 +55,13 @@ interface TerminalOutputProps {
 }
 
 /**
- * Проверяет, находится ли контейнер у нижнего края
- * @param el - Элемент прокрутки
- * @returns true если внизу
- */
-function checkIsAtBottom(el: HTMLDivElement): boolean {
-  return el.scrollTop + el.clientHeight >= el.scrollHeight - 10;
-}
-
-/**
  * Таблица логов с автоскроллом и подсветкой поиска
  * @param props - Свойства компонента
  * @returns JSX элемент
  */
 export function TerminalOutput({
+  live = false,
+  streamKey,
   showDate,
   emptyMessage,
   lines,
@@ -78,27 +76,8 @@ export function TerminalOutput({
   onLineClick,
   selectedLineId,
 }: TerminalOutputProps) {
-  const [showScrollBtn, setShowScrollBtn] = useState(false);
+  const { paused, newLines, scrollToBottom, handleScroll } = useTerminalOutputScroll(containerRef, lines, live, streamKey);
   const lineRefs = useRef<Map<string, HTMLDivElement>>(new Map());
-
-  const scrollToBottom = useCallback(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
-    setShowScrollBtn(false);
-  }, [containerRef]);
-
-  const handleScroll = useCallback(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    setShowScrollBtn(!checkIsAtBottom(el));
-  }, [containerRef]);
-
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    if (checkIsAtBottom(el)) el.scrollTo({ top: el.scrollHeight });
-  }, [lines, containerRef]);
 
   useEffect(() => {
     if (!shouldScrollToMatch || !currentMatchLineId) return;
@@ -150,14 +129,14 @@ export function TerminalOutput({
           ))
         )}
       </div>
-      {showScrollBtn && (
+      {paused && lines.length > 0 && (
         <button
           type="button"
           onClick={scrollToBottom}
-          className="absolute bottom-4 right-4 bg-primary/80 hover:bg-primary text-primary-foreground rounded-full w-8 h-8 flex items-center justify-center shadow-lg transition-all"
-          title="Прокрутить вниз"
+          className="absolute bottom-4 right-4 flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5 text-xs text-foreground shadow-md hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          ↓
+          <span aria-hidden="true">↓</span>
+          {newLines > 0 ? `Новые строки: ${newLines}` : 'К последним строкам'}
         </button>
       )}
     </div>

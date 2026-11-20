@@ -6,6 +6,7 @@
 
 import { useMemo } from 'react';
 import { parseHTML } from '@/components/editor/inline-rich/utils/formatting-parser';
+import { highlightMessageText } from '../utils/highlight-message-text';
 
 /**
  * Свойства компонента форматированного текста
@@ -15,6 +16,8 @@ interface FormattedTextProps {
   text?: string | null;
   /** Тип сообщения для выбора цветовой схемы */
   messageType: 'bot' | 'user';
+  /** Фраза для подсветки внутри текста выбранного совпадения. */
+  highlightTerm?: string;
 }
 
 /**
@@ -23,21 +26,21 @@ interface FormattedTextProps {
  * @param props - Свойства компонента
  * @returns JSX-элемент с форматированным текстом или null
  */
-export function FormattedText({ text, messageType }: FormattedTextProps) {
+export function FormattedText({ text, messageType, highlightTerm = '' }: FormattedTextProps) {
   const isBot = messageType === 'bot';
 
   /** Парсим HTML в JSX только при изменении текста */
   const formattedContent = useMemo(() => {
     if (typeof text !== 'string' || !text.trim()) return null;
-    return parseHTML(text.trimEnd());
-  }, [text]);
+    return highlightMessageText(parseHTML(text.trimEnd()), highlightTerm);
+  }, [text, highlightTerm]);
 
   // Не рендерим пустой блок
   if (!formattedContent) return null;
 
   return (
     <div
-      className={`rounded-lg px-3 py-2 ${
+      className={`dialog-message-text rounded-lg px-3 py-2 ${
         isBot
           ? 'bg-green-100 dark:bg-green-900/50 text-green-900 dark:text-green-100'
           : 'border border-zinc-200 bg-white text-foreground dark:border-zinc-800 dark:bg-[#181818]'

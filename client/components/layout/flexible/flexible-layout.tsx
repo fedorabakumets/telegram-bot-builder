@@ -32,8 +32,6 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
   hideOnMobile = false,
 }) => {
   const isMobile = useMediaQuery('(max-width: 1200px)');
-  /** Флаг мобильного устройства для переключения вкладок кода */
-  const isMobileCode = useMediaQuery('(max-width: 767px)');
 
   const { getElementContent } = useElementContent({
     headerContent,
@@ -54,7 +52,7 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
    * @returns true если оба элемента видимы и устройство мобильное
    */
   const shouldUseMobileCodeLayout = (): boolean => {
-    if (!isMobileCode) return false;
+    /** Общее полотно кода располагает заголовок над обеими панелями при любой ширине. */
     const codeEl = visibleElements.find(el => el.type === 'code');
     const codeEditorEl = visibleElements.find(el => el.type === 'codeEditor');
     return !!(codeEl && codeEditorEl);

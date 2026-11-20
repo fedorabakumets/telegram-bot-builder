@@ -1,20 +1,8 @@
 /** @fileoverview Адаптивная сетка аналитики и спокойная иерархия показателей. */
 .analytics-page { container-type: inline-size; }
-
-
 .analytics-content .whitespace-nowrap { white-space: normal; }
 .analytics-content .truncate { white-space: normal; overflow: visible; text-wrap: balance; }
 .analytics-content p { text-wrap: pretty; }
-/** На средних панелях фильтры располагаются в одной строке с названием вкладки. */
-@container (min-width: 800px) and (max-width: 1200px) {
-  .analytics-responsive-header { padding-block: 4px 12px; }
-  .analytics-responsive-header.space-y-4 > .analytics-header-content { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; margin-block-start: 0; }
-  .analytics-header-content .workspace-tab-heading { display: contents; }
-  .analytics-header-content .workspace-tab-heading > div:first-child { grid-column: 1; grid-row: 1; }
-  .analytics-header-content .workspace-tab-heading > div:first-child > p { display: none; }
-  .analytics-header-content .workspace-tab-heading > div:last-child { grid-column: 3; grid-row: 1; }
-  .analytics-header-content.space-y-4 > .analytics-scope { grid-column: 2; grid-row: 1; min-width: 0; margin: 0; gap: 12px; align-items: center; }
-}
 /** Две группы показателей заменяют мелкий разноцветный текст в одну строку. */
 .analytics-audience-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 16px; }
 .analytics-audience-summary > div { display: flex; min-width: 0; flex-direction: column; gap: 4px; }
@@ -25,56 +13,15 @@
 @container (min-width: 960px) {
   .analytics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
-/** На телефоне селекторы занимают доступную ширину и сохраняют удобную высоту. */
-@container (max-width: 479px) {
-  .analytics-scope > div { flex: 1 1 100%; min-width: 0; }
-  .analytics-scope [role='combobox'] { width: 100%; min-width: 0; height: 40px; }
-
-}
-
 /** На телефоне обе группы используют общие две колонки и одинаковую высоту подписей. */
 @container (max-width: 479px) {
   .analytics-audience-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
-/** На узком экране шапку можно свернуть, освобождая место для карточек. */
-.analytics-header-toggle { display: none; }
-@container (max-width: 479px) {
-  .analytics-header-toggle { display: block; color: var(--muted-foreground); font-size: 12px; line-height: 20px; }
-  .analytics-responsive-header.is-collapsed .analytics-header-content { display: none; }
-  .analytics-responsive-header.is-collapsed { padding-block: 6px; }
-}
-
-/** Проект и бот на узком экране располагаются рядом, период — отдельной строкой. */
-@container (max-width: 479px) {
-  .analytics-scope { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-  .analytics-scope-project, .analytics-scope-bot { min-width: 0; }
-  .analytics-scope-project > div, .analytics-scope-bot > div { width: 100%; min-width: 0; }
-  .analytics-scope-project [role=combobox], .analytics-scope-bot [role=combobox] { min-width: 0; width: 100%; }
-  .analytics-scope-period { grid-column: 1 / -1; min-width: 0; }
-}
-
-/** На узком экране действия аналитики находятся в строке заголовка. */
-@container (max-width: 479px) {
-  .analytics-header-content .workspace-tab-heading { align-items: center; gap: 8px; }
-  .analytics-header-content .workspace-tab-heading > div:first-child > p { display: none; }
-  .analytics-header-content .workspace-tab-actions { align-items: center; }
-}
-
-/** Узкие селекторы сохраняют больше места для названий проекта и бота. */
-@container (max-width: 479px) {
-  .analytics-scope :is(.analytics-scope-project, .analytics-scope-bot) [role="combobox"] { font-size: 12px; padding-inline: 6px; gap: 4px; }
-  .analytics-scope :is(.analytics-scope-project, .analytics-scope-bot) [role="combobox"] > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-}
-
-/** Подписи служебных действий раскрываются на просторной панели; в тесной строке остаются иконки. */
-@container (min-width: 800px) and (max-width: 999px) {
-  .analytics-header-content .workspace-tab-actions { gap: 4px; }
-  .analytics-header-content .workspace-tab-actions > :is(button, a) { width: 32px; height: 32px; padding: 0; }
-  .analytics-header-content .workspace-tab-actions span { display: none; }
-}
-
-/** На узкой панели период выбирается в общей шапке, без повторения в каждой карточке. */
+/** На узкой панели сворачиваются только фильтры, а заголовок и действия остаются видимыми. */
+.analytics-heading-actions .analytics-filter-toggle { display: none; }
 @container analytics (max-width: 479px) {
+  .analytics-heading-actions .analytics-filter-toggle { display: inline-flex; }
+  .analytics-header-content > .analytics-scope[data-collapsed='true'] { display: none; }
   .analytics-page .analytics-card .analytics-choose-period { display: none; }
 }

@@ -7,11 +7,11 @@ import type {
   InsertBotToken,
   InsertBotTemplate 
 } from "@shared/schema";
+import { botSettingsToInheritOnCreate } from "@shared/bot-setting-inheritance-on-create";
+import { LOCAL_RECORD_KEYS, readLocalRecord, serializeLocalRecord } from './local-storage-credentials';
 
 const STORAGE_KEYS = {
-  PROJECTS: 'botcraft_projects',
-  TOKENS: 'botcraft_tokens',
-  TEMPLATES: 'botcraft_templates',
+  ...LOCAL_RECORD_KEYS,
   NEXT_PROJECT_ID: 'botcraft_next_project_id',
   NEXT_TOKEN_ID: 'botcraft_next_token_id',
   NEXT_TEMPLATE_ID: 'botcraft_next_template_id',
@@ -22,6 +22,8 @@ type StoredProject = Omit<
   BotProject,
   | 'createdAt'
   | 'updatedAt'
+  | 'botToken'
+  | 'sessionId'
   | 'restartOnUpdate'
   | 'lastExportedAt'
   | 'lastExportedStructureAt'
@@ -34,11 +36,18 @@ type StoredProject = Omit<
   updatedAt: string;
   restartOnUpdate?: boolean;
 };
-type StoredToken = Omit<BotToken, 'createdAt' | 'updatedAt' | 'lastUsedAt' | 'ownerId'> & { createdAt: string; updatedAt: string; lastUsedAt: string | null; ownerId: number | null };
+/** Метаданные токена без его учётных данных и секретов. */
+type StoredToken = Omit<BotToken, 'createdAt' | 'updatedAt' | 'lastUsedAt' | 'ownerId' | 'token'
+  | 'webhookSecretToken' | 'userbotApiHash' | 'userbotSessionString'> & {
+  /** Дата создания в формате ISO. */ createdAt: string;
+  /** Дата обновления в формате ISO. */ updatedAt: string;
+  /** Дата последнего использования в формате ISO, если она есть. */ lastUsedAt: string | null;
+  /** Владелец записи. */ ownerId: number | null;
+};
 type StoredTemplate = Omit<BotTemplate, 'createdAt' | 'updatedAt' | 'lastUsedAt' | 'ownerId'> & { createdAt: string; updatedAt: string; lastUsedAt: string | null; ownerId: number | null };
 
 // Define partial versions for updates
-type PartialStoredProject = Partial<Pick<StoredProject, 'name' | 'description' | 'data' | 'botToken' | 'userDatabaseEnabled' | 'ownerId' | 'restartOnUpdate'>>;
+type PartialStoredProject = Partial<Pick<StoredProject, 'name' | 'description' | 'data' | 'userDatabaseEnabled' | 'ownerId' | 'restartOnUpdate'>>;
 
 /** Преобразует дату записи в формат JSON, сохраняя отсутствие значения. */
 function serializeDate(value: Date | string | null | undefined): string | null | undefined {
@@ -75,17 +84,16 @@ export class LocalStorageService {
 
   private static safeGetItem<T>(key: string, defaultValue: T): T {
     try {
-      const item = localStorage.getItem(key);
-      return item ? JSON.parse(item) : defaultValue;
+      return readLocalRecord(localStorage, key, defaultValue);
     } catch (e) {
       console.error(`Error reading from localStorage (${key}):`, e);
       return defaultValue;
     }
   }
 
-  private static safeSetItem(key: string, value: any): void {
+  private static safeSetItem(key: string, value: unknown): void {
     try {
-      localStorage.setItem(key, JSON.stringify(value));
+      localStorage.setItem(key, serializeLocalRecord(value));
     } catch (e) {
       console.error(`Error writing to localStorage (${key}):`, e);
     }
@@ -119,8 +127,18 @@ export class LocalStorageService {
   private static reviveProject(stored: StoredProject): BotProject {
     return {
       ...stored,
+      /** Локальная копия проекта не является источником учётных данных. */
+      botToken: null,
+      sessionId: null,
       /** Ревизия старых локальных проектов до её появления в схеме. */
       revision: stored.revision ?? 0,
+      /** Значения старых локальных проектов до появления наследуемых настроек. */
+      defaultLaunchMode: stored.defaultLaunchMode ?? 'polling',
+      defaultSleepMode: stored.defaultSleepMode ?? null,
+      defaultAutoRestart: stored.defaultAutoRestart ?? 0,
+      defaultMaxRestartAttempts: stored.defaultMaxRestartAttempts ?? 3,
+      /** Старые локальные проекты используют стандартные значения. */
+      botSettingDefaults: stored.botSettingDefaults ?? {},
       createdAt: new Date(stored.createdAt),
       updatedAt: new Date(stored.updatedAt),
       lastExportedAt: null,
@@ -135,6 +153,18 @@ export class LocalStorageService {
   private static reviveToken(stored: StoredToken): BotToken {
     return {
       ...stored,
+      /** Локальная запись восстанавливает метаданные без учётных данных. */
+      token: '',
+      webhookSecretToken: null,
+      userbotApiHash: null,
+      userbotSessionString: null,
+      /** Старые локальные токены сохраняют индивидуальные настройки. */
+      inheritLaunchMode: stored.inheritLaunchMode ?? false,
+      inheritSleepMode: stored.inheritSleepMode ?? false,
+      inheritAutoRestart: stored.inheritAutoRestart ?? false,
+      inheritMaxRestartAttempts: stored.inheritMaxRestartAttempts ?? false,
+      /** Старые записи сохраняют индивидуальные значения дополнительных настроек. */
+      inheritBotSettings: stored.inheritBotSettings ?? [],
       createdAt: new Date(stored.createdAt),
       updatedAt: new Date(stored.updatedAt),
       lastUsedAt: stored.lastUsedAt ? new Date(stored.lastUsedAt) : null,
@@ -173,11 +203,16 @@ export class LocalStorageService {
       name: data.name,
       description: data.description || null,
       data: data.data,
-      botToken: data.botToken || null,
       userDatabaseEnabled: data.userDatabaseEnabled ?? 1,
+      /** Наследуемые настройки нового локального проекта. */
+      defaultLaunchMode: data.defaultLaunchMode ?? 'polling',
+      defaultSleepMode: data.defaultSleepMode ?? null,
+      defaultAutoRestart: data.defaultAutoRestart ?? 0,
+      defaultMaxRestartAttempts: data.defaultMaxRestartAttempts ?? 3,
+      /** Переопределения общих настроек нового проекта. */
+      botSettingDefaults: data.botSettingDefaults ?? {},
       sortOrder: data.sortOrder ?? 0,
       adminIds: data.adminIds ?? '',
-      sessionId: data.sessionId ?? null,
       createdAt: now,
       updatedAt: now,
     };
@@ -238,7 +273,6 @@ export class LocalStorageService {
       projectId: data.projectId,
       ownerId: null,
       name: data.name,
-      token: data.token,
       isDefault: data.isDefault ?? 0,
       isActive: data.isActive ?? 1,
       /** Новый локальный токен ещё не имеет подтверждённого отказа Telegram. */
@@ -267,12 +301,16 @@ export class LocalStorageService {
       trackGroupMembership: data.trackGroupMembership ?? 1,
       contentCache: data.contentCache ?? 0,
       launchMode: data.launchMode ?? 'polling',
+      /** Новый локальный токен наследует настройки без явных переопределений. */
+      inheritLaunchMode: data.inheritLaunchMode ?? (data.launchMode == null),
+      inheritSleepMode: data.inheritSleepMode ?? true,
+      inheritAutoRestart: data.inheritAutoRestart ?? (data.autoRestart == null),
+      inheritMaxRestartAttempts: data.inheritMaxRestartAttempts ?? (data.maxRestartAttempts == null),
+      /** Сохраняем только разрешённые ключи наследуемых настроек. */
+      inheritBotSettings: botSettingsToInheritOnCreate(data, data.inheritBotSettings),
       webhookBaseUrl: data.webhookBaseUrl ?? null,
-      webhookSecretToken: data.webhookSecretToken ?? null,
       userbotEnabled: data.userbotEnabled ?? 0,
       userbotApiId: data.userbotApiId ?? null,
-      userbotApiHash: data.userbotApiHash ?? null,
-      userbotSessionString: data.userbotSessionString ?? null,
       createdAt: now,
       updatedAt: now,
     };

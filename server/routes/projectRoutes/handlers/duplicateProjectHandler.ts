@@ -74,6 +74,14 @@ export async function duplicateProjectHandler(req: Request, res: Response): Prom
         const projectData: StorageBotProjectInput = {
             name,
             data: structuredClone(source.data),
+            /** Копия проекта сохраняет настройки для будущих ботов. */
+            defaultLaunchMode: source.defaultLaunchMode,
+            /** Общие параметры обработчиков и автоперезапуска также сохраняются в копии. */
+            defaultSleepMode: source.defaultSleepMode,
+            defaultAutoRestart: source.defaultAutoRestart,
+            defaultMaxRestartAttempts: source.defaultMaxRestartAttempts,
+            /** Копия не разделяет объект настроек с исходным проектом. */
+            botSettingDefaults: structuredClone(source.botSettingDefaults),
             ownerId,
             sessionId: null,
         };

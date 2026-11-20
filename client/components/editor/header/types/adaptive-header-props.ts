@@ -54,6 +54,8 @@ export interface AdaptiveHeaderProps {
   headerVisible?: boolean;
   /** Видимость боковой панели */
   sidebarVisible?: boolean;
+  /** Внешняя навигация приложения уже доступна рядом с редактором. */
+  hasWorkspaceSidebar?: boolean;
   /** Видимость панели свойств */
   propertiesVisible?: boolean;
   /** Видимость холста */

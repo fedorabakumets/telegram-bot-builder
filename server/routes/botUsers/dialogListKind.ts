@@ -49,7 +49,7 @@ export function groupChatTypesSql(kind: DialogKind): string {
 }
 
 /**
- * SELECT групп/каналов как строк диалога (без UNION ALL)
+ * SELECT групп/каналов как отдельных пар бот–чат (без UNION ALL).
  * @param chatTypesSql - Уже готовый IN-список типов
  * @returns SQL SELECT
  */
@@ -58,6 +58,7 @@ export function buildGroupsSelectSql(chatTypesSql: string): string {
       SELECT
         (-(ROW_NUMBER() OVER (ORDER BY MAX(bm.created_at) DESC))::bigint) AS id,
         bm.chat_id AS "userId",
+        bm.token_id AS "tokenId",
         NULL AS "userName",
         COALESCE(bg.name, bm.chat_id) AS "firstName",
         NULL AS "lastName",
@@ -88,6 +89,6 @@ export function buildGroupsSelectSql(chatTypesSql: string): string {
         AND bm.chat_type IN ${chatTypesSql}
         AND bm.chat_id IS NOT NULL
         AND ($2::integer IS NULL OR bm.token_id = $2)
-      GROUP BY bm.chat_id, bm.chat_type, bg.name, bg.avatar_url
+      GROUP BY bm.chat_id, bm.token_id, bm.chat_type, bg.name, bg.avatar_url
   `;
 }

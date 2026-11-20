@@ -4,9 +4,17 @@ import { mkdir, writeFile, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 vi.mock('../../database/db', () => ({ db: {} }));
-import { persistUploadToBackend, resolveUploadBackend } from './upload-storage-helper';
+import { deriveObjectKey, persistUploadToBackend, resolveUploadBackend } from './upload-storage-helper';
 
 describe('адреса выбранного хранилища', () => {
+  /** Ключ сохраняет структуру проекта, но определяется только в каталоге загрузки. */
+  it('ограничивает логический ключ корнем uploads', () => {
+    expect(deriveObjectKey(path.join(process.cwd(), 'uploads', '42', '2026-11-20', 'photo.jpg')))
+      .toBe('42/2026-11-20/photo.jpg');
+    expect(() => deriveObjectKey(path.join(process.cwd(), 'assets', 'photo.jpg')))
+      .toThrow('Недопустимый путь загрузки');
+  });
+
   it('выбирает настроенный S3 при загрузке файла', () => {
     const previous = process.env.UPLOADS_STORAGE_ID;
     process.env.UPLOADS_STORAGE_ID = 's3-selected';

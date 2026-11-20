@@ -69,8 +69,15 @@ export function UserAvatar({ messageType, user, projectId, tokenId, size = 28, o
       ? buildUserAvatarUrl(projectId, user.userId, tokenId)
       : null);
 
-  const [imageError, setImageError] = useState(() => !!photoUrl && isAvatarUrlFailed(photoUrl));
-  const canFetchPhoto = !!photoUrl && !imageError && !isAvatarUrlFailed(photoUrl);
+  /** Ошибка относится только к конкретному адресу и не блокирует фото при смене бота. */
+  const [failedPhotoUrl, setFailedPhotoUrl] = useState<string | null>(null);
+  /** До завершения загрузки сохраняет видимую иконку вместо пустого места. */
+  const [loadedPhotoUrl, setLoadedPhotoUrl] = useState<string | null>(null);
+  const canFetchPhoto = !!photoUrl && failedPhotoUrl !== photoUrl && !isAvatarUrlFailed(photoUrl);
+  const placeholder = <div style={{ width: size, height: size }} className={`flex-shrink-0 rounded-full flex items-center justify-center ${isBot ? 'bg-blue-100 dark:bg-blue-900' : 'bg-green-100 dark:bg-green-900'}`}>
+    {isBot ? <Bot style={{ width: iconSize, height: iconSize }} className="text-blue-600 dark:text-blue-400" />
+      : <User style={{ width: iconSize, height: iconSize }} className="text-green-600 dark:text-green-400" />}
+  </div>;
 
   if (canFetchPhoto && photoUrl) {
     const image = (
@@ -79,19 +86,22 @@ export function UserAvatar({ messageType, user, projectId, tokenId, size = 28, o
         src={photoUrl}
         alt={isBot ? 'Bot avatar' : 'User avatar'}
         style={{ width: size, height: size }}
-        className="flex-shrink-0 rounded-full object-cover"
+        className="absolute inset-0 flex-shrink-0 rounded-full object-cover"
+        onLoad={() => setLoadedPhotoUrl(photoUrl)}
         onError={() => {
           markAvatarUrlFailed(photoUrl);
-          setImageError(true);
+          setFailedPhotoUrl(photoUrl);
         }}
       />
     );
-    if (!onPhotoClick) return image;
+    if (!onPhotoClick) return <span className="relative inline-flex shrink-0" style={{ width: size, height: size }}>
+      {loadedPhotoUrl !== photoUrl && placeholder}{image}
+    </span>;
     return (
       <button type="button" onClick={() => onPhotoClick(photoUrl)} aria-label="Увеличить фотографию пользователя"
         style={{ width: size, height: size }}
         className="group relative shrink-0 overflow-hidden rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-        {image}
+        {loadedPhotoUrl !== photoUrl && placeholder}{image}
         <span className="absolute inset-0 flex items-center justify-center bg-black/50 text-white opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
           <ZoomIn className="h-6 w-6" />
         </span>
@@ -99,17 +109,5 @@ export function UserAvatar({ messageType, user, projectId, tokenId, size = 28, o
     );
   }
 
-  if (isBot) {
-    return (
-      <div style={{ width: size, height: size }} className="flex-shrink-0 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-        <Bot style={{ width: iconSize, height: iconSize }} className="text-blue-600 dark:text-blue-400" />
-      </div>
-    );
-  }
-
-  return (
-    <div style={{ width: size, height: size }} className="flex-shrink-0 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
-      <User style={{ width: iconSize, height: iconSize }} className="text-green-600 dark:text-green-400" />
-    </div>
-  );
+  return placeholder;
 }

@@ -24,7 +24,8 @@ interface UseStatsParams {
  */
 export function useStats(params: UseStatsParams) {
   const { projectId, selectedTokenId } = params;
-  const requestUrl = buildUsersApiUrl(`/api/projects/${projectId}/users/stats`, selectedTokenId);
+  /** Верхние показатели используют ту же область личных контактов, что и таблица. */
+  const requestUrl = buildUsersApiUrl(`/api/projects/${projectId}/users/stats`, selectedTokenId, { privateContactsOnly: 'true' });
 
   const {
     data: stats = {},

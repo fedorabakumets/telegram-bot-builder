@@ -9,6 +9,7 @@
 
 ```json
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "project_id": {
@@ -17,10 +18,12 @@
       "maximum": 9007199254740991
     },
     "token_id": {
-      "$ref": "#/properties/project_id"
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
     },
     "change": {
-      "anyOf": [
+      "oneOf": [
         {
           "type": "object",
           "properties": {
@@ -29,10 +32,15 @@
               "const": "auto-restart"
             },
             "autoRestart": {
-              "type": "number",
-              "enum": [
-                0,
-                1
+              "anyOf": [
+                {
+                  "type": "number",
+                  "const": 0
+                },
+                {
+                  "type": "number",
+                  "const": 1
+                }
               ]
             },
             "maxRestartAttempts": {
@@ -45,8 +53,7 @@
             "setting",
             "autoRestart",
             "maxRestartAttempts"
-          ],
-          "additionalProperties": false
+          ]
         },
         {
           "type": "object",
@@ -56,14 +63,22 @@
               "const": "protect-content"
             },
             "protectContent": {
-              "$ref": "#/properties/change/anyOf/0/properties/autoRestart"
+              "anyOf": [
+                {
+                  "type": "number",
+                  "const": 0
+                },
+                {
+                  "type": "number",
+                  "const": 1
+                }
+              ]
             }
           },
           "required": [
             "setting",
             "protectContent"
-          ],
-          "additionalProperties": false
+          ]
         },
         {
           "type": "object",
@@ -73,14 +88,22 @@
               "const": "save-incoming-media"
             },
             "saveIncomingMedia": {
-              "$ref": "#/properties/change/anyOf/0/properties/autoRestart"
+              "anyOf": [
+                {
+                  "type": "number",
+                  "const": 0
+                },
+                {
+                  "type": "number",
+                  "const": 1
+                }
+              ]
             }
           },
           "required": [
             "setting",
             "saveIncomingMedia"
-          ],
-          "additionalProperties": false
+          ]
         },
         {
           "type": "object",
@@ -90,14 +113,22 @@
               "const": "catch-all-handlers"
             },
             "catchAllHandlers": {
-              "$ref": "#/properties/change/anyOf/0/properties/autoRestart"
+              "anyOf": [
+                {
+                  "type": "number",
+                  "const": 0
+                },
+                {
+                  "type": "number",
+                  "const": 1
+                }
+              ]
             }
           },
           "required": [
             "setting",
             "catchAllHandlers"
-          ],
-          "additionalProperties": false
+          ]
         },
         {
           "type": "object",
@@ -107,14 +138,22 @@
               "const": "track-user-blocks"
             },
             "trackUserBlocks": {
-              "$ref": "#/properties/change/anyOf/0/properties/autoRestart"
+              "anyOf": [
+                {
+                  "type": "number",
+                  "const": 0
+                },
+                {
+                  "type": "number",
+                  "const": 1
+                }
+              ]
             }
           },
           "required": [
             "setting",
             "trackUserBlocks"
-          ],
-          "additionalProperties": false
+          ]
         },
         {
           "type": "object",
@@ -124,14 +163,22 @@
               "const": "track-group-membership"
             },
             "trackGroupMembership": {
-              "$ref": "#/properties/change/anyOf/0/properties/autoRestart"
+              "anyOf": [
+                {
+                  "type": "number",
+                  "const": 0
+                },
+                {
+                  "type": "number",
+                  "const": 1
+                }
+              ]
             }
           },
           "required": [
             "setting",
             "trackGroupMembership"
-          ],
-          "additionalProperties": false
+          ]
         },
         {
           "type": "object",
@@ -141,14 +188,22 @@
               "const": "content-cache"
             },
             "contentCache": {
-              "$ref": "#/properties/change/anyOf/0/properties/autoRestart"
+              "anyOf": [
+                {
+                  "type": "number",
+                  "const": 0
+                },
+                {
+                  "type": "number",
+                  "const": 1
+                }
+              ]
             }
           },
           "required": [
             "setting",
             "contentCache"
-          ],
-          "additionalProperties": false
+          ]
         },
         {
           "type": "object",
@@ -170,8 +225,7 @@
           "required": [
             "setting",
             "logLevel"
-          ],
-          "additionalProperties": false
+          ]
         },
         {
           "type": "object",
@@ -214,8 +268,7 @@
           "required": [
             "setting",
             "launchMode"
-          ],
-          "additionalProperties": false
+          ]
         }
       ]
     }
@@ -224,9 +277,7 @@
     "project_id",
     "token_id",
     "change"
-  ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  ]
 }
 ```
 
@@ -244,7 +295,22 @@
 
 ## Пример вызова
 
-Безопасный универсальный пример не сгенерирован. Используйте точную схему и данные пользователя; секреты в документацию не подставляются.
+```json
+{
+  "action_id": "db_set_bot_settings",
+  "args": {
+    "project_id": 1,
+    "token_id": 1,
+    "change": {
+      "setting": "auto-restart",
+      "autoRestart": 0,
+      "maxRestartAttempts": 1
+    }
+  }
+}
+```
+
+Структурный пример проверен Zod; ID и данные замените реальными.
 
 ## Ответ и ошибки
 
@@ -254,6 +320,7 @@
 
 ```json
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "data": {
@@ -323,11 +390,13 @@
             },
             "projectId": {
               "type": "integer",
-              "exclusiveMinimum": 0
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             },
             "revision": {
               "type": "integer",
-              "minimum": 0
+              "minimum": 0,
+              "maximum": 9007199254740991
             }
           },
           "required": [
@@ -337,6 +406,9 @@
         },
         "sideEffects": {
           "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
           "additionalProperties": {}
         }
       },
@@ -353,10 +425,10 @@
     }
   },
   "required": [
+    "data",
     "execution"
   ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  "additionalProperties": false
 }
 ```
 

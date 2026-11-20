@@ -57,6 +57,8 @@ export function useTokenEdit(): UseTokenEditResult {
    */
   const stopEditing = () => {
     setIsEditing(false);
+    /** Секрет больше не нужен после закрытия редактора. */
+    setTokenValue('');
     setError(null);
   };
 

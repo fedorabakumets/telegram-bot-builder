@@ -49,7 +49,7 @@ export function DialogAttachmentMenu({
           type="button"
           variant={activePanel ? 'secondary' : 'ghost'}
           size="icon"
-          className="relative col-start-1 row-start-3 h-[46px] w-9 shrink-0"
+          className="dialogs-attachment-trigger relative col-start-1 row-start-3 h-[46px] w-9 shrink-0"
           disabled={disabled}
           aria-label={count ? `Прикрепить: добавлено ${count}` : 'Прикрепить'}
           title="Прикрепить"
@@ -62,7 +62,7 @@ export function DialogAttachmentMenu({
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent side="top" align="start" sideOffset={8}>
+      <DropdownMenuContent className="dialogs-attachment-menu" side="top" align="start" sideOffset={8}>
         <DropdownMenuItem onSelect={onSelectMedia}>
           <FilePlus2 className="mr-2 h-4 w-4" aria-hidden="true" />
           Файл{mediaCount > 0 ? ` · ${mediaCount}` : ''}

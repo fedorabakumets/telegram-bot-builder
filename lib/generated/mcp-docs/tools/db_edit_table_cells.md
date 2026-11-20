@@ -9,6 +9,7 @@
 
 ```json
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "project_id": {
@@ -17,16 +18,21 @@
       "maximum": 9007199254740991
     },
     "table_id": {
-      "$ref": "#/properties/project_id"
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
     },
     "edits": {
+      "minItems": 1,
+      "maxItems": 5000,
       "type": "array",
       "items": {
         "type": "object",
         "properties": {
           "rowId": {
             "type": "integer",
-            "exclusiveMinimum": 0
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
           },
           "columnId": {
             "type": "string",
@@ -46,25 +52,21 @@
           "columnId",
           "before",
           "after"
-        ],
-        "additionalProperties": false
-      },
-      "minItems": 1,
-      "maxItems": 5000
+        ]
+      }
     },
     "request_id": {
+      "description": "Включает постоянный журнал и ответ-квитанцию ID вместо строк.",
       "type": "string",
       "format": "uuid",
-      "description": "Включает постоянный журнал и ответ-квитанцию ID вместо строк."
+      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
     }
   },
   "required": [
     "project_id",
     "table_id",
     "edits"
-  ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  ]
 }
 ```
 
@@ -82,7 +84,25 @@
 
 ## Пример вызова
 
-Безопасный универсальный пример не сгенерирован. Используйте точную схему и данные пользователя; секреты в документацию не подставляются.
+```json
+{
+  "action_id": "db_edit_table_cells",
+  "args": {
+    "project_id": 1,
+    "table_id": 1,
+    "edits": [
+      {
+        "rowId": 1,
+        "columnId": "1",
+        "before": "1",
+        "after": "1"
+      }
+    ]
+  }
+}
+```
+
+Структурный пример проверен Zod; ID и данные замените реальными.
 
 ## Ответ и ошибки
 
@@ -92,6 +112,7 @@
 
 ```json
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "data": {
@@ -161,11 +182,13 @@
             },
             "projectId": {
               "type": "integer",
-              "exclusiveMinimum": 0
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             },
             "revision": {
               "type": "integer",
-              "minimum": 0
+              "minimum": 0,
+              "maximum": 9007199254740991
             }
           },
           "required": [
@@ -175,6 +198,9 @@
         },
         "sideEffects": {
           "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
           "additionalProperties": {}
         }
       },
@@ -191,10 +217,10 @@
     }
   },
   "required": [
+    "data",
     "execution"
   ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  "additionalProperties": false
 }
 ```
 

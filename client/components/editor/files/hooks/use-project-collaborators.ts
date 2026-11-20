@@ -25,6 +25,10 @@ export interface UseProjectCollaboratorsResult {
   collaborators: CollaboratorInfo[];
   /** Идёт ли загрузка данных */
   isLoading: boolean;
+  /** Последняя попытка загрузки завершилась ошибкой */
+  isError: boolean;
+  /** Повторить загрузку списка */
+  refetch: () => Promise<unknown>;
 }
 
 /**
@@ -33,7 +37,7 @@ export interface UseProjectCollaboratorsResult {
  * @returns Список коллабораторов и состояние загрузки
  */
 export function useProjectCollaborators(projectId: number): UseProjectCollaboratorsResult {
-  const { data, isLoading } = useQuery<CollaboratorInfo[]>({
+  const { data, isLoading, isError, refetch } = useQuery<CollaboratorInfo[]>({
     queryKey: ['/api/projects', projectId, 'collaborators'],
     queryFn: async () => {
       const res = await fetch(`/api/projects/${projectId}/collaborators`);
@@ -47,5 +51,7 @@ export function useProjectCollaborators(projectId: number): UseProjectCollaborat
   return {
     collaborators: data ?? [],
     isLoading,
+    isError,
+    refetch,
   };
 }

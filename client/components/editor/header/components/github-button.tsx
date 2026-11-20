@@ -7,6 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Github } from 'lucide-react';
 import { cn } from '@/utils/utils';
 
+/** Официальный репозиторий конструктора. */
+export const GITHUB_REPOSITORY_URL = 'https://github.com/fedorabakumets/telegram-bot-builder';
+
 /**
  * Свойства кнопки GitHub
  */
@@ -31,7 +34,7 @@ export function GithubButton({ className }: GithubButtonProps) {
       data-testid="button-github"
     >
       <a
-        href="https://github.com/fedorabakumets/telegram-bot-builder"
+        href={GITHUB_REPOSITORY_URL}
         target="_blank"
         rel="noopener noreferrer"
         className="flex items-center justify-center"

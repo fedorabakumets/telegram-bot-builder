@@ -13,6 +13,7 @@ import { fetchWithProxy } from "../../../../utils/telegram-proxy";
 import { isLocalPath, buildMultipartBody } from "./media-multipart";
 import { waitForTelegramMessages } from "./telegram-message-limiter";
 import { sendTelegramMediaGroup } from "./send-telegram-media-group";
+import { validateTelegramMediaPackage } from './validate-telegram-media-package';
 
 /**
  * Объект сообщения из ответа Telegram API
@@ -114,6 +115,8 @@ export async function sendTelegramMessage(
   buttonsPerRow?: number,
   projectId?: number
 ): Promise<TelegramSendResult> {
+  /** Отклоняем несовместимый пакет до проверки файлов и любых отправок. */
+  validateTelegramMediaPackage(mediaFiles, buttons.length > 0);
   /** Проверяем весь пакет до первого внешнего действия. */
   for (const media of mediaFiles) {
     if (isLocalPath(media.url)) await assertOwnedMediaAvailable(media.url, projectId);
@@ -137,7 +140,7 @@ export async function sendTelegramMessage(
     return sendTelegramMediaGroup(token, chatId, text, mediaFiles, useHtml, projectId);
   }
 
-  // Отправляем первое медиа
+  /** После проверки пакета здесь остаётся единственное вложение с сохранёнными кнопками. */
   const firstMedia = mediaFiles[0];
   await waitForTelegramMessages(token);
   return sendMediaMessage(token, chatId, firstMedia, text, useHtml, replyMarkup, projectId);

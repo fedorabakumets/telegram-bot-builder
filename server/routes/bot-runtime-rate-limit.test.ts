@@ -5,7 +5,13 @@ import { describe, expect, it, vi } from 'vitest';
 
 /** Счётчик подтверждает, что превышение квоты отсекается до проверки доступа к БД. */
 const ownership = vi.hoisted(() => ({ calls: 0, statsCalls: 0 }));
-vi.mock('../middleware/requireProjectAccess', () => ({ requireProjectAccess: vi.fn() }));
+/** Моделирует результат проверки членства в проекте перед обработчиком. */
+vi.mock('../middleware/requireProjectAccess', () => ({
+  requireProjectAccess: (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    if (req.headers['x-test-project-member'] !== 'yes') { res.status(403).end(); return; }
+    next();
+  },
+}));
 vi.mock('../middleware/bot-api-actor', () => ({ resolveBotApiActor: vi.fn() }));
 vi.mock('../middleware/requireResourceOwnership', () => ({
   requireBotTokenOwnership: vi.fn(),
@@ -17,6 +23,18 @@ vi.mock('../middleware/requireResourceOwnership', () => ({
 }));
 vi.mock('./botManagement/handlers/botRuntimeSettingsHandler', () => ({
   handleBotRuntimeSettings: (_req: express.Request, res: express.Response) => res.json({ ok: true }),
+}));
+/** Изолирует хранилище общих настроек от проверки регистрации маршрута. */
+vi.mock('./botManagement/handlers/projectLaunchDefaultHandler', () => ({
+  handleProjectLaunchDefault: (_req: express.Request, res: express.Response) => res.json({ ok: true }),
+}));
+/** Изолирует хранилище общих параметров работы ботов от маршрутизации. */
+vi.mock('./botManagement/handlers/projectRuntimeDefaultsHandler', () => ({
+  handleProjectRuntimeDefaults: (_req: express.Request, res: express.Response) => res.json({ ok: true }),
+}));
+/** Изолирует JSON настроек проекта от проверки прав и квот. */
+vi.mock('./botManagement/handlers/projectBotSettingDefaultsHandler', () => ({
+  handleProjectBotSettingDefaults: (_req: express.Request, res: express.Response) => res.json({ ok: true }),
 }));
 vi.mock('./botManagement/handlers/botStartHandler', () => ({ handleBotStart: vi.fn() }));
 vi.mock('./botManagement/handlers/botStopHandler', () => ({ handleBotStop: vi.fn() }));
@@ -38,6 +56,8 @@ vi.mock('./botManagement/handlers/workerStatsHandler', () => ({
 vi.mock('./botManagement/handlers/clearLogsHandler', () => ({ handleClearLogs: vi.fn() }));
 vi.mock('./botManagement/handlers/botLiveLogsHandler', () => ({ handleGetLiveBotLogs: vi.fn() }));
 vi.mock('./botManagement/handlers/botLogByIdHandler', () => ({ handleGetBotLogById: vi.fn() }));
+/** Изолирует запись наследования от проверки квот. */
+vi.mock('./botManagement/handlers/botLaunchInheritanceHandler', () => ({ handleBotLaunchInheritance: vi.fn() }));
 import { setupBotManagementRoutes } from './setupBotManagementRoutes';
 
 /** Создаёт изолированный сервер и гарантирует закрытие соединений после проверки. */
@@ -56,6 +76,15 @@ async function withRuntimeApi(check: (url: string) => Promise<void>): Promise<vo
 }
 
 describe('ограничения настроек режима бота', () => {
+  it.each(['launch-default', 'runtime-defaults', 'setting-defaults'])('проверяет доступ к проекту для GET и PUT %s', async (endpoint) => {
+    await withRuntimeApi(async url => {
+      const projectUrl = `${new URL(url).origin}/api/projects/1/bot/${endpoint}`;
+      for (const method of ['GET', 'PUT']) {
+        expect((await fetch(projectUrl, { method })).status).toBe(403);
+        expect((await fetch(projectUrl, { method, headers: { 'x-test-project-member': 'yes' } })).status).toBe(200);
+      }
+    });
+  });
   it('ограничивает статистику до обработчика, сохраняя независимые квоты настроек', async () => {
     await withRuntimeApi(async url => {
       const statsUrl = `${new URL(url).origin}/api/workers/stats`;

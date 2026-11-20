@@ -2,10 +2,22 @@
 
 /** Запись из списка пользователей и диалогов. */
 export interface UserBotData {
+  /** Основание контакта: личное обращение, групповая история, импорт или отсутствие доказательств. */
+  contactOrigin?: 'private' | 'group_history' | 'imported' | 'unknown';
+  /** Дата первого сохранённого входящего сообщения или нажатия в текущей области ботов. */
+  firstSavedMessageAt?: string | null;
   /** Номер строки в текущей выдаче. */
   id: string;
   /** Идентификатор пользователя или чата в Telegram. */
   userId: string;
+  /** Время импорта контакта; не подтверждает наличие переписки с ботом. */
+  importedAt?: string | null;
+  /** Есть ли сохранённая личная переписка в текущей области ботов. */
+  hasPrivateMessages?: boolean;
+  /** Бот исходной записи для загрузки привязанного к нему аватара. */
+  tokenId?: number;
+  /** Боты пользователя и переменные с сохранением принадлежности каждому боту. */
+  botMemberships?: import('../user-bot-membership').UserBotMembership[];
   /** Имя пользователя в Telegram. */
   userName: string | null;
   /** Имя пользователя или название группы. */
@@ -22,6 +34,12 @@ export interface UserBotData {
   lastInteraction: string | null;
   /** Количество взаимодействий. */
   interactionCount: number;
+  /** Количество сохранённых личных входящих сообщений без нажатий кнопок. */
+  incomingMessageCount?: number;
+  /** Количество сохранённых нажатий кнопок в личном диалоге. */
+  buttonClickCount?: number;
+  /** Название первого источника по атрибуции аналитики. */
+  acquisitionSource?: string;
   /** Признак активного пользователя. */
   isActive: boolean;
   /** Признак подписки Premium. */

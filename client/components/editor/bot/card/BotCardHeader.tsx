@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/tooltip';
 import { Pencil, ChevronUp, ChevronDown } from 'lucide-react';
 import { BotAvatar } from './BotAvatar';
+import { BotLaunchModeLabel } from './BotLaunchModeLabel';
 import { BotActions } from '../card/BotActions';
 import { formatExecutionTime } from '../contexts/bot-control-utils';
 import { IdBadge } from '@/components/editor/database/user-database/components/header/project-name-label';
@@ -26,7 +27,9 @@ import type { BotToken } from '@shared/schema';
 /** Свойства заголовка карточки бота */
 interface BotCardHeaderProps {
   /** Данные токена бота */
-  token: Pick<BotToken, 'id' | 'botFirstName' | 'name' | 'botUsername' | 'botPhotoUrl' | 'isDefault' | 'isActive' | 'authorizationError'>;
+  token: Pick<BotToken, 'id' | 'botFirstName' | 'name' | 'botUsername' | 'botPhotoUrl' | 'isDefault' | 'isActive' | 'authorizationError' | 'launchMode' | 'inheritLaunchMode'>;
+  /** Режим проекта по умолчанию. */
+  projectLaunchMode?: string | null;
   /** Информация о боте из Telegram API */
   projectBotInfo: { photoUrl?: string; id?: number } | null | undefined;
   /** Редактируемое поле */
@@ -90,7 +93,7 @@ export function BotCardHeader({
   isBotRunning, startBotMutation, stopBotMutation,
   onRequestDelete, deletePending,
   onEditProfile, isProfileLoading, tokenId, projectId,
-  isCollapsed, onToggleCollapse, showTimer, currentElapsedSeconds,
+  isCollapsed, onToggleCollapse, showTimer, currentElapsedSeconds, projectLaunchMode,
 }: BotCardHeaderProps) {
   const isEditingName = editingField?.tokenId === token.id && editingField?.field === 'name';
   const displayName = token.botFirstName || token.name || '';
@@ -182,6 +185,7 @@ export function BotCardHeader({
         </div>
         <div className="flex items-center gap-2 mb-2 flex-wrap">
           {getStatusBadge(token)}
+          <BotLaunchModeLabel choice={token.inheritLaunchMode ? 'inherit' : token.launchMode} projectMode={projectLaunchMode} />
           {showTimer && isCollapsed && elapsed > 0 && (
             <span className="text-xs text-muted-foreground">⏱ {formatExecutionTime(elapsed)}</span>
           )}

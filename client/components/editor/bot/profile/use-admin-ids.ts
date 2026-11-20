@@ -1,83 +1,101 @@
-/**
- * @fileoverview Хук для управления ID администраторов бота
- *
- * Загружает и сохраняет ADMIN_IDS через API.
- * Конвертирует строку через запятую ↔ массив строк.
- *
- * @module use-admin-ids
- */
+/** @fileoverview Чтение, редактирование и синхронизация списка администраторов проекта. */
 
-import { useState, useEffect } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import { useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/queryClient';
 
-/**
- * Результат хука useAdminIds
- */
-interface UseAdminIdsResult {
-  /** Список ID администраторов */
-  ids: string[];
-  /** Заменить весь список */
-  setIds: (ids: string[]) => void;
-  /** Идёт ли сохранение */
-  isSaving: boolean;
-  /** Только что сохранено (сбрасывается через 2 сек) */
-  isSaved: boolean;
-  /** Сохранить список через API */
-  save: () => Promise<void>;
+/** Ответ проектного маршрута администраторов. */
+interface AdminIdsResponse {
+  /** Telegram ID через запятую. */
+  adminIds: string;
 }
 
-/** Разбить строку через запятую в массив, отфильтровав пустые */
-const parseIds = (raw: string): string[] =>
-  raw.split(',').map((s) => s.trim()).filter(Boolean);
-
-/** Собрать массив в строку через запятую */
-const joinIds = (ids: string[]): string =>
-  ids.filter(Boolean).join(',');
+/** Локальные изменения списка. */
+interface AdminIdsDraft {
+  /** Проект, для которого сделаны изменения. */
+  projectId: number;
+  /** Редактируемые строки. */
+  ids: string[];
+}
 
 /**
- * Хук для чтения и сохранения ADMIN_IDS бота
- *
- * @param projectId - ID проекта бота
+ * Разбивает список на отдельные непустые значения и исключает дубликаты.
+ * @param raw - Строка с ID через запятую.
+ * @returns Сохранённые ID.
  */
-export function useAdminIds(projectId: number): UseAdminIdsResult {
-  const [ids, setIds] = useState<string[]>(['']);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
-  const { toast } = useToast();
+function parseIds(raw: string): string[] {
+  return [...new Set(raw.split(',').map((value) => value.trim()).filter(Boolean))];
+}
 
-  useEffect(() => {
-    apiRequest('GET', `/api/projects/${projectId}/admin-ids`)
-      .then((data: { adminIds: string }) => {
-        const parsed = parseIds(data.adminIds ?? '');
-        setIds(parsed.length ? parsed : ['']);
-      })
-      .catch(() => setIds(['']));
-  }, [projectId]);
+/**
+ * Проверяет Telegram ID перед прямым сохранением или добавлением в черновик.
+ * @param values - Строки формы.
+ * @returns Строка без дубликатов или null при ошибке формата.
+ */
+function serializeIds(values: string[]): string | null {
+  const ids = parseIds(values.join(','));
+  if (ids.some((id) => !/^\d+$/.test(id) || !Number.isSafeInteger(Number(id)) || Number(id) < 1)) return null;
+  return [...new Set(ids.map((id) => String(Number(id))))].join(',');
+}
 
-  const save = async () => {
-    setIsSaving(true);
-    try {
-      await apiRequest('PUT', `/api/projects/${projectId}/admin-ids`, {
-        adminIds: joinIds(ids),
-      });
-      toast({ title: 'Сохранено', description: 'Список администраторов обновлён' });
-      setIsSaved(true);
-      // Re-fetch to confirm saved state
-      apiRequest('GET', `/api/projects/${projectId}/admin-ids`)
-        .then((data: { adminIds: string }) => {
-          const parsed = parseIds(data.adminIds ?? '');
-          setIds(parsed.length ? parsed : ['']);
-        })
-        .catch(() => {});
-      // Reset saved indicator after 2 seconds
-      setTimeout(() => setIsSaved(false), 2000);
-    } catch {
-      toast({ title: 'Ошибка', description: 'Не удалось сохранить ADMIN_IDS', variant: 'destructive' });
-    } finally {
-      setIsSaving(false);
+/**
+ * Загружает общий список проекта, сохраняя локальные правки при обновлении кэша.
+ * @param projectId - Идентификатор проекта.
+ * @param canManage - Может ли пользователь редактировать общий список.
+ * @returns Значения, состояние загрузки и действия формы.
+ */
+export function useAdminIds(projectId: number, canManage: boolean) {
+  const queryClient = useQueryClient();
+  const url = `/api/projects/${projectId}/admin-ids`;
+  const query = useQuery<AdminIdsResponse>({
+    queryKey: [url], queryFn: () => apiRequest('GET', url), retry: false,
+  });
+  const [draft, setDraft] = useState<AdminIdsDraft | null>(null);
+  const [invalid, setInvalid] = useState(false);
+  const savedIds = parseIds(query.data?.adminIds ?? '');
+  const hasDraft = canManage && draft?.projectId === projectId;
+  const ids = hasDraft ? draft.ids : savedIds.length > 0 ? savedIds : [''];
+  const mutation = useMutation<AdminIdsResponse, Error, string>({
+    mutationFn: (adminIds) => apiRequest('PUT', url, { adminIds }),
+    onSuccess: async ({ adminIds }) => {
+      await queryClient.cancelQueries({ queryKey: [url], exact: true });
+      queryClient.setQueryData<AdminIdsResponse>([url], { adminIds });
+      setDraft((current) => current?.projectId === projectId ? null : current);
+      void queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+      void queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}`] });
+    },
+  });
+
+  /**
+   * Записывает значения формы, не меняя общий список до сохранения.
+   * @param values - Новый список строк.
+   */
+  function setIds(values: string[]): void {
+    if (!canManage || !query.data || mutation.isPending) return;
+    mutation.reset();
+    setInvalid(false);
+    setDraft({ projectId, ids: values });
+  }
+
+  /**
+   * Сохраняет проверенный список напрямую либо добавляет его в общий черновик бота.
+   * @param onPendingChange - Добавление в общий черновик, если он используется.
+   */
+  function save(onPendingChange?: (key: string, value: string) => void): void {
+    if (!canManage || !query.data || !hasDraft || mutation.isPending) return;
+    const adminIds = serializeIds(ids);
+    if (adminIds === null) {
+      setInvalid(true);
+      return;
     }
-  };
+    if (onPendingChange) onPendingChange('ADMIN_IDS', adminIds);
+    else mutation.mutate(adminIds);
+  }
 
-  return { ids, setIds, isSaving, isSaved, save };
+  return {
+    ids, setIds, save, hasDraft, isLoading: query.isPending, isReady: !!query.data,
+    isSaving: mutation.isPending, isSaved: mutation.isSuccess,
+    loadError: query.isError, retry: query.refetch,
+    saveError: invalid ? 'Введите действительные числовые Telegram ID.' : mutation.error?.message,
+  };
 }

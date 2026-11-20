@@ -1,159 +1,88 @@
-/**
- * @fileoverview Компонент вкладок терминалов
- *
- * Select для переключения между живыми терминалами и историями запусков.
- * В подписи — проект и число пользователей бота; список отсортирован по убыванию пользователей.
- *
- * @module bot/TerminalTabs
- */
-
-import { useMemo } from 'react';
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from '@/components/ui/select';
+/** @fileoverview Раздельный выбор бота и запуска в терминале проекта. */
+import { UsersBotSelector } from '../database/user-database/components/header/users-bot-selector';
+import '../database/user-database/content/users-workspace.css';
 import { useActiveTerminals } from '../bot/contexts/ActiveTerminalsContext';
 import type { TerminalInfo } from '../bot/contexts/ActiveTerminalsContext';
+import { getBotDisplayName } from '../bot/contexts/bot-control-utils';
 import { useBotQueries } from '../bot/hooks/use-bot-queries';
-import { useTerminalUserCounts } from './use-terminal-user-counts';
+import { TerminalLaunchSelector } from './TerminalLaunchSelector';
 
-/** Пропсы компонента вкладок терминалов */
 interface TerminalTabsProps {
-  /** Обработчик выбора терминала */
+  /** Идентификатор проекта, выбранного в шапке. */
+  currentProjectId?: number;
+  /** Обработчик выбора ключа терминала. */
   onTerminalSelect: (key: string) => void;
 }
 
 /**
- * Форматирует число пользователей для компактной подписи.
- * @param value - Количество пользователей
- * @returns Строка вида `142` или `1.2k`
+ * Возвращает ключ терминала, совпадающий с ключом контекста.
+ * @param terminal - Открытый терминал.
+ * @returns Ключ записи живого вывода или истории.
  */
-function formatUserCount(value: number): string {
-  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
-  if (value >= 1_000) return `${(value / 1_000).toFixed(1)}k`;
-  return String(value);
-}
-
-/**
- * Возвращает строковый ключ вкладки терминала.
- * @param terminal - Данные вкладки
- * @returns Ключ для activeTerminalId
- */
-function getTabKey(terminal: TerminalInfo): string {
+function getTerminalKey(terminal: TerminalInfo) {
   return terminal.tabType === 'history'
     ? `history_${terminal.launchId}`
     : `${terminal.projectId}_${terminal.tokenId}`;
 }
 
 /**
- * Собирает подпись пункта селектора терминала.
- * @param terminal - Данные вкладки
- * @param projectNames - Карта названий проектов
- * @param userCounts - Карта числа пользователей по `${projectId}_${tokenId}`
- * @returns Текст для SelectItem
+ * Показывает ботов проекта и запуски выбранного бота.
+ * @param props - Текущий проект и обработчик выбора терминала.
+ * @returns Два селектора терминала.
  */
-function getTerminalLabel(
-  terminal: TerminalInfo,
-  projectNames: Map<number, string>,
-  userCounts: Map<string, number>,
-): string {
-  const projectName = projectNames.get(terminal.projectId) ?? `Проект #${terminal.projectId}`;
-  const statsKey = `${terminal.projectId}_${terminal.tokenId}`;
-  const userCount = userCounts.get(statsKey);
-  const usersSuffix = userCount !== undefined ? ` · ${formatUserCount(userCount)}` : '';
+export function TerminalTabs({ currentProjectId, onTerminalSelect }: TerminalTabsProps) {
+  const { terminals, activeTerminalId, addTerminal, setActiveTerminalById, openHistoryTab } = useActiveTerminals();
+  const { allTokensFlat, allBotStatuses } = useBotQueries({ includeBotInfo: false });
+  const active = terminals.find(terminal => getTerminalKey(terminal) === activeTerminalId);
+  const projectId = currentProjectId ?? active?.projectId;
+  const selected = active?.projectId === projectId ? active : undefined;
+  const tokens = allTokensFlat.filter(token => token.projectId === projectId);
 
-  if (terminal.tabType === 'history') {
-    const dateLabel = terminal.launchStartedAt
-      ? new Date(terminal.launchStartedAt).toLocaleString('ru-RU', {
-          day: '2-digit',
-          month: 'short',
-          hour: '2-digit',
-          minute: '2-digit',
-        })
-      : 'Запуск';
-    return `📜 ${dateLabel} · ${projectName}${usersSuffix}`;
+  /**
+   * Открывает живой вывод выбранного бота.
+   * @param tokenId - Идентификатор выбранного бота.
+   */
+  function selectBot(tokenId: number) {
+    const token = tokens.find(candidate => candidate.id === tokenId);
+    const botName = token ? getBotDisplayName(token, `Бот #${tokenId}`) : selected?.botName;
+    if (projectId === undefined || botName === undefined) return;
+    const key = `${projectId}_${tokenId}`;
+    if (terminals.some(terminal => getTerminalKey(terminal) === key)) {
+      setActiveTerminalById(key);
+    } else {
+      const isRunning = allBotStatuses.some(status => status.tokenId === tokenId && status.status === 'running');
+      addTerminal({ projectId, tokenId, botName, isRunning });
+    }
+    onTerminalSelect(key);
   }
 
-  return `${terminal.botName} · ${projectName}${usersSuffix}`;
-}
-
-/**
- * Возвращает число пользователей для сортировки; неизвестные значения — в конец списка.
- * @param terminal - Данные вкладки
- * @param userCounts - Карта числа пользователей
- * @returns Число для сравнения
- */
-function getSortableUserCount(terminal: TerminalInfo, userCounts: Map<string, number>): number {
-  return userCounts.get(`${terminal.projectId}_${terminal.tokenId}`) ?? -1;
-}
-
-/**
- * Сортирует терминалы: сначала с большим числом пользователей, затем live, затем по имени бота.
- * @param terminals - Список вкладок
- * @param userCounts - Карта числа пользователей
- * @returns Отсортированная копия списка
- */
-function sortTerminalsByUserCount(
-  terminals: TerminalInfo[],
-  userCounts: Map<string, number>,
-): TerminalInfo[] {
-  return [...terminals].sort((left, right) => {
-    const userDiff =
-      getSortableUserCount(right, userCounts) - getSortableUserCount(left, userCounts);
-    if (userDiff !== 0) return userDiff;
-
-    const liveDiff = Number(right.tabType === 'history') - Number(left.tabType === 'history');
-    if (liveDiff !== 0) return liveDiff;
-
-    return left.botName.localeCompare(right.botName, 'ru');
-  });
-}
-
-/**
- * Вкладки терминалов с поддержкой live и history вкладок.
- * @param props - Свойства компонента
- * @returns JSX элемент или null
- */
-export function TerminalTabs({ onTerminalSelect }: TerminalTabsProps) {
-  const { terminals, activeTerminalId, setActiveTerminalById } = useActiveTerminals();
-  const { projects } = useBotQueries({ includeBotInfo: false });
-  const userCounts = useTerminalUserCounts(terminals);
-
-  const projectNames = useMemo(
-    () => new Map(projects.map((project) => [project.id, project.name])),
-    [projects],
-  );
-
-  const sortedTerminals = useMemo(
-    () => sortTerminalsByUserCount(terminals, userCounts),
-    [terminals, userCounts],
-  );
-
-  if (terminals.length === 0) return null;
-
-  const handleSelectChange = (value: string) => {
-    setActiveTerminalById(value);
-    onTerminalSelect(value);
-  };
-
   return (
-    <Select value={activeTerminalId || ''} onValueChange={handleSelectChange}>
-      <SelectTrigger className="h-7 max-w-[min(100%,480px)] text-xs">
-        <SelectValue placeholder="Выберите терминал" />
-      </SelectTrigger>
-      <SelectContent>
-        {sortedTerminals.map((terminal) => {
-          const key = getTabKey(terminal);
-          return (
-            <SelectItem key={key} value={key} className="text-xs">
-              {getTerminalLabel(terminal, projectNames, userCounts)}
-            </SelectItem>
-          );
-        })}
-      </SelectContent>
-    </Select>
+    <div className="terminal-launch-controls flex min-w-0 items-center gap-2">
+      {projectId !== undefined && <UsersBotSelector
+        projectId={projectId}
+        tokens={tokens}
+        selectedTokenId={selected?.tokenId ?? null}
+        allowAll={false}
+        showRuntimeStatus
+        emptySelectionLabel="Выберите бота"
+        onSelect={id => { if (id !== null) selectBot(id); }}
+      />}
+      {selected && <TerminalLaunchSelector
+        terminal={{ ...selected, isRunning: allBotStatuses.find(status => status.tokenId === selected.tokenId)
+          ? allBotStatuses.some(status => status.tokenId === selected.tokenId && status.status === 'running')
+          : selected.isRunning }}
+        onCurrent={() => selectBot(selected.tokenId)}
+        onHistory={(launchId, launchStartedAt) => {
+          openHistoryTab({
+            projectId: selected.projectId,
+            tokenId: selected.tokenId,
+            botName: selected.botName,
+            launchId,
+            launchStartedAt,
+          });
+          onTerminalSelect(`history_${launchId}`);
+        }}
+      />}
+    </div>
   );
 }

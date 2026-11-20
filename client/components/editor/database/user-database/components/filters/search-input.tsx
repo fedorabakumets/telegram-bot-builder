@@ -29,8 +29,9 @@ export function SearchInput({ value, onChange }: SearchInputProps): React.JSX.El
       </div>
       <Input
         type="search"
-        aria-label="Поиск пользователей по имени, username или ID"
-        placeholder="Имя, username или ID"
+        aria-label="Поиск по имени, фамилии, ID, username, источнику и переменным"
+        placeholder="Имя, фамилия, ID, @username, источник, переменные"
+        title="Имя, фамилия, ID, username, источник, название или значение переменной"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className="h-10 rounded-lg border border-border/60 bg-background pl-10 pr-10 text-sm shadow-none transition-colors focus-visible:ring-2 focus-visible:ring-primary/40 [&::-webkit-search-cancel-button]:appearance-none"
