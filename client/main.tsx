@@ -1,4 +1,5 @@
 /**
+ * @fileoverview Главная точка входа клиентского приложения Telegram Bot Builder.
  * @file main.tsx
  * @brief Главный файл точки входа для клиентского приложения Telegram Bot Builder
  *
@@ -16,9 +17,11 @@
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import { installVisualViewportSync } from "./lib/sync-visual-viewport";
+import { scrubLegacyLocalRecords } from "./storage/local-storage-credentials";
 import "./index.css";
 
 installVisualViewportSync();
+scrubLegacyLocalRecords();
 
 /**
  * @brief Функция монтирования React-приложения в DOM
