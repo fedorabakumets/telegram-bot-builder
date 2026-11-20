@@ -18,7 +18,7 @@
 :is(.workspace-adaptive-header,.terminal-workspace-header) .workspace-tab-actions svg.lucide,
 .workspace-adaptive-header > [role='group'] svg.lucide { color: var(--foreground); opacity: 1; stroke-width: 1.5; }
 /** Три режима подписей определяются общим измерением доступного места. */
-.workspace-adaptive-header .workspace-tab-actions > :is(a,button) { width: auto; min-width: 32px; height: 32px; padding-inline: 8px; flex-shrink: 0; }
+.workspace-adaptive-header .workspace-tab-actions > :is(a,button) { width: auto; min-width: 32px; height: 32px; padding-inline: var(--workspace-action-padding, 8px); flex-shrink: 0; }
 /** Наведение меняет только рамку и текст, не размеры шапки. */
 .workspace-adaptive-header :is(.workspace-tab-actions > a,.workspace-tab-actions > button,[role='combobox']) { transform: none; transition-property: color, background-color, border-color; }
 .workspace-adaptive-header :is(.workspace-tab-actions > a,.workspace-tab-actions > button,[role='combobox']):hover { transform: none; color: var(--foreground); background: transparent; border-color: #52525b; }
@@ -28,7 +28,7 @@
 .workspace-adaptive-header[data-extra-labels~='view'] [data-workspace-label='view'],
 .workspace-adaptive-header[data-extra-labels~='connect'] [data-workspace-label='connect'],
 .workspace-adaptive-header[data-extra-labels~='bulk'] [data-workspace-label='bulk'] { display: inline; }
-:is(.workspace-adaptive-header,.terminal-workspace-header) .workspace-tab-actions > :is(a,button) { gap: 8px; font-size: 14px; font-weight: 400; }
+:is(.workspace-adaptive-header,.terminal-workspace-header) .workspace-tab-actions > :is(a,button) { gap: var(--workspace-action-gap, 8px); font-size: var(--workspace-action-font-size, 14px); font-weight: 400; }
 .workspace-adaptive-header[data-compact-actions='true'] .workspace-tab-actions > :is(a,button) { width: 32px; padding-inline: 0; }
 .workspace-adaptive-header[data-compact-actions='true'] .workspace-tab-actions > :is(a,button) > span { display: none; }
 /** Раскрытый текст документации всегда получает собственную ширину вместе с отступами. */
@@ -37,14 +37,39 @@
 .workspace-adaptive-header[data-compact-actions='false'] .workspace-tab-actions > :is(a,button) > span,
 .workspace-adaptive-header[data-documentation-label='true'] .workspace-tab-actions > a > span { display: inline; }
 @container (max-width: 799px) {
-  .workspace-adaptive-header { grid-template-columns: minmax(0,1fr) auto; }
-  .workspace-adaptive-header .workspace-tab-heading > div:last-child:not(:first-child) { grid-column: 2; }
-  .workspace-adaptive-header > [role='group'] { grid-column: 1 / -1; grid-row: 2; }
-  .workspace-adaptive-header > [role='group'] { flex-wrap: wrap; }
-  .workspace-adaptive-header > [role='group'] > div { flex: 1 1 160px; }
-  .workspace-adaptive-header > [role='group'] [role='combobox'] { width: 100%; }
+  /** Компактные кнопки освобождают место для селектора без скрытия подписей. */
+  .workspace-adaptive-header { gap: 8px; --workspace-action-gap: 4px; --workspace-action-padding: 6px; --workspace-action-font-size: 12px; }
+  .workspace-adaptive-header .workspace-tab-actions { gap: 4px; }
+  /** В компактной строке иконка поля уступает место названию проекта. */
+  .workspace-adaptive-header[data-scope-inline='true'] > .workspace-project-scope > div > svg { display: none; }
+  .workspace-adaptive-header[data-scope-inline='true'] > .workspace-project-scope [role='combobox'] { padding-inline: 6px; }
+  .workspace-adaptive-header:not([data-scope-inline='true']) { grid-template-columns: minmax(0,1fr) auto; }
+  .workspace-adaptive-header:not([data-scope-inline='true']) .workspace-tab-heading > div:last-child:not(:first-child) { grid-column: 2; }
+  .workspace-adaptive-header:not([data-scope-inline='true']) > [role='group'] { grid-column: 1 / -1; grid-row: 2; flex-wrap: wrap; }
+  .workspace-adaptive-header:not([data-scope-inline='true']) > [role='group'] > div { flex: 1 1 160px; }
+  .workspace-adaptive-header:not([data-scope-inline='true']) > [role='group'] [role='combobox'] { width: 100%; }
 }
 @container (max-width: 479px) {
   .workspace-adaptive-header { gap: 8px; }
-  .workspace-adaptive-header > [role='group'] [role='combobox'] { height: 40px; font-size: 12px; }
+  .workspace-adaptive-header:not([data-scope-inline='true']) > [role='group'] [role='combobox'] { height: 40px; font-size: 12px; }
+}
+
+/** На узком экране заголовок и действия остаются в одной компактной строке. */
+@container (max-width: 285px) {
+  .workspace-adaptive-header { gap: 4px; }
+  .workspace-adaptive-header .workspace-tab-heading > div:first-child > div { gap: 4px; }
+  .workspace-adaptive-header .workspace-tab-heading h2 {
+    min-width: 0; overflow: hidden; text-overflow: ellipsis; font-size: 16px; line-height: 24px;
+  }
+  .workspace-adaptive-header .workspace-tab-heading > div:first-child > div > span > svg { width: 16px; height: 16px; }
+  .workspace-adaptive-header .workspace-header-tab-tools { gap: 4px; }
+  .workspace-adaptive-header .workspace-tab-actions > :is(a,button)[aria-label] {
+    width: 28px; min-width: 28px; height: 32px; padding-inline: 0;
+  }
+  .workspace-adaptive-header .workspace-tab-actions > :is(a,button)[aria-label] > span,
+  .workspace-adaptive-header[data-extra-labels] [data-workspace-label] { display: none; }
+  .workspace-adaptive-header .workspace-tab-actions > :is(a,button) > svg { width: 14px; height: 14px; }
+  .bot-workspace-header .workspace-header-tab-tools [role='tab'] { padding-inline: 4px; }
+  .bot-workspace-header .workspace-header-tab-tools [data-testid='button-connect-bot'] { width: 28px; padding-inline: 0; }
+  .workspace-adaptive-header > [role='group'] [role='combobox'] { height: 32px; }
 }

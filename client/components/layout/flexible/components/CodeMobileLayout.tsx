@@ -68,18 +68,14 @@ export function CodeMobileLayout({ panelContent, editorContent }: CodeMobileLayo
     );
   }
 
-  return (
-    <CodeViewNavigationContext.Provider value={{ openCodeView: openEditor, headerTarget }}>
-    <div className="flex flex-col h-full">
-      {/* Мобильный контейнер также использует поля общей шапки. */}
-      <div ref={setHeaderTarget} className="code-panel shrink-0" />
-      {/* Панель вкладок */}
-      <div role="group" aria-label="Просмотр файлов проекта" className="flex shrink-0 gap-2 border-b border-border bg-background p-3">
+  /** Переключатель выводится внутри общей шапки с её боковыми отступами. */
+  const viewControls = (
+      <div role="group" aria-label="Просмотр файлов проекта" className="flex flex-wrap gap-1">
         <button
           type="button"
           onClick={() => setActiveTab('panel')}
           className={[
-            'flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary',
+            'flex min-h-8 items-center gap-1.5 rounded-lg px-2 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary',
             activeTab === 'panel'
               ? 'bg-muted text-foreground'
               : 'text-muted-foreground hover:bg-muted hover:text-foreground',
@@ -94,7 +90,7 @@ export function CodeMobileLayout({ panelContent, editorContent }: CodeMobileLayo
           ref={previewButtonRef}
           onClick={openEditor}
           className={[
-            'flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary',
+            'flex min-h-8 items-center gap-1.5 rounded-lg px-2 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary',
             activeTab === 'editor'
               ? 'bg-muted text-foreground'
               : 'text-muted-foreground hover:bg-muted hover:text-foreground',
@@ -105,7 +101,12 @@ export function CodeMobileLayout({ panelContent, editorContent }: CodeMobileLayo
           Просмотр кода
         </button>
       </div>
+  );
 
+  return (
+    <CodeViewNavigationContext.Provider value={{ openCodeView: openEditor, headerTarget, viewControls }}>
+    <div className="flex flex-col h-full">
+      <div ref={setHeaderTarget} className="code-panel shrink-0" />
       {/* Контент вкладок — оба в DOM, один скрыт */}
       <div className="flex-1 min-h-0 overflow-hidden">
         <div className={activeTab === 'panel' ? 'h-full' : 'hidden'}>

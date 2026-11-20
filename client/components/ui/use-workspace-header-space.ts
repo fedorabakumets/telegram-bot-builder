@@ -22,8 +22,8 @@ function naturalWidth(element: HTMLElement, actions = false, documentationOnly =
   if (actions) {
     copy.querySelectorAll<HTMLElement>('.workspace-tab-actions > :is(a,button)').forEach(button => {
       button.style.setProperty('width', 'auto', 'important');
-      button.style.setProperty('padding-inline', '8px', 'important');
-      button.style.setProperty('gap', '8px', 'important');
+      button.style.setProperty('padding-inline', 'var(--workspace-action-padding, 8px)', 'important');
+      button.style.setProperty('gap', 'var(--workspace-action-gap, 8px)', 'important');
     });
     copy.querySelectorAll<HTMLElement>('.workspace-tab-actions span').forEach(span => span.style.setProperty('display', 'inline', 'important'));
     if (documentationOnly) {
@@ -52,16 +52,28 @@ export function useWorkspaceHeaderSpace(scopeSelector = "[role='group']", action
     const header = ref.current;
     const scope = header?.querySelector<HTMLElement>(scopeSelector);
     const actions = header?.querySelector<HTMLElement>(actionsSelector);
-    const title = header?.querySelector<HTMLElement>('.workspace-tab-heading > div:first-child');
+    /** Измеряем только строку с иконкой и названием, без скрытого описания раздела. */
+    const title = header?.querySelector<HTMLElement>('.workspace-tab-heading > div:first-child > div:first-child');
     if (!header || !actions || !title) return;
     let frame = 0;
     /** Обновляет режим без зависимости от уже скрытых подписей и сжатых селекторов. */
     const measure = () => {
       const gap = parseFloat(getComputedStyle(header).columnGap) || 12;
+      const titleWidth = naturalWidth(title);
+      /** Помещаем селекторы в первую строку, когда все основные подписи видны. */
+      const scopeNaturalWidth = scope ? naturalWidth(scope, false, false, new Set()) : 0;
+      /** Отдельное поле проекта может сократить длинное название в закрытом состоянии. */
+      const inlineScopeWidth = scope?.classList.contains('workspace-project-scope')
+        ? Math.min(scopeNaturalWidth, 88)
+        : scopeNaturalWidth;
+      const inlineRequired = scope
+        ? titleWidth + inlineScopeWidth + naturalWidth(actions, true, false, new Set()) + gap * 2
+        : Infinity;
+      const fitsInline = inlineRequired <= header.clientWidth;
+      header.dataset.scopeInline = String(fitsInline);
       /** Во второй строке область проекта не отнимает место у служебных действий. */
       const scopeInTitleRow = scope && getComputedStyle(scope).gridRowStart !== '2';
       const spacing = gap * (scopeInTitleRow ? 2 : 1);
-      const titleWidth = naturalWidth(title);
       const extraLabels = new Set<string>();
       /** Сначала помещаем подписи смены вида, затем подключения и массовых действий. */
       for (const group of ['view', 'connect', 'bulk']) {
@@ -74,7 +86,11 @@ export function useWorkspaceHeaderSpace(scopeSelector = "[role='group']", action
         if (available > header.clientWidth) extraLabels.delete(group);
       }
       header.dataset.extraLabels = [...extraLabels].join(' ');
-      const scopeWidth = scopeInTitleRow ? naturalWidth(scope, false, false, extraLabels) : 0;
+      const scopeWidth = scopeInTitleRow
+        ? fitsInline && scope.classList.contains('workspace-project-scope')
+          ? inlineScopeWidth
+          : naturalWidth(scope, false, false, extraLabels)
+        : 0;
       const required = titleWidth + scopeWidth + naturalWidth(actions, true, false, extraLabels) + spacing;
       header.dataset.compactActions = String(required > header.clientWidth);
       /** Документация получает подпись раньше обновления, когда обе подписи не помещаются. */
