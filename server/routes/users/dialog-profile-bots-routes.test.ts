@@ -31,6 +31,8 @@ it('читает все реальные связи независимо от ф
   const response = await fetch(`${base}/12/dialog-users/101/profile-bots?tokenId=11`);
   const data = await response.json();
   expect(response.status).toBe(200);
+  /** Чтение профиля имеет квоту даже для разрешённого проекта. */
+  expect(response.headers.get('ratelimit-policy')).toBe('120;w=60');
   expect(mocks.enrich).toHaveBeenCalledWith(12, [{ userId: '101' }]);
   expect(mocks.query.mock.calls[0][1]).toEqual([12, '101']);
   expect(data.botMemberships.map((bot: { /** ID бота. */ tokenId: number }) => bot.tokenId)).toEqual([11, 12]);

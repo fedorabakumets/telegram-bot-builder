@@ -1,7 +1,9 @@
 /** @fileoverview Лёгкая пакетная загрузка подтверждённой аудитории для селекторов ботов. */
 import type { Express, Request, Response } from 'express';
+import { rateLimit } from 'express-rate-limit';
 import { pool } from '../../database/db';
 import { requireProjectAccess } from '../../middleware/requireProjectAccess';
+import { UsersRateLimitStore } from '../userProjectsTokens/users-rate-limit-store';
 /** Возвращает те же счётчики, что снимок аналитики, без расчёта графиков. @param req - Разрешённый проект. @param res - Все счётчики одним ответом. */
 async function handleCounts(req: Request, res: Response): Promise<void> {
   const projectId = Number(req.params.projectId);
@@ -16,5 +18,11 @@ async function handleCounts(req: Request, res: Response): Promise<void> {
 }
 /** Регистрирует защищённый маршрут счётчиков. @param app - Сервер приложения. */
 export function registerBotAudienceCounts(app: Express): void {
-  app.get('/api/projects/:projectId/bot-audience-counts', requireProjectAccess, handleCounts);
+  /** Ограничивает пакетный подсчёт аудитории вне квот профиля. */
+  const countsLimit = rateLimit({
+    windowMs: 60_000, limit: 120, store: new UsersRateLimitStore('bot-audience-counts'),
+    standardHeaders: 'draft-7', legacyHeaders: false,
+    message: { message: 'Слишком много запросов счётчиков аудитории. Повторите позже.' },
+  });
+  app.get('/api/projects/:projectId/bot-audience-counts', countsLimit, requireProjectAccess, handleCounts);
 }

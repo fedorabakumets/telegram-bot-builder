@@ -1,9 +1,11 @@
 /** @fileoverview Авторизованное чтение ботов и общих дат личного профиля во всём проекте. */
 import type { Express, Request, Response } from 'express';
+import { rateLimit } from 'express-rate-limit';
 import { requireProjectAccess } from '../../middleware/requireProjectAccess';
 import { pool } from '../../database/db';
 import { enrichDialogBotMemberships } from './enrich-dialog-bots';
 import type { DialogProfileBotsData } from '../../../shared/dialog-profile-bots';
+import { UsersRateLimitStore } from '../userProjectsTokens/users-rate-limit-store';
 
 /**
  * Читает только сохранённые связи и даты, не обращаясь к Telegram и не возвращая токены.
@@ -42,5 +44,11 @@ export async function dialogProfileBotsHandler(req: Request, res: Response): Pro
 
 /** Регистрирует чтение общего профиля с обязательной проверкой доступа. @param app - HTTP-сервер. */
 export function registerDialogProfileBotsRoutes(app: Express): void {
-  app.get('/api/projects/:projectId/dialog-users/:userId/profile-bots', requireProjectAccess, dialogProfileBotsHandler);
+  /** Ограничивает чтение связей и дат до обращения к хранилищу проекта. */
+  const profileBotsLimit = rateLimit({
+    windowMs: 60_000, limit: 120, store: new UsersRateLimitStore('dialog-profile-bots'),
+    standardHeaders: 'draft-7', legacyHeaders: false,
+    message: { message: 'Слишком много запросов профиля. Повторите позже.' },
+  });
+  app.get('/api/projects/:projectId/dialog-users/:userId/profile-bots', profileBotsLimit, requireProjectAccess, dialogProfileBotsHandler);
 }

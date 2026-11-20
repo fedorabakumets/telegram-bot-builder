@@ -1,9 +1,11 @@
 /** @fileoverview Авторизованные маршруты сохранённых фотографий и ссылок профиля. */
 import type { Express, Request, Response } from 'express';
+import { rateLimit } from 'express-rate-limit';
 import { requireProjectAccess } from '../../middleware/requireProjectAccess';
 import { storage } from '../../storages/storage';
 import { readProfileContent, type ProfileContentScope } from './dialog-profile-content-store';
 import { serveProfilePhoto } from './dialog-profile-content-file';
+import { UsersRateLimitStore } from '../userProjectsTokens/users-rate-limit-store';
 
 /** Проверяет область профиля без подстановки бота по умолчанию. @param req - Запрос. @returns Область либо null. */
 async function readScope(req: Request): Promise<ProfileContentScope | null> {
@@ -19,7 +21,19 @@ async function readScope(req: Request): Promise<ProfileContentScope | null> {
 /** Регистрирует чтение материалов с общей проверкой прав проекта на обоих маршрутах. @param app - HTTP-сервер. */
 export function registerDialogProfileContentRoutes(app: Express): void {
   const base = '/api/projects/:projectId/dialog-profiles/:userId/content';
-  app.get(base, requireProjectAccess, async (req: Request, res: Response) => {
+  /** Ограничивает загрузку страниц фотографий и ссылок. */
+  const contentLimit = rateLimit({
+    windowMs: 60_000, limit: 120, store: new UsersRateLimitStore('dialog-profile-content'),
+    standardHeaders: 'draft-7', legacyHeaders: false,
+    message: { message: 'Слишком много запросов материалов профиля. Повторите позже.' },
+  });
+  /** У изображений отдельная квота, поскольку галерея загружает несколько файлов на страницу. */
+  const photoLimit = rateLimit({
+    windowMs: 60_000, limit: 600, store: new UsersRateLimitStore('dialog-profile-photo'),
+    standardHeaders: 'draft-7', legacyHeaders: false,
+    message: { message: 'Слишком много запросов фотографий. Повторите позже.' },
+  });
+  app.get(base, contentLimit, requireProjectAccess, async (req: Request, res: Response) => {
     try {
       const scope = await readScope(req);
       const beforeId = req.query.beforeId === undefined ? null : Number(req.query.beforeId);
@@ -30,7 +44,7 @@ export function registerDialogProfileContentRoutes(app: Express): void {
       res.json(await readProfileContent(scope, beforeId));
     } catch { res.status(500).json({ message: 'Не удалось загрузить материалы профиля' }); }
   });
-  app.get(`${base}/media/:mediaId`, requireProjectAccess, async (req: Request, res: Response) => {
+  app.get(`${base}/media/:mediaId`, photoLimit, requireProjectAccess, async (req: Request, res: Response) => {
     try {
       const scope = await readScope(req);
       if (!scope) { res.status(400).end(); return; }

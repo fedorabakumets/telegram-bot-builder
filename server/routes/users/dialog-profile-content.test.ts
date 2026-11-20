@@ -27,13 +27,17 @@ beforeEach(() => {
 it('читает общие материалы без токена по умолчанию и передаёт курсор', async () => {
   const response = await fetch(`${base}/12/dialog-profiles/15/content?beforeId=40`);
   expect(response.status).toBe(200);
+  expect(response.headers.get('ratelimit-policy')).toBe('120;w=60');
   expect(mocks.read).toHaveBeenCalledWith({ projectId: 12, userId: '15', tokenId: null, isGroup: false }, 40);
   expect(mocks.getToken).not.toHaveBeenCalled();
 });
 
 it('не позволяет читать материалы и изображения чужого проекта', async () => {
   expect((await fetch(`${base}/13/dialog-profiles/15/content`)).status).toBe(403);
-  expect((await fetch(`${base}/13/dialog-profiles/15/content/media/4`)).status).toBe(403);
+  const photo = await fetch(`${base}/13/dialog-profiles/15/content/media/4`);
+  expect(photo.status).toBe(403);
+  /** Фото расходуют собственную квоту, поскольку галерея загружает их параллельно. */
+  expect(photo.headers.get('ratelimit-policy')).toBe('600;w=60');
   expect(mocks.read).not.toHaveBeenCalled(); expect(mocks.photo).not.toHaveBeenCalled();
 });
 
