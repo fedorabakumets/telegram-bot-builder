@@ -75,11 +75,11 @@ export function useWorkspaceHeaderSpace(scopeSelector = "[role='group']", action
       const scopeInTitleRow = scope && getComputedStyle(scope).gridRowStart !== '2';
       const spacing = gap * (scopeInTitleRow ? 2 : 1);
       const extraLabels = new Set<string>();
-      /** Сначала помещаем подписи смены вида, затем подключения и массовых действий. */
-      for (const group of ['view', 'connect', 'bulk']) {
+      /** Подпись запуска имеет приоритет над перезапуском, если обе не помещаются. */
+      for (const group of ['view', 'connect', 'bulk-start', 'bulk-restart']) {
         if (!header.querySelector(`[data-workspace-label="${group}"]`)) continue;
         extraLabels.add(group);
-        const available = scopeInTitleRow || group !== 'bulk'
+        const available = scopeInTitleRow || !group.startsWith('bulk-')
           ? titleWidth + spacing + naturalWidth(actions, true, false, extraLabels)
             + (scopeInTitleRow ? naturalWidth(scope, false, false, extraLabels) : 0)
           : scope ? naturalWidth(scope, false, false, extraLabels) : 0;

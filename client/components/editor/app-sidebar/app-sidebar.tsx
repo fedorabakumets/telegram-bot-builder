@@ -96,8 +96,8 @@ export function AppSidebar({
         <SidebarSeparator />
       </div>
 
-      {/* Футер */}
-      <div className="p-2">
+      {/* Дополнительный нижний отступ отделяет кнопки от края окна. */}
+      <div className="p-2 pb-3">
         <SidebarFooter
           isCollapsed={isCollapsed}
           headerVisible={headerVisible}

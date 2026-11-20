@@ -107,8 +107,8 @@ export function BotControlPanelHeader({
       {/* На узком экране область проекта и воркеров может переноситься. */}
       <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1.5">
         {allProjects && allProjects.length > 1 && onProjectChange && currentProjectId ? (
-          <div className="min-w-0 max-w-40 shrink">
-            {/* Селектор занимает ширину названия, чтобы соседние кнопки не отрывались от проекта. */}
+          <div className="min-w-0 max-w-[calc(100%_-_5rem)] shrink">
+            {/* Название использует свободное место, оставляя ширину для кнопок управления. */}
             <ProjectSelector
               projects={allProjects}
               selectedProjectId={currentProjectId}

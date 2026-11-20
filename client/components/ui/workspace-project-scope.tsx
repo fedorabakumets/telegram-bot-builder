@@ -16,8 +16,11 @@ export interface WorkspaceProjectScopeProps {
  * @param props - Список, выбранный проект и обработчик
  * @returns Селектор либо отсутствие элемента без обработчика
  */
-export function WorkspaceProjectScope({ projectId, projects, onProjectChange }: WorkspaceProjectScopeProps) {
-  return projects?.length && onProjectChange ? <div className="workspace-project-scope" role="group" aria-label="Проект">
+export function WorkspaceProjectScope({ projectId, projects, onProjectChange, compact = false }: WorkspaceProjectScopeProps & {
+  /** Поле сохраняет ширину названия после переноса на отдельную строку. */
+  compact?: boolean;
+}) {
+  return projects?.length && onProjectChange ? <div className={compact ? 'workspace-project-scope workspace-project-scope-compact' : 'workspace-project-scope'} role="group" aria-label="Проект">
     <ProjectSelector projects={projects} selectedProjectId={projectId} onSelect={onProjectChange} />
   </div> : null;
 }

@@ -30,7 +30,7 @@ export function SearchInput({ value, onChange }: SearchInputProps): React.JSX.El
       <Input
         type="search"
         aria-label="Поиск по имени, фамилии, ID, username, источнику и переменным"
-        placeholder="Имя, фамилия, ID, @username, источник, переменные"
+        placeholder="Поиск пользователей"
         title="Имя, фамилия, ID, username, источник, название или значение переменной"
         value={value}
         onChange={(e) => onChange(e.target.value)}

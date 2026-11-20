@@ -27,7 +27,8 @@
 .workspace-adaptive-header [data-workspace-label] { display: none; }
 .workspace-adaptive-header[data-extra-labels~='view'] [data-workspace-label='view'],
 .workspace-adaptive-header[data-extra-labels~='connect'] [data-workspace-label='connect'],
-.workspace-adaptive-header[data-extra-labels~='bulk'] [data-workspace-label='bulk'] { display: inline; }
+.workspace-adaptive-header[data-extra-labels~='bulk-start'] [data-workspace-label='bulk-start'],
+.workspace-adaptive-header[data-extra-labels~='bulk-restart'] [data-workspace-label='bulk-restart'] { display: inline; }
 :is(.workspace-adaptive-header,.terminal-workspace-header) .workspace-tab-actions > :is(a,button) { gap: var(--workspace-action-gap, 8px); font-size: var(--workspace-action-font-size, 14px); font-weight: 400; }
 .workspace-adaptive-header[data-compact-actions='true'] .workspace-tab-actions > :is(a,button) { width: 32px; padding-inline: 0; }
 .workspace-adaptive-header[data-compact-actions='true'] .workspace-tab-actions > :is(a,button) > span { display: none; }
@@ -48,6 +49,17 @@
   .workspace-adaptive-header:not([data-scope-inline='true']) > [role='group'] { grid-column: 1 / -1; grid-row: 2; flex-wrap: wrap; }
   .workspace-adaptive-header:not([data-scope-inline='true']) > [role='group'] > div { flex: 1 1 160px; }
   .workspace-adaptive-header:not([data-scope-inline='true']) > [role='group'] [role='combobox'] { width: 100%; }
+  /** Одиночный компактный селектор остаётся слева и занимает ширину названия. */
+  .workspace-adaptive-header:not([data-scope-inline='true']) > .workspace-project-scope-compact > div {
+    flex: 0 1 auto; max-width: min(100%, 160px);
+  }
+  .workspace-adaptive-header:not([data-scope-inline='true']) > .workspace-project-scope-compact [role='combobox'] {
+    width: max-content;
+  }
+}
+/** Отделяет нижний ряд шапки от границы рабочей области на узкой панели. */
+@container (max-width: 599px) {
+  .workspace-tab-bar > .workspace-adaptive-header:not(.editor-horizontal-header) { padding-block-end: 4px; }
 }
 @container (max-width: 479px) {
   .workspace-adaptive-header { gap: 8px; }

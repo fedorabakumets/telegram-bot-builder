@@ -66,6 +66,8 @@ export function ProjectBotBulkActions({
       ? `${progress.started + progress.failed}/${progress.total}`
       : null;
 
+  /** В шапке краткая подпись освобождает место, полное действие указано в доступном имени. */
+  const startLabel = adaptiveLabels ? 'Запустить' : 'Запустить офлайн';
   return (
     <>
       <div className={adaptiveLabels ? 'flex shrink-0 items-center gap-0.5' : 'flex shrink-0 items-center gap-1 sm:gap-1.5'}>
@@ -80,7 +82,8 @@ export function ProjectBotBulkActions({
           {/* Стрелка по часовой отличает перезапуск от обновления данных. */}
           <RotateCw className={`h-3 w-3 ${adaptiveLabels ? '' : 'sm:mr-1'} ${isRestartingAll ? 'motion-safe:animate-spin' : ''}`} />
           {/* Подпись можно скрыть в компактной шапке; у кнопки есть доступное имя. */}
-          <span data-workspace-label={adaptiveLabels ? 'bulk' : undefined} className={adaptiveLabels ? undefined : 'hidden sm:inline'}>
+          {/* Подписи запуска и перезапуска оцениваются отдельно. */}
+          <span data-workspace-label={adaptiveLabels ? 'bulk-restart' : undefined} className={adaptiveLabels ? undefined : 'hidden sm:inline'}>
             {isRestartingAll ? 'Перезапуск...' : 'Перезапустить'}
           </span>
         </Button>
@@ -93,12 +96,12 @@ export function ProjectBotBulkActions({
           aria-label="Запустить офлайн-ботов проекта"
         >
           <Play className={`h-3 w-3 ${adaptiveLabels ? '' : 'sm:mr-1'} ${isStartingOffline ? 'animate-pulse' : ''}`} />
-          <span data-workspace-label={adaptiveLabels ? 'bulk' : undefined} className={adaptiveLabels ? undefined : 'hidden sm:inline'}>
+          <span data-workspace-label={adaptiveLabels ? 'bulk-start' : undefined} className={adaptiveLabels ? undefined : 'hidden sm:inline'}>
             {isStartingOffline
               ? (progressLabel ? `Запуск ${progressLabel}` : 'Запуск...')
               : offlineCount > 0
-                ? `Запустить офлайн (${offlineCount})`
-                : 'Запустить офлайн'}
+                ? `${startLabel} (${offlineCount})`
+                : startLabel}
           </span>
         </Button>
       </div>

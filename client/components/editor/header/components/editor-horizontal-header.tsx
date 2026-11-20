@@ -54,9 +54,10 @@ export function EditorHorizontalHeader({
   return (
     // Отступы и высоту задаёт общая панель рабочих вкладок.
     <div className={cn('workspace-tab-frame workspace-tab-bar @container shrink-0 border-b border-border/50 bg-background', className)}>
-      <WorkspaceAdaptiveHeader actionsSelector=".editor-horizontal-header-actions">
+      <WorkspaceAdaptiveHeader className="editor-horizontal-header" actionsSelector=".editor-horizontal-header-actions">
         <WorkspaceTabHeading title={title} icon={icon} actions={actions} />
-        <div role="group" aria-label="Проект">
+        {/** Одиночный селектор может занимать оставшееся место между названием и справкой. */}
+        <div role="group" aria-label="Проект" className={projectActions ? undefined : 'workspace-project-scope'}>
           {projects?.length && currentProjectId != null && onProjectChange ? (
             <ProjectSelector
               projects={projects}

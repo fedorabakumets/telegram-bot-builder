@@ -87,7 +87,7 @@ export function VersionsPanel({ projectId, onRestored, projects, onProjectChange
             description="Сохраняйте важные этапы и возвращайтесь к предыдущим версиям проекта."
             actions={<WorkspaceTabActions docsPath="interface/versions" section="История версий" onRefresh={() => void refetch()} isRefreshing={isFetching} />}
           />
-          <WorkspaceProjectScope projectId={projectId} projects={projects} onProjectChange={onProjectChange} />
+          <WorkspaceProjectScope compact projectId={projectId} projects={projects} onProjectChange={onProjectChange} />
         </WorkspaceAdaptiveHeader>
       </div>
       <div className="versions-content workspace-tab-frame workspace-tab-content space-y-6">

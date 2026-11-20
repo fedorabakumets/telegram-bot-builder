@@ -48,7 +48,7 @@ export function DatabaseHeaderSection(props: DatabaseHeaderSectionProps): React.
       {isDatabaseEnabled && <div className="users-header-tools workspace-tab-frame flex flex-wrap items-center justify-between gap-3">
         {stats && <InlineStatsBadges stats={stats} />}
         {/** Перенос данных расположен рядом с текущей областью, перед очисткой. */}
-        <div className="ml-auto flex flex-wrap items-center gap-2">
+        <div className="users-header-data-actions ml-auto flex flex-wrap items-center gap-2">
           <UsersTransferActions projectId={projectId} projectName={projectName} tokenId={selectedTokenId}
             tokens={availableTokens} search={props.searchQuery} onRefresh={handleRefresh} />
           <HeaderActions projectId={projectId} projectName={projectName}
