@@ -30,7 +30,9 @@
 | track_execution_time | integer | `0` | YES | - | - | Флаг отслеживания времени выполнения (0 = выключено, 1 = включено) |
 | total_execution_seconds | integer | `0` | YES | - | - | Общее время выполнения в секундах |
 | auto_restart | integer | `0` | YES | - | - | Флаг автоперезапуска при краше (0 = выключено, 1 = включено) |
+| inherit_auto_restart | boolean | `true` | NO | - | - | Бот наследует флаг автоперезапуска проекта. |
 | max_restart_attempts | integer | `3` | YES | - | - | Максимальное количество попыток автоперезапуска подряд |
+| inherit_max_restart_attempts | boolean | `true` | NO | - | - | Бот наследует предел попыток автоперезапуска проекта. |
 | log_level | text | `'DEBUG'` | YES | - | - | Уровень логирования Python-бота (DEBUG, INFO, WARNING, ERROR) |
 | protect_content | integer | `0` | YES | - | - | Защита контента от копирования/пересылки (0 = выключено, 1 = включено) |
 | save_incoming_media | integer | `0` | YES | - | - | Флаг сохранения входящих медиафайлов от пользователей (0 = выключено, 1 = включено) |
@@ -40,6 +42,9 @@
 | track_group_membership | integer | `1` | YES | - | - | Сохранять добавление и исключение бота в группах |
 | content_cache | integer | `0` | YES | - | - | Живое обновление контента из таблицы _content без перезапуска (0 = выключено, 1 = включено). По умолчанию выключено — меньше памяти. Управляет генерацией load_content/reload_content/_content_reload_loop/_content_subscribe_redis. |
 | launch_mode | text | `'polling'` | YES | - | - | Режим запуска бота: 'polling' (по умолчанию) или 'webhook' |
+| inherit_launch_mode | boolean | `true` | NO | - | - | Бот использует способ получения обновлений из настроек проекта |
+| inherit_sleep_mode | boolean | `true` | NO | - | - | Бот наследует режим жизни обработчика проекта. |
+| inherit_bot_settings | jsonb | `["saveIncomingMedia","messagesRetentionDays","contentCache","logLevel","catchAllHandlers","trackUserBlocks","trackGroupMembership","protectContent","webhookBaseUrl"]` | NO | - | - | Ключи общих настроек поведения и данных, которые наследует бот. |
 | webhook_base_url | text | - | YES | - | - | Базовый URL для webhook режима (например https://example.com) |
 | webhook_secret_token | text | - | YES | - | - | Секретный токен для верификации webhook запросов |
 | userbot_enabled | integer | `0` | YES | - | - | Включён ли Telethon userbot (0 = выключено, 1 = включено) |

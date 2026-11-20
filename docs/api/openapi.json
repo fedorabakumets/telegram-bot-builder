@@ -601,6 +601,43 @@
             "maximum": 1,
             "default": 1
           },
+          "defaultLaunchMode": {
+            "type": "string",
+            "enum": [
+              "polling",
+              "webhook"
+            ]
+          },
+          "defaultSleepMode": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "direct",
+              "process",
+              null
+            ]
+          },
+          "defaultAutoRestart": {
+            "anyOf": [
+              {
+                "type": "number",
+                "enum": [
+                  0
+                ]
+              },
+              {
+                "type": "number",
+                "enum": [
+                  1
+                ]
+              }
+            ]
+          },
+          "defaultMaxRestartAttempts": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10
+          },
           "sortOrder": {
             "type": "number",
             "default": 0
@@ -656,6 +693,43 @@
             "minimum": 0,
             "maximum": 1,
             "default": 1
+          },
+          "defaultLaunchMode": {
+            "type": "string",
+            "enum": [
+              "polling",
+              "webhook"
+            ]
+          },
+          "defaultSleepMode": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "direct",
+              "process",
+              null
+            ]
+          },
+          "defaultAutoRestart": {
+            "anyOf": [
+              {
+                "type": "number",
+                "enum": [
+                  0
+                ]
+              },
+              {
+                "type": "number",
+                "enum": [
+                  1
+                ]
+              }
+            ]
+          },
+          "defaultMaxRestartAttempts": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10
           },
           "lastExportedGoogleSheetId": {
             "type": "string",
@@ -2306,11 +2380,29 @@
           "messagesRetentionDays": {
             "type": "integer",
             "example": 60
+          },
+          "inheritBotSettings": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "saveIncomingMedia",
+                "messagesRetentionDays",
+                "contentCache",
+                "logLevel",
+                "catchAllHandlers",
+                "trackUserBlocks",
+                "trackGroupMembership",
+                "protectContent",
+                "webhookBaseUrl"
+              ]
+            }
           }
         },
         "required": [
           "success",
-          "messagesRetentionDays"
+          "messagesRetentionDays",
+          "inheritBotSettings"
         ]
       },
       "UpdateMessagesRetentionRequest": {
@@ -2359,10 +2451,16 @@
                 "enum": [
                   365
                 ]
+              },
+              {
+                "type": "string",
+                "enum": [
+                  "inherit"
+                ]
               }
             ],
             "example": 60,
-            "description": "0 = безлимит; иначе 7/30/60/90/180/365. Чистится только bot_messages, не аналитика."
+            "description": "0 — безлимит, 7/30/60/90/180/365 — срок, inherit — использовать настройку проекта."
           }
         },
         "required": [
@@ -3078,12 +3176,20 @@
           },
           "maxRestartAttempts": {
             "type": "integer"
+          },
+          "inheritAutoRestart": {
+            "type": "boolean"
+          },
+          "inheritMaxRestartAttempts": {
+            "type": "boolean"
           }
         },
         "required": [
           "success",
           "autoRestart",
-          "maxRestartAttempts"
+          "maxRestartAttempts",
+          "inheritAutoRestart",
+          "inheritMaxRestartAttempts"
         ]
       },
       "AutoRestartRequest": {
@@ -3102,21 +3208,33 @@
                 "enum": [
                   1
                 ]
+              },
+              {
+                "type": "string",
+                "enum": [
+                  "inherit"
+                ]
               }
             ],
             "example": 1
           },
           "maxRestartAttempts": {
-            "type": "integer",
-            "minimum": 1,
-            "maximum": 10,
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 10
+              },
+              {
+                "type": "string",
+                "enum": [
+                  "inherit"
+                ]
+              }
+            ],
             "example": 3
           }
-        },
-        "required": [
-          "autoRestart",
-          "maxRestartAttempts"
-        ]
+        }
       },
       "ProtectContentResponse": {
         "type": "object",
@@ -3142,11 +3260,29 @@
                 ]
               }
             ]
+          },
+          "inheritBotSettings": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "saveIncomingMedia",
+                "messagesRetentionDays",
+                "contentCache",
+                "logLevel",
+                "catchAllHandlers",
+                "trackUserBlocks",
+                "trackGroupMembership",
+                "protectContent",
+                "webhookBaseUrl"
+              ]
+            }
           }
         },
         "required": [
           "success",
-          "protectContent"
+          "protectContent",
+          "inheritBotSettings"
         ]
       },
       "ProtectContentRequest": {
@@ -3164,6 +3300,12 @@
                 "type": "number",
                 "enum": [
                   1
+                ]
+              },
+              {
+                "type": "string",
+                "enum": [
+                  "inherit"
                 ]
               }
             ],
@@ -3198,11 +3340,29 @@
                 ]
               }
             ]
+          },
+          "inheritBotSettings": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "saveIncomingMedia",
+                "messagesRetentionDays",
+                "contentCache",
+                "logLevel",
+                "catchAllHandlers",
+                "trackUserBlocks",
+                "trackGroupMembership",
+                "protectContent",
+                "webhookBaseUrl"
+              ]
+            }
           }
         },
         "required": [
           "success",
-          "saveIncomingMedia"
+          "saveIncomingMedia",
+          "inheritBotSettings"
         ]
       },
       "SaveIncomingMediaRequest": {
@@ -3220,6 +3380,12 @@
                 "type": "number",
                 "enum": [
                   1
+                ]
+              },
+              {
+                "type": "string",
+                "enum": [
+                  "inherit"
                 ]
               }
             ],
@@ -3254,11 +3420,29 @@
                 ]
               }
             ]
+          },
+          "inheritBotSettings": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "saveIncomingMedia",
+                "messagesRetentionDays",
+                "contentCache",
+                "logLevel",
+                "catchAllHandlers",
+                "trackUserBlocks",
+                "trackGroupMembership",
+                "protectContent",
+                "webhookBaseUrl"
+              ]
+            }
           }
         },
         "required": [
           "success",
-          "trackUserBlocks"
+          "trackUserBlocks",
+          "inheritBotSettings"
         ]
       },
       "TrackUserBlocksRequest": {
@@ -3276,6 +3460,12 @@
                 "type": "number",
                 "enum": [
                   1
+                ]
+              },
+              {
+                "type": "string",
+                "enum": [
+                  "inherit"
                 ]
               }
             ],
@@ -3310,11 +3500,29 @@
                 ]
               }
             ]
+          },
+          "inheritBotSettings": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "saveIncomingMedia",
+                "messagesRetentionDays",
+                "contentCache",
+                "logLevel",
+                "catchAllHandlers",
+                "trackUserBlocks",
+                "trackGroupMembership",
+                "protectContent",
+                "webhookBaseUrl"
+              ]
+            }
           }
         },
         "required": [
           "success",
-          "catchAllHandlers"
+          "catchAllHandlers",
+          "inheritBotSettings"
         ]
       },
       "CatchAllHandlersRequest": {
@@ -3332,6 +3540,12 @@
                 "type": "number",
                 "enum": [
                   1
+                ]
+              },
+              {
+                "type": "string",
+                "enum": [
+                  "inherit"
                 ]
               }
             ],
@@ -3366,11 +3580,29 @@
                 ]
               }
             ]
+          },
+          "inheritBotSettings": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "saveIncomingMedia",
+                "messagesRetentionDays",
+                "contentCache",
+                "logLevel",
+                "catchAllHandlers",
+                "trackUserBlocks",
+                "trackGroupMembership",
+                "protectContent",
+                "webhookBaseUrl"
+              ]
+            }
           }
         },
         "required": [
           "success",
-          "contentCache"
+          "contentCache",
+          "inheritBotSettings"
         ]
       },
       "ContentCacheRequest": {
@@ -3388,6 +3620,12 @@
                 "type": "number",
                 "enum": [
                   1
+                ]
+              },
+              {
+                "type": "string",
+                "enum": [
+                  "inherit"
                 ]
               }
             ],
@@ -3415,11 +3653,29 @@
               "WARNING",
               "ERROR"
             ]
+          },
+          "inheritBotSettings": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "saveIncomingMedia",
+                "messagesRetentionDays",
+                "contentCache",
+                "logLevel",
+                "catchAllHandlers",
+                "trackUserBlocks",
+                "trackGroupMembership",
+                "protectContent",
+                "webhookBaseUrl"
+              ]
+            }
           }
         },
         "required": [
           "success",
-          "logLevel"
+          "logLevel",
+          "inheritBotSettings"
         ]
       },
       "LogLevelRequest": {
@@ -3431,7 +3687,8 @@
               "DEBUG",
               "INFO",
               "WARNING",
-              "ERROR"
+              "ERROR",
+              "inherit"
             ],
             "example": "WARNING"
           }
@@ -3456,18 +3713,37 @@
               "webhook"
             ]
           },
+          "inheritLaunchMode": {
+            "type": "boolean"
+          },
           "webhookBaseUrl": {
             "type": "string",
             "nullable": true
           },
-          "webhookSecretToken": {
-            "type": "string",
-            "nullable": true
+          "inheritBotSettings": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "saveIncomingMedia",
+                "messagesRetentionDays",
+                "contentCache",
+                "logLevel",
+                "catchAllHandlers",
+                "trackUserBlocks",
+                "trackGroupMembership",
+                "protectContent",
+                "webhookBaseUrl"
+              ]
+            }
           }
         },
         "required": [
           "success",
-          "launchMode"
+          "launchMode",
+          "inheritLaunchMode",
+          "webhookBaseUrl",
+          "inheritBotSettings"
         ]
       },
       "LaunchSettingsRequest": {
@@ -3476,24 +3752,35 @@
           "launchMode": {
             "type": "string",
             "enum": [
+              "inherit",
               "polling",
               "webhook"
             ],
             "example": "webhook"
           },
           "webhookBaseUrl": {
-            "type": "string",
-            "nullable": true,
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uri"
+              },
+              {
+                "type": "string",
+                "enum": [
+                  "inherit"
+                ]
+              },
+              {
+                "nullable": true
+              }
+            ],
             "example": "https://example.com"
           },
           "webhookSecretToken": {
             "type": "string",
             "nullable": true
           }
-        },
-        "required": [
-          "launchMode"
-        ]
+        }
       },
       "UserbotPutResponse": {
         "type": "object",
@@ -35879,7 +36166,7 @@
           "project-broadcasts"
         ],
         "summary": "Изменить текст большой рассылки у всех ботов",
-        "description": "Обновляет `messageText` кампании и правит уже отправленные сообщения через `editMessageText` во всех ботах кампании (throttle ~25/с на бота). Текст 1…4096 после trim. В ответе — сводка и разбивка по ботам.\n\n**Доступ:** `requireProjectAccess` — сессионная cookie или Bearer PAT плюс права на проект (владелец или коллаборатор). Кампания ищется по `campaignId`, но отдаётся только если `campaign.projectId` совпадает с `projectId` из пути — иначе 403, поэтому перебор чужих ID ничего не раскрывает.\n\n**Клиенты Studio:** правка текста в пузыре большой рассылки в «Диалогах» (`use-edit-broadcast-campaign`).\n\n```bash\ncurl -s -X PUT -b cookies.txt -H 'Content-Type: application/json' \\\n  -d '{\"messageText\":\"Обновлённый текст\"}' \\\n  'http://localhost:5000/api/projects/42/broadcast-campaigns/3'\n```",
+        "description": "Обновляет `messageText` кампании и правит уже отправленные сообщения через `editMessageText` во всех ботах кампании (throttle ~25/с на бота). Клавиатура сохраняется. Текст 1…4096 после trim. В ответе — сводка и разбивка по ботам; проверяйте edited/failed, поскольку ok не гарантирует успех у всех получателей.\n\n**Доступ:** `requireProjectAccess` — сессионная cookie или Bearer PAT плюс права на проект (владелец или коллаборатор). Кампания ищется по `campaignId`, но отдаётся только если `campaign.projectId` совпадает с `projectId` из пути — иначе 403, поэтому перебор чужих ID ничего не раскрывает.\n\n**Клиенты Studio:** правка текста в пузыре большой рассылки в «Диалогах» (`use-edit-broadcast-campaign`).\n\n```bash\ncurl -s -X PUT -b cookies.txt -H 'Content-Type: application/json' \\\n  -d '{\"messageText\":\"Обновлённый текст\"}' \\\n  'http://localhost:5000/api/projects/42/broadcast-campaigns/3'\n```",
         "security": [
           {
             "cookieAuth": []
@@ -36948,7 +37235,7 @@
           "project-broadcasts"
         ],
         "summary": "Редактировать текст рассылки",
-        "description": "Обновляет `messageText` в БД и через `editMessageText` у получателей (throttle ~25/s). Текст 1…4096 после trim.\n\n**Клиент:** `broadcast-dialog-panel`.\n\n```bash\ncurl -s -X PUT -b cookies.txt -H 'Content-Type: application/json' \\\n  -d '{\"messageText\":\"Обновлённый текст\"}' \\\n  'http://localhost:5000/api/projects/42/broadcasts/15'\n```",
+        "description": "Обновляет `messageText` в БД и через `editMessageText` у получателей (throttle ~25/s), сохраняя inline-клавиатуру. Текст 1…4096 после trim. Проверяйте edited/failed: ok подтверждает обработку запроса, а не успех у всех получателей.\n\n**Клиент:** `broadcast-dialog-panel`.\n\n```bash\ncurl -s -X PUT -b cookies.txt -H 'Content-Type: application/json' \\\n  -d '{\"messageText\":\"Обновлённый текст\"}' \\\n  'http://localhost:5000/api/projects/42/broadcasts/15'\n```",
         "security": [
           {
             "cookieAuth": []
@@ -40345,7 +40632,7 @@
           "project-messages"
         ],
         "summary": "Редактировать текст сообщения бота",
-        "description": "Правит исходящее сообщение бота в диалоге: сначала в Telegram, потом у нас в БД, UI обновляется по WebSocket.\n\nТолько сообщения бота (не пользователя) с известным Telegram id. Тело: обязательный `messageText`; опционально `buttons` / `buttonsPerRow` (пустой массив кнопок снимает клавиатуру).\n\nQuery `tokenId` — каким ботом слать edit (иначе дефолтный/первый токен проекта).\n\n**Auth:** cookie или Bearer PAT + доступ к проекту.\n\n**Клиент:** диалоги → `use-edit-message`.\n\n```bash\ncurl -s -X PATCH 'http://localhost:5000/api/projects/42/messages/501?tokenId=7' \\\n  -H 'Content-Type: application/json' \\\n  -d '{\"messageText\":\"Обновлённый текст\"}' \\\n  -b cookies.txt\n```",
+        "description": "Правит исходящее сообщение бота в диалоге: сначала в Telegram, потом у нас в БД, UI обновляется по WebSocket.\n\nТолько сообщения бота (не пользователя) с известным Telegram id. Тело: обязательный `messageText`; опционально `buttons` / `buttonsPerRow` (отсутствие buttons сохраняет клавиатуру, пустой массив явно снимает её).\n\nQuery `tokenId` — каким ботом слать edit (иначе дефолтный/первый токен проекта).\n\n**Auth:** cookie или Bearer PAT + доступ к проекту.\n\n**Клиент:** диалоги → `use-edit-message`.\n\n```bash\ncurl -s -X PATCH 'http://localhost:5000/api/projects/42/messages/501?tokenId=7' \\\n  -H 'Content-Type: application/json' \\\n  -d '{\"messageText\":\"Обновлённый текст\"}' \\\n  -b cookies.txt\n```",
         "security": [
           {
             "cookieAuth": []
@@ -41039,7 +41326,7 @@
           "project-tokens"
         ],
         "summary": "Автоперезапуск бота",
-        "description": "`autoRestart` 0|1, `maxRestartAttempts` 1–10.\n\n**Auth:** `requireTokenOwnership`. WS `token-updated`. Флаги попадают в env бота при следующем запуске.\n\n```bash\ncurl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/auto-restart \\\n  -b cookies.txt -H 'Content-Type: application/json' \\\n  -d '{\"autoRestart\":1,\"maxRestartAttempts\":3}'\n```",
+        "description": "Передайте хотя бы одно поле. `autoRestart` принимает 0 или 1, `maxRestartAttempts` принимает 1–10. Значение `inherit` возвращает наследование выбранного поля.\n\n**Auth:** `requireTokenOwnership`. WS `token-updated`. Флаги попадают в env бота при следующем запуске.\n\n```bash\ncurl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/auto-restart \\\n  -b cookies.txt -H 'Content-Type: application/json' \\\n  -d '{\"autoRestart\":1,\"maxRestartAttempts\":3}'\n```",
         "security": [
           {
             "cookieAuth": []
@@ -41115,7 +41402,9 @@
                 "example": {
                   "success": true,
                   "autoRestart": 1,
-                  "maxRestartAttempts": 3
+                  "maxRestartAttempts": 3,
+                  "inheritAutoRestart": false,
+                  "inheritMaxRestartAttempts": false
                 },
                 "schema": {
                   "$ref": "#/components/schemas/AutoRestartResponse"
@@ -42234,7 +42523,7 @@
           "project-tokens"
         ],
         "summary": "Режим запуска polling/webhook",
-        "description": "`launchMode` polling|webhook; опционально `webhookBaseUrl`, `webhookSecretToken`. При смене webhook→polling вызывается Telegram `deleteWebhook`. **Риск:** ответ может вернуть `webhookSecretToken`.\n\n**Auth:** `requireTokenOwnership`. WS `token-updated`.\n\n```bash\ncurl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/launch-settings \\\n  -b cookies.txt -H 'Content-Type: application/json' \\\n  -d '{\"launchMode\":\"polling\"}'\n```",
+        "description": "Передайте хотя бы одно поле. `launchMode` принимает polling, webhook или inherit. `webhookBaseUrl` принимает адрес, null для адреса сервера или inherit для настройки проекта. Транспорт применяется при следующем запуске. Секрет в ответе отсутствует.\n\n**Auth:** `requireTokenOwnership`. WS `token-updated`.\n\n```bash\ncurl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/launch-settings \\\n  -b cookies.txt -H 'Content-Type: application/json' \\\n  -d '{\"launchMode\":\"polling\"}'\n```",
         "security": [
           {
             "cookieAuth": []
@@ -42310,8 +42599,9 @@
                 "example": {
                   "success": true,
                   "launchMode": "polling",
+                  "inheritLaunchMode": false,
                   "webhookBaseUrl": null,
-                  "webhookSecretToken": null
+                  "inheritBotSettings": []
                 },
                 "schema": {
                   "$ref": "#/components/schemas/LaunchSettingsResponse"

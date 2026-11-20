@@ -251,7 +251,7 @@ curl -s -b cookies.txt \
 
 **Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
-Обновляет `messageText` кампании и правит уже отправленные сообщения через `editMessageText` во всех ботах кампании (throttle ~25/с на бота). Текст 1…4096 после trim. В ответе — сводка и разбивка по ботам.
+Обновляет `messageText` кампании и правит уже отправленные сообщения через `editMessageText` во всех ботах кампании (throttle ~25/с на бота). Клавиатура сохраняется. Текст 1…4096 после trim. В ответе — сводка и разбивка по ботам; проверяйте edited/failed, поскольку ok не гарантирует успех у всех получателей.
 
 **Доступ:** `requireProjectAccess` — сессионная cookie или Bearer PAT плюс права на проект (владелец или коллаборатор). Кампания ищется по `campaignId`, но отдаётся только если `campaign.projectId` совпадает с `projectId` из пути — иначе 403, поэтому перебор чужих ID ничего не раскрывает.
 
@@ -674,7 +674,7 @@ curl -s -b cookies.txt \
 
 **Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
-Обновляет `messageText` в БД и через `editMessageText` у получателей (throttle ~25/s). Текст 1…4096 после trim.
+Обновляет `messageText` в БД и через `editMessageText` у получателей (throttle ~25/s), сохраняя inline-клавиатуру. Текст 1…4096 после trim. Проверяйте edited/failed: ok подтверждает обработку запроса, а не успех у всех получателей.
 
 **Клиент:** `broadcast-dialog-panel`.
 
