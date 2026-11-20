@@ -3,7 +3,7 @@
  * @module client/components/editor/broadcast/wizard/new-broadcast-modal
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type RefObject } from 'react';
 import './broadcast-wizard.css';
 import { Megaphone, X } from 'lucide-react';
 import {
@@ -35,6 +35,8 @@ interface NewBroadcastModalProps {
   open: boolean;
   /** Обработчик закрытия */
   onClose: () => void;
+  /** Кнопка открытия, которой возвращается фокус после закрытия окна. */
+  returnFocusRef?: RefObject<HTMLElement | null>;
   /** Идентификатор проекта */
   projectId: number;
   /** Идентификатор токена */
@@ -74,7 +76,7 @@ const STEP_TITLES = ['Аудитория', 'Сообщение', 'Подтвер
  * @param props - Свойства компонента
  * @returns JSX элемент модального окна
  */
-export function NewBroadcastModal({ open, onClose, projectId, tokenId, refetch, initialMessageText, initialMediaUrls, initialButtons, initialButtonsPerRow, initialTokenIds, fixedAudience }: NewBroadcastModalProps) {
+export function NewBroadcastModal({ open, onClose, returnFocusRef, projectId, tokenId, refetch, initialMessageText, initialMediaUrls, initialButtons, initialButtonsPerRow, initialTokenIds, fixedAudience }: NewBroadcastModalProps) {
   const botStatuses = useFrozenBots(projectId);
   const [step, setStep] = useState<1 | 2 | 3 | 'progress'>(1);
   const [formData, setFormData] = useState<NewBroadcastFormData>({
@@ -195,6 +197,11 @@ export function NewBroadcastModal({ open, onClose, projectId, tokenId, refetch, 
     <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
       <DialogContent
         hideClose
+        onCloseAutoFocus={(event) => {
+          if (!returnFocusRef?.current) return;
+          event.preventDefault();
+          returnFocusRef.current.focus();
+        }}
         className={[
           'broadcast-wizard !p-0 gap-0 !flex flex-col overflow-hidden bg-background',
           // Мобилка — на весь экран

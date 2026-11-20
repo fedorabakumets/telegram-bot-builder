@@ -41,7 +41,8 @@ export function AppSidebar({
     >
       {/* Бренд + кнопка сворачивания */}
       <div className={cn(
-        'h-14 px-3 flex items-center flex-shrink-0 border-b border-border/50',
+        /** Верхняя ячейка совпадает по высоте с компактными шапками вкладок. */
+        'h-12 px-3 flex items-center flex-shrink-0 border-b border-border/50',
         isCollapsed ? 'justify-center' : 'justify-between'
       )}>
         {!isCollapsed && (

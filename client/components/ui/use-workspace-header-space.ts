@@ -6,13 +6,19 @@ import { useLayoutEffect, useRef } from 'react';
  * @param element - Названия области или группа действий
  * @param actions - Раскрывать подписи служебных кнопок
  * @param documentationOnly - Оставить подпись только у документации
+ * @param extraLabels - Группы дополнительных подписей для пробного измерения
  * @returns Требуемая ширина в пикселях
  */
-function naturalWidth(element: HTMLElement, actions = false, documentationOnly = false): number {
+function naturalWidth(element: HTMLElement, actions = false, documentationOnly = false, extraLabels?: Set<string>): number {
   const copy = element.cloneNode(true) as HTMLElement;
   copy.setAttribute('aria-hidden', 'true');
   copy.inert = true;
   copy.style.cssText = 'position:fixed;left:-10000px;top:0;visibility:hidden;width:max-content;max-width:none;pointer-events:none';
+  if (extraLabels) {
+    copy.querySelectorAll<HTMLElement>('[data-workspace-label]').forEach(label => {
+      label.style.setProperty('display', extraLabels.has(label.dataset.workspaceLabel ?? '') ? 'inline' : 'none', 'important');
+    });
+  }
   if (actions) {
     copy.querySelectorAll<HTMLElement>('.workspace-tab-actions > :is(a,button)').forEach(button => {
       button.style.setProperty('width', 'auto', 'important');
@@ -54,12 +60,25 @@ export function useWorkspaceHeaderSpace(scopeSelector = "[role='group']", action
       const gap = parseFloat(getComputedStyle(header).columnGap) || 12;
       /** Во второй строке область проекта не отнимает место у служебных действий. */
       const scopeInTitleRow = scope && getComputedStyle(scope).gridRowStart !== '2';
-      const scopeWidth = scopeInTitleRow ? naturalWidth(scope) : 0;
       const spacing = gap * (scopeInTitleRow ? 2 : 1);
-      const required = title.getBoundingClientRect().width + scopeWidth + naturalWidth(actions, true) + spacing;
+      const titleWidth = naturalWidth(title);
+      const extraLabels = new Set<string>();
+      /** Сначала помещаем подписи смены вида, затем подключения и массовых действий. */
+      for (const group of ['view', 'connect', 'bulk']) {
+        if (!header.querySelector(`[data-workspace-label="${group}"]`)) continue;
+        extraLabels.add(group);
+        const available = scopeInTitleRow || group !== 'bulk'
+          ? titleWidth + spacing + naturalWidth(actions, true, false, extraLabels)
+            + (scopeInTitleRow ? naturalWidth(scope, false, false, extraLabels) : 0)
+          : scope ? naturalWidth(scope, false, false, extraLabels) : 0;
+        if (available > header.clientWidth) extraLabels.delete(group);
+      }
+      header.dataset.extraLabels = [...extraLabels].join(' ');
+      const scopeWidth = scopeInTitleRow ? naturalWidth(scope, false, false, extraLabels) : 0;
+      const required = titleWidth + scopeWidth + naturalWidth(actions, true, false, extraLabels) + spacing;
       header.dataset.compactActions = String(required > header.clientWidth);
       /** Документация получает подпись раньше обновления, когда обе подписи не помещаются. */
-      const documentationWidth = title.getBoundingClientRect().width + scopeWidth + naturalWidth(actions, true, true) + spacing;
+      const documentationWidth = titleWidth + scopeWidth + naturalWidth(actions, true, true, extraLabels) + spacing;
       header.dataset.documentationLabel = String(documentationWidth <= header.clientWidth);
     };
     /** Объединяет изменения размеров и текста в одно измерение за кадр. */

@@ -37,34 +37,41 @@ export function TablesHeader({ projectId, allProjects, onProjectChange, selected
   const hasProjects = !!allProjects && allProjects.length > 1 && !!onProjectChange;
   const hasTokens = tokens.length > 0 && !!onSelectToken;
   return (
-    <div className="tables-header workspace-tab-frame shrink-0 space-y-4">
-      <WorkspaceAdaptiveHeader className="tables-header-content" scopeSelector=".tables-context" actionsSelector=".workspace-tab-actions"><WorkspaceTabHeading title="Таблицы" icon={<Table2 />}
-        description="Данные ботов и таблицы проекта."
-        actions={<WorkspaceTabActions docsPath="interface/tables/overview" section="Таблицы"
-          onRefresh={() => void queryClient.invalidateQueries({ queryKey: ['bot-tables', projectId] })}
-          isRefreshing={refreshing} />} />
-      {(hasProjects || hasTokens) && <div role="group" aria-label="Проект и бот" className="tables-context flex min-w-0 flex-wrap items-center gap-3">
-        {hasProjects && (
-          <ProjectSelector
-            projects={allProjects}
-            selectedProjectId={projectId}
-            showBotCount={selectedTokenId == null}
-            onSelect={onProjectChange}
-          />
-        )}
-        {hasTokens && (
-          <BotTokenSelector
-            projectId={projectId}
-            tokens={tokens}
-            audienceCounts={audience.counts}
-            countsError={audience.isError && !audience.data}
-            onRetryCounts={() => { void audience.refetch(); }}
-            selectedTokenId={selectedTokenId ?? null}
-            onSelect={(id) => onSelectToken?.(id)}
-          />
-        )}
-      </div>}
-      <div className="tables-header-tools flex flex-wrap items-center gap-2">
+    <div className="tables-header shrink-0">
+      <div className="workspace-tab-frame workspace-tab-bar">
+        <WorkspaceAdaptiveHeader className="tables-header-content" scopeSelector=".tables-context" actionsSelector=".workspace-tab-actions">
+          <WorkspaceTabHeading title="Таблицы" icon={<Table2 />}
+            description="Данные ботов и таблицы проекта."
+            actions={<WorkspaceTabActions docsPath="interface/tables/overview" section="Таблицы"
+              onRefresh={() => void queryClient.invalidateQueries({ queryKey: ['bot-tables', projectId] })}
+              isRefreshing={refreshing} />} />
+          {(hasProjects || hasTokens) && (
+            <div role="group" aria-label="Проект и бот" className="tables-context flex min-w-0 flex-wrap items-center gap-3">
+              {hasProjects && (
+                <ProjectSelector
+                  projects={allProjects}
+                  selectedProjectId={projectId}
+                  showBotCount={selectedTokenId == null}
+                  onSelect={onProjectChange}
+                />
+              )}
+              {hasTokens && (
+                <BotTokenSelector
+                  projectId={projectId}
+                  tokens={tokens}
+                  audienceCounts={audience.counts}
+                  countsError={audience.isError && !audience.data}
+                  onRetryCounts={() => { void audience.refetch(); }}
+                  selectedTokenId={selectedTokenId ?? null}
+                  onSelect={(id) => onSelectToken?.(id)}
+                />
+              )}
+            </div>
+          )}
+        </WorkspaceAdaptiveHeader>
+      </div>
+      {/* Действия с таблицами занимают собственную строку. */}
+      <div className="tables-header-tools workspace-tab-frame flex flex-wrap items-center gap-2">
         <button type="button" onClick={onToggleList} aria-expanded={!listCollapsed}
           aria-label={listCollapsed ? 'Развернуть список таблиц' : 'Свернуть список таблиц'}
           title={listCollapsed ? 'Развернуть список таблиц' : 'Свернуть список таблиц'}
@@ -73,7 +80,7 @@ export function TablesHeader({ projectId, allProjects, onProjectChange, selected
           <span>Список таблиц</span>
         </button>
         <AllTablesActions projectId={projectId} />
-      </div></WorkspaceAdaptiveHeader>
+      </div>
     </div>
   );
 }

@@ -18,21 +18,10 @@
   .analytics-audience-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
-/** На узком экране шапку можно свернуть, освобождая место для карточек. */
-.analytics-header-toggle { display: none; }
-@container (max-width: 479px) {
-  .analytics-header-toggle { display: block; color: var(--muted-foreground); font-size: 12px; line-height: 20px; }
-  .analytics-responsive-header.is-collapsed .analytics-header-content { display: none; }
-  .analytics-responsive-header.is-collapsed { padding-block: 6px; }
-}
-
-/** Период остаётся отдельным элементом общей области, на узкой панели занимает строку. */
-.analytics-header-content > .analytics-scope > .analytics-scope-period { flex: 0 0 auto; }
-@container (max-width: 799px) {
-  .analytics-header-content > .analytics-scope > .analytics-scope-period { flex: 1 1 100%; }
-}
-
-/** На узкой панели период выбирается в общей шапке, без повторения в каждой карточке. */
+/** На узкой панели сворачиваются только фильтры, а заголовок и действия остаются видимыми. */
+.analytics-heading-actions .analytics-filter-toggle { display: none; }
 @container analytics (max-width: 479px) {
+  .analytics-heading-actions .analytics-filter-toggle { display: inline-flex; }
+  .analytics-header-content > .analytics-scope[data-collapsed='true'] { display: none; }
   .analytics-page .analytics-card .analytics-choose-period { display: none; }
 }

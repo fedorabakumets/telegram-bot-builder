@@ -32,17 +32,20 @@ export function DatabaseHeaderSection(props: DatabaseHeaderSectionProps): React.
     onProjectChange, stats } = props;
   const showProjects = allProjects && allProjects.length > 1 && onProjectChange;
   return (
-    <div className="users-page-header workspace-tab-frame shrink-0">
-      <WorkspaceAdaptiveHeader className="users-header-content" scopeSelector=".users-scope" actionsSelector=".workspace-tab-actions">
-      <WorkspaceTabHeading title="Пользователи" icon={<Users className="text-blue-500" />}
-        description="Личные контакты бота, история общения и ответы."
-        actions={<WorkspaceTabActions docsPath="interface/users" section="Пользователи" onRefresh={handleRefresh} />} />
-      <div role="group" aria-label="Проект и бот" className="users-scope flex min-w-0 flex-wrap items-center gap-3">
-        {showProjects && <ProjectSelector projects={allProjects} selectedProjectId={projectId} showBotCount={selectedTokenId == null} onSelect={onProjectChange} />}
-        <UsersBotSelector projectId={projectId} tokens={availableTokens}
-          selectedTokenId={selectedTokenId} onSelect={onSelectToken} />
+    <div className="users-page-header shrink-0">
+      <div className="workspace-tab-frame workspace-tab-bar">
+        <WorkspaceAdaptiveHeader className="users-header-content" scopeSelector=".users-scope" actionsSelector=".workspace-tab-actions">
+          <WorkspaceTabHeading title="Пользователи" icon={<Users className="text-blue-500" />}
+            description="Личные контакты бота, история общения и ответы."
+            actions={<WorkspaceTabActions docsPath="interface/users" section="Пользователи" onRefresh={handleRefresh} />} />
+          <div role="group" aria-label="Проект и бот" className="users-scope flex min-w-0 flex-wrap items-center gap-3">
+            {showProjects && <ProjectSelector projects={allProjects} selectedProjectId={projectId} showBotCount={selectedTokenId == null} onSelect={onProjectChange} />}
+            <UsersBotSelector projectId={projectId} tokens={availableTokens}
+              selectedTokenId={selectedTokenId} onSelect={onSelectToken} />
+          </div>
+        </WorkspaceAdaptiveHeader>
       </div>
-      {isDatabaseEnabled && <div className="users-header-tools flex flex-wrap items-center justify-between gap-3">
+      {isDatabaseEnabled && <div className="users-header-tools workspace-tab-frame flex flex-wrap items-center justify-between gap-3">
         {stats && <InlineStatsBadges stats={stats} />}
         {/** Перенос данных расположен рядом с текущей областью, перед очисткой. */}
         <div className="ml-auto flex flex-wrap items-center gap-2">
@@ -53,7 +56,6 @@ export function DatabaseHeaderSection(props: DatabaseHeaderSectionProps): React.
             onRefresh={handleRefresh} onDeleteAll={() => deleteAllUsersMutation.mutate()} />
         </div>
       </div>}
-      </WorkspaceAdaptiveHeader>
     </div>
   );
 }

@@ -1,5 +1,5 @@
 /** @fileoverview Прикладная строка списка, экспорта и импорта под общей шапкой таблиц. */
-.tables-header-content .tables-header-tools { grid-column: 1 / -1; }
+.workspace-tab-frame.tables-header-tools { padding-block: 8px; border-top: 1px solid var(--border); }
 .tables-header-tools .tables-transfer-actions { margin-left: auto; }
 .tables-header-tools > [role='alert'] { flex-basis: 100%; }
 /** На узкой панели действия переносятся, сохраняя компактные подписи рядом с иконками. */

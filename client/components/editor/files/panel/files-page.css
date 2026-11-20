@@ -2,12 +2,13 @@
  * @fileoverview Изолированное оформление вкладки файлов с адаптивной шапкой и фильтрами.
  */
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap');
-.files-page { font-family: 'Manrope', sans-serif; container: files-page / inline-size; }
+.files-page { font-family: 'Manrope', sans-serif; }
+/** Локальные переходы измеряют доступную ширину каждой полосы после общих боковых полей. */
+.files-page :is(.workspace-tab-bar, .files-page-upload, .files-page-body) { container: files-page / inline-size; }
 .files-surface { background: #ffffff; }
 .files-inset { background: #f4f4f5; }
 .dark .files-surface { background: #09090b; border-color: #29292d; }
 .dark .files-inset { background: #141416; }
-.files-page-header { padding-bottom: 4px; }
 .files-header-actions > button, .files-header-actions > a { height: 40px; padding: 8px 12px; font-size: 14px; line-height: 20px; font-weight: 600; }
 .files-header-actions button > span, .files-header-actions a > span { display: inline; }
 .files-header-actions button > svg, .files-header-actions a > svg { margin-right: 0; }

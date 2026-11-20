@@ -23,6 +23,11 @@
 .workspace-adaptive-header :is(.workspace-tab-actions > a,.workspace-tab-actions > button,[role='combobox']) { transform: none; transition-property: color, background-color, border-color; }
 .workspace-adaptive-header :is(.workspace-tab-actions > a,.workspace-tab-actions > button,[role='combobox']):hover { transform: none; color: var(--foreground); background: transparent; border-color: #52525b; }
 .workspace-adaptive-header .workspace-tab-actions { display: flex; align-items: center; gap: 8px; }
+/** Дополнительные подписи открываются независимо по фактической ширине шапки. */
+.workspace-adaptive-header [data-workspace-label] { display: none; }
+.workspace-adaptive-header[data-extra-labels~='view'] [data-workspace-label='view'],
+.workspace-adaptive-header[data-extra-labels~='connect'] [data-workspace-label='connect'],
+.workspace-adaptive-header[data-extra-labels~='bulk'] [data-workspace-label='bulk'] { display: inline; }
 :is(.workspace-adaptive-header,.terminal-workspace-header) .workspace-tab-actions > :is(a,button) { gap: 8px; font-size: 14px; font-weight: 400; }
 .workspace-adaptive-header[data-compact-actions='true'] .workspace-tab-actions > :is(a,button) { width: 32px; padding-inline: 0; }
 .workspace-adaptive-header[data-compact-actions='true'] .workspace-tab-actions > :is(a,button) > span { display: none; }

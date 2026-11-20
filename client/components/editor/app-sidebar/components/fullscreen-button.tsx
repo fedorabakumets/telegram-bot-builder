@@ -9,11 +9,10 @@ interface FullscreenButtonProps {
   isCollapsed?: boolean;
 }
 /**
- * Переключает полноэкранный режим и отражает выход средствами браузера.
- * @param props - Режим отображения бокового меню.
- * @returns Кнопка переключения и сообщение при отказе браузера.
+ * Синхронизирует полноэкранный режим для боковой панели и компактного меню.
+ * @returns Состояние и действие переключения полноэкранного режима.
  */
-export function FullscreenButton({ isCollapsed }: FullscreenButtonProps) {
+export function useAppFullscreen() {
   const [active, setActive] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
@@ -39,6 +38,16 @@ export function FullscreenButton({ isCollapsed }: FullscreenButtonProps) {
     } finally { setPending(false); }
   }
   const label = active ? 'Выйти из полноэкранного режима' : 'Полноэкранный режим';
+  return { active, pending, error, label, toggle };
+}
+
+/**
+ * Показывает кнопку полноэкранного режима и сообщение при отказе браузера.
+ * @param props - Режим отображения бокового меню.
+ * @returns Кнопка переключения полноэкранного режима.
+ */
+export function FullscreenButton({ isCollapsed }: FullscreenButtonProps) {
+  const { active, pending, error, label, toggle } = useAppFullscreen();
   return (
     <>
       <button type="button" title={label} aria-label={label} aria-pressed={active} disabled={pending}

@@ -63,6 +63,7 @@ export function TerminalTabs({ currentProjectId, onTerminalSelect }: TerminalTab
         tokens={tokens}
         selectedTokenId={selected?.tokenId ?? null}
         allowAll={false}
+        showRuntimeStatus
         emptySelectionLabel="Выберите бота"
         onSelect={id => { if (id !== null) selectBot(id); }}
       />}

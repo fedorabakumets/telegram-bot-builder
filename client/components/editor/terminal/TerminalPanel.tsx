@@ -13,7 +13,6 @@ import { useState, useCallback, useEffect } from 'react';
 import { Terminal as TerminalIcon } from 'lucide-react';
 import { TabHeader } from '@/components/ui/tab-header';
 import { WorkspaceTabActions } from '@/components/ui/workspace-tab-actions';
-import '@/components/ui/workspace-adaptive-header.css';
 import { useQueryClient } from '@tanstack/react-query';
 import { BotTerminal } from './BotTerminal';
 import { LaunchHistoryViewer } from './LaunchHistoryViewer';
@@ -111,24 +110,33 @@ export function TerminalPanel({ allProjects, currentProjectId, onProjectChange }
     });
   }, []);
 
+  /** Одна и та же строка селекторов работает с активным терминалом и без него. */
+  const header = (
+    <TabHeader
+      className="terminal-workspace-header"
+      icon={<TerminalIcon className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />}
+      title="Терминал"
+      actions={actions}
+    >
+      <div className="flex min-w-0 max-w-full items-center gap-2">
+        {allProjects && allProjects.length > 1 && onProjectChange && currentProjectId && (
+          <ProjectSelector
+            projects={allProjects}
+            selectedProjectId={currentProjectId}
+            showBotCount={false}
+            ariaLabel="Проект терминала"
+            onSelect={onProjectChange}
+          />
+        )}
+        <TerminalTabs currentProjectId={currentProjectId} onTerminalSelect={handleTerminalSelect} />
+      </div>
+    </TabHeader>
+  );
+
   if (!active) {
     return (
       <div className="flex flex-col h-full bg-background">
-        <TabHeader
-          className="terminal-workspace-header"
-          icon={<TerminalIcon className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />}
-          title="Терминал"
-          actions={actions}
-        >
-          {allProjects && allProjects.length > 1 && onProjectChange && currentProjectId && (
-            <ProjectSelector
-              projects={allProjects}
-              selectedProjectId={currentProjectId}
-              onSelect={onProjectChange}
-            />
-          )}
-          <TerminalTabs currentProjectId={currentProjectId} onTerminalSelect={handleTerminalSelect} />
-        </TabHeader>
+        {header}
         <div className="flex-1 flex items-center justify-center text-muted-foreground">
           <div className="text-center">
             <p className="text-lg font-medium mb-2">Терминалы не активны</p>
@@ -141,22 +149,7 @@ export function TerminalPanel({ allProjects, currentProjectId, onProjectChange }
 
   return (
     <div className="flex flex-col h-full bg-background">
-      <TabHeader
-        className="terminal-workspace-header"
-        icon={<TerminalIcon className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />}
-        title="Терминал"
-        actions={actions}
-      >
-        {allProjects && allProjects.length > 1 && onProjectChange && currentProjectId && (
-          <ProjectSelector
-            projects={allProjects}
-            selectedProjectId={currentProjectId}
-            showBotCount={false}
-            onSelect={onProjectChange}
-          />
-        )}
-        <TerminalTabs currentProjectId={currentProjectId} onTerminalSelect={handleTerminalSelect} />
-      </TabHeader>
+      {header}
 
       <div className="flex-1 overflow-hidden p-2">
         {terminals.map((terminal: TerminalInfo) => {

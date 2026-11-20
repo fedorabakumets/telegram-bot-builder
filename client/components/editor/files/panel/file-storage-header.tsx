@@ -7,18 +7,15 @@
 
 import type { BotToken } from '@shared/schema';
 import type { ReactNode } from 'react';
-import { FileImage, FolderOpen, RefreshCw } from 'lucide-react';
+import { FolderOpen } from 'lucide-react';
 
-import { WorkspaceAdaptiveHeader } from '@/components/ui/workspace-adaptive-header';
 import './files-header-adaptive.css';
 import '@/components/editor/database/user-database/content/users-workspace.css';
 import { useBotAudienceCounts } from '@/components/editor/database/user-database/components/header/use-bot-audience-counts';
-import { WorkspaceTabHeading } from '@/components/ui/workspace-tab-heading';
-import { Button } from '@/components/ui/button';
 import { ProjectSelector } from '@/components/editor/database/user-database/components/header/project-selector';
 import { BotTokenSelector } from '@/components/editor/database/user-database/components/header/bot-token-selector';
 
-import { FileStorageDocsLink } from './file-storage-docs-link';
+import { FileStoragePageBar } from './file-storage-page-bar';
 import { FileStorageHeaderActions } from './file-storage-header-actions';
 import { HEADER_CONTAINER_MODAL_CLASS } from './panel-styles';
 import type { PanelMode } from './panel-types';
@@ -132,22 +129,18 @@ export function FileStorageHeader(props: FileStorageHeaderProps): React.JSX.Elem
 
   return (
     <div
-      className="files-page-header shrink-0 space-y-4"
+      className="files-page-header shrink-0"
       data-testid="file-storage-header"
       data-mode="page"
     >
-      <WorkspaceAdaptiveHeader className="files-header-content" scopeSelector=".files-scope-controls" actionsSelector=".workspace-tab-actions"><WorkspaceTabHeading title="Файлы" icon={<FileImage />}
-        description="Медиа для блоков бота."
-        actions={<div className="workspace-tab-actions flex shrink-0 items-center gap-2"><FileStorageDocsLink />
-          {/* При обновлении сохраняем оформление кнопки и блокируем повторный запрос. */}
-          <Button variant="ghost" size="icon" className="files-action h-8 w-8" onClick={() => { if (!props.isRefreshing) onRefresh(); }}
-          aria-disabled={props.isRefreshing} aria-busy={props.isRefreshing} aria-label="Обновить список файлов" title="Обновить список файлов" data-testid="file-storage-refresh">
-          {/* Иконка показывает обновление списка файлов. */}
-          <RefreshCw className={props.isRefreshing ? 'h-4 w-4 motion-safe:animate-spin' : 'h-4 w-4'} aria-hidden="true" />
-          <span className="files-heading-action-label">Обновить</span>
-        </Button></div>} />
-      <HeaderSelectors {...props} />
-      <div className="files-header-actions flex flex-wrap items-center gap-2">{actions}{props.quota}</div></WorkspaceAdaptiveHeader>
+      <FileStoragePageBar onRefresh={onRefresh} isRefreshing={props.isRefreshing}>
+        <HeaderSelectors {...props} />
+      </FileStoragePageBar>
+      <div className="files-page-upload workspace-tab-frame">
+        <div className="files-header-actions flex flex-wrap items-center gap-2">
+          {actions}{props.quota}
+        </div>
+      </div>
     </div>
   );
 }

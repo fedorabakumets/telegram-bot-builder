@@ -42,23 +42,25 @@ export function DialogsWorkspaceHeader({ projectId, projects, onProjectChange, t
     void queryClient.invalidateQueries({ predicate: query => query.queryKey.some(part =>
       part === projectId || (typeof part === 'string' && part.startsWith(`/api/projects/${projectId}/`))) });
   };
+  const hasProjects = !!projects && projects.length > 1 && !!onProjectChange;
   return <>
-    <header className="workspace-tab-frame dialogs-workspace-header">
+    <header className="workspace-tab-frame workspace-tab-bar dialogs-workspace-header shrink-0">
       <WorkspaceAdaptiveHeader className="dialogs-header-content" scopeSelector=".dialogs-scope" actionsSelector=".dialogs-heading-actions">
         <WorkspaceTabHeading title="Диалоги" icon={<MessageSquare />}
           description="Переписка с пользователями и группами."
           actions={<div className="dialogs-heading-actions">
             <WorkspaceTabActions docsPath="interface/dialogs" section="Диалоги" onRefresh={refreshDialogs} />
-            <Button variant="outline" size="sm" onClick={onNewBroadcast} className="dialogs-new-broadcast">
-              <Megaphone aria-hidden="true" className="h-4 w-4" />Рассылка
+            <Button variant="outline" size="sm" onClick={onNewBroadcast} className="dialogs-new-broadcast"
+              type="button" aria-label="Рассылка" title="Рассылка">
+              <Megaphone aria-hidden="true" className="h-4 w-4" /><span>Рассылка</span>
             </Button>
           </div>} />
-        <div className="dialogs-scope" role="group" aria-label="Проект и бот">
-          {projects && projects.length > 1 && onProjectChange && <ProjectSelector
+        {(hasProjects || tokens.length > 0) && <div className="dialogs-scope" role="group" aria-label="Проект и бот">
+          {hasProjects && <ProjectSelector
             projects={projects} selectedProjectId={projectId} showBotCount={tokenId == null} onSelect={onProjectChange} />}
           {tokens.length > 0 && <DialogBotSelector projectId={projectId} tokens={tokens}
             selectedTokenId={tokenId} allowAll onSelect={onSelectToken} />}
-        </div>
+        </div>}
       </WorkspaceAdaptiveHeader>
     </header>
     {hasConversation && children && <div className="dialogs-conversation-heading">{children}</div>}

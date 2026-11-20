@@ -10,10 +10,7 @@
 .terminal-workspace-header .terminal-launch-controls > [role='combobox'] { min-width: 0; }
 .terminal-workspace-header .terminal-launch-controls > [role='combobox'] > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .terminal-workspace-header .terminal-launch-controls > [role='combobox'] > svg { flex-shrink: 0; }
-/** Компактные действия терминала и ботов сохраняют подписи в подсказках. */
-:is(.terminal-workspace-header, .bot-workspace-header) .workspace-tab-actions > :is(button, a) { width: 32px; padding-inline: 0; }
-:is(.terminal-workspace-header, .bot-workspace-header) .workspace-tab-actions > :is(button, a) > span { display: none; }
-.bot-workspace-header .workspace-tab-actions > :is(button, a)[aria-label] { color: var(--foreground); }
+/** Подписи действий раскрывает общий адаптивный каркас при наличии места. */
 .workspace-tab-actions > :is(button, a) > span { display: none; }
 .workspace-project-scope { min-width: 0; width: 100%; }
 .workspace-project-scope > div { width: 100%; }
@@ -35,6 +32,14 @@
   .workspace-tab-heading.workspace-tab-heading > div:first-child { display: block; }
 }
 @media (min-width: 640px) { .workspace-tab-frame { padding: 12px 24px 24px; } }
+
+/** Шапка без вертикальных отступов растёт при переносе содержимого. */
+.workspace-tab-frame.workspace-tab-bar {
+  container-type: inline-size;
+  min-height: 48px;
+  padding-block: 0;
+  align-content: center;
+}
 
 /** Узкая рабочая вкладка позволяет свернуть шапку, сохраняя доступ к ней. */
 .workspace-header-toggle { display: none; }

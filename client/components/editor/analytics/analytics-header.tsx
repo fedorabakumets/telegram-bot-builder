@@ -1,8 +1,9 @@
 /** @fileoverview Единая шапка аналитики с описанием, документацией и выбором области данных. */
-import { useEffect, useState, type ReactNode } from 'react';
-import { BarChart2 } from 'lucide-react';
+import { useEffect, useId, useState, type ReactNode } from 'react';
+import { BarChart2, SlidersHorizontal } from 'lucide-react';
 import type { BotToken } from '@shared/schema';
 import { WorkspaceTabHeading } from '@/components/ui/workspace-tab-heading';
+import { Button } from '@/components/ui/button';
 import { WorkspaceAdaptiveHeader } from '@/components/ui/workspace-adaptive-header';
 import { WorkspaceTabActions } from '@/components/ui/workspace-tab-actions';
 import { ProjectSelector } from '@/components/editor/database/user-database/components/header/project-selector';
@@ -36,20 +37,25 @@ interface AnalyticsHeaderProps extends AnalyticsPanelProps {
 export function AnalyticsHeader({ projectId, tokens, selectedTokenId, onSelectToken,
   allProjects, onProjectChange, isRefreshing, onRefresh, totalUsers, audienceCounts, periodControl, periodRequest }: AnalyticsHeaderProps) {
   const [collapsed, setCollapsed] = useState(false);
+  const filtersId = useId();
   /** Список ботов получает готовые числа раньше графиков; полный снимок остаётся резервом. */
   const fastAudience = useBotAudienceCounts(projectId);
   useEffect(() => { if (periodRequest) setCollapsed(false); }, [periodRequest]);
   const hasProjects = !!allProjects && allProjects.length > 1 && !!onProjectChange;
-  /** Промежуток появляется только при видимой кнопке сворачивания. */
-  return <header className={`workspace-tab-frame analytics-responsive-header flex shrink-0 flex-col gap-4 ${collapsed ? "is-collapsed" : ""}`}>
-    <button type="button" className="analytics-header-toggle" aria-expanded={!collapsed} onClick={() => setCollapsed(!collapsed)}>{collapsed ? "Показать фильтры" : "Свернуть шапку"}</button>
-    <WorkspaceAdaptiveHeader className="analytics-header-content" scopeSelector=".analytics-scope" actionsSelector=".workspace-tab-actions">
+  const hasFilters = hasProjects || tokens.length > 0 || Boolean(periodControl);
+  const filtersLabel = collapsed ? 'Показать фильтры' : 'Свернуть фильтры';
+  return <header className="workspace-tab-frame workspace-tab-bar shrink-0">
+    <WorkspaceAdaptiveHeader className="analytics-header-content" scopeSelector=".analytics-scope" actionsSelector=".analytics-heading-actions">
     <WorkspaceTabHeading title="Аналитика" icon={<BarChart2 />}
       description="Рост аудитории, активность и источники трафика."
-      actions={<WorkspaceTabActions docsPath="interface/analytics" section="Аналитика"
-        onRefresh={onRefresh} isRefreshing={isRefreshing} />} />
-    {(hasProjects || tokens.length > 0 || periodControl) && <div role="group" aria-label="Проект и бот"
-      className="analytics-scope">
+      actions={<div className="analytics-heading-actions flex items-center gap-2">
+        {hasFilters && <Button type="button" variant="ghost" size="icon" className="analytics-filter-toggle h-8 w-8 shrink-0"
+          aria-label={filtersLabel} title={filtersLabel} aria-controls={filtersId} aria-expanded={!collapsed}
+          onClick={() => setCollapsed((previous) => !previous)}><SlidersHorizontal aria-hidden="true" /></Button>}
+        <WorkspaceTabActions docsPath="interface/analytics" section="Аналитика" onRefresh={onRefresh} isRefreshing={isRefreshing} />
+      </div>} />
+    {hasFilters && <div id={filtersId} role="group" aria-label="Фильтры отчётов"
+      className="analytics-scope" data-collapsed={collapsed}>
       {hasProjects && <div className="analytics-scope-project"><ProjectSelector projects={allProjects} selectedProjectId={projectId} showBotCount={selectedTokenId == null}
         onSelect={id => { onSelectToken?.(null); onProjectChange(id); }} /></div>}
       {tokens.length > 0 && <div className="analytics-scope-bot"><BotTokenSelector projectId={projectId} tokens={tokens}

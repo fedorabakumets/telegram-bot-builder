@@ -1664,8 +1664,10 @@ export default function Editor() {
 
   // Функция рендеринга содержимого для гибкого макета
   const renderFlexibleLayoutContent = () => {
+    /** В этом макете основные переходы и действия уже выведены в AppSidebar. */
     const headerContent = (
       <AdaptiveHeader
+        hasWorkspaceSidebar
         config={layoutConfig}
         projectName={activeProject.name}
         projects={allProjects.map((p) => ({ id: p.id, name: p.name }))}

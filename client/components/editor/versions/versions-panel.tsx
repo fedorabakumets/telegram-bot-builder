@@ -79,8 +79,8 @@ export function VersionsPanel({ projectId, onRestored, projects, onProjectChange
   }, [restoreMutation, onRestored, toast]);
 
   return (
-    <div ref={panel} className="versions-page workspace-tab-frame h-full overflow-auto bg-background">
-      <div className="versions-content workspace-tab-content space-y-6 pb-4">
+    <div ref={panel} className="versions-page h-full overflow-auto bg-background">
+      <div className="workspace-tab-frame workspace-tab-bar">
         {/** Геометрия, контраст и сокращение подписей задаются общей шапкой вкладок. */}
         <WorkspaceAdaptiveHeader scopeSelector=".workspace-project-scope" actionsSelector=".workspace-tab-actions">
           <WorkspaceTabHeading title="История версий" icon={<History />}
@@ -89,6 +89,8 @@ export function VersionsPanel({ projectId, onRestored, projects, onProjectChange
           />
           <WorkspaceProjectScope projectId={projectId} projects={projects} onProjectChange={onProjectChange} />
         </WorkspaceAdaptiveHeader>
+      </div>
+      <div className="versions-content workspace-tab-frame workspace-tab-content space-y-6">
         <CommitForm projectId={projectId} />
         <section className="space-y-3" aria-labelledby="saved-versions-heading" aria-busy={isFetching}>
           <div className="flex flex-wrap items-center justify-between gap-2">

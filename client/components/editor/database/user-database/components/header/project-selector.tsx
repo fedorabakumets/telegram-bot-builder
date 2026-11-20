@@ -24,6 +24,10 @@ interface ProjectSelectorProps {
   projects: Array<{ id: number; name: string }>;
   /** ID выбранного проекта */
   selectedProjectId: number;
+  /** Название выбранного проекта, если он отсутствует в списке, например в архиве. */
+  selectedProjectName?: string;
+  /** Доступная подпись поля выбора. */
+  ariaLabel?: string;
   /** Обработчик выбора проекта */
   onSelect: (projectId: number) => void;
   /** Показывать количество в закрытом поле; список всегда сохраняет полные подписи. */
@@ -38,6 +42,8 @@ interface ProjectSelectorProps {
 export function ProjectSelector({
   projects,
   selectedProjectId,
+  selectedProjectName,
+  ariaLabel = 'Проект пользователей',
   onSelect,
   showBotCount = true,
 }: ProjectSelectorProps): React.JSX.Element {
@@ -56,11 +62,11 @@ export function ProjectSelector({
         value={String(selectedProjectId)}
         onValueChange={(value) => onSelect(Number(value))}
       >
-        <SelectTrigger aria-label="Проект пользователей" className="h-8 min-w-0 w-40 max-w-full rounded-lg border-border bg-background text-sm [&>span]:min-w-0 [&>span]:flex-1 [&>span]:text-left">
+        <SelectTrigger aria-label={ariaLabel} className="h-8 min-w-0 w-40 max-w-full rounded-lg border-border bg-background text-sm [&>span]:min-w-0 [&>span]:flex-1 [&>span]:text-left">
           <SelectValue placeholder="Проект"><span className="flex min-w-0 items-center justify-between gap-2">
             {/** В закрытом поле название важнее служебного ID; полная подпись остаётся в списке. */}
             <span className="flex min-w-0 flex-1 items-center gap-2">
-              <span className="min-w-0 truncate">{selectedProject?.name}</span>
+              <span className="min-w-0 truncate">{selectedProject?.name ?? selectedProjectName}</span>
             </span>
             {showBotCount && <span className="shrink-0 tabular-nums" title={botCountLabel(selectedProjectId)}>{counts.get(selectedProjectId)?.toLocaleString('ru-RU') ?? '—'}</span>}
           </span></SelectValue>

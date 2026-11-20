@@ -3,19 +3,17 @@
  * @module components/editor/canvas/learn/EditorLearnButton
  */
 
-import { useState } from 'react';
-import { Check, GraduationCap } from 'lucide-react';
+import { GraduationCap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { EDITOR_LEARN_SECTIONS, type EditorLearnSectionId } from './editor-learn-sections';
-import { getEditorLearnDoneSections } from './editor-learn-storage';
+import type { EditorLearnSectionId } from './editor-learn-sections';
+import { EditorLearnMenuItems } from './EditorLearnMenuItems';
 
 /** Пропсы кнопки */
 export interface EditorLearnButtonProps {
@@ -23,6 +21,8 @@ export interface EditorLearnButtonProps {
   active: boolean;
   /** Запуск раздела с первого шага */
   onStart: (sectionId: EditorLearnSectionId) => void;
+  /** Показывает подпись рядом с иконкой в широкой шапке. */
+  showLabel?: boolean;
 }
 
 /**
@@ -30,40 +30,26 @@ export interface EditorLearnButtonProps {
  * @param props - Свойства
  * @returns JSX элемент
  */
-export function EditorLearnButton({ active, onStart }: EditorLearnButtonProps) {
-  const [done, setDone] = useState<Set<string>>(() => new Set());
-
+export function EditorLearnButton({ active, onStart, showLabel = false }: EditorLearnButtonProps) {
   return (
-    <DropdownMenu onOpenChange={(open) => open && setDone(getEditorLearnDoneSections())}>
+    <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
           type="button"
           variant={active ? 'secondary' : 'outline'}
           size="sm"
-          className="h-8 w-8 shrink-0 p-0"
+          className={showLabel ? 'h-8 shrink-0 gap-1.5 px-2' : 'h-8 w-8 shrink-0 p-0'}
           title="Обучение"
+          aria-label="Обучение"
         >
-          <GraduationCap className="h-4 w-4" />
+          <GraduationCap className="h-4 w-4" aria-hidden="true" />
+          {showLabel && <span>Обучение</span>}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-72">
         <DropdownMenuLabel>Разделы обучения</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {EDITOR_LEARN_SECTIONS.map((section) => (
-          <DropdownMenuItem
-            key={section.id}
-            className="items-start gap-2 py-2"
-            onSelect={() => onStart(section.id)}
-          >
-            <Check className={done.has(section.id) ? 'mt-0.5 h-4 w-4 text-primary' : 'mt-0.5 h-4 w-4 opacity-0'} />
-            <div className="min-w-0">
-              <p className="text-sm font-medium">{section.title}</p>
-              <p className="text-xs text-muted-foreground">
-                {section.steps.length} шагов · {section.description}
-              </p>
-            </div>
-          </DropdownMenuItem>
-        ))}
+        <EditorLearnMenuItems onStart={onStart} />
       </DropdownMenuContent>
     </DropdownMenu>
   );

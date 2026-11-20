@@ -1,5 +1,5 @@
 /**
- * @fileoverview Адаптивная шапка редактора. Узкая шапка прокручивается по горизонтали.
+ * @fileoverview Компоновка шапки редактора и переходов при отсутствии внешней навигации.
  */
 
 import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
@@ -9,11 +9,16 @@ import type { AdaptiveHeaderProps } from './types';
 import { Navigation } from './components/navigation';
 import { DesktopActionsFull } from './components/desktop-actions-full';
 import { Separator } from './components/separator';
-import { ProjectSwitcher } from './components/project-switcher';
 import { ProjectArchiveBadge } from './components/project-archive-badge';
-import { EditorLearnButton } from '@/components/editor/canvas/learn';
-import { requestEditorLearn, useEditorLearnActive } from '@/components/editor/canvas/learn/editor-learn-bridge';
+import { EditorHorizontalHeader } from './components/editor-horizontal-header';
+import { EditorHelpActions } from './components/editor-help-actions';
+import { WorkspaceFallbackMenu } from './components/workspace-fallback-menu';
 
+/**
+ * Выбирает общую горизонтальную шапку или вертикальную навигацию макета.
+ * @param props - Состояние проекта, макета и доступные действия.
+ * @returns Шапка активного рабочего пространства.
+ */
 export function AdaptiveHeader({
   config,
   projectName,
@@ -33,6 +38,7 @@ export function AdaptiveHeader({
   onOpenFileExplorer,
   headerVisible,
   sidebarVisible,
+  hasWorkspaceSidebar = false,
   propertiesVisible,
   canvasVisible,
   codeVisible,
@@ -44,27 +50,19 @@ export function AdaptiveHeader({
 }: AdaptiveHeaderProps) {
 
   // Проверка авторизации пользователя
-  const { user, logout, isLoading } = useTelegramAuth();
+  const { user, logout, isLoading, isTelegramUser } = useTelegramAuth();
   const { handleTelegramLogin } = useTelegramLogin();
 
   // Подключаем listener postMessage один раз на верхнем уровне
   useTelegramAuthListener();
-  const learnActive = useEditorLearnActive();
 
   // Определяем ориентацию заголовка
   const isVertical = config.headerPosition === 'left' || config.headerPosition === 'right';
   const isCompact = config.compactMode;
 
-  // Классы для контейнера с адаптивной высотой для мобильных устройств
-  const containerClasses = [
-    'bg-background dark:bg-slate-950 border-b border-border/50 relative z-50',
-    isVertical ? 'h-full w-full border-r flex flex-col' : `h-14 flex items-center justify-between gap-2 px-3 lg:px-4`,
-    isCompact ? 'text-sm' : ''
-  ].join(' ');
-
   if (isVertical) {
     return (
-      <header className={containerClasses}>
+      <header className={`relative z-50 flex h-full w-full flex-col border-r border-border/50 bg-background ${isCompact ? 'text-sm' : ''}`}>
         {/* BrandSection скрыт — перенесён в боковое меню */}
         <Separator />
         <div className="flex-1 overflow-y-auto">
@@ -104,97 +102,20 @@ export function AdaptiveHeader({
   }
 
   return (
-    <>
-      <header className={`${containerClasses} w-full min-w-0 overflow-x-auto overflow-y-hidden`}>
-        <div className="flex w-max min-w-full items-center gap-2">
-        <div className="flex shrink-0 items-center">
-          {/* Переключатель проекта — без лого, лого живёт в сайдбаре */}
-          {projects && projects.length > 0 && currentProjectId && onProjectChange && (
-            <ProjectSwitcher
-              projects={projects}
-              currentProjectId={currentProjectId}
-              currentProjectName={projectName}
-              onSelect={onProjectChange}
-            />
-          )}
-
-          {isCurrentProjectArchived && onUnarchiveCurrentProject && (
-            <ProjectArchiveBadge
-              onUnarchive={onUnarchiveCurrentProject}
-              disabled={isUnarchivePending}
-            />
-          )}
-
-          <Separator />
-          {/* Мобильные кнопки перенесены на FAB канваса — см. mobile-canvas-fab.tsx */}
-        </div>
-
-        <div className="flex shrink-0 grow items-center gap-1 lg:gap-2">
-          <Navigation
-            currentTab={currentTab}
-            onTabChange={onTabChange}
-            isVertical={isVertical}
-            isCompact={isCompact}
-          />
-
-          {currentTab === 'editor' ? (
-            <EditorLearnButton active={learnActive} onStart={requestEditorLearn} />
-          ) : null}
-
-          {/* Десктопные/Планшетные действия */}
-          <DesktopActionsFull
-            onToggleHeader={onToggleHeader}
-            onToggleSidebar={onToggleSidebar}
-            onToggleCanvas={onToggleCanvas}
-            onToggleProperties={onToggleProperties}
-            onToggleCode={onToggleCode}
-            onToggleCodeEditor={onToggleCodeEditor}
-            onOpenFileExplorer={onOpenFileExplorer}
-            onLoadTemplate={onLoadTemplate}
-            onSaveAsTemplate={onSaveAsTemplate}
-            headerVisible={headerVisible}
-            sidebarVisible={sidebarVisible}
-            canvasVisible={canvasVisible}
-            propertiesVisible={propertiesVisible}
-            codeVisible={codeVisible}
-            codeEditorVisible={codeEditorVisible}
-            user={user}
-            isLoading={isLoading}
-            onLogout={logout}
-            onLogin={handleTelegramLogin}
-            isVertical={isVertical}
-            adminModeContent={adminModeContent}
-          />
-        </div>
-        </div>
-
-        {/* Мобильная кнопка меню — скрыта, функционал перенесён на FAB и навигацию */}
-        {/* <div className="lg:hidden">
-          <MobileMenu
-            currentTab={currentTab}
-            onTabChange={onTabChange}
-            onToggleHeader={onToggleHeader}
-            onToggleSidebar={onToggleSidebar}
-            onToggleCanvas={onToggleCanvas}
-            onToggleProperties={onToggleProperties}
-            onToggleCode={onToggleCode}
-            onToggleCodeEditor={onToggleCodeEditor}
-            onOpenFileExplorer={onOpenFileExplorer}
-            onLoadTemplate={onLoadTemplate}
-            onSaveAsTemplate={onSaveAsTemplate}
-            headerVisible={headerVisible}
-            sidebarVisible={sidebarVisible}
-            canvasVisible={canvasVisible}
-            propertiesVisible={propertiesVisible}
-            codeVisible={codeVisible}
-            codeEditorVisible={codeEditorVisible}
-            user={user}
-            isLoading={isLoading}
-            onLogout={logout}
-            onLogin={handleTelegramLogin}
-          />
-        </div> */}
-      </header>
-    </>
+    <EditorHorizontalHeader projectName={projectName} projects={projects} currentProjectId={currentProjectId}
+      onProjectChange={onProjectChange}
+      projectActions={isCurrentProjectArchived && onUnarchiveCurrentProject && (
+        <ProjectArchiveBadge onUnarchive={onUnarchiveCurrentProject} disabled={isUnarchivePending} />
+      )}
+      help={<EditorHelpActions compact={isCompact || !hasWorkspaceSidebar} canUseSupport={!!user && isTelegramUser(user)}
+        showLearning={currentTab === 'editor'} />}
+      fallbackActions={(!hasWorkspaceSidebar || adminModeContent) && (
+        <>
+          {adminModeContent}
+          {!hasWorkspaceSidebar && <WorkspaceFallbackMenu currentTab={currentTab} onTabChange={onTabChange}
+            onLoadTemplate={onLoadTemplate} onSaveAsTemplate={onSaveAsTemplate}
+            user={user} onLogin={handleTelegramLogin} onLogout={logout} isAuthLoading={isLoading} />}
+        </>
+      )} />
   );
 }

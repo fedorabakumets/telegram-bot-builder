@@ -81,8 +81,7 @@ export function BotControlPanelHeader({
     <TabHeader
       icon={<Bot className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />}
       title="Боты"
-      className="bot-workspace-header sm:px-4"
-      singleLine
+      className="bot-workspace-header"
       actions={
         <>
           <BotViewModeToggle mode={viewMode} onModeChange={onViewModeChange} />
@@ -96,8 +95,8 @@ export function BotControlPanelHeader({
               data-testid="button-connect-bot"
             >
               <Plus className="h-4 w-4" />
-              {/* На средней ширине иконка освобождает место для названия проекта. */}
-              <span className="hidden @[920px]:inline">Подключить</span>
+              {/* Подпись появляется, если помещается в общей шапке. */}
+              <span data-workspace-label="connect">Подключить</span>
             </Button>
           )}
           {/* Служебные действия идут после подключения бота. */}
@@ -105,11 +104,11 @@ export function BotControlPanelHeader({
         </>
       }
     >
-      {/* На десктопе проект и управление воркерами остаются в общей строке. */}
-      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1.5 sm:flex-nowrap">
+      {/* На узком экране область проекта и воркеров может переноситься. */}
+      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1.5">
         {allProjects && allProjects.length > 1 && onProjectChange && currentProjectId ? (
-          <div className="w-40 min-w-0 max-w-full shrink @[920px]:w-auto">
-            {/* Даёт имени проекта место рядом со счётчиком и сжимается в узкой панели. */}
+          <div className="min-w-0 max-w-40 shrink">
+            {/* Селектор занимает ширину названия, чтобы соседние кнопки не отрывались от проекта. */}
             <ProjectSelector
               projects={allProjects}
               selectedProjectId={currentProjectId}
@@ -119,8 +118,9 @@ export function BotControlPanelHeader({
         ) : null}
         <WorkerPoolStatus projects={allProjects} />
         {currentProjectId != null && (
-          <div className="shrink-0 sm:[&_*[data-bulk-label]]:hidden @[920px]:[&_*[data-bulk-label]]:inline">
+          <div className="shrink-0">
           <ProjectBotBulkActions
+            adaptiveLabels
             projectId={currentProjectId}
             projectName={projectName}
             botsCount={currentProjectTokens.length}

@@ -3,12 +3,26 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-libra
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { afterEach, expect, it, vi } from 'vitest';
 import type { BotToken } from '@shared/schema';
+import { projectBotStatusesQueryKey } from '@/components/editor/bot/project-bot-statuses-query';
 vi.mock('./use-token-user-counts', async importOriginal => ({
   ...await importOriginal<typeof import('./use-token-user-counts')>(),
   useTokenUserCounts: () => new Map([[1, 30], [2, 20]]),
 }));
 import { BotTokenSelector } from './bot-token-selector';
 afterEach(cleanup);
+/** Терминал показывает текущий запуск даже при активном токене остановленного бота. */
+it('отличает активный токен от работающего процесса в терминале', async () => {
+  const client = new QueryClient({ defaultOptions: { queries: { staleTime: Infinity } } });
+  const key = projectBotStatusesQueryKey(12);
+  client.setQueryData(key, { statuses: [{ status: 'stopped', tokenId: 1, instance: null }] });
+  const tokens = [{ id: 1, name: 'Бот', isActive: 1 }] as BotToken[];
+  render(<QueryClientProvider client={client}><BotTokenSelector projectId={12} tokens={tokens}
+    selectedTokenId={1} allowAll={false} showRuntimeStatus onSelect={() => {}} /></QueryClientProvider>);
+  expect(screen.getByRole('combobox').textContent).toContain('Офлайн');
+  act(() => client.setQueryData(key, { statuses: [{ status: 'running', tokenId: 1, instance: null }] }));
+  await waitFor(() => expect(screen.getByRole('combobox').textContent).toContain('Онлайн'));
+  client.clear();
+});
 /** Итог сервера может быть меньше суммы по ботам; подтверждённый ноль остаётся видимым. */
 it('показывает уникальный итог проекта и обновляет его до нуля', async () => {
   const client = new QueryClient();

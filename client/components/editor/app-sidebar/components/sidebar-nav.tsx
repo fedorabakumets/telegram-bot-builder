@@ -32,7 +32,7 @@ interface NavItem {
 }
 
 /** Список активных пунктов навигации */
-const NAV_ITEMS: NavItem[] = [
+export const SIDEBAR_NAV_ITEMS: readonly NavItem[] = [
   { tab: 'editor',    label: 'Редактор',   icon: LayoutDashboard },
   { tab: 'bot',       label: 'Бот',        icon: Bot },
   { tab: 'terminal', label: 'Терминал',  icon: Terminal },
@@ -53,7 +53,7 @@ const NAV_ITEMS: NavItem[] = [
 export function SidebarNav({ currentTab, onTabChange, isCollapsed }: SidebarNavProps) {
   return (
     <nav className="flex flex-col gap-1">
-      {NAV_ITEMS.map(({ tab, label, icon: Icon }) => {
+      {SIDEBAR_NAV_ITEMS.map(({ tab, label, icon: Icon }) => {
         const isActive = currentTab === tab;
         return (
           <Button

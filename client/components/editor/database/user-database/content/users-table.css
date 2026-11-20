@@ -59,8 +59,3 @@
   .users-workspace .users-filter-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .users-filters { grid-template-columns: minmax(220px, 1fr) minmax(0, 3fr); }
 }
-/** На узкой панели сохраняются общие поля и отступы без горизонтального скролла. */
-@container (max-width: 799px) {
-  .users-page-header { padding-bottom: 12px; }
-  .users-header-tools { padding-top: 12px; border-top: 1px solid var(--border); }
-}

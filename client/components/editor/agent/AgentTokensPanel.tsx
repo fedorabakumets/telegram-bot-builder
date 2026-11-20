@@ -13,6 +13,7 @@ import { Sparkles } from "lucide-react";
 import "./agent-page.css";
 import { WorkspaceActionButton } from '@/components/ui/workspace-action-button';
 import { WorkspaceTabHeading } from "@/components/ui/workspace-tab-heading";
+import { WorkspaceAdaptiveHeader } from '@/components/ui/workspace-adaptive-header';
 import { useAgentTokens } from "./use-agent-tokens";
 import { AgentTokensTable } from "./AgentTokensTable";
 import { CreateTokenDialog } from "./CreateTokenDialog";
@@ -31,24 +32,31 @@ export function AgentTokensPanel() {
   const [revokeTarget, setRevokeTarget] = useState<AgentTokenDto | null>(null);
 
   return (
-    <div className="agent-page workspace-tab-frame workspace-tab-content space-y-6">
-      <WorkspaceTabHeading title="Агент" icon={<Sparkles />} actions={<AgentHeaderActions />}
-        description="Подключите Telegram Agent к своему профилю, чтобы работать с ботами в переписке." />
-      <AgentConnections />
-      <section aria-labelledby="agent-tokens-heading" className="space-y-4">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="min-w-0 space-y-1">
-            <h3 id="agent-tokens-heading" className="text-xl font-semibold">Другие ИИ клиенты</h3>
-            <p className="max-w-xl text-pretty text-sm text-muted-foreground">Создайте отдельный токен для подключения через MCP.</p>
+    <div className="agent-page">
+      <div className="workspace-tab-frame workspace-tab-bar">
+        {/* Действия агента размещены в общей строке без выбора проекта. */}
+        <WorkspaceAdaptiveHeader>
+          <WorkspaceTabHeading title="Агент" icon={<Sparkles />} actions={<AgentHeaderActions />} />
+        </WorkspaceAdaptiveHeader>
+      </div>
+      <div className="workspace-tab-frame workspace-tab-content space-y-6">
+        <p className="text-sm text-muted-foreground">Подключите Telegram Agent к своему профилю, чтобы работать с ботами в переписке.</p>
+        <AgentConnections />
+        <section aria-labelledby="agent-tokens-heading" className="space-y-4">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="min-w-0 space-y-1">
+              <h3 id="agent-tokens-heading" className="text-xl font-semibold">Другие ИИ клиенты</h3>
+              <p className="max-w-xl text-pretty text-sm text-muted-foreground">Создайте отдельный токен для подключения через MCP.</p>
+            </div>
+            <WorkspaceActionButton className="agent-action px-3 text-sm font-semibold" onClick={() => setCreateOpen(true)}>
+              <span aria-hidden="true">＋</span> Создать токен
+            </WorkspaceActionButton>
           </div>
-          <WorkspaceActionButton className="agent-action px-3 text-sm font-semibold" onClick={() => setCreateOpen(true)}>
-            <span aria-hidden="true">＋</span> Создать токен
-          </WorkspaceActionButton>
-        </div>
-        {isLoading && <div role="status" className="agent-skeleton h-32 rounded-xl bg-muted"><span className="sr-only">Загрузка токенов…</span></div>}
-        {isError && <p role="alert" className="rounded-lg border border-destructive/30 p-4 text-sm text-destructive">Не удалось загрузить токены. Обновите страницу, чтобы повторить попытку.</p>}
-        {!isLoading && !isError && <AgentTokensTable tokens={tokens ?? []} onRevoke={setRevokeTarget} />}
-      </section>
+          {isLoading && <div role="status" className="agent-skeleton h-32 rounded-xl bg-muted"><span className="sr-only">Загрузка токенов…</span></div>}
+          {isError && <p role="alert" className="rounded-lg border border-destructive/30 p-4 text-sm text-destructive">Не удалось загрузить токены. Обновите страницу, чтобы повторить попытку.</p>}
+          {!isLoading && !isError && <AgentTokensTable tokens={tokens ?? []} onRevoke={setRevokeTarget} />}
+        </section>
+      </div>
       <CreateTokenDialog
         open={createOpen}
         onOpenChange={setCreateOpen}

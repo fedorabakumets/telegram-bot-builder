@@ -1,6 +1,5 @@
 /** @fileoverview Отступы шапки, списка и переписки, согласованные с вкладкой аналитики. */
 .dialogs-workspace { container: dialogs / inline-size; }
-.dialogs-workspace-header { flex-shrink: 0; padding: 4px 24px 12px; }
 /** Общая шапка управляет селекторами и подписями; здесь сгруппированы действия диалогов. */
 .dialogs-heading-actions { display: flex; align-items: center; gap: 8px; }
 .dialogs-conversation-heading { display: none; }
@@ -38,7 +37,8 @@
   .dialogs-list-column { width: 280px; }
 }
 @container dialogs (max-width: 479px) {
-  .dialogs-workspace-header { padding: 8px 16px 12px; }
+  .dialogs-heading-actions .dialogs-new-broadcast { width: 32px; padding-inline: 0; }
+  .dialogs-new-broadcast > span { display: none; }
   .dialogs-mobile-body { margin: 0 16px 16px; }
   .dialogs-list-search, .dialogs-workspace .dialogs-composer { padding: 12px; }
 }

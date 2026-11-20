@@ -58,10 +58,11 @@ export function TerminalLaunchSelector({ terminal, onCurrent, onHistory }: Termi
 
   return (
     <Select value={selectedId === undefined ? 'current' : String(selectedId)} onValueChange={selectLaunch}>
-      <SelectTrigger aria-label="Запуск" className="h-8 w-auto max-w-full min-w-36 text-sm">
+      {/** Длинная дата запуска сокращается только в закрытом селекторе. */}
+      <SelectTrigger aria-label="Запуск" className="h-8 w-max min-w-0 max-w-full text-sm [&>span]:min-w-0 [&>span]:truncate [&>svg]:shrink-0">
         <SelectValue />
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent align="start" collisionPadding={12} className="max-w-[calc(100vw-24px)]">
         {/* У остановленного бота показываются сохранённые логи последнего запуска. */}
         <SelectItem value="current">{terminal.isRunning ? 'Текущий запуск' : 'Последний запуск'}</SelectItem>
         {selectedId !== undefined && !selectedInHistory && (

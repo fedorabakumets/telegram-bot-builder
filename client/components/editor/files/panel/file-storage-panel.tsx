@@ -1,13 +1,4 @@
-/**
- * @fileoverview Переиспользуемая панель файлового хранилища (`FileStoragePanel`).
- * Единственная реализация логики и UI вкладки/модалки: рендерится и как
- * полноэкранная страница (mode='page'), и внутри закрываемого окна
- * (mode='modal'). Вся оркестрация состояния вынесена в хук
- * useFileStoragePanelState; презентация — в дочерние компоненты (задачи 5.2–5.5,
- * 6.x, 7.x). Контейнеры FilesTabPage/FileStorageModal — тонкие обёртки
- * (Req 1.1, 1.2, 1.6, 3.7).
- * @module components/editor/files/panel/file-storage-panel
- */
+/** @fileoverview Общая панель файлового хранилища для страницы и модалки. */
 import { FilePageSize } from './file-page-size';
 import { FileAttachActionProvider } from './file-attach-action';
 import { FileNodePicker } from './file-node-picker';
@@ -44,23 +35,10 @@ export function FileStoragePanel(props: FileStoragePanelProps) {
   const rootClassName =
     mode === 'modal'
       ? 'flex min-h-0 h-full flex-1 flex-col overflow-hidden bg-background'
-      : 'files-page workspace-tab-frame flex min-h-0 h-full flex-col gap-3 overflow-auto bg-background';
-  return (
-    <FileAttachActionProvider enabled={mode === 'page' && !!props.onSelectAttachNode} selectedIds={s.selectedIds} onToggle={s.toggleSelect} onEnable={s.setAttachModeEnabled}>
-      <div className={rootClassName} data-testid="file-storage-panel" data-mode={mode}>
-      <FileStorageHeader
-        quota={mode === 'page' && <StorageQuotaBar usedBytes={s.quota.usedBytes} s3UsedBytes={s.quota.s3UsedBytes} limitBytes={s.quota.limitBytes} isLoading={s.quota.isLoading} compact />}
-        mode={mode}
-        projectId={projectId}
-        tokens={s.tokens}
-        selectedTokenId={selectedTokenId ?? null}
-        onSelectToken={onSelectToken}
-        allProjects={allProjects}
-        onProjectChange={onProjectChange}
-        onRefresh={s.refresh}
-        onUploaded={s.handleUploaded}
-        isRefreshing={s.isFetching}
-      />
+      : 'files-page flex min-h-0 h-full flex-col overflow-auto bg-background';
+  /** Общие элементы страницы и модалки остаются в одном порядке. */
+  const body = (
+    <>
       <FileStorageToolbar
         hideQuota={mode === 'page'}
         category={s.category}
@@ -142,7 +120,26 @@ export function FileStoragePanel(props: FileStoragePanelProps) {
         total={s.total}
         onPageChange={(next) => s.setPage(next)}
       />
-    </div>
+    </>
+  );
+  return (
+    <FileAttachActionProvider enabled={mode === 'page' && !!props.onSelectAttachNode} selectedIds={s.selectedIds} onToggle={s.toggleSelect} onEnable={s.setAttachModeEnabled}>
+      <div className={rootClassName} data-testid="file-storage-panel" data-mode={mode}>
+        <FileStorageHeader
+          quota={mode === 'page' && <StorageQuotaBar usedBytes={s.quota.usedBytes} s3UsedBytes={s.quota.s3UsedBytes} limitBytes={s.quota.limitBytes} isLoading={s.quota.isLoading} compact />}
+          mode={mode}
+          projectId={projectId}
+          tokens={s.tokens}
+          selectedTokenId={selectedTokenId ?? null}
+          onSelectToken={onSelectToken}
+          allProjects={allProjects}
+          onProjectChange={onProjectChange}
+          onRefresh={s.refresh}
+          onUploaded={s.handleUploaded}
+          isRefreshing={s.isFetching}
+        />
+        {mode === 'page' ? <div className="files-page-body workspace-tab-frame flex shrink-0 flex-col gap-3">{body}</div> : body}
+      </div>
     </FileAttachActionProvider>
   );
 }

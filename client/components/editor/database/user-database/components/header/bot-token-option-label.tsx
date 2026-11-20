@@ -16,16 +16,17 @@ export function botSelectorStatus(token: BotToken): string {
  * @param props - Бот и количество профилей либо подтверждённой аудитории.
  * @returns Общая подпись раскрытого пункта и выбранного бота.
  */
-export function BotTokenOptionLabel({ token, count, audience, disconnected }: {
+export function BotTokenOptionLabel({ token, count, audience, disconnected, runtimeLabel }: {
   /** Текущий бот. */ token: BotToken;
   /** Количество пользователей. */ count?: number;
   /** Счётчик подтверждённой аудитории. */ audience: boolean;
   /** Исполнитель не подтвердил связь. */ disconnected?: boolean;
+  /** Статус выполнения для областей, где важно состояние процесса. */ runtimeLabel?: string;
 }) {
   const name = token.botFirstName && token.botUsername ? `${token.botFirstName} (@${token.botUsername})`
     : token.botFirstName || (token.botUsername ? `@${token.botUsername}` : token.name || `Бот №${token.id}`);
   const availability = botSelectorStatus(token);
-  const status = disconnected && availability === 'Активен' ? 'Нет связи' : availability;
+  const status = runtimeLabel ?? (disconnected && availability === 'Активен' ? 'Нет связи' : availability);
   /** Цвет берётся из того же справочника, что и остальные статусы интерфейса. */
   const { color: statusColor } = statusAppearance(status);
   return <span className="flex min-w-0 items-center gap-2" title={`${name} ${status}`}>

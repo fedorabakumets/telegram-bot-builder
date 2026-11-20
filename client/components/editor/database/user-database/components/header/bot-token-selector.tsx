@@ -11,6 +11,7 @@ import { BotToken } from '@shared/schema';
 import { Bot } from 'lucide-react';
 import { BotTokenOptionLabel } from './bot-token-option-label';
 import { useProjectBotStatuses } from '@/components/editor/bot/hooks/use-project-bot-statuses';
+import { botCanvasStatusLabel, resolveBotCanvasStatus } from '@/components/editor/bot/canvas/bot-canvas-status';
 import './bot-selector-responsive.css';
 import {
   Select,
@@ -47,6 +48,7 @@ interface BotTokenSelectorProps {
   audienceCounts?: Map<number, number>;
   /** Ошибка первоначального получения чисел. */ countsError?: boolean;
   /** Повторяет загрузку счётчиков. */ onRetryCounts?: () => void;
+  /** Показывает состояние запуска вместо доступности токена. */ showRuntimeStatus?: boolean;
 }
 
 /**
@@ -63,8 +65,11 @@ export function BotTokenSelector({
   emptySelectionLabel,
   audienceCounts,
   countsError, onRetryCounts,
+  showRuntimeStatus = false,
 }: BotTokenSelectorProps): React.JSX.Element {
   const runtime = useProjectBotStatuses(projectId);
+  /** Текущий запуск сопоставляется с ботом, а отсутствие подтверждения отображается отдельно. */
+  const statuses = new Map(runtime.data?.statuses.map(status => [status.tokenId ?? status.instance?.tokenId, status]));
   /** Только подтверждённое отсутствие связи заменяет обычный статус. */
   const disconnected = new Set(runtime.data?.statuses.filter(status => status.status === 'unknown')
     .map(status => status.tokenId ?? status.instance?.tokenId));
@@ -131,9 +136,17 @@ export function BotTokenSelector({
           </div>}
           {(countsReady ? sortedTokens : []).map((token) => {
             const count = userCounts.get(token.id);
+            const current = statuses.get(token.id);
+            const runtimeLabel = showRuntimeStatus ? botCanvasStatusLabel(resolveBotCanvasStatus({
+              unknown: !current || current.status === 'unknown', frozen: current?.frozen,
+              isActive: token.isActive, authorizationError: token.authorizationError,
+              isRunning: current?.status === 'running', hasFailure: current?.status === 'error',
+              operation: current?.status === 'starting' || current?.status === 'requested' ? 'starting' : undefined,
+            })) : undefined;
             return (
               <SelectItem key={token.id} value={String(token.id)}>
-                <BotTokenOptionLabel token={token} count={count} audience={Boolean(audienceCounts)} disconnected={disconnected.has(token.id)} />
+                <BotTokenOptionLabel token={token} count={count} audience={Boolean(audienceCounts)}
+                  disconnected={disconnected.has(token.id)} runtimeLabel={runtimeLabel} />
               </SelectItem>
             );
           })}
