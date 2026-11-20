@@ -25,6 +25,7 @@ import { isGuest } from '@/types/telegram-user';
 import { useBotViewMode } from '../canvas/use-bot-view-mode';
 import type { BotWorkspaceMode } from '../accounts/BotWorkspaceModeSwitch';
 import { BotAccountsWorkspace } from '../accounts/BotAccountsWorkspace';
+import { BotDemoAccountContext } from '../accounts/bot-demo-account-setting';
 import { useMockTelegramAccounts } from '../accounts/use-mock-telegram-accounts';
 import type { BotProject, BotToken } from '@shared/schema';
 
@@ -83,7 +84,6 @@ export function BotControlPanel({
   const { handleTelegramLogin } = useTelegramLogin();
   const { viewMode, setViewMode } = useBotViewMode();
   const [workspaceMode, setWorkspaceMode] = useState<BotWorkspaceMode>('bots');
-  const mockAccounts = useMockTelegramAccounts(currentProjectId);
 
   /** Является ли текущий пользователь гостем */
   const isGuestUser = !authLoading && (!user || isGuest(user));
@@ -94,6 +94,10 @@ export function BotControlPanel({
   const currentProjectIndex = projects.findIndex((p) => p.id === currentProjectId);
   const currentProjectTokens =
     currentProjectIndex >= 0 ? (allTokens[currentProjectIndex] || []) : [];
+  /** Для привязок передаём только подписи уже загруженных ботов проекта. */
+  const mockAccounts = useMockTelegramAccounts(currentProjectId, currentProjectTokens.map(bot => ({
+    id: `project-bot-${bot.id}`, name: bot.botFirstName || bot.name, username: bot.botUsername ?? '',
+  })));
 
   /** При открытии формы выбирает текущий проект, если он доступен. */
   const openConnectBot = () => {
@@ -140,12 +144,14 @@ export function BotControlPanel({
         ) : projects.length === 0 ? (
           <BotControlPanelEmpty />
         ) : (
+          <BotDemoAccountContext.Provider value={mockAccounts}>
           <BotManagementInterface
             projects={projects}
             allTokens={allTokens}
             currentProjectId={currentProjectId}
             viewMode={viewMode}
           />
+          </BotDemoAccountContext.Provider>
         )}
       </div>}
 

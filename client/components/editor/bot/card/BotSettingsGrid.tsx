@@ -22,6 +22,7 @@ import { BotLaunchSettings } from './BotLaunchSettings';
 import { effectiveLaunchMode } from './bot-launch-helpers';
 import { BotTokenSettings } from './BotTokenSettings';
 import { BotUserbotSettings } from './BotUserbotSettings';
+import { BotDemoAccountSetting } from '../accounts/bot-demo-account-setting';
 import { SettingsSection } from './SettingsSection';
 import type { BotProject, BotToken } from '@shared/schema';
 import { resolveProjectBotSettings } from '@shared/bot-inherited-settings';
@@ -170,6 +171,7 @@ export function BotSettingsGrid({
       )}
 
       <SettingsSection title="Дополнительно">
+        <BotDemoAccountSetting key={tokenId} tokenId={tokenId} fallback={
         <BotUserbotSettings
           projectId={projectId}
           tokenId={tokenId}
@@ -179,6 +181,7 @@ export function BotSettingsGrid({
           userbotSessionString={token.userbotSessionString ?? null}
           onPendingChange={onPendingChange}
         />
+        } />
       </SettingsSection>
 
       {showLaunchHistory && (

@@ -253,12 +253,12 @@ export function BotUserbotSettings({
             htmlFor={`userbot-toggle-${tokenId}`}
             className="block cursor-pointer text-sm font-medium text-foreground"
           >
-            Telethon Userbot
+            Подключить Telegram-аккаунт
           </Label>
           <p className="mt-0.5 text-xs text-muted-foreground">
             {enabled
-              ? 'Юзербот работает параллельно с основным ботом'
-              : 'Подключить аккаунт пользователя через Telethon'}
+              ? 'Подключение через Telethon для этого бота'
+              : 'Войти по номеру телефона через Telethon'}
           </p>
         </div>
         <Switch
