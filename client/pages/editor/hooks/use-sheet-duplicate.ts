@@ -25,8 +25,6 @@ interface UseSheetDuplicateParams {
   handleActionLog: (type: string, description: string) => void;
   /** Функция сохранения в историю */
   saveToHistory: () => void;
-  /** Функция мутации сохранения проекта */
-  updateProjectMutation: { mutate: (variables?: any) => void };
   /** Функция toast для уведомлений */
   toast: (props: Toast) => void;
   /** Текущие узлы */
@@ -48,7 +46,6 @@ export function useSheetDuplicate(params: UseSheetDuplicateParams) {
     setBotData,
     handleActionLog,
     saveToHistory,
-    updateProjectMutation,
     toast,
     nodes,
     currentNodeSizes,
@@ -88,8 +85,7 @@ export function useSheetDuplicate(params: UseSheetDuplicateParams) {
         setBotData({ nodes: newSheet.nodes }, undefined, currentNodeSizes, false);
       }
 
-      // Сохраняем изменения
-      updateProjectMutation.mutate();
+      /** Черновик сохраняется через общую панель или общий таймер редактора. */
 
       toast({
         title: 'Лист дублирован',
@@ -102,7 +98,7 @@ export function useSheetDuplicate(params: UseSheetDuplicateParams) {
         variant: 'destructive',
       });
     }
-  }, [botDataWithSheets, setBotData, setBotDataWithSheets, handleActionLog, saveToHistory, updateProjectMutation, toast, nodes, currentNodeSizes]);
+  }, [botDataWithSheets, setBotData, setBotDataWithSheets, handleActionLog, saveToHistory, toast, nodes, currentNodeSizes]);
 
   return { handleSheetDuplicate };
 }

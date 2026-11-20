@@ -79,11 +79,14 @@ import { MobilePropertiesSheet } from '@/pages/editor/components/mobile/mobile-p
 import { CanvasViewToggle } from '@/pages/editor/components/canvas-view-toggle';
 import { useCanvasView } from '@/pages/editor/hooks/use-canvas-view';
 import { StagingBar, useEditorAutosave, useStagingBar } from '@/components/editor/staging';
+import { ProjectSaveConflictAlert } from '@/components/editor/staging/ProjectSaveConflictAlert';
 import { invalidateBotStatusQueries } from '@/components/editor/bot/invalidate-bot-status-queries';
 import { useBotEditor } from '@/components/editor/canvas/canvas/use-bot-editor';
 import { useMoveNodeToSheet } from '@/components/editor/canvas/canvas/use-move-node-to-sheet';
 import { useIsMobile } from '@/components/editor/header/hooks/use-mobile';
 import { useToast } from '@/hooks/use-toast';
+import { ClipboardPaste, Copy, Scissors } from 'lucide-react';
+import { copyTextToClipboard } from '@/utils/copy-text';
 import { useCanvasSync } from '@/hooks/use-canvas-sync';
 import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
 import type { CanvasActor } from '@shared/canvas-sync/canvas-actor';
@@ -280,10 +283,24 @@ export default function Editor() {
     handleOpenMobileProperties,
   } = useMobileHandlers({ setShowMobileSidebar, setShowMobileProperties });
 
+  /** Номер локальной правки защищает черновик от запоздалого ответа сохранения. */
+  const draftEditRef = useRef(0);
+  /** JSON применён в том же событии, что и явное сохранение. */
+  const appliedJsonRef = useRef<BotDataWithSheets | null>(null);
+  useLayoutEffect(() => { appliedJsonRef.current = null; }, [botDataWithSheets]);
+  const [draftRevision, setDraftRevision] = useState(0);
+  /** Привязывает сохранение к проекту и версии, с которой был загружен холст. */
+  const draftBaseRef = useRef<{ id: number; revision: number } | null>(null);
+  const activeSaveProjectRef = useRef<number | undefined>(undefined);
+  const saveInFlightRef = useRef(new Set<number>());
+  const conflictRef = useRef<number | undefined>(undefined);
+  const [saveConflict, setSaveConflict] = useState<{ projectId: number; source: 'remote-change' | 'save-conflict' } | null>(null);
+
   // Обработчик логирования действий
   const handleActionLog = useCallback((type: string, description: string) => {
     setActionHistory((prevHistory: ActionHistoryItem[]) => [createActionHistoryItem(type as ActionType, description), ...prevHistory].slice(0, 50));
     setHasLocalChanges(true);
+    setDraftRevision(++draftEditRef.current);
   }, [setActionHistory, setHasLocalChanges]);
 
   // Callback для получения размеров узлов
@@ -354,7 +371,7 @@ export default function Editor() {
    * Используется для сохранения изменений в проекте на сервере
    */
   const updateProjectMutation = useMutation({
-    mutationFn: async (params: { restartOnUpdate?: boolean; newName?: string; commitMessage?: string } = {}) => {
+    mutationFn: async (params: { restartOnUpdate?: boolean; newName?: string; commitMessage?: string; draftEdit?: number; data?: BotDataWithSheets } = {}) => {
       if (!activeProject?.id) {
         console.warn('Cannot save: activeProject or ID is undefined');
         return;
@@ -363,7 +380,9 @@ export default function Editor() {
       // Всегда используем текущие данные с холста для сохранения
       let projectData;
 
-      if (botDataWithSheets) {
+      if (params.data) {
+        projectData = params.data;
+      } else if (botDataWithSheets) {
         // Обновляем активный лист текущими данными холста
         const currentCanvasData = getBotData();
         const activeSheetId = botDataWithSheets.activeSheetId;
@@ -394,7 +413,8 @@ export default function Editor() {
         // Передаём новое имя если оно было указано при вызове мутации
         ...(params.newName ? { name: params.newName } : {}),
         /** Сохраняем прочитанную ревизию для всех пользователей, включая обычный редактор. */
-        ...(Number.isSafeInteger(activeProject.revision) ? { expectedRevision: activeProject.revision }
+        ...(draftBaseRef.current?.id === projectId ? { expectedRevision: draftBaseRef.current.revision }
+          : Number.isSafeInteger(activeProject.revision) ? { expectedRevision: activeProject.revision }
           : isAdminEditor && activeProject.updatedAt ? { expectedUpdatedAt: activeProject.updatedAt } : {}),
         // Непустая заметка превращает снимок в постоянный ручной чекпоинт
         ...(params.commitMessage ? { commitMessage: params.commitMessage } : {}),
@@ -453,17 +473,18 @@ export default function Editor() {
       }
       queryClient.setQueryData<BotProject>([`/api/projects/${_updatedProject.id}`], old => preferNewerProject(old, _updatedProject));
       /** Поздний ответ другого проекта не снимает его локальный черновик после переключения. */
-      if (_updatedProject?.id !== activeProject?.id) return;
-      // Reset local changes flag only after successful save
-      setHasLocalChanges(false);
-      setRemoteSyncActor(null);
+      if (_updatedProject.id !== activeSaveProjectRef.current) return;
+      if (conflictRef.current !== _updatedProject.id) {
+        draftBaseRef.current = { id: _updatedProject.id, revision: _updatedProject.revision };
+        if (variables?.draftEdit === draftEditRef.current) {
+          setHasLocalChanges(false);
+          setRemoteSyncActor(null);
+          broadcastResetFnRef.current?.('saved');
+        }
+      }
       if (variables?.restartOnUpdate && activeProject?.id) {
         invalidateBotStatusQueries(queryClient, activeProject.id);
       }
-
-      // Оповещаем другие вкладки/устройства что изменения сохранены —
-      // у них тоже пропадёт плашка несохранённых изменений (данные уже синхронизированы)
-      broadcastResetFnRef.current?.('saved');
 
       // Инвалидируем кеш для загрузки актуальных данных с сервера
       if (activeProject?.id) {
@@ -489,6 +510,13 @@ export default function Editor() {
         queryClient.setQueryData<Array<Omit<BotProject, 'data'>>>(['/api/projects/list'], current => rollbackProjectList(current, context.previousList!));
       }
 
+      if ((_error as { code?: string })?.code === 'PROJECT_CONFLICT') {
+        if (context?.projectId && activeSaveProjectRef.current === context.projectId) {
+          conflictRef.current = context.projectId;
+          setSaveConflict({ projectId: context.projectId, source: 'save-conflict' });
+        }
+        return;
+      }
       toast({
         title: "Ошибка сохранения",
         description: "Не удалось сохранить проект",
@@ -507,6 +535,29 @@ export default function Editor() {
 
   // Активный проект
   const activeProject = projectId ? currentProject : firstProject;
+  activeSaveProjectRef.current = activeProject?.id;
+  const { mutateAsync: persistProject } = updateProjectMutation;
+
+  /**
+   * Сохраняет только один снимок проекта за раз.
+   * @param options - Параметры явного сохранения.
+   * @returns Подтверждённый исход попытки либо конфликт.
+   */
+  const saveProject = useCallback(async (options: { restartOnUpdate?: boolean; newName?: string; commitMessage?: string; data?: BotDataWithSheets } = {}) => {
+    const id = activeProject?.id;
+    if (!id || activeSaveProjectRef.current !== id || lastLoadedProjectId !== id) return 'failed' as const;
+    if (conflictRef.current === id) return 'conflict' as const;
+    if (saveInFlightRef.current.has(id)) return 'failed' as const;
+    saveInFlightRef.current.add(id);
+    try {
+      const receipt = await persistProject({ ...options, data: options.data ?? appliedJsonRef.current ?? undefined, draftEdit: draftEditRef.current });
+      return isSavedProjectReceipt(receipt) ? 'saved' as const : 'failed' as const;
+    } catch (error) {
+      return (error as { code?: string })?.code === 'PROJECT_CONFLICT' ? 'conflict' as const : 'failed' as const;
+    } finally {
+      saveInFlightRef.current.delete(id);
+    }
+  }, [activeProject?.id, lastLoadedProjectId, persistProject]);
 
   /** Открыть терминал по постоянной ссылке ?log=&bot= */
   const openTerminalTab = useCallback(() => setCurrentTab('terminal'), []);
@@ -734,24 +785,14 @@ export default function Editor() {
   }, [handleBotDataUpdate]);
 
   /**
-   * Live-синхронизация холста: вкладки, устройства, коллабораторы, ИИ-агент.
-   * Для actor.kind='agent' данные уже записаны в БД — показываем бейдж, но НЕ
-   * выставляем флаг «несохранённые изменения», а также инвалидируем список версий,
-   * чтобы открытая история подхватила новый снимок без перезагрузки.
-   * Для user/guest поведение прежнее.
+   * Применяет подтверждённую ревизию и показывает автора удалённого изменения.
+   * @param msg - Снимок от другой вкладки или сервера.
    */
   const handleRemoteCanvasSync = useCallback((msg: CanvasSyncMessage) => {
-    if (!msg.actor) return;
-    // Если только что был удалённый сброс — не возвращаем плашку из-за запоздавшего data-sync
-    if (Date.now() < suppressLocalChangesUntilRef.current) return;
-    setRemoteSyncActor(msg.actor);
-    // Правка ИИ-агента уже в БД → плашка «несохранённые изменения» не нужна,
-    // но открытый список версий надо обновить (агент создал новый снимок).
-    if (msg.actor.kind !== 'agent') {
-      setHasLocalChanges(true);
-    } else if (activeProject?.id) {
-      /** Обновляет токен конкурентной записи вместе с подтверждённым снимком агента. */
+    /** Полученный снимок остаётся удалённым, даже если автор ещё не сохранил его. */
+    if (activeProject?.id && (Number.isSafeInteger(msg.revision) || msg.actor?.kind === 'agent')) {
       if (Number.isSafeInteger(msg.revision)) {
+        draftBaseRef.current = { id: activeProject.id, revision: msg.revision! };
         queryClient.setQueryData<BotProject>([`/api/projects/${activeProject.id}`], old => old
           ? preferNewerProject(old, { ...old, data: msg.data, revision: msg.revision! }) : old);
       } else {
@@ -759,13 +800,15 @@ export default function Editor() {
       }
       queryClient.invalidateQueries({ queryKey: ['/api/projects', activeProject.id, 'versions'] });
     }
+    if (!msg.actor || Date.now() < suppressLocalChangesUntilRef.current) return;
+    setRemoteSyncActor(msg.actor);
     if (remoteSyncDismissTimerRef.current) {
       clearTimeout(remoteSyncDismissTimerRef.current);
     }
     remoteSyncDismissTimerRef.current = setTimeout(() => {
       setRemoteSyncActor(null);
     }, 12_000);
-  }, [setHasLocalChanges, activeProject?.id, queryClient]);
+  }, [activeProject?.id, queryClient]);
 
   const dismissRemoteCanvasSync = useCallback(() => {
     setRemoteSyncActor(null);
@@ -783,7 +826,11 @@ export default function Editor() {
     if (activeProject?.id) {
       const savedProject = queryClient.getQueryData<BotProject>([`/api/projects/${activeProject.id}`]);
       const savedData = savedProject?.data as any;
-      if (savedData) {
+      if (savedData && savedProject) {
+        draftBaseRef.current = { id: savedProject.id, revision: savedProject.revision };
+        conflictRef.current = undefined;
+        setSaveConflict(null);
+        draftEditRef.current++;
         let sheetsData: BotDataWithSheets;
         if (SheetsManager.isNewFormat(savedData)) {
           sheetsData = savedData;
@@ -808,6 +855,14 @@ export default function Editor() {
     setRemoteSyncActor(null);
   }, [activeProject?.id, queryClient, botDataWithSheets, setBotDataWithSheets, setBotData, setHasLocalChanges, setActionHistory]);
 
+  /** Чистый холст принимает подтверждённую ревизию после обновления кэша. */
+  useEffect(() => {
+    const id = activeProject?.id;
+    const base = draftBaseRef.current;
+    if (!activeProject || !id || base?.id !== id || saveInFlightRef.current.has(id) || hasLocalChanges) return;
+    if (activeProject.revision > base.revision) discardLocalChanges();
+  }, [activeProject?.id, activeProject?.revision, hasLocalChanges, discardLocalChanges]);
+
   /**
    * Обрабатывает удалённый сигнал сброса/сохранения от другой вкладки/устройства.
    * 'reset' — откатывает изменения к серверной версии.
@@ -816,6 +871,7 @@ export default function Editor() {
    * @param kind - Вид сигнала
    */
   const handleRemoteReset = useCallback((kind: 'reset' | 'saved') => {
+    if (hasLocalChanges || conflictRef.current === activeProject?.id) return;
     suppressLocalChangesUntilRef.current = Date.now() + 2000;
     if (kind === 'reset') {
       discardLocalChanges();
@@ -829,7 +885,7 @@ export default function Editor() {
     if (activeProject?.id) {
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${activeProject.id}`] });
     }
-  }, [discardLocalChanges, activeProject?.id, queryClient, setHasLocalChanges, setActionHistory]);
+  }, [discardLocalChanges, activeProject?.id, hasLocalChanges, queryClient, setHasLocalChanges, setActionHistory]);
 
   /**
    * Обрабатывает сигнал об изменении истории версий: инвалидирует react-query
@@ -846,8 +902,12 @@ export default function Editor() {
     savedRevision: activeProject?.revision,
     /** Локальный черновик остаётся на своей ревизии и не перезаписывает новую запись агента. */
     hasLocalChanges,
-    onRemoteConflict: () => toast({ title: 'Проект изменён в другом окне',
-      description: 'Ваши несохранённые правки оставлены в редакторе. Перед сохранением сравните их с новой версией проекта.', variant: 'destructive' }),
+    localDraftProjectId: hasLocalChanges && lastLoadedProjectId === activeProject?.id ? lastLoadedProjectId ?? undefined : undefined,
+    onRemoteConflict: () => {
+      if (!activeProject?.id || conflictRef.current === activeProject.id) return;
+      conflictRef.current = activeProject.id;
+      setSaveConflict({ projectId: activeProject.id, source: 'remote-change' });
+    },
     projectId: activeProject?.id,
     botDataWithSheets,
     localUser,
@@ -870,6 +930,7 @@ export default function Editor() {
     try {
       const parsed = JSON.parse(jsonString) as BotDataWithSheets | BotData;
       if ((parsed as BotDataWithSheets).sheets) {
+        appliedJsonRef.current = parsed as BotDataWithSheets;
         handleBotDataUpdate(parsed as BotDataWithSheets);
       } else if ((parsed as BotData).nodes) {
         const current = botDataWithSheets;
@@ -880,16 +941,16 @@ export default function Editor() {
             i === 0 ? { ...sheet, nodes: (parsed as BotData).nodes } : sheet
           ),
         };
+        appliedJsonRef.current = updated;
         handleBotDataUpdate(updated);
       }
       // Сбрасываем редактируемый контент — данные успешно применены
       setEditedJsonContent('');
-      // Сохраняем на сервер и инвалидируем кэш — чтобы левая панель увидела новые листы
-      setTimeout(() => updateProjectMutation.mutate({}), 50);
+      handleActionLog('update', 'Применён JSON сценария');
     } catch (e) {
       console.error('Ошибка применения JSON:', e);
     }
-  }, [botDataWithSheets, handleBotDataUpdate, updateProjectMutation]);
+  }, [botDataWithSheets, handleBotDataUpdate, handleActionLog]);
 
   // Хук перемещения узла между листами
   const { moveNodeToSheet } = useMoveNodeToSheet(botDataWithSheets || undefined, handleBotDataUpdate);
@@ -918,9 +979,51 @@ export default function Editor() {
   const handleJsonChange = useCallback((value: string) => {
     if (!isDirty) {
       handleActionLog('update', 'Изменён JSON сценария');
+    } else {
+      setDraftRevision(++draftEditRef.current);
     }
     handleJsonChangeRaw(value);
   }, [isDirty, handleJsonChangeRaw, handleActionLog]);
+
+  /** Снимок помогает не затереть правки, внесённые во время запроса к буферу. */
+  const jsonClipboardContext = useRef({ jsonContent, canvasView, currentTab, projectId: activeProject?.id });
+  useEffect(() => {
+    jsonClipboardContext.current = { jsonContent, canvasView, currentTab, projectId: activeProject?.id };
+  }, [jsonContent, canvasView, currentTab, activeProject?.id]);
+
+  /**
+   * Копирует или вырезает весь текст либо заменяет его содержимым буфера.
+   * @param action - Действие с буфером обмена.
+   */
+  const handleCanvasJsonClipboard = async (action: 'copy' | 'cut' | 'paste') => {
+    const context = jsonClipboardContext.current;
+    if (action === 'paste') {
+      try {
+        const text = await navigator.clipboard.readText();
+        if (context !== jsonClipboardContext.current) return;
+        if (!text) {
+          toast({ title: 'В буфере обмена нет текста' });
+          return;
+        }
+        if (text !== context.jsonContent) handleJsonChange(text);
+        toast({ title: 'Текст вставлен' });
+      } catch {
+        toast({ title: 'Не удалось прочитать буфер обмена', variant: 'destructive' });
+      }
+      return;
+    }
+
+    if (!(await copyTextToClipboard(context.jsonContent))) {
+      toast({ title: 'Не удалось скопировать JSON', variant: 'destructive' });
+      return;
+    }
+    if (action === 'cut' && context === jsonClipboardContext.current) {
+      handleJsonChange('');
+      toast({ title: 'JSON вырезан' });
+    } else {
+      toast({ title: 'JSON скопирован' });
+    }
+  };
 
   /**
    * Обёртка над handleViewChange — при переходе в JSON разворачивает все блоки редактора
@@ -936,17 +1039,29 @@ export default function Editor() {
     hasLocalChanges,
     actionHistory,
     remoteSyncActor,
-    onSave: () => updateProjectMutation.mutate({}),
-    onSaveWithNote: (note: string) => updateProjectMutation.mutate({ commitMessage: note }),
+    onSave: () => saveProject({}),
+    onSaveWithNote: (note: string) => saveProject({ commitMessage: note }),
     onSaveAndRestart: () => {
       // Сохраняем проект с флагом restartOnUpdate — сервер перезапустит всех запущенных ботов
-      updateProjectMutation.mutate({ restartOnUpdate: true });
+      saveProject({ restartOnUpdate: true });
     },
     onDiscard: () => {
-      // Откатываем локальные изменения к серверной версии и оповещаем другие вкладки,
-      // чтобы у них тоже пропала плашка несохранённых изменений.
-      discardLocalChanges();
-      broadcastReset('reset');
+      const id = activeProject?.id;
+      if (!id || saveInFlightRef.current.has(id)) return;
+      if (conflictRef.current !== id) {
+        discardLocalChanges();
+        broadcastReset('reset');
+        return;
+      }
+      /** После конфликта сброс разрешён только на фактически перечитанный серверный снимок. */
+      const draftAtDiscard = draftEditRef.current;
+      void queryClient.fetchQuery<BotProject>({ queryKey: [`/api/projects/${id}`], staleTime: 0 })
+        .then(() => {
+          if (activeSaveProjectRef.current !== id || draftAtDiscard !== draftEditRef.current) return;
+          discardLocalChanges();
+          handleViewChangeRaw('canvas');
+        })
+        .catch(() => toast({ title: 'Не удалось загрузить сохранённую версию', variant: 'destructive' }));
     },
     isSaving: updateProjectMutation.isPending,
     isDirty,
@@ -957,11 +1072,14 @@ export default function Editor() {
   });
 
   const { autosave, setAutosave } = useEditorAutosave({
+    projectId: activeProject?.id,
+    enabled: currentTab === 'editor' && lastLoadedProjectId === activeProject?.id && saveConflict?.projectId !== activeProject?.id,
+    draftRevision,
     hasLocalChanges,
     isSaving: updateProjectMutation.isPending,
     mode: canvasView,
     latestActionId: actionHistory[0]?.id ?? null,
-    onSave: stagingBar.onSave,
+    onSave: saveProject,
   });
 
   // Обработчики узлов через хук
@@ -1021,8 +1139,6 @@ export default function Editor() {
         sheetsData = projectData;
       } else {
         sheetsData = SheetsManager.migrateLegacyData(projectData as BotData);
-        // Автосохранение мигрированных данных — с задержкой чтобы state обновился
-        setTimeout(() => updateProjectMutation.mutate({}), 500);
       }
 
       // Миграция keyboardLayout для всех узлов
@@ -1053,7 +1169,10 @@ export default function Editor() {
         setBotData({ nodes: activeSheet.nodes }, undefined, undefined, true);
       }
 
-      // Обновляем отслеживание загруженного проекта
+      /** Берём исходную ревизию именно из загруженного снимка. */
+      draftBaseRef.current = { id: activeProject.id, revision: activeProject.revision };
+      conflictRef.current = undefined;
+      setSaveConflict(null);
       setLastLoadedProjectId(activeProject.id);
       localStorage.setItem('lastProjectId', activeProject.id.toString());
     }
@@ -1085,7 +1204,6 @@ export default function Editor() {
     currentTab,
     setCurrentTab,
     setPreviousTab,
-    onSaveProject: () => activeProject?.id && updateProjectMutation.mutate({}),
     onOpenCodePanel: handleOpenCodePanel,
     onCloseCodePanel: handleCloseCodePanel,
     onRestoreCanvas: handleRestoreCanvas,
@@ -1117,12 +1235,9 @@ export default function Editor() {
     getBotData,
     handleActionLog,
     saveToHistory,
-    updateProjectMutation,
     toast,
-    queryClient,
     currentNodeSizes,
     nodes,
-    activeProjectId: activeProject?.id || null,
     onAfterSelect: () => {
       try {
         if (localStorage.getItem('canvas-auto-fit-sheet') === 'false') return;
@@ -1255,7 +1370,7 @@ export default function Editor() {
               }
 
               // Сохраняем данные холста и новое имя одним запросом
-              updateProjectMutation.mutate({ newName: template.name });
+              saveProject({ newName: template.name, data: { ...botDataWithSheets, ...templateDataWithSheets } });
             }
           } else {
             // Обычный сценарий без листов - мигрируем к формату с листами
@@ -1297,7 +1412,7 @@ export default function Editor() {
               }
 
               // Сохраняем данные холста и новое имя одним запросом
-              updateProjectMutation.mutate({ newName: template.name });
+              saveProject({ newName: template.name, data: migratedData });
             }
           }
 
@@ -1325,7 +1440,7 @@ export default function Editor() {
       }
     };
     apply();
-  }, [activeProject?.id, setBotData, setBotDataWithSheets, updateProjectMutation, toast, queryClient]);
+  }, [activeProject?.id, setBotData, setBotDataWithSheets, saveProject, toast, queryClient]);
 
   // Обёртки для deleteNode и duplicateNode с логированием в историю
   const handleNodeDelete = useCallback((nodeId: string) => {
@@ -1480,9 +1595,6 @@ export default function Editor() {
       return;
     }
 
-    // Set local changes flag first to prevent useEffect from running
-    setHasLocalChanges(true);
-
     // Создаем новый узел из компонента
     const clonedData = structuredClone(component.defaultData || {});
     // Регенерируем id кнопок чтобы они были уникальны между узлами
@@ -1505,11 +1617,6 @@ export default function Editor() {
       saveToHistory();
       addNode(invoice);
       addNode(keyboard);
-      setTimeout(() => {
-        if (activeProject?.id) {
-          updateProjectMutation.mutate({});
-        }
-      }, 1000);
       return;
     }
 
@@ -1530,13 +1637,7 @@ export default function Editor() {
     // Добавляем узел на холст
     addNode(newNode);
 
-    // Auto-save after a short delay to persist the new node
-    setTimeout(() => {
-      if (activeProject?.id) {
-        updateProjectMutation.mutate({});
-      }
-    }, 1000);
-  }, [addNode, isLoadingTemplate, updateProjectMutation, activeProject, handleActionLog, saveToHistory, nodes]);
+  }, [addNode, isLoadingTemplate, handleActionLog, saveToHistory]);
 
   /**
    * Обработчик явного сохранения проекта
@@ -1545,9 +1646,9 @@ export default function Editor() {
    */
   const handleSaveProject = useCallback(() => {
     if (activeProject?.id) {
-      updateProjectMutation.mutate({ restartOnUpdate: true });
+      saveProject({ restartOnUpdate: true });
     }
-  }, [activeProject?.id, updateProjectMutation]);
+  }, [activeProject?.id, saveProject]);
 
   /**
    * Обработчик открытия модального окна сохранения сценария
@@ -1742,14 +1843,38 @@ export default function Editor() {
             autosave={autosave}
           />
         )}
+        {currentTab === 'editor' && saveConflict && saveConflict.projectId === activeProject?.id && (
+          <ProjectSaveConflictAlert source={saveConflict.source} onOpenVersions={() => handleTabChange('versions')}
+            onCopyDraft={botDataWithSheets ? () => {
+              void navigator.clipboard.writeText(JSON.stringify(botDataWithSheets, null, 2))
+                .then(() => toast({ title: 'Черновик скопирован' }))
+                .catch(() => toast({ title: 'Не удалось скопировать черновик', variant: 'destructive' }));
+            } : undefined}
+            onLoadSaved={() => {
+              if (window.confirm('Загрузить сохранённую версию и сбросить локальный черновик?')) stagingBar.onDiscard();
+            }}
+          />
+        )}
         {/* Контейнер вкладок: relative нужен для absolute-позиционирования JSON-редактора поверх Canvas */}
         <div className="flex-1 min-h-0 relative">
 
           {/* JSON-редактор — абсолютно поверх Canvas, виден только в json-режиме вкладки editor */}
           {currentTab === 'editor' && canvasView === 'json' && (
-            <div className="absolute inset-0 z-10 flex flex-col">
-              {/* Тулбар JSON-режима: кнопки fold/unfold и переключатель вида */}
-              <div className="flex items-center justify-end gap-2 px-4 py-2 bg-gradient-to-r from-white via-slate-50 to-white dark:from-slate-950/95 dark:via-slate-900/95 dark:to-slate-950/95 border-b border-slate-200/50 dark:border-slate-600/50 shrink-0">
+            <div className="@container absolute inset-0 z-10 flex flex-col">
+              {/* Подписи действий зависят от ширины панели JSON. */}
+              <div className="flex shrink-0 items-center justify-end gap-2 px-4 py-2 bg-gradient-to-r from-white via-slate-50 to-white dark:from-slate-950/95 dark:via-slate-900/95 dark:to-slate-950/95 border-b border-slate-200/50 dark:border-slate-600/50">
+                {([
+                  ['copy', 'Копировать', 'Копировать весь JSON', Copy],
+                  ['cut', 'Вырезать всё', 'Вырезать весь JSON', Scissors],
+                  ['paste', 'Вставить', 'Заменить текст из буфера обмена', ClipboardPaste],
+                ] as const).map(([action, label, title, Icon]) => (
+                  <button key={action} type="button" onClick={() => void handleCanvasJsonClipboard(action)}
+                    disabled={action !== 'paste' && !jsonContent} aria-label={label} title={title}
+                    className="flex h-6 shrink-0 items-center gap-1 rounded-sm border bg-background px-2 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50">
+                    <Icon className="size-3" aria-hidden="true" />
+                    <span className="hidden @[480px]:inline">{label}</span>
+                  </button>
+                ))}
                 <button
                   type="button"
                   onClick={() => setAreAllCollapsed(!areAllCollapsed)}
@@ -1813,8 +1938,8 @@ export default function Editor() {
                 onRedo={redo}
                 canUndo={canUndo}
                 canRedo={canRedo}
-                onSave={() => updateProjectMutation.mutate({ restartOnUpdate: true })}
-                onSaveWithNote={(note) => updateProjectMutation.mutate({ restartOnUpdate: true, commitMessage: note })}
+                onSave={() => saveProject({ restartOnUpdate: true })}
+                onSaveWithNote={(note) => saveProject({ restartOnUpdate: true, commitMessage: note })}
                 isSaving={updateProjectMutation.isPending}
                 autosave={autosave}
                 onAutosaveChange={setAutosave}
@@ -2277,8 +2402,8 @@ export default function Editor() {
                   onRedo={redo}
                   canUndo={canUndo}
                   canRedo={canRedo}
-                  onSave={() => updateProjectMutation.mutate({ restartOnUpdate: true })}
-                  onSaveWithNote={(note) => updateProjectMutation.mutate({ restartOnUpdate: true, commitMessage: note })}
+                  onSave={() => saveProject({ restartOnUpdate: true })}
+                  onSaveWithNote={(note) => saveProject({ restartOnUpdate: true, commitMessage: note })}
                   isSaving={updateProjectMutation.isPending}
                   autosave={autosave}
                   onAutosaveChange={setAutosave}

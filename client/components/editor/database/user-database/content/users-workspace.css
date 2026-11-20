@@ -70,6 +70,13 @@
   .users-filter-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .users-filter-grid > :last-child { grid-column: auto; }
 }
+/** На телефоне основные фильтры образуют сетку из двух равных колонок. */
+@container (max-width: 459px) {
+  .users-filter-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .users-filter-grid > :last-child { grid-column: auto; }
+  .users-filter-grid > *, .users-filter-grid [role='combobox'] { min-width: 0; }
+  .users-filter-grid [role='combobox'] { gap: 4px; padding-inline: 8px; font-size: 12px; }
+}
 @container (min-width: 800px) {
   .users-filters { padding: 16px 24px; }
   .users-workspace [role='tablist'] { margin-inline: 24px; }

@@ -22,3 +22,20 @@
 @container (max-width: 599px) { .users-availability-card { grid-template-columns: minmax(0, 1fr); } }
 /** Все иконки действий имеют одинаковый размер независимо от исходного компонента кнопки. */
 .users-availability-actions svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+/** Кнопки делят высоту строки и переносят подписи внутри своих границ. */
+@container (max-width: 479px) {
+  .users-availability-summary { gap: 8px; }
+  .users-availability-line > dl { gap: 4px 12px; }
+  .users-availability-line > dl > div { min-width: 0; max-width: 100%; }
+  .users-availability-line dd { flex-shrink: 0; }
+  .users-availability-actions { width: 100%; grid-template-rows: repeat(2, minmax(42px, auto)); grid-auto-flow: column; align-items: stretch; }
+  .users-availability-action-column { display: contents; }
+  .users-availability-actions :is(.analytics-access-check-trigger,.users-telegram-bot-check,.users-cleanup-trigger) {
+    min-width: 0; height: auto; min-height: 42px; gap: 6px; padding-inline: 8px;
+    white-space: normal; text-align: start; line-height: 16px;
+  }
+}
+@container (max-width: 310px) {
+  .users-availability-actions { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-auto-flow: row; }
+}

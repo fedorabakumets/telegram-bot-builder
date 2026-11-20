@@ -4,10 +4,11 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { Link, useLocation } from 'wouter';
-import { CreditCard, ExternalLink, LogOut, RefreshCw } from 'lucide-react';
+import { Link, useLocation, useSearch } from 'wouter';
+import { ExternalLink, FolderOpen, LogOut, Monitor, RefreshCw, ShieldCheck, UserRound } from 'lucide-react';
 import { AppSidebar } from '@/components/editor/app-sidebar';
 import { ActiveSessionsCard } from '@/components/profile/active-sessions-card';
+import { InterfaceSettingsCard } from '@/components/profile/interface-settings-card';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
@@ -16,6 +17,14 @@ import { useSidebarState } from '@/components/editor/app-sidebar/hooks/use-sideb
 import { isTelegramUser } from '@/types/telegram-user';
 import { apiRequest } from '@/queryClient';
 import type { BotProject } from '@shared/schema';
+
+/** Разделы профиля со ссылками для прямого открытия. */
+const profileSections = [
+  { id: 'account', label: 'Аккаунт', icon: UserRound },
+  { id: 'projects', label: 'Проекты', icon: FolderOpen },
+  { id: 'interface', label: 'Интерфейс', icon: Monitor },
+  { id: 'sessions', label: 'Сессии', icon: ShieldCheck },
+] as const;
 
 /**
  * Форматирует дату профиля для пользовательского интерфейса
@@ -33,6 +42,8 @@ function formatDate(value?: string | Date | null): string {
  */
 export default function ProfilePage() {
   const [, setLocation] = useLocation();
+  const requestedSection = new URLSearchParams(useSearch()).get('section');
+  const section = profileSections.find(item => item.id === requestedSection)?.id ?? 'account';
   const { isCollapsed: isSidebarCollapsed, toggleCollapsed } = useSidebarState();
   const { user, logout } = useTelegramAuth();
   const { handleTelegramLogin } = useTelegramLogin();
@@ -64,7 +75,20 @@ export default function ProfilePage() {
       <main className="min-w-0 flex-1 overflow-y-auto px-4 py-8 sm:px-6 lg:px-10">
         <div className="mx-auto max-w-5xl space-y-6">
           <div><p className="mb-2 text-sm font-medium text-primary">Аккаунт</p><h1 className="text-3xl font-bold tracking-tight">Мой профиль</h1><p className="mt-2 text-muted-foreground">Личные данные, проекты и настройки аккаунта</p></div>
-          <Card className="overflow-hidden border-border/70">
+          <div className="grid min-w-0 gap-4 lg:grid-cols-[176px_minmax(0,1fr)] lg:gap-6">
+            <nav aria-label="Разделы профиля" className="grid grid-cols-2 content-start gap-2 sm:grid-cols-4 lg:grid-cols-1">
+              {profileSections.map(({ id, label, icon: Icon }) => (
+                <Link key={id} href={id === 'account' ? '/profile' : `/profile?section=${id}`}
+                  aria-current={section === id ? 'page' : undefined}
+                  className="flex min-h-9 min-w-0 items-center gap-2 rounded-lg border border-border/70 px-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground aria-[current=page]:bg-muted aria-[current=page]:text-foreground">
+                  <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  {label}
+                </Link>
+              ))}
+            </nav>
+            <div className="min-w-0">
+              {section === 'account' && (
+                <Card className="overflow-hidden border-border/70">
             <CardContent className="flex flex-col gap-5 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
               <div className="flex items-center gap-4">
                 <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 text-center text-xl font-semibold leading-[4rem] text-white ring-4 ring-primary/10">
@@ -75,11 +99,14 @@ export default function ProfilePage() {
               <div className="flex flex-wrap gap-2"><Button variant="outline" onClick={handleTelegramLogin}><RefreshCw className="mr-2 h-4 w-4" />Сменить аккаунт</Button><Button variant="ghost" onClick={logout}><LogOut className="mr-2 h-4 w-4" />Выйти</Button></div>
             </CardContent>
           </Card>
-          <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-            <div className="space-y-6"><Card className="border-border/70"><CardHeader><CardTitle>Проекты во владении</CardTitle></CardHeader><CardContent>{isLoading ? <p className="text-sm text-muted-foreground">Загрузка проектов...</p> : ownedProjects.length === 0 ? <p className="text-sm text-muted-foreground">Нет проектов.</p> : <div className="divide-y divide-border/60">{ownedProjects.map((project) => <div key={project.id} className="flex items-center justify-between gap-3 py-3"><div className="min-w-0"><p className="truncate font-semibold">{project.name}</p><p className="text-sm text-muted-foreground">Создан {formatDate(project.createdAt)} · изменён {formatDate(project.updatedAt)}</p></div><Link href={`/editor/${project.id}`} className="inline-flex shrink-0 items-center gap-1 text-sm text-primary hover:underline">Открыть <ExternalLink className="h-3.5 w-3.5" /></Link></div>)}</div>}</CardContent></Card><Card className="border-border/70"><CardHeader><CardTitle>Участник проектов</CardTitle></CardHeader><CardContent>{isLoading ? <p className="text-sm text-muted-foreground">Загрузка проектов...</p> : memberProjects.length === 0 ? <p className="text-sm text-muted-foreground">Нет проектов, где вы участник.</p> : <div className="divide-y divide-border/60">{memberProjects.map((project) => <div key={project.id} className="flex items-center justify-between gap-3 py-3"><div className="min-w-0"><p className="truncate font-semibold">{project.name}</p><p className="text-sm text-muted-foreground">Создан {formatDate(project.createdAt)} · изменён {formatDate(project.updatedAt)}</p></div><Link href={`/editor/${project.id}`} className="inline-flex shrink-0 items-center gap-1 text-sm text-primary hover:underline">Открыть <ExternalLink className="h-3.5 w-3.5" /></Link></div>)}</div>}</CardContent></Card></div>
-            <div className="hidden"><Card className="border-border/70"><CardHeader><CardTitle className="flex items-center gap-2"><CreditCard className="h-5 w-5 text-primary" />Тариф и лимиты</CardTitle></CardHeader><CardContent><div className="flex items-center justify-between"><div><p className="font-semibold">Free</p><p className="text-xs text-muted-foreground">Базовый доступ</p></div><span className="rounded-full bg-primary/10 px-2 py-1 text-xs font-medium text-primary">Активен</span></div><div className="mt-4 space-y-3">{['Проекты — 1 из 1', 'Пользователи — 0 из 100', 'Сообщения — 0 из 1 000'].map((item) => <div key={item}><div className="flex justify-between text-xs text-muted-foreground"><span>{item}</span></div><div className="mt-1 h-1.5 rounded-full bg-muted"><div className="h-full w-1/12 rounded-full bg-primary" /></div></div>)}</div><Button variant="outline" className="mt-4 w-full" disabled>Сравнить тарифы</Button></CardContent></Card></div>
+              )}
+              {section === 'projects' && (
+                <div className="space-y-6"><Card className="border-border/70"><CardHeader><CardTitle>Проекты во владении</CardTitle></CardHeader><CardContent>{isLoading ? <p className="text-sm text-muted-foreground">Загрузка проектов...</p> : ownedProjects.length === 0 ? <p className="text-sm text-muted-foreground">Нет проектов.</p> : <div className="divide-y divide-border/60">{ownedProjects.map((project) => <div key={project.id} className="flex items-center justify-between gap-3 py-3"><div className="min-w-0"><p className="truncate font-semibold">{project.name}</p><p className="text-sm text-muted-foreground">Создан {formatDate(project.createdAt)} · изменён {formatDate(project.updatedAt)}</p></div><Link href={`/editor/${project.id}`} className="inline-flex shrink-0 items-center gap-1 text-sm text-primary hover:underline">Открыть <ExternalLink className="h-3.5 w-3.5" /></Link></div>)}</div>}</CardContent></Card><Card className="border-border/70"><CardHeader><CardTitle>Участник проектов</CardTitle></CardHeader><CardContent>{isLoading ? <p className="text-sm text-muted-foreground">Загрузка проектов...</p> : memberProjects.length === 0 ? <p className="text-sm text-muted-foreground">Нет проектов, где вы участник.</p> : <div className="divide-y divide-border/60">{memberProjects.map((project) => <div key={project.id} className="flex items-center justify-between gap-3 py-3"><div className="min-w-0"><p className="truncate font-semibold">{project.name}</p><p className="text-sm text-muted-foreground">Создан {formatDate(project.createdAt)} · изменён {formatDate(project.updatedAt)}</p></div><Link href={`/editor/${project.id}`} className="inline-flex shrink-0 items-center gap-1 text-sm text-primary hover:underline">Открыть <ExternalLink className="h-3.5 w-3.5" /></Link></div>)}</div>}</CardContent></Card></div>
+              )}
+              {section === 'interface' && <InterfaceSettingsCard isSidebarCollapsed={isSidebarCollapsed} onToggleSidebar={toggleCollapsed} previewProjectId={projects[0]?.id} />}
+              {section === 'sessions' && <ActiveSessionsCard />}
+            </div>
           </div>
-          <ActiveSessionsCard />
         </div>
       </main>
     </div>

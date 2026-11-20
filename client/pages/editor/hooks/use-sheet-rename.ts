@@ -23,8 +23,6 @@ interface UseSheetRenameParams {
   handleActionLog: (type: string, description: string) => void;
   /** Функция сохранения в историю */
   saveToHistory: () => void;
-  /** Функция мутации сохранения проекта */
-  updateProjectMutation: { mutate: (variables?: any) => void };
   /** Функция toast для уведомлений */
   toast: (props: Toast) => void;
 }
@@ -41,7 +39,6 @@ export function useSheetRename(params: UseSheetRenameParams) {
     setBotDataWithSheets,
     handleActionLog,
     saveToHistory,
-    updateProjectMutation,
     toast,
   } = params;
 
@@ -55,18 +52,11 @@ export function useSheetRename(params: UseSheetRenameParams) {
     if (!botDataWithSheets) return;
 
     try {
-      // Находим лист для логирования
       const sheet = botDataWithSheets.sheets.find(s => s.id === sheetId);
+      if (!sheet || sheet.name === newName) return;
 
       // Логируем ДО изменений
-      if (sheet) {
-        logSheetRename({
-          sheetId,
-          oldName: sheet.name,
-          newName,
-          onActionLog: handleActionLog,
-        });
-      }
+      logSheetRename({ sheetId, oldName: sheet.name, newName, onActionLog: handleActionLog });
 
       // Сохраняем в историю ДО изменений
       saveToHistory();
@@ -74,8 +64,7 @@ export function useSheetRename(params: UseSheetRenameParams) {
       const updatedData = SheetsManager.renameSheet(botDataWithSheets, sheetId, newName);
       setBotDataWithSheets(updatedData);
 
-      // Сохраняем изменения
-      updateProjectMutation.mutate();
+      /** Черновик сохраняется через общую панель или общий таймер редактора. */
 
       toast({
         title: 'Лист переименован',
@@ -88,7 +77,7 @@ export function useSheetRename(params: UseSheetRenameParams) {
         variant: 'destructive',
       });
     }
-  }, [botDataWithSheets, setBotDataWithSheets, handleActionLog, saveToHistory, updateProjectMutation, toast]);
+  }, [botDataWithSheets, setBotDataWithSheets, handleActionLog, saveToHistory, toast]);
 
   return { handleSheetRename };
 }

@@ -21,6 +21,8 @@ export interface UseCanvasSyncOptions {
   savedRevision?: number;
   /** Несохранённый черновик нельзя заменять входящим снимком. */
   hasLocalChanges?: boolean;
+  /** ID проекта локально созданного черновика, готового к отправке. */
+  localDraftProjectId?: number;
   /** Уведомляет о сохранённом удалённом изменении, отложенном до разрешения конфликта. */
   onRemoteConflict?: (msg: CanvasSyncMessage) => void;
   /** Текущие данные холста */
@@ -77,6 +79,7 @@ function createTabId(): string {
 export function useCanvasSync(options: UseCanvasSyncOptions): UseCanvasSyncResult {
   const {
     projectId,
+    localDraftProjectId,
     botDataWithSheets,
     localUser,
     agentActor,
@@ -89,15 +92,14 @@ export function useCanvasSync(options: UseCanvasSyncOptions): UseCanvasSyncResul
   } = options;
 
   const tabIdRef = useRef(createTabId());
-  const isApplyingRemoteRef = useRef(false);
-  const lastAppliedTimestampRef = useRef(0);
   /** Отдельный порядок серверных ревизий не зависит от задержки побочных эффектов. */
   const lastOrderRef = useRef<CanvasOrder>();
   /** Отложенный снимок хранится отдельно от исходной ревизии локального черновика. */
   const deferredRemoteRef = useRef<CanvasSyncMessage>();
   const dirtyRef = useRef(options.hasLocalChanges === true);
   const conflictRef = useRef(options.onRemoteConflict);
-  const lastSentPayloadRef = useRef('');
+  /** Последнее известное содержимое, включая чистый или полученный снимок. */
+  const lastPayloadRef = useRef<{ projectId: number; payload: string }>();
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onRemoteUpdateRef = useRef(onRemoteUpdate);
   const onRemoteSyncRef = useRef(onRemoteSync);
@@ -107,9 +109,8 @@ export function useCanvasSync(options: UseCanvasSyncOptions): UseCanvasSyncResul
   const agentActorRef = useRef(agentActor);
   const bcRef = useRef<BroadcastChannel | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
-  const pingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const projectIdRef = useRef(projectId);
+  const localDraftProjectIdRef = useRef(localDraftProjectId);
 
   onRemoteUpdateRef.current = onRemoteUpdate;
   onRemoteSyncRef.current = onRemoteSync;
@@ -117,7 +118,8 @@ export function useCanvasSync(options: UseCanvasSyncOptions): UseCanvasSyncResul
   onVersionsChangedRef.current = onVersionsChanged;
   localUserRef.current = localUser;
   agentActorRef.current = agentActor;
-  projectIdRef.current = projectId;
+  projectIdRef.current = enabled ? projectId : undefined;
+  localDraftProjectIdRef.current = localDraftProjectId;
   dirtyRef.current = options.hasLocalChanges === true;
   conflictRef.current = options.onRemoteConflict;
   /** Локальное сохранение также повышает водораздел запоздавших серверных снимков. */
@@ -132,8 +134,7 @@ export function useCanvasSync(options: UseCanvasSyncOptions): UseCanvasSyncResul
    */
   const applyResetRef = useRef((msg: CanvasResetMessage) => {
     if (msg.tabId === tabIdRef.current) return;
-    const pid = projectIdRef.current;
-    if (pid != null && msg.projectId !== pid) return;
+    if (msg.projectId !== projectIdRef.current) return;
     /** Чужое сохранение или сброс не разрешают удалить локальный черновик. */
     if (dirtyRef.current) return;
     onRemoteResetRef.current?.(msg.kind);
@@ -144,17 +145,17 @@ export function useCanvasSync(options: UseCanvasSyncOptions): UseCanvasSyncResul
    * Игнорирует чужие проекты, иначе вызывает onVersionsChanged с ID проекта.
    */
   const applyVersionsChangedRef = useRef((msg: CanvasVersionsChangedMessage) => {
-    const pid = projectIdRef.current;
-    if (pid != null && msg.projectId !== pid) return;
+    if (msg.projectId !== projectIdRef.current) return;
     onVersionsChangedRef.current?.(msg.projectId);
   });
 
   const applyRemoteRef = useRef((msg: CanvasSyncMessage) => {
     if (msg.tabId === tabIdRef.current) return;
-    const pid = projectIdRef.current;
-    if (pid != null && msg.projectId !== pid) return;
+    if (msg.projectId !== projectIdRef.current) return;
     if (!acceptsCanvasOrder(lastOrderRef.current, msg)) return;
     if (dirtyRef.current) {
+      /** Неподтверждённый черновик другого окна не заменяет локальные правки. */
+      if (msg.revision === undefined) return;
       const previous = deferredRemoteRef.current;
       if (!previous || acceptsCanvasOrder(previous, msg)) {
         deferredRemoteRef.current = msg;
@@ -162,34 +163,29 @@ export function useCanvasSync(options: UseCanvasSyncOptions): UseCanvasSyncResul
       }
       return;
     }
+    const payload = JSON.stringify(msg.data);
+    const unchanged = lastPayloadRef.current?.projectId === msg.projectId && lastPayloadRef.current.payload === payload;
+    /** Повтор черновика не должен сдвигать порядок приёма других сообщений. */
+    if (unchanged && msg.revision === undefined) return;
     lastOrderRef.current = { projectId: msg.projectId, timestamp: msg.timestamp,
       revision: msg.revision ?? (lastOrderRef.current?.projectId === msg.projectId ? lastOrderRef.current.revision : undefined) };
+    if (unchanged) {
+      /** При равных данных серверная ревизия всё равно обновляет базу сохранения. */
+      onRemoteSyncRef.current?.(msg);
+      return;
+    }
 
-    const payload = JSON.stringify(msg.data);
-    if (payload === lastSentPayloadRef.current) { onRemoteSyncRef.current?.(msg); return; }
-
-    lastAppliedTimestampRef.current = msg.timestamp;
-    lastSentPayloadRef.current = payload;
-    isApplyingRemoteRef.current = true;
+    lastPayloadRef.current = { projectId: msg.projectId, payload };
     onRemoteUpdateRef.current(msg.data);
     onRemoteSyncRef.current?.(msg);
-
-    // Сбрасываем флаг после того как React обработает re-render и эффекты.
-    // requestAnimationFrame + setTimeout гарантирует что useEffect отправки
-    // увидит isApplyingRemoteRef.current === true и не отправит echo обратно.
-    requestAnimationFrame(() => {
-      setTimeout(() => {
-        isApplyingRemoteRef.current = false;
-      }, 0);
-    });
   });
 
   useEffect(() => {
-    if (options.hasLocalChanges || !deferredRemoteRef.current) return;
+    if (!enabled || options.hasLocalChanges || !deferredRemoteRef.current) return;
     const deferred = deferredRemoteRef.current;
     deferredRemoteRef.current = undefined;
     if (deferred.projectId === projectId) applyRemoteRef.current(deferred);
-  }, [options.hasLocalChanges, projectId]);
+  }, [enabled, options.hasLocalChanges, projectId]);
 
   useEffect(() => {
     if (!enabled || !projectId || typeof BroadcastChannel === 'undefined') return;
@@ -198,6 +194,7 @@ export function useCanvasSync(options: UseCanvasSyncOptions): UseCanvasSyncResul
     bcRef.current = channel;
 
     channel.onmessage = (event: MessageEvent<CanvasSyncMessage>) => {
+      if (bcRef.current !== channel) return;
       if (isCanvasResetMessage(event.data)) {
         applyResetRef.current(event.data);
         return;
@@ -212,7 +209,7 @@ export function useCanvasSync(options: UseCanvasSyncOptions): UseCanvasSyncResul
 
     return () => {
       channel.close();
-      bcRef.current = null;
+      if (bcRef.current === channel) bcRef.current = null;
     };
   }, [enabled, projectId]);
 
@@ -220,17 +217,22 @@ export function useCanvasSync(options: UseCanvasSyncOptions): UseCanvasSyncResul
     if (!enabled || !projectId) return;
 
     let destroyed = false;
+    let socket: WebSocket | undefined;
+    let pingTimer: ReturnType<typeof setInterval> | undefined;
+    let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
 
     const connect = () => {
-      if (destroyed) return;
+      if (destroyed || projectIdRef.current !== projectId) return;
 
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       const url = `${protocol}//${window.location.host}/api/canvas?projectId=${projectId}`;
       const ws = new WebSocket(url);
+      socket = ws;
       wsRef.current = ws;
 
       ws.onopen = () => {
-        pingTimerRef.current = setInterval(() => {
+        if (destroyed || wsRef.current !== ws) return;
+        pingTimer = setInterval(() => {
           if (ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({ type: 'ping' }));
           }
@@ -238,6 +240,7 @@ export function useCanvasSync(options: UseCanvasSyncOptions): UseCanvasSyncResul
       };
 
       ws.onmessage = (event) => {
+        if (destroyed || wsRef.current !== ws) return;
         try {
           const parsed = JSON.parse(event.data as string) as unknown;
           if (isCanvasResetMessage(parsed)) {
@@ -256,13 +259,10 @@ export function useCanvasSync(options: UseCanvasSyncOptions): UseCanvasSyncResul
       };
 
       ws.onclose = () => {
-        wsRef.current = null;
-        if (pingTimerRef.current) {
-          clearInterval(pingTimerRef.current);
-          pingTimerRef.current = null;
-        }
+        if (wsRef.current === ws) wsRef.current = null;
+        if (pingTimer) clearInterval(pingTimer);
         if (!destroyed) {
-          reconnectTimerRef.current = setTimeout(connect, 3000);
+          reconnectTimer = setTimeout(connect, 3000);
         }
       };
 
@@ -273,10 +273,10 @@ export function useCanvasSync(options: UseCanvasSyncOptions): UseCanvasSyncResul
 
     return () => {
       destroyed = true;
-      if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
-      if (pingTimerRef.current) clearInterval(pingTimerRef.current);
-      wsRef.current?.close();
-      wsRef.current = null;
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      if (pingTimer) clearInterval(pingTimer);
+      if (wsRef.current === socket) wsRef.current = null;
+      socket?.close();
     };
   }, [enabled, projectId]);
 
@@ -284,17 +284,22 @@ export function useCanvasSync(options: UseCanvasSyncOptions): UseCanvasSyncResul
   const lastSentAtRef = useRef(0);
 
   useEffect(() => {
-    if (!enabled || !projectId || !botDataWithSheets || isApplyingRemoteRef.current) return;
+    if (!projectId || !botDataWithSheets) return;
 
     const payload = JSON.stringify(botDataWithSheets);
-    if (payload === lastSentPayloadRef.current) return;
+    if (localDraftProjectId !== projectId) {
+      /** Открытие и получение снимка задают базу, не создавая черновик. */
+      lastPayloadRef.current = { projectId, payload };
+      return;
+    }
+    if (!enabled || (lastPayloadRef.current?.projectId === projectId && lastPayloadRef.current.payload === payload)) return;
 
     /**
      * Отправляет текущее состояние холста в BroadcastChannel и WebSocket.
      * Вызывается либо сразу (leading edge), либо по таймеру (trailing edge).
      */
     const send = () => {
-      if (isApplyingRemoteRef.current) return;
+      if (projectIdRef.current !== projectId || localDraftProjectIdRef.current !== projectId) return;
 
       const actor = buildLocalCanvasActor(
         localUserRef.current,
@@ -317,7 +322,7 @@ export function useCanvasSync(options: UseCanvasSyncOptions): UseCanvasSyncResul
         if (wsRef.current?.readyState === WebSocket.OPEN) {
           wsRef.current.send(JSON.stringify(message));
         }
-        lastSentPayloadRef.current = payload;
+        lastPayloadRef.current = { projectId, payload };
         lastSentAtRef.current = Date.now();
       } catch {
         // Игнорируем ошибки сериализации
@@ -338,7 +343,7 @@ export function useCanvasSync(options: UseCanvasSyncOptions): UseCanvasSyncResul
     return () => {
       if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
     };
-  }, [botDataWithSheets, enabled, projectId, debounceMs, localUser, agentActor]);
+  }, [botDataWithSheets, enabled, projectId, localDraftProjectId, debounceMs]);
 
   /**
    * Рассылает сигнал сброса/сохранения локальных изменений другим вкладкам/устройствам.

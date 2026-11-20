@@ -12,6 +12,8 @@ import { SidebarAdminLink } from './components/sidebar-admin-link';
 import { SidebarFooter } from './components/sidebar-footer';
 import { SidebarSeparator } from './components/sidebar-separator';
 import type { AppSidebarProps } from './types';
+import { useSidebarPosition } from './hooks/use-sidebar-position';
+import './app-sidebar-position.css';
 
 /**
  * Главный компонент сайдбара редактора
@@ -23,13 +25,18 @@ export function AppSidebar({
   onTabChange,
   onSaveAsTemplate,
   onLoadTemplate,
-  isCollapsed = false,
+  isCollapsed: collapsed = false,
   onToggleCollapsed,
   headerVisible,
   onToggleHeader,
 }: AppSidebarProps) {
+  const position = useSidebarPosition();
+  const horizontal = position === 'top' || position === 'bottom';
+  /** В горизонтальном режиме элементы занимают ширину иконок. */
+  const isCollapsed = horizontal || collapsed;
   return (
     <aside
+      data-sidebar-position={position}
       className={cn(
         'h-full flex flex-col z-40',
         /** Нейтральный фон совпадает с рабочей областью без синего оттенка. */
@@ -40,6 +47,7 @@ export function AppSidebar({
     >
       {/* Бренд + кнопка сворачивания */}
       <div className={cn(
+        'app-sidebar-brand',
         /** Верхняя ячейка совпадает по высоте с компактными шапками вкладок. */
         'h-12 px-3 flex items-center flex-shrink-0 border-b border-border/50',
         isCollapsed ? 'justify-center' : 'justify-between'
@@ -62,8 +70,8 @@ export function AppSidebar({
             )}
           >
             {isCollapsed
-              ? <ChevronRight className="h-3.5 w-3.5" />
-              : <ChevronLeft className="h-3.5 w-3.5" />
+              ? <ChevronRight className={cn('h-3.5 w-3.5', position === 'right' && 'rotate-180')} />
+              : <ChevronLeft className={cn('h-3.5 w-3.5', position === 'right' && 'rotate-180')} />
             }
           </button>
         )}
@@ -72,7 +80,7 @@ export function AppSidebar({
       {/* Основной контент */}
       <div
         className={cn(
-          'flex min-h-0 flex-1 flex-col overflow-y-auto p-2',
+          'app-sidebar-navigation flex min-h-0 flex-1 flex-col overflow-y-auto p-2',
           isCollapsed && '[scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
         )}
       >
@@ -80,7 +88,7 @@ export function AppSidebar({
         {!isCollapsed && <p className="mb-1 px-2 text-xs font-medium text-muted-foreground">Проект</p>}
         <SidebarNav currentTab={currentTab} onTabChange={onTabChange} isCollapsed={isCollapsed} />
         <SidebarSeparator />
-        <div role="group" aria-label="Инструменты" className="flex flex-col gap-1">
+        <div role="group" aria-label="Инструменты" className="app-sidebar-tools flex flex-col gap-1">
           {!isCollapsed && <p className="px-2 text-xs font-medium text-muted-foreground">Инструменты</p>}
           <SidebarAgentLink active={currentTab === 'agent'} isCollapsed={isCollapsed} onOpen={() => onTabChange('agent')} />
           <SidebarActions
@@ -92,16 +100,18 @@ export function AppSidebar({
         </div>
       </div>
 
-      <div className="px-2">
+      <div className="app-sidebar-divider px-2">
         <SidebarSeparator />
       </div>
 
-      {/* Футер */}
-      <div className="p-2">
+      {/* Дополнительный нижний отступ отделяет кнопки от края окна. */}
+      <div className="app-sidebar-footer p-2 pb-3">
         <SidebarFooter
           isCollapsed={isCollapsed}
+          showVersion={horizontal}
           headerVisible={headerVisible}
           onToggleHeader={onToggleHeader}
+          menuSide={position === 'right' ? 'left' : position === 'bottom' ? 'top' : position === 'top' ? 'bottom' : 'right'}
         />
       </div>
     </aside>

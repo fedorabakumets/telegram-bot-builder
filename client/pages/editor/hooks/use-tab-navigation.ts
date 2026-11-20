@@ -15,8 +15,6 @@ interface UseTabNavigationOptions {
   setCurrentTab: (tab: EditorTab) => void;
   /** Функция установки предыдущей вкладки */
   setPreviousTab: (tab: PreviousEditorTab) => void;
-  /** Функция сохранения проекта */
-  onSaveProject?: () => void;
   /** Функция открытия панели кода */
   onOpenCodePanel?: () => void;
   /** Функция закрытия панели кода */
@@ -39,22 +37,24 @@ export function useTabNavigation({
   currentTab,
   setCurrentTab,
   setPreviousTab,
-  onSaveProject,
   onOpenCodePanel,
   onCloseCodePanel,
   onRestoreCanvas,
   setLocation,
   projectId
 }: UseTabNavigationOptions) {
+  /** Переключает интерфейс без записи данных проекта. */
   const handleTabChange = useCallback((tab: EditorTab) => {
-    // Если нажали на ту же вкладку "Код" - ничего не делаем
-    if (tab === 'export' && currentTab === 'export') {
+    if (tab === currentTab) return;
+
+    if (tab === 'preview' && projectId && setLocation) {
+      setLocation(`/preview/${projectId}`);
       return;
     }
 
     // Сохраняем предыдущую вкладку
-    if (currentTab !== 'export' && tab !== 'export') {
-      setPreviousTab(currentTab as PreviousEditorTab);
+    if (currentTab !== 'export' && currentTab !== 'preview' && tab !== 'export') {
+      setPreviousTab(currentTab);
     }
 
     // Для вкладки export обновляем синхронно чтобы избежать мелькания
@@ -66,36 +66,13 @@ export function useTabNavigation({
       });
     }
 
-    // Автосохранение при переключении
-    if (tab === 'preview' && projectId && setLocation) {
-      onSaveProject?.();
-      setLocation(`/preview/${projectId}`);
-      return;
-    }
-
     if (tab === 'export') {
-      if (projectId) {
-        onSaveProject?.();
-      }
-      // Открываем обе панели кода синхронно — startTransition уже гарантирует обновление currentTab
       onOpenCodePanel?.();
-    } else if (currentTab === 'export') {
+    } else if (currentTab === 'export' || tab === 'editor') {
       onCloseCodePanel?.();
       onRestoreCanvas?.();
-      if (projectId) {
-        onSaveProject?.();
-      }
-    } else if (tab === 'editor') {
-      // При переключении на редактор закрываем панель кода и восстанавливаем canvas
-      onCloseCodePanel?.();
-      onRestoreCanvas?.();
-      if (projectId) {
-        onSaveProject?.();
-      }
-    } else if (tab === 'bot' || tab === 'users') {
-      // Не вызываем onSaveProject — сохранение происходит при уходе с editor
     }
-  }, [currentTab, setCurrentTab, setPreviousTab, onSaveProject, onOpenCodePanel, onCloseCodePanel, onRestoreCanvas, setLocation, projectId]);
+  }, [currentTab, setCurrentTab, setPreviousTab, onOpenCodePanel, onCloseCodePanel, onRestoreCanvas, setLocation, projectId]);
 
   return { handleTabChange };
 }

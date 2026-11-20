@@ -5,6 +5,8 @@ import { useActiveTerminals } from '../bot/contexts/ActiveTerminalsContext';
 import type { TerminalInfo } from '../bot/contexts/ActiveTerminalsContext';
 import { getBotDisplayName } from '../bot/contexts/bot-control-utils';
 import { useBotQueries } from '../bot/hooks/use-bot-queries';
+import type { ReactNode } from 'react';
+import { WorkspaceHeaderActionItems } from '@/components/ui/workspace-header-action-items';
 import { TerminalLaunchSelector } from './TerminalLaunchSelector';
 
 interface TerminalTabsProps {
@@ -12,6 +14,8 @@ interface TerminalTabsProps {
   currentProjectId?: number;
   /** Обработчик выбора ключа терминала. */
   onTerminalSelect: (key: string) => void;
+  /** Селектор проекта рядом с селектором бота. */
+  projectControl?: ReactNode;
 }
 
 /**
@@ -30,7 +34,7 @@ function getTerminalKey(terminal: TerminalInfo) {
  * @param props - Текущий проект и обработчик выбора терминала.
  * @returns Два селектора терминала.
  */
-export function TerminalTabs({ currentProjectId, onTerminalSelect }: TerminalTabsProps) {
+export function TerminalTabs({ currentProjectId, onTerminalSelect, projectControl }: TerminalTabsProps) {
   const { terminals, activeTerminalId, addTerminal, setActiveTerminalById, openHistoryTab } = useActiveTerminals();
   const { allTokensFlat, allBotStatuses } = useBotQueries({ includeBotInfo: false });
   const active = terminals.find(terminal => getTerminalKey(terminal) === activeTerminalId);
@@ -58,7 +62,9 @@ export function TerminalTabs({ currentProjectId, onTerminalSelect }: TerminalTab
 
   return (
     <div className="terminal-launch-controls flex min-w-0 items-center gap-2">
-      {projectId !== undefined && <UsersBotSelector
+      <WorkspaceHeaderActionItems kind="selectors" items={[
+        { id: 'project', content: projectControl },
+        { id: 'bot', content: projectId !== undefined && <UsersBotSelector
         projectId={projectId}
         tokens={tokens}
         selectedTokenId={selected?.tokenId ?? null}
@@ -66,7 +72,8 @@ export function TerminalTabs({ currentProjectId, onTerminalSelect }: TerminalTab
         showRuntimeStatus
         emptySelectionLabel="Выберите бота"
         onSelect={id => { if (id !== null) selectBot(id); }}
-      />}
+        /> },
+      ]} />
       {selected && <TerminalLaunchSelector
         terminal={{ ...selected, isRunning: allBotStatuses.find(status => status.tokenId === selected.tokenId)
           ? allBotStatuses.some(status => status.tokenId === selected.tokenId && status.status === 'running')

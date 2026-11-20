@@ -1,4 +1,5 @@
 /** @fileoverview Единая шапка аналитики с описанием, документацией и выбором области данных. */
+import { WorkspaceHeaderActionItems } from '@/components/ui/workspace-header-action-items';
 import { useEffect, useId, useState, type ReactNode } from 'react';
 import { BarChart2, SlidersHorizontal } from 'lucide-react';
 import type { BotToken } from '@shared/schema';
@@ -49,19 +50,21 @@ export function AnalyticsHeader({ projectId, tokens, selectedTokenId, onSelectTo
     <WorkspaceTabHeading title="Аналитика" icon={<BarChart2 />}
       description="Рост аудитории, активность и источники трафика."
       actions={<div className="analytics-heading-actions flex items-center gap-2">
-        {hasFilters && <Button type="button" variant="ghost" size="icon" className="analytics-filter-toggle h-8 w-8 shrink-0"
+        <WorkspaceTabActions docsPath="interface/analytics" section="Аналитика" onRefresh={onRefresh} isRefreshing={isRefreshing}
+          before={[{ id: 'filters', content: hasFilters && <Button type="button" variant="ghost" size="icon" className="analytics-filter-toggle h-8 w-8 shrink-0"
           aria-label={filtersLabel} title={filtersLabel} aria-controls={filtersId} aria-expanded={!collapsed}
-          onClick={() => setCollapsed((previous) => !previous)}><SlidersHorizontal aria-hidden="true" /></Button>}
-        <WorkspaceTabActions docsPath="interface/analytics" section="Аналитика" onRefresh={onRefresh} isRefreshing={isRefreshing} />
+          onClick={() => setCollapsed((previous) => !previous)}><SlidersHorizontal aria-hidden="true" /></Button> }]} />
       </div>} />
     {hasFilters && <div id={filtersId} role="group" aria-label="Фильтры отчётов"
       className="analytics-scope" data-collapsed={collapsed}>
-      {hasProjects && <div className="analytics-scope-project"><ProjectSelector projects={allProjects} selectedProjectId={projectId} showBotCount={selectedTokenId == null}
-        onSelect={id => { onSelectToken?.(null); onProjectChange(id); }} /></div>}
-      {tokens.length > 0 && <div className="analytics-scope-bot"><BotTokenSelector projectId={projectId} tokens={tokens}
+      <WorkspaceHeaderActionItems kind="selectors" items={[
+      { id: 'project', content: hasProjects && <div className="analytics-scope-project"><ProjectSelector projects={allProjects} selectedProjectId={projectId} showBotCount={selectedTokenId == null}
+        onSelect={id => { onSelectToken?.(null); onProjectChange(id); }} /></div> },
+      { id: 'bot', content: tokens.length > 0 && <div className="analytics-scope-bot"><BotTokenSelector projectId={projectId} tokens={tokens}
         audienceCounts={fastAudience.data ? fastAudience.counts : audienceCounts ?? new Map(selectedTokenId != null && totalUsers !== undefined ? [[selectedTokenId, totalUsers]] : [])}
         countsError={fastAudience.isError && !fastAudience.data} onRetryCounts={() => { void fastAudience.refetch(); }}
-        selectedTokenId={selectedTokenId ?? null} onSelect={id => onSelectToken?.(id)} /></div>}
+        selectedTokenId={selectedTokenId ?? null} onSelect={id => onSelectToken?.(id)} /></div> },
+      ]} />
       {periodControl && <div className="analytics-scope-period">{periodControl}</div>}
     </div>}
     </WorkspaceAdaptiveHeader>

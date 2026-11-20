@@ -1,6 +1,7 @@
 /**
  * @fileoverview Нейтральная шапка аудитории с выбором проекта, бота и подписанными показателями.
  */
+import { WorkspaceHeaderActionItems } from '@/components/ui/workspace-header-action-items';
 import { Users } from 'lucide-react';
 import { WorkspaceTabHeading } from '@/components/ui/workspace-tab-heading';
 import { WorkspaceTabActions } from '@/components/ui/workspace-tab-actions';
@@ -39,16 +40,18 @@ export function DatabaseHeaderSection(props: DatabaseHeaderSectionProps): React.
             description="Личные контакты бота, история общения и ответы."
             actions={<WorkspaceTabActions docsPath="interface/users" section="Пользователи" onRefresh={handleRefresh} />} />
           <div role="group" aria-label="Проект и бот" className="users-scope flex min-w-0 flex-wrap items-center gap-3">
-            {showProjects && <ProjectSelector projects={allProjects} selectedProjectId={projectId} showBotCount={selectedTokenId == null} onSelect={onProjectChange} />}
-            <UsersBotSelector projectId={projectId} tokens={availableTokens}
-              selectedTokenId={selectedTokenId} onSelect={onSelectToken} />
+            <WorkspaceHeaderActionItems kind="selectors" items={[
+              { id: 'project', content: showProjects && <ProjectSelector projects={allProjects} selectedProjectId={projectId} showBotCount={selectedTokenId == null} onSelect={onProjectChange} /> },
+              { id: 'bot', content: <UsersBotSelector projectId={projectId} tokens={availableTokens}
+                selectedTokenId={selectedTokenId} onSelect={onSelectToken} /> },
+            ]} />
           </div>
         </WorkspaceAdaptiveHeader>
       </div>
       {isDatabaseEnabled && <div className="users-header-tools workspace-tab-frame flex flex-wrap items-center justify-between gap-3">
         {stats && <InlineStatsBadges stats={stats} />}
         {/** Перенос данных расположен рядом с текущей областью, перед очисткой. */}
-        <div className="ml-auto flex flex-wrap items-center gap-2">
+        <div className="users-header-data-actions ml-auto flex flex-wrap items-center gap-2">
           <UsersTransferActions projectId={projectId} projectName={projectName} tokenId={selectedTokenId}
             tokens={availableTokens} search={props.searchQuery} onRefresh={handleRefresh} />
           <HeaderActions projectId={projectId} projectName={projectName}

@@ -119,16 +119,15 @@ export function TerminalPanel({ allProjects, currentProjectId, onProjectChange }
       actions={actions}
     >
       <div className="flex min-w-0 max-w-full items-center gap-2">
-        {allProjects && allProjects.length > 1 && onProjectChange && currentProjectId && (
-          <ProjectSelector
+        {/* Проект и бот переставляются вместе, запуск остаётся отдельным полем. */}
+        <TerminalTabs currentProjectId={currentProjectId} onTerminalSelect={handleTerminalSelect}
+          projectControl={allProjects && allProjects.length > 1 && onProjectChange && currentProjectId ? <ProjectSelector
             projects={allProjects}
             selectedProjectId={currentProjectId}
             showBotCount={false}
             ariaLabel="Проект терминала"
             onSelect={onProjectChange}
-          />
-        )}
-        <TerminalTabs currentProjectId={currentProjectId} onTerminalSelect={handleTerminalSelect} />
+          /> : null} />
       </div>
     </TabHeader>
   );

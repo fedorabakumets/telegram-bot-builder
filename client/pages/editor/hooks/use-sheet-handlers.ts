@@ -14,7 +14,6 @@ import { useSheetDuplicate } from './use-sheet-duplicate';
 import { useSheetSelect } from './use-sheet-select';
 import type { BotDataWithSheets } from '@shared/schema';
 import type { ToasterToast } from '@/hooks/use-toast';
-import type { QueryClient } from '@tanstack/react-query';
 
 /** Параметры хука useSheetHandlers */
 interface UseSheetHandlersParams {
@@ -30,18 +29,12 @@ interface UseSheetHandlersParams {
   handleActionLog: (type: string, description: string) => void;
   /** Функция сохранения в историю */
   saveToHistory: () => void;
-  /** Функция мутации сохранения проекта */
-  updateProjectMutation: { mutate: (variables?: any) => void };
   /** Toast для уведомлений */
   toast: (props: Omit<ToasterToast, 'id'>) => void;
-  /** QueryClient для инвалидации кэша */
-  queryClient: QueryClient;
   /** Текущие размеры узлов */
   currentNodeSizes: any;
   /** Текущие узлы */
   nodes: any[];
-  /** ID активного проекта */
-  activeProjectId: number | null;
   /** Колбэк после успешного переключения листа */
   onAfterSelect?: () => void;
 }
@@ -74,12 +67,9 @@ export function useSheetHandlers(params: UseSheetHandlersParams): UseSheetHandle
     getBotData,
     handleActionLog,
     saveToHistory,
-    updateProjectMutation,
     toast,
-    queryClient,
     currentNodeSizes,
     nodes,
-    activeProjectId,
     onAfterSelect,
   } = params;
 
@@ -89,7 +79,6 @@ export function useSheetHandlers(params: UseSheetHandlersParams): UseSheetHandle
     setBotData,
     handleActionLog,
     saveToHistory,
-    updateProjectMutation,
     toast,
     currentNodeSizes,
   });
@@ -100,7 +89,6 @@ export function useSheetHandlers(params: UseSheetHandlersParams): UseSheetHandle
     setBotData,
     handleActionLog,
     saveToHistory,
-    updateProjectMutation,
     toast,
     nodes,
   });
@@ -110,7 +98,6 @@ export function useSheetHandlers(params: UseSheetHandlersParams): UseSheetHandle
     setBotDataWithSheets,
     handleActionLog,
     saveToHistory,
-    updateProjectMutation,
     toast,
   });
 
@@ -120,7 +107,6 @@ export function useSheetHandlers(params: UseSheetHandlersParams): UseSheetHandle
     setBotData,
     handleActionLog,
     saveToHistory,
-    updateProjectMutation,
     toast,
     nodes,
     currentNodeSizes,
@@ -131,13 +117,8 @@ export function useSheetHandlers(params: UseSheetHandlersParams): UseSheetHandle
     getBotData,
     setBotDataWithSheets,
     setBotData,
-    handleActionLog,
-    saveToHistory,
-    updateProjectMutation,
     toast,
-    queryClient,
     currentNodeSizes,
-    activeProjectId,
     onAfterSelect,
   });
 

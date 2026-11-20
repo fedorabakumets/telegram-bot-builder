@@ -9,6 +9,8 @@
  * Свойства компонента кнопок отмены/повтора
  */
 interface UndoRedoButtonsProps {
+  /** Выводит одну кнопку отдельно от второй. */
+  only?: 'undo' | 'redo';
   /** Доступность отмены действия */
   canUndo: boolean;
   /** Доступность повтора действия */
@@ -32,28 +34,28 @@ const BUTTON_DISABLED_CLASSES = 'opacity-50 cursor-not-allowed disabled:hover:bg
  * @param props - Свойства компонента
  * @returns JSX элемент с кнопками Undo/Redo
  */
-export function UndoRedoButtons({ canUndo, canRedo = false, onUndo, onRedo }: UndoRedoButtonsProps) {
+export function UndoRedoButtons({ canUndo, canRedo = false, onUndo, onRedo, only }: UndoRedoButtonsProps) {
   return (
     <>
       {/* Кнопка отмены действия */}
-      <button
+      {only !== 'redo' && <button
         onClick={() => { if (canUndo) onUndo?.(); }}
         disabled={!canUndo}
         className={`${BUTTON_BASE_CLASSES} ${BUTTON_INACTIVE_CLASSES} ${!canUndo ? BUTTON_DISABLED_CLASSES : ''}`}
         title="Отменить действие (Ctrl + Z)"
       >
         <i className={`fas fa-undo text-sm transition-colors ${canUndo ? 'text-slate-600 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400' : 'text-slate-400 dark:text-slate-500'}`} />
-      </button>
+      </button>}
 
       {/* Кнопка повтора действия */}
-      <button
+      {only !== 'undo' && <button
         onClick={() => { if (canRedo) onRedo?.(); }}
         disabled={!canRedo}
         className={`${BUTTON_BASE_CLASSES} ${BUTTON_INACTIVE_CLASSES} ${!canRedo ? BUTTON_DISABLED_CLASSES : ''}`}
         title="Повторить действие (Ctrl + Y)"
       >
         <i className={`fas fa-redo text-sm transition-colors ${canRedo ? 'text-slate-600 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400' : 'text-slate-400 dark:text-slate-500'}`} />
-      </button>
+      </button>}
     </>
   );
 }

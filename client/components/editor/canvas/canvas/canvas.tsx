@@ -10,6 +10,8 @@
 
 import { useRef, useCallback, useState, useEffect, useMemo } from 'react';
 import { CanvasSheets } from '@/components/editor/canvas/canvas-sheets';
+import { CanvasSheetsFrame } from '@/components/editor/canvas/canvas-sheets-frame';
+import { useCanvasSheetsPosition } from '@/components/editor/canvas/use-canvas-sheets-position';
 import { useCanvasViewport } from './use-canvas-viewport';
 import { useCanvasFullscreen } from '@/components/editor/bot/canvas/use-canvas-fullscreen';
 import { editorGridStep, paintEditorViewport } from './paint-editor-viewport';
@@ -24,6 +26,7 @@ import { CanvasContent } from './canvas-content';
 import { MobileCanvasFab } from './mobile-canvas-fab';
 import { useConnectionDrag } from './use-connection-drag';
 import { useCanvasViewHistory } from './use-canvas-view-history';
+import { hasCanvasShortcutBlocker } from './canvas-shortcut-scope';
 import { useMarqueeSelection } from './use-marquee-selection';
 import { useMoveNodesToSheet } from './use-move-nodes-to-sheet';
 import { useMoveNodesToProject } from './use-move-nodes-to-project';
@@ -294,6 +297,8 @@ export function Canvas({
   }, [learn.active]);
   const canvasRef = useRef<HTMLDivElement>(null);
   const mainRef = useRef<HTMLElement | null>(null);
+  const sheetsPosition = useCanvasSheetsPosition();
+  const sheetsVertical = sheetsPosition === 'left' || sheetsPosition === 'right';
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { isFullscreen, cssFullscreen, toggleFullscreen } = useCanvasFullscreen(mainRef);
   const cssFullscreenRef = useRef(false);
@@ -1035,17 +1040,13 @@ export function Canvas({
 
   // Обработчики для работы с листами
   const handleSheetSelect = useCallback((sheetId: string) => {
-    if (!botData || !onBotDataUpdate) return;
+    if (!botData || !onBotDataUpdate || sheetId === botData.activeSheetId || !botData.sheets.some(sheet => sheet.id === sheetId)) return;
 
-    // ВАЖНО: Сначала сохраняем текущее состояние редактора в активный лист
-    let dataWithCurrentSheetSaved = botData;
-    if (botData.activeSheetId) {
-      dataWithCurrentSheetSaved = SheetsManager.updateSheetData(
-        botData,
-        botData.activeSheetId,
-        nodes
-      );
-    }
+    /** При просмотре другого листа переносим узлы в локальный черновик без изменения даты. */
+    const dataWithCurrentSheetSaved = {
+      ...botData,
+      sheets: botData.sheets.map(sheet => sheet.id === botData.activeSheetId ? { ...sheet, nodes } : sheet),
+    };
 
     // Затем переключаемся на новый лист
     const updatedData = SheetsManager.setActiveSheet(dataWithCurrentSheetSaved, sheetId);
@@ -1067,24 +1068,28 @@ export function Canvas({
     }
 
     const updatedData = SheetsManager.addSheet(dataWithCurrentSheetSaved, name);
+    addAction('sheet_add', `Добавлен лист "${name}"`);
     onBotDataUpdate(updatedData);
-  }, [botData, onBotDataUpdate, nodes]);
+  }, [botData, onBotDataUpdate, nodes, addAction]);
 
   const handleSheetDelete = useCallback((sheetId: string) => {
-    if (!botData || !onBotDataUpdate) return;
+    if (!botData || !onBotDataUpdate || !botData.sheets.some(sheet => sheet.id === sheetId)) return;
     try {
       const updatedData = SheetsManager.deleteSheet(botData, sheetId);
+      addAction('sheet_delete', 'Удалён лист');
       onBotDataUpdate(updatedData);
     } catch (error) {
       console.error('Ошибка удаления листа:', error);
     }
-  }, [botData, onBotDataUpdate]);
+  }, [botData, onBotDataUpdate, addAction]);
 
   const handleSheetRename = useCallback((sheetId: string, newName: string) => {
-    if (!botData || !onBotDataUpdate) return;
+    const sheet = botData?.sheets.find(item => item.id === sheetId);
+    if (!botData || !onBotDataUpdate || !sheet || sheet.name === newName) return;
     const updatedData = SheetsManager.renameSheet(botData, sheetId, newName);
+    addAction('sheet_rename', `Лист переименован в "${newName}"`);
     onBotDataUpdate(updatedData);
-  }, [botData, onBotDataUpdate]);
+  }, [botData, onBotDataUpdate, addAction]);
 
   const handleSheetDuplicate = useCallback((sheetId: string) => {
     if (!botData || !onBotDataUpdate) return;
@@ -1100,11 +1105,12 @@ export function Canvas({
       }
 
       const updatedData = SheetsManager.duplicateSheetInProject(dataWithCurrentSheetSaved, sheetId);
+      addAction('sheet_duplicate', 'Лист продублирован');
       onBotDataUpdate(updatedData);
     } catch (error) {
       console.error('Ошибка дублирования листа:', error);
     }
-  }, [botData, onBotDataUpdate, nodes]);
+  }, [botData, onBotDataUpdate, nodes, addAction]);
 
   // Функция для получения центральной позиции видимой области canvas
   const getCenterPosition = useCallback(() => {
@@ -1199,22 +1205,9 @@ export function Canvas({
     const contentHeight = nodeBounds.bottom - nodeBounds.top;
     if (contentWidth <= 0 || contentHeight <= 0) return;
 
-    // Берём размеры из main — он занимает всю видимую область
-    const mainEl = canvasRef.current.closest('main');
-    if (!mainEl) return;
-    const mainRect = mainEl.getBoundingClientRect();
-    const containerWidth = mainRect.width;
-    const containerHeight = mainRect.height;
-
-    // Измеряем реальные высоты toolbar и sheets через data-атрибуты
-    const toolbarEl = mainEl.querySelector<HTMLElement>('[data-canvas-toolbar]');
-    const sheetsEl = mainEl.querySelector<HTMLElement>('[data-canvas-sheets]');
-    const toolbarHeight = toolbarEl ? toolbarEl.getBoundingClientRect().height : 60;
-    const sheetsHeight = sheetsEl ? sheetsEl.getBoundingClientRect().height : 0;
-
-    // Видимая область между toolbar и sheets
-    const visibleWidth = containerWidth;
-    const visibleHeight = containerHeight - toolbarHeight - sheetsHeight;
+    /** Измеряем область холста, которую оставляют панели инструментов и листов. */
+    const visibleWidth = scrollContainerRef.current?.clientWidth ?? 0;
+    const visibleHeight = scrollContainerRef.current?.clientHeight ?? 0;
 
     if (visibleWidth <= 0 || visibleHeight <= 0) return;
 
@@ -1259,8 +1252,8 @@ export function Canvas({
     
     
     const handleKeyDown = (e: KeyboardEvent) => {
-      // В JSON-режиме не перехватываем горячие клавиши — Monaco Editor должен их обрабатывать сам
-      if (canvasView === 'json') return;
+      /** Редактор JSON и открытая история владеют вводом до команд фонового холста. */
+      if (canvasView === 'json' || hasCanvasShortcutBlocker(document)) return;
 
       // Проверяем, что фокус не находится на input или textarea
       const target = e.target as HTMLElement;
@@ -1755,8 +1748,8 @@ export function Canvas({
   const handleGroupCopy = useCallback(() => {
     if (selectedNodeIds.size === 0 || !onCopyToClipboard) return;
     onCopyToClipboard(Array.from(selectedNodeIds));
-    addAction('duplicate', `Скопировано узлов в буфер: ${selectedNodeIds.size}`);
-  }, [selectedNodeIds, onCopyToClipboard, addAction]);
+    /** Копирование не помечает черновик изменённым. */
+  }, [selectedNodeIds, onCopyToClipboard]);
 
   /** Групповое перемещение выделенных узлов в существующий лист */
   const handleGroupMoveToSheet = useCallback((sheetId: string) => {
@@ -1785,8 +1778,9 @@ export function Canvas({
   }, [selectedNodeIds, moveNodesToNewSheet, addAction, clearSelection, botData]);
 
   return (
-    <main ref={mainRef} className={`w-full h-full relative overflow-hidden bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 dark:from-slate-950 dark:via-gray-950 dark:to-slate-900 max-md:flex max-md:flex-col${cssFullscreen ? ' !fixed inset-0 z-[200]' : ''}`}>
-      <div ref={scrollContainerRef} className="absolute inset-x-0 top-[60px] bottom-[60px] overflow-auto max-md:!static max-md:flex-1 max-md:min-h-0 max-md:pt-[60px]">
+    <main ref={mainRef} className={`relative flex h-full w-full overflow-hidden bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 dark:from-slate-950 dark:via-gray-950 dark:to-slate-900 ${sheetsVertical ? 'flex-row' : 'flex-col'}${cssFullscreen ? ' !fixed inset-0 z-[200]' : ''}`}>
+      <div className="relative grid min-h-0 min-w-0 flex-1 grid-cols-[minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)] overflow-hidden [&>[data-canvas-toolbar]]:relative [&>[data-canvas-toolbar]]:col-start-1 [&>[data-canvas-toolbar]]:row-start-1">
+      <div ref={scrollContainerRef} className="col-start-1 row-start-2 min-h-0 overflow-auto">
 
         {/* Enhanced Canvas Grid */}
         <div
@@ -1978,10 +1972,13 @@ export function Canvas({
         onMoveToProject={handleGroupMoveToProject}
       />
 
-      {/* На узком экране панель в потоке колонки, а не bottom-0 у слишком высокого 100vh */}
+      </div>
+
+      {/* Расположение листов определяет границы рабочей области холста. */}
       {botData && botData.sheets && botData.sheets.length > 0 && onBotDataUpdate && (
-        <div data-canvas-sheets className="absolute bottom-0 left-0 right-0 z-30 pointer-events-auto max-md:!static max-md:shrink-0">
+        <CanvasSheetsFrame position={sheetsPosition}>
           <CanvasSheets
+            vertical={sheetsVertical}
             sheets={botData.sheets}
             activeSheetId={botData.activeSheetId || botData.sheets[0]?.id || null}
             onSheetSelect={handleSheetSelect}
@@ -1991,7 +1988,7 @@ export function Canvas({
             onSheetDuplicate={handleSheetDuplicate}
             maxVisibleTabs={5}
           />
-        </div>
+        </CanvasSheetsFrame>
       )}
     </main>
   );

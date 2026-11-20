@@ -1,4 +1,5 @@
 /** @fileoverview Заголовок и контекст рабочей области таблиц. */
+import { WorkspaceHeaderActionItems } from '@/components/ui/workspace-header-action-items';
 import '../tables-header-controls.css';
 import '../tables-header-adaptive.css';
 import { WorkspaceAdaptiveHeader } from '@/components/ui/workspace-adaptive-header';
@@ -47,15 +48,16 @@ export function TablesHeader({ projectId, allProjects, onProjectChange, selected
               isRefreshing={refreshing} />} />
           {(hasProjects || hasTokens) && (
             <div role="group" aria-label="Проект и бот" className="tables-context flex min-w-0 flex-wrap items-center gap-3">
-              {hasProjects && (
+              <WorkspaceHeaderActionItems kind="selectors" items={[
+              { id: 'project', content: hasProjects && (
                 <ProjectSelector
                   projects={allProjects}
                   selectedProjectId={projectId}
                   showBotCount={selectedTokenId == null}
                   onSelect={onProjectChange}
                 />
-              )}
-              {hasTokens && (
+              ) },
+              { id: 'bot', content: hasTokens && (
                 <BotTokenSelector
                   projectId={projectId}
                   tokens={tokens}
@@ -65,7 +67,8 @@ export function TablesHeader({ projectId, allProjects, onProjectChange, selected
                   selectedTokenId={selectedTokenId ?? null}
                   onSelect={(id) => onSelectToken?.(id)}
                 />
-              )}
+              ) },
+              ]} />
             </div>
           )}
         </WorkspaceAdaptiveHeader>

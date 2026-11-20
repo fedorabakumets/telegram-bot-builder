@@ -4,7 +4,7 @@
 
 import { FullscreenButton } from './fullscreen-button';
 import * as React from 'react';
-import { CreditCard, LogOut, MessageCircle, PanelTop, RefreshCw, UserRound, Users, Workflow } from 'lucide-react';
+import { CreditCard, LogOut, MessageCircle, PanelTop, RefreshCw, Settings, Users, Workflow } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import {
@@ -24,6 +24,7 @@ import {
 import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
 import { useTelegramLogin } from '@/components/editor/header/hooks/use-telegram-login';
 import { cn } from '@/utils/utils';
+import { CLIENT_APP_VERSION } from '@/lib/app-version';
 import { isTelegramUser } from '@/types/telegram-user';
 
 /**
@@ -32,10 +33,14 @@ import { isTelegramUser } from '@/types/telegram-user';
 interface SidebarFooterProps {
   /** Свёрнут ли сайдбар */
   isCollapsed?: boolean;
+  /** Показывать версию после кнопок аккаунта на горизонтальной панели. */
+  showVersion?: boolean;
   /** Видима ли шапка */
   headerVisible?: boolean;
   /** Переключить видимость шапки */
   onToggleHeader?: () => void;
+  /** Сторона раскрытия меню учётной записи. */
+  menuSide?: 'left' | 'right' | 'top' | 'bottom';
 }
 
 /**
@@ -43,7 +48,7 @@ interface SidebarFooterProps {
  * @param props - Свойства компонента
  * @returns JSX элемент с профилем и кнопкой шапки
  */
-export function SidebarFooter({ isCollapsed, headerVisible, onToggleHeader }: SidebarFooterProps) {
+export function SidebarFooter({ isCollapsed, showVersion, headerVisible, onToggleHeader, menuSide = 'right' }: SidebarFooterProps) {
   const [location] = useLocation();
   const { user, logout } = useTelegramAuth();
   const { handleTelegramLogin } = useTelegramLogin();
@@ -53,7 +58,7 @@ export function SidebarFooter({ isCollapsed, headerVisible, onToggleHeader }: Si
   const isProfileActive = location === '/profile';
 
   return (
-    <div className={cn('flex flex-col gap-2', isCollapsed && 'items-center')}>
+    <div className={cn('app-sidebar-footer-content flex flex-col gap-2', isCollapsed && 'items-center')}>
       {onToggleHeader && (
         <Button
           variant="ghost"
@@ -75,14 +80,16 @@ export function SidebarFooter({ isCollapsed, headerVisible, onToggleHeader }: Si
       <Link
         href="/profile"
         title="Мой профиль"
+        aria-label="Мой профиль"
         className={cn(
-          'flex h-9 items-center gap-2 rounded-lg border border-transparent px-2 text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground',
+          'app-sidebar-profile-link flex h-9 shrink-0 items-center gap-2 rounded-lg border border-transparent px-2 text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground',
           isProfileActive && 'border-primary/20 bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-md shadow-blue-500/20 hover:from-blue-700 hover:to-blue-600 hover:text-white',
           isCollapsed ? 'w-9 justify-center px-0' : 'w-full',
         )}
       >
-        <UserRound className="h-4 w-4 shrink-0" />
-        {!isCollapsed && <span className="text-sm">Мой профиль</span>}
+        {/* Шестерёнка обозначает переход к настройкам профиля. */}
+        <Settings className="h-4 w-4 shrink-0" aria-hidden="true" />
+        <span className={cn('app-sidebar-profile-label whitespace-nowrap text-sm', isCollapsed && 'hidden')}>Мой профиль</span>
       </Link>
 
       {isAuthed ? (
@@ -123,7 +130,7 @@ export function SidebarFooter({ isCollapsed, headerVisible, onToggleHeader }: Si
             )}
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent side="right" align="end" className="w-64">
+          <DropdownMenuContent side={menuSide} align="end" className="w-64">
             <div className="px-2 py-2">
               <div className="flex items-center gap-2">
                 <div className="relative h-9 w-9 overflow-hidden rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
@@ -157,7 +164,7 @@ export function SidebarFooter({ isCollapsed, headerVisible, onToggleHeader }: Si
           </DropdownMenuContent>
           </DropdownMenu>
           {isCollapsed && (
-            <div className="flex flex-col items-center gap-1 pt-0.5">
+            <div className="app-sidebar-account-actions flex flex-col items-center gap-1 pt-0.5">
               <span className="rounded px-1 py-0.5 text-[9px] font-semibold leading-none text-blue-500/80 ring-1 ring-blue-500/20">
                 Free
               </span>
@@ -215,6 +222,11 @@ export function SidebarFooter({ isCollapsed, headerVisible, onToggleHeader }: Si
           <MessageCircle className="h-4 w-4 flex-shrink-0" />
           {!isCollapsed && <span className="text-sm">Войти в Telegram</span>}
         </Button>
+      )}
+      {showVersion && (
+        <span className="shrink-0 whitespace-nowrap px-1 text-[10px] tabular-nums text-muted-foreground" title="Версия приложения">
+          v{CLIENT_APP_VERSION}
+        </span>
       )}
     </div>
   );

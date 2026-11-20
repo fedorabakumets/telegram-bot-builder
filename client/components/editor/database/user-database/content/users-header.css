@@ -19,4 +19,11 @@
 /** Прикладные действия сохраняют компактный промежуток на узкой панели. */
 @container (max-width: 479px) {
   .users-header-tools { gap: 8px; }
+  .users-header-tools > dl {
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+    flex-basis: 100%; gap: 4px 12px;
+  }
+  .users-header-tools > dl > div { min-width: 0; flex-wrap: wrap; column-gap: 6px; row-gap: 0; }
+  .users-header-data-actions { margin-inline-start: 0; }
+  .users-header-data-actions button { min-height: 32px; }
 }

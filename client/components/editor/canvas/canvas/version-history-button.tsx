@@ -77,6 +77,7 @@ export function VersionHistoryButton({ projectId, onRestored }: VersionHistoryBu
 
       <PopoverContent
         side="bottom"
+        data-block-canvas-shortcuts
         className="w-96 p-0 overflow-hidden"
         style={{ maxHeight: '420px', display: 'flex', flexDirection: 'column' }}
       >

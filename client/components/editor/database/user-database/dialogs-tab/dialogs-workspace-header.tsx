@@ -1,4 +1,5 @@
 /** @fileoverview Компактная шапка диалогов в общем стиле рабочих вкладок. */
+import { WorkspaceHeaderActionItems } from '@/components/ui/workspace-header-action-items';
 import type { ReactNode } from 'react';
 import type { BotToken } from '@shared/schema';
 import { MessageSquare, Megaphone } from 'lucide-react';
@@ -49,17 +50,19 @@ export function DialogsWorkspaceHeader({ projectId, projects, onProjectChange, t
         <WorkspaceTabHeading title="Диалоги" icon={<MessageSquare />}
           description="Переписка с пользователями и группами."
           actions={<div className="dialogs-heading-actions">
-            <WorkspaceTabActions docsPath="interface/dialogs" section="Диалоги" onRefresh={refreshDialogs} />
-            <Button variant="outline" size="sm" onClick={onNewBroadcast} className="dialogs-new-broadcast"
+            <WorkspaceTabActions docsPath="interface/dialogs" section="Диалоги" onRefresh={refreshDialogs}
+              after={[{ id: 'broadcast', content: <Button variant="outline" size="sm" onClick={onNewBroadcast} className="dialogs-new-broadcast"
               type="button" aria-label="Рассылка" title="Рассылка">
               <Megaphone aria-hidden="true" className="h-4 w-4" /><span>Рассылка</span>
-            </Button>
+            </Button> }]} />
           </div>} />
         {(hasProjects || tokens.length > 0) && <div className="dialogs-scope" role="group" aria-label="Проект и бот">
-          {hasProjects && <ProjectSelector
-            projects={projects} selectedProjectId={projectId} showBotCount={tokenId == null} onSelect={onProjectChange} />}
-          {tokens.length > 0 && <DialogBotSelector projectId={projectId} tokens={tokens}
-            selectedTokenId={tokenId} allowAll onSelect={onSelectToken} />}
+          <WorkspaceHeaderActionItems kind="selectors" items={[
+          { id: 'project', content: hasProjects && <ProjectSelector
+            projects={projects} selectedProjectId={projectId} showBotCount={tokenId == null} onSelect={onProjectChange} /> },
+          { id: 'bot', content: tokens.length > 0 && <DialogBotSelector projectId={projectId} tokens={tokens}
+            selectedTokenId={tokenId} allowAll onSelect={onSelectToken} /> },
+          ]} />
         </div>}
       </WorkspaceAdaptiveHeader>
     </header>

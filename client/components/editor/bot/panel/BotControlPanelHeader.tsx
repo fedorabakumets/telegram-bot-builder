@@ -4,6 +4,7 @@
  * @module BotControlPanelHeader
  */
 
+import { WorkspaceHeaderActionItems } from '@/components/ui/workspace-header-action-items';
 import { Button } from '@/components/ui/button';
 import { Bot, Plus } from 'lucide-react';
 import { TabHeader } from '@/components/ui/tab-header';
@@ -83,9 +84,9 @@ export function BotControlPanelHeader({
       title="Боты"
       className="bot-workspace-header"
       actions={
-        <>
-          <BotViewModeToggle mode={viewMode} onModeChange={onViewModeChange} />
-          {!isGuestUser && (
+        <WorkspaceTabActions docsPath="interface/bot" section="Боты" onRefresh={refreshBots} before={[
+          { id: 'view', content: <BotViewModeToggle mode={viewMode} onModeChange={onViewModeChange} /> },
+          { id: 'connect', content: !isGuestUser && (
             <Button
               variant="outline"
               onClick={onConnectBot}
@@ -98,24 +99,22 @@ export function BotControlPanelHeader({
               {/* Подпись появляется, если помещается в общей шапке. */}
               <span data-workspace-label="connect">Подключить</span>
             </Button>
-          )}
-          {/* Служебные действия идут после подключения бота. */}
-          <WorkspaceTabActions docsPath="interface/bot" section="Боты" onRefresh={refreshBots} />
-        </>
+          ) },
+        ]} />
       }
     >
       {/* На узком экране область проекта и воркеров может переноситься. */}
       <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1.5">
-        {allProjects && allProjects.length > 1 && onProjectChange && currentProjectId ? (
-          <div className="min-w-0 max-w-40 shrink">
-            {/* Селектор занимает ширину названия, чтобы соседние кнопки не отрывались от проекта. */}
+        <WorkspaceHeaderActionItems kind="selectors" items={[{ id: 'project', content: allProjects && allProjects.length > 1 && onProjectChange && currentProjectId ? (
+          <div className="w-max min-w-0 max-w-full shrink">
+            {/* Размер поля определяется названием и доступной шириной строки. */}
             <ProjectSelector
               projects={allProjects}
               selectedProjectId={currentProjectId}
               onSelect={onProjectChange}
             />
           </div>
-        ) : null}
+        ) : null }]} />
         <WorkerPoolStatus projects={allProjects} />
         {currentProjectId != null && (
           <div className="shrink-0">

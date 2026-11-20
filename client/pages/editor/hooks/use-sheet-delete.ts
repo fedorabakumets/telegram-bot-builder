@@ -28,8 +28,6 @@ interface UseSheetDeleteParams {
   handleActionLog: (type: string, description: string) => void;
   /** Функция сохранения в историю */
   saveToHistory: () => void;
-  /** Функция мутации сохранения проекта */
-  updateProjectMutation: { mutate: (variables?: any) => void };
   /** Функция toast для уведомлений */
   toast: (props: Toast) => void;
   /** Текущие узлы */
@@ -49,7 +47,6 @@ export function useSheetDelete(params: UseSheetDeleteParams) {
     setBotData,
     handleActionLog,
     saveToHistory,
-    updateProjectMutation,
     toast,
     nodes,
   } = params;
@@ -83,8 +80,7 @@ export function useSheetDelete(params: UseSheetDeleteParams) {
         setBotData({ nodes: activeSheet.nodes });
       }
 
-      // Сохраняем изменения
-      updateProjectMutation.mutate();
+      /** Черновик сохраняется через общую панель или общий таймер редактора. */
 
       toast({
         title: 'Лист удален',
@@ -97,7 +93,7 @@ export function useSheetDelete(params: UseSheetDeleteParams) {
         variant: 'destructive',
       });
     }
-  }, [botDataWithSheets, setBotData, setBotDataWithSheets, handleActionLog, saveToHistory, updateProjectMutation, toast, nodes]);
+  }, [botDataWithSheets, setBotData, setBotDataWithSheets, handleActionLog, saveToHistory, toast, nodes]);
 
   return { handleSheetDelete };
 }

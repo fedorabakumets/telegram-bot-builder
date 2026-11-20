@@ -3,7 +3,7 @@
  */
 import { Code2 } from 'lucide-react';
 import { createPortal } from 'react-dom';
-import { useCodeHeaderTarget } from '@/components/layout/flexible/components/code-view-navigation';
+import { useCodeHeader } from '@/components/layout/flexible/components/code-view-navigation';
 import { WorkspaceAdaptiveHeader } from '@/components/ui/workspace-adaptive-header';
 import '@/components/editor/database/user-database/content/users-workspace.css';
 import './code-header.css';
@@ -35,7 +35,7 @@ const SHORTCUTS = [
  * @returns Заголовок панели экспорта.
  */
 export function CodePanelHeader({ projectId, projects, onProjectChange, onRefresh, isRefreshing }: CodePanelHeaderProps) {
-  const headerTarget = useCodeHeaderTarget();
+  const { headerTarget, viewControls } = useCodeHeader() ?? {};
   const heading = (
     <div className="code-workspace-heading workspace-tab-frame workspace-tab-bar">
       <WorkspaceAdaptiveHeader className="code-header-content" scopeSelector=".workspace-project-scope" actionsSelector=".workspace-tab-actions">
@@ -45,6 +45,7 @@ export function CodePanelHeader({ projectId, projects, onProjectChange, onRefres
         />
         <WorkspaceProjectScope projectId={projectId} projects={projects} onProjectChange={onProjectChange} />
       </WorkspaceAdaptiveHeader>
+      {viewControls}
     </div>
   );
   return headerTarget ? createPortal(heading, headerTarget) : heading;

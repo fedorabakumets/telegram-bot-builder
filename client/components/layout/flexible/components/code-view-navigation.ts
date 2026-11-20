@@ -1,14 +1,16 @@
 /**
  * @fileoverview Переход из списка файлов в просмотр кода на узком экране.
  */
-import { createContext, useContext } from 'react';
+import { createContext, useContext, type ReactNode } from 'react';
 
 /** Общая навигация и место заголовка мобильной вкладки кода. */
 interface CodeViewNavigation {
   /** Обработчик перехода к редактору. */
   openCodeView: (() => void) | null;
-  /** Контейнер заголовка над переключателем режимов. */
+  /** Контейнер общей шапки. */
   headerTarget: HTMLDivElement | null;
+  /** Переключатель списка файлов и просмотра кода на узком экране. */
+  viewControls?: ReactNode;
 }
 
 /** Контекст мобильной вкладки кода. */
@@ -23,9 +25,9 @@ export function useOpenCodeView() {
 }
 
 /**
- * Возвращает контейнер общего заголовка мобильной вкладки.
- * @returns Контейнер над переключателем либо null для обычной панели.
+ * Возвращает контейнер и дополнительные действия общей шапки кода.
+ * @returns Данные внешней шапки либо null для обычной панели.
  */
-export function useCodeHeaderTarget() {
-  return useContext(CodeViewNavigationContext)?.headerTarget ?? null;
+export function useCodeHeader() {
+  return useContext(CodeViewNavigationContext);
 }

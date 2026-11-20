@@ -1289,14 +1289,14 @@
 
 /* Низ панели листов над жестом «домой». max-inset не прыгает, когда панель браузера прячется */
 @media (max-width: 767px) {
-  [data-canvas-sheets] {
+  [data-canvas-sheets="bottom"] {
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 }
 
 @supports (padding-bottom: env(safe-area-max-inset-bottom)) {
   @media (max-width: 767px) {
-    [data-canvas-sheets] {
+    [data-canvas-sheets="bottom"] {
       padding-bottom: env(safe-area-max-inset-bottom, 0px);
     }
   }
