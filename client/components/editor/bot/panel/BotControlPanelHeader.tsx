@@ -16,6 +16,7 @@ import { isGuest } from '@/types/telegram-user';
 import { ProjectSelector } from '@/components/editor/database/user-database/components/header/project-selector';
 import { WorkerPoolStatus } from './WorkerPoolStatus';
 import { BotViewModeToggle } from '../canvas/BotViewModeToggle';
+import { BotWorkspaceModeSwitch, type BotWorkspaceMode } from '../accounts/BotWorkspaceModeSwitch';
 import { ProjectBotBulkActions } from '../project/ProjectBotBulkActions';
 import { countStartableOfflineBots } from '../project/count-startable-offline-bots';
 import { useBotControl } from '../bot-control-context';
@@ -38,6 +39,12 @@ interface BotControlPanelHeaderProps {
   onViewModeChange: (mode: BotViewMode) => void;
   /** Токены текущего проекта (для offline-счётчика) */
   currentProjectTokens?: BotToken[];
+  /** Выбранная область вкладки. */
+  workspaceMode: BotWorkspaceMode;
+  /** Переключает ботов и аккаунты. */
+  onWorkspaceModeChange: (mode: BotWorkspaceMode) => void;
+  /** Создаёт демонстрационный аккаунт. */
+  onAddMockAccount: () => void;
 }
 
 /**
@@ -53,6 +60,9 @@ export function BotControlPanelHeader({
   viewMode,
   onViewModeChange,
   currentProjectTokens = [],
+  workspaceMode,
+  onWorkspaceModeChange,
+  onAddMockAccount,
 }: BotControlPanelHeaderProps) {
   const { user, isLoading: authLoading } = useTelegramAuth();
   const queryClient = useQueryClient();
@@ -84,7 +94,13 @@ export function BotControlPanelHeader({
       title="Боты"
       className="bot-workspace-header"
       actions={
-        <WorkspaceTabActions docsPath="interface/bot" section="Боты" onRefresh={refreshBots} before={[
+        <>
+        <BotWorkspaceModeSwitch mode={workspaceMode} onModeChange={onWorkspaceModeChange} />
+        {workspaceMode === 'accounts' ? (
+          <Button variant="outline" size="sm" onClick={onAddMockAccount}>
+            <Plus className="size-4" aria-hidden="true" /> Аккаунт
+          </Button>
+        ) : <WorkspaceTabActions docsPath="interface/bot" section="Боты" onRefresh={refreshBots} before={[
           { id: 'view', content: <BotViewModeToggle mode={viewMode} onModeChange={onViewModeChange} /> },
           { id: 'connect', content: !isGuestUser && (
             <Button
@@ -100,13 +116,14 @@ export function BotControlPanelHeader({
               <span data-workspace-label="connect">Подключить</span>
             </Button>
           ) },
-        ]} />
+        ]} />}
+        </>
       }
     >
       {/* На узком экране область проекта и воркеров может переноситься. */}
-      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1.5">
+      <div className="bot-workspace-scope flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1.5">
         <WorkspaceHeaderActionItems kind="selectors" items={[{ id: 'project', content: allProjects && allProjects.length > 1 && onProjectChange && currentProjectId ? (
-          <div className="w-max min-w-0 max-w-full shrink">
+          <div className="bot-workspace-project w-max min-w-0 max-w-full shrink">
             {/* Размер поля определяется названием и доступной шириной строки. */}
             <ProjectSelector
               projects={allProjects}
@@ -115,8 +132,10 @@ export function BotControlPanelHeader({
             />
           </div>
         ) : null }]} />
-        <WorkerPoolStatus projects={allProjects} />
-        {currentProjectId != null && (
+        {workspaceMode === 'accounts' ? (
+          <span className="text-xs text-muted-foreground">Демонстрационные данные</span>
+        ) : <WorkerPoolStatus projects={allProjects} />}
+        {workspaceMode === 'bots' && currentProjectId != null && (
           <div className="shrink-0">
           <ProjectBotBulkActions
             adaptiveLabels

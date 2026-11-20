@@ -11,6 +11,7 @@
  * @module BotControlPanel
  */
 
+import { useState } from 'react';
 import { BotControlPanelHeader } from './BotControlPanelHeader';
 import { BotControlPanelLoading } from './BotControlPanelLoading';
 import { BotControlPanelEmpty } from './BotControlPanelEmpty';
@@ -22,6 +23,9 @@ import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-a
 import { useTelegramLogin } from '@/components/editor/header/hooks/use-telegram-login';
 import { isGuest } from '@/types/telegram-user';
 import { useBotViewMode } from '../canvas/use-bot-view-mode';
+import type { BotWorkspaceMode } from '../accounts/BotWorkspaceModeSwitch';
+import { BotAccountsWorkspace } from '../accounts/BotAccountsWorkspace';
+import { useMockTelegramAccounts } from '../accounts/use-mock-telegram-accounts';
 import type { BotProject, BotToken } from '@shared/schema';
 
 /**
@@ -78,6 +82,8 @@ export function BotControlPanel({
   const { user, isLoading: authLoading } = useTelegramAuth();
   const { handleTelegramLogin } = useTelegramLogin();
   const { viewMode, setViewMode } = useBotViewMode();
+  const [workspaceMode, setWorkspaceMode] = useState<BotWorkspaceMode>('bots');
+  const mockAccounts = useMockTelegramAccounts(currentProjectId);
 
   /** Является ли текущий пользователь гостем */
   const isGuestUser = !authLoading && (!user || isGuest(user));
@@ -105,9 +111,17 @@ export function BotControlPanel({
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         currentProjectTokens={currentProjectTokens}
+        workspaceMode={workspaceMode}
+        onWorkspaceModeChange={setWorkspaceMode}
+        onAddMockAccount={mockAccounts.createAccount}
       />
 
-      <div
+      {workspaceMode === 'accounts' && (
+        <div className="min-h-0 flex-1 overflow-hidden">
+          <BotAccountsWorkspace model={mockAccounts} />
+        </div>
+      )}
+      {workspaceMode === 'bots' && <div
         className={
           isCanvas
             ? 'flex-1 min-h-0 overflow-hidden p-0 sm:p-0'
@@ -133,9 +147,9 @@ export function BotControlPanel({
             viewMode={viewMode}
           />
         )}
-      </div>
+      </div>}
 
-      <AddBotDialog
+      {workspaceMode === 'bots' && <AddBotDialog
         showAddBot={showAddBot}
         setShowAddBot={setShowAddBot}
         projectForNewBot={projectForNewBot}
@@ -147,7 +161,7 @@ export function BotControlPanel({
         createBotMutation={createBotMutation}
         handleAddBot={handleAddBot}
         allTokensFlat={allTokensFlat}
-      />
+      />}
     </div>
   );
 }
