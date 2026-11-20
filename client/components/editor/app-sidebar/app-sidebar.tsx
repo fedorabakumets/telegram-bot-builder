@@ -108,6 +108,7 @@ export function AppSidebar({
       <div className="app-sidebar-footer p-2 pb-3">
         <SidebarFooter
           isCollapsed={isCollapsed}
+          showVersion={horizontal}
           headerVisible={headerVisible}
           onToggleHeader={onToggleHeader}
           menuSide={position === 'right' ? 'left' : position === 'bottom' ? 'top' : position === 'top' ? 'bottom' : 'right'}

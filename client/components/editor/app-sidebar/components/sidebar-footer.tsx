@@ -24,6 +24,7 @@ import {
 import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
 import { useTelegramLogin } from '@/components/editor/header/hooks/use-telegram-login';
 import { cn } from '@/utils/utils';
+import { CLIENT_APP_VERSION } from '@/lib/app-version';
 import { isTelegramUser } from '@/types/telegram-user';
 
 /**
@@ -32,6 +33,8 @@ import { isTelegramUser } from '@/types/telegram-user';
 interface SidebarFooterProps {
   /** Свёрнут ли сайдбар */
   isCollapsed?: boolean;
+  /** Показывать версию после кнопок аккаунта на горизонтальной панели. */
+  showVersion?: boolean;
   /** Видима ли шапка */
   headerVisible?: boolean;
   /** Переключить видимость шапки */
@@ -45,7 +48,7 @@ interface SidebarFooterProps {
  * @param props - Свойства компонента
  * @returns JSX элемент с профилем и кнопкой шапки
  */
-export function SidebarFooter({ isCollapsed, headerVisible, onToggleHeader, menuSide = 'right' }: SidebarFooterProps) {
+export function SidebarFooter({ isCollapsed, showVersion, headerVisible, onToggleHeader, menuSide = 'right' }: SidebarFooterProps) {
   const [location] = useLocation();
   const { user, logout } = useTelegramAuth();
   const { handleTelegramLogin } = useTelegramLogin();
@@ -219,6 +222,11 @@ export function SidebarFooter({ isCollapsed, headerVisible, onToggleHeader, menu
           <MessageCircle className="h-4 w-4 flex-shrink-0" />
           {!isCollapsed && <span className="text-sm">Войти в Telegram</span>}
         </Button>
+      )}
+      {showVersion && (
+        <span className="shrink-0 whitespace-nowrap px-1 text-[10px] tabular-nums text-muted-foreground" title="Версия приложения">
+          v{CLIENT_APP_VERSION}
+        </span>
       )}
     </div>
   );
