@@ -61,21 +61,21 @@
     },
     {
       "file": "server/routes/dialogs/dialog-profile-bots-routes.ts",
-      "line": 45,
+      "line": 53,
       "method": "GET",
       "expression": "'/api/projects/:projectId/dialog-users/:userId/profile-bots'",
       "resolvedPath": "/api/projects/{projectId}/dialog-users/{userId}/profile-bots"
     },
     {
       "file": "server/routes/dialogs/dialog-profile-content-routes.ts",
-      "line": 22,
+      "line": 36,
       "method": "GET",
       "expression": "base",
       "resolvedPath": "/api/projects/{projectId}/dialog-profiles/{userId}/content"
     },
     {
       "file": "server/routes/dialogs/dialog-profile-content-routes.ts",
-      "line": 33,
+      "line": 47,
       "method": "GET",
       "expression": "`${base}/media/:mediaId`",
       "resolvedPath": "/api/projects/{projectId}/dialog-profiles/{userId}/content/media/{mediaId}"
@@ -201,7 +201,7 @@
     },
     {
       "file": "server/routes/users/bot-audience-counts.ts",
-      "line": 19,
+      "line": 27,
       "method": "GET",
       "expression": "'/api/projects/:projectId/bot-audience-counts'",
       "resolvedPath": "/api/projects/{projectId}/bot-audience-counts"
@@ -364,7 +364,7 @@
       {
         "candidate": {
           "file": "server/routes/routes.ts",
-          "line": 508,
+          "line": 507,
           "method": "USE",
           "expression": "sessionMiddleware"
         },
@@ -374,7 +374,7 @@
       {
         "candidate": {
           "file": "server/routes/routes.ts",
-          "line": 510,
+          "line": 509,
           "method": "USE",
           "expression": "['/api', '/admin/api']"
         },
@@ -984,21 +984,21 @@
     },
     {
       "file": "server/routes/dialogs/dialog-profile-bots-routes.ts",
-      "line": 45,
+      "line": 53,
       "method": "GET",
       "expression": "'/api/projects/:projectId/dialog-users/:userId/profile-bots'",
       "resolvedPath": "/api/projects/{projectId}/dialog-users/{userId}/profile-bots"
     },
     {
       "file": "server/routes/dialogs/dialog-profile-content-routes.ts",
-      "line": 22,
+      "line": 36,
       "method": "GET",
       "expression": "base",
       "resolvedPath": "/api/projects/{projectId}/dialog-profiles/{userId}/content"
     },
     {
       "file": "server/routes/dialogs/dialog-profile-content-routes.ts",
-      "line": 33,
+      "line": 47,
       "method": "GET",
       "expression": "`${base}/media/:mediaId`",
       "resolvedPath": "/api/projects/{projectId}/dialog-profiles/{userId}/content/media/{mediaId}"
@@ -1081,15 +1081,22 @@
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 508,
+      "line": 507,
       "method": "USE",
       "expression": "sessionMiddleware"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 510,
+      "line": 509,
       "method": "USE",
       "expression": "['/api', '/admin/api']"
+    },
+    {
+      "file": "server/routes/routes.ts",
+      "line": 518,
+      "method": "USE",
+      "expression": "\"/api\"",
+      "resolvedPath": "/api"
     },
     {
       "file": "server/routes/routes.ts",
@@ -1102,26 +1109,26 @@
       "file": "server/routes/routes.ts",
       "line": 520,
       "method": "USE",
-      "expression": "\"/api\"",
-      "resolvedPath": "/api"
-    },
-    {
-      "file": "server/routes/routes.ts",
-      "line": 521,
-      "method": "USE",
       "expression": "\"/uploads\"",
       "resolvedPath": "/uploads"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 522,
+      "line": 521,
       "method": "USE",
       "expression": "\"/api\"",
       "resolvedPath": "/api"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 526,
+      "line": 525,
+      "method": "USE",
+      "expression": "\"/api\"",
+      "resolvedPath": "/api"
+    },
+    {
+      "file": "server/routes/routes.ts",
+      "line": 529,
       "method": "USE",
       "expression": "\"/api\"",
       "resolvedPath": "/api"
@@ -1135,56 +1142,49 @@
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 531,
+      "line": 539,
       "method": "USE",
       "expression": "\"/api\"",
       "resolvedPath": "/api"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 540,
-      "method": "USE",
-      "expression": "\"/api\"",
-      "resolvedPath": "/api"
-    },
-    {
-      "file": "server/routes/routes.ts",
-      "line": 551,
+      "line": 550,
       "method": "GET",
       "expression": "\"/api/health\"",
       "resolvedPath": "/api/health"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 559,
+      "line": 558,
       "method": "HEAD",
       "expression": "\"/api/health\"",
       "resolvedPath": "/api/health"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 603,
+      "line": 602,
       "method": "GET",
       "expression": "\"/api/bots\"",
       "resolvedPath": "/api/bots"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 630,
+      "line": 629,
       "method": "GET",
       "expression": "\"/api/projects/:id/tokens\"",
       "resolvedPath": "/api/projects/{id}/tokens"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 665,
+      "line": 664,
       "method": "POST",
       "expression": "\"/api/projects/:id/tokens/parse\"",
       "resolvedPath": "/api/projects/{id}/tokens/parse"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 858,
+      "line": 857,
       "method": "PUT",
       "expression": "\"/api/projects/:id/tokens/:tokenId/bot-info\"",
       "resolvedPath": "/api/projects/{id}/tokens/{tokenId}/bot-info"
@@ -1345,217 +1345,217 @@
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 1763,
+      "line": 1764,
       "method": "POST",
       "expression": "\"/api/media/check-url\"",
       "resolvedPath": "/api/media/check-url"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 1832,
+      "line": 1833,
       "method": "POST",
       "expression": "\"/api/media/download-url/:projectId\"",
       "resolvedPath": "/api/media/download-url/{projectId}"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 1987,
+      "line": 1988,
       "method": "POST",
       "expression": "\"/api/media/download-urls/:projectId\"",
       "resolvedPath": "/api/media/download-urls/{projectId}"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 2146,
+      "line": 2147,
       "method": "GET",
       "expression": "\"/api/media/project/:projectId\"",
       "resolvedPath": "/api/media/project/{projectId}"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 2165,
+      "line": 2166,
       "method": "GET",
       "expression": "\"/api/media/:id\"",
       "resolvedPath": "/api/media/{id}"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 2183,
+      "line": 2184,
       "method": "PUT",
       "expression": "\"/api/media/:id\"",
       "resolvedPath": "/api/media/{id}"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 2205,
+      "line": 2206,
       "method": "DELETE",
       "expression": "\"/api/media/:id\"",
       "resolvedPath": "/api/media/{id}"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 2238,
+      "line": 2239,
       "method": "GET",
       "expression": "\"/api/media/search/:projectId\"",
       "resolvedPath": "/api/media/search/{projectId}"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 2258,
+      "line": 2259,
       "method": "POST",
       "expression": "\"/api/media/:id/use\"",
       "resolvedPath": "/api/media/{id}/use"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 2278,
+      "line": 2279,
       "method": "GET",
       "expression": "\"/api/projects/:id/users\"",
       "resolvedPath": "/api/projects/{id}/users"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 2600,
+      "line": 2601,
       "method": "GET",
       "expression": "\"/api/projects/:id/users/stats\"",
       "resolvedPath": "/api/projects/{id}/users/stats"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 2674,
+      "line": 2675,
       "method": "GET",
       "expression": "\"/api/projects/:id/users/traffic\"",
       "resolvedPath": "/api/projects/{id}/users/traffic"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 2734,
+      "line": 2735,
       "method": "GET",
       "expression": "\"/api/projects/:id/users/activity\"",
       "resolvedPath": "/api/projects/{id}/users/activity"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 2758,
+      "line": 2759,
       "method": "GET",
       "expression": "\"/api/projects/:id/users/growth\"",
       "resolvedPath": "/api/projects/{id}/users/growth"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 2873,
+      "line": 2874,
       "method": "GET",
       "expression": "\"/api/projects/:id/users/growth-by-source\"",
       "resolvedPath": "/api/projects/{id}/users/growth-by-source"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 2981,
+      "line": 2982,
       "method": "GET",
       "expression": "\"/api/projects/:id/users/popular-buttons\"",
       "resolvedPath": "/api/projects/{id}/users/popular-buttons"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 3029,
+      "line": 3030,
       "method": "GET",
       "expression": "\"/api/projects/:id/logs/all\"",
       "resolvedPath": "/api/projects/{id}/logs/all"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 3056,
+      "line": 3057,
       "method": "GET",
       "expression": "\"/api/projects/:id/launches/all\"",
       "resolvedPath": "/api/projects/{id}/launches/all"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 3083,
+      "line": 3084,
       "method": "GET",
       "expression": "\"/api/projects/:id/users/variables\"",
       "resolvedPath": "/api/projects/{id}/users/variables"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 3144,
+      "line": 3145,
       "method": "GET",
       "expression": "\"/api/projects/:id/messages/all\"",
       "resolvedPath": "/api/projects/{id}/messages/all"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 3178,
+      "line": 3179,
       "method": "GET",
       "expression": "\"/api/projects/:id/messages/activity\"",
       "resolvedPath": "/api/projects/{id}/messages/activity"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 3350,
+      "line": 3351,
       "method": "PUT",
       "expression": "\"/api/projects/:projectId/users/:userId\"",
       "resolvedPath": "/api/projects/{projectId}/users/{userId}"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 3357,
+      "line": 3358,
       "method": "DELETE",
       "expression": "\"/api/projects/:projectId/users/:userId\"",
       "resolvedPath": "/api/projects/{projectId}/users/{userId}"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 3365,
+      "line": 3366,
       "method": "DELETE",
       "expression": "\"/api/projects/:id/users\"",
       "resolvedPath": "/api/projects/{id}/users"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 3438,
+      "line": 3439,
       "method": "GET",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId/env-variables\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/env-variables"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 3456,
+      "line": 3457,
       "method": "POST",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId/env-variables\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/env-variables"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 3495,
+      "line": 3496,
       "method": "PUT",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId/env-variables/:id\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/env-variables/{id}"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 3551,
+      "line": 3552,
       "method": "DELETE",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId/env-variables/:id\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/env-variables/{id}"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 3578,
+      "line": 3579,
       "method": "GET",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId/env-variables/:id/reveal\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/env-variables/{id}/reveal"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 3599,
+      "line": 3600,
       "method": "GET",
       "expression": "\"/api/server/env-keys\"",
       "resolvedPath": "/api/server/env-keys"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 3620,
+      "line": 3621,
       "method": "PUT",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId/env-batch\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/env-batch"
@@ -2787,7 +2787,7 @@
     },
     {
       "file": "server/routes/users/bot-audience-counts.ts",
-      "line": 19,
+      "line": 27,
       "method": "GET",
       "expression": "'/api/projects/:projectId/bot-audience-counts'",
       "resolvedPath": "/api/projects/{projectId}/bot-audience-counts"
