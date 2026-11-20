@@ -26,7 +26,8 @@ import { ChildProcess } from "child_process";
 import PostgresStore from "connect-pg-simple";
 import type { Express, RequestHandler } from "express";
 import session from "express-session";
-import { existsSync, mkdirSync, unlinkSync } from "fs";
+import { ipKeyGenerator, rateLimit } from "express-rate-limit";
+import { UsersRateLimitStore } from "./userProjectsTokens/users-rate-limit-store";
 import { type Server } from "http";
 import multer from "multer";
 import { join } from "path";
@@ -129,6 +130,7 @@ import { listSelectedMedia } from "./media/selected-media-list";
 import { SelectedStorageUnavailableError } from "../storage/selected-media-storage";
 import { broadcastProjectEvent, emitTokenUpdated } from "../terminal";
 import { getRequestTokenId } from "./utils/resolve-request-token";
+import { cleanupProjectUpload, createProjectUploadName, ensureProjectUploadDirectory, parseProjectUploadId } from './media/project-upload-path';
 import { getTelegramProxyAgent } from "../utils/telegram-proxy";
 import { sessionActivityMiddleware } from "../auth/session-registry";
 import { attachAdminAudit } from "../admin/admin-audit";
@@ -174,14 +176,10 @@ export const botProcesses = new Map<string, ChildProcess>();
 // Расширенная настройка multer для загрузки файлов
 const storage_multer = multer.diskStorage({
   destination: (req, _file, cb) => {
-    const projectId = req.params.projectId;
-    const date = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-    const uploadDir = join(process.cwd(), 'uploads', projectId, date);
-
-    if (!existsSync(uploadDir)) {
-      mkdirSync(uploadDir, { recursive: true });
-    }
-    cb(null, uploadDir);
+    /** Разрешаем запись только в проверенный каталог числового проекта. */
+    void Promise.resolve()
+      .then(() => ensureProjectUploadDirectory(parseProjectUploadId(req.params.projectId), new Date().toISOString().slice(0, 10)))
+      .then((directory) => cb(null, directory), (error: Error) => cb(error, ''));
   },
   filename: (_req, file, cb) => {
     // Исправляем кодировку UTF-8 - декодируем URL-encoded имя
@@ -200,19 +198,8 @@ const storage_multer = multer.diskStorage({
       }
     }
     
-    // Если имя всё ещё пустое или содержит только спецсимволы, используем дефолтное
-    const baseNameRaw = originalname
-      .split('.')[0]
-      .replace(/[^a-zA-Z0-9._-]/g, '_')
-      .substring(0, 50);
-    
-    const baseName = baseNameRaw && baseNameRaw !== '_' ? baseNameRaw : 'file';
-    
-    // Генерируем уникальное имя файла с временной меткой
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const extension = originalname.split('.').pop()?.toLowerCase() || 'jpg';
-
-    cb(null, `${uniqueSuffix}-${baseName}.${extension}`);
+    /** Имя для диска не содержит каталогов и не совпадает с именем клиента. */
+    cb(null, createProjectUploadName(originalname, 'jpg'));
   }
 });
 
@@ -520,13 +507,46 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   app.use("/uploads", authMiddleware);
   app.use("/api", sessionActivityMiddleware);
 
-  // Резолвер личности по персональному токену агента (PAT) — Authorization: Bearer.
-  // Дополняет личность, если сессии нет (MCP/CLI). Не блокирует запрос.
-  app.use("/api", identifyAgent);
+  /** Ограничивает проверки личности без воздействия на поток событий ботов и проверку готовности. */
+  const apiIdentityLimit = rateLimit({
+    windowMs: 60_000, limit: 1800, store: new UsersRateLimitStore("editor-api-identity"),
+    standardHeaders: "draft-7", legacyHeaders: false,
+    skip: (req) => req.path === "/health" || req.path.startsWith("/webhook/") || req.path.startsWith("/hooks/"),
+    message: { message: "Слишком много запросов к API. Повторите позже." },
+  });
+  /** Использует подтверждённого пользователя, а в режиме администрирования — адрес соединения. */
+  const editorActorKey = (req: Parameters<RequestHandler>[0]) => {
+    const ownerId = getOwnerIdFromRequest(req);
+    return ownerId == null ? ipKeyGenerator(req.ip || req.socket.remoteAddress || "unknown") : `owner:${ownerId}`;
+  };
+  /** Общая квота охватывает все этапы входа в Telegram через юзербота. */
+  const userbotSignInLimit = rateLimit({
+    windowMs: 60_000, limit: 20, keyGenerator: editorActorKey, store: new UsersRateLimitStore("editor-userbot-sign-in"),
+    standardHeaders: "draft-7", legacyHeaders: false,
+    message: { message: "Слишком много попыток входа в Telegram. Повторите позже." },
+  });
+  /** Один запрос может содержать пакет файлов; квота действует перед обработкой файлов. */
+  const editorMediaWriteLimit = rateLimit({
+    windowMs: 60_000, limit: 120, keyGenerator: editorActorKey, store: new UsersRateLimitStore("editor-media-write"),
+    standardHeaders: "draft-7", legacyHeaders: false,
+    message: { message: "Слишком много загрузок медиа. Повторите позже." },
+  });
+  /** Запросы списков и отчётов делят бюджет, сохраняя запас на постраничное чтение. */
+  const projectDataReadLimit = rateLimit({
+    windowMs: 60_000, limit: 240, keyGenerator: editorActorKey, store: new UsersRateLimitStore("editor-project-data-read"),
+    standardHeaders: "draft-7", legacyHeaders: false,
+    message: { message: "Слишком много запросов данных проекта. Повторите позже." },
+  });
+  /** Изменение пользователя не расходует бюджет чтения. */
+  const projectUserWriteLimit = rateLimit({
+    windowMs: 60_000, limit: 120, keyGenerator: editorActorKey, store: new UsersRateLimitStore("editor-project-user-write"),
+    standardHeaders: "draft-7", legacyHeaders: false,
+    message: { message: "Слишком много изменений пользователей. Повторите позже." },
+  });
 
-  // Deny-by-default: все /api закрыты, кроме публичного allowlist.
-  // Подключается ПОСЛЕ identifyUser/identifyAgent — личность уже установлена.
-  app.use("/api", requireApiAuth);
+  // Резолвер личности по персональному токену агента (PAT) — Authorization: Bearer.
+  // После определения личности API закрыт для всех, кроме публичного списка путей.
+  app.use("/api", apiIdentityLimit, identifyAgent, requireApiAuth);
   app.use("/api", attachAdminAudit);
   /** Подключает точные временные диапазоны после общей авторизации. */
   setupAnalyticsRangeRoutes(app, dbPool, requireProjectAccess);
@@ -1283,7 +1303,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
    * Авторизация Telethon userbot — шаг 1: отправка кода
    * POST /api/projects/:projectId/tokens/:tokenId/userbot/send-code
    */
-  app.post("/api/projects/:projectId/tokens/:tokenId/userbot/send-code", requireTokenOwnership, async (req, res) => {
+  app.post("/api/projects/:projectId/tokens/:tokenId/userbot/send-code", userbotSignInLimit, requireTokenOwnership, async (req, res) => {
     try {
       const tokenId = parseInt(req.params.tokenId);
       const { apiId, phone } = req.body as { apiId: string; apiHash: string; phone: string };
@@ -1321,7 +1341,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
    * Авторизация Telethon userbot — шаг 2: ввод кода
    * POST /api/projects/:projectId/tokens/:tokenId/userbot/sign-in
    */
-  app.post("/api/projects/:projectId/tokens/:tokenId/userbot/sign-in", requireTokenOwnership, async (req, res) => {
+  app.post("/api/projects/:projectId/tokens/:tokenId/userbot/sign-in", userbotSignInLimit, requireTokenOwnership, async (req, res) => {
     try {
       const tokenId = parseInt(req.params.tokenId);
       const { phone, code } = req.body as { phone: string; code: string };
@@ -1355,7 +1375,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
    * Авторизация Telethon userbot — шаг 3: ввод 2FA пароля
    * POST /api/projects/:projectId/tokens/:tokenId/userbot/sign-in-2fa
    */
-  app.post("/api/projects/:projectId/tokens/:tokenId/userbot/sign-in-2fa", requireTokenOwnership, async (req, res) => {
+  app.post("/api/projects/:projectId/tokens/:tokenId/userbot/sign-in-2fa", userbotSignInLimit, requireTokenOwnership, async (req, res) => {
     try {
       const tokenId = parseInt(req.params.tokenId);
       const { password } = req.body as { password: string };
@@ -1469,9 +1489,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // === МЕДИАФАЙЛЫ ===
 
   // Загрузка медиафайла (одиночная) с улучшенной обработкой
-  app.post("/api/media/upload/:projectId", requireProjectAccess, upload.single('file'), fixUtf8Encoding, async (req, res) => {
+  app.post("/api/media/upload/:projectId", editorMediaWriteLimit, requireProjectAccess, upload.single('file'), fixUtf8Encoding, async (req, res) => {
+    /** Идентификатор также ограничивает очистку после ошибки. */
+    const projectId = Number(req.params.projectId);
     try {
-      const projectId = parseInt(req.params.projectId);
       const file = req.file;
       const { description, tags, isPublic, storageConfigId } = req.body;
 
@@ -1486,9 +1507,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const project = await storage.getBotProject(projectId);
       if (!project) {
         // Удаляем загруженный файл если проект не найден
-        if (existsSync(file.path)) {
-          unlinkSync(file.path);
-        }
+        await cleanupProjectUpload(projectId, file.path);
         return res.status(404).json({
           message: "Проект не найден",
           code: "PROJECT_NOT_FOUND"
@@ -1499,9 +1518,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const validation = validateFileDetailed(file);
       if (!validation.valid) {
         // Удаляем файл при ошибке валидации
-        if (existsSync(file.path)) {
-          unlinkSync(file.path);
-        }
+        await cleanupProjectUpload(projectId, file.path);
         return res.status(400).json({
           message: validation.error,
           code: "VALIDATION_ERROR"
@@ -1527,9 +1544,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       } catch (storageError) {
         // Сбой записи во внешнее хранилище (например, недоступность S3) → 502 + очистка (Req 12.6)
         if (storageError instanceof StorageBackendWriteError && storageError.backend === "s3") {
-          if (existsSync(file.path)) {
-            try { unlinkSync(file.path); } catch { /* очистка best-effort */ }
-          }
+          await cleanupProjectUpload(projectId, file.path);
           return res.status(502).json({
             message: "Хранилище S3 недоступно, файл не сохранён",
             code: "STORAGE_UNREACHABLE",
@@ -1602,13 +1617,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       console.error("Ошибка при загрузке файла:", error);
 
       // Удаляем файл в случае ошибки
-      if (req.file && existsSync(req.file.path)) {
-        try {
-          unlinkSync(req.file.path);
-        } catch (unlinkError) {
-          console.error("Ошибка при удалении файла:", unlinkError);
-        }
-      }
+      await cleanupProjectUpload(projectId, req.file?.path);
 
       if (error instanceof StorageBackendWriteError) return res.status(502).json({ message: "Хранилище недоступно, файл не сохранён", code: "STORAGE_UNREACHABLE" });
       const errorMessage = error instanceof Error ? error.message : "Неизвестная ошибка";
@@ -1622,11 +1631,11 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // Загрузка множественных медиафайлов с улучшенной обработкой
-  app.post("/api/media/upload-multiple/:projectId", requireProjectAccess, upload.array('files', 20), async (req, res) => {
-    /** Обработчик принимает только массив файлов от multer.array. */
+  app.post("/api/media/upload-multiple/:projectId", editorMediaWriteLimit, requireProjectAccess, upload.array('files', 20), async (req, res) => {
+    /** Обработчик принимает только массив файлов от multer.array и очищает его в каталоге проекта. */
     const files = Array.isArray(req.files) ? req.files : [];
+    const projectId = Number(req.params.projectId);
     try {
-      const projectId = parseInt(req.params.projectId);
 
       const { isPublic, defaultDescription, storageConfigId } = req.body;
 
@@ -1641,11 +1650,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const project = await storage.getBotProject(projectId);
       if (!project) {
         // Удаляем все файлы если проект не найден
-        files.forEach(file => {
-          if (existsSync(file.path)) {
-            unlinkSync(file.path);
-          }
-        });
+        await Promise.all(files.map(file => cleanupProjectUpload(projectId, file.path)));
         return res.status(404).json({
           message: "Проект не найден",
           code: "PROJECT_NOT_FOUND"
@@ -1671,7 +1676,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           const maxSize = file.mimetype.startsWith('video/') ? 100 * 1024 * 1024 : 50 * 1024 * 1024;
           if (file.size > maxSize) {
             // Удаляем файл, если он превышает лимит
-            unlinkSync(file.path);
+            await cleanupProjectUpload(projectId, file.path);
             errors.push({
               fileName: file.originalname,
               error: `Файл слишком большой. Максимальный размер: ${file.mimetype.startsWith('video/') ? '100' : '50'}МБ`
@@ -1708,13 +1713,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           console.error('Ошибка при обработке файла %s:', file.originalname, fileError);
 
           // Удаляем файл в случае ошибки
-          if (existsSync(file.path)) {
-            try {
-              unlinkSync(file.path);
-            } catch (unlinkError) {
-              console.error("Ошибка при удалении файла:", unlinkError);
-            }
-          }
+          await cleanupProjectUpload(projectId, file.path);
 
           errors.push({
             fileName: file.originalname,
@@ -1743,17 +1742,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       console.error("Ошибка при загрузке файлов:", error);
 
       // Удаляем все файлы в случае ошибки
-      if (files.length > 0) {
-        files.forEach(file => {
-          if (existsSync(file.path)) {
-            try {
-              unlinkSync(file.path);
-            } catch (unlinkError) {
-              console.error("Ошибка при удалении файла:", unlinkError);
-            }
-          }
-        });
-      }
+      await Promise.all(files.map(file => cleanupProjectUpload(projectId, file.path)));
 
       res.status(error instanceof StorageBackendWriteError ? 502 : 500).json({ message: error instanceof StorageBackendWriteError ? "Хранилище недоступно, файлы не сохранены" : "Ошибка при загрузке файлов", code: error instanceof StorageBackendWriteError ? "STORAGE_UNREACHABLE" : "UPLOAD_ERROR" });
     }
@@ -1830,7 +1819,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // Загрузка файла по URL с расширенными возможностями
-  app.post("/api/media/download-url/:projectId", requireProjectAccess, async (req, res) => {
+  app.post("/api/media/download-url/:projectId", editorMediaWriteLimit, requireProjectAccess, async (req, res) => {
     try {
       const projectId = parseInt(req.params.projectId);
       const { url, description, tags, isPublic, customFileName, storageConfigId } = req.body;
@@ -1864,23 +1853,11 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       }
 
       // Создаем путь для сохранения
-      const date = new Date().toISOString().split('T')[0];
-      const uploadDir = join(process.cwd(), 'uploads', projectId.toString(), date);
-
-      if (!existsSync(uploadDir)) {
-        mkdirSync(uploadDir, { recursive: true });
-      }
-
-      // Генерируем уникальное имя файла
-      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-      const originalFileName = customFileName || urlCheck.fileName || 'downloaded-file';
-      const extension = originalFileName.split('.').pop()?.toLowerCase() || 'bin';
-      const baseName = originalFileName
-        .split('.')[0]
-        .replace(/[^a-zA-Z0-9._-]/g, '_')
-        .substring(0, 50);
-
-      const fileName = `${uniqueSuffix}-${baseName}.${extension}`;
+      /** Имя пользователя используется как подпись, а путь формируется безопасной функцией. */
+      const date = new Date().toISOString().slice(0, 10);
+      const uploadDir = await ensureProjectUploadDirectory(project.id, date);
+      const originalFileName = (typeof customFileName === 'string' && customFileName) || urlCheck.fileName || 'downloaded-file';
+      const fileName = createProjectUploadName(originalFileName, 'bin');
       const filePath = join(uploadDir, fileName);
 
       // Загружаем файл
@@ -1904,9 +1881,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       if (!validation.valid) {
         // Удаляем файл если он не прошел валидацию
-        if (existsSync(filePath)) {
-          unlinkSync(filePath);
-        }
+        await cleanupProjectUpload(project.id, filePath);
         return res.status(400).json({
           message: validation.error,
           code: "VALIDATION_FAILED"
@@ -1985,7 +1960,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // Пакетная загрузка файлов по URL (множественная загрузка)
-  app.post("/api/media/download-urls/:projectId", requireProjectAccess, async (req, res) => {
+  app.post("/api/media/download-urls/:projectId", editorMediaWriteLimit, requireProjectAccess, async (req, res) => {
     try {
       const projectId = parseInt(req.params.projectId);
       const { urls, isPublic, defaultDescription, storageConfigId } = req.body;
@@ -2018,12 +1993,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const errors = [];
 
       // Создаем путь для сохранения
-      const date = new Date().toISOString().split('T')[0];
-      const uploadDir = join(process.cwd(), 'uploads', projectId.toString(), date);
-
-      if (!existsSync(uploadDir)) {
-        mkdirSync(uploadDir, { recursive: true });
-      }
+      /** Папка одна на весь пакет и привязана к найденному проекту. */
+      const date = new Date().toISOString().slice(0, 10);
+      const uploadDir = await ensureProjectUploadDirectory(project.id, date);
 
       // Обра��атываем каждый URL
       for (let i = 0; i < urls.length; i++) {
@@ -2044,15 +2016,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           }
 
           // Генерируем путь для ��айла
-          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-          const originalFileName = customFileName || urlCheck.fileName || `file-${i + 1}`;
-          const extension = originalFileName.split('.').pop()?.toLowerCase() || 'bin';
-          const baseName = originalFileName
-            .split('.')[0]
-            .replace(/[^a-zA-Z0-9._-]/g, '_')
-            .substring(0, 50);
-
-          const fileName = `${uniqueSuffix}-${baseName}.${extension}`;
+          /** Имя на диске использует только допустимую основу и расширение. */
+          const originalFileName = (typeof customFileName === 'string' && customFileName) || urlCheck.fileName || `file-${i + 1}`;
+          const fileName = createProjectUploadName(originalFileName, 'bin');
           const filePath = join(uploadDir, fileName);
 
           // Загружаем файл
@@ -2075,9 +2041,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           } as any);
 
           if (!validation.valid) {
-            if (existsSync(filePath)) {
-              unlinkSync(filePath);
-            }
+            await cleanupProjectUpload(project.id, filePath);
             errors.push({
               url: url,
               error: `Валидация не пройдена: ${validation.error}`
@@ -2276,7 +2240,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // User Bot Data Management endpoints
 
   // Get all user data for a project
-  app.get("/api/projects/:id/users", async (req, res) => {
+  app.get("/api/projects/:id/users", projectDataReadLimit, async (req, res) => {
     const projectId = parseInt(req.params.id);
     const tokenId = getRequestTokenId(req);
     /** Фильтрация реальных личных переписок применяется только к списку диалогов. */
@@ -2598,7 +2562,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // Get user data stats for a project
-  app.get("/api/projects/:id/users/stats", async (req, res) => {
+  app.get("/api/projects/:id/users/stats", projectDataReadLimit, async (req, res) => {
     const projectId = parseInt(req.params.id);
     const tokenId = getRequestTokenId(req);
     /** Вкладка пользователей считает уникальные личные контакты без групповых профилей. */
@@ -2672,7 +2636,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
    * @param id - Идентификатор проекта
    * @returns Объект с массивами sources и languages
    */
-  app.get("/api/projects/:id/users/traffic", async (req, res) => {
+  app.get("/api/projects/:id/users/traffic", projectDataReadLimit, async (req, res) => {
     const projectId = parseInt(req.params.id);
     const tokenId = getRequestTokenId(req);
 
@@ -2756,7 +2720,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
    * @query period - Период: "7d"|"30d"|"90d" (старый параметр, обратная совместимость)
    * @returns Массив объектов [{date, count}] — дата в ISO формате
    */
-  app.get("/api/projects/:id/users/growth", async (req, res) => {
+  app.get("/api/projects/:id/users/growth", projectDataReadLimit, async (req, res) => {
     const projectId = parseInt(req.params.id);
     const tokenId = getRequestTokenId(req);
     const granularity = req.query.granularity as string | undefined;
@@ -2871,7 +2835,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
    * @query tokenId - Фильтр по боту (опциональный)
    * @returns Массив объектов [{date, sources}] где sources — объект с количеством пользователей по источникам
    */
-  app.get("/api/projects/:id/users/growth-by-source", async (req, res) => {
+  app.get("/api/projects/:id/users/growth-by-source", projectDataReadLimit, async (req, res) => {
     const projectId = parseInt(req.params.id);
     const tokenId = getRequestTokenId(req);
     const granularity = req.query.granularity as string | undefined;
@@ -2979,7 +2943,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
    * @query granularity - Гранулярность периода: "1m"|"5m"|"1h"|"1w"|"1d"|"7d"|"30d" (опциональный, по умолчанию "1d")
    * @returns Массив объектов [{label, count}] — топ-10 кнопок по числу нажатий
    */
-  app.get("/api/projects/:id/users/popular-buttons", async (req, res) => {
+  app.get("/api/projects/:id/users/popular-buttons", projectDataReadLimit, async (req, res) => {
     const projectId = parseInt(req.params.id);
     const tokenId = getRequestTokenId(req);
     const granularity = req.query.granularity as string | undefined;
@@ -3027,7 +2991,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
    * @route GET /api/projects/:id/logs/all
    * @returns Массив логов [{level, message, timestamp}]
    */
-  app.get("/api/projects/:id/logs/all", requireProjectAccess, async (req, res) => {
+  app.get("/api/projects/:id/logs/all", projectDataReadLimit, requireProjectAccess, async (req, res) => {
     const projectId = parseInt(req.params.id);
     const limit = req.query.limit ? parseInt(req.query.limit as string) : 200;
     const tokenId = getRequestTokenId(req);
@@ -3054,7 +3018,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
    * @route GET /api/projects/:id/launches/all
    * @returns Массив запусков [{status, started_at, stopped_at, error_message}]
    */
-  app.get("/api/projects/:id/launches/all", requireProjectAccess, async (req, res) => {
+  app.get("/api/projects/:id/launches/all", projectDataReadLimit, requireProjectAccess, async (req, res) => {
     const projectId = parseInt(req.params.id);
 
     try {
@@ -3081,7 +3045,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
    * @query limit - Лимит записей (по умолчанию 200)
    * @returns {columns: string[], rows: Array<{user_id, ...переменные}>}
    */
-  app.get("/api/projects/:id/users/variables", requireProjectAccess, async (req, res) => {
+  app.get("/api/projects/:id/users/variables", projectDataReadLimit, requireProjectAccess, async (req, res) => {
     const projectId = parseInt(req.params.id);
     const tokenId = getRequestTokenId(req);
     const limit = req.query.limit ? parseInt(req.query.limit as string) : 200;
@@ -3142,7 +3106,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
    * @query offset - Смещение (по умолчанию 0)
    * @returns Массив сообщений [{id, userId, messageType, messageText, chatType, createdAt}]
    */
-  app.get("/api/projects/:id/messages/all", requireProjectAccess, async (req, res) => {
+  app.get("/api/projects/:id/messages/all", projectDataReadLimit, requireProjectAccess, async (req, res) => {
     const projectId = parseInt(req.params.id);
     const tokenId = getRequestTokenId(req);
     const limit = req.query.limit ? parseInt(req.query.limit as string) : 200;
@@ -3176,7 +3140,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
    * @query split - "true" — вернуть [{date, incoming, outgoing}] вместо [{date, count}]
    * @returns Массив объектов [{date, count}] или [{date, incoming, outgoing}] при split=true
    */
-  app.get("/api/projects/:id/messages/activity", requireProjectAccess, async (req, res) => {
+  app.get("/api/projects/:id/messages/activity", projectDataReadLimit, requireProjectAccess, async (req, res) => {
     const projectId = parseInt(req.params.id);
     const tokenId = getRequestTokenId(req);
     const granularity = req.query.granularity as string | undefined;
@@ -3350,6 +3314,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
   app.put(
     "/api/projects/:projectId/users/:userId",
+    projectUserWriteLimit,
     requireProjectAccess,
     updateBotUserHandler,
   );

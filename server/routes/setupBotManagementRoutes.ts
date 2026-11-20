@@ -96,8 +96,9 @@ export function setupBotManagementRoutes(app: Express): void {
     app.post("/api/projects/:id/bot/restart", requireProjectAccess, handleBotRestart);
     app.post("/api/projects/:id/bot/restart-all", requireProjectAccess, handleBotRestartAll);
     app.post("/api/projects/:id/bot/start-offline-all", requireProjectAccess, handleBotStartOfflineAll);
-    /** Возвращает выбранным ботам общий режим проекта без перезапуска. */
-    app.put('/api/projects/:projectId/bot/launch-inheritance', requireProjectAccess, handleBotLaunchInheritance);
+    /** Ограничивает массовое изменение до проверки доступа и записи в БД. */
+    app.put('/api/projects/:projectId/bot/launch-inheritance', runtimeWriteLimit,
+        requireProjectAccess, handleBotLaunchInheritance);
     app.get("/api/projects/:id/bot/statuses", requireProjectAccess, handleBotProjectStatuses);
     app.delete("/api/projects/:projectId/tokens/:tokenId/logs", requireProjectAccess, handleClearLogs);
 }
