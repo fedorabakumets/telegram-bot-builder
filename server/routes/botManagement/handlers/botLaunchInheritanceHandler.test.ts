@@ -28,7 +28,7 @@ async function request(tokenIds: unknown, setting?: 'all' | 'auto-restart' | 'sl
     status(code: number) { result.code = code; return this; },
     json(value: unknown) { result.body = value; return this; },
   };
-  await handleBotLaunchInheritance({ method: 'PUT', params: { projectId: '10' }, body: { tokenIds, setting } } as Request,
+  await handleBotLaunchInheritance({ method: 'PUT', params: { projectId: '10' }, body: { tokenIds, setting } } as unknown as Request,
     res as unknown as Response);
   return result;
 }

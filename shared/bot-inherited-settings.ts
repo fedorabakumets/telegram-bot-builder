@@ -91,12 +91,14 @@ export function resolveBotInheritedSettings(
 ): BotInheritedSettings {
   const project = resolveProjectBotSettings(defaults);
   const result: BotInheritedSettings = { ...DEFAULT_BOT_SETTINGS };
+  /** Отделяем значения полей от признаков наследования для типизированной записи по ключу. */
+  const overrides: Partial<BotInheritedSettings> | null | undefined = token;
   /**
    * Записывает значение с источником, выбранным для конкретного поля.
    * @param key - Ключ наследуемой настройки.
    */
   function assign<K extends BotInheritedSettingKey>(key: K): void {
-    const own = token?.[key];
+    const own: BotInheritedSettings[K] | undefined = overrides?.[key];
     if (token?.inheritBotSettings?.includes(key)) result[key] = project[key];
     else if (own !== undefined) result[key] = own;
   }

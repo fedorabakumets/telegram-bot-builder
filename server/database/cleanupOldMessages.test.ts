@@ -29,7 +29,7 @@ it('удаляет только для ограниченного срока и 
   expect(selection.sql).toContain('"bot_tokens"."inherit_bot_settings"');
   expect(selection.sql).toContain('"bot_projects"."bot_setting_defaults"');
   expect(selection.sql).toContain('else "bot_tokens"."messages_retention_days"');
-  expect(selection.params.at(-1)).toBe(0);
+  expect(selection.params[selection.params.length - 1]).toBe(0);
   expect(mocks.execute).toHaveBeenCalledTimes(2);
   for (const [statement] of mocks.execute.mock.calls) {
     const deletion = dialect.sqlToQuery(statement);

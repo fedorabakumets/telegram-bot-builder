@@ -23,7 +23,7 @@ afterEach(cleanup);
 it('отмечает всю серверную выборку, включая невидимого третьего человека', async () => {
   vi.mocked(fetch).mockResolvedValueOnce({ ok: true, json: async () => ({ users: [{ userId: '1' }, { userId: '2' }, { userId: '3' }], total: 3, hasMore: false }) } as Response);
   render(<List />);
-  fireEvent.click(screen.getByRole('button', { name: 'Выбрать пользователей для рассылки', exact: true }));
+  fireEvent.click(screen.getByRole('button', { name: 'Выбрать пользователей для рассылки' }));
   fireEvent.click(screen.getByRole('button', { name: 'Выбрать всех' }));
   await waitFor(() => expect(screen.getByRole('button', { name: 'Рассылка выбранным · 3' })).toBeEnabled());
   expect(screen.getByRole('checkbox', { name: /Один/ })).toBeChecked();
@@ -34,11 +34,11 @@ it('отмечает всю серверную выборку, включая н
 
 it('отмена снимает галочки, а изменение поиска начинает новый выбор', () => {
   const view = render(<List />);
-  fireEvent.click(screen.getByRole('button', { name: 'Выбрать пользователей для рассылки', exact: true }));
+  fireEvent.click(screen.getByRole('button', { name: 'Выбрать пользователей для рассылки' }));
   fireEvent.click(screen.getByRole('checkbox', { name: /Один/ }));
   fireEvent.click(screen.getByRole('button', { name: 'Отменить выбор' }));
   expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
-  fireEvent.click(screen.getByRole('button', { name: 'Выбрать пользователей для рассылки', exact: true }));
+  fireEvent.click(screen.getByRole('button', { name: 'Выбрать пользователей для рассылки' }));
   expect(screen.getByRole('checkbox', { name: /Один/ })).not.toBeChecked();
   view.rerender(<List search="другая фраза" />);
   expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
@@ -49,7 +49,7 @@ it('отмена прерывает сбор и не открывает реда
   vi.mocked(fetch).mockImplementationOnce(() => new Promise(resolve => { finish = resolve; }));
   render(<List />);
   fireEvent.click(screen.getByRole('button', { name: 'Рассылка по найденным' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Отменить', exact: true }));
+  fireEvent.click(screen.getByRole('button', { name: 'Отменить' }));
   await act(async () => finish({ ok: true, json: async () => ({ users: [{ userId: '1' }], total: 1, hasMore: false }) } as Response));
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
 });
@@ -57,7 +57,7 @@ it('отмена прерывает сбор и не открывает реда
 it('без поиска и фильтров скрывает рассылку по найденным, сохраняя ручной выбор', () => {
   render(<List search="" />);
   expect(screen.queryByRole('button', { name: 'Рассылка по найденным' })).not.toBeInTheDocument();
-  fireEvent.click(screen.getByRole('button', { name: 'Выбрать пользователей для рассылки', exact: true }));
+  fireEvent.click(screen.getByRole('button', { name: 'Выбрать пользователей для рассылки' }));
   expect(screen.getByRole('button', { name: 'Рассылка выбранным · 0' })).toBeDisabled();
   fireEvent.click(screen.getByRole('checkbox', { name: /Один/ }));
   expect(screen.getByRole('button', { name: 'Рассылка выбранным · 1' })).toBeEnabled();

@@ -32,7 +32,7 @@ export function useTerminalLaunchHistory(tokenId: number | null | undefined) {
       const history = records.slice(0, PAGE_SIZE);
       return {
         history,
-        nextId: records.length > PAGE_SIZE ? history.at(-1)?.id : undefined,
+        nextId: records.length > PAGE_SIZE ? history[history.length - 1]?.id : undefined,
       };
     },
     getNextPageParam: (lastPage) => lastPage.nextId,

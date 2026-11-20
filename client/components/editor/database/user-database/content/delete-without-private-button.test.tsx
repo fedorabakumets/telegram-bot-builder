@@ -22,7 +22,7 @@ it('передаёт подтверждённое количество и обл
   mocks.request.mockResolvedValue({people:2,botRecords:2});show(9);
   fireEvent.click(screen.getByRole('button',{name:'Удалить тех, кто без сообщений'}));
   await screen.findByText('2',{selector:'strong'});
-  fireEvent.click(screen.getByRole('button',{name:'Удалить',exact:true}));
+  fireEvent.click(screen.getByRole('button',{name:'Удалить'}));
   await waitFor(()=>expect(mocks.request).toHaveBeenCalledWith('DELETE','/api/projects/12/users/without-private-messages?tokenId=9',{people:2,botRecords:2}));
 });
 
@@ -44,7 +44,7 @@ it('не закрывается по Escape, пока выполняется у�
   mocks.request.mockImplementation((method:string)=>method==='GET'?Promise.resolve({people:2,botRecords:2}):new Promise(()=>{}));show();
   fireEvent.click(screen.getByRole('button',{name:'Удалить тех, кто без сообщений'}));
   await screen.findByText('2',{selector:'strong'});
-  fireEvent.click(screen.getByRole('button',{name:'Удалить',exact:true}));
+  fireEvent.click(screen.getByRole('button',{name:'Удалить'}));
   await screen.findByRole('button',{name:'Удаление…'});
   fireEvent.keyDown(screen.getByRole('dialog'),{key:'Escape'});
   expect(screen.getByRole('dialog')).toBeTruthy();

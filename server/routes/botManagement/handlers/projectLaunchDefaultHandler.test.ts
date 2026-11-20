@@ -32,7 +32,7 @@ async function request(method: string, projectId: string, body?: unknown) {
     status(code: number) { result.code = code; return this; },
     json(value: unknown) { result.body = value; return this; },
   };
-  await handleProjectLaunchDefault({ method, params: { projectId }, body } as Request, res as unknown as Response);
+  await handleProjectLaunchDefault({ method, params: { projectId }, body } as unknown as Request, res as unknown as Response);
   return result;
 }
 

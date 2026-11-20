@@ -26,7 +26,7 @@ async function request(method: string, body?: unknown) {
     status(code: number) { result.code = code; return this; },
     json(value: unknown) { result.body = value; return this; },
   };
-  await handleProjectBotSettingDefaults({ method, body, params: { projectId: '10' } } as Request, res as unknown as Response);
+  await handleProjectBotSettingDefaults({ method, body, params: { projectId: '10' } } as unknown as Request, res as unknown as Response);
   return result;
 }
 

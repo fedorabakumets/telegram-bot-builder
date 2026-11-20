@@ -2,13 +2,29 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
-import type { BotToken } from '@shared/schema';
+import type { ComponentProps } from 'react';
 import { BOT_INHERITED_SETTING_KEYS } from '@shared/bot-inherited-settings';
 import { apiRequest } from '@/queryClient';
 import { ProjectBotInheritancePicker } from './ProjectBotInheritancePicker';
 
 vi.mock('@/queryClient', () => ({ apiRequest: vi.fn() }));
 afterEach(() => { cleanup(); vi.clearAllMocks(); });
+
+/** Данные бота, необходимые массовому выбору. */
+type PickerToken = ComponentProps<typeof ProjectBotInheritancePicker>['tokens'][number];
+
+/**
+ * Заполняет поля профиля и независимые источники индивидуальными значениями.
+ * @param fields - Идентификатор, имя и отличия конкретного бота.
+ * @returns Бот для проверки массового выбора.
+ */
+function token(fields: Partial<PickerToken> & Pick<PickerToken, 'id' | 'name'>): PickerToken {
+  return {
+    botFirstName: null, botUsername: null, inheritLaunchMode: false, inheritSleepMode: false,
+    inheritAutoRestart: false, inheritMaxRestartAttempts: false, inheritBotSettings: [],
+    messagesRetentionDays: 0, ...fields,
+  };
+}
 
 /**
  * Готовит список с наследующим ботом и двумя индивидуальными режимами.
@@ -17,11 +33,11 @@ afterEach(() => { cleanup(); vi.clearAllMocks(); });
  */
 function picker(projectId: number) {
   const tokens = [
-    { id: 1, name: 'Джекпот', launchMode: 'polling' },
-    { id: 2, name: 'Выдача (@payout)', launchMode: 'webhook' },
-    { id: 3, name: 'Наследующий', inheritLaunchMode: true, inheritSleepMode: true,
-      inheritAutoRestart: true, inheritMaxRestartAttempts: true, inheritBotSettings: [...BOT_INHERITED_SETTING_KEYS] },
-  ] as BotToken[];
+    token({ id: 1, name: 'Джекпот' }),
+    token({ id: 2, name: 'Выдача (@payout)' }),
+    token({ id: 3, name: 'Наследующий', inheritLaunchMode: true, inheritSleepMode: true,
+      inheritAutoRestart: true, inheritMaxRestartAttempts: true, inheritBotSettings: [...BOT_INHERITED_SETTING_KEYS] }),
+  ];
 
   return <ProjectBotInheritancePicker projectId={projectId} tokens={tokens} />;
 }
@@ -68,7 +84,7 @@ it('выбирает всех ботов с хотя бы одной лично�
     { ...inherited, id: 4, name: 'Лимит', inheritMaxRestartAttempts: false },
     { ...inherited, id: 5, name: 'Наследующий' },
     { ...inherited, id: 6, name: 'Хранение', inheritBotSettings: BOT_INHERITED_SETTING_KEYS.filter((key) => key !== 'messagesRetentionDays') },
-  ] as BotToken[];
+  ].map(token);
   vi.mocked(apiRequest).mockResolvedValue({ inheritedCount: 5 });
   render(<QueryClientProvider client={new QueryClient()}>
     <ProjectBotInheritancePicker projectId={10} tokens={tokens} />
@@ -97,7 +113,7 @@ it('показывает сообщение сервера и сохраняет
 
 it('требует подтверждения при переходе с бессрочного хранения на ограниченное', async () => {
   vi.mocked(apiRequest).mockResolvedValue({ inheritedCount: 1 });
-  const tokens = [{ id: 1, name: 'Джекпот', messagesRetentionDays: 0 }] as BotToken[];
+  const tokens = [token({ id: 1, name: 'Джекпот', messagesRetentionDays: 0 })];
   render(<QueryClientProvider client={new QueryClient()}>
     <ProjectBotInheritancePicker projectId={10} tokens={tokens} projectDefaults={{ messagesRetentionDays: 30 }} />
   </QueryClientProvider>);

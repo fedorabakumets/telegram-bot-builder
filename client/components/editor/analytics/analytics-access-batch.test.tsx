@@ -21,7 +21,7 @@ it('позволяет выбрать всех ботов и подтверди�
   expect(screen.getByRole('option', { name: 'Все боты проекта · 2' })).toBeInTheDocument();
   fireEvent.change(screen.getByLabelText('Бот для проверки'), { target: { value: 'all' } });
   expect(select).toHaveBeenCalledWith('all');
-  fireEvent.click(screen.getByRole('button', { name: 'Проверить', exact: true }));
+  fireEvent.click(screen.getByRole('button', { name: 'Проверить' }));
   expect(confirm).toHaveBeenCalledOnce();
 });
 /** Отмена относится ко всем очередям, а не только к текущему выбранному боту. */

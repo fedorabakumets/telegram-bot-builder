@@ -29,10 +29,10 @@ function Fixture({ client, kind = 'all' }: { /** Изолированный кэ
 }
 /** Читает текущее состояние фильтров, не подменяя обработчики компонентов. */
 function state(id = 'dialogs-state') { return JSON.parse(screen.getByTestId(id).textContent!); }
-/** Раскрывает общую кнопку, не меняя уже открытое состояние панели. */
+/** Раскрывает панель по точному доступному имени кнопки, если панель ещё не открыта. */
 function openFilters() {
   if (!screen.queryByRole('combobox', { name: 'Источник пользователей' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Фильтры диалогов', exact: true }));
+    fireEvent.click(screen.getByRole('button', { name: 'Фильтры диалогов' }));
 }
 /** Выбирает значение настоящего селектора Radix клавиатурным раскрытием. */
 async function choose(label: string, option: RegExp) {
@@ -65,7 +65,7 @@ it('автоматически применяет общие фильтры и �
   expect(state()).toEqual({ source: 'Реклама', status: 'deleted', premium: 'true', advanced: { language: 'ru' } });
   openFilters();
   expect(screen.getByRole('combobox', { name: 'Статус пользователя' }).textContent).toContain('Аккаунт удалён');
-  fireEvent.click(screen.getByRole('button', { name: 'Сбросить фильтры', exact: true }));
+  fireEvent.click(screen.getByRole('button', { name: 'Сбросить фильтры' }));
   expect(state()).toEqual({ source: '', status: 'all', premium: 'all', advanced: {} });
   expect(screen.queryByText('Фильтры применяются к личным диалогам')).toBeNull();
   client.clear();
@@ -78,7 +78,7 @@ it('скрывает фильтры групп и каналов, сохраня
   await choose('Статус пользователя', /Пользователь заблокировал бота/);
   for (const kind of ['groups', 'channels'] as const) {
     view.rerender(<Fixture client={client} kind={kind} />);
-    expect(screen.queryByRole('button', { name: 'Фильтры диалогов', exact: true })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Фильтры диалогов' })).toBeNull();
     expect(screen.queryByRole('combobox', { name: 'Статус пользователя' })).toBeNull();
     expect(state().status).toBe('blocked');
   }
@@ -99,7 +99,7 @@ it('применяет дополнительный диапазон и не в�
   fireEvent.keyDown(screen.getByLabelText('Входящие сообщения: до'), { key: 'Escape' });
   await waitFor(() => expect(state().advanced).toEqual({ messagesMax: '0' }));
   expect(screen.queryByRole('button', { name: 'Применить' })).toBeNull();
-  fireEvent.click(screen.getByRole('button', { name: 'Сбросить фильтры', exact: true }));
+  fireEvent.click(screen.getByRole('button', { name: 'Сбросить фильтры' }));
   await new Promise(resolve => setTimeout(resolve, 400));
   expect(state().advanced).toEqual({});
   client.clear();

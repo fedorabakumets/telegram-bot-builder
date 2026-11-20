@@ -15,7 +15,7 @@ function parameters(projectId: number, query: CheckHistoryQuery, runId?: string)
 export async function listCheckHistory(projectId: number, query: CheckHistoryQuery): Promise<CheckHistoryPage> {
   const result = await pool.query(CHECK_HISTORY_SQL, parameters(projectId, query));
   const items = result.rows.slice(0, query.limit).map(mapHistoryEntry);
-  const last = items.at(-1);
+  const last = items[items.length - 1];
   return { items, nextCursor: result.rows.length > query.limit && last
     ? Buffer.from(JSON.stringify({ at: last.createdAt, id: last.id })).toString('base64url') : null };
 }

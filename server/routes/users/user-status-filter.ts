@@ -16,5 +16,5 @@ const predicates: Record<string, string> = {
  * @returns SQL-условие либо отсутствие допустимого статуса.
  */
 export function userStatusPredicate(status: string): string | undefined {
-  return Object.hasOwn(predicates, status) ? predicates[status] : undefined;
+  return Object.prototype.hasOwnProperty.call(predicates, status) ? predicates[status] : undefined;
 }

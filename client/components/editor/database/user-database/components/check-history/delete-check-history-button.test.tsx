@@ -14,7 +14,7 @@ it('ожидает подтверждения и позволяет отмени
   expect(screen.getByText(/Общие проверки с участием/)).toBeInTheDocument();
   expect(mocks.request).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole('button', { name: 'Отмена' }));
-  expect(screen.queryByRole('button', { name: 'Удалить', exact: true })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Удалить' })).not.toBeInTheDocument();
 });
 /** Запрос ограничен видом проверок и текущим ботом. */
 it('отправляет очистку только подтверждённой области', async () => {
@@ -22,7 +22,7 @@ it('отправляет очистку только подтверждённо�
   const done = vi.fn();
   render(<QueryClientProvider client={new QueryClient()}><DeleteCheckHistoryButton projectId={12} tokenId={9} kind="telegram-bots" onDeleted={done} /></QueryClientProvider>);
   fireEvent.click(screen.getByRole('button', { name: 'Удалить историю' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Удалить', exact: true }));
+  fireEvent.click(screen.getByRole('button', { name: 'Удалить' }));
   await waitFor(() => expect(done).toHaveBeenCalledOnce());
   expect(mocks.request).toHaveBeenCalledWith('DELETE', '/api/projects/12/check-history?kind=telegram-bots&tokenId=9');
 });

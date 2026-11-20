@@ -10,12 +10,17 @@ import type { BotToken } from '@shared/schema';
 import { BOT_INHERITED_SETTING_KEYS, resolveProjectBotSettings } from '@shared/bot-inherited-settings';
 import { getBotProfileLabels } from './bot-profile-labels';
 
+/** Поля профиля, источников и хранения, которые читает массовый выбор. */
+type InheritancePickerToken = Pick<BotToken, 'id' | 'name' | 'botFirstName' | 'botUsername'
+  | 'inheritLaunchMode' | 'inheritSleepMode' | 'inheritAutoRestart' | 'inheritMaxRestartAttempts'
+  | 'inheritBotSettings' | 'messagesRetentionDays'>;
+
 /** Данные для выбора ботов проекта. */
 interface ProjectBotInheritancePickerProps {
   /** Идентификатор текущего проекта. */
   projectId: number;
   /** Боты текущего проекта. */
-  tokens: BotToken[];
+  tokens: InheritancePickerToken[];
   /** Сохранённые настройки проекта для предпросмотра массового изменения. */
   projectDefaults?: Record<string, unknown>;
 }
@@ -28,7 +33,7 @@ const SETTING_COUNT = 4 + BOT_INHERITED_SETTING_KEYS.length;
  * @param token - Настройки подключённого бота.
  * @returns Число индивидуальных настроек запуска.
  */
-function countOverrides(token: BotToken): number {
+function countOverrides(token: InheritancePickerToken): number {
   return [token.inheritLaunchMode, token.inheritSleepMode, token.inheritAutoRestart, token.inheritMaxRestartAttempts]
     .filter((inherited) => inherited !== true).length
     + BOT_INHERITED_SETTING_KEYS.filter((key) => !token.inheritBotSettings?.includes(key)).length;

@@ -9,7 +9,7 @@ import { EditorHelpActions } from './editor-help-actions';
 /** Отслеживает открытие существующего чата без подключения сети. */
 const support = vi.hoisted(() => ({ open: vi.fn() }));
 vi.mock('@/components/support/support-chat-button', () => ({
-  SupportChatButton: ({ renderTrigger }: ComponentProps<typeof SupportChatButton>) => renderTrigger?.(support.open, 2),
+  SupportChatButton: ({ renderTrigger }: NonNullable<ComponentProps<typeof SupportChatButton>>) => renderTrigger?.(support.open, 2),
 }));
 
 afterEach(() => { cleanup(); vi.clearAllMocks(); });
