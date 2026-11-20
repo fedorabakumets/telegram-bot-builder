@@ -500,8 +500,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     secret: resolveSessionSecret(),
     resave: false,
     saveUninitialized: false,
-    // Secure только при реальном HTTPS: локальный npm start по http://localhost
-    // иначе теряет cookie → login 200, а /api/projects 401
+    /** В production cookie по умолчанию передаётся только по HTTPS. */
     cookie: sessionCookie,
   });
 
@@ -934,7 +933,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       res.json({ success: true, field, value });
     } catch (error) {
-      console.error(`Failed to update bot ${req.body.field}:`, error);
+      /** Передаёт имя поля как значение, сохраняя фиксированный формат журнала. */
+      console.error('Failed to update bot %s:', req.body.field, error);
       res.status(500).json({ message: `Failed to update bot ${req.body.field}` });
     }
     return;
@@ -1623,13 +1623,14 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
   // Загрузка множественных медиафайлов с улучшенной обработкой
   app.post("/api/media/upload-multiple/:projectId", requireProjectAccess, upload.array('files', 20), async (req, res) => {
+    /** Обработчик принимает только массив файлов от multer.array. */
+    const files = Array.isArray(req.files) ? req.files : [];
     try {
       const projectId = parseInt(req.params.projectId);
-      const files = req.files as Express.Multer.File[];
 
       const { isPublic, defaultDescription, storageConfigId } = req.body;
 
-      if (!files || files.length === 0) {
+      if (files.length === 0) {
         return res.status(400).json({
           message: "Файлы не выбраны",
           code: "NO_FILES"
@@ -1704,7 +1705,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
           uploadedFiles.push(mediaFile);
         } catch (fileError) {
-          console.error(`Ошибка при обработке файла ${file.originalname}:`, fileError);
+          console.error('Ошибка при обработке файла %s:', file.originalname, fileError);
 
           // Удаляем файл в случае ошибки
           if (existsSync(file.path)) {
@@ -1742,8 +1743,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       console.error("Ошибка при загрузке файлов:", error);
 
       // Удаляем все файлы в случае ошибки
-      if (req.files) {
-        (req.files as Express.Multer.File[]).forEach(file => {
+      if (files.length > 0) {
+        files.forEach(file => {
           if (existsSync(file.path)) {
             try {
               unlinkSync(file.path);
@@ -2111,7 +2112,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           });
 
         } catch (error) {
-          console.error(`Ошибка обработки URL ${url}:`, error);
+          console.error('Ошибка обработки импортируемой ссылки:', error);
           errors.push({
             url: url,
             error: error instanceof StorageBackendWriteError ? 'Хранилище недоступно, файл не сохранён' : 'Ошибка обработки ссылки'

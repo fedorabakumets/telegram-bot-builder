@@ -142,7 +142,8 @@ export async function stopBot(projectId: number, tokenId: number, options?: { /*
           console.log(`🔗 Webhook удалён для токена ${tokenId}`);
         }
       } catch (webhookError) {
-        console.log(`⚠️ Не удалось удалить webhook для токена ${tokenId}:`, webhookError);
+        /** Передаёт идентификатор отдельно от шаблона сообщения. */
+        console.log('⚠️ Не удалось удалить webhook для токена %s:', tokenId, webhookError);
       }
     }
 
@@ -181,7 +182,7 @@ export async function stopBot(projectId: number, tokenId: number, options?: { /*
         console.log(`Процессы для бота ${projectId} (токен ${tokenId}) не найдены`);
       }
     } catch (error) {
-      console.log(`Ошибка при поиске процессов для бота ${projectId} (токен ${tokenId}):`, error);
+      console.log('Ошибка при поиске процессов для бота %s (токен %s):', projectId, tokenId, error);
     }
 
     // Если процесс был в памяти - завершаем его мягко

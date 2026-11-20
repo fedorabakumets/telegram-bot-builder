@@ -18,27 +18,24 @@ export interface SessionCookieOptions {
 }
 
 /**
- * Нужны ли Secure-cookies (реальный HTTPS).
- * Локальный `npm start` по http://localhost не может использовать Secure —
- * браузер отбросит cookie, и после login все API вернут 401.
- *
- * Переопределение: `COOKIE_SECURE=true|false`.
+ * Включает защиту cookie в production и при явном использовании HTTPS.
+ * Локальный HTTP в production допускается только при привязке к loopback
+ * и явном `COOKIE_SECURE=false`.
  *
  * @returns true если cookie должны быть Secure + SameSite=None
  */
 export function shouldUseSecureSessionCookie(): boolean {
   if (process.env.COOKIE_SECURE === "true") return true;
-  if (process.env.COOKIE_SECURE === "false") return false;
-
   if (process.env.NODE_ENV !== "production") return false;
-
-  // Railway всегда отдаёт приложение по HTTPS
   if (process.env.RAILWAY_PUBLIC_DOMAIN || process.env.RAILWAY_STATIC_URL) {
     return true;
   }
-
   const baseUrl = process.env.API_BASE_URL || process.env.WEBHOOK_BASE_URL || "";
-  return baseUrl.startsWith("https://");
+  if (baseUrl.trim().toLowerCase().startsWith("https://")) return true;
+  /** Разрешаем локальный тест собранной версии без ослабления внешнего сервера. */
+  const listenHost = process.env.HOST?.trim();
+  const loopback = listenHost === "127.0.0.1" || listenHost === "::1" || listenHost === "localhost";
+  return !loopback || process.env.COOKIE_SECURE !== "false";
 }
 
 /**

@@ -41,7 +41,9 @@ async function administrative(sql) {
 /** Создаёт безопасное окружение: новая БД, отключённые боты, Redis и внешние хранилища. */
 function environment(port) {
   const database = new URL(source); database.pathname = `/${marker}`;
+  /** Тест работает на локальном HTTP независимо от настроек внешней среды. */
   const env = { ...process.env, NODE_ENV: 'production', PORT: String(port), FRONTEND_PORT: String(port), HOST: '127.0.0.1', DATABASE_URL: database.toString(),
+    API_BASE_URL: `http://127.0.0.1:${port}`,
     SESSION_SECRET: randomBytes(32).toString('hex'), ADMIN_API_KEY: 'isolated-smoke-admin-key',
     REDIS_URL: '', SKIP_AUTH: 'true', COOKIE_SECURE: 'false', PGSSLMODE: 'disable', BOT_RUNTIME_ENABLED: 'false',
     BOT_DATABASE_URL: '', DB_BACKUP_INTERVAL_HOURS: '0', DB_BACKUP_TARGETS: '', STORAGE_BACKEND: 'local',
