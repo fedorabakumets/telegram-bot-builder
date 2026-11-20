@@ -1,7 +1,8 @@
 /** @fileoverview Состояние прототипа аккаунтов по проектам в памяти вкладки. */
 import { useState } from 'react';
 import { emptyMockAccountProxy, initialMockAccounts, mockAccountBots } from './mock-account-fixtures';
-import type { MockAccountProxy, MockSessionKind, MockTelegramAccount } from './mock-account-types';
+import { createMockAccountProfile } from './mock-account-profile';
+import type { MockAccountBot, MockAccountProxy, MockSessionKind, MockTelegramAccount } from './mock-account-types';
 
 /** Демонстрационные карточки и выбор для одного проекта. */
 interface MockAccountsState {
@@ -16,12 +17,14 @@ const initialState: MockAccountsState = { accounts: initialMockAccounts, selecte
 /**
  * Управляет карточками аккаунтов без сетевых запросов.
  * @param projectId - Идентификатор проекта для разделения демонстрационных изменений.
+ * @param projectBots - Уже загруженные подписи ботов проекта для локальной привязки.
  * @returns Карточки, их выбор и операции прототипа.
  */
-export function useMockTelegramAccounts(projectId?: number | null) {
+export function useMockTelegramAccounts(projectId?: number | null, projectBots: readonly MockAccountBot[] = []) {
   const key = projectId ?? 'default';
   const [projects, setProjects] = useState<Record<string, MockAccountsState>>({});
   const { accounts, selectedId } = projects[key] ?? initialState;
+  const bots = [...mockAccountBots, ...projectBots];
 
   /**
    * Применяет изменение к актуальному состоянию выбранного проекта.
@@ -59,21 +62,53 @@ export function useMockTelegramAccounts(projectId?: number | null) {
   }
 
   /**
+   * Создаёт авторизованный демо-аккаунт и сразу переносит к нему привязку.
+   * @param botId - Идентификатор бота, из настроек которого открыт вход.
+   * @param phone - Подтверждённый в демо номер.
+   */
+  function connectPhoneAccount(botId: string, phone: string) {
+    if (!bots.some(bot => bot.id === botId)) return;
+    update(state => {
+      const number = state.accounts.length + 1;
+      const account: MockTelegramAccount = {
+        id: `demo-account-${number}`, name: `Аккаунт ${number}`,
+        maskedPhone: `+••• ••• •• ${phone.slice(-2)}`, profile: createMockAccountProfile(number, phone),
+        status: 'connected', botIds: [botId], sessionKind: 'phone', proxy: emptyMockAccountProxy,
+      };
+      const accounts = state.accounts.map(existing => existing.botIds.includes(botId)
+        ? { ...existing, botIds: existing.botIds.filter(id => id !== botId) } : existing);
+      return { ...state, accounts: [...accounts, account], selectedId: account.id };
+    });
+  }
+
+  /**
    * Добавляет, переносит или снимает привязку бота.
    * @param accountId - Идентификатор аккаунта в прототипе.
    * @param botId - Идентификатор демонстрационного бота.
    */
   function toggleBot(accountId: string, botId: string) {
-    if (!mockAccountBots.some(bot => bot.id === botId)) return;
+    changeBotAccount(botId, accountId, true);
+  }
+
+  /**
+   * Меняет локальную привязку независимо от открытой панели.
+   * @param botId - Идентификатор бота.
+   * @param accountId - Выбранный аккаунт или отсутствие привязки.
+   * @param toggle - Снять привязку при повторном выборе того же аккаунта.
+   */
+  function changeBotAccount(botId: string, accountId: string | null, toggle = false) {
+    if (!bots.some(bot => bot.id === botId)) return;
     update(state => {
       const target = state.accounts.find(account => account.id === accountId);
-      if (!target) return state;
-      const unlink = target.botIds.includes(botId);
+      if (accountId !== null && !target) return state;
+      const targetId = toggle && target?.botIds.includes(botId) ? null : accountId;
       return {
         ...state,
         accounts: state.accounts.map(account => {
+          if (account.id === targetId) {
+            return account.botIds.includes(botId) ? account : { ...account, botIds: [...account.botIds, botId] };
+          }
           if (account.botIds.includes(botId)) return { ...account, botIds: account.botIds.filter(id => id !== botId) };
-          if (!unlink && account.id === accountId) return { ...account, botIds: [...account.botIds, botId] };
           return account;
         }),
       };
@@ -88,8 +123,8 @@ export function useMockTelegramAccounts(projectId?: number | null) {
   function importSession(accountId: string, kind: MockSessionKind) {
     update(state => ({
       ...state,
-      accounts: state.accounts.map(account => account.id === accountId
-        ? { ...account, sessionKind: kind, status: 'connected' }
+      accounts: state.accounts.map((account, index) => account.id === accountId
+        ? { ...account, profile: account.profile ?? createMockAccountProfile(index + 1), sessionKind: kind, status: 'connected' }
         : account),
     }));
   }
@@ -107,5 +142,5 @@ export function useMockTelegramAccounts(projectId?: number | null) {
   }
 
   const selectedAccount = accounts.find(account => account.id === selectedId) ?? null;
-  return { accounts, bots: mockAccountBots, selectedAccount, selectAccount, createAccount, toggleBot, importSession, updateProxy };
+  return { accounts, bots, selectedAccount, selectAccount, createAccount, connectPhoneAccount, toggleBot, changeBotAccount, importSession, updateProxy };
 }

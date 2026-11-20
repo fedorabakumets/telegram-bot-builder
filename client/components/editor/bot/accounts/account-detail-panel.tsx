@@ -8,6 +8,7 @@ import { SheetDescription, SheetTitle } from '@/components/ui/sheet';
 import { cn } from '@/utils/utils';
 import { AccountMockProxy } from './account-mock-proxy';
 import { AccountSessionImport } from './account-session-import';
+import { AccountProfileDetails } from './account-profile-details';
 import type { MockAccountBot, MockAccountProxy, MockSessionKind, MockTelegramAccount } from './mock-account-types';
 
 /** Настройки и действия панели аккаунта. */
@@ -71,6 +72,7 @@ export function AccountDetailPanel({
       </header>
 
       <div className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain p-4">
+        <AccountProfileDetails account={account} />
         <fieldset className="min-w-0">
           <legend className="mb-2 text-sm font-semibold">Привязанные боты</legend>
           {bots.length > 0 ? (

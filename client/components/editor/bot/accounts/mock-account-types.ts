@@ -1,4 +1,5 @@
 /** @fileoverview Типы демонстрационных аккаунтов Telegram и их привязок. */
+import type { MockAccountProfile } from './mock-account-profile';
 
 /** Способ подключения демонстрационной сессии. */
 export type MockSessionKind = 'phone' | 'tdata' | 'session' | 'session-json' | 'string-session';
@@ -37,6 +38,8 @@ export interface MockTelegramAccount {
   avatarUrl?: string;
   /** Маскированный демонстрационный номер телефона. */
   maskedPhone: string;
+  /** Данные профиля после демонстрационного подключения. */
+  profile?: MockAccountProfile;
   /** Состояние подключения аккаунта в прототипе. */
   status: 'connected' | 'disconnected';
   /** Идентификаторы связанных демонстрационных ботов. */
