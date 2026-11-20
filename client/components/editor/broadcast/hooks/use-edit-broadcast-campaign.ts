@@ -6,6 +6,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { apiRequest } from '@/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { getBroadcastEditNotice, type BroadcastEditResult } from './edit-result';
 
 /**
  * Параметры хука useEditBroadcastCampaign
@@ -44,13 +45,10 @@ export function useEditBroadcastCampaign({ projectId, refetch }: UseEditBroadcas
         'PUT',
         `/api/projects/${projectId}/broadcast-campaigns/${campaignId}`,
         { messageText },
-      ) as Promise<{ ok: boolean; edited: number; failed: number }>;
+      ) as Promise<BroadcastEditResult>;
     },
     onSuccess: (data) => {
-      toast({
-        title: 'Текст обновлён',
-        description: `Сообщений изменено у получателей: ${data?.edited ?? 0}`,
-      });
+      toast(getBroadcastEditNotice(data));
       refetch?.();
     },
     onError: (error: Error) => {

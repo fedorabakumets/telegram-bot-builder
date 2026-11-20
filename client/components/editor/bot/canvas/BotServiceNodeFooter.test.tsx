@@ -24,7 +24,7 @@ describe('диагностика завершения на холсте', () => 
   it('не заменяет отказ авторизации общей аварией', () => {
     render(<BotServiceNodeFooter isRunning={false} visualStatus="invalid"
       failure={{ at: '2026-11-14T11:37:12Z' }} />);
-    expect(screen.getByText('Недействительный токен')).toBeTruthy();
+    expect(screen.getByText('Ошибка токена')).toBeTruthy();
     expect(screen.queryByText(/Бот завершился с ошибкой/)).toBeNull();
   });
 });

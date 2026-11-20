@@ -9,6 +9,7 @@
 
 ```json
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "project_id": {
@@ -17,38 +18,45 @@
       "maximum": 9007199254740991
     },
     "token_id": {
-      "$ref": "#/properties/project_id"
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
     },
     "requestId": {
       "type": "string",
-      "format": "uuid"
+      "format": "uuid",
+      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
     },
     "group_id": {
       "type": "string",
       "pattern": "^-?[1-9]\\d{0,19}$"
     },
     "messageText": {
+      "default": "",
       "type": "string",
-      "maxLength": 4096,
-      "default": ""
+      "maxLength": 4096
     },
     "nodeId": {
       "type": "string"
     },
     "userData": {
       "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
       "additionalProperties": {}
     },
     "mediaUrls": {
+      "default": [],
+      "maxItems": 10,
       "type": "array",
       "items": {
         "type": "string",
         "maxLength": 16384
-      },
-      "maxItems": 10,
-      "default": []
+      }
     },
     "buttons": {
+      "maxItems": 100,
       "type": "array",
       "items": {
         "type": "object",
@@ -60,6 +68,7 @@
             "type": "string"
           },
           "action": {
+            "default": "goto",
             "type": "string",
             "enum": [
               "goto",
@@ -74,8 +83,7 @@
               "web_app",
               "request_managed_bot",
               "pay"
-            ],
-            "default": "goto"
+            ]
           },
           "copyText": {
             "type": "string"
@@ -96,21 +104,21 @@
             "type": "boolean"
           },
           "buttonType": {
+            "default": "normal",
             "type": "string",
             "enum": [
               "normal",
               "option",
               "complete"
-            ],
-            "default": "normal"
+            ]
           },
           "skipDataCollection": {
-            "type": "boolean",
-            "default": false
+            "default": false,
+            "type": "boolean"
           },
           "hideAfterClick": {
-            "type": "boolean",
-            "default": false
+            "default": false,
+            "type": "boolean"
           },
           "customCallbackData": {
             "type": "string"
@@ -136,17 +144,14 @@
         "required": [
           "id",
           "text"
-        ],
-        "additionalProperties": false
-      },
-      "maxItems": 100,
-      "default": []
+        ]
+      }
     },
     "buttonsPerRow": {
+      "default": 0,
       "type": "integer",
       "minimum": 0,
-      "maximum": 8,
-      "default": 0
+      "maximum": 8
     }
   },
   "required": [
@@ -154,9 +159,7 @@
     "token_id",
     "requestId",
     "group_id"
-  ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  ]
 }
 ```
 
@@ -174,7 +177,23 @@
 
 ## Пример вызова
 
-Безопасный универсальный пример не сгенерирован. Используйте точную схему и данные пользователя; секреты в документацию не подставляются.
+```json
+{
+  "action_id": "db_send_group_message",
+  "args": {
+    "project_id": 1,
+    "token_id": 1,
+    "requestId": "11111111-1111-4111-8111-111111111111",
+    "group_id": "1",
+    "messageText": "",
+    "mediaUrls": [],
+    "buttons": [],
+    "buttonsPerRow": 0
+  }
+}
+```
+
+Структурный пример проверен Zod; ID и данные замените реальными.
 
 ## Ответ и ошибки
 
@@ -184,6 +203,7 @@
 
 ```json
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "data": {
@@ -253,11 +273,13 @@
             },
             "projectId": {
               "type": "integer",
-              "exclusiveMinimum": 0
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             },
             "revision": {
               "type": "integer",
-              "minimum": 0
+              "minimum": 0,
+              "maximum": 9007199254740991
             }
           },
           "required": [
@@ -267,6 +289,9 @@
         },
         "sideEffects": {
           "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
           "additionalProperties": {}
         }
       },
@@ -283,10 +308,10 @@
     }
   },
   "required": [
+    "data",
     "execution"
   ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  "additionalProperties": false
 }
 ```
 

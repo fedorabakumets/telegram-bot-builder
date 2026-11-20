@@ -79,7 +79,7 @@ export const EditMessageRequestSchema = z
     messageText: z.string().min(1).openapi({
       example: "Обновлённый текст сообщения",
     }),
-    /** Inline-кнопки; [] снимает клавиатуру */
+    /** Inline-кнопки; отсутствие сохраняет клавиатуру, [] явно снимает её. */
     buttons: z.array(z.unknown()).optional().openapi({ example: [] }),
     /** Кнопок в ряду (0 — авто) */
     buttonsPerRow: z.number().int().optional().openapi({ example: 0 }),

@@ -5,6 +5,7 @@
 
 import { BotMessage } from '@shared/schema';
 import type { UserBotData } from '@/types/bot';
+import type { MessagePeriod } from '@shared/message-period';
 
 /**
  * Расширенный тип сообщения бота с медиафайлами
@@ -35,6 +36,8 @@ export interface DialogPanelProps {
   projectId: number;
   /** Идентификатор выбранного токена бота */
   selectedTokenId?: number | null;
+  /** Бот истории; null объединяет ботов, undefined сохраняет область отправителя. */
+  historyTokenId?: number | null;
   /** Данные пользователя для диалога */
   user: UserBotData | null;
   /** Колбэк закрытия панели */
@@ -45,4 +48,8 @@ export interface DialogPanelProps {
   hideHeader?: boolean;
   /** Открывает профиль автора сообщения группы. */
   onOpenMember?: (message: BotMessageWithMedia) => void;
+  /** Поисковая фраза, с которой собеседник выбран из списка диалогов. */
+  searchTerm?: string;
+  /** Период для переходов по сообщениям с точностью до времени. */
+  searchPeriod?: MessagePeriod;
 }

@@ -37,7 +37,7 @@ export function MessageButtons({ buttons, index }: MessageButtonsProps) {
   if (!Array.isArray(buttons) || buttons.length === 0) return null;
 
   return (
-    <div className="flex flex-wrap gap-1 mt-1">
+    <div className="dialog-message-buttons flex flex-wrap gap-1 mt-1">
       {buttons.map((button, btnIndex) => {
         const isUrl = button.action === 'url' && button.url;
         const label = String(button?.text ?? '');

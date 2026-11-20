@@ -1,0 +1,10 @@
+/** @fileoverview Размещение действий хранилища под общей шапкой рабочих вкладок. */
+/** Проект, бот и служебные действия оформляются общим адаптивным компонентом. */
+.files-header-content > .files-header-actions { grid-column: 1 / -1; }
+/** Загрузка и вставка сохраняют контрастный нейтральный вид в обеих темах. */
+.files-page .files-header-actions > button {
+  border: 1px solid var(--border);
+  background: var(--background);
+  color: var(--foreground);
+}
+.files-page .files-header-actions > button:hover:not(:disabled) { background: var(--accent); }

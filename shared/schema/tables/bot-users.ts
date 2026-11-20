@@ -34,6 +34,8 @@ export const botUsers = pgTable("bot_users", {
   interactionCount: integer("interaction_count").default(0),
   /** Пользовательские данные */
   userData: jsonb("user_data").default({}),
+  /** Время явного импорта контакта без подтверждения личной переписки. */
+  importedAt: timestamp("imported_at"),
   /** Флаг активности: 0 - неактивен, 1 - активен */
   isActive: integer("is_active").default(1),
   /** Заблокировал бота: 0 — нет, 1 — да (снимается при новом сообщении) */

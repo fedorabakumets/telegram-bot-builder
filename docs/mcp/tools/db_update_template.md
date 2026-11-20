@@ -9,6 +9,7 @@
 
 ```json
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "template_id": {
@@ -28,6 +29,7 @@
     },
     "data": {},
     "category": {
+      "default": "custom",
       "type": "string",
       "enum": [
         "custom",
@@ -38,8 +40,7 @@
         "games",
         "official",
         "community"
-      ],
-      "default": "custom"
+      ]
     },
     "tags": {
       "type": "array",
@@ -48,19 +49,19 @@
       }
     },
     "isPublic": {
+      "default": 0,
       "type": "number",
       "minimum": 0,
-      "maximum": 1,
-      "default": 0
+      "maximum": 1
     },
     "difficulty": {
+      "default": "easy",
       "type": "string",
       "enum": [
         "easy",
         "medium",
         "hard"
-      ],
-      "default": "easy"
+      ]
     },
     "authorId": {
       "type": [
@@ -75,8 +76,8 @@
       ]
     },
     "version": {
-      "type": "string",
-      "default": "1.0.0"
+      "default": "1.0.0",
+      "type": "string"
     },
     "previewImage": {
       "type": [
@@ -85,6 +86,7 @@
       ]
     },
     "language": {
+      "default": "ru",
       "type": "string",
       "enum": [
         "ru",
@@ -97,33 +99,30 @@
         "zh",
         "ja",
         "ko"
-      ],
-      "default": "ru"
+      ]
     },
     "requiresToken": {
+      "default": 0,
       "type": "number",
       "minimum": 0,
-      "maximum": 1,
-      "default": 0
+      "maximum": 1
     },
     "complexity": {
+      "default": 1,
       "type": "number",
       "minimum": 1,
-      "maximum": 10,
-      "default": 1
+      "maximum": 10
     },
     "estimatedTime": {
+      "default": 5,
       "type": "number",
       "minimum": 1,
-      "maximum": 120,
-      "default": 5
+      "maximum": 120
     }
   },
   "required": [
     "template_id"
-  ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  ]
 }
 ```
 
@@ -145,7 +144,15 @@
 {
   "action_id": "db_update_template",
   "args": {
-    "template_id": 1
+    "template_id": 1,
+    "category": "custom",
+    "isPublic": 0,
+    "difficulty": "easy",
+    "version": "1.0.0",
+    "language": "ru",
+    "requiresToken": 0,
+    "complexity": 1,
+    "estimatedTime": 5
   }
 }
 ```
@@ -160,6 +167,7 @@
 
 ```json
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "data": {
@@ -229,11 +237,13 @@
             },
             "projectId": {
               "type": "integer",
-              "exclusiveMinimum": 0
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             },
             "revision": {
               "type": "integer",
-              "minimum": 0
+              "minimum": 0,
+              "maximum": 9007199254740991
             }
           },
           "required": [
@@ -243,6 +253,9 @@
         },
         "sideEffects": {
           "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
           "additionalProperties": {}
         }
       },
@@ -259,10 +272,10 @@
     }
   },
   "required": [
+    "data",
     "execution"
   ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  "additionalProperties": false
 }
 ```
 

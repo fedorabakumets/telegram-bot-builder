@@ -12,6 +12,9 @@
 import { useState, useCallback, useEffect } from 'react';
 import { Terminal as TerminalIcon } from 'lucide-react';
 import { TabHeader } from '@/components/ui/tab-header';
+import { WorkspaceTabActions } from '@/components/ui/workspace-tab-actions';
+import '@/components/ui/workspace-adaptive-header.css';
+import { useQueryClient } from '@tanstack/react-query';
 import { BotTerminal } from './BotTerminal';
 import { LaunchHistoryViewer } from './LaunchHistoryViewer';
 import { TerminalTabs } from './TerminalTabs';
@@ -48,14 +51,31 @@ interface TerminalPanelProps {
  * @returns JSX элемент
  */
 export function TerminalPanel({ allProjects, currentProjectId, onProjectChange }: TerminalPanelProps) {
+  const queryClient = useQueryClient();
   const { activeTerminalId, terminals, addTerminal } = useActiveTerminals();
+  /** Активная запись должна относиться к проекту, открытому в шапке. */
+  const active = terminals.find(terminal => getTabKey(terminal) === activeTerminalId &&
+    (currentProjectId == null || terminal.projectId === currentProjectId));
+  /** Перечитывает сохранённые запуски и записи, уже открытые в терминале. */
+  const refresh = () => {
+    void queryClient.invalidateQueries({ queryKey: ['launch-history', active?.tokenId].filter(id => id != null) });
+    if (active?.launchId != null) void queryClient.invalidateQueries({ queryKey: ['launch-logs', active.launchId] });
+    else if (active) void queryClient.invalidateQueries({
+      queryKey: ['/api/projects', active.projectId, 'tokens', active.tokenId, 'logs', 'current-launch'],
+    });
+  };
+  const actions = <WorkspaceTabActions docsPath="interface/terminal" section="Терминал" onRefresh={refresh} />;
   const { allTokensFlat, allBotStatuses } = useBotQueries({ includeBotInfo: false });
 
-  // Автоматическая регистрация терминалов для запущенных ботов
+  /** Автоматический выбор применяется только в пустом терминале проекта. */
   useEffect(() => {
-    if (allTokensFlat.length === 0 || allBotStatuses.length === 0) return;
+    if (activeTerminalId || allTokensFlat.length === 0 || allBotStatuses.length === 0) return;
 
-    allTokensFlat.forEach(token => {
+    const token = allTokensFlat.find(candidate =>
+      (currentProjectId == null || candidate.projectId === currentProjectId) &&
+      allBotStatuses.some(status => status.tokenId === candidate.id && status.status === 'running'),
+    );
+    if (token) {
       const statusEntry = allBotStatuses.find(s => s.tokenId === token.id);
       if (statusEntry?.status === 'running') {
         addTerminal({
@@ -65,7 +85,7 @@ export function TerminalPanel({ allProjects, currentProjectId, onProjectChange }
           isRunning: true,
         });
       }
-    });
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     JSON.stringify(allTokensFlat.map(t => t.id)),
@@ -91,12 +111,14 @@ export function TerminalPanel({ allProjects, currentProjectId, onProjectChange }
     });
   }, []);
 
-  if (terminals.length === 0) {
+  if (!active) {
     return (
       <div className="flex flex-col h-full bg-background">
         <TabHeader
+          className="terminal-workspace-header"
           icon={<TerminalIcon className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />}
           title="Терминал"
+          actions={actions}
         >
           {allProjects && allProjects.length > 1 && onProjectChange && currentProjectId && (
             <ProjectSelector
@@ -105,11 +127,12 @@ export function TerminalPanel({ allProjects, currentProjectId, onProjectChange }
               onSelect={onProjectChange}
             />
           )}
+          <TerminalTabs currentProjectId={currentProjectId} onTerminalSelect={handleTerminalSelect} />
         </TabHeader>
         <div className="flex-1 flex items-center justify-center text-muted-foreground">
           <div className="text-center">
             <p className="text-lg font-medium mb-2">Терминалы не активны</p>
-            <p className="text-sm">Запустите бота, чтобы увидеть его логи</p>
+            <p className="text-sm">Выберите бота, чтобы открыть его логи и историю запусков</p>
           </div>
         </div>
       </div>
@@ -119,17 +142,20 @@ export function TerminalPanel({ allProjects, currentProjectId, onProjectChange }
   return (
     <div className="flex flex-col h-full bg-background">
       <TabHeader
+        className="terminal-workspace-header"
         icon={<TerminalIcon className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />}
         title="Терминал"
+        actions={actions}
       >
         {allProjects && allProjects.length > 1 && onProjectChange && currentProjectId && (
           <ProjectSelector
             projects={allProjects}
             selectedProjectId={currentProjectId}
+            showBotCount={false}
             onSelect={onProjectChange}
           />
         )}
-        <TerminalTabs onTerminalSelect={handleTerminalSelect} />
+        <TerminalTabs currentProjectId={currentProjectId} onTerminalSelect={handleTerminalSelect} />
       </TabHeader>
 
       <div className="flex-1 overflow-hidden p-2">
@@ -146,12 +172,16 @@ export function TerminalPanel({ allProjects, currentProjectId, onProjectChange }
                 <LaunchHistoryViewer
                   launchId={terminal.launchId!}
                   startedAt={terminal.launchStartedAt ?? null}
+                  botName={terminal.botName}
                 />
               ) : (
                 <BotTerminal
                   projectId={terminal.projectId}
                   tokenId={terminal.tokenId}
-                  isBotRunning={terminal.isRunning}
+                  isBotRunning={allBotStatuses.find(status => status.tokenId === terminal.tokenId)
+                    ? allBotStatuses.some(status => status.tokenId === terminal.tokenId && status.status === 'running')
+                    : terminal.isRunning}
+                  botName={terminal.botName}
                 />
               )}
             </div>

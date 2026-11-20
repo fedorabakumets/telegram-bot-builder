@@ -80,6 +80,12 @@ export type ProjectEventType =
   | 'token-created'
   | 'token-deleted'
   | 'token-updated'
+  /** Изменение общего способа получения обновлений ботов проекта. */
+  | 'project-launch-default-updated'
+  /** Изменение общих настроек обработчика и автоперезапуска. */
+  | 'project-runtime-defaults-updated'
+  /** Изменены общие настройки данных, логов, поведения или базового адреса webhook. */
+  | 'project-bot-settings-updated'
   /** Изменение шага авторизации юзербота без кода, пароля и сессии */
   | 'userbot-auth-progress'
   | 'bot-started'

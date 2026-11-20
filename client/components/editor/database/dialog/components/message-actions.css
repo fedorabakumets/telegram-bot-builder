@@ -1,0 +1,27 @@
+/** @fileoverview Стабильное положение и спокойные состояния действий сообщения. */
+.dialog-message-actions {
+  display: flex; flex-direction: column; align-self: center; gap: 4px;
+  flex: 0 0 28px; width: 28px; opacity: 0; pointer-events: none;
+  transition: opacity 120ms ease;
+}
+.dialog-message-shell:hover .dialog-message-actions,
+.dialog-message-shell:focus-within .dialog-message-actions,
+.dialog-message-actions[data-busy='true'] { opacity: 1; pointer-events: auto; }
+.dialog-message-actions .dialog-message-action {
+  width: 28px; height: 28px; flex-shrink: 0; padding: 0;
+  border: 1px solid transparent; border-radius: 6px;
+  background: transparent; color: var(--muted-foreground); box-shadow: none;
+  transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+.dialog-message-actions .dialog-message-action:hover {
+  background: var(--muted); color: var(--foreground); border-color: var(--border);
+}
+.dialog-message-actions .dialog-message-action[data-action='delete']:hover { color: var(--destructive); }
+.dialog-message-actions .dialog-message-action:focus-visible {
+  outline: 2px solid var(--ring); outline-offset: 2px;
+  background: var(--muted); color: var(--foreground);
+}
+.dialog-message-actions .dialog-message-action:disabled { opacity: .45; }
+/** На сенсорном экране действия доступны без предварительного наведения. */
+@media (hover: none) { .dialog-message-actions { opacity: 1; pointer-events: auto; } }
+@media (prefers-reduced-motion: reduce) { .dialog-message-actions, .dialog-message-actions .dialog-message-action { transition: none; } }

@@ -28,6 +28,10 @@ import { handleWorkerStats } from './botManagement/handlers/workerStatsHandler';
 import { handleClearLogs } from './botManagement/handlers/clearLogsHandler';
 import { handleGetLiveBotLogs } from './botManagement/handlers/botLiveLogsHandler';
 import { handleGetBotLogById } from './botManagement/handlers/botLogByIdHandler';
+import { handleBotLaunchInheritance } from './botManagement/handlers/botLaunchInheritanceHandler';
+import { handleProjectLaunchDefault } from './botManagement/handlers/projectLaunchDefaultHandler';
+import { handleProjectRuntimeDefaults } from './botManagement/handlers/projectRuntimeDefaultsHandler';
+import { handleProjectBotSettingDefaults } from './botManagement/handlers/projectBotSettingDefaultsHandler';
 
 /**
  * Настраивает маршруты управления ботами
@@ -54,6 +58,21 @@ export function setupBotManagementRoutes(app: Express): void {
         requireTokenOwnership, handleBotRuntimeSettings);
     app.put('/api/projects/:projectId/tokens/:tokenId/runtime-settings', runtimeWriteLimit,
         requireTokenOwnership, handleBotRuntimeSettings);
+    /** Общий режим доступен владельцу и участникам проекта. */
+    app.get('/api/projects/:projectId/bot/launch-default', runtimeReadLimit,
+        requireProjectAccess, handleProjectLaunchDefault);
+    app.put('/api/projects/:projectId/bot/launch-default', runtimeWriteLimit,
+        requireProjectAccess, handleProjectLaunchDefault);
+    /** Общие параметры обработчика и автоперезапуска проверяют права проекта. */
+    app.get('/api/projects/:projectId/bot/runtime-defaults', runtimeReadLimit,
+        requireProjectAccess, handleProjectRuntimeDefaults);
+    app.put('/api/projects/:projectId/bot/runtime-defaults', runtimeWriteLimit,
+        requireProjectAccess, handleProjectRuntimeDefaults);
+    /** Общие настройки данных и поведения доступны участникам проекта. */
+    app.get('/api/projects/:projectId/bot/setting-defaults', runtimeReadLimit,
+        requireProjectAccess, handleProjectBotSettingDefaults);
+    app.put('/api/projects/:projectId/bot/setting-defaults', runtimeWriteLimit,
+        requireProjectAccess, handleProjectBotSettingDefaults);
     app.get("/api/workers/stats", workerStatsLimit, handleWorkerStats);
     app.get("/api/tokens/:tokenId/bot-status", handleBotStatusByToken);
     app.get(
@@ -77,6 +96,8 @@ export function setupBotManagementRoutes(app: Express): void {
     app.post("/api/projects/:id/bot/restart", requireProjectAccess, handleBotRestart);
     app.post("/api/projects/:id/bot/restart-all", requireProjectAccess, handleBotRestartAll);
     app.post("/api/projects/:id/bot/start-offline-all", requireProjectAccess, handleBotStartOfflineAll);
+    /** Возвращает выбранным ботам общий режим проекта без перезапуска. */
+    app.put('/api/projects/:projectId/bot/launch-inheritance', requireProjectAccess, handleBotLaunchInheritance);
     app.get("/api/projects/:id/bot/statuses", requireProjectAccess, handleBotProjectStatuses);
     app.delete("/api/projects/:projectId/tokens/:tokenId/logs", requireProjectAccess, handleClearLogs);
 }

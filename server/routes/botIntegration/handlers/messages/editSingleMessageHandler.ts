@@ -6,87 +6,23 @@
  *
  * @module botIntegration/handlers/messages/editSingleMessageHandler
  */
-import { getTelegramApiBaseUrl } from '../../../../utils/telegram-api-url';
+import { hasMediaAttachment, callTelegramEditMessage } from './edit-single-telegram';
 
 import type { Request, Response } from "express";
 import { eq } from "drizzle-orm";
 import { db } from "../../../../database/db";
 import { botMessages } from "@shared/schema";
-import { fetchWithProxy } from "../../../../utils/telegram-proxy";
 import {
   resolveEffectiveProjectToken,
   getRequestTokenId,
 } from "../../../utils/resolve-request-token";
 import { broadcastProjectEvent } from "../../../../terminal/broadcastProjectEvent";
-import { extractButtonsFromNode } from "./extract-buttons";
-import { buildInlineKeyboard } from "./send-telegram-message";
-
-/**
- * Проверяет наличие медиа-вложения в данных сообщения
- * @param messageData - Данные сообщения из БД
- * @returns true если сообщение содержит медиа с file_id
- */
-function hasMediaAttachment(messageData: unknown): boolean {
-  if (!messageData || typeof messageData !== "object") return false;
-  const data = messageData as Record<string, unknown>;
-  return ["photo", "video", "audio", "voice", "document", "sticker"].some(
-    (type) => data[type] && typeof (data[type] as Record<string, unknown>)?.file_id === "string"
-  );
-}
-
-/**
- * Вызывает Telegram API для редактирования текста или подписи к медиа
- * @param token - Токен бота
- * @param chatId - ID чата (userId в Telegram)
- * @param telegramMessageId - ID сообщения в Telegram
- * @param messageText - Новый текст сообщения
- * @param isMedia - Редактировать подпись (caption) или текст
- * @param replyMarkup - Встроенная клавиатура (inline_keyboard); пустой массив убирает кнопки
- * @returns Успех операции и возможная ошибка
- */
-async function callTelegramEditMessage(
-  token: string,
-  chatId: string,
-  telegramMessageId: number,
-  messageText: string,
-  isMedia: boolean,
-  replyMarkup: { inline_keyboard: any[][] }
-): Promise<{ success: boolean; error?: string }> {
-  const method = isMedia ? "editMessageCaption" : "editMessageText";
-  const textField = isMedia ? "caption" : "text";
-  const url = `${getTelegramApiBaseUrl()}/bot${token}/${method}`;
-
-  const response = await fetchWithProxy(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      chat_id: chatId,
-      message_id: telegramMessageId,
-      [textField]: messageText,
-      parse_mode: "HTML",
-      reply_markup: replyMarkup,
-    }),
-  });
-
-  const result = await response.json();
-
-  if (!response.ok) {
-    return { success: false, error: (result as { description?: string }).description ?? "Неизвестная ошибка" };
-  }
-
-  return { success: true };
-}
+import { resolveEditKeyboard } from './resolve-edit-keyboard';
 
 /**
  * Обрабатывает запрос на редактирование одного сообщения бота
  *
- * Алгоритм:
- * 1. Читает messageId из params, messageText из body
- * 2. Находит запись в БД, проверяет принадлежность проекту и тип 'bot'
- * 3. Если нет telegramMessageId — возвращает 400 (редактирование невозможно)
- * 4. Вызывает Telegram API — при ошибке возвращает 400, БД не трогает
- * 5. Только при успехе Telegram — обновляет messageText в БД
- * 6. Рассылает WS-событие message-edited
+ * Проверяет проект и бота-отправителя, изменяет Telegram, затем сохраняет историю и событие.
  *
  * @param req - Объект запроса Express (params: projectId, messageId; body: messageText)
  * @param res - Объект ответа Express
@@ -101,7 +37,7 @@ export async function editSingleMessageHandler(
   try {
     const projectId = parseInt(req.params.projectId);
     const messageId = parseInt(req.params.messageId);
-    const { messageText, buttons = [], buttonsPerRow = 0 } = req.body as {
+    const { messageText, buttons: requestedButtons, buttonsPerRow: requestedPerRow } = req.body as {
       messageText?: string;
       buttons?: unknown[];
       buttonsPerRow?: number;
@@ -148,20 +84,22 @@ export async function editSingleMessageHandler(
 
     // Редактируем в Telegram — только при успехе обновляем БД
     const tokenId = getRequestTokenId(req);
-    const { selectedToken } = await resolveEffectiveProjectToken(projectId, tokenId);
+    /** Идентификатор сообщения Telegram имеет смысл только внутри бота-отправителя. */
+    if (tokenId != null && message.tokenId && tokenId !== message.tokenId) {
+      res.status(400).json({ message: "Сообщение отправлено другим ботом" });
+      return;
+    }
+    const { selectedToken } = await resolveEffectiveProjectToken(projectId, message.tokenId ?? tokenId);
 
-    if (!selectedToken?.token) {
+    if (!selectedToken?.token || message.tokenId && selectedToken.id !== message.tokenId) {
       res.status(400).json({ message: "Токен бота не найден для этого проекта" });
       return;
     }
 
     const isMedia = hasMediaAttachment(message.messageData);
 
-    // Пересобираем inline-клавиатуру из переданных кнопок. Пустой массив кнопок
-    // даёт { inline_keyboard: [] } — это осознанно убирает клавиатуру у сообщения.
-    const replyMarkup = buttons.length > 0
-      ? buildInlineKeyboard(extractButtonsFromNode({ buttons }), buttonsPerRow)
-      : { inline_keyboard: [] as any[][] };
+    /** Изменение текста сохраняет клавиатуру; [] явно снимает кнопки. */
+    const { buttons, buttonsPerRow, replyMarkup } = resolveEditKeyboard(message.messageData, requestedButtons, requestedPerRow);
 
     const telegramResult = await callTelegramEditMessage(
       selectedToken.token,
@@ -187,6 +125,7 @@ export async function editSingleMessageHandler(
         : {}),
       buttons,
       buttonsPerRow,
+      reply_markup: replyMarkup,
     };
 
     await db

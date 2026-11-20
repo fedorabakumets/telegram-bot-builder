@@ -1,0 +1,16 @@
+/** @fileoverview Визуальная иерархия общей строки человека и отдельных строк его ботов. */
+.users-workspace .users-bot-row { border-color: var(--border); background: transparent; }
+.users-workspace .users-bot-row:hover { background: #111113; }
+.users-bot-name { display: flex; align-items: start; gap: 8px; padding-left: 16px; min-width: 0; }
+.users-bot-name > svg { margin-top: 4px; color: var(--muted-foreground); }
+.users-workspace .users-bot-row td:first-child { border-left: 2px solid var(--border); }
+/** Раскрытие отделено от перехода в диалог и не выделяется яркой заливкой. */
+.users-workspace .users-table-frame td .users-bots-toggle,
+.users-workspace .users-bots-toggle { display: flex; align-items: center; gap: 4px; margin-top: 8px; padding: 0; border: 0; background: transparent; color: var(--muted-foreground); font-size: 12px; line-height: 16px; }
+.users-bots-toggle svg { width: 14px; height: 14px; }
+.users-workspace .users-table-frame td .users-bots-toggle:hover,
+.users-workspace .users-bots-toggle:hover { color: var(--foreground); background: transparent; border: 0; }
+/** Вся общая строка подсказывает возможность раскрытия, сохраняя отдельные кнопки действий. */
+.users-workspace [data-expandable='true'] { cursor: pointer; }
+/** Проблема самого бота размещается у названия бота, отдельно от состояния пользователя. */
+.users-bot-availability { margin-top: 4px; color: #d4a951; font-size: 12px; line-height: 16px; overflow-wrap: anywhere; }

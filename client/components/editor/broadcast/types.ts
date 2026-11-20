@@ -63,6 +63,8 @@ export interface BroadcastPanelProps {
  * Данные формы wizard создания рассылки
  */
 export interface NewBroadcastFormData {
+  /** Аудитория, зафиксированная из поиска; никогда не заменяется отправкой всем. */
+  fixedAudience?: import('./utils/fixed-audience').FixedBroadcastAudience;
   /** Название рассылки (необязательно; пустое → дата + начало текста) */
   name: string;
   /** HTML-текст сообщения */

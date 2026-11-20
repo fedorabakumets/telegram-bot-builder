@@ -7,6 +7,7 @@ import type {
   InsertBotToken,
   InsertBotTemplate 
 } from "@shared/schema";
+import { botSettingsToInheritOnCreate } from "@shared/bot-setting-inheritance-on-create";
 
 const STORAGE_KEYS = {
   PROJECTS: 'botcraft_projects',
@@ -121,6 +122,13 @@ export class LocalStorageService {
       ...stored,
       /** Ревизия старых локальных проектов до её появления в схеме. */
       revision: stored.revision ?? 0,
+      /** Значения старых локальных проектов до появления наследуемых настроек. */
+      defaultLaunchMode: stored.defaultLaunchMode ?? 'polling',
+      defaultSleepMode: stored.defaultSleepMode ?? null,
+      defaultAutoRestart: stored.defaultAutoRestart ?? 0,
+      defaultMaxRestartAttempts: stored.defaultMaxRestartAttempts ?? 3,
+      /** Старые локальные проекты используют стандартные значения. */
+      botSettingDefaults: stored.botSettingDefaults ?? {},
       createdAt: new Date(stored.createdAt),
       updatedAt: new Date(stored.updatedAt),
       lastExportedAt: null,
@@ -135,6 +143,13 @@ export class LocalStorageService {
   private static reviveToken(stored: StoredToken): BotToken {
     return {
       ...stored,
+      /** Старые локальные токены сохраняют индивидуальные настройки. */
+      inheritLaunchMode: stored.inheritLaunchMode ?? false,
+      inheritSleepMode: stored.inheritSleepMode ?? false,
+      inheritAutoRestart: stored.inheritAutoRestart ?? false,
+      inheritMaxRestartAttempts: stored.inheritMaxRestartAttempts ?? false,
+      /** Старые записи сохраняют индивидуальные значения дополнительных настроек. */
+      inheritBotSettings: stored.inheritBotSettings ?? [],
       createdAt: new Date(stored.createdAt),
       updatedAt: new Date(stored.updatedAt),
       lastUsedAt: stored.lastUsedAt ? new Date(stored.lastUsedAt) : null,
@@ -175,6 +190,13 @@ export class LocalStorageService {
       data: data.data,
       botToken: data.botToken || null,
       userDatabaseEnabled: data.userDatabaseEnabled ?? 1,
+      /** Наследуемые настройки нового локального проекта. */
+      defaultLaunchMode: data.defaultLaunchMode ?? 'polling',
+      defaultSleepMode: data.defaultSleepMode ?? null,
+      defaultAutoRestart: data.defaultAutoRestart ?? 0,
+      defaultMaxRestartAttempts: data.defaultMaxRestartAttempts ?? 3,
+      /** Переопределения общих настроек нового проекта. */
+      botSettingDefaults: data.botSettingDefaults ?? {},
       sortOrder: data.sortOrder ?? 0,
       adminIds: data.adminIds ?? '',
       sessionId: data.sessionId ?? null,
@@ -267,6 +289,13 @@ export class LocalStorageService {
       trackGroupMembership: data.trackGroupMembership ?? 1,
       contentCache: data.contentCache ?? 0,
       launchMode: data.launchMode ?? 'polling',
+      /** Новый локальный токен наследует настройки без явных переопределений. */
+      inheritLaunchMode: data.inheritLaunchMode ?? (data.launchMode == null),
+      inheritSleepMode: data.inheritSleepMode ?? true,
+      inheritAutoRestart: data.inheritAutoRestart ?? (data.autoRestart == null),
+      inheritMaxRestartAttempts: data.inheritMaxRestartAttempts ?? (data.maxRestartAttempts == null),
+      /** Сохраняем только разрешённые ключи наследуемых настроек. */
+      inheritBotSettings: botSettingsToInheritOnCreate(data, data.inheritBotSettings),
       webhookBaseUrl: data.webhookBaseUrl ?? null,
       webhookSecretToken: data.webhookSecretToken ?? null,
       userbotEnabled: data.userbotEnabled ?? 0,

@@ -21,7 +21,7 @@ export interface WorkerBotRuntimeRow {
   /** Ошибка настройки; null означает корректный выбор режима. */
   configurationError: string | null;
   /** Источник выбранного режима. */
-  source: 'bot' | 'server' | 'default';
+  source: 'bot' | 'project' | 'server' | 'default';
   /** Настроенный транспорт получения обновлений. */
   launchMode: 'polling' | 'webhook';
   /** Сохранённый статус экземпляра. */

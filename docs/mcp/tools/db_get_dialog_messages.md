@@ -9,6 +9,7 @@
 
 ```json
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "project_id": {
@@ -35,18 +36,18 @@
       ]
     },
     "limit": {
+      "default": 10,
       "type": "integer",
       "minimum": 1,
-      "maximum": 100,
-      "default": 10
+      "maximum": 100
     },
     "cursor": {
       "type": "string",
       "maxLength": 2048
     },
     "include_group_context": {
-      "type": "boolean",
-      "default": false
+      "default": false,
+      "type": "boolean"
     }
   },
   "required": [
@@ -54,9 +55,7 @@
     "token_id",
     "chat_id",
     "chat_type"
-  ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  ]
 }
 ```
 
@@ -98,6 +97,7 @@
 
 ```json
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "data": {
@@ -167,11 +167,13 @@
             },
             "projectId": {
               "type": "integer",
-              "exclusiveMinimum": 0
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             },
             "revision": {
               "type": "integer",
-              "minimum": 0
+              "minimum": 0,
+              "maximum": 9007199254740991
             }
           },
           "required": [
@@ -181,6 +183,9 @@
         },
         "sideEffects": {
           "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
           "additionalProperties": {}
         }
       },
@@ -197,10 +202,10 @@
     }
   },
   "required": [
+    "data",
     "execution"
   ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  "additionalProperties": false
 }
 ```
 

@@ -66,11 +66,6 @@ interface BotControlContextValue {
     /** Удаляет бота и возвращает результат запроса или ошибку. */
     mutateAsync: (tokenId: number) => Promise<unknown>;
   };
-  /** Мутация переключения базы данных */
-  toggleDatabaseMutation: {
-    isPending: boolean;
-    mutate: (enabled: boolean) => void;
-  };
   /** Мутация перезапуска всех ботов проекта */
   restartAllBotsMutation: {
     isPending: boolean;

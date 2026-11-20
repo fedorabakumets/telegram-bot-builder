@@ -10,6 +10,8 @@ import type { BotProject } from '@shared/schema';
 import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
 import { apiRequest } from '@/queryClient';
 import type { BotProjectWithArchive } from '@/components/editor/sidebar/hooks/use-projects-query';
+import { loadEditorProject, ProjectLoadError } from './load-editor-project';
+import { retryProjectLoad, projectLoadRetryDelay } from './project-load-retry';
 
 /** Параметры хука загрузки проекта */
 interface UseProjectLoaderOptions {
@@ -29,6 +31,8 @@ interface UseProjectLoaderResult {
   effectiveProjectId: number | undefined;
   /** Флаг ошибки загрузки проекта */
   isProjectNotFound: boolean;
+  /** Ошибка соединения, сервера или сессии, не подтверждающая отсутствие проекта. */
+  isProjectLoadError: boolean;
 }
 
 /**
@@ -44,8 +48,11 @@ export function useProjectLoader({
   const { sessionReady } = useTelegramAuth();
 
   // Загрузка проекта по ID из URL — ждём сессии
-  const { data: currentProject, isError: projectNotFound } = useQuery<BotProjectWithArchive>({
+  const { data: currentProject, isError, error } = useQuery<BotProjectWithArchive>({
     queryKey: [`/api/projects/${projectId}`],
+    queryFn: ({ signal }) => loadEditorProject<BotProjectWithArchive>(projectId!, signal),
+    retry: retryProjectLoad,
+    retryDelay: projectLoadRetryDelay,
     enabled: !!projectId && sessionReady,
     staleTime: 30000,
   });
@@ -75,6 +82,9 @@ export function useProjectLoader({
   // Загрузка первого проекта если нет ID в URL
   const { data: firstProject } = useQuery<BotProjectWithArchive>({
     queryKey: [`/api/projects/${effectiveProjectId}`],
+    queryFn: ({ signal }) => loadEditorProject<BotProjectWithArchive>(effectiveProjectId!, signal),
+    retry: retryProjectLoad,
+    retryDelay: projectLoadRetryDelay,
     enabled: !projectId && !!effectiveProjectId && sessionReady,
     staleTime: 30000,
   });
@@ -84,6 +94,7 @@ export function useProjectLoader({
     firstProject,
     projectsList,
     effectiveProjectId,
-    isProjectNotFound: projectNotFound
+    isProjectNotFound: isError && error instanceof ProjectLoadError && error.status === 404,
+    isProjectLoadError: isError && !(error instanceof ProjectLoadError && error.status === 404)
   };
 }

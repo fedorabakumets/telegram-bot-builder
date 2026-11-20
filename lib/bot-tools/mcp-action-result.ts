@@ -35,7 +35,10 @@ export function normalizeMcpActionResult(result: CallToolResult, policy: McpActi
   const pending = policy.completionMode === 'job' || policy.effect === 'external'
     && ['pending', 'running', 'cancelling'].includes(String(job?.status ?? data?.status));
   const prepared = data?.prepared === true && data?.saved === false || data?.applied === false && data?.requiresConfirmation === true;
-  const outcome = data?.outcome === 'partial' ? 'partial' : data?.outcome === 'unknown' || data?.state === 'unknown' ? 'unknown' : failed ? 'error'
+  /** Старые массовые операции возвращают счётчики вместо явного признака частичного исхода. */
+  const partialEdit = policy.effect === 'external' && typeof data?.edited === 'number'
+    && typeof data?.failed === 'number' && data.failed > 0;
+  const outcome = data?.outcome === 'partial' || partialEdit ? 'partial' : data?.outcome === 'unknown' || data?.state === 'unknown' ? 'unknown' : failed ? 'error'
     : prepared || policy.effect === 'prepare' ? 'prepared'
     : policy.effect === 'read' ? 'read'
     : pending ? 'pending'

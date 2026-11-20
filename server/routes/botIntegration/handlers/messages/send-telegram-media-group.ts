@@ -14,12 +14,7 @@ import { sendTelegramMessage } from "./send-telegram-message";
 import { waitForTelegramMessages } from "./telegram-message-limiter";
 import { fetchWithProxy } from "../../../../utils/telegram-proxy";
 import { isLocalPath, buildMultipartBody, type MultipartFile } from "./media-multipart";
-
-/** Типы медиа, которые Telegram допускает в альбоме */
-const ALBUM_TYPES = new Set(['photo', 'video', 'audio', 'document']);
-
-/** Максимальное число элементов в альбоме Telegram */
-const MAX_ALBUM_SIZE = 10;
+import { validateTelegramMediaPackage } from './validate-telegram-media-package';
 
 /**
  * Описание одного элемента поля media запроса sendMediaGroup
@@ -53,8 +48,9 @@ export async function sendTelegramMediaGroup(
   useHtml: boolean,
   projectId?: number
 ): Promise<TelegramSendResult> {
-  // Отфильтровываем неподдерживаемые в альбоме типы (sticker/voice и пр.)
-  const supported = mediaFiles.filter((m) => ALBUM_TYPES.has(m.type)).slice(0, MAX_ALBUM_SIZE);
+  /** Проверяем весь альбом вместо молчаливого удаления лишних или неподдерживаемых файлов. */
+  validateTelegramMediaPackage(mediaFiles);
+  const supported = mediaFiles;
 
   // Пограничный случай: 0 или 1 элемент — делегируем одиночной отправке
   if (supported.length < 2) {

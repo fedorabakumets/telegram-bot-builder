@@ -40,21 +40,27 @@
 .users-filters { padding: 16px 16px 12px; }
 .users-filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .users-filter-grid > :last-child { grid-column: 1 / -1; }
-.users-workspace [role='tablist'] { padding: 0; margin: 0 16px 8px; width: auto; height: auto; gap: 8px; border: 0; border-radius: 0; background: transparent; }
-.users-workspace [role='tab'] { border: 0; border-bottom: 2px solid transparent; border-radius: 0; padding: 12px; color: var(--muted-foreground); }
-.users-workspace [role='tab'][data-state='active'] { background: transparent; color: #60a5fa; border-bottom-color: #3b82f6; box-shadow: none; }
-.users-workspace [role='tab']:hover { color: #93c5fd; }
+.users-workspace [role='tablist'] { display: flex; justify-content: flex-start; padding: 0; margin: 0 16px; width: auto; height: auto; gap: 16px; border: 0; border-radius: 0; background: transparent; }
+/** Компактные текстовые вкладки повторяют переключатели графиков аналитики. */
+.users-workspace [role='tab'] { flex: none; border: 0; border-bottom: 2px solid transparent; border-radius: 0; padding: 8px 0; color: var(--muted-foreground); }
+.users-workspace [role='tab'][data-state='active'] { background: transparent; color: var(--foreground); border-bottom-color: var(--foreground); box-shadow: none; }
+.users-workspace [role='tab']:hover { color: var(--foreground); }
 .users-workspace [data-testid^='user-card-mobile-'] { background: var(--card); }
 .users-workspace button,
-.users-portal button { transition-timing-function: cubic-bezier(0.22,1,0.36,1); transition-duration: 300ms; }
+.users-portal button { transition-property: color, background-color, border-color; transition-timing-function: cubic-bezier(0.22,1,0.36,1); transition-duration: 120ms; }
 .users-workspace button:active,
-.users-portal button:active { transform: translateY(1px); }
+.users-portal button:active { transform: none; }
 .users-workspace button:focus-visible,
 .users-portal button:focus-visible { outline: 2px solid #3b82f6; outline-offset: 2px; }
 .users-portal { background: var(--popover); color: var(--popover-foreground); border-color: var(--border); }
 /** Подчёркивает выбранный пункт меню текстом без серой заливки. */
 .users-portal [role='option'][data-state='checked'],
 .users-portal [role='option'][data-highlighted] { background: transparent; color: #60a5fa; }
+/** При наведении статусы и источники выделяются подчёркиванием. */
+.users-portal.users-status-menu [role='option'][data-highlighted] > span:last-child,
+.users-portal .users-source-option[data-highlighted] > span:last-child { text-decoration: underline; text-underline-offset: 3px; }
+/** Обрезанный источник в таблице сохраняет подсказку полного названия. */
+.users-workspace .users-source-cell > span:hover { text-decoration: underline; text-underline-offset: 3px; cursor: help; }
 .users-workspace svg,
 .users-portal svg { stroke-width: 1.5; }
 .users-workspace th { font-weight: 500; }

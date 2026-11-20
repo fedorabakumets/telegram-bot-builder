@@ -9,6 +9,7 @@
 
 ```json
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "project_id": {
@@ -17,20 +18,25 @@
       "maximum": 9007199254740991
     },
     "table_id": {
-      "$ref": "#/properties/project_id"
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
     },
     "column_id": {
-      "$ref": "#/properties/project_id"
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
     },
     "data": {
       "type": "object",
       "properties": {
         "displayName": {
+          "default": "",
           "type": "string",
-          "maxLength": 255,
-          "default": ""
+          "maxLength": 255
         },
         "dataType": {
+          "default": "text",
           "type": "string",
           "enum": [
             "text",
@@ -38,12 +44,11 @@
             "date",
             "boolean",
             "link"
-          ],
-          "default": "text"
+          ]
         },
         "required": {
-          "type": "boolean",
-          "default": false
+          "default": false,
+          "type": "boolean"
         },
         "min": {
           "type": "number"
@@ -52,10 +57,10 @@
           "type": "number"
         },
         "maxLength": {
+          "default": 10000,
           "type": "integer",
           "minimum": 1,
-          "maximum": 10000,
-          "default": 10000
+          "maximum": 10000
         }
       },
       "additionalProperties": false
@@ -66,9 +71,7 @@
     "table_id",
     "column_id",
     "data"
-  ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  ]
 }
 ```
 
@@ -86,7 +89,24 @@
 
 ## Пример вызова
 
-Безопасный универсальный пример не сгенерирован. Используйте точную схему и данные пользователя; секреты в документацию не подставляются.
+```json
+{
+  "action_id": "db_set_table_column_settings",
+  "args": {
+    "project_id": 1,
+    "table_id": 1,
+    "column_id": 1,
+    "data": {
+      "displayName": "",
+      "dataType": "text",
+      "required": false,
+      "maxLength": 10000
+    }
+  }
+}
+```
+
+Структурный пример проверен Zod; ID и данные замените реальными.
 
 ## Ответ и ошибки
 
@@ -96,6 +116,7 @@
 
 ```json
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "data": {
@@ -165,11 +186,13 @@
             },
             "projectId": {
               "type": "integer",
-              "exclusiveMinimum": 0
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             },
             "revision": {
               "type": "integer",
-              "minimum": 0
+              "minimum": 0,
+              "maximum": 9007199254740991
             }
           },
           "required": [
@@ -179,6 +202,9 @@
         },
         "sideEffects": {
           "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
           "additionalProperties": {}
         }
       },
@@ -195,10 +221,10 @@
     }
   },
   "required": [
+    "data",
     "execution"
   ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  "additionalProperties": false
 }
 ```
 

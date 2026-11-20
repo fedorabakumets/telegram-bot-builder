@@ -2,7 +2,6 @@
  * @fileoverview Маршруты интеграции с ботами: диалоги, группы, файлы
  * @module setupBotIntegrationRoutes
  */
-
 import { getBotUserDataHandler } from './botUsers/handlers/getBotUserDataHandler';
 import { getMessageFileSize } from './botIntegration/handlers/botData/get-message-file-size';
 import { durableProjectAction } from "./durable-project-action";
@@ -35,6 +34,8 @@ import { listDialogsHandler } from './dialogs/list-dialogs-handler';
 import { searchDialogMessagesHandler } from './dialogs/search-dialog-messages-handler';
 import { getDialogMessagesHandler } from './dialogs/get-dialog-messages-handler';
 import { checkPrivateChatAccessHandler } from './dialogs/check-private-chat-access-handler';
+import { checkTelegramBotsHandler, getActiveTelegramBotCheckHandler } from './users/check-telegram-bots-handler';
+import { registerCheckHistoryRoutes } from './check-history/routes';
 import {
   cancelChatAccessCheckHandler,
   getActiveChatAccessCheckHandler,
@@ -47,6 +48,10 @@ import {
  * @returns void
  */
 export function setupBotIntegrationRoutes(app: Express) {
+  registerCheckHistoryRoutes(app);
+  app.get('/api/projects/:projectId/telegram-bot-checks/active', requireProjectAccess, getActiveTelegramBotCheckHandler);
+  /** Ручная проверка самих ботов не отправляет сообщения и не меняет статусы пользователей. */
+  app.post('/api/projects/:projectId/telegram-bot-checks', requireProjectAccess, checkTelegramBotsHandler);
   /** Точная карточка пользователя с переменными выбранного бота. */
   app.get('/api/projects/:projectId/users/:userId', requireProjectAccess, getBotUserDataHandler);
   app.get('/api/projects/:projectId/dialogs', requireProjectAccess, listDialogsHandler);

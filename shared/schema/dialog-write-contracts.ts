@@ -13,7 +13,12 @@ export const dialogMessageBodySchema = sendMessageSchema.extend({
   buttonsPerRow: z.number().int().min(0).max(8).default(0),
 });
 /** Редактируемые поля сообщения. */
-export const editDialogMessageBodySchema = dialogMessageBodySchema.pick({ messageText: true, buttons: true, buttonsPerRow: true });
+export const editDialogMessageBodySchema = dialogMessageBodySchema.pick({ messageText: true }).extend({
+  /** Отсутствие сохраняет кнопки; пустой массив явно снимает клавиатуру. */
+  buttons: z.array(buttonSchema).max(100).optional(),
+  /** Отсутствие сохраняет расположение кнопок. */
+  buttonsPerRow: z.number().int().min(0).max(8).optional(),
+});
 
 /** HTTP поддерживает проверяемые активы проекта; удалённый MCP путей не принимает. */
 export const httpDialogMessageBodySchema = dialogMessageBodySchema.extend({ mediaUrls: z.array(httpMediaReferenceSchema).max(10).default([]) });

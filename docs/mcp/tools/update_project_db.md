@@ -9,6 +9,7 @@
 
 ```json
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "project_id": {
@@ -22,31 +23,33 @@
         },
         {
           "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
           "additionalProperties": {}
         }
       ],
       "description": "project.json"
     },
     "expected_revision": {
+      "description": "Ревизия прочитанного проекта; при конфликте сохранение отклоняется.",
       "type": "integer",
       "minimum": 0,
-      "description": "Ревизия прочитанного проекта; при конфликте сохранение отклоняется."
+      "maximum": 9007199254740991
     },
     "commit_message": {
-      "type": "string",
-      "description": "Заметка к версии (ручной чекпоинт)"
+      "description": "Заметка к версии (ручной чекпоинт)",
+      "type": "string"
     },
     "skip_validation": {
-      "type": "boolean",
-      "description": "Пропустить валидацию перед записью"
+      "description": "Пропустить валидацию перед записью",
+      "type": "boolean"
     }
   },
   "required": [
     "project_id",
     "project_json"
-  ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  ]
 }
 ```
 
@@ -84,6 +87,7 @@
 
 ```json
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "data": {
@@ -153,11 +157,13 @@
             },
             "projectId": {
               "type": "integer",
-              "exclusiveMinimum": 0
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             },
             "revision": {
               "type": "integer",
-              "minimum": 0
+              "minimum": 0,
+              "maximum": 9007199254740991
             }
           },
           "required": [
@@ -167,6 +173,9 @@
         },
         "sideEffects": {
           "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
           "additionalProperties": {}
         }
       },
@@ -183,10 +192,10 @@
     }
   },
   "required": [
+    "data",
     "execution"
   ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  "additionalProperties": false
 }
 ```
 

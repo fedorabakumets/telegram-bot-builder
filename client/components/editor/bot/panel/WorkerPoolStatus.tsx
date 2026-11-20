@@ -38,10 +38,10 @@ export function WorkerPoolStatus({ projects }: WorkerPoolStatusProps) {
 
   return (
     <>
-      {/* Десктоп: раскрываемая кнопка с детализацией */}
+      {/* На тесной панели детали сводки доступны через иконку. */}
       <Popover>
         <PopoverTrigger asChild>
-          <button type="button" aria-label="Статус Worker Pool" className={`${badgeBase} hidden @[600px]:flex hover:bg-emerald-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 data-[state=open]:bg-emerald-500/20`}>
+          <button type="button" aria-label="Статус Worker Pool" title="Сводка воркеров" className={`${badgeBase} hidden @[600px]:flex h-8 w-8 @[700px]:w-auto justify-center shrink-0 whitespace-nowrap [&>span]:hidden @[700px]:[&>span]:inline hover:bg-emerald-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 data-[state=open]:bg-emerald-500/20`}>
             <Activity className="w-3 h-3 shrink-0" />
             <span>{disconnected ? 'Нет связи' : `${data.workers} воркер${data.workers > 1 ? 'а' : ''}`}</span>
             <span className="text-muted-foreground">·</span>
@@ -52,7 +52,7 @@ export function WorkerPoolStatus({ projects }: WorkerPoolStatusProps) {
                 <span>{data.totalMemoryMb} MB</span>
               </>
             )}
-            <ChevronDown className="w-3 h-3 shrink-0 opacity-60" />
+            <ChevronDown className="hidden @[700px]:block w-3 h-3 shrink-0 opacity-60" />
           </button>
         </PopoverTrigger>
         <PopoverContent side="bottom" align="start" className="w-72 p-3">
@@ -63,12 +63,12 @@ export function WorkerPoolStatus({ projects }: WorkerPoolStatusProps) {
       {/* Мобильные: tap-popover с читаемой сводкой */}
       <Popover>
         <PopoverTrigger asChild>
-          <button type="button" className={`${badgeBase} @[600px]:hidden max-w-[min(100%,200px)]`} aria-label="Статус Worker Pool">
+          <button type="button" className={`${badgeBase} @[600px]:hidden max-w-[min(100%,200px)] sm:h-8 sm:w-8 sm:shrink-0 sm:justify-center`} aria-label="Статус Worker Pool" title="Сводка воркеров">
             <Activity className="w-3 h-3 shrink-0" />
-            <span className="truncate tabular-nums">
+            <span className="truncate tabular-nums sm:hidden">
               {disconnected ? 'Нет связи с исполнителем' : formatMobileWorkerPoolSummary(data)}
             </span>
-            <ChevronDown className="w-3 h-3 shrink-0 opacity-60" />
+            <ChevronDown className="w-3 h-3 shrink-0 opacity-60 sm:hidden" />
           </button>
         </PopoverTrigger>
         <PopoverContent side="bottom" align="end" className="w-72 p-3">

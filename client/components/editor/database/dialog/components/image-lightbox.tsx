@@ -4,7 +4,8 @@
  */
 
 import { useRef } from 'react';
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogClose, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { X } from 'lucide-react';
 
 /**
  * Свойства компонента лайтбокса
@@ -32,6 +33,7 @@ export function ImageLightbox({ src, alt = 'Изображение', mediaType =
   return (
     <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
       <DialogContent
+        hideClose
         className="max-w-[94vw] border-0 bg-background p-8 shadow-none [&>button]:text-foreground"
         data-testid="lightbox-overlay"
         onCloseAutoFocus={(event) => {
@@ -41,6 +43,10 @@ export function ImageLightbox({ src, alt = 'Изображение', mediaType =
       >
         <DialogTitle className="sr-only">Просмотр медиафайла</DialogTitle>
         <DialogDescription className="sr-only">{alt}</DialogDescription>
+        {/** Явная русская подпись сохраняет доступность крестика в общем просмотрщике. */}
+        <DialogClose aria-label="Закрыть" className="absolute right-4 top-4 rounded-md p-1.5 text-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <X className="h-4 w-4" aria-hidden />
+        </DialogClose>
       {/* Медиа-контент — клик по нему не закрывает лайтбокс */}
       {mediaType === 'video' ? (
         <video

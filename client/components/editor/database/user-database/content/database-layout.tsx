@@ -6,11 +6,15 @@
 import { ScrollArea } from '@/components/ui/scroll-area';
 import './users-workspace.css';
 import './users-header.css';
+import './users-table.css';
+import './users-variables.css';
+import './users-bot-rows.css';
 import { DatabaseContentProps } from './database-content-props';
 import { DatabaseHeaderSection } from './database-header-section';
 import { DatabaseFiltersSection } from './database-filters-section';
 import { DatabaseTabs } from './database-tabs';
 import { DatabaseDisabled } from '../components/header';
+import { UsersAvailabilityCard } from './users-availability-card';
 
 /**
  * Компонент контента панели базы данных
@@ -40,6 +44,7 @@ export function DatabaseContent(props: DatabaseContentProps): React.JSX.Element 
         {!isDatabaseEnabled && <DatabaseDisabled />}
         {isDatabaseEnabled && (
           <div className="flex-1 flex flex-col min-h-0 w-full">
+            <UsersAvailabilityCard projectId={restProps.projectId} tokenId={restProps.selectedTokenId} totalUsers={restProps.stats?.totalUsers} />
             <DatabaseFiltersSection {...restProps} />
             <DatabaseTabs 
               {...restProps} 

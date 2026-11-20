@@ -44,6 +44,16 @@ function createWrapper() {
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 
 describe('Проверка доступа к группе', () => {
+  /** В сводном списке проверки выполняет карточка конкретной пары бот–чат. */
+  it.each([null, undefined])('не подставляет бота по умолчанию в общей области %s', async (token) => {
+    const fetchMock = vi.fn().mockResolvedValue(response());
+    vi.stubGlobal('fetch', fetchMock);
+    const hook = renderHook(() => useSyncGroups(12, token, [group]), { wrapper: createWrapper() });
+    await act(async () => { await hook.result.current.checkAccess(group.userId); });
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(hook.result.current.statuses).toEqual({});
+  });
+
   it('отличает исключение от отсутствующего чата и сетевой ошибки', async () => {
     const fetchMock = vi.fn()
       .mockResolvedValueOnce(response('Forbidden: bot was kicked from the supergroup chat'))
@@ -111,5 +121,11 @@ describe('Проверка доступа к группе', () => {
     expect(screen.getByRole('button')).toBeDisabled();
     view.rerender(<GroupAccessStatus status="available" onCheck={vi.fn()} />);
     expect(view.container).toBeEmptyDOMElement();
+    /** Проблема самого бота не должна отображаться как блокировка пользователем либо общая ошибка. */
+    view.rerender(<GroupAccessStatus status="kicked" chatType="private" botAvailability="Бот заморожен Telegram" />);
+    expect(screen.getByText('Бот заморожен Telegram')).toBeInTheDocument();
+    expect(screen.queryByText('Пользователь заблокировал бота')).not.toBeInTheDocument();
+    view.rerender(<GroupAccessStatus status="error" chatType="private" />);
+    expect(screen.getByText('Не удалось проверить чат')).toBeInTheDocument();
   });
 });

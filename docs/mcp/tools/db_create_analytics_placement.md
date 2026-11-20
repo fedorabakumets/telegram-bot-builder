@@ -9,6 +9,7 @@
 
 ```json
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "project_id": {
@@ -27,10 +28,13 @@
         },
         "tokenId": {
           "type": "integer",
-          "exclusiveMinimum": 0
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
         },
         "sourceId": {
-          "$ref": "#/properties/data/properties/tokenId"
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
         },
         "startsOn": {
           "anyOf": [
@@ -46,7 +50,8 @@
         "endsOn": {
           "anyOf": [
             {
-              "$ref": "#/properties/data/properties/startsOn/anyOf/0"
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
             },
             {
               "type": "null"
@@ -54,8 +59,8 @@
           ]
         },
         "timezone": {
-          "type": "string",
-          "default": "Europe/Moscow"
+          "default": "Europe/Moscow",
+          "type": "string"
         }
       },
       "required": [
@@ -69,9 +74,7 @@
   "required": [
     "project_id",
     "data"
-  ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  ]
 }
 ```
 
@@ -89,7 +92,22 @@
 
 ## Пример вызова
 
-Безопасный универсальный пример не сгенерирован. Используйте точную схему и данные пользователя; секреты в документацию не подставляются.
+```json
+{
+  "action_id": "db_create_analytics_placement",
+  "args": {
+    "project_id": 1,
+    "data": {
+      "name": "1",
+      "tokenId": 1,
+      "sourceId": 1,
+      "timezone": "Europe/Moscow"
+    }
+  }
+}
+```
+
+Структурный пример проверен Zod; ID и данные замените реальными.
 
 ## Ответ и ошибки
 
@@ -99,6 +117,7 @@
 
 ```json
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "data": {
@@ -168,11 +187,13 @@
             },
             "projectId": {
               "type": "integer",
-              "exclusiveMinimum": 0
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             },
             "revision": {
               "type": "integer",
-              "minimum": 0
+              "minimum": 0,
+              "maximum": 9007199254740991
             }
           },
           "required": [
@@ -182,6 +203,9 @@
         },
         "sideEffects": {
           "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
           "additionalProperties": {}
         }
       },
@@ -198,10 +222,10 @@
     }
   },
   "required": [
+    "data",
     "execution"
   ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  "additionalProperties": false
 }
 ```
 

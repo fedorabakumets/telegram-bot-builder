@@ -1,7 +1,21 @@
 /** @fileoverview Загрузка сохранённых сведений профиля диалога выбранного бота. */
 import { useMutation, useQuery } from '@tanstack/react-query';
+import type { ReactNode } from 'react';
 import type { UserBotData } from '@/types/bot';
 import { DialogProfile } from './dialog-profile';
+import { DialogProfileBots } from './dialog-profile-bots';
+import { DialogProfileGroups } from './dialog-profile-groups';
+import { DialogSharedMedia } from './dialog-shared-media';
+import { useDialogProfileBots } from '../hooks/use-dialog-profile-bots';
+
+/** Актуальные сведения для дополнительных секций и действий общей карточки. */
+export interface DialogProfileContext {
+  /** Сохранённые данные после загрузки профиля. */ user: UserBotData;
+  /** Бот для аватара и явных действий; общий список секций им не ограничивается. */ tokenId?: number | null;
+}
+
+/** Секция карточки с доступом к обновлённым сведениям пользователя. */
+type ProfileSlot = ReactNode | ((context: DialogProfileContext) => ReactNode);
 
 /** Сохранённые сведения группы. */
 interface SavedGroup {
@@ -31,6 +45,8 @@ interface DialogProfileDataProps {
   memberGroup?: string | null;
   /** Закрытие профиля. */
   onClose: () => void;
+  /** Статистика, ответы и другие секции места открытия карточки. */ children?: ProfileSlot;
+  /** Действия над текущим пользователем, например переход в диалог. */ actions?: ProfileSlot;
 }
 
 /**
@@ -38,8 +54,10 @@ interface DialogProfileDataProps {
  * @param props - Контекст профиля
  * @returns Карточка сохранённых сведений
  */
-export function DialogProfileData({ user, projectId, tokenId, memberGroup, onClose }: DialogProfileDataProps) {
+export function DialogProfileData({ user, projectId, tokenId, memberGroup, onClose, children, actions }: DialogProfileDataProps) {
   const isGroup = !!user.isGroup || String(user.userId).startsWith('-');
+  /** Общие даты не зависят от выбранного в исходной вкладке бота. */
+  const allBots = useDialogProfileBots(projectId, !isGroup && !user.isBot ? user.userId : '');
   const query = useQuery({
     queryKey: ['dialog-profile', projectId, tokenId, String(user.userId), isGroup],
     enabled: !user.isBot && !!projectId && !!tokenId && !!user.userId,
@@ -68,10 +86,15 @@ export function DialogProfileData({ user, projectId, tokenId, memberGroup, onClo
   const person = !isGroup ? query.data as UserBotData | null | undefined : null;
   /** Извлекаем только публичное имя, не считая приватное приглашение username. */
   const groupUsername = group?.url?.match(/^(?:https?:\/\/)?(?:www\.)?t\.me\/([a-zA-Z0-9_]{5,32})\/?(?:\?.*)?$/i)?.[1];
-  const enriched = isGroup ? { ...user, firstName: group?.name ?? user.firstName, avatarUrl: group?.avatarUrl ?? user.avatarUrl, userName: groupUsername ?? user.userName } : { ...user, ...person, userName: person?.userName ?? user.userName };
+  const enriched = isGroup ? { ...user, firstName: group?.name ?? user.firstName, avatarUrl: group?.avatarUrl ?? user.avatarUrl, userName: groupUsername ?? user.userName }
+    : { ...user, ...person, userName: person?.userName ?? user.userName,
+      ...(allBots.data ? { registeredAt: allBots.data.registeredAt, lastInteraction: allBots.data.lastInteraction } : {}) };
+  const context = { user: enriched, tokenId };
+  const actionContent = typeof actions === 'function' ? actions(context) : actions;
+  const extraContent = typeof children === 'function' ? children(context) : children;
   return (
-    <DialogProfile user={enriched} projectId={projectId} tokenId={tokenId} onClose={onClose}>
-      <div className="space-y-4 border-t px-5 py-4 text-sm">
+    <DialogProfile user={enriched} projectId={projectId} tokenId={tokenId} onClose={onClose} actions={actionContent}>
+      {(isGroup || memberGroup || query.isLoading || query.isError) && <div className="space-y-4 border-t px-5 py-4 text-sm">
         {isGroup && tokenId && <div>
           <button type="button" disabled={sync.isPending} onClick={() => sync.mutate()}
             className="rounded-md border px-3 py-2 text-sm hover:bg-accent disabled:opacity-50">
@@ -87,7 +110,13 @@ export function DialogProfileData({ user, projectId, tokenId, memberGroup, onClo
         {isGroup && group?.memberCount != null && <div><h3 className="mb-1 text-xs text-muted-foreground">Участников</h3><p>{group.memberCount.toLocaleString('ru-RU')}</p></div>}
         {isGroup && group?.memberCount == null && !query.isLoading && <p className="text-muted-foreground">Количество участников неизвестно.</p>}
         {!isGroup && memberGroup && !person && !query.isLoading && !query.isError && <p className="text-muted-foreground">Имя взято из сообщения. Других сохранённых данных у этого бота нет.</p>}
-      </div>
+      </div>}
+      {extraContent && <div className="space-y-5 border-t px-5 py-4 text-sm">{extraContent}</div>}
+      {!isGroup && !user.isBot && <>
+        <DialogProfileBots projectId={projectId} userId={String(user.userId)} />
+        <DialogProfileGroups projectId={projectId} userId={String(user.userId)} />
+      </>}
+      {!user.isBot && <DialogSharedMedia projectId={projectId} userId={String(user.userId)} tokenId={isGroup ? tokenId : null} isGroup={isGroup} />}
     </DialogProfile>
   );
 }

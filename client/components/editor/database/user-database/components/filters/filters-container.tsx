@@ -13,6 +13,10 @@ import { SortField, SortDirection } from '../../types';
  * Пропсы компонента FiltersContainer
  */
 interface FiltersContainerProps {
+  /** Дополнительные серверные фильтры в отдельном спокойном блоке. */
+  advancedControl?: React.ReactNode;
+  /** Выбор источника текущей базы. */
+  sourceControl?: React.ReactNode;
   /** Поисковый запрос */
   searchQuery: string;
   /** Функция изменения запроса */
@@ -56,6 +60,7 @@ export function FiltersContainer(props: FiltersContainerProps): React.JSX.Elemen
       <SearchInput value={searchQuery} onChange={setSearchQuery} />
 
       <div className="users-filter-grid min-w-0">
+        {props.sourceControl}
         <StatusFilter value={filterActive} onChange={setFilterActive} />
         <PremiumFilter value={filterPremium} onChange={setFilterPremium} />
         <SortFilter
@@ -64,6 +69,7 @@ export function FiltersContainer(props: FiltersContainerProps): React.JSX.Elemen
           onChange={setSort}
         />
       </div>
+      {props.advancedControl}
     </div>
   );
 }

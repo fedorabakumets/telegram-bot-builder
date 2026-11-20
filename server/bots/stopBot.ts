@@ -130,9 +130,11 @@ export async function stopBot(projectId: number, tokenId: number, options?: { /*
     const processKey = `${projectId}_${tokenId}`;
     const botProcess = botProcesses.get(processKey);
 
-    /** Сохранённый режим бота определяет снятие webhook независимо от общего адреса API. */
-    const tokenRecord = await storage.getBotToken(tokenId);
-    if (tokenRecord?.launchMode === 'webhook') {
+    /** Снимаем webhook текущего экземпляра, даже если уже выбран polling для следующего запуска. */
+    const [tokenRecord, instance] = await Promise.all([
+      storage.getBotToken(tokenId), storage.getBotInstanceByToken(tokenId),
+    ]);
+    if ((instance?.launchMode ?? tokenRecord?.launchMode) === 'webhook') {
       try {
         if (tokenRecord?.token) {
           const deleteUrl = `${getTelegramApiBaseUrl()}/bot${tokenRecord.token}/deleteWebhook`;

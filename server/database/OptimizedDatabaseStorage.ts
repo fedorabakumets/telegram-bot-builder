@@ -5,6 +5,7 @@
 import { type BotGroup, botGroups, type BotInstance, botInstances, type BotProject, botProjects, type BotTemplate, botTemplates, type BotToken, botTokens, type InsertBotGroup, type InsertBotInstance, type InsertBotProject, type InsertBotTemplate, type InsertBotToken, type InsertMediaFile, type MediaFile, mediaFiles } from "@shared/schema";
 import { and, desc, eq, ilike, inArray, or } from "drizzle-orm";
 import { DatabaseStorage } from "./DatabaseStorage";
+import { botSettingsToInheritOnCreate } from "@shared/bot-setting-inheritance-on-create";
 
 /**
  * Оптимизированная реализация хранилища с кэшированием
@@ -404,7 +405,16 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
 
     const [token] = await this.db
       .insert(botTokens)
-      .values(insertToken)
+      .values({
+        ...insertToken,
+        /** Явный способ получения обновлений при создании считается индивидуальным. */
+        inheritLaunchMode: insertToken.inheritLaunchMode ?? (insertToken.launchMode == null),
+        /** Явные параметры автоперезапуска остаются настройками конкретного бота. */
+        inheritAutoRestart: insertToken.inheritAutoRestart ?? (insertToken.autoRestart == null),
+        inheritMaxRestartAttempts: insertToken.inheritMaxRestartAttempts ?? (insertToken.maxRestartAttempts == null),
+        /** Остальные общие настройки наследуются, если при создании не заданы явно. */
+        inheritBotSettings: botSettingsToInheritOnCreate(insertToken, insertToken.inheritBotSettings),
+      })
       .returning();
     return token;
   }

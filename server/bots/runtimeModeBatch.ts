@@ -32,27 +32,32 @@ interface RuntimeVariable {
  * @param launchMode - Сохранённый способ получения обновлений.
  * @param inheritedMode - Режим общего окружения при удалении индивидуального.
  * @param tokenId - Идентификатор для списка пробного включения общего режима.
+ * @param defaultLaunchMode - Режим проекта для команды возврата к наследованию.
+ * @param projectSleepMode - Настройка обработчика проекта.
+ * @param inheritSleepMode - Текущий источник настройки обработчика.
  * @returns Признак изменения настройки выполнения.
  */
 export function validateRuntimeModeBatch(
   changes: RuntimeModeChange[], variables: RuntimeVariable[],
-  launchMode: string | null | undefined, inheritedMode?: string, tokenId?: number,
+  launchMode: string | null | undefined, inheritedMode?: string, tokenId?: number, defaultLaunchMode = 'polling',
+  projectSleepMode?: string | null, inheritSleepMode?: boolean,
 ): boolean {
-  inheritedMode ??= resolveRuntimeModeSettings([], launchMode, process.env, tokenId).mode;
+  inheritedMode ??= resolveRuntimeModeSettings([], launchMode, process.env, tokenId, projectSleepMode, true).mode;
   let finalLaunch = launchMode || 'polling';
   /** Последняя сохранённая настройка сохраняет приоритет при наличии дубликатов. */
   const ownModes = variables.filter(row => row.key === 'BOT_POLLING_MODE');
-  let mode = ownModes[ownModes.length - 1]?.value ?? inheritedMode;
+  let mode = inheritSleepMode ? inheritedMode : ownModes[ownModes.length - 1]?.value
+    ?? resolveRuntimeModeSettings([], launchMode, process.env, tokenId).mode;
   let touched = false;
   let launchTouched = false;
   for (const change of changes) {
     const row = change.id ? variables.find(item => item.id === change.id) : undefined;
     if (change.id && !row) throw Object.assign(new Error('Переменная не принадлежит этому боту'), { status: 400 });
     if (change.key === 'LAUNCH_MODE' && change.action === 'update') {
-      if (!['polling', 'webhook'].includes(change.value || '')) {
+      if (!['inherit', 'polling', 'webhook'].includes(change.value || '')) {
         throw Object.assign(new Error('Неизвестный способ получения обновлений'), { status: 400 });
       }
-      finalLaunch = change.value!;
+      finalLaunch = change.value === 'inherit' ? defaultLaunchMode : change.value!;
       launchTouched = true;
     }
     const key = change.key || row?.key;
@@ -67,7 +72,7 @@ export function validateRuntimeModeBatch(
     if (!['create', 'update', 'delete'].includes(change.action)) {
       throw Object.assign(new Error('Неизвестное действие настройки режима'), { status: 400 });
     }
-    mode = change.action === 'delete' ? inheritedMode : parseRuntimeMode(change.value);
+    mode = change.action === 'delete' || change.value === 'inherit' ? inheritedMode : parseRuntimeMode(change.value);
     touched = true;
   }
   if (touched || launchTouched) validateRuntimeMode(parseRuntimeMode(mode), finalLaunch);

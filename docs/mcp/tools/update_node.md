@@ -9,6 +9,7 @@
 
 ```json
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "project_json": {
@@ -18,6 +19,9 @@
         },
         {
           "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
           "additionalProperties": {}
         }
       ]
@@ -114,8 +118,7 @@
           "required": [
             "x",
             "y"
-          ],
-          "additionalProperties": false
+          ]
         },
         "data": {
           "type": "object",
@@ -303,7 +306,7 @@
                 "required": [
                   "mode"
                 ],
-                "additionalProperties": true
+                "additionalProperties": {}
               }
             },
             "timezone": {
@@ -340,13 +343,13 @@
               "type": "string"
             },
             "keyboardType": {
+              "default": "none",
               "type": "string",
               "enum": [
                 "reply",
                 "inline",
                 "none"
-              ],
-              "default": "none"
+              ]
             },
             "keyboardNodeId": {
               "type": "string"
@@ -383,6 +386,7 @@
                     "type": "string"
                   },
                   "action": {
+                    "default": "goto",
                     "type": "string",
                     "enum": [
                       "goto",
@@ -397,8 +401,7 @@
                       "web_app",
                       "request_managed_bot",
                       "pay"
-                    ],
-                    "default": "goto"
+                    ]
                   },
                   "copyText": {
                     "type": "string"
@@ -419,21 +422,21 @@
                     "type": "boolean"
                   },
                   "buttonType": {
+                    "default": "normal",
                     "type": "string",
                     "enum": [
                       "normal",
                       "option",
                       "complete"
-                    ],
-                    "default": "normal"
+                    ]
                   },
                   "skipDataCollection": {
-                    "type": "boolean",
-                    "default": false
+                    "default": false,
+                    "type": "boolean"
                   },
                   "hideAfterClick": {
-                    "type": "boolean",
-                    "default": false
+                    "default": false,
+                    "type": "boolean"
                   },
                   "customCallbackData": {
                     "type": "string"
@@ -459,68 +462,67 @@
                 "required": [
                   "id",
                   "text"
-                ],
-                "additionalProperties": false
-              },
-              "default": []
+                ]
+              }
             },
             "shuffleButtons": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "enableDynamicButtons": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "dynamicButtons": {
               "type": "object",
               "properties": {
                 "sourceVariable": {
-                  "type": "string",
-                  "default": ""
+                  "default": "",
+                  "type": "string"
                 },
                 "arrayPath": {
-                  "type": "string",
-                  "default": ""
+                  "default": "",
+                  "type": "string"
                 },
                 "textTemplate": {
-                  "type": "string",
-                  "default": ""
+                  "default": "",
+                  "type": "string"
                 },
                 "callbackTemplate": {
-                  "type": "string",
-                  "default": ""
+                  "default": "",
+                  "type": "string"
                 },
                 "styleMode": {
+                  "default": "none",
                   "type": "string",
                   "enum": [
                     "field",
                     "template",
                     "none"
-                  ],
-                  "default": "none"
+                  ]
                 },
                 "styleField": {
-                  "type": "string",
-                  "default": ""
+                  "default": "",
+                  "type": "string"
                 },
                 "styleTemplate": {
-                  "type": "string",
-                  "default": ""
+                  "default": "",
+                  "type": "string"
                 },
                 "columns": {
+                  "default": 2,
                   "type": "number",
                   "minimum": 1,
-                  "maximum": 6,
-                  "default": 2
+                  "maximum": 6
                 }
               },
-              "additionalProperties": true
+              "additionalProperties": {}
             },
             "keyboardLayout": {
               "type": "object",
               "properties": {
                 "rows": {
+                  "default": [],
                   "type": "array",
                   "items": {
                     "type": "object",
@@ -534,80 +536,77 @@
                     },
                     "required": [
                       "buttonIds"
-                    ],
-                    "additionalProperties": false
-                  },
-                  "default": []
+                    ]
+                  }
                 },
                 "columns": {
+                  "default": 2,
                   "type": "number",
                   "minimum": 1,
-                  "maximum": 6,
-                  "default": 2
+                  "maximum": 6
                 },
                 "autoLayout": {
-                  "type": "boolean",
-                  "default": true
+                  "default": true,
+                  "type": "boolean"
                 }
-              },
-              "additionalProperties": false
+              }
             },
             "oneTimeKeyboard": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "resizeKeyboard": {
-              "type": "boolean",
-              "default": true
+              "default": true,
+              "type": "boolean"
             },
             "markdown": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "formatMode": {
+              "default": "none",
               "type": "string",
               "enum": [
                 "html",
                 "markdown",
                 "none"
-              ],
-              "default": "none"
+              ]
             },
             "disableLinkPreview": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "synonyms": {
+              "default": [],
               "type": "array",
               "items": {
                 "type": "string"
-              },
-              "default": []
+              }
             },
             "matchMode": {
+              "default": "exact",
               "type": "string",
               "enum": [
                 "exact",
                 "contains",
                 "fuzzy"
-              ],
-              "default": "exact"
+              ]
             },
             "adminOnly": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "requiresAuth": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "showInMenu": {
-              "type": "boolean",
-              "default": true
+              "default": true,
+              "type": "boolean"
             },
             "saveCommandArgsTo": {
-              "type": "string",
-              "default": ""
+              "default": "",
+              "type": "string"
             },
             "commandTimeout": {
               "type": "number"
@@ -619,11 +618,11 @@
               "type": "number"
             },
             "customParameters": {
+              "default": [],
               "type": "array",
               "items": {
                 "type": "string"
-              },
-              "default": []
+              }
             },
             "targetMessageId": {
               "type": "string"
@@ -632,6 +631,7 @@
               "type": "string"
             },
             "messageIdSource": {
+              "default": "last_message",
               "type": "string",
               "enum": [
                 "manual",
@@ -644,8 +644,7 @@
                 "last_n",
                 "custom",
                 "last"
-              ],
-              "default": "last_message"
+              ]
             },
             "messageIdManual": {
               "type": "string"
@@ -654,12 +653,12 @@
               "type": "string"
             },
             "chatIdSource": {
+              "default": "current_chat",
               "type": "string",
               "enum": [
                 "current_chat",
                 "custom"
-              ],
-              "default": "current_chat"
+              ]
             },
             "chatIdManual": {
               "type": "string"
@@ -668,21 +667,21 @@
               "type": "boolean"
             },
             "bulkDelete": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "bulkMessageIdsVariable": {
               "type": "string"
             },
             "sourceMessageIdSource": {
+              "default": "current_message",
               "type": "string",
               "enum": [
                 "current_message",
                 "last_message",
                 "manual",
                 "variable"
-              ],
-              "default": "current_message"
+              ]
             },
             "sourceMessageNodeId": {
               "type": "string"
@@ -694,29 +693,30 @@
               "type": "string"
             },
             "disableNotification": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "hideAuthor": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "targetChatId": {
               "type": "string"
             },
             "targetChatIdSource": {
+              "default": "manual",
               "type": "string",
               "enum": [
                 "manual",
                 "variable",
                 "admin_ids"
-              ],
-              "default": "manual"
+              ]
             },
             "targetChatVariableName": {
               "type": "string"
             },
             "targetChatTargets": {
+              "default": [],
               "type": "array",
               "items": {
                 "type": "object",
@@ -725,13 +725,13 @@
                     "type": "string"
                   },
                   "targetChatIdSource": {
+                    "default": "manual",
                     "type": "string",
                     "enum": [
                       "manual",
                       "variable",
                       "admin_ids"
-                    ],
-                    "default": "manual"
+                    ]
                   },
                   "targetChatId": {
                     "type": "string"
@@ -752,10 +752,8 @@
                 },
                 "required": [
                   "id"
-                ],
-                "additionalProperties": false
-              },
-              "default": []
+                ]
+              }
             },
             "targetThreadId": {
               "type": "string"
@@ -774,6 +772,7 @@
               "type": "string"
             },
             "userIdSource": {
+              "default": "last_message",
               "type": "string",
               "enum": [
                 "manual",
@@ -782,8 +781,7 @@
                 "current_user",
                 "reply_user",
                 "custom"
-              ],
-              "default": "last_message"
+              ]
             },
             "userIdManual": {
               "type": "string"
@@ -825,14 +823,14 @@
               "type": "string"
             },
             "mapService": {
+              "default": "custom",
               "type": "string",
               "enum": [
                 "yandex",
                 "google",
                 "2gis",
                 "custom"
-              ],
-              "default": "custom"
+              ]
             },
             "yandexMapUrl": {
               "type": "string"
@@ -844,18 +842,18 @@
               "type": "string"
             },
             "mapZoom": {
+              "default": 15,
               "type": "number",
               "minimum": 1,
-              "maximum": 20,
-              "default": 15
+              "maximum": 20
             },
             "showDirections": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "generateMapPreview": {
-              "type": "boolean",
-              "default": true
+              "default": true,
+              "type": "boolean"
             },
             "phoneNumber": {
               "type": "string"
@@ -876,19 +874,19 @@
               "type": "string"
             },
             "options": {
+              "default": [],
               "type": "array",
               "items": {
                 "type": "string"
-              },
-              "default": []
+              }
             },
             "allowsMultipleAnswers": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "anonymousVoting": {
-              "type": "boolean",
-              "default": true
+              "default": true,
+              "type": "boolean"
             },
             "emoji": {
               "type": "string"
@@ -912,6 +910,7 @@
               "type": "string"
             },
             "inputType": {
+              "default": "text",
               "type": "string",
               "enum": [
                 "text",
@@ -925,18 +924,18 @@
                 "location",
                 "contact",
                 "any"
-              ],
-              "default": "text"
+              ]
             },
             "responseType": {
+              "default": "text",
               "type": "string",
               "enum": [
                 "text",
                 "buttons"
-              ],
-              "default": "text"
+              ]
             },
             "responseOptions": {
+              "default": [],
               "type": "array",
               "items": {
                 "type": "object",
@@ -951,13 +950,13 @@
                     "type": "string"
                   },
                   "action": {
+                    "default": "goto",
                     "type": "string",
                     "enum": [
                       "goto",
                       "command",
                       "url"
-                    ],
-                    "default": "goto"
+                    ]
                   },
                   "target": {
                     "type": "string"
@@ -969,14 +968,12 @@
                 "required": [
                   "id",
                   "text"
-                ],
-                "additionalProperties": false
-              },
-              "default": []
+                ]
+              }
             },
             "allowMultipleSelection": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "multiSelectVariable": {
               "type": "string"
@@ -997,8 +994,8 @@
               "type": "string"
             },
             "inputRequired": {
-              "type": "boolean",
-              "default": true
+              "default": true,
+              "type": "boolean"
             },
             "inputTimeout": {
               "type": "number"
@@ -1013,8 +1010,8 @@
               "type": "string"
             },
             "enableConditionalMessages": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "conditionalMessages": {
               "type": "array",
@@ -1025,6 +1022,7 @@
                     "type": "string"
                   },
                   "condition": {
+                    "default": "user_data_exists",
                     "type": "string",
                     "enum": [
                       "user_data_exists",
@@ -1033,26 +1031,25 @@
                       "user_data_contains",
                       "first_time",
                       "returning_user"
-                    ],
-                    "default": "user_data_exists"
+                    ]
                   },
                   "variableName": {
                     "type": "string"
                   },
                   "variableNames": {
+                    "default": [],
                     "type": "array",
                     "items": {
                       "type": "string"
-                    },
-                    "default": []
+                    }
                   },
                   "logicOperator": {
+                    "default": "AND",
                     "type": "string",
                     "enum": [
                       "AND",
                       "OR"
-                    ],
-                    "default": "AND"
+                    ]
                   },
                   "expectedValue": {
                     "type": "string"
@@ -1061,61 +1058,145 @@
                     "type": "string"
                   },
                   "formatMode": {
+                    "default": "text",
                     "type": "string",
                     "enum": [
                       "text",
                       "markdown",
                       "html"
-                    ],
-                    "default": "text"
+                    ]
                   },
                   "keyboardType": {
+                    "default": "none",
                     "type": "string",
                     "enum": [
                       "reply",
                       "inline",
                       "none"
-                    ],
-                    "default": "none"
+                    ]
                   },
                   "buttons": {
                     "type": "array",
                     "items": {
-                      "$ref": "#/properties/patch/properties/data/properties/buttons/items"
-                    },
-                    "default": []
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "text": {
+                          "type": "string"
+                        },
+                        "action": {
+                          "default": "goto",
+                          "type": "string",
+                          "enum": [
+                            "goto",
+                            "command",
+                            "url",
+                            "contact",
+                            "location",
+                            "selection",
+                            "complete",
+                            "default",
+                            "copy_text",
+                            "web_app",
+                            "request_managed_bot",
+                            "pay"
+                          ]
+                        },
+                        "copyText": {
+                          "type": "string"
+                        },
+                        "webAppUrl": {
+                          "type": "string"
+                        },
+                        "target": {
+                          "type": "string"
+                        },
+                        "url": {
+                          "type": "string"
+                        },
+                        "requestContact": {
+                          "type": "boolean"
+                        },
+                        "requestLocation": {
+                          "type": "boolean"
+                        },
+                        "buttonType": {
+                          "default": "normal",
+                          "type": "string",
+                          "enum": [
+                            "normal",
+                            "option",
+                            "complete"
+                          ]
+                        },
+                        "skipDataCollection": {
+                          "default": false,
+                          "type": "boolean"
+                        },
+                        "hideAfterClick": {
+                          "default": false,
+                          "type": "boolean"
+                        },
+                        "customCallbackData": {
+                          "type": "string"
+                        },
+                        "style": {
+                          "type": "string",
+                          "enum": [
+                            "primary",
+                            "success",
+                            "danger"
+                          ]
+                        },
+                        "suggestedBotName": {
+                          "type": "string"
+                        },
+                        "suggestedBotUsername": {
+                          "type": "string"
+                        },
+                        "selectionGroup": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "text"
+                      ]
+                    }
                   },
                   "resizeKeyboard": {
-                    "type": "boolean",
-                    "default": true
+                    "default": true,
+                    "type": "boolean"
                   },
                   "oneTimeKeyboard": {
-                    "type": "boolean",
-                    "default": false
+                    "default": false,
+                    "type": "boolean"
                   },
                   "collectUserInput": {
-                    "type": "boolean",
-                    "default": false
+                    "default": false,
+                    "type": "boolean"
                   },
                   "enableTextInput": {
-                    "type": "boolean",
-                    "default": false
+                    "default": false,
+                    "type": "boolean"
                   },
                   "enablePhotoInput": {
-                    "type": "boolean",
-                    "default": false
+                    "default": false,
+                    "type": "boolean"
                   },
                   "enableVideoInput": {
-                    "type": "boolean",
-                    "default": false
+                    "default": false,
+                    "type": "boolean"
                   },
                   "enableAudioInput": {
-                    "type": "boolean",
-                    "default": false
+                    "default": false,
+                    "type": "boolean"
                   },
                   "enableDocumentInput": {
-                    "type": "boolean",
-                    "default": false
+                    "default": false,
+                    "type": "boolean"
                   },
                   "inputVariable": {
                     "type": "string"
@@ -1133,8 +1214,8 @@
                     "type": "string"
                   },
                   "waitForTextInput": {
-                    "type": "boolean",
-                    "default": false
+                    "default": false,
+                    "type": "boolean"
                   },
                   "textInputVariable": {
                     "type": "string"
@@ -1143,47 +1224,45 @@
                     "type": "string"
                   },
                   "priority": {
-                    "type": "number",
-                    "default": 0
+                    "default": 0,
+                    "type": "number"
                   }
                 },
                 "required": [
                   "id",
                   "messageText"
-                ],
-                "additionalProperties": false
-              },
-              "default": []
+                ]
+              }
             },
             "fallbackMessage": {
               "type": "string"
             },
             "saveToDatabase": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "allowSkip": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "collectUserInput": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "inputTargetNodeId": {
               "type": "string"
             },
             "inputButtonType": {
+              "default": "inline",
               "type": "string",
               "enum": [
                 "inline",
                 "reply"
-              ],
-              "default": "inline"
+              ]
             },
             "enableAutoTransition": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "autoTransitionTo": {
               "type": "string"
@@ -1204,37 +1283,43 @@
               "type": "string"
             },
             "appendVariable": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "saveMediaMetadata": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "mediaMetadataSuffixes": {
+              "default": [],
               "type": "array",
               "items": {
                 "type": "string"
-              },
-              "default": []
+              }
             },
             "mediaMetadataCustomNames": {
+              "default": {},
               "type": "object",
-              "additionalProperties": {
+              "propertyNames": {
                 "type": "string"
               },
-              "default": {}
+              "additionalProperties": {
+                "type": "string"
+              }
             },
             "variableFilters": {
+              "default": {},
               "type": "object",
-              "additionalProperties": {
+              "propertyNames": {
                 "type": "string"
               },
-              "default": {}
+              "additionalProperties": {
+                "type": "string"
+              }
             },
             "enableUserActions": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "actionTrigger": {
               "type": "string",
@@ -1265,8 +1350,8 @@
               "type": "string"
             },
             "silentAction": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "mimeType": {
               "type": "string"
@@ -1338,48 +1423,48 @@
               "type": "string"
             },
             "canChangeInfo": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "canDeleteMessages": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "canBanUsers": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "canInviteUsers": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "canPinMessages": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "canAddAdmins": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "canRestrictMembers": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "canPromoteMembers": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "canManageVideoChats": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "canManageTopics": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "isAnonymous": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "canManageChat": {
               "type": "boolean"
@@ -1400,8 +1485,8 @@
               "type": "boolean"
             },
             "canSendMessages": {
-              "type": "boolean",
-              "default": true
+              "default": true,
+              "type": "boolean"
             },
             "canSendAudios": {
               "type": "boolean"
@@ -1425,28 +1510,28 @@
               "type": "boolean"
             },
             "canSendPolls": {
-              "type": "boolean",
-              "default": true
+              "default": true,
+              "type": "boolean"
             },
             "canSendOtherMessages": {
-              "type": "boolean",
-              "default": true
+              "default": true,
+              "type": "boolean"
             },
             "canAddWebPagePreviews": {
-              "type": "boolean",
-              "default": true
+              "default": true,
+              "type": "boolean"
             },
             "canChangeGroupInfo": {
-              "type": "boolean",
-              "default": true
+              "default": true,
+              "type": "boolean"
             },
             "canInviteUsers2": {
-              "type": "boolean",
-              "default": true
+              "default": true,
+              "type": "boolean"
             },
             "canPinMessages2": {
-              "type": "boolean",
-              "default": true
+              "default": true,
+              "type": "boolean"
             },
             "untilDate": {
               "type": "number"
@@ -1455,76 +1540,76 @@
               "type": "string"
             },
             "adminUserIdSource": {
+              "default": "last_message",
               "type": "string",
               "enum": [
                 "manual",
                 "variable",
                 "last_message"
-              ],
-              "default": "last_message"
+              ]
             },
             "adminUserVariableName": {
               "type": "string"
             },
             "can_manage_chat": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "can_post_messages": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "can_edit_messages": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "can_delete_messages": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "can_post_stories": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "can_edit_stories": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "can_delete_stories": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "can_manage_video_chats": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "can_restrict_members": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "can_promote_members": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "can_change_info": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "can_invite_users": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "can_pin_messages": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "can_manage_topics": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "is_anonymous": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "can_manage_direct_messages": {
               "type": "boolean"
@@ -1539,23 +1624,23 @@
               "type": "string"
             },
             "adminChatIdSource": {
+              "default": "current_chat",
               "type": "string",
               "enum": [
                 "manual",
                 "variable",
                 "current_chat"
-              ],
-              "default": "current_chat"
+              ]
             },
             "adminChatVariableName": {
               "type": "string"
             },
             "attachedMedia": {
+              "default": [],
               "type": "array",
               "items": {
                 "type": "string"
-              },
-              "default": []
+              }
             },
             "sendAsGifUrls": {
               "type": "array",
@@ -1573,23 +1658,23 @@
               "type": "boolean"
             },
             "broadcastApiType": {
+              "default": "bot",
               "type": "string",
               "enum": [
                 "bot",
                 "client"
-              ],
-              "default": "bot"
+              ]
             },
             "broadcastTargetNode": {
               "type": "string"
             },
             "enableBroadcast": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "enableConfirmation": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "confirmationText": {
               "type": "string"
@@ -1601,27 +1686,27 @@
               "type": "string"
             },
             "sessionName": {
-              "type": "string",
-              "default": "user_session"
+              "default": "user_session",
+              "type": "string"
             },
             "sessionCreated": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "textSynonyms": {
+              "default": [],
               "type": "array",
               "items": {
                 "type": "string"
-              },
-              "default": []
+              }
             },
             "textMatchType": {
+              "default": "exact",
               "type": "string",
               "enum": [
                 "exact",
                 "contains"
-              ],
-              "default": "exact"
+              ]
             },
             "variable": {
               "type": "string"
@@ -1630,12 +1715,12 @@
               "type": "string"
             },
             "forumChatIdSource": {
+              "default": "manual",
               "type": "string",
               "enum": [
                 "manual",
                 "variable"
-              ],
-              "default": "manual"
+              ]
             },
             "forumChatVariableName": {
               "type": "string"
@@ -1671,17 +1756,17 @@
               "type": "string"
             },
             "skipIfExists": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "imtChatTypeFilter": {
+              "default": "any",
               "type": "string",
               "enum": [
                 "any",
                 "private",
                 "group"
-              ],
-              "default": "any"
+              ]
             },
             "imtGroupChatId": {
               "type": "string"
@@ -1694,8 +1779,8 @@
               ]
             },
             "imtStopOnFlag": {
-              "type": "boolean",
-              "default": true
+              "default": true,
+              "type": "boolean"
             },
             "groupChatId": {
               "type": "string"
@@ -1717,13 +1802,13 @@
               "type": "string"
             },
             "memberEventType": {
+              "default": "join",
               "type": "string",
               "enum": [
                 "join",
                 "leave",
                 "both"
-              ],
-              "default": "join"
+              ]
             },
             "saveJoinedUserIdTo": {
               "type": "string"
@@ -1738,6 +1823,7 @@
               "type": "string"
             },
             "branches": {
+              "default": [],
               "type": "array",
               "items": {
                 "type": "object",
@@ -1746,8 +1832,8 @@
                     "type": "string"
                   },
                   "label": {
-                    "type": "string",
-                    "default": ""
+                    "default": "",
+                    "type": "string"
                   },
                   "operator": {
                     "type": "string",
@@ -1802,12 +1888,11 @@
                   "id",
                   "operator",
                   "value"
-                ],
-                "additionalProperties": false
-              },
-              "default": []
+                ]
+              }
             },
             "parallelBranches": {
+              "default": [],
               "type": "array",
               "items": {
                 "type": "object",
@@ -1816,8 +1901,8 @@
                     "type": "string"
                   },
                   "label": {
-                    "type": "string",
-                    "default": ""
+                    "default": "",
+                    "type": "string"
                   },
                   "target": {
                     "type": "string"
@@ -1828,22 +1913,20 @@
                 },
                 "required": [
                   "id"
-                ],
-                "additionalProperties": false
-              },
-              "default": []
+                ]
+              }
             },
             "maxConcurrent": {
-              "type": "number",
-              "default": 5
+              "default": 5,
+              "type": "number"
             },
             "awaitAll": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "skipIfRunning": {
-              "type": "boolean",
-              "default": true
+              "default": true,
+              "type": "boolean"
             },
             "counterKey": {
               "type": "string"
@@ -1852,6 +1935,7 @@
               "type": "string"
             },
             "messageSendRecipients": {
+              "default": [],
               "type": "array",
               "items": {
                 "type": "object",
@@ -1860,13 +1944,13 @@
                     "type": "string"
                   },
                   "type": {
+                    "default": "user",
                     "type": "string",
                     "enum": [
                       "user",
                       "chat_id",
                       "admin_ids"
-                    ],
-                    "default": "user"
+                    ]
                   },
                   "chatId": {
                     "type": "string"
@@ -1875,8 +1959,8 @@
                     "type": "string"
                   },
                   "isGroup": {
-                    "type": "boolean",
-                    "default": false
+                    "default": false,
+                    "type": "boolean"
                   },
                   "botToken": {
                     "type": "string"
@@ -1884,10 +1968,8 @@
                 },
                 "required": [
                   "id"
-                ],
-                "additionalProperties": false
-              },
-              "default": []
+                ]
+              }
             },
             "messageSendTarget": {
               "type": "string"
@@ -1902,6 +1984,7 @@
               "type": "string"
             },
             "httpRequestMethod": {
+              "default": "GET",
               "type": "string",
               "enum": [
                 "GET",
@@ -1909,8 +1992,7 @@
                 "PUT",
                 "PATCH",
                 "DELETE"
-              ],
-              "default": "GET"
+              ]
             },
             "httpRequestHeaders": {
               "type": "string"
@@ -1919,8 +2001,8 @@
               "type": "string"
             },
             "httpRequestTimeout": {
-              "type": "number",
-              "default": 30
+              "default": 30,
+              "type": "number"
             },
             "httpRequestResponseVariable": {
               "type": "string"
@@ -1953,15 +2035,16 @@
               "type": "string"
             },
             "httpRequestBodyFormat": {
+              "default": "json",
               "type": "string",
               "enum": [
                 "json",
                 "form-urlencoded",
                 "raw"
-              ],
-              "default": "json"
+              ]
             },
             "httpRequestAuthType": {
+              "default": "none",
               "type": "string",
               "enum": [
                 "none",
@@ -1969,8 +2052,7 @@
                 "bearer",
                 "header",
                 "query"
-              ],
-              "default": "none"
+              ]
             },
             "httpRequestAuthBearerToken": {
               "type": "string"
@@ -1994,73 +2076,74 @@
               "type": "string"
             },
             "httpRequestResponseFormat": {
+              "default": "autodetect",
               "type": "string",
               "enum": [
                 "autodetect",
                 "json",
                 "text",
                 "file"
-              ],
-              "default": "autodetect"
+              ]
             },
             "httpRequestIgnoreHttpErrors": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "httpRequestIgnoreSsl": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "httpRequestFollowRedirects": {
-              "type": "boolean",
-              "default": true
+              "default": true,
+              "type": "boolean"
             },
             "httpRequestEnablePagination": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "httpRequestPaginationMode": {
+              "default": "interactive",
               "type": "string",
               "enum": [
                 "interactive",
                 "fetch_all"
-              ],
-              "default": "interactive"
+              ]
             },
             "httpRequestPaginationOffsetVar": {
               "type": "string"
             },
             "httpRequestPaginationTotalField": {
-              "type": "string",
-              "default": "count"
+              "default": "count",
+              "type": "string"
             },
             "httpRequestPaginationItemsField": {
-              "type": "string",
-              "default": "items"
+              "default": "items",
+              "type": "string"
             },
             "httpRequestPaginationLimit": {
-              "type": "number",
-              "default": 10
+              "default": 10,
+              "type": "number"
             },
             "httpRequestPaginationMaxPages": {
-              "type": "number",
-              "default": 20
+              "default": 20,
+              "type": "number"
             },
             "httpRequestBatchEnabled": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "httpRequestBatchSource": {
               "type": "string"
             },
             "httpRequestBatchItemVar": {
-              "type": "string",
-              "default": "item"
+              "default": "item",
+              "type": "string"
             },
             "httpRequestBatchResultVariable": {
               "type": "string"
             },
             "httpRequestBatchResultFields": {
+              "default": [],
               "type": "array",
               "items": {
                 "type": "object",
@@ -2075,21 +2158,22 @@
                 "required": [
                   "key",
                   "value"
-                ],
-                "additionalProperties": false
-              },
-              "default": []
+                ]
+              }
             },
             "attachedMediaThumbnails": {
+              "default": {},
               "type": "object",
-              "additionalProperties": {
+              "propertyNames": {
                 "type": "string"
               },
-              "default": {}
+              "additionalProperties": {
+                "type": "string"
+              }
             },
             "query": {
-              "type": "string",
-              "default": ""
+              "default": "",
+              "type": "string"
             },
             "connectionSource": {
               "type": "string",
@@ -2106,10 +2190,11 @@
               "type": "string"
             },
             "saveResultTo": {
-              "type": "string",
-              "default": ""
+              "default": "",
+              "type": "string"
             },
             "resultFormat": {
+              "default": "first_row",
               "type": "string",
               "enum": [
                 "json",
@@ -2120,14 +2205,14 @@
                 "scalar",
                 "count",
                 "random_row"
-              ],
-              "default": "first_row"
+              ]
             },
             "textTemplate": {
-              "type": "string",
-              "default": ""
+              "default": "",
+              "type": "string"
             },
             "assignments": {
+              "default": [],
               "type": "array",
               "items": {
                 "type": "object",
@@ -2142,6 +2227,7 @@
                     "type": "string"
                   },
                   "mode": {
+                    "default": "text",
                     "type": "string",
                     "enum": [
                       "text",
@@ -2167,18 +2253,18 @@
                       "trim",
                       "length",
                       "array_concat"
-                    ],
-                    "default": "text"
+                    ]
                   },
                   "lookupTable": {
-                    "type": "string",
-                    "default": ""
+                    "default": "",
+                    "type": "string"
                   },
                   "lookupField": {
-                    "type": "string",
-                    "default": ""
+                    "default": "",
+                    "type": "string"
                   },
                   "lookupWhere": {
+                    "default": [],
                     "type": "array",
                     "items": {
                       "type": "object",
@@ -2193,125 +2279,122 @@
                       "required": [
                         "field",
                         "value"
-                      ],
-                      "additionalProperties": false
-                    },
-                    "default": []
+                      ]
+                    }
                   },
                   "replaceWith": {
-                    "type": "string",
-                    "default": ""
+                    "default": "",
+                    "type": "string"
                   },
                   "pattern": {
-                    "type": "string",
-                    "default": ""
+                    "default": "",
+                    "type": "string"
                   },
                   "regexGroup": {
-                    "type": "string",
-                    "default": "0"
+                    "default": "0",
+                    "type": "string"
                   },
                   "maxValue": {
-                    "type": "string",
-                    "default": ""
+                    "default": "",
+                    "type": "string"
                   },
                   "separator": {
-                    "type": "string",
-                    "default": ""
+                    "default": "",
+                    "type": "string"
                   },
                   "jsonPath": {
-                    "type": "string",
-                    "default": ""
+                    "default": "",
+                    "type": "string"
                   },
                   "startIndex": {
-                    "type": "string",
-                    "default": "0"
+                    "default": "0",
+                    "type": "string"
                   },
                   "endIndex": {
-                    "type": "string",
-                    "default": ""
+                    "default": "",
+                    "type": "string"
                   },
                   "conditionVariable": {
-                    "type": "string",
-                    "default": ""
+                    "default": "",
+                    "type": "string"
                   },
                   "conditionOperator": {
-                    "type": "string",
-                    "default": "equals"
+                    "default": "equals",
+                    "type": "string"
                   },
                   "conditionValue": {
-                    "type": "string",
-                    "default": ""
+                    "default": "",
+                    "type": "string"
                   },
                   "trueValue": {
-                    "type": "string",
-                    "default": ""
+                    "default": "",
+                    "type": "string"
                   },
                   "falseValue": {
-                    "type": "string",
-                    "default": ""
+                    "default": "",
+                    "type": "string"
                   },
                   "concatWith": {
-                    "type": "string",
-                    "default": ""
+                    "default": "",
+                    "type": "string"
                   },
                   "skipIfEmpty": {
-                    "type": "string",
-                    "default": ""
+                    "default": "",
+                    "type": "string"
                   },
                   "persistToDb": {
-                    "type": "boolean",
-                    "default": true
+                    "default": true,
+                    "type": "boolean"
                   }
                 },
                 "required": [
                   "id",
                   "variable",
                   "value"
-                ],
-                "additionalProperties": false
-              },
-              "default": []
+                ]
+              }
             },
             "convertFileMode": {
+              "default": "toFile",
               "type": "string",
               "enum": [
                 "toFile"
-              ],
-              "default": "toFile"
+              ]
             },
             "convertFileInputVariable": {
-              "type": "string",
-              "default": ""
+              "default": "",
+              "type": "string"
             },
             "convertFileFormat": {
+              "default": "csv",
               "type": "string",
               "enum": [
                 "csv",
                 "json"
-              ],
-              "default": "csv"
+              ]
             },
             "convertFileFileName": {
-              "type": "string",
-              "default": "export_{date}.csv"
+              "default": "export_{date}.csv",
+              "type": "string"
             },
             "convertFileCsvDelimiter": {
-              "type": "string",
-              "default": ","
+              "default": ",",
+              "type": "string"
             },
             "convertFileIncludeHeaderRow": {
-              "type": "boolean",
-              "default": true
+              "default": true,
+              "type": "boolean"
             },
             "convertFileOutputVariable": {
-              "type": "string",
-              "default": ""
+              "default": "",
+              "type": "string"
             },
             "code": {
-              "type": "string",
-              "default": ""
+              "default": "",
+              "type": "string"
             },
             "apiMethod": {
+              "default": "POST",
               "type": "string",
               "enum": [
                 "GET",
@@ -2319,51 +2402,51 @@
                 "PUT",
                 "PATCH",
                 "DELETE"
-              ],
-              "default": "POST"
+              ]
             },
             "apiPath": {
-              "type": "string",
-              "default": ""
+              "default": "",
+              "type": "string"
             },
             "apiSecretToken": {
-              "type": "string",
-              "default": ""
+              "default": "",
+              "type": "string"
             },
             "apiSaveBodyTo": {
-              "type": "string",
-              "default": ""
+              "default": "",
+              "type": "string"
             },
             "apiSaveQueryTo": {
-              "type": "string",
-              "default": ""
+              "default": "",
+              "type": "string"
             },
             "apiSaveHeadersTo": {
-              "type": "string",
-              "default": ""
+              "default": "",
+              "type": "string"
             },
             "apiParseJson": {
-              "type": "boolean",
-              "default": true
+              "default": true,
+              "type": "boolean"
             },
             "apiResponseStatusCode": {
-              "type": "number",
-              "default": 200
+              "default": 200,
+              "type": "number"
             },
             "apiResponseBody": {
-              "type": "string",
-              "default": "{\"ok\":true}"
+              "default": "{\"ok\":true}",
+              "type": "string"
             },
             "apiResponseContentType": {
+              "default": "application/json",
               "type": "string",
               "enum": [
                 "application/json",
                 "text/plain",
                 "text/html"
-              ],
-              "default": "application/json"
+              ]
             },
             "apiResponseHeaders": {
+              "default": [],
               "type": "array",
               "items": {
                 "type": "object",
@@ -2378,24 +2461,23 @@
                 "required": [
                   "key",
                   "value"
-                ],
-                "additionalProperties": false
-              },
-              "default": []
+                ]
+              }
             },
             "invoiceTitle": {
-              "type": "string",
-              "default": ""
+              "default": "",
+              "type": "string"
             },
             "invoiceDescription": {
-              "type": "string",
-              "default": ""
+              "default": "",
+              "type": "string"
             },
             "invoiceAmount": {
-              "type": "string",
-              "default": "1"
+              "default": "1",
+              "type": "string"
             },
             "invoicePrices": {
+              "default": [],
               "type": "array",
               "items": {
                 "type": "object",
@@ -2414,278 +2496,274 @@
                   "id",
                   "label",
                   "amount"
-                ],
-                "additionalProperties": false
-              },
-              "default": []
+                ]
+              }
             },
             "invoiceCurrency": {
-              "type": "string",
-              "default": "XTR"
+              "default": "XTR",
+              "type": "string"
             },
             "invoiceProviderSource": {
-              "type": "string",
-              "default": "inline"
+              "default": "inline",
+              "type": "string"
             },
             "invoiceProviderToken": {
-              "type": "string",
-              "default": ""
+              "default": "",
+              "type": "string"
             },
             "invoiceProviderTokenEnv": {
-              "type": "string",
-              "default": "PAYMENT_PROVIDER_TOKEN"
+              "default": "PAYMENT_PROVIDER_TOKEN",
+              "type": "string"
             },
             "invoiceNeedName": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "invoiceNeedEmail": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "invoiceNeedPhone": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "invoiceNeedShipping": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "invoiceIsFlexible": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "invoiceSendPhoneToProvider": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "invoiceSendEmailToProvider": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "invoiceProtectContent": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "invoiceMaxTipAmount": {
-              "type": "string",
-              "default": ""
+              "default": "",
+              "type": "string"
             },
             "invoiceSuggestedTipAmounts": {
-              "type": "string",
-              "default": ""
+              "default": "",
+              "type": "string"
             },
             "invoiceProviderData": {
-              "type": "string",
-              "default": ""
+              "default": "",
+              "type": "string"
             },
             "invoiceStartParameter": {
-              "type": "string",
-              "default": ""
+              "default": "",
+              "type": "string"
             },
             "invoiceSubscription": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "invoicePhotoUrl": {
-              "type": "string",
-              "default": ""
+              "default": "",
+              "type": "string"
             },
             "invoicePhotoSize": {
-              "type": "string",
-              "default": ""
+              "default": "",
+              "type": "string"
             },
             "invoicePhotoWidth": {
-              "type": "string",
-              "default": ""
+              "default": "",
+              "type": "string"
             },
             "invoicePhotoHeight": {
-              "type": "string",
-              "default": ""
+              "default": "",
+              "type": "string"
             },
             "invoiceMessageThreadId": {
-              "type": "string",
-              "default": ""
+              "default": "",
+              "type": "string"
             },
             "invoiceDirectMessagesTopicId": {
-              "type": "string",
-              "default": ""
+              "default": "",
+              "type": "string"
             },
             "invoiceDisableNotification": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "invoiceReplyToMessageId": {
-              "type": "string",
-              "default": ""
+              "default": "",
+              "type": "string"
             },
             "invoiceMessageEffectId": {
-              "type": "string",
-              "default": ""
+              "default": "",
+              "type": "string"
             },
             "invoiceAllowPaidBroadcast": {
-              "type": "boolean",
-              "default": false
+              "default": false,
+              "type": "boolean"
             },
             "invoiceSuggestedPostParams": {
-              "type": "string",
-              "default": ""
+              "default": "",
+              "type": "string"
             },
             "invoicePayload": {
-              "type": "string",
-              "default": ""
+              "default": "",
+              "type": "string"
             },
             "savePaymentAmountTo": {
-              "type": "string",
-              "default": ""
+              "default": "",
+              "type": "string"
             },
             "savePaymentChargeIdTo": {
-              "type": "string",
-              "default": ""
+              "default": "",
+              "type": "string"
             },
             "saveOrderNameTo": {
-              "type": "string",
-              "default": ""
+              "default": "",
+              "type": "string"
             },
             "saveOrderEmailTo": {
-              "type": "string",
-              "default": ""
+              "default": "",
+              "type": "string"
             },
             "saveOrderPhoneTo": {
-              "type": "string",
-              "default": ""
+              "default": "",
+              "type": "string"
             },
             "saveInvoiceLinkTo": {
-              "type": "string",
-              "default": ""
+              "default": "",
+              "type": "string"
             },
             "afterPaymentTo": {
-              "type": "string",
-              "default": ""
+              "default": "",
+              "type": "string"
             },
             "preCheckoutMode": {
-              "type": "string",
-              "default": "always"
+              "default": "always",
+              "type": "string"
             },
             "preCheckoutVariable": {
-              "type": "string",
-              "default": ""
+              "default": "",
+              "type": "string"
             },
             "preCheckoutOperator": {
-              "type": "string",
-              "default": "filled"
+              "default": "filled",
+              "type": "string"
             },
             "preCheckoutValue": {
-              "type": "string",
-              "default": ""
+              "default": "",
+              "type": "string"
             },
             "preCheckoutValue2": {
-              "type": "string",
-              "default": ""
+              "default": "",
+              "type": "string"
             },
             "preCheckoutErrorMessage": {
-              "type": "string",
-              "default": ""
+              "default": "",
+              "type": "string"
             },
             "refundUserSource": {
-              "type": "string",
-              "default": "current_user"
+              "default": "current_user",
+              "type": "string"
             },
             "refundUserId": {
-              "type": "string",
-              "default": ""
+              "default": "",
+              "type": "string"
             },
             "refundChargeId": {
-              "type": "string",
-              "default": ""
+              "default": "",
+              "type": "string"
             },
             "refundMsgEmpty": {
-              "type": "string",
-              "default": "Пожалуйста, укажите код покупки: /back КОД"
+              "default": "Пожалуйста, укажите код покупки: /back КОД",
+              "type": "string"
             },
             "refundMsgNotFound": {
-              "type": "string",
-              "default": "Такой код покупки не найден. Проверьте данные и попробуйте снова."
+              "default": "Такой код покупки не найден. Проверьте данные и попробуйте снова.",
+              "type": "string"
             },
             "refundMsgAlreadyRefunded": {
-              "type": "string",
-              "default": "За эту покупку уже ранее был произведён возврат."
+              "default": "За эту покупку уже ранее был произведён возврат.",
+              "type": "string"
             },
             "refundEmptyTarget": {
-              "type": "string",
-              "default": ""
+              "default": "",
+              "type": "string"
             },
             "refundNotFoundTarget": {
-              "type": "string",
-              "default": ""
+              "default": "",
+              "type": "string"
             },
             "refundAlreadyRefundedTarget": {
-              "type": "string",
-              "default": ""
+              "default": "",
+              "type": "string"
             },
             "subscriptionUserSource": {
-              "type": "string",
-              "default": "current_user"
+              "default": "current_user",
+              "type": "string"
             },
             "subscriptionUserId": {
-              "type": "string",
-              "default": ""
+              "default": "",
+              "type": "string"
             },
             "subscriptionChargeId": {
-              "type": "string",
-              "default": ""
+              "default": "",
+              "type": "string"
             },
             "subscriptionAction": {
-              "type": "string",
-              "default": "cancel"
+              "default": "cancel",
+              "type": "string"
             },
             "subscriptionMsgEmpty": {
-              "type": "string",
-              "default": "Укажите код покупки подписки"
+              "default": "Укажите код покупки подписки",
+              "type": "string"
             },
             "subscriptionMsgError": {
-              "type": "string",
-              "default": "Не удалось изменить автопродление. Проверьте код покупки."
+              "default": "Не удалось изменить автопродление. Проверьте код покупки.",
+              "type": "string"
             },
             "subscriptionEmptyTarget": {
-              "type": "string",
-              "default": ""
+              "default": "",
+              "type": "string"
             },
             "subscriptionErrorTarget": {
-              "type": "string",
-              "default": ""
+              "default": "",
+              "type": "string"
             },
             "saveStarBalanceTo": {
-              "type": "string",
-              "default": "star_balance"
+              "default": "star_balance",
+              "type": "string"
             },
             "balanceMsgError": {
-              "type": "string",
-              "default": "Не удалось получить баланс звёзд"
+              "default": "Не удалось получить баланс звёзд",
+              "type": "string"
             },
             "balanceErrorTarget": {
-              "type": "string",
-              "default": ""
+              "default": "",
+              "type": "string"
             }
           },
-          "additionalProperties": true
+          "additionalProperties": {}
         }
       },
       "additionalProperties": false,
       "description": "Только изменяемые поля: position, data, type"
     },
     "sheet_id": {
-      "type": "string",
-      "description": "ID листа (иначе автопоиск по всем листам)"
+      "description": "ID листа (иначе автопоиск по всем листам)",
+      "type": "string"
     }
   },
   "required": [
     "project_json",
     "node_id",
     "patch"
-  ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  ]
 }
 ```
 
@@ -2713,6 +2791,7 @@
 
 ```json
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "data": {
@@ -2782,11 +2861,13 @@
             },
             "projectId": {
               "type": "integer",
-              "exclusiveMinimum": 0
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             },
             "revision": {
               "type": "integer",
-              "minimum": 0
+              "minimum": 0,
+              "maximum": 9007199254740991
             }
           },
           "required": [
@@ -2796,6 +2877,9 @@
         },
         "sideEffects": {
           "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
           "additionalProperties": {}
         }
       },
@@ -2812,10 +2896,10 @@
     }
   },
   "required": [
+    "data",
     "execution"
   ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  "additionalProperties": false
 }
 ```
 

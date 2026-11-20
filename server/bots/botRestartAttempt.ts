@@ -5,6 +5,8 @@ import { getBotStartRevision } from './botStartState';
 import { automaticBotStartAllowed } from './automaticBotStartAllowed';
 import { refuseInactiveBotStart } from './refuse-inactive-bot-start';
 import { isServerShuttingDown } from './serverShutdownState';
+import { getRestartCounter } from './botRestartManager';
+import { resolveStoredBotAutoRestart } from './resolveStoredBotAutoRestart';
 
 /** Токены, для которых уже запланирована или выполняется попытка. */
 const pending = new Set<number>();
@@ -63,15 +65,18 @@ export function queueBotRestart(attempt: BotRestartAttempt): void {
             (attempt.generation !== undefined && current?.desiredGeneration !== attempt.generation)) return;
         if (current?.status === 'running') return;
         const token = await storage.getBotToken(tokenId);
-        if (!token?.token || (!infrastructure && token.autoRestart !== 1) ||
+        if (!token?.token ||
             refuseInactiveBotStart(token.isActive, token.authorizationError)) return;
         if (!await automaticBotStartAllowed(projectId, tokenId)) return;
-        const final = await storage.getBotInstanceByToken(tokenId);
         const latestToken = await storage.getBotToken(tokenId);
+        if (!latestToken || latestToken.token !== token.token) return;
+        const { autoRestart, maxRestartAttempts } = await resolveStoredBotAutoRestart(projectId, latestToken);
+        if ((!infrastructure && !autoRestart) || (getRestartCounter(tokenId)?.attempts ?? 0) > maxRestartAttempts) return;
+        const final = await storage.getBotInstanceByToken(tokenId);
         // Ручное действие во время проверок БД отменяет уже подготовленную попытку.
         if (getBotStartRevision(tokenId) !== attempt.revision || isServerShuttingDown() ||
             final?.desiredStatus === 'stopped' || final?.status === 'running' ||
-            latestToken?.token !== token.token || refuseInactiveBotStart(latestToken?.isActive, latestToken?.authorizationError) ||
+            refuseInactiveBotStart(latestToken.isActive, latestToken.authorizationError) ||
             (infrastructure && final?.desiredStatus !== 'running') ||
             (attempt.generation !== undefined && final?.desiredGeneration !== attempt.generation)) return;
         const result = await startBotAfterStop(projectId, token.token, tokenId, false);

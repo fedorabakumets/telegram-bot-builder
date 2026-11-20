@@ -4,13 +4,14 @@
  */
 import { pool } from '../../database/db';
 import type { ChatAccessCheckJobView, ChatAccessCheckStatus } from '@shared/project-sync/project-event';
-
-const SELECT = `id AS "jobId", project_id AS "projectId", token_id AS "tokenId", status,
+const SELECT = `id AS "jobId", project_id AS "projectId", token_id AS "tokenId",
+  CASE WHEN status IN ('pending','running','cancelling') AND COALESCE(lease_until,created_at+interval '2 minutes')<now()
+    THEN 'failed' ELSE status END AS status,
   total_count AS "totalCount", processed_count AS "processedCount",
   available_count AS "availableCount", kicked_count AS "kickedCount",
   deleted_count AS "deletedCount", error_count AS "errorCount",
-  started_at AS "startedAt", finished_at AS "finishedAt"`;
-
+  started_at AS "startedAt", CASE WHEN status IN ('pending','running','cancelling') AND COALESCE(lease_until,created_at+interval '2 minutes')<now()
+    THEN COALESCE(lease_until,created_at+interval '2 minutes') ELSE finished_at END AS "finishedAt"`;
 /** Поля, которые очередь может обновлять. */
 export interface ChatAccessCheckJobPatch {
   /** Новый статус. */
@@ -29,14 +30,15 @@ export interface ChatAccessCheckJobPatch {
   errorCount?: number;
   /** Время завершения. */
   finishedAt?: Date | null;
+  /** Фактическое начало задачи, ожидавшей очередь всех ботов. */
+  startedAt?: Date | null;
+  /** Безопасная причина незавершённой проверки. */ failureReason?: string | null;
 }
-
 const COLUMNS: Record<keyof ChatAccessCheckJobPatch, string> = {
   status: 'status', totalCount: 'total_count', processedCount: 'processed_count',
   availableCount: 'available_count', kickedCount: 'kicked_count', deletedCount: 'deleted_count',
-  errorCount: 'error_count', finishedAt: 'finished_at',
+  errorCount: 'error_count', finishedAt: 'finished_at', startedAt: 'started_at', failureReason: 'failure_reason',
 };
-
 /**
  * Приводит строку БД к публичному виду без лишних полей.
  * @param row - Строка SELECT
@@ -53,7 +55,6 @@ export function mapChatAccessCheckJob(row: Record<string, unknown>): ChatAccessC
     startedAt: iso(row.startedAt), finishedAt: iso(row.finishedAt),
   };
 }
-
 /**
  * Создаёт running-задачу. null — уже есть активная (unique index).
  * @param projectId - Проект
@@ -65,19 +66,23 @@ export async function createRunningChatAccessCheckJob(
   projectId: number, tokenId: number, totalCount: number,
 ): Promise<ChatAccessCheckJobView | null> {
   try {
+    /** Старый процесс считается потерянным только после истечения аренды. */
+    await pool.query(`UPDATE chat_access_check_jobs SET status='failed',finished_at=now(),failure_reason='worker_interrupted'
+      WHERE project_id=$1 AND token_id=$2 AND status IN ('pending','running','cancelling')
+      AND COALESCE(lease_until,created_at+interval '2 minutes')<now()`, [projectId,tokenId]);
     const result = await pool.query(
       `INSERT INTO chat_access_check_jobs
-        (project_id, token_id, status, total_count, started_at)
-       VALUES ($1, $2, 'running', $3, now()) RETURNING ${SELECT}`,
+        (project_id, token_id, historical_token_id, token_name, token_username, project_name, status, total_count, started_at)
+       SELECT $1, id, id, COALESCE(bot_first_name,name), bot_username, (SELECT name FROM bot_projects WHERE id=$1), 'running', $3, now()
+       FROM bot_tokens WHERE project_id=$1 AND id=$2 RETURNING ${SELECT}`,
       [projectId, tokenId, totalCount],
     );
-    return mapChatAccessCheckJob(result.rows[0]);
+    return result.rows[0] ? mapChatAccessCheckJob(result.rows[0]) : null;
   } catch (error) {
     if ((error as { code?: string }).code === '23505') return null;
     throw error;
   }
 }
-
 /**
  * Активная задача или последняя завершённая для пары проект+токен.
  * @param projectId - Проект
@@ -126,7 +131,7 @@ export async function updateChatAccessCheckJob(jobId: number, patch: ChatAccessC
   if (!sets.length) return getChatAccessCheckJobUnscoped(jobId);
   values.push(jobId);
   const result = await pool.query(
-    `UPDATE chat_access_check_jobs SET ${sets.join(', ')} WHERE id = $${values.length} RETURNING ${SELECT}`,
+    `UPDATE chat_access_check_jobs SET ${sets.join(', ')} WHERE id = $${values.length} AND status IN ('pending','running','cancelling') RETURNING ${SELECT}`,
     values,
   );
   return result.rows[0] ? mapChatAccessCheckJob(result.rows[0]) : null;

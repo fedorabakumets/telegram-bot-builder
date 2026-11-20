@@ -18,11 +18,16 @@ import {
 import { TerminalLine } from './terminalTypes';
 import { buildTerminalLogPermalink } from './terminal-log-permalink';
 import { useToast } from '@/hooks/use-toast';
+import { TerminalLogContext } from './TerminalLogContext';
 
 /** Свойства компонента панели деталей строки */
 export interface TerminalLogDetailProps {
   /** Строка лога для отображения */
   line: TerminalLine | undefined;
+  /** Полный список загруженных строк для показа контекста. */
+  lines?: readonly TerminalLine[];
+  /** Открыть соседнюю строку. */
+  onSelectLine?: (id: string) => void;
   /** ID токена бота (для постоянной ссылки) */
   tokenId?: number;
   /** Закрыть панель */
@@ -76,17 +81,17 @@ function copyPermalink(line: TerminalLine, tokenId: number): Promise<void> {
  * @param props - Свойства компонента
  * @returns JSX элемент
  */
-export function TerminalLogDetail({ line, tokenId, onClose, onPrev, onNext, onScrollToLine }: TerminalLogDetailProps) {
+export function TerminalLogDetail({ line, lines, onSelectLine, tokenId, onClose, onPrev, onNext, onScrollToLine }: TerminalLogDetailProps) {
   const { toast } = useToast();
 
   if (!line) return null;
 
   return (
-    <div className="w-[380px] shrink-0 h-full bg-card border-l border-border flex flex-col overflow-hidden font-sans">
+    <aside aria-label="Детали лога" className="w-[380px] max-w-full shrink-0 h-full bg-card border-l border-border flex flex-col overflow-hidden font-sans">
       {/* Заголовок и сгруппированные действия */}
       <div className="flex h-11 shrink-0 items-center gap-2 border-b border-border bg-muted/20 px-3">
         <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
-          Детали лога
+          {line.type === 'stderr' ? 'Детали ошибки' : 'Детали лога'}
         </span>
         <div className="flex shrink-0 items-center divide-x divide-border/60 overflow-hidden rounded-md border border-border/60 bg-background">
           <Button variant="ghost" size="icon" className="h-7 w-7 rounded-none" onClick={onPrev} title="Предыдущая строка">
@@ -161,7 +166,10 @@ export function TerminalLogDetail({ line, tokenId, onClose, onPrev, onNext, onSc
           </span>
           <span className="h-px flex-1 bg-border/60" />
         </div>
-        <pre className="text-sm font-mono whitespace-pre-wrap break-all">{line.content}</pre>
+        <pre className="text-sm font-mono whitespace-pre-wrap break-words">{line.content}</pre>
+        {lines && onSelectLine && (
+          <TerminalLogContext lines={lines} selectedId={line.id} onSelectLine={onSelectLine} />
+        )}
       </div>
 
       {/* Атрибуты */}
@@ -193,6 +201,6 @@ export function TerminalLogDetail({ line, tokenId, onClose, onPrev, onNext, onSc
           </tbody>
         </table>
       </div>
-    </div>
+    </aside>
   );
 }

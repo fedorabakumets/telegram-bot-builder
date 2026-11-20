@@ -1,0 +1,66 @@
+/** @fileoverview Таблица, фильтры и спокойные состояния действий в стиле аналитики. */
+/** Таблица повторяет форму карточек аналитики и сохраняет читаемые строки. */
+.users-workspace .users-table-frame { width: 100%; border-radius: 12px; border-color: var(--border); background: var(--card); }
+.users-workspace .users-table-frame th { height: 40px; padding-block: 8px; font-size: 12px; line-height: 16px; }
+.users-workspace .users-table-frame td { padding-block: 12px; font-size: 14px; line-height: 20px; }
+.users-workspace .users-table-frame tbody tr { border-color: var(--border); transition: background-color 120ms cubic-bezier(.22,1,.36,1); }
+.users-workspace .users-table-frame tbody tr:hover { background: #111113; }
+.users-workspace .users-table-frame tbody tr:last-child { border-bottom: 0; }
+/** Реквизиты и числовые колонки сохраняют плотность таблицы аналитики. */
+.users-workspace .users-table-frame table { table-layout: fixed; min-width: 920px; }
+/** Компактные поля сохраняют место для имени, показателей и переменных. */
+.users-workspace .users-table-frame :is(th, td) { padding-inline: 8px; }
+/** Ширину задают колонки: отдельные ограничения ячеек не сдвигают их содержимое. */
+.users-workspace .users-table-frame td:first-child { min-width: 0; }
+.users-source-cell { min-width: 0; }
+.users-source-cell > span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.users-status { display: block; max-width: 160px; font-size: 12px; color: var(--muted-foreground); white-space: normal; }
+.users-workspace .users-table-frame td .users-copy-value,
+.users-workspace .users-copy-value { padding: 0; border: 0; background: transparent; text-align: left; }
+.users-workspace .users-copy-value:hover { color: var(--foreground); text-decoration: underline; text-underline-offset: 3px; }
+/** Кнопка аватара сохраняет фотографию без заливки и рамки при наведении. */
+.users-workspace .users-table-frame td .users-dialog-avatar,
+.users-workspace .users-dialog-avatar { padding: 0; border: 0; background: transparent; box-shadow: none; }
+.users-workspace .users-dialog-avatar:hover { opacity: .8; }
+/** Сортировка сохраняет спокойные заголовки и заметный порядок числовых столбцов. */
+.users-sort-button { display: inline-flex; align-items: center; gap: 8px; padding: 4px 0; color: var(--muted-foreground); background: transparent; white-space: nowrap; }
+.users-sort-button svg { width: 14px; height: 14px; flex-shrink: 0; }
+/** Длинные заголовки и даты не растягивают компактную таблицу. */
+.users-sort-button { max-width: 100%; }
+.users-sort-button > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+/** Внешние поля совпадают с поиском, а числовые заголовки стоят над значениями. */
+.users-workspace .users-table-frame :is(th, td):first-child { padding-left: 16px; }
+.users-workspace .users-table-frame :is(th, td):last-child { padding-right: 16px; }
+/** Заголовок и кнопка действий имеют одну ось и помещаются внутри последней колонки. */
+.users-workspace .users-table-frame th:last-child,
+.users-workspace .users-table-frame td.users-actions-cell:last-child { padding-inline: 4px; text-align: center; }
+.users-workspace .users-table-frame th:nth-child(6) .users-sort-button > span { white-space: normal; text-align: left; }
+.users-workspace .users-table-frame th:nth-child(6) .users-sort-button { gap: 4px; }
+.users-workspace .users-table-frame td:nth-child(6) { overflow: hidden; text-overflow: ellipsis; font-size: 12px; line-height: 16px; }
+.users-sort-button:hover, th[aria-sort='ascending'] .users-sort-button, th[aria-sort='descending'] .users-sort-button { color: var(--foreground); }
+/** Иконки действий не меняют геометрию и сохраняют смысл опасного действия. */
+.users-workspace .users-table-frame td button,
+.users-workspace .users-header-tools button { border: 1px solid transparent; background: transparent; box-shadow: none; }
+.users-workspace .users-header-tools button { border-color: var(--border); }
+.users-workspace .users-table-frame td button:hover,
+.users-workspace .users-header-tools button:hover,
+.users-workspace .workspace-tab-actions > :is(button, a):hover { background: #151517; border-color: var(--border); }
+/** Поиск и три фильтра занимают одну строку при достаточной ширине. */
+@container (min-width: 1200px) {
+  .users-filters { display: grid; grid-template-columns: minmax(240px, 1.2fr) minmax(0, 2fr); align-items: start; gap: 16px; }
+  .users-filters.space-y-3 > .users-filter-grid { margin: 0; }
+}
+/** Четыре фильтра делятся на две строки в средней панели. */
+@container (min-width: 460px) {
+  .users-workspace .users-filter-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .users-workspace .users-filter-grid > :last-child { grid-column: auto; }
+}
+@container (min-width: 1200px) {
+  .users-workspace .users-filter-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .users-filters { grid-template-columns: minmax(220px, 1fr) minmax(0, 3fr); }
+}
+/** На узкой панели сохраняются общие поля и отступы без горизонтального скролла. */
+@container (max-width: 799px) {
+  .users-page-header { padding-bottom: 12px; }
+  .users-header-tools { padding-top: 12px; border-top: 1px solid var(--border); }
+}

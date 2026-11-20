@@ -1,5 +1,6 @@
 /** @fileoverview Адаптер настроек и ENV с маскированием всех значений и подтверждением записи. */
 import { userDataRequest } from './user-data-db';
+import { BOT_INHERITED_SETTING_KEYS, type BotInheritedSettingKey } from '../../shared/bot-inherited-settings';
 /** Удаляет секреты из произвольного ответа настроек. */
 export function redactBotSettings(value: unknown): any {
   if (Array.isArray(value)) return value.map(redactBotSettings);
@@ -18,6 +19,19 @@ export async function setBotSettings(projectId: number, tokenId: number, change:
   if (stored.error) return { error: 'Запись отправлена, но повторное чтение не подтвердило результат' };
   for (const [key, value] of Object.entries(body)) {
     if (key === 'webhookSecretToken') continue;
+    /** Источник режима подтверждается отдельно от индивидуального значения. */
+    const inheritKey = key === 'launchMode' ? 'inheritLaunchMode' : key === 'autoRestart' ? 'inheritAutoRestart'
+      : key === 'maxRestartAttempts' ? 'inheritMaxRestartAttempts' : undefined;
+    if (inheritKey) {
+      if (Boolean(stored[inheritKey]) !== (value === 'inherit')) return { error: `Источник настройки не подтверждён: ${key}` };
+      if (value === 'inherit') continue;
+    }
+    /** Общий список источников позволяет отличить явные ноль и null. */
+    if (BOT_INHERITED_SETTING_KEYS.includes(key as BotInheritedSettingKey)) {
+      const inherited = Array.isArray(stored.inheritBotSettings) && stored.inheritBotSettings.includes(key);
+      if (inherited !== (value === 'inherit')) return { error: `Источник настройки не подтверждён: ${key}` };
+      if (value === 'inherit') continue;
+    }
     if (stored[key] !== value) return { error: `Запись не подтверждена: ${key}` };
   }
   return { status: 'saved', persistence: { confirmed: true, method: 'readback' }, settings: stored, runtime: 'Для применения части настроек нужен перезапуск; автоматически не выполнялся' };

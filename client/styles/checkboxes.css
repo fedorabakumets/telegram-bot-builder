@@ -1,0 +1,76 @@
+/** @fileoverview Единые контрастные флажки для обычных полей и компонентов Radix во всех темах. */
+/** Цвета темы уже являются готовыми CSS-цветами: повторное оборачивание в hsl() недопустимо. */
+html :is(input[type='checkbox']:where(:not([aria-hidden='true']):not(.sr-only):not([hidden])), button[role='checkbox']) {
+  /** Заливка чуть темнее акцента темы, чтобы светлая отметка оставалась контрастной. */
+  --checkbox-fill: color-mix(in srgb, var(--primary, #2563eb) 80%, #000);
+  box-sizing: border-box;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  padding: 0;
+  margin: 0;
+  border: 2px solid var(--muted-foreground, #71717a);
+  border-radius: 4px;
+  background: var(--background, #fff);
+  color: var(--foreground, #18181b);
+  box-shadow: none;
+  transform: none;
+  cursor: pointer;
+  vertical-align: middle;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+html input[type='checkbox']:where(:not([aria-hidden='true']):not(.sr-only):not([hidden])) {
+  appearance: none;
+  display: inline-grid;
+  place-content: center;
+  position: relative;
+}
+/** Нарисованная границами отметка сохраняет толщину независимо от шрифта. */
+html input[type='checkbox']:where(:not([aria-hidden='true']):not(.sr-only):not([hidden]))::before {
+  content: '';
+  display: block;
+  position: static;
+  width: 8px;
+  height: 5px;
+  border: 0;
+  border-left: 2px solid var(--primary-foreground, #fff);
+  border-bottom: 2px solid var(--primary-foreground, #fff);
+  transform: translateY(-1px) rotate(-45deg);
+  opacity: 0;
+  text-shadow: none;
+}
+html :is(input[type='checkbox']:checked, input[type='checkbox']:indeterminate, button[role='checkbox'][data-state='checked'], button[role='checkbox'][data-state='indeterminate']) {
+  border-color: var(--checkbox-fill, var(--primary, #2563eb));
+  background: var(--checkbox-fill, var(--primary, #2563eb));
+  color: var(--primary-foreground, #fff);
+}
+html input[type='checkbox']:checked::before,
+html input[type='checkbox']:indeterminate::before { opacity: 1; }
+html input[type='checkbox']:indeterminate::before {
+  height: 0;
+  border-left: 0;
+  transform: none;
+}
+html :is(input[type='checkbox'], button[role='checkbox']):hover:not(:disabled):not([data-disabled]) {
+  border-color: var(--primary, #2563eb);
+  box-shadow: none;
+  transform: none;
+}
+html :is(input[type='checkbox'], button[role='checkbox']):focus-visible {
+  outline: 2px solid var(--ring, #2563eb);
+  outline-offset: 3px;
+}
+html :is(input[type='checkbox'], button[role='checkbox']):is(:disabled, [data-disabled]) {
+  opacity: .6;
+  cursor: not-allowed;
+  filter: none;
+}
+/** Системная контрастная тема сохраняет видимую рамку и отметку. */
+@media (forced-colors: active) {
+  html :is(input[type='checkbox'], button[role='checkbox']) { forced-color-adjust: none; border-color: CanvasText; background: Canvas; }
+  html :is(input[type='checkbox']:checked, input[type='checkbox']:indeterminate, button[role='checkbox'][data-state='checked'], button[role='checkbox'][data-state='indeterminate']) { background: Highlight; border-color: Highlight; color: HighlightText; }
+  html input[type='checkbox']::before { border-color: HighlightText; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html :is(input[type='checkbox'], button[role='checkbox']) { transition: none; }
+}

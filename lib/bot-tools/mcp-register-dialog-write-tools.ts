@@ -26,7 +26,7 @@ export function registerDialogWriteTools(server: McpServer): void {
     _meta: { botcraft: { section: 'dialogs', effect: 'external' } },
   }, async ({ project_id, token_id, user_id, ...body }) => result(await writeDialogMessage(project_id, token_id, user_id, 'send-node-message', body)));
   server.registerTool('db_edit_dialog_message', {
-    description: 'Изменяет отправленное сообщение Telegram и сохранённую историю.',
+    description: 'Изменяет отправленное сообщение Telegram и сохранённую историю. Если buttons не переданы, клавиатура сохраняется; buttons: [] явно удаляет кнопки.',
     inputSchema: { ...base, message_id: id, ...editDialogMessageBodySchema.shape },
     annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: true },
     _meta: { botcraft: { section: 'dialogs', effect: 'external' } },

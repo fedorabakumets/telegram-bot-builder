@@ -22,6 +22,8 @@ import { useProjectData } from './hooks/use-project-data';
 import { collectNodesFromProjectData } from './utils/node-utils';
 import { useDialogLiveMessages } from './hooks/use-dialog-live-messages';
 import { useOlderDialogMessages } from './hooks/use-older-dialog-messages';
+import { useDialogMessageSearch } from './hooks/use-dialog-message-search';
+import { DialogMessageSearchBar } from './components/dialog-message-search-bar';
 import { useUserList } from '@/components/editor/database/user-details/hooks/useUserList';
 import { MessageBubble } from './components/message-bubble';
 import { MessageNavigation } from './components/message-navigation';
@@ -32,6 +34,7 @@ import { LoadingMessages } from './components/loading-messages';
 import { NoUserSelected } from './components/no-user-selected';
 import { NodeSender } from './components/node-sender';
 import { canActOnDialogMessage } from './utils/dialog-message-source';
+import { useProjectTokens } from '@/hooks/use-project-tokens';
 
 /**
  * Дедуплицирует и сортирует сообщения по id и времени создания.
@@ -71,11 +74,14 @@ function mergeMessages(
 export function DialogPanel({
   projectId,
   selectedTokenId,
+  historyTokenId,
   user,
   onClose,
   onSelectUser,
   hideHeader,
   onOpenMember,
+  searchTerm,
+  searchPeriod,
 }: DialogPanelProps) {
   /** Набор id сообщений, оптимистично скрытых при удалении */
   const [deletedMessageIds, setDeletedMessageIds] = useState<Set<number>>(new Set());
@@ -95,6 +101,11 @@ export function DialogPanel({
   /** Тип чата группы */
   const groupChatType = (user as any)?.chatType as string | undefined;
   const isChannel = groupChatType === 'channel';
+  /** Область чтения не зависит от выбранного отправителя общей ленты. */
+  const historyScope = historyTokenId === undefined || isGroup ? selectedTokenId : historyTokenId;
+  const unifiedHistory = !isGroup && historyTokenId === null;
+  const tokensInfo = useProjectTokens([projectId]);
+  const historyBots = tokensInfo[0]?.tokens ?? [];
 
   const { users } = useUserList(projectId, selectedTokenId);
   const { bot } = useBotData(projectId);
@@ -108,13 +119,16 @@ export function DialogPanel({
     [project?.data],
   );
 
-  const targetMessageId = readFileMessageId(user?.userId);
+  /** Поиск открывает контекст совпадения, даже если оно за пределами последней страницы. */
+  const messageSearch = useDialogMessageSearch(projectId, historyScope, String(user?.userId ?? ''),
+    isGroup ? groupChatType ?? 'group' : 'private', searchTerm, searchPeriod, unifiedHistory);
+  const targetMessageId = messageSearch.targetId ?? readFileMessageId(user?.userId);
   // URL для загрузки сообщений: группа или личный диалог
   const baseRequestUrl = isGroup
     ? buildUsersApiUrl(`/api/projects/${projectId}/groups/${encodeURIComponent(groupChatId ?? '')}/messages`, selectedTokenId)
     : buildUsersApiUrl(
-        `/api/projects/${projectId}/users/${user?.userId}/messages?includeGroupContext=true`,
-        selectedTokenId
+        `/api/projects/${projectId}/users/${user?.userId}/messages?includeGroupContext=true${unifiedHistory ? '&allBots=true' : ''}`,
+        historyScope
       );
 
   const requestUrl = targetMessageId ? `${baseRequestUrl}${baseRequestUrl.includes('?' ) ? '&' : '?'}aroundMessageId=${targetMessageId}` : baseRequestUrl;
@@ -124,7 +138,7 @@ export function DialogPanel({
     isError: messagesError,
     refetch: refetchMessages,
   } = useQuery<{ messages: BotMessageWithMedia[]; total: number | null }>({
-    queryKey: [requestUrl, selectedTokenId, user?.userId],
+    queryKey: [requestUrl, historyScope, user?.userId],
     enabled: !!user?.userId,
     queryFn: async () => {
       const response = await fetch(requestUrl, { credentials: 'include' });
@@ -140,9 +154,9 @@ export function DialogPanel({
   /** Последняя страница и общее число записей выбранного диалога. */
   const httpMessages = historyPage?.messages ?? [];
 
-  const history = useOlderDialogMessages(baseRequestUrl, httpMessages, messagesScrollRef, !messagesLoading && !messagesError && !targetMessageId);
+  const history = useOlderDialogMessages(requestUrl, httpMessages, messagesScrollRef, !messagesLoading && !messagesError && !targetMessageId);
   const { liveMessages, resetLiveMessages, addOptimisticMessage, removeOptimisticMessage, wsDeletedIds, wsEditedMessages } =
-    useDialogLiveMessages(projectId, selectedTokenId, user?.userId, isGroup ? groupChatId : null);
+    useDialogLiveMessages(projectId, historyScope, user?.userId, isGroup ? groupChatId : null);
 
   /** Объединённые и дедуплицированные сообщения */
   const allMessages = useMemo(
@@ -163,7 +177,7 @@ export function DialogPanel({
     setEditedMessages(new Map());
     prevMessageCountRef.current = 0;
     previousFirstIdRef.current = null;
-  }, [user?.userId, selectedTokenId, resetLiveMessages]);
+  }, [user?.userId, historyScope, resetLiveMessages]);
 
   /** Автопрокрутка при первой загрузке и при новых live-сообщениях */
   useLayoutEffect(() => {
@@ -185,7 +199,7 @@ export function DialogPanel({
     }
   }, [messagesLoading, messages.length]);
 
-  useMessageTarget(messagesScrollRef, targetMessageId, messagesLoading, messages.length);
+  useMessageTarget(messagesScrollRef, targetMessageId, messagesLoading, messages.length, !messageSearch.targetId);
   // Мутация отправки для личного диалога
   const sendMessageMutation = useSendMessage({
     projectId,
@@ -208,6 +222,7 @@ export function DialogPanel({
   const deleteMessageMutation = useDeleteMessage({
     projectId,
     selectedTokenId,
+    resolveMessageTokenId: (id) => messages.find(message => message.id === id)?.tokenId,
     onOptimisticRemove: (id) =>
       setDeletedMessageIds((prev) => new Set(prev).add(id)),
     onRollback: (id) =>
@@ -222,6 +237,7 @@ export function DialogPanel({
   const editMessageMutation = useEditMessage({
     projectId,
     selectedTokenId,
+    resolveMessageTokenId: (id) => messages.find(message => message.id === id)?.tokenId,
     onOptimisticEdit: (messageId, newText) =>
       setEditedMessages((prev) => new Map(prev).set(messageId, newText)),
     onRollback: (messageId, originalText) =>
@@ -280,6 +296,7 @@ export function DialogPanel({
         />
       ))}
 
+      <DialogMessageSearchBar search={messageSearch} />
       <div className="flex flex-1 min-h-0 min-w-0">
       <MessageNavigation messages={messages} scrollRef={messagesScrollRef} total={targetMessageId ? null : historyPage?.total ?? null} />
       {/* Содержимое области прокрутки не должно расширяться по длине сообщения. */}
@@ -323,7 +340,14 @@ export function DialogPanel({
                 : message;
               return (
                 <div key={message.id || index} data-dialog-index={index}>
+                {unifiedHistory && <p className="px-12 pb-1 text-xs text-muted-foreground">
+                  {(() => {
+                    const sourceBot = historyBots.find(item => item.id === message.tokenId);
+                    return sourceBot?.botUsername ? `@${sourceBot.botUsername.replace(/^@/, '')}` : sourceBot?.botFirstName || sourceBot?.name || `Бот #${message.tokenId}`;
+                  })()}
+                </p>}
                 <MessageBubble
+                  highlightTerm={messageSearch.targetId === message.id ? messageSearch.term : undefined}
                   key={message.id || index}
                   message={displayMessage}
                   index={index}
@@ -335,18 +359,18 @@ export function DialogPanel({
                     : null}
                   bot={message.messageType === 'bot' ? bot : null}
                   projectId={projectId}
-                  tokenId={selectedTokenId}
+                  tokenId={message.tokenId ?? historyScope}
                   isGroupDialog={isGroup}
                   showSource={!isGroup}
                   onOpenMember={onOpenMember}
-                  onDelete={!canActOnDialogMessage(isGroup, message.chatType)
+                  onDelete={(unifiedHistory && !message.tokenId) || !canActOnDialogMessage(isGroup, message.chatType)
                     ? undefined : (id) => deleteMessageMutation.mutate(id)}
                   isDeleting={
                     deleteMessageMutation.isPending &&
                     deleteMessageMutation.variables === message.id
                   }
-                  onEdit={!canActOnDialogMessage(isGroup, message.chatType) ? undefined : (messageId, newText, originalText, buttons, buttonsPerRow) =>
-                    editMessageMutation.mutate({ messageId, messageText: newText, originalText, buttons, buttonsPerRow })
+                  onEdit={(unifiedHistory && !message.tokenId) || !canActOnDialogMessage(isGroup, message.chatType) ? undefined : (messageId, newText, originalText, buttons, buttonsPerRow) =>
+                    editMessageMutation.mutateAsync({ messageId, messageText: newText, originalText, buttons, buttonsPerRow }).then((result) => result.success && result.editedInTelegram).catch(() => false)
                   }
                   availableNodes={availableNodes}
                   isEditing={

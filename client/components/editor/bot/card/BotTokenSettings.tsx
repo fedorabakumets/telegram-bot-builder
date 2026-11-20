@@ -31,10 +31,11 @@ export function BotTokenSettings({
     <SettingCard
       icon={KeyRound}
       title="Токен бота"
-      description="Двойной клик, чтобы вставить новый от @BotFather"
+      description="Нажмите на токен, чтобы посмотреть или заменить его"
       testId="bot-token-settings"
     >
       <TokenDisplayEdit
+        key={`${projectId}:${tokenId}`}
         token={token}
         tokenId={tokenId}
         projectId={projectId}

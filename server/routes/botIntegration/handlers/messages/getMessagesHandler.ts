@@ -27,6 +27,11 @@ export async function getMessagesHandler(req: Request, res: Response): Promise<v
         const projectId = parseInt(req.params.projectId);
         const userId = req.params.userId;
         const requestedTokenId = getRequestTokenId(req);
+        /** Общее чтение включается явно и не допускает одновременного выбора бота. */
+        const allBots = req.query.allBots === 'true';
+        if (allBots && (req.query.tokenId !== undefined || requestedTokenId !== null)) {
+            res.status(400).json({ message: 'Нельзя одновременно выбрать бота и все боты' }); return;
+        }
         const limit = req.query.limit ? parseInt(req.query.limit as string) : 100;
         const messageType = req.query.messageType === 'user' || req.query.messageType === 'bot' 
             ? req.query.messageType 
@@ -38,13 +43,16 @@ export async function getMessagesHandler(req: Request, res: Response): Promise<v
         }
 
         /** Явный токен проверяем без переключения на другого бота. */
-        const token = requestedTokenId
+        const token = allBots ? null : requestedTokenId
             ? await storage.getBotToken(requestedTokenId)
             : await storage.getDefaultBotToken(projectId);
-        if (!token || token.projectId !== projectId || (req.query.tokenId !== undefined && !requestedTokenId)) {
+        if (!allBots && (!token || token.projectId !== projectId || (req.query.tokenId !== undefined && !requestedTokenId))) {
             res.status(404).json({ message: 'Бот проекта не найден' });
             return;
         }
+        /** Общая история ограничена проектом и пользователем, без подстановки бота по умолчанию. */
+        const tokenId = token?.id ?? null;
+        const includeGroupContext = req.query.includeGroupContext === 'true';
         if (!Number.isInteger(limit) || limit < 1 || limit > 1000) {
             res.status(400).json({ message: 'Неверное ограничение сообщений' });
             return;
@@ -55,16 +63,16 @@ export async function getMessagesHandler(req: Request, res: Response): Promise<v
             res.status(400).json({ message: 'Неверный курсор сообщений' }); return;
         }
         if (req.query.aroundMessageId !== undefined) {
-            const context = await getMessageContext(projectId, token.id, userId, Number(req.query.aroundMessageId));
+            const context = await getMessageContext(projectId, tokenId, userId, Number(req.query.aroundMessageId), false, includeGroupContext);
             if (!context) { res.status(404).json({ message: "Сообщение не найдено в этом диалоге" }); return; }
             res.json(context); return;
         }
         /** Общую историю включает только панель диалогов; остальные потребители сохраняют личную выборку. */
-        if (req.query.includeGroupContext === 'true') {
-            res.set('X-Dialog-Message-Count', String(await getDialogMessageCount(projectId, token.id, userId, false)));
-            res.json(await getUserDialogHistory(projectId, token.id, userId, limit, messageType, beforeId));
+        if (includeGroupContext || allBots) {
+            res.set('X-Dialog-Message-Count', String(await getDialogMessageCount(projectId, tokenId, userId, false, includeGroupContext)));
+            res.json(await getUserDialogHistory(projectId, tokenId, userId, limit, messageType, beforeId, includeGroupContext));
         } else {
-            const messages = await storage.getBotMessagesWithMedia(projectId, userId, limit, 'desc', messageType, token.id);
+            const messages = await storage.getBotMessagesWithMedia(projectId, userId, limit, 'desc', messageType, tokenId!);
             res.json(messages.reverse());
         }
     } catch (error) {

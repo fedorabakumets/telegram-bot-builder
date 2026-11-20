@@ -39,7 +39,11 @@ export async function getAvatarHandler(req: Request, res: Response): Promise<voi
 
         // Проверяем, это аватарка бота — ищем по userId среди всех токенов проекта
         const allTokens = await storage.getBotTokensByProject(projectId);
-        const fetchWithProxy = createBotTokenFetch(allTokens);
+        const tokenFetch = createBotTokenFetch(allTokens);
+        /** Старый file_id или файловый сервер не должны оставлять аватар в бесконечной загрузке. */
+        const fetchWithProxy: typeof tokenFetch = (url, options) => tokenFetch(url, {
+            ...options, signal: options?.signal ?? AbortSignal.timeout(10000),
+        });
         const botToken = allTokens.find(t => t.token.split(':')[0] === userId);
         const isBotAvatar = userId === 'bot' || !!botToken;
 
@@ -161,8 +165,8 @@ export async function getAvatarHandler(req: Request, res: Response): Promise<voi
                             const freshFileId = photoData.result.photos[0].at(-1).file_id;
                             // Сохраняем file_id в БД чтобы не запрашивать повторно
                             await pool.query(
-                                'UPDATE bot_users SET avatar_url = $1 WHERE user_id = $2 AND project_id = $3',
-                                [freshFileId, userId, projectId]
+                                'UPDATE bot_users SET avatar_url = $1 WHERE user_id = $2 AND project_id = $3 AND token_id = $4',
+                                [freshFileId, userId, projectId, tokenToUse.id]
                             );
                             avatarUrl = freshFileId;
                             console.log(`[avatar] fetched fresh file_id from Telegram for user_id=${userId}`);
@@ -208,8 +212,8 @@ export async function getAvatarHandler(req: Request, res: Response): Promise<voi
                         const freshFileId = photoData.result.photos[0].at(-1).file_id;
                         // Сохраняем свежий file_id
                         await pool.query(
-                            'UPDATE bot_users SET avatar_url = $1 WHERE user_id = $2 AND project_id = $3',
-                            [freshFileId, userId, projectId]
+                            'UPDATE bot_users SET avatar_url = $1 WHERE user_id = $2 AND project_id = $3 AND token_id = $4',
+                            [freshFileId, userId, projectId, tokenToUse.id]
                         );
 
                         // Резолвим свежий file_id в URL
@@ -227,8 +231,8 @@ export async function getAvatarHandler(req: Request, res: Response): Promise<voi
                     } else {
                         // У пользователя нет аватарки — очищаем устаревший file_id
                         await pool.query(
-                            'UPDATE bot_users SET avatar_url = NULL WHERE user_id = $1 AND project_id = $2',
-                            [userId, projectId]
+                            'UPDATE bot_users SET avatar_url = NULL WHERE user_id = $1 AND project_id = $2 AND token_id = $3',
+                            [userId, projectId, tokenToUse.id]
                         );
 
                         res.status(404).json({ message: "Аватарка не найдена" });
@@ -321,8 +325,8 @@ export async function getAvatarHandler(req: Request, res: Response): Promise<voi
                                 const freshUrl = `${getTelegramApiBaseUrl()}/file/bot${tokenToUse.token}/${fileData.result.file_path}`;
                                 // Сохраняем свежий file_id в БД
                                 await pool.query(
-                                    'UPDATE bot_users SET avatar_url = $1 WHERE user_id = $2 AND project_id = $3',
-                                    [freshFileId, userId, projectId]
+                                    'UPDATE bot_users SET avatar_url = $1 WHERE user_id = $2 AND project_id = $3 AND token_id = $4',
+                                    [freshFileId, userId, projectId, tokenToUse.id]
                                 );
 
                                 response = await fetchWithProxy(freshUrl);
@@ -330,8 +334,8 @@ export async function getAvatarHandler(req: Request, res: Response): Promise<voi
                         } else {
                             // Аватарки больше нет — очищаем протухший URL
                             await pool.query(
-                                'UPDATE bot_users SET avatar_url = NULL WHERE user_id = $1 AND project_id = $2',
-                                [userId, projectId]
+                                'UPDATE bot_users SET avatar_url = NULL WHERE user_id = $1 AND project_id = $2 AND token_id = $3',
+                                [userId, projectId, tokenToUse.id]
                             );
 
                         }

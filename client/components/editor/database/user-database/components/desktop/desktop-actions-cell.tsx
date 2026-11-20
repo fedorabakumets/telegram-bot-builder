@@ -4,11 +4,13 @@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { TableCell } from '@/components/ui/table';
-import { MessageSquare, ExternalLink, Trash2 } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { UserBotData } from '@shared/schema';
 
 /** Свойства действий пользователя. */
 interface DesktopActionsCellProps {
+  /** Размещает те же действия непосредственно в компактной карточке. */
+  inCard?: boolean;
   /** Данные пользователя. */
   user: UserBotData;
   /** Индекс в списке. */
@@ -31,7 +33,9 @@ interface DesktopActionsCellProps {
  * @returns Ячейка действий и диалог подтверждения.
  */
 export function DesktopActionsCell(props: DesktopActionsCellProps): React.JSX.Element {
-  const { user, index, formatUserName, deleteUserMutation, onOpenDialogPanel, onOpenUserDetailsPanel, onNavigateToDialog } = props;
+  /** Карточка и таблица используют одинаковое подтверждение удаления. */
+  const Container = props.inCard ? 'div' : TableCell;
+  const { user, index, formatUserName, deleteUserMutation } = props;
   /** Имя в доступных подписях кнопок. */
   const userName = formatUserName(user);
   /** Общая блокировка удаления во время запроса. */
@@ -40,26 +44,8 @@ export function DesktopActionsCell(props: DesktopActionsCellProps): React.JSX.El
   const actionClass = 'h-8 w-8 p-0 text-muted-foreground hover:bg-muted/40 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring';
 
   return (
-    <TableCell className="py-2 text-right">
-      <div className="flex items-center justify-end gap-1">
-        {onOpenDialogPanel && (
-          <Button variant="ghost" size="sm" className={actionClass}
-            title="Открыть диалог" aria-label={`Открыть диалог: ${userName}`}
-            onClick={(event) => {
-              event.stopPropagation();
-              onOpenDialogPanel(user);
-              onOpenUserDetailsPanel?.(user);
-            }}>
-            <MessageSquare className="h-4 w-4" aria-hidden="true" />
-          </Button>
-        )}
-        {onNavigateToDialog && (
-          <Button variant="ghost" size="sm" className={actionClass}
-            title="Открыть во вкладке «Диалоги»" aria-label={`Открыть во вкладке «Диалоги»: ${userName}`}
-            onClick={(event) => { event.stopPropagation(); onNavigateToDialog(user); }}>
-            <ExternalLink className="h-4 w-4" aria-hidden="true" />
-          </Button>
-        )}
+    <Container className="users-actions-cell py-2 text-center">
+      <div className="flex items-center justify-center gap-1">
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button variant="ghost" size="sm" disabled={isDeleting}
@@ -88,6 +74,6 @@ export function DesktopActionsCell(props: DesktopActionsCellProps): React.JSX.El
           </AlertDialogContent>
         </AlertDialog>
       </div>
-    </TableCell>
+    </Container>
   );
 }

@@ -9,6 +9,7 @@
 
 ```json
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "project_id": {
@@ -20,20 +21,18 @@
       "description": "Подстрока для поиска (регистронезависимо; в т.ч. URL кнопки)"
     },
     "type": {
-      "type": "string",
-      "description": "Фильтр по типу ноды (точное совпадение)"
+      "description": "Фильтр по типу ноды (точное совпадение)",
+      "type": "string"
     },
     "sheet_id": {
-      "type": "string",
-      "description": "ID листа (по умолчанию все листы)"
+      "description": "ID листа (по умолчанию все листы)",
+      "type": "string"
     }
   },
   "required": [
     "project_id",
     "query"
-  ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  ]
 }
 ```
 
@@ -71,6 +70,7 @@
 
 ```json
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "data": {
@@ -140,11 +140,13 @@
             },
             "projectId": {
               "type": "integer",
-              "exclusiveMinimum": 0
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             },
             "revision": {
               "type": "integer",
-              "minimum": 0
+              "minimum": 0,
+              "maximum": 9007199254740991
             }
           },
           "required": [
@@ -154,6 +156,9 @@
         },
         "sideEffects": {
           "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
           "additionalProperties": {}
         }
       },
@@ -170,10 +175,10 @@
     }
   },
   "required": [
+    "data",
     "execution"
   ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  "additionalProperties": false
 }
 ```
 

@@ -9,6 +9,7 @@
 
 ```json
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "type": {
@@ -16,9 +17,12 @@
       "description": "Тип ноды"
     },
     "partial_data": {
+      "description": "Частичные поля data для merge",
       "type": "object",
-      "additionalProperties": {},
-      "description": "Частичные поля data для merge"
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
     },
     "id": {
       "type": "string"
@@ -36,15 +40,12 @@
       "required": [
         "x",
         "y"
-      ],
-      "additionalProperties": false
+      ]
     }
   },
   "required": [
     "type"
-  ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  ]
 }
 ```
 
@@ -81,6 +82,7 @@
 
 ```json
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "data": {
@@ -150,11 +152,13 @@
             },
             "projectId": {
               "type": "integer",
-              "exclusiveMinimum": 0
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             },
             "revision": {
               "type": "integer",
-              "minimum": 0
+              "minimum": 0,
+              "maximum": 9007199254740991
             }
           },
           "required": [
@@ -164,6 +168,9 @@
         },
         "sideEffects": {
           "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
           "additionalProperties": {}
         }
       },
@@ -180,10 +187,10 @@
     }
   },
   "required": [
+    "data",
     "execution"
   ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  "additionalProperties": false
 }
 ```
 

@@ -12,12 +12,16 @@ import { useTerminalSearch } from './useTerminalSearch';
 import { TerminalOutput } from './TerminalOutput';
 import { TerminalLogsToolbar } from './TerminalLogsToolbar';
 import { TerminalLogsContextBar } from './TerminalLogsContextBar';
+import { TerminalRepeatedErrors } from './TerminalRepeatedErrors';
+import { TerminalLogDetail } from './TerminalLogDetail';
 import { copyTerminalOutput, saveTerminalOutput } from './terminalUtils';
 import { botLogToTerminalLine } from './bot-log-utils';
 import { isVisibleTerminalNotice } from './terminal-log-notices';
 
 /** Пропсы компонента просмотра истории запуска */
 interface LaunchHistoryViewerProps {
+  /** Имя бота, к которому относится запуск. */
+  botName?: string;
   /** ID запуска */
   launchId: number;
   /** Дата запуска (для заголовка) */
@@ -25,26 +29,11 @@ interface LaunchHistoryViewerProps {
 }
 
 /**
- * Форматирует дату запуска для заголовка
- * @param startedAt - Строка даты
- * @returns Отформатированная строка
- */
-function formatStartedAt(startedAt: string | null): string {
-  if (!startedAt) return 'Запуск';
-  return new Date(startedAt).toLocaleString('ru-RU', {
-    day: '2-digit',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
-/**
  * Статичные логи запуска: context + toolbar + таблица (как Deploy Logs)
  * @param props - Свойства компонента
  * @returns JSX элемент
  */
-export function LaunchHistoryViewer({ launchId, startedAt }: LaunchHistoryViewerProps) {
+export function LaunchHistoryViewer({ launchId, startedAt, botName }: LaunchHistoryViewerProps) {
   const { logs, isLoading } = useLaunchLogs(launchId);
   const {
     terminalBgClass, terminalTextClass, placeholderTextClass, stderrTextClass,
@@ -64,6 +53,13 @@ export function LaunchHistoryViewer({ launchId, startedAt }: LaunchHistoryViewer
   /** Строки истории без служебного уведомления о необязательном OpenSSL. */
   const lines = useMemo(() => logs.map(botLogToTerminalLine).filter(isVisibleTerminalNotice), [logs]);
   const { filter, setFilter, filterLines, stderrCount } = useTerminalFilter();
+  const [selectedLineId, setSelectedLineId] = useState<string | null>(null);
+  const selectedIndex = lines.findIndex(line => line.id === selectedLineId);
+  /** Переключает детали на соседнюю сохранённую строку. */
+  const moveDetail = (offset: number) => {
+    const neighbor = lines[selectedIndex + offset];
+    if (neighbor) setSelectedLineId(neighbor.id);
+  };
   const visibleLines = useMemo(() => filterLines(lines), [filterLines, lines]);
   const {
     searchQuery, matchIndices, currentMatchIndex,
@@ -85,7 +81,12 @@ export function LaunchHistoryViewer({ launchId, startedAt }: LaunchHistoryViewer
   return (
     <div className={`h-full flex flex-col font-mono text-sm ${terminalBgClass}`}>
       <TerminalLogsContextBar
-        title={formatStartedAt(startedAt)}
+        title="Прошлый запуск"
+        startedAt={startedAt}
+        botName={botName}
+        errorCount={stderrCount(lines)}
+        errorsSelected={filter === 'stderr'}
+        onShowErrors={() => setFilter('stderr')}
         subtitle={`#${launchId}`}
         statusLabel="История"
         statusClassName="bg-muted text-muted-foreground border-border"
@@ -106,6 +107,7 @@ export function LaunchHistoryViewer({ launchId, startedAt }: LaunchHistoryViewer
         onSave={(format) => saveTerminalOutput(visibleLines, format)}
         onClose={handleClose}
       />
+      <TerminalRepeatedErrors lines={lines} onOpenLine={setSelectedLineId} />
       {isLoading ? (
         <div className={`flex-1 flex items-center justify-center ${placeholderTextClass} italic`}>
           Загрузка логов...
@@ -115,7 +117,8 @@ export function LaunchHistoryViewer({ launchId, startedAt }: LaunchHistoryViewer
           Логи не сохранены
         </div>
       ) : (
-        <div className="flex-1 overflow-hidden min-h-0">
+        <div className="flex flex-1 overflow-hidden min-h-0">
+          <div className="min-w-0 flex-1">
           <TerminalOutput
             lines={visibleLines}
             containerRef={containerRef}
@@ -126,7 +129,23 @@ export function LaunchHistoryViewer({ launchId, startedAt }: LaunchHistoryViewer
             searchQuery={searchQuery || undefined}
             currentMatchLineId={currentMatchLineId}
             shouldScrollToMatch={shouldScrollToMatch}
+            onLineClick={setSelectedLineId}
+            selectedLineId={selectedLineId ?? undefined}
           />
+          </div>
+          {selectedIndex >= 0 && <TerminalLogDetail
+            line={lines[selectedIndex]}
+            lines={lines}
+            onSelectLine={setSelectedLineId}
+            onClose={() => setSelectedLineId(null)}
+            onPrev={() => moveDetail(-1)}
+            onNext={() => moveDetail(1)}
+            onScrollToLine={() => {
+              const row = Array.from(containerRef.current?.querySelectorAll<HTMLElement>('[data-line-id]') ?? [])
+                .find(element => element.dataset.lineId === selectedLineId);
+              row?.scrollIntoView({ block: 'center' });
+            }}
+          />}
         </div>
       )}
     </div>

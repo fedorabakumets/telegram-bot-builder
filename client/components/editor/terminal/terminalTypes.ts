@@ -25,6 +25,10 @@ export interface TerminalLine {
  * Свойства компонента терминала
  */
 export interface TerminalProps {
+  /** Имя бота в сводке запуска. */
+  botName?: string;
+  /** Известное состояние процесса бота. */
+  isBotRunning?: boolean;
   /** Состояние видимости терминала */
   isVisible?: boolean;
   /** Функция для переключения видимости терминала */

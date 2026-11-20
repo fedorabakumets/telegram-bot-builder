@@ -339,6 +339,8 @@ export async function initializeDatabaseTables() {
         PRIMARY KEY (user_id, project_id, token_id)
       );
     `, "Создание таблицы bot_users");
+    /** Импортированный контакт хранится явно и не создаёт фиктивных сообщений. */
+    await executeWithRetry(db, sql`ALTER TABLE bot_users ADD COLUMN IF NOT EXISTS imported_at TIMESTAMP;`, "Поле импорта контактов");
 
     await executeWithRetry(db, sql`
       CREATE TABLE IF NOT EXISTS user_telegram_settings (

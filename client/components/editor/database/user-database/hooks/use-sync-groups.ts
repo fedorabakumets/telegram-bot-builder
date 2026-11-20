@@ -44,6 +44,8 @@ export function useSyncGroups(
    * @returns Завершение проверки и обновления списка
    */
   const checkAccess = useCallback(async (groupId: string, refresh = true): Promise<void> => {
+    /** Общая область не выбирает бота по умолчанию: карточка проверяет собственный токен. */
+    if (selectedTokenId == null) return;
     const key = `${scope}${groupId}`;
     if (pendingRef.current.has(key)) return;
     attemptedRef.current.add(key);
@@ -61,6 +63,8 @@ export function useSyncGroups(
   }, [scope, projectId, selectedTokenId, queryClient]);
 
   useEffect(() => {
+    /** Сводный список не должен синхронизировать чужую группу через бота по умолчанию. */
+    if (selectedTokenId == null) return;
     const checks: Promise<void>[] = [];
     for (const dialog of dialogs ?? []) {
       const meta = dialog as UserBotData & {
@@ -94,7 +98,7 @@ export function useSyncGroups(
         queryClient.refetchQueries({ queryKey: ['infinite-users', projectId] }),
       );
     }
-  }, [dialogs, scope, checkAccess, queryClient, projectId]);
+  }, [dialogs, scope, checkAccess, queryClient, projectId, selectedTokenId]);
 
   const statuses: Record<string, GroupSyncStatus> = {};
   for (const [key, status] of Object.entries(states)) {

@@ -1,0 +1,19 @@
+/** @fileoverview Общая адаптация статуса выбранного бота к ширине панели и составу её шапки. */
+/** По умолчанию статус доступен во всех местах использования общего селектора. */
+.bot-selector-trigger .bot-selector-status { display: inline; }
+/** На тесной рабочей панели название получает приоритет перед статусом. */
+@container (max-width: 799px) {
+  .bot-selector-trigger .bot-selector-status { display: none; }
+}
+/** В аналитике место дополнительно занимает выбор периода. */
+@container (max-width: 1199px) {
+  .analytics-page .bot-selector-trigger .bot-selector-status { display: none; }
+}
+/** В диалогах дополнительное место требуется кнопке рассылки. */
+@container (max-width: 999px) {
+  .dialogs-workspace .bot-selector-trigger .bot-selector-status { display: none; }
+}
+/** Запасной компактный режим для экранов без собственного контейнера. */
+@media (max-width: 600px) {
+  .bot-selector-trigger .bot-selector-status { display: none; }
+}

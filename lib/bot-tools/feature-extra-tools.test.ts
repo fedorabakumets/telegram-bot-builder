@@ -10,9 +10,10 @@ import { projectFilesRequest, uploadProjectBytes } from './project-files-db';
 import { templatesRequest } from './templates-db';
 import { createVersionCheckpoint } from './version-log-extra-db';
 import { getBotSettingsHandler } from '../../server/routes/projectRoutes/handlers/getBotSettingsHandler';
-const mocks = vi.hoisted(() => ({ fetch: vi.fn(), token: vi.fn() }));
+/** Заглушки запросов и чтения проекта для проверки источника настроек. */
+const mocks = vi.hoisted(() => ({ fetch: vi.fn(), token: vi.fn(), project: vi.fn() }));
 vi.mock('./api-fetch.ts', () => ({ apiFetch: mocks.fetch }));
-vi.mock('../../server/storages/storage', () => ({ storage: { getBotToken: mocks.token } }));
+vi.mock('../../server/storages/storage', () => ({ storage: { getBotToken: mocks.token, getBotProject: mocks.project } }));
 /** Создаёт JSON ответ имитации API. */
 function response(value: unknown, status = 200) { return new Response(JSON.stringify(value), { status }); }
 beforeEach(() => { vi.resetAllMocks(); });
@@ -52,9 +53,14 @@ describe('Файлы, настройки, шаблоны и версии', () =>
     const res = { status: vi.fn().mockReturnThis(), json: vi.fn() };
     await getBotSettingsHandler({ params: { id: '12', tokenId: '9' } } as never, res as never);
     expect(res.status).toHaveBeenCalledWith(404);
-    mocks.token.mockResolvedValue({ id: 9, projectId: 12, token: 'secret', webhookSecretToken: 'secret', logLevel: 'INFO' });
+    mocks.token.mockResolvedValue({ id: 9, projectId: 12, token: 'secret', webhookSecretToken: 'secret',
+      logLevel: 'INFO', inheritBotSettings: ['logLevel'] });
+    mocks.project.mockResolvedValue({ botSettingDefaults: { logLevel: 'ERROR' } });
     await getBotSettingsHandler({ params: { id: '12', tokenId: '9' } } as never, res as never);
     expect(JSON.stringify(res.json.mock.calls)).not.toContain('secret');
+    expect(res.json).toHaveBeenLastCalledWith(expect.objectContaining({
+      logLevel: 'INFO', inheritBotSettings: ['logLevel'], effectiveBotSettings: expect.objectContaining({ logLevel: 'ERROR' }),
+    }));
   });
   it('загружает байты multipart без чтения файлов сервера и скрывает filePath', async () => {
     mocks.fetch.mockResolvedValue(response({ id: 1, projectId: 12, filePath: 'C:/private', fileName: 'a.txt' }));

@@ -11,6 +11,7 @@
  */
 
 import { apiRequest } from '@/queryClient';
+import { useEffect, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTokenEdit } from '../token/useTokenEdit';
@@ -49,12 +50,46 @@ export function TokenDisplayEdit({
   const { isEditing, tokenValue, isValidating, error, startEditing, stopEditing, setTokenValue, validateToken } = useTokenEdit();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const revealRequest = useRef<AbortController | null>(null);
+  const originalToken = useRef('');
+
+  /** Отменяет раскрытие при смене бота или закрытии карточки. */
+  useEffect(() => () => {
+    revealRequest.current?.abort();
+    revealRequest.current = null;
+    originalToken.current = '';
+  }, [projectId, tokenId]);
+
+  /** Загружает секрет только при явном открытии редактора. */
+  const handleEdit = async () => {
+    if (revealRequest.current) return;
+    const request = new AbortController();
+    revealRequest.current = request;
+    try {
+      const response = await fetch(`/api/projects/${projectId}/tokens/${tokenId}/reveal`, {
+        signal: request.signal, cache: 'no-store',
+      });
+      if (!response.ok) throw new Error('Токен недоступен');
+      const { value } = await response.json() as { /** Полный сохранённый токен. */ value: string };
+      if (request.signal.aborted) return;
+      originalToken.current = value;
+      startEditing(value);
+    } catch {
+      if (request.signal.aborted) return;
+      toast({ title: 'Не удалось показать текущий токен', description: 'В поле можно ввести новый токен.' });
+      startEditing('');
+    } finally {
+      if (revealRequest.current === request) revealRequest.current = null;
+    }
+  };
 
   /**
    * Обработчик сохранения нового токена
    */
   const handleSave = async () => {
-    if (tokenValue === token) {
+    if (!tokenValue.trim()) return;
+    if (tokenValue === token || tokenValue === originalToken.current) {
+      originalToken.current = '';
       stopEditing();
       return;
     }
@@ -72,6 +107,7 @@ export function TokenDisplayEdit({
 
       toast({ title: 'Токен обновлен', description: 'Токен бота успешно изменён' });
 
+      originalToken.current = '';
       stopEditing();
       onTokenUpdate();
     } catch (err: any) {
@@ -87,7 +123,7 @@ export function TokenDisplayEdit({
    * Обработчик отмены редактирования
    */
   const handleCancel = () => {
-    setTokenValue(token);
+    originalToken.current = '';
     stopEditing();
   };
 
@@ -117,7 +153,7 @@ export function TokenDisplayEdit({
     <TokenDisplay
       token={token}
       hidePrefix={hidePrefix}
-      onDoubleClick={() => startEditing(token)}
+      onEdit={handleEdit}
     />
   );
 }

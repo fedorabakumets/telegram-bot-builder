@@ -8,39 +8,9 @@
 .tables-workspace .tables-control:active { background: var(--muted); }
 .tables-workspace .tables-control:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
 .tables-row.is-selected { background: var(--muted); box-shadow: inset 0 0 0 1px var(--border); color: var(--foreground); }
-/** Проект и бот повторяют геометрию селекторов вкладки файлов. */
-.tables-context > div { flex: 1 1 240px; max-width: 100%; min-width: 0; }
-.tables-context button[role="combobox"] { width: 100%; max-width: none; min-width: 0; height: 40px; font-size: 14px; line-height: 20px; background: var(--background); border-color: var(--border); }
-.tables-context button[role="combobox"] > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-/** На средних панелях оба селектора остаются рядом с названием вкладки. */
-@container (min-width: 800px) and (max-width: 1200px) {
-  .tables-header .tables-context { flex-wrap: nowrap; }
-  /** Название проекта получает свободное место между заголовком и действиями. */
-  .tables-workspace .tables-header .workspace-header-content > .space-y-4 > .tables-context { max-width: none; }
-  .tables-header .tables-context > div { flex: 0 1 160px; min-width: 0; }
-  .tables-header .tables-context > div:first-child { flex: 1 1 320px; }
-  .tables-header .tables-context button[role="combobox"] { height: 36px; font-size: 14px; }
-  .tables-header.workspace-tab-frame { padding-block: 4px 12px; }
-  /** Действия списка и переноса занимают противоположные края строки. */
-  .tables-header-tools .tables-transfer-actions { margin-left: auto; }
-}
+/** Уменьшение движения сохраняет спокойные состояния элементов таблицы. */
 @media (prefers-reduced-motion: reduce) {
   .tables-workspace .tables-control { transition: none; }
-}
-
-/** Прикладные действия используют те же размеры и нейтральные контуры, что файлы. */
-.tables-header-tools > [role="alert"] { flex-basis: 100%; }
-@container (max-width: 440px) {
-  /** Две равные колонки сохраняют проект и бота рядом, как во вкладке файлов. */
-  .tables-context { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-  .tables-context > div { min-width: 0; width: 100%; }
-  .tables-context > div:only-child { grid-column: 1 / -1; }
-  .tables-context > div > svg { display: none; }
-  .tables-context button[role="combobox"] { padding: 8px; gap: 4px; }
-  .tables-context button[role="combobox"] > svg { width: 12px; flex-shrink: 0; }
-  /** Экспорт и импорт повторяют двухколоночные действия файлов с иконкой над подписью. */
-  .tables-header .tables-transfer-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); flex: 1; gap: 8px; min-width: 0; }
-  .tables-header .tables-transfer-actions > .tables-control { min-width: 0; width: 100%; height: auto; min-height: 48px; padding: 8px 4px; flex-direction: column; justify-content: center; gap: 4px; font-size: 12px; line-height: 16px; text-align: center; }
 }
 
 /** Количество листов не увеличивает высоту панели фильтров. */
@@ -85,10 +55,4 @@
   .tables-body[data-mobile-list="false"] .tables-nav { display: none; }
   .tables-body .tables-nav { width: 100%; }
   .tables-body .tables-list { display: flex; width: 100%; }
-}
-
-/** Свёрнутая шапка таблиц занимает только высоту кнопки раскрытия. */
-@container (max-width: 479px) {
-  .tables-header:has(.workspace-header-content[hidden]) { padding-block: 6px; }
-  .tables-header .workspace-header-toggle[aria-expanded="false"] { padding: 0; min-height: 20px; text-align: left; }
 }

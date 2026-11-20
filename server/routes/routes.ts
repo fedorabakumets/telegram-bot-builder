@@ -1,10 +1,22 @@
 /**
  * @fileoverview Основной роутер HTTP API для проектов, токенов, интеграций и базы пользователей
  */
+import { hasDialogProfileConstraints, dialogProfileFacetSelection, dialogActivityConditions } from './dialogs/dialog-user-filters';
+import { uniqueDialogUsersSql } from './dialogs/unique-dialog-users-sql';
+import { enrichDialogBotMemberships } from './dialogs/enrich-dialog-bots';
+import { foundBroadcastAudienceSql } from './users/found-broadcast-audience';
+import { registerDeleteWithoutPrivateRoutes } from './users/delete-without-private-routes';
+import { userContactOriginSql, firstSavedMessageSql } from './users/user-contact-origin-sql';
 import { getTelegramApiBaseUrl } from '../utils/telegram-api-url';
 import { validateRuntimeModeBatch } from '../bots/runtimeModeBatch';
 import { saveRuntimeMode, saveRuntimeModeSettings } from '../bots/runtimeModeSettings';
 import { buildLaunchSettingsPatch } from '../bots/launchSettingsPatch';
+import { buildBotAutoRestartPatch, parseBotAutoRestartBatch } from '../bots/botAutoRestartPatch';
+import { saveBotAutoRestartSettings } from '../bots/saveBotAutoRestartSettings';
+import { saveBotInheritedSetting } from '../bots/saveBotInheritedSetting';
+import { inheritedBotSettingForEnv, parseBotInheritedSettingsBatch } from '../bots/botInheritedSettingsPatch';
+import { encodeAdminIdsForStorage } from '../bots/adminIdsStorage';
+import { resolveBotLaunchMode } from '../../shared/bot-launch-mode';
 
 import { requireBotSettingBody, requireBotProfileBody } from "../middleware/require-bot-setting-body";
 import { updateMediaMetadataSchema } from "../../shared/schema/media-metadata-contracts";
@@ -28,6 +40,27 @@ import { z } from "zod";
 import { pool as dbPool } from "../database/db";
 import { initializeDatabaseTables } from "../database/init-db";
 import { enrichDialogAccess } from './dialogs/access-store';
+import { enrichUserMetrics } from './users/enrich-user-metrics';
+import { userActionCountSql, userSourceSql, userSourcePopularitySql, userVariableCountSql, userStatusSortSql } from './users/user-directory-sql';
+import { userStatusPredicate } from './users/user-status-filter';
+import { userStatusCountsSql } from './users/user-status-counts';
+import { userSourceCountsSql, userPremiumCountsSql, userLanguageCountsSql } from './users/user-facet-counts';
+import { advancedUserFiltersSchema } from '@shared/user-advanced-filters';
+import { advancedUserWhere, userLanguageCondition } from './users/user-advanced-filter-sql';
+import { userVariableCountsSql, userVariableValuesSql } from './users/user-variable-counts';
+import { userDirectorySearchSql, userDirectorySearchPattern } from './users/user-directory-search';
+import { uniqueProjectUsersSql } from './users/unique-project-users';
+import { userContactEligibility, hasPrivateMessagesSql } from './users/user-contact-eligibility';
+import { registerUsersTransferRoutes } from './users/register-users-transfer-routes';
+import { registerBotAudienceCounts } from './users/bot-audience-counts';
+import { registerChatAccessBatchRoutes } from './dialogs/chat-access-batch-routes';
+/** Подключает сохранённые связи пользователя с ботами общей карточки. */
+import { registerDialogProfileBotsRoutes } from './dialogs/dialog-profile-bots-routes';
+/** Подключает сохранённые группы пользователя общей карточки. */
+import { registerDialogProfileGroupsRoutes } from './dialogs/dialog-profile-groups-routes';
+/** Подключает сохранённые материалы общей карточки пользователя. */
+import { registerDialogProfileContentRoutes } from './dialogs/dialog-profile-content-routes';
+import { userBotUnavailableSql, userHasOtherBotsSql } from './users/user-bot-unavailable-sql';
 import { downloadFileFromUrl } from "../files/downloadFileFromUrl";
 import { getFileType } from "../files/getFileType";
 import { seedDefaultTemplates } from "../utils/seed-templates";
@@ -1017,18 +1050,16 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const tokenId = parseInt(req.params.tokenId);
       const projectId = parseInt(req.params.projectId);
       const { autoRestart, maxRestartAttempts } = req.body as {
-        autoRestart: number;
-        maxRestartAttempts: number;
+        autoRestart?: 0 | 1 | 'inherit';
+        maxRestartAttempts?: number | 'inherit';
       };
-
-      if (autoRestart !== 0 && autoRestart !== 1) {
-        return res.status(400).json({ message: "autoRestart должен быть 0 или 1" });
-      }
-      if (maxRestartAttempts < 1 || maxRestartAttempts > 10) {
-        return res.status(400).json({ message: "maxRestartAttempts должен быть от 1 до 10" });
+      /** Проверка тела уже выполнена, пустое частичное изменение не принимается. */
+      if (autoRestart === undefined && maxRestartAttempts === undefined) {
+        return res.status(400).json({ message: "Укажите настройки автоперезапуска" });
       }
 
-      const updated = await storage.updateBotToken(tokenId, { autoRestart, maxRestartAttempts });
+      const patch = buildBotAutoRestartPatch(autoRestart, maxRestartAttempts);
+      const updated = await saveBotAutoRestartSettings(projectId, tokenId, patch);
       if (!updated) {
         return res.status(404).json({ message: "Токен не найден" });
       }
@@ -1036,11 +1067,11 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       void emitTokenUpdated({
         projectId,
         tokenId,
-        changedFields: ['autoRestart', 'maxRestartAttempts'],
+        changedFields: Object.keys(patch),
         source: 'api',
       }).catch((err) => console.error('[auto-restart] emitTokenUpdated:', err));
 
-      res.json({ success: true, autoRestart, maxRestartAttempts });
+      res.json({ success: true, ...updated });
     } catch (error) {
       res.status(500).json({ message: "Ошибка обновления настроек автоперезапуска" });
     }
@@ -1055,13 +1086,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     try {
       const tokenId = parseInt(req.params.tokenId);
       const projectId = parseInt(req.params.projectId);
-      const { protectContent } = req.body as { protectContent: number };
-
-      if (protectContent !== 0 && protectContent !== 1) {
-        return res.status(400).json({ message: "protectContent должен быть 0 или 1" });
-      }
-
-      const updated = await storage.updateBotToken(tokenId, { protectContent });
+      /** Сохраняет индивидуальное значение или возвращает наследование проекта. */
+      const updated = await saveBotInheritedSetting(projectId, tokenId, 'protectContent', req.body.protectContent);
       if (!updated) {
         return res.status(404).json({ message: "Токен не найден" });
       }
@@ -1069,11 +1095,11 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       void emitTokenUpdated({
         projectId,
         tokenId,
-        changedFields: ['protectContent'],
+        changedFields: ['protectContent', 'inheritBotSettings'],
         source: 'api',
       }).catch((err) => console.error('[protect-content] emitTokenUpdated:', err));
 
-      res.json({ success: true, protectContent });
+      res.json({ success: true, protectContent: updated.botSettings.protectContent, inheritBotSettings: updated.inheritBotSettings });
     } catch (error) {
       res.status(500).json({ message: "Ошибка обновления защиты контента" });
     }
@@ -1099,13 +1125,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     try {
       const tokenId = parseInt(req.params.tokenId);
       const projectId = parseInt(req.params.projectId);
-      const { saveIncomingMedia } = req.body as { saveIncomingMedia: number };
-
-      if (saveIncomingMedia !== 0 && saveIncomingMedia !== 1) {
-        return res.status(400).json({ message: "saveIncomingMedia должен быть 0 или 1" });
-      }
-
-      const updated = await storage.updateBotToken(tokenId, { saveIncomingMedia });
+      /** Сохраняет индивидуальное значение или возвращает наследование проекта. */
+      const updated = await saveBotInheritedSetting(projectId, tokenId, 'saveIncomingMedia', req.body.saveIncomingMedia);
       if (!updated) {
         return res.status(404).json({ message: "Токен не найден" });
       }
@@ -1113,11 +1134,11 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       void emitTokenUpdated({
         projectId,
         tokenId,
-        changedFields: ['saveIncomingMedia'],
+        changedFields: ['saveIncomingMedia', 'inheritBotSettings'],
         source: 'api',
       }).catch((err) => console.error('[save-incoming-media] emitTokenUpdated:', err));
 
-      res.json({ success: true, saveIncomingMedia });
+      res.json({ success: true, saveIncomingMedia: updated.botSettings.saveIncomingMedia, inheritBotSettings: updated.inheritBotSettings });
     } catch (error) {
       res.status(500).json({ message: "Ошибка обновления настройки сохранения медиа" });
     }
@@ -1136,13 +1157,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     try {
       const tokenId = parseInt(req.params.tokenId);
       const projectId = parseInt(req.params.projectId);
-      const { catchAllHandlers } = req.body as { catchAllHandlers: number };
-
-      if (catchAllHandlers !== 0 && catchAllHandlers !== 1) {
-        return res.status(400).json({ message: "catchAllHandlers должен быть 0 или 1" });
-      }
-
-      const updated = await storage.updateBotToken(tokenId, { catchAllHandlers });
+      /** Сохраняет индивидуальное значение или возвращает наследование проекта. */
+      const updated = await saveBotInheritedSetting(projectId, tokenId, 'catchAllHandlers', req.body.catchAllHandlers);
       if (!updated) {
         return res.status(404).json({ message: "Токен не найден" });
       }
@@ -1150,11 +1166,11 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       void emitTokenUpdated({
         projectId,
         tokenId,
-        changedFields: ['catchAllHandlers'],
+        changedFields: ['catchAllHandlers', 'inheritBotSettings'],
         source: 'api',
       }).catch((err) => console.error('[catch-all-handlers] emitTokenUpdated:', err));
 
-      res.json({ success: true, catchAllHandlers });
+      res.json({ success: true, catchAllHandlers: updated.botSettings.catchAllHandlers, inheritBotSettings: updated.inheritBotSettings });
     } catch (error) {
       res.status(500).json({ message: "Ошибка обновления настройки catch-all обработчиков" });
     }
@@ -1166,15 +1182,12 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     try {
       const tokenId = parseInt(req.params.tokenId);
       const projectId = parseInt(req.params.projectId);
-      const { trackUserBlocks } = req.body as { trackUserBlocks: number };
-      if (trackUserBlocks !== 0 && trackUserBlocks !== 1) {
-        return res.status(400).json({ message: "trackUserBlocks должен быть 0 или 1" });
-      }
-      const updated = await storage.updateBotToken(tokenId, { trackUserBlocks });
+      /** Сохраняет индивидуальное значение или возвращает наследование проекта. */
+      const updated = await saveBotInheritedSetting(projectId, tokenId, 'trackUserBlocks', req.body.trackUserBlocks);
       if (!updated) return res.status(404).json({ message: "Токен не найден" });
-      void emitTokenUpdated({ projectId, tokenId, changedFields: ['trackUserBlocks'], source: 'api' })
+      void emitTokenUpdated({ projectId, tokenId, changedFields: ['trackUserBlocks', 'inheritBotSettings'], source: 'api' })
         .catch((err) => console.error('[track-user-blocks] emitTokenUpdated:', err));
-      res.json({ success: true, trackUserBlocks });
+      res.json({ success: true, trackUserBlocks: updated.botSettings.trackUserBlocks, inheritBotSettings: updated.inheritBotSettings });
     } catch {
       res.status(500).json({ message: "Ошибка обновления отслеживания блокировок" });
     }
@@ -1186,15 +1199,12 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     try {
       const tokenId = parseInt(req.params.tokenId);
       const projectId = parseInt(req.params.projectId);
-      const { trackGroupMembership } = req.body as { trackGroupMembership: number };
-      if (trackGroupMembership !== 0 && trackGroupMembership !== 1) {
-        return res.status(400).json({ message: "trackGroupMembership должен быть 0 или 1" });
-      }
-      const updated = await storage.updateBotToken(tokenId, { trackGroupMembership });
+      /** Сохраняет индивидуальное значение или возвращает наследование проекта. */
+      const updated = await saveBotInheritedSetting(projectId, tokenId, 'trackGroupMembership', req.body.trackGroupMembership);
       if (!updated) return res.status(404).json({ message: "Токен не найден" });
-      void emitTokenUpdated({ projectId, tokenId, changedFields: ['trackGroupMembership'], source: 'api' })
+      void emitTokenUpdated({ projectId, tokenId, changedFields: ['trackGroupMembership', 'inheritBotSettings'], source: 'api' })
         .catch((err) => console.error('[track-group-membership] emitTokenUpdated:', err));
-      res.json({ success: true, trackGroupMembership });
+      res.json({ success: true, trackGroupMembership: updated.botSettings.trackGroupMembership, inheritBotSettings: updated.inheritBotSettings });
     } catch {
       res.status(500).json({ message: "Ошибка обновления отслеживания групп" });
     }
@@ -1214,13 +1224,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     try {
       const tokenId = parseInt(req.params.tokenId);
       const projectId = parseInt(req.params.projectId);
-      const { contentCache } = req.body as { contentCache: number };
-
-      if (contentCache !== 0 && contentCache !== 1) {
-        return res.status(400).json({ message: "contentCache должен быть 0 или 1" });
-      }
-
-      const updated = await storage.updateBotToken(tokenId, { contentCache });
+      /** Сохраняет индивидуальное значение или возвращает наследование проекта. */
+      const updated = await saveBotInheritedSetting(projectId, tokenId, 'contentCache', req.body.contentCache);
       if (!updated) {
         return res.status(404).json({ message: "Токен не найден" });
       }
@@ -1228,11 +1233,11 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       void emitTokenUpdated({
         projectId,
         tokenId,
-        changedFields: ['contentCache'],
+        changedFields: ['contentCache', 'inheritBotSettings'],
         source: 'api',
       }).catch((err) => console.error('[content-cache] emitTokenUpdated:', err));
 
-      res.json({ success: true, contentCache });
+      res.json({ success: true, contentCache: updated.botSettings.contentCache, inheritBotSettings: updated.inheritBotSettings });
     } catch (error) {
       res.status(500).json({ message: "Ошибка обновления настройки живого обновления контента" });
     }
@@ -1382,12 +1387,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     try {
       const tokenId = parseInt(req.params.tokenId);
       const projectId = parseInt(req.params.projectId);
-      const { logLevel } = req.body as { logLevel: string };
-      const valid = ['DEBUG', 'INFO', 'WARNING', 'ERROR'] as const;
-      if (!(valid as readonly string[]).includes(logLevel)) {
-        return res.status(400).json({ message: "Недопустимый уровень логирования" });
-      }
-      const updated = await storage.updateBotToken(tokenId, { logLevel: logLevel as StorageBotTokenInput["logLevel"] });
+      /** Уровень журналирования допускает независимый источник. */
+      const updated = await saveBotInheritedSetting(projectId, tokenId, 'logLevel', req.body.logLevel);
       if (!updated) return res.status(404).json({ message: "Токен не найден" });
 
       // Обновляем .env файл бота если существует
@@ -1395,11 +1396,11 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       void emitTokenUpdated({
         projectId,
         tokenId,
-        changedFields: ['logLevel'],
+        changedFields: ['logLevel', 'inheritBotSettings'],
         source: 'api',
       }).catch((err) => console.error('[log-level] emitTokenUpdated:', err));
 
-      res.json({ success: true, logLevel });
+      res.json({ success: true, logLevel: updated.botSettings.logLevel, inheritBotSettings: updated.inheritBotSettings });
     } catch (error) {
       res.status(500).json({ message: "Ошибка обновления уровня логирования" });
     }
@@ -1415,28 +1416,25 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     const { revealWebhookSecret } = await import('./botTokens/reveal-webhook-secret');
     await revealWebhookSecret(req, res);
   });
+  /** Возвращает текущий токен только при явном запросе владельца. */
+  app.get("/api/projects/:projectId/tokens/:tokenId/reveal", requireTokenOwnership, async (req, res) => {
+    const { revealBotToken } = await import('./botTokens/reveal-webhook-secret');
+    await revealBotToken(req, res);
+  });
   app.put("/api/projects/:projectId/tokens/:tokenId/launch-settings", requireTokenOwnership, requireBotSettingBody("launch-settings"), async (req, res) => {
     try {
       const tokenId = parseInt(req.params.tokenId);
       const projectId = parseInt(req.params.projectId);
       const { launchMode, webhookBaseUrl, webhookSecretToken } = req.body as {
-        launchMode: 'polling' | 'webhook';
+        launchMode?: 'inherit' | 'polling' | 'webhook';
         webhookBaseUrl?: string | null;
         webhookSecretToken?: string | null;
       };
 
-      if (launchMode !== 'polling' && launchMode !== 'webhook') {
-        return res.status(400).json({ message: "launchMode должен быть 'polling' или 'webhook'" });
-      }
-
-      // Читаем текущий режим до обновления
-      const currentToken = await storage.getBotToken(tokenId);
-
-      /** Не допускаем несовместимый вебхук при сохранённом режиме сна. */
-      validateRuntimeModeBatch([{ action: 'update', key: 'LAUNCH_MODE', value: launchMode }],
-        await storage.getEnvVariables(tokenId), currentToken?.launchMode, undefined, tokenId);
-
       /** Сохраняем только явно заданные поля; применение выполняется при запуске. */
+      if (launchMode === undefined && webhookBaseUrl === undefined && webhookSecretToken === undefined) {
+        return res.status(400).json({ message: 'Укажите настройки запуска' });
+      }
       const updated = await saveRuntimeModeSettings(tokenId,
         buildLaunchSettingsPatch({ launchMode, webhookBaseUrl, webhookSecretToken }), projectId);
 
@@ -1447,12 +1445,14 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       void emitTokenUpdated({
         projectId,
         tokenId,
-        changedFields: ['launchMode', 'webhookBaseUrl'],
+        changedFields: ['launchMode', 'inheritLaunchMode', 'webhookBaseUrl', 'inheritBotSettings'],
         source: 'api',
       }).catch((err) => console.error('[launch-settings] emitTokenUpdated:', err));
 
       /** Секрет webhook никогда не возвращается после записи. */
-      res.json({ success: true, launchMode, webhookBaseUrl, persistence: { confirmed: true, method: 'storage_returning' } });
+      res.json({ success: true, launchMode: updated.launchMode, inheritLaunchMode: updated.inheritLaunchMode,
+        webhookBaseUrl: updated.botSettings.webhookBaseUrl, inheritBotSettings: updated.inheritBotSettings,
+        persistence: { confirmed: true, method: 'storage_returning' } });
     } catch (error: any) {
       res.status(error?.status || 500).json({ message: error?.status === 400 ? error.message : "Ошибка обновления настроек запуска" });
     }
@@ -2277,17 +2277,25 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // Get all user data for a project
   app.get("/api/projects/:id/users", async (req, res) => {
     const projectId = parseInt(req.params.id);
-    let tokenId = getRequestTokenId(req);
+    const tokenId = getRequestTokenId(req);
     /** Фильтрация реальных личных переписок применяется только к списку диалогов. */
     const isDialogList = req.query.dialogKind !== undefined || req.query.includeGroups === 'true';
     /** Во вкладке пользователей исключаем групповые профили без личной переписки, сохраняя выбор всех ботов. */
     const privateContactsOnly = req.query.privateContactsOnly === 'true';
-    if (isDialogList) {
-      const token = tokenId ? await storage.getBotToken(tokenId) : await storage.getDefaultBotToken(projectId);
-      if (!token || token.projectId !== projectId || (req.query.tokenId !== undefined && !tokenId)) {
+    /** Профильные фильтры диалогов не меняют выбор бота и не включают каталог пользователей. */
+    const dialogKind = resolveDialogKind(req.query as Record<string, unknown>);
+    const dialogUserFilters = isDialogList && wantsUsers(dialogKind) && req.query.dialogUserFilters === 'true';
+    const profileFiltersEnabled = privateContactsOnly || dialogUserFilters;
+    /** В общей области один человек занимает одну строку, а группы остаются отдельными чатами ботов. */
+    const uniqueDialogUsers = isDialogList && tokenId === null;
+    /** Объединяет строки после каждого собственного набора условий списка или фасета. */
+    const privateDialogSelection = (selection: string) => uniqueDialogUsers ? uniqueDialogUsersSql(selection) : selection;
+    /** Без tokenId диалоги охватывают всех ботов проекта; явный выбор не подменяется ботом по умолчанию. */
+    if (isDialogList && (tokenId !== null || req.query.tokenId !== undefined)) {
+      const token = tokenId ? await storage.getBotToken(tokenId) : undefined;
+      if (!token || token.projectId !== projectId) {
         return res.status(404).json({ message: 'Бот проекта не найден' });
       }
-      tokenId = token.id;
     }
 
     // Проверяем права доступа к проекту для авторизованных пользователей
@@ -2316,6 +2324,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       interactionCount: 'u.interaction_count',
       firstName: 'u.first_name',
       userName: 'u.username',
+      ...(privateContactsOnly ? { incomingMessageCount: userActionCountSql(false), buttonClickCount: userActionCountSql(true), acquisitionSource: userSourcePopularitySql,
+        variableCount: userVariableCountSql, userStatus: userStatusSortSql } : {}),
     };
     const sortColumn = sortColumnMap[sortBy as string] ?? sortColumnMap.lastInteraction;
     const sortOrder = sortDir === 'asc' ? 'ASC' : 'DESC';
@@ -2324,6 +2334,11 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       SELECT
         ROW_NUMBER() OVER (ORDER BY u.last_interaction DESC) AS id,
         u.user_id::text AS "userId",
+        ${privateContactsOnly || isDialogList ? 'u.token_id AS "tokenId",' : ''}
+        ${privateContactsOnly ? `${userBotUnavailableSql()} AS "botUnavailable",` : ''}
+        ${privateContactsOnly ? `${userHasOtherBotsSql()} AS "hasOtherAvailableBots",` : ''}
+        ${privateContactsOnly ? `${userSourceSql} AS "acquisitionSource", ${userContactOriginSql('u',true)} AS "contactOrigin",
+          ${firstSavedMessageSql('u',true)} AS "firstSavedMessageAt",` : ''}
         u.username AS "userName",
         u.first_name AS "firstName",
         u.last_name AS "lastName",
@@ -2341,11 +2356,12 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         u.deep_link_param AS "deepLinkParam",
         u.referrer_id AS "referrerId",
         u.user_data AS "userData",
+        ${privateContactsOnly ? `u.imported_at AS "importedAt", ${hasPrivateMessagesSql()} AS "hasPrivateMessages",` : ''}
         lm.message_text AS "lastMessageText",
         lm.created_at AS "lastMessageAt",
         FALSE AS "isGroup",
         NULL AS "chatType"
-      FROM bot_users u
+      FROM ${privateContactsOnly && tokenId === null ? uniqueProjectUsersSql() : 'bot_users'} u
       LEFT JOIN LATERAL (
         SELECT id, message_text, created_at
         FROM bot_messages
@@ -2359,15 +2375,16 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       WHERE u.is_bot = 0
         AND u.project_id = $1
         AND ($2::integer IS NULL OR u.token_id = $2)
-        ${isDialogList || privateContactsOnly ? 'AND lm.id IS NOT NULL' : ''}
+        ${isDialogList ? 'AND lm.id IS NOT NULL' : privateContactsOnly ? `AND ${userContactEligibility('u')}` : ''}
     `;
 
     // Фильтр вкладки «Диалоги»: all | users | groups | channels (includeGroups — legacy)
-    const dialogKind = resolveDialogKind(req.query as Record<string, unknown>);
     const includeUsers = wantsUsers(dialogKind);
-    const includeGroupsPart = wantsGroups(dialogKind);
+    const includeGroupsPart = wantsGroups(dialogKind) && !(dialogUserFilters && hasDialogProfileConstraints(req.query as Record<string, unknown>));
     const groupsSelectSql = buildGroupsSelectSql(groupChatTypesSql(dialogKind));
     const groupsUnionSql = includeGroupsPart ? ` UNION ALL ${groupsSelectSql}` : '';
+    /** Фасеты считаются только по личным диалогам, без изменения колонок группового UNION. */
+    const facetBase = dialogUserFilters ? dialogProfileFacetSelection(selectBase) : selectBase;
 
     try {
       if (limit !== null) {
@@ -2375,14 +2392,15 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         const params: any[] = [projectId, tokenId];
         let paramIdx = 3;
         const conditions: string[] = [];
+        let selectedLanguage: string | undefined;
 
         if (search && includeUsers) {
-          const searchParam = `%${search}%`;
+          const searchParam = privateContactsOnly ? userDirectorySearchPattern(search) : `%${search}%`;
           /**
            * Ищем не только по данным пользователя, но и по тексту сообщений диалога.
            * EXISTS сохраняет корректную пагинацию без дублирования строк пользователя.
            */
-          conditions.push(`
+          conditions.push(privateContactsOnly ? userDirectorySearchSql(paramIdx) : `
             (
               u.first_name ILIKE $${paramIdx}
               OR u.username ILIKE $${paramIdx}
@@ -2404,8 +2422,48 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         }
         if (filterActive === 'true') conditions.push('u.is_active = 1');
         if (filterActive === 'false') conditions.push('u.is_active = 0');
+        /** Дополнительные фильтры применяются до пагинации ко всем счётчикам. */
+        if (profileFiltersEnabled && req.query.filters !== undefined) {
+          let raw: unknown;
+          try { raw = typeof req.query.filters === 'string' && req.query.filters.length <= 6000 ? JSON.parse(req.query.filters) : null; }
+          catch { return res.status(400).json({ message: 'Некорректные дополнительные фильтры' }); }
+          const parsed = advancedUserFiltersSchema.safeParse(raw);
+          if (!parsed.success) return res.status(400).json({ message: parsed.error.issues[0]?.message ?? 'Некорректные фильтры' });
+          selectedLanguage = parsed.data.language;
+          const advancedConditions = advancedUserWhere({ ...parsed.data, language: undefined,
+            ...(req.query.variableOptions === 'true' ? { variableName: undefined, variableMode: undefined, variableValue: undefined } : {}) }, params, dialogUserFilters ? search : undefined);
+          conditions.push(...(dialogUserFilters ? dialogActivityConditions(advancedConditions) : advancedConditions));
+          paramIdx = params.length + 1;
+        }
+        /** Выбранный статус исключается из области счётчиков пунктов фильтра. */
+        let statusCondition = '';
+        const premiumCondition = profileFiltersEnabled && req.query.premium === 'true' ? ' AND u.is_premium=1'
+          : profileFiltersEnabled && req.query.premium === 'false' ? ' AND COALESCE(u.is_premium,0)=0' : '';
+        /** Статусы соответствуют видимому состоянию, а не только флагу активности. */
+        if (profileFiltersEnabled && req.query.status !== undefined && req.query.status !== 'all') {
+          const predicate = typeof req.query.status === 'string' ? userStatusPredicate(req.query.status) : undefined;
+          if (!predicate) return res.status(400).json({ message: 'Неизвестный статус пользователя' });
+          statusCondition = ` AND (${predicate})`;
+        }
+        /** Источник фильтруется до подсчёта и пагинации, значение передаётся параметром. */
+        const sourceParams = [...params];
+        let sourceCondition = '';
+        if (profileFiltersEnabled && typeof req.query.source === 'string' && req.query.source) {
+          sourceCondition = ` AND ${userSourceSql} = $${paramIdx++}`;
+          params.push(req.query.source);
+        }
 
-        const whereExtra = conditions.length ? ' AND ' + conditions.join(' AND ') : '';
+        /** Язык исключён только из собственного счётчика; нумерация остальных фасетов независима. */
+        const languageParams = [...params];
+        const languagePredicate = userLanguageCondition(selectedLanguage, params);
+        const sourceLanguagePredicate = userLanguageCondition(selectedLanguage, sourceParams);
+        paramIdx = params.length + 1;
+        const languageCondition = languagePredicate ? ` AND ${languagePredicate}` : '';
+        const baseWhere = conditions.length ? ' AND ' + conditions.join(' AND ') : '';
+        const facetWhere = baseWhere + premiumCondition + sourceCondition + languageCondition;
+        const whereExtra = facetWhere + statusCondition;
+        /** Полный набор условий применяется до выбора последнего подходящего диалога человека. */
+        const privateSelection = privateDialogSelection(`${selectBase}${whereExtra}`);
 
         /** Поиск по названию группы/канала (внешний WHERE после GROUP BY) */
         let groupsSearchOuter = '';
@@ -2418,41 +2476,93 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         let dataSql: string;
         let countSql: string;
 
+        /** При одинаковом времени пара бот/чат задаёт устойчивый порядок соседних страниц. */
         if (includeUsers && includeGroupsPart) {
-          dataSql = `SELECT * FROM (${selectBase}${whereExtra}${groupsUnionSql}) AS dialogs ORDER BY "lastInteraction" DESC NULLS LAST LIMIT $${paramIdx} OFFSET $${paramIdx + 1}`;
-          countSql = `SELECT COUNT(*)::integer AS total FROM (${selectBase}${whereExtra}${groupsUnionSql}) AS dialogs`;
+          dataSql = `SELECT * FROM (${privateSelection}${groupsUnionSql}) AS dialogs ORDER BY "lastInteraction" DESC NULLS LAST, "userId", "tokenId" LIMIT $${paramIdx} OFFSET $${paramIdx + 1}`;
+          countSql = `SELECT COUNT(*)::integer AS total FROM (${privateSelection}${groupsUnionSql}) AS dialogs`;
         } else if (includeGroupsPart) {
-          dataSql = `SELECT * FROM (${groupsSelectSql}) AS dialogs${groupsSearchOuter} ORDER BY "lastInteraction" DESC NULLS LAST LIMIT $${paramIdx} OFFSET $${paramIdx + 1}`;
+          dataSql = `SELECT * FROM (${groupsSelectSql}) AS dialogs${groupsSearchOuter} ORDER BY "lastInteraction" DESC NULLS LAST, "userId", "tokenId" LIMIT $${paramIdx} OFFSET $${paramIdx + 1}`;
           countSql = `SELECT COUNT(*)::integer AS total FROM (${groupsSelectSql}) AS dialogs${groupsSearchOuter}`;
+        } else if (uniqueDialogUsers) {
+          /** Имена сортируем по разрешённым полям внешней выборки без ссылок на внутренний u. */
+          const outerSortColumns: Record<string, string> = { firstName: '"firstName"', userName: '"userName"', createdAt: '"createdAt"', interactionCount: '"interactionCount"' };
+          const outerSort = outerSortColumns[sortBy ?? ''] ?? '"lastInteraction"';
+          dataSql = `SELECT * FROM (${privateSelection}) AS dialogs ORDER BY ${outerSort} ${sortOrder} NULLS LAST, "userId" LIMIT $${paramIdx} OFFSET $${paramIdx + 1}`;
+          countSql = `SELECT COUNT(*)::integer AS total FROM (${privateSelection}) AS dialogs`;
         } else {
-          dataSql = `${selectBase}${whereExtra} ORDER BY ${sortColumn} ${sortOrder} LIMIT $${paramIdx} OFFSET $${paramIdx + 1}`;
+          dataSql = `${selectBase}${whereExtra} ORDER BY ${sortColumn} ${sortOrder} NULLS LAST${privateContactsOnly && sortBy === 'acquisitionSource' ? `, ${userSourceSql} ASC, u.last_interaction DESC NULLS LAST` : ''}, u.user_id, u.token_id LIMIT $${paramIdx} OFFSET $${paramIdx + 1}`;
           countSql = `SELECT COUNT(*)::integer AS total FROM (${selectBase}${whereExtra}) AS dialogs`;
         }
 
         const dataParams = [...params, limit, offset];
         const countParams = [...params];
+        /** Снимок поиска читает ID и имена одним запросом, без переменных, пагинации и фасетов. */
+        if (req.query.audienceSnapshot === 'true') {
+          if (!profileFiltersEnabled || includeGroupsPart || !tokenId)
+            return res.status(400).json({ message: 'Выберите конкретного бота и личных пользователей.' });
+          const snapshot = await dbPool.query(foundBroadcastAudienceSql(`${selectBase}${whereExtra}`), countParams);
+          if (snapshot.rows.length > 10000)
+            return res.status(400).json({ message: 'Найдено больше 10 000 пользователей. Уточните фильтры.' });
+          return res.json({ users: snapshot.rows, total: snapshot.rows.length, hasMore: false });
+        }
+        /** Селектор переменных запрашивает только общий итог и заполненность, без тяжёлой загрузки строк. */
+        if (profileFiltersEnabled && req.query.variableOptions === 'true') {
+          const equals = typeof req.query.variableEquals === 'string' ? req.query.variableEquals : '';
+          if (equals.length > 2000) return res.status(400).json({ message: 'Слишком длинное значение переменной' });
+          const variableName = typeof req.query.variableName === 'string' ? req.query.variableName : '';
+          const valueSearch = typeof req.query.variableValueSearch === 'string' ? req.query.variableValueSearch : '';
+          if (variableName.length > 200 || valueSearch.length > 200) return res.status(400).json({ message: 'Слишком длинный поиск переменной' });
+          const selection = privateSelection;
+          const [totalResult, variableResult, valuesResult] = await Promise.all([
+            dbPool.query(countSql, countParams),
+            dbPool.query(userVariableCountsSql(selection, countParams.length + 1), [...countParams, equals]),
+            variableName ? dbPool.query(userVariableValuesSql(selection, countParams.length + 1, countParams.length + 2),
+              [...countParams, variableName, userDirectorySearchPattern(valueSearch)]) : Promise.resolve(null),
+          ]);
+          return res.json({ total: totalResult.rows[0]?.total ?? 0, variables: variableResult.rows,
+            values: valuesResult?.rows.slice(0, 200) ?? [], hasMoreValues: (valuesResult?.rows.length ?? 0) > 200 });
+        }
 
-        const [dataResult, countResult] = await Promise.all([
+        const [dataResult, countResult, statusesResult, sourceCountsResult, premiumCountsResult, languageCountsResult] = await Promise.all([
           dbPool.query(dataSql, dataParams),
           dbPool.query(countSql, countParams),
+          profileFiltersEnabled ? dbPool.query(userStatusCountsSql(privateDialogSelection(`${facetBase}${facetWhere}`), true), countParams) : Promise.resolve(null),
+          profileFiltersEnabled ? dbPool.query(userSourceCountsSql(privateDialogSelection(`${facetBase}${baseWhere}${premiumCondition}${statusCondition}${sourceLanguagePredicate ? ` AND ${sourceLanguagePredicate}` : ''}`)), sourceParams) : Promise.resolve(null),
+          profileFiltersEnabled ? dbPool.query(userPremiumCountsSql(privateDialogSelection(`${facetBase}${baseWhere}${sourceCondition}${statusCondition}${languageCondition}`)), countParams) : Promise.resolve(null),
+          profileFiltersEnabled ? dbPool.query(userLanguageCountsSql(privateDialogSelection(`${facetBase}${baseWhere}${premiumCondition}${sourceCondition}${statusCondition}`)), languageParams) : Promise.resolve(null),
         ]);
 
         const total: number = countResult.rows[0]?.total ?? 0;
-        const users = await enrichDialogAccess(projectId, tokenId, dataResult.rows);
+        /** Счётчики нужны только вкладке пользователей и вычисляются после пагинации. */
+        const page = privateContactsOnly ? await enrichUserMetrics(projectId, tokenId, dataResult.rows) : dataResult.rows;
+        const dialogPage = uniqueDialogUsers ? await enrichDialogBotMemberships(projectId, page) : page;
+        const users = await enrichDialogAccess(projectId, tokenId, dialogPage);
         console.log(`Paginated: project ${projectId}, kind=${dialogKind}, offset=${offset}, limit=${limit}, total=${total}`);
-        return res.json({ users, total, hasMore: offset + users.length < total });
+        /** Список источников независим от выбранного фильтра и текущей страницы. */
+        const sources = dialogUserFilters ? { rows: sourceCountsResult?.rows.map(row => ({ label: row.source })) ?? [] } : privateContactsOnly ? await dbPool.query(`SELECT DISTINCT ${userSourceSql} label
+          FROM bot_users u WHERE u.project_id=$1 AND ($2::integer IS NULL OR u.token_id=$2)
+          AND u.is_bot=0 AND ${userContactEligibility('u')} ORDER BY label`, [projectId, tokenId]) : null;
+        return res.json({ users, total, hasMore: offset + users.length < total,
+          ...(statusesResult ? { statusCounts: statusesResult.rows[0] } : {}),
+          ...(sourceCountsResult ? { sourceCounts: Object.fromEntries(sourceCountsResult.rows.map(row => [row.source, row.count])) } : {}),
+          ...(premiumCountsResult ? { premiumCounts: premiumCountsResult.rows[0] } : {}),
+          ...(languageCountsResult ? { languageCounts: Object.fromEntries(languageCountsResult.rows.map(row => [row.language, row.count])) } : {}),
+          ...(sources ? { sources: [...new Set(sources.rows.map(row => row.label))] } : {}) });
       }
 
       // Обратная совместимость: возвращаем массив без пагинации (без фильтров)
+      const completePrivateSelection = privateDialogSelection(selectBase);
       const selectSql =
         includeUsers && includeGroupsPart
-          ? `SELECT * FROM (${selectBase}${groupsUnionSql}) AS dialogs ORDER BY "lastInteraction" DESC NULLS LAST`
+          ? `SELECT * FROM (${completePrivateSelection}${groupsUnionSql}) AS dialogs ORDER BY "lastInteraction" DESC NULLS LAST`
           : includeGroupsPart
             ? `SELECT * FROM (${groupsSelectSql}) AS dialogs ORDER BY "lastInteraction" DESC NULLS LAST`
-            : `${selectBase} ORDER BY ${sortColumnMap.lastInteraction} DESC NULLS LAST`;
+            : uniqueDialogUsers ? `SELECT * FROM (${completePrivateSelection}) AS dialogs ORDER BY "lastInteraction" DESC NULLS LAST, "userId"`
+              : `${selectBase} ORDER BY ${sortColumnMap.lastInteraction} DESC NULLS LAST`;
       const result = await dbPool.query(selectSql, [projectId, tokenId]);
       console.log(`Found ${result.rows.length} users for project ${projectId} (kind=${dialogKind})`);
-      res.json(await enrichDialogAccess(projectId, tokenId, result.rows));
+      const dialogRows = uniqueDialogUsers ? await enrichDialogBotMemberships(projectId, result.rows) : result.rows;
+      res.json(await enrichDialogAccess(projectId, tokenId, dialogRows));
     } catch (error) {
       console.error("Error fetching user data:", error);
       /** Ошибка выборки диалогов не должна возвращать групповых отправителей через запасной список. */
@@ -2490,6 +2600,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   app.get("/api/projects/:id/users/stats", async (req, res) => {
     const projectId = parseInt(req.params.id);
     const tokenId = getRequestTokenId(req);
+    /** Вкладка пользователей считает уникальные личные контакты без групповых профилей. */
+    const privateContactsOnly = req.query.privateContactsOnly === 'true';
 
     // Проверяем права доступа к проекту для авторизованных пользователей
     const ownerId = getOwnerIdFromRequest(req);
@@ -2515,20 +2627,23 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           (SELECT COALESCE(COUNT(*), 0) FROM bot_messages bm
            WHERE bm.project_id = $1
              AND bm.message_type IN ('user', 'bot')
+             ${privateContactsOnly ? "AND COALESCE(bm.chat_type,'private')='private'" : ''}
              AND ($2::integer IS NULL OR bm.token_id = $2)) as "totalInteractions",
           CASE WHEN COUNT(*) > 0
             THEN (SELECT COALESCE(COUNT(*), 0)::float FROM bot_messages bm
                   WHERE bm.project_id = $1
                     AND bm.message_type IN ('user', 'bot')
+                    ${privateContactsOnly ? "AND COALESCE(bm.chat_type,'private')='private'" : ''}
                     AND ($2::integer IS NULL OR bm.token_id = $2)) / COUNT(*)
             ELSE 0
           END as "avgInteractionsPerUser",
           COUNT(DISTINCT language_code) FILTER (WHERE language_code IS NOT NULL) as "uniqueLanguages",
           COUNT(*) FILTER (WHERE deep_link_param IS NOT NULL AND deep_link_param != 'direct') as "deepLinkUsers",
           COUNT(*) FILTER (WHERE referrer_id IS NOT NULL) as "referralUsers"
-        FROM bot_users
+        FROM ${privateContactsOnly && tokenId === null ? uniqueProjectUsersSql() : 'bot_users'} u
         WHERE project_id = $1
           AND ($2::integer IS NULL OR token_id = $2)
+          ${privateContactsOnly ? `AND is_bot=0 AND ${userContactEligibility('u')}` : ''}
       `, [projectId, tokenId]);
 
       const stats = result.rows[0];
@@ -3237,6 +3352,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     requireProjectAccess,
     updateBotUserHandler,
   );
+  /** Очистка без личных обращений имеет отдельную проверенную область и предварительный подсчёт. */
+  registerDeleteWithoutPrivateRoutes(app);
   app.delete(
     "/api/projects/:projectId/users/:userId",
     requireProjectAccess,
@@ -3253,6 +3370,13 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   setupBotIntegrationRoutes(app);
   registerGroupsAnalyticsRoutes(app);
   registerUnavailableUsersRoutes(app);
+  /** Импорт контактов доступен только после проверки прав проекта. */
+  registerUsersTransferRoutes(app);
+  registerBotAudienceCounts(app);
+  registerChatAccessBatchRoutes(app);
+  registerDialogProfileBotsRoutes(app);
+  registerDialogProfileGroupsRoutes(app);
+  registerDialogProfileContentRoutes(app);
 
   // HTML страница со встроенным Telegram Login Widget для авторизации в отдельном окне
   setupAuthRoutes(app);
@@ -3339,8 +3463,6 @@ function setupTokenEnvVariableRoutes(app: Express) {
       }
 
       const existing = await storage.getEnvVariables(tokenId);
-      /** Проверяем системный режим до создания пользовательской переменной. */
-      validateRuntimeModeBatch([{ action: 'create', key, value }], existing, (await storage.getBotToken(tokenId))?.launchMode, undefined, tokenId);
       if (existing.some(v => v.key === key)) {
         return res.status(409).json({ message: `Переменная ${key} уже существует` });
       }
@@ -3349,7 +3471,7 @@ function setupTokenEnvVariableRoutes(app: Express) {
       if (key === 'BOT_POLLING_MODE') {
         await saveRuntimeMode(tokenId, value);
         const variable = (await storage.getEnvVariables(tokenId)).find(row => row.key === key);
-        void emitTokenUpdated({ projectId: parseInt(req.params.projectId), tokenId, source: 'api', changedFields: ['pollingMode'] }).catch(console.error);
+        void emitTokenUpdated({ projectId: parseInt(req.params.projectId), tokenId, source: 'api', changedFields: ['pollingMode', 'inheritSleepMode'] }).catch(console.error);
         return res.status(201).json({ ...variable, persistence: { confirmed: true, method: 'storage_returning' } });
       }
 
@@ -3389,14 +3511,15 @@ function setupTokenEnvVariableRoutes(app: Express) {
       }
 
       /** Проверяем переименование и значение режима до обновления строки. */
-      validateRuntimeModeBatch([{ action: 'update', id, key, value: value ?? variable.value }],
-        await storage.getEnvVariables(variable.tokenId), (await storage.getBotToken(variable.tokenId))?.launchMode, undefined, variable.tokenId);
+      if (key && key !== variable.key && (key === 'BOT_POLLING_MODE' || variable.key === 'BOT_POLLING_MODE')) {
+        return res.status(400).json({ message: 'Настройку режима выполнения нельзя переименовать' });
+      }
 
       /** Не допускаем гонку режима с параллельной сменой способа доставки. */
       if (variable.key === 'BOT_POLLING_MODE') {
         await saveRuntimeMode(variable.tokenId, value ?? variable.value);
         const updated = (await storage.getEnvVariables(variable.tokenId)).find(row => row.key === variable.key);
-        void emitTokenUpdated({ projectId: parseInt(req.params.projectId), tokenId: variable.tokenId, source: 'api', changedFields: ['pollingMode'] }).catch(console.error);
+        void emitTokenUpdated({ projectId: parseInt(req.params.projectId), tokenId: variable.tokenId, source: 'api', changedFields: ['pollingMode', 'inheritSleepMode'] }).catch(console.error);
         return res.json({ ...updated, persistence: { confirmed: true, method: 'storage_returning' } });
       }
 
@@ -3433,13 +3556,10 @@ function setupTokenEnvVariableRoutes(app: Express) {
       if (!variable || variable.tokenId !== parseInt(req.params.tokenId, 10)) {
         return res.status(404).json({ message: "Переменная не найдена" });
       }
-      /** Удаление индивидуального значения возвращает режим общего окружения. */
-      validateRuntimeModeBatch([{ action: 'delete', id }], await storage.getEnvVariables(variable.tokenId),
-        (await storage.getBotToken(variable.tokenId))?.launchMode, undefined, variable.tokenId);
       /** Сброс удаляет все старые дубликаты системной настройки одной транзакцией. */
       if (variable.key === 'BOT_POLLING_MODE') {
         await saveRuntimeModeSettings(variable.tokenId, { resetMode: true });
-        void emitTokenUpdated({ projectId: parseInt(req.params.projectId), tokenId: variable.tokenId, source: 'api', changedFields: ['pollingMode'] }).catch(console.error);
+        void emitTokenUpdated({ projectId: parseInt(req.params.projectId), tokenId: variable.tokenId, source: 'api', changedFields: ['pollingMode', 'inheritSleepMode'] }).catch(console.error);
         return res.json({ success: true, persistence: { confirmed: true, method: 'storage_delete' } });
       }
       const deleted = await storage.deleteEnvVariable(id);
@@ -3512,10 +3632,21 @@ function setupTokenEnvVariableRoutes(app: Express) {
       /** Проверяем весь пакет до первой записи, включая переменные по идентификаторам. */
       const variables = await storage.getEnvVariables(tokenId);
       const token = await storage.getBotToken(tokenId);
-      const runtimeModeChanged = validateRuntimeModeBatch(changes, variables, token?.launchMode, undefined, tokenId);
+      if (!token || token.projectId !== projectId) return res.status(404).json({ message: 'Бот не найден в проекте' });
+      const project = await storage.getBotProject(projectId);
+      const defaultLaunchMode = project?.defaultLaunchMode ?? 'polling';
+      const effectiveLaunchMode = resolveBotLaunchMode(defaultLaunchMode, token.launchMode, token.inheritLaunchMode);
+      const runtimeModeChanged = validateRuntimeModeBatch(
+        changes, variables, effectiveLaunchMode, undefined, tokenId, defaultLaunchMode,
+        project?.defaultSleepMode, token.inheritSleepMode,
+      );
       const normalizedChanges = changes.map(change => ({
         ...change, key: change.key || variables.find(row => row.id === change.id)?.key || '',
       }));
+      /** Отклоняем неверный формат списка до первой записи пакета. */
+      if (normalizedChanges.some(({ action, key, value }) => action === 'update' && key === 'ADMIN_IDS' && typeof value !== 'string')) {
+        return res.status(400).json({ message: 'Укажите список администраторов строкой' });
+      }
       /** Сначала сохраняем способ доставки, затем совместимый режим обработчика. */
       const orderedChanges = normalizedChanges.sort((a, b) =>
         Number(a.key === 'BOT_POLLING_MODE') - Number(b.key === 'BOT_POLLING_MODE'));
@@ -3525,28 +3656,25 @@ function setupTokenEnvVariableRoutes(app: Express) {
       /** Последнее изменение способа получения обновлений определяет итог пакета. */
       const launchChanges = normalizedChanges.filter(change => change.key === 'LAUNCH_MODE' && change.action === 'update');
       const launchChange = launchChanges[launchChanges.length - 1];
-      if (modeChange || launchChange) {
-        await saveRuntimeModeSettings(tokenId, {
-          ...(modeChange ? modeChange.action === 'delete' ? { resetMode: true } : { mode: modeChange.value } : {}),
-          ...(launchChange ? { launchMode: launchChange.value as 'polling' | 'webhook' } : {}),
+      /** Проверяем общие и индивидуальные настройки до первой записи. */
+      const botSettingChanges = parseBotInheritedSettingsBatch(normalizedChanges);
+      const inheritedFields = Object.keys(botSettingChanges);
+      const autoRestartPatch = parseBotAutoRestartBatch(normalizedChanges);
+      const autoRestartFields = Object.keys(autoRestartPatch);
+      if (modeChange || launchChange || inheritedFields.length || autoRestartFields.length) {
+        const updated = await saveRuntimeModeSettings(tokenId, {
+          ...(modeChange ? modeChange.action === 'delete' || modeChange.value === 'inherit'
+            ? { resetMode: true } : { mode: modeChange.value } : {}),
+          ...(launchChange ? { launchMode: launchChange.value as 'inherit' | 'polling' | 'webhook' } : {}),
+          botSettingChanges,
+          autoRestartPatch,
         }, projectId);
+        if (!updated) return res.status(404).json({ message: 'Бот не найден в проекте' });
       }
 
       /** Маппинг системных ключей на поля bot_tokens */
       const tokenFieldMap: Record<string, string> = {
         BOT_TOKEN: 'token',
-        LOG_LEVEL: 'logLevel',
-        PROTECT_CONTENT: 'protectContent',
-        SAVE_INCOMING_MEDIA: 'saveIncomingMedia',
-        MESSAGES_RETENTION_DAYS: 'messagesRetentionDays',
-        CATCH_ALL_HANDLERS: 'catchAllHandlers',
-        CONTENT_CACHE: 'contentCache',
-        TRACK_USER_BLOCKS: 'trackUserBlocks',
-        TRACK_GROUP_MEMBERSHIP: 'trackGroupMembership',
-        AUTO_RESTART: 'autoRestart',
-        MAX_RESTART_ATTEMPTS: 'maxRestartAttempts',
-        LAUNCH_MODE: 'launchMode',
-        WEBHOOK_BASE_URL: 'webhookBaseUrl',
         WEBHOOK_SECRET_TOKEN: 'webhookSecretToken',
       };
 
@@ -3567,7 +3695,9 @@ function setupTokenEnvVariableRoutes(app: Express) {
         console.log(`[env-batch]   ${action} ${key}${id ? ` id=${id}` : ''}`);
 
         /** Сервис удаляет дубликаты и сохраняет единственное каноническое значение. */
-        if (key === 'BOT_POLLING_MODE' || (key === 'LAUNCH_MODE' && action === 'update')) {
+        if (key === 'BOT_POLLING_MODE' || (key === 'LAUNCH_MODE' && action === 'update')
+          || ((key === 'AUTO_RESTART' || key === 'MAX_RESTART_ATTEMPTS') && action === 'update')
+          || (action === 'update' && inheritedBotSettingForEnv(key))) {
           results.push(`updated:${key}`);
           continue;
         }
@@ -3585,9 +3715,9 @@ function setupTokenEnvVariableRoutes(app: Express) {
         }
 
         if (action === 'update' && key && value !== undefined) {
-          // ADMIN_IDS → обновляем проект
+          /** Сохраняем явную очистку списка без возврата к старому .env. */
           if (key === 'ADMIN_IDS') {
-            await storage.updateBotProject(projectId, { adminIds: value });
+            await storage.updateBotProject(projectId, { adminIds: encodeAdminIdsForStorage(value) });
             results.push(`updated:ADMIN_IDS`);
             continue;
           }
@@ -3599,7 +3729,7 @@ function setupTokenEnvVariableRoutes(app: Express) {
             continue;
           }
 
-          // Поля bot_tokens (BOT_TOKEN, LOG_LEVEL, PROTECT_CONTENT, SAVE_INCOMING_MEDIA, AUTO_RESTART, MAX_RESTART_ATTEMPTS)
+          // Остальные поля bot_tokens, не участвующие в настройках запуска.
           if (tokenFieldMap[key]) {
             const field = tokenFieldMap[key];
             // Маска из GET (botId:••••••••) нельзя писать в bot_tokens.token —
@@ -3615,20 +3745,7 @@ function setupTokenEnvVariableRoutes(app: Express) {
               results.push(`skipped:${key}:masked`);
               continue;
             }
-            let dbValue: any = value;
-            if (key === 'PROTECT_CONTENT' || key === 'SAVE_INCOMING_MEDIA' || key === 'AUTO_RESTART' || key === 'CATCH_ALL_HANDLERS' || key === 'CONTENT_CACHE' || key === 'TRACK_USER_BLOCKS' || key === 'TRACK_GROUP_MEMBERSHIP') {
-              dbValue = value === 'true' || value === '1' ? 1 : 0;
-            }
-            if (key === 'MAX_RESTART_ATTEMPTS') {
-              dbValue = parseInt(value!) || 3;
-            }
-            if (key === 'MESSAGES_RETENTION_DAYS') {
-              dbValue = parseInt(value!, 10);
-              if (Number.isNaN(dbValue)) dbValue = 0;
-            }
-            if (key === 'WEBHOOK_BASE_URL' || key === 'WEBHOOK_SECRET_TOKEN') {
-              dbValue = value || null;
-            }
+            const dbValue = key === 'WEBHOOK_SECRET_TOKEN' ? value || null : value;
             await storage.updateBotToken(tokenId, { [field]: dbValue });
             results.push(`updated:${key}`);
             continue;
@@ -3666,7 +3783,12 @@ function setupTokenEnvVariableRoutes(app: Express) {
           projectId,
           tokenId,
           source: 'api',
-          changedFields: runtimeModeChanged ? ['pollingMode'] : undefined,
+          changedFields: [
+            ...(runtimeModeChanged ? ['pollingMode', 'inheritSleepMode'] : []),
+            ...(launchChange ? ['launchMode', 'inheritLaunchMode'] : []),
+            ...(inheritedFields.length ? ['inheritBotSettings', ...inheritedFields] : []),
+            ...autoRestartFields,
+          ],
         }).catch((err) => console.error('[env-batch] emitTokenUpdated:', err));
       }
 

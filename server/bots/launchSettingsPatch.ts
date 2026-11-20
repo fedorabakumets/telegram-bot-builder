@@ -4,8 +4,8 @@ import type { RuntimeModeChanges } from './runtimeModeSettings';
 /** Входные поля формы доставки сообщений. */
 interface LaunchSettingsInput {
   /** Способ доставки после следующего запуска. */
-  launchMode: 'polling' | 'webhook';
-  /** Адрес вебхука; отсутствие поля сохраняет прежний адрес. */
+  launchMode?: RuntimeModeChanges['launchMode'];
+  /** Адрес вебхука, команда наследования или отсутствие нового значения. */
   webhookBaseUrl?: string | null;
   /** Секрет; отсутствие поля или маска сохраняет прежнее значение. */
   webhookSecretToken?: string | null;
@@ -17,7 +17,8 @@ interface LaunchSettingsInput {
  * @returns Безопасное изменение без обращения к Telegram.
  */
 export function buildLaunchSettingsPatch(input: LaunchSettingsInput): RuntimeModeChanges {
-  const patch: RuntimeModeChanges = { launchMode: input.launchMode };
+  const patch: RuntimeModeChanges = {};
+  if (input.launchMode !== undefined) patch.launchMode = input.launchMode;
   if (input.webhookBaseUrl !== undefined) patch.webhookBaseUrl = input.webhookBaseUrl;
   if (input.webhookSecretToken !== undefined
     && !(typeof input.webhookSecretToken === 'string' && /[•*…]/.test(input.webhookSecretToken))) {

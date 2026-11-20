@@ -13,12 +13,17 @@ import { useUserDatabasePanelState } from './panel/panel-state';
 import { UserDatabasePanelProps } from './types';
 import { formatUserName } from './utils';
 import { LiveInvalidator } from './panel/live-invalidator';
+import { UserDirectoryControls } from './content/user-directory-controls';
+/** Объединяет контролы таблицы и запросы в одной области. @param props - Параметры панели. @returns Панель пользователей. */
+export function UserDatabasePanel(props: UserDatabasePanelProps): React.JSX.Element {
+  return <UserDirectoryControls key={props.projectId}><UserDatabasePanelContent {...props} /></UserDirectoryControls>;
+}
 /**
  * Компонент панели базы данных пользователей
  * @param props - Пропсы компонента
  * @returns JSX компонент панели
  */
-export function UserDatabasePanel(props: UserDatabasePanelProps): React.JSX.Element {
+function UserDatabasePanelContent(props: UserDatabasePanelProps): React.JSX.Element {
   const {
     projectId,
     projectName,

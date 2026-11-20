@@ -49,7 +49,7 @@ export function BotDetailPanel({
   const [tab, setTab] = useState<BotDetailTabId>('history');
   const [confirmDelete, setConfirmDelete] = useState(false);
   const pending = useEnvPendingChanges(project.id, token.id);
-  const { startBotMutation, stopBotMutation, deleteBotMutation, toggleDatabaseMutation } =
+  const { startBotMutation, stopBotMutation, deleteBotMutation } =
     useBotControl();
   const { user, isTelegramUser } = useTelegramAuth();
   const { terminals, activeTerminalId } = useActiveTerminals();
@@ -113,14 +113,19 @@ export function BotDetailPanel({
             <BotSettingsGrid
               pendingRuntimeMode={pending.getPendingValue('BOT_POLLING_MODE')}
               pendingLaunchMode={pending.getPendingValue('LAUNCH_MODE')}
+              pendingAutoRestart={pending.getPendingValue('AUTO_RESTART')}
+              pendingMaxAttempts={pending.getPendingValue('MAX_RESTART_ATTEMPTS')}
+              restartDefaults={project}
+              inheritedDefaults={project.botSettingDefaults}
+              getPendingValue={pending.getPendingValue}
               settingsSaving={pending.isSaving}
               projectId={project.id}
               tokenId={token.id}
               botName={title}
               userDatabaseEnabled={project.userDatabaseEnabled}
               token={token}
-              toggleDatabaseMutation={toggleDatabaseMutation}
-              launchMode={token.launchMode ?? 'polling'}
+              launchMode={token.inheritLaunchMode ? 'inherit' : token.launchMode}
+              projectLaunchMode={project.defaultLaunchMode}
               webhookBaseUrl={token.webhookBaseUrl ?? null}
               webhookSecretToken={token.webhookSecretToken ?? null}
               hasWebhookSecret={token.hasWebhookSecret}
@@ -133,7 +138,7 @@ export function BotDetailPanel({
             />
           )}
           {tab === 'collaborators' && (
-            <BotCollaboratorsTab projectId={project.id} canManage={canManage} />
+            <BotCollaboratorsTab projectId={project.id} ownerId={project.ownerId} canManage={canManage} />
           )}
           {tab === 'variables' && (
             <BotEnvPanel

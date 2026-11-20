@@ -8,9 +8,9 @@ import type { BotCanvasStatus } from './bot-canvas-status';
 afterEach(cleanup);
 describe('бейдж замороженного бота', () => {
   it.each([
-    ['frozen_running', 'Заморожен · ожидается автоостановка'],
-    ['frozen_stopped', 'Заморожен · процесс остановлен'],
-    ['frozen_unknown', 'Заморожен · состояние процесса неизвестно'],
+    ['frozen_running', 'Заморожен'],
+    ['frozen_stopped', 'Заморожен'],
+    ['frozen_unknown', 'Заморожен'],
   ] satisfies Array<[BotCanvasStatus, string]>)('показывает %s явно', (status, label) => {
     render(<BotRunStatusBadge status={status} />);
     expect(screen.getByRole('status').textContent).toBe(label);

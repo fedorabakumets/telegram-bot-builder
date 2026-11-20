@@ -89,10 +89,16 @@ export function BotControlPanel({
   const currentProjectTokens =
     currentProjectIndex >= 0 ? (allTokens[currentProjectIndex] || []) : [];
 
+  /** При открытии формы выбирает текущий проект, если он доступен. */
+  const openConnectBot = () => {
+    setProjectForNewBot(currentProjectIndex >= 0 ? projects[currentProjectIndex].id : null);
+    setShowAddBot(true);
+  };
+
   return (
     <div className="flex flex-col h-full bg-background">
       <BotControlPanelHeader
-        onConnectBot={() => setShowAddBot(true)}
+        onConnectBot={openConnectBot}
         allProjects={allProjects}
         currentProjectId={currentProjectId}
         onProjectChange={onProjectChange}

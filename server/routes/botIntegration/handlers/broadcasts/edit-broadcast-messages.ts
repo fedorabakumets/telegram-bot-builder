@@ -1,94 +1,69 @@
-/**
- * @fileoverview Общая операция редактирования одной рассылки:
- * правка сообщений в Telegram, обновление БД и WS-события
- * @module botIntegration/handlers/broadcasts/edit-broadcast-messages
- */
-
-import { eq, and, sql, isNotNull } from "drizzle-orm";
+/** @fileoverview Правка отправленных сообщений с сохранением клавиатуры и точными итогами. */
+import { eq, and } from "drizzle-orm";
 import { db } from "../../../../database/db";
-import { broadcasts, broadcastResults, botMessages, botTokens } from "@shared/schema";
-import { broadcastProjectEvent } from "../../../../terminal/broadcastProjectEvent";
-import {
-  editTelegramBroadcastMessage,
-  throttleBroadcastTelegramOps,
-} from "./broadcast-telegram-ops";
-
-/** Статистика редактирования сообщений рассылки */
-export interface BroadcastEditStats {
-  /** Успешно отредактировано сообщений в Telegram */
-  edited: number;
-  /** Не удалось отредактировать */
-  failed: number;
-}
+import { broadcasts, broadcastResults, botTokens } from "@shared/schema";
+import { extractButtonsFromNode } from "../messages/extract-buttons";
+import { buildInlineKeyboard } from "../messages/send-telegram-message";
+import { editTelegramBroadcastMessage, throttleBroadcastTelegramOps } from "./broadcast-telegram-ops";
+import type { BroadcastMessageEditResult } from "./broadcast-telegram-ops";
+import { acquireBroadcastEdit, BroadcastEditConflict, emptyBroadcastEditStats } from "./broadcast-edit-state";
+import { persistBroadcastEdit } from "./persist-broadcast-edit";
+export type { BroadcastEditStats } from "./broadcast-edit-state";
 
 /**
- * Редактирует текст всех отправленных сообщений рассылки в Telegram,
- * обновляет запись рассылки, историю диалогов и рассылает WS-события
- * @param projectId - ID проекта
- * @param broadcastId - ID рассылки
- * @param tokenId - ID токена бота рассылки
- * @param messageText - Новый HTML-текст
- * @returns Количество успешных и неуспешных правок
+ * Редактирует только отправленные сообщения выбранного бота и проекта.
+ * @param projectId - Проект с проверенными правами доступа.
+ * @param broadcastId - Отправленная рассылка.
+ * @param tokenId - Бот этой рассылки.
+ * @param messageText - Новый текст или подпись.
+ * @returns Подтверждённые результаты Telegram и ошибки сохранения.
  */
-export async function editBroadcastMessages(
-  projectId: number,
-  broadcastId: number,
-  tokenId: number,
-  messageText: string,
-): Promise<BroadcastEditStats> {
-  const [tokenRecord] = await db
-    .select()
-    .from(botTokens)
-    .where(and(eq(botTokens.id, tokenId), eq(botTokens.projectId, projectId)));
-
-  const results = await db
-    .select()
-    .from(broadcastResults)
-    .where(and(eq(broadcastResults.broadcastId, broadcastId), isNotNull(broadcastResults.telegramMessageId)));
-
-  let edited = 0;
-  let failed = 0;
-
-  if (tokenRecord?.token && results.length > 0) {
-    for (const r of results) {
-      const ok = await editTelegramBroadcastMessage(
-        tokenRecord.token,
-        r.userId,
-        r.telegramMessageId!,
-        messageText,
-      );
-      if (ok) edited++;
-      else failed++;
+export async function editBroadcastMessages(projectId: number, broadcastId: number,
+  tokenId: number, messageText: string) {
+  const release = acquireBroadcastEdit(broadcastId);
+  try {
+    const [broadcast] = await db.select().from(broadcasts).where(and(
+      eq(broadcasts.id, broadcastId), eq(broadcasts.projectId, projectId), eq(broadcasts.tokenId, tokenId)));
+    if (!broadcast) throw new Error("Рассылка не найдена в проекте");
+    if (["running", "pending"].includes(broadcast.status)) {
+      throw new BroadcastEditConflict("Сначала остановите отправку рассылки");
+    }
+    const [token] = await db.select().from(botTokens).where(and(
+      eq(botTokens.id, tokenId), eq(botTokens.projectId, projectId)));
+    const results = await db.select().from(broadcastResults).where(and(
+      eq(broadcastResults.broadcastId, broadcastId), eq(broadcastResults.status, "sent")));
+    const stats = emptyBroadcastEditStats();
+    const buttons = (broadcast.buttons as unknown[]) ?? [];
+    const inlineButtons = extractButtonsFromNode({ buttons });
+    const replyMarkup = inlineButtons.length ? buildInlineKeyboard(inlineButtons, broadcast.buttonsPerRow ?? undefined)
+      : { inline_keyboard: [] };
+    const hasMedia = Array.isArray(broadcast.mediaUrls) && broadcast.mediaUrls.length > 0;
+    for (const result of results) {
+      if (!result.telegramMessageId || result.telegramMessageId < 1) { stats.skipped++; continue; }
+      if (!token?.token) { stats.failed++; continue; }
+      stats.attempted++;
+      let response: BroadcastMessageEditResult;
+      try {
+        response = await editTelegramBroadcastMessage(token.token, result.userId,
+          result.telegramMessageId, messageText, { replyMarkup, hasMedia });
+      } catch { response = { status: "unknown" }; }
+      stats[response.status]++;
+      if (response.status === "edited" || response.status === "unchanged") {
+        try {
+          await persistBroadcastEdit(projectId, tokenId, broadcastId, result.userId,
+            result.telegramMessageId, messageText, buttons, broadcast.buttonsPerRow);
+        } catch {
+          stats.persistenceFailed++;
+        }
+      }
       await throttleBroadcastTelegramOps(results.length);
     }
-  }
-
-  await db.update(broadcasts).set({ messageText }).where(eq(broadcasts.id, broadcastId));
-
-  await db
-    .update(botMessages)
-    .set({ messageText })
-    .where(
-      and(
-        eq(botMessages.projectId, projectId),
-        sql`${botMessages.messageData}->>'broadcastId' = ${String(broadcastId)}`,
-      ),
-    );
-
-  const allResults = await db
-    .select()
-    .from(broadcastResults)
-    .where(eq(broadcastResults.broadcastId, broadcastId));
-
-  for (const r of allResults) {
-    await broadcastProjectEvent(projectId, {
-      type: "message-edited",
-      projectId,
-      tokenId,
-      data: { messageId: 0, userId: r.userId, messageText },
-      timestamp: new Date().toISOString(),
-    });
-  }
-
-  return { edited, failed };
+    if (stats.edited + stats.unchanged > 0 && stats.failed + stats.unknown + stats.skipped + stats.persistenceFailed === 0) {
+      try {
+        await db.update(broadcasts).set({ messageText }).where(and(
+          eq(broadcasts.id, broadcastId), eq(broadcasts.projectId, projectId), eq(broadcasts.tokenId, tokenId)));
+      } catch { stats.persistenceFailed++; }
+    }
+    return stats;
+  } finally { release(); }
 }

@@ -11,6 +11,7 @@ import {
   type LiveEvent,
 } from '@/components/editor/database/user-database/contexts/user-messages-live-context';
 import { applyCampaignProgress } from './invalidate-campaign-cache';
+import { useBroadcastEditRefresh } from './use-broadcast-edit-refresh';
 import type { Broadcast } from '../types';
 
 /**
@@ -74,6 +75,7 @@ function buildDetailKey(projectId: number, broadcastId: number): string {
 export function useBroadcastLiveInvalidate({
   projectId,
 }: UseBroadcastLiveInvalidateParams): void {
+  useBroadcastEditRefresh(projectId);
   const queryClient = useQueryClient();
   const liveContext = useUserMessagesLiveContext();
   const detailInvalidateTimers = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map());

@@ -46,6 +46,21 @@ describe("настройки общего polling", () => {
     assert.deepEqual(withPollingRuntimeEnv([], { BOT_POLLING_MODE: "  " }), []);
   });
 
+  it("передаёт режим проекта вне серверного списка и игнорирует старый режим токена", () => {
+    const own = [
+      { key: "BOT_POLLING_MODE", value: "ondemand" },
+      { key: "BOT_ON_DEMAND_TOKEN_IDS", value: "35" },
+    ];
+    const actual = withPollingRuntimeEnv(own, env, { inherited: true, defaultMode: "direct" });
+    assert.equal(actual.find((entry) => entry.key === "BOT_POLLING_MODE")?.value, "direct");
+    assert.equal(actual.find((entry) => entry.key === "BOT_ON_DEMAND_TOKEN_IDS")?.value, "");
+    const fallback = withPollingRuntimeEnv(own, env, { inherited: true, defaultMode: null });
+    assert.equal(fallback.find((entry) => entry.key === "BOT_POLLING_MODE")?.value, "process");
+    assert.equal(fallback.find((entry) => entry.key === "BOT_ON_DEMAND_TOKEN_IDS")?.value, "");
+    const override = withPollingRuntimeEnv(own, env, { inherited: false, defaultMode: "direct" });
+    assert.equal(override.find((entry) => entry.key === "BOT_POLLING_MODE")?.value, "ondemand");
+  });
+
   it("передаёт настройки процессу, сохраняя запрет наследования подключений", () => {
     const result = buildWorkerBaseEnv(env, { passthrough: [] });
     assert.deepEqual(result, Object.fromEntries(POLLING_RUNTIME_ENV.map((key) => [key, env[key as keyof typeof env]])));

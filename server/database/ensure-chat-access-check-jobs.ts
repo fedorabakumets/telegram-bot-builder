@@ -10,6 +10,13 @@ export const CHAT_ACCESS_CHECK_JOBS_DDL = `CREATE TABLE IF NOT EXISTS chat_acces
     id SERIAL PRIMARY KEY,
     project_id INTEGER NOT NULL REFERENCES bot_projects(id) ON DELETE CASCADE,
     token_id INTEGER NOT NULL REFERENCES bot_tokens(id) ON DELETE CASCADE,
+    historical_token_id INTEGER,
+    token_name TEXT,
+    token_username TEXT,
+    project_name TEXT,
+    failure_reason TEXT,
+    worker_id TEXT,
+    lease_until TIMESTAMPTZ,
     status TEXT NOT NULL DEFAULT 'pending'
       CHECK (status IN ('pending', 'running', 'cancelling', 'cancelled', 'completed', 'failed')),
     total_count INTEGER NOT NULL DEFAULT 0,

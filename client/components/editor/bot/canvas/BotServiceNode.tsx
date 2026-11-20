@@ -5,9 +5,12 @@
 
 import { useRef } from 'react';
 import { BotAvatar } from '../card/BotAvatar';
+import { BotLaunchModeLabel } from '../card/BotLaunchModeLabel';
 import { IdBadge } from '@/components/editor/database/user-database/components/header/project-name-label';
 import { BotServiceNodeFooter } from './BotServiceNodeFooter';
 import { useBotVisualStatus } from './use-bot-visual-status';
+import { isFrozenCanvasStatus } from './bot-canvas-status';
+import { statusAppearance } from '@shared/status-appearance';
 import { BotStatusMotion } from './BotStatusMotion';
 import { getBotProfileLabels } from './bot-profile-labels';
 import type { BotServiceFailure } from './bot-service-failure';
@@ -20,6 +23,8 @@ interface BotServiceNodeProps {
   token: BotToken;
   /** ID проекта */
   projectId: number;
+  /** Режим проекта по умолчанию. */
+  projectLaunchMode?: string | null;
   /** Запущен ли бот */
   isRunning: boolean;
   /** Последний запуск с ошибкой */
@@ -44,6 +49,7 @@ interface BotServiceNodeProps {
 export function BotServiceNode({
   token,
   projectId,
+  projectLaunchMode,
   isRunning,
   failure,
   selected,
@@ -65,7 +71,12 @@ export function BotServiceNode({
     moved: boolean;
   } | null>(null);
   const canvasStatus = useBotVisualStatus(token.id, projectId, token.isActive, isRunning, token.authorizationError);
-  const alertBorder = ['invalid', 'failed', 'error'].includes(canvasStatus);
+  /** Рамка повторяет цвет бейджа, пока карточка не выбрана. */
+  const restrictionLabel = canvasStatus === 'invalid' ? 'Ошибка токена'
+    : isFrozenCanvasStatus(canvasStatus) ? 'Заморожен' : undefined;
+  const restrictionBorder = !selected && restrictionLabel
+    ? `${statusAppearance(restrictionLabel).color}66` : undefined;
+  const alertBorder = canvasStatus === 'failed' || canvasStatus === 'error';
 
   return (
     <button
@@ -74,7 +85,7 @@ export function BotServiceNode({
       data-canvas-node="true"
       aria-pressed={selected}
       aria-label={title}
-      style={{ left, top }}
+      style={{ left, top, borderColor: restrictionBorder }}
       className={[
         'absolute w-[240px] overflow-hidden rounded-xl border p-0 text-left touch-none',
         'bg-card shadow-sm transition-[border-color,box-shadow,transform]',
@@ -142,7 +153,10 @@ export function BotServiceNode({
           <div className="text-[11px] text-muted-foreground truncate mt-0.5">{username}</div>
         </div>
       </div>
-      <BotServiceNodeFooter isRunning={isRunning} failure={failure} isActive={token.isActive} visualStatus={canvasStatus} />
+      <BotServiceNodeFooter
+        isRunning={isRunning} failure={failure} isActive={token.isActive} visualStatus={canvasStatus}
+        launchModeLabel={<BotLaunchModeLabel choice={token.inheritLaunchMode ? 'inherit' : token.launchMode} projectMode={projectLaunchMode} />}
+      />
     </button>
   );
 }

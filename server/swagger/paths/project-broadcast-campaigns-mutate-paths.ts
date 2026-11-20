@@ -73,7 +73,8 @@ export function registerProjectBroadcastCampaignsMutatePaths(
     description:
       "Обновляет `messageText` кампании и правит уже отправленные сообщения " +
       "через `editMessageText` во всех ботах кампании (throttle ~25/с на бота). " +
-      "Текст 1…4096 после trim. В ответе — сводка и разбивка по ботам.\n\n" +
+      "Клавиатура сохраняется. Текст 1…4096 после trim. В ответе — сводка и разбивка по ботам; " +
+      "проверяйте edited/failed, поскольку ok не гарантирует успех у всех получателей.\n\n" +
       CAMPAIGN_SECURITY_NOTE +
       "\n\n**Клиенты Studio:** правка текста в пузыре большой рассылки в «Диалогах» " +
       "(`use-edit-broadcast-campaign`).\n\n" +

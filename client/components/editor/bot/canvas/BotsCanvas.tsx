@@ -5,6 +5,7 @@
 
 import { useCallback, useMemo, useRef } from 'react';
 import { BotServiceNode } from './BotServiceNode';
+import { BotProjectNode } from './BotProjectNode';
 import { BotsCanvasToolbar } from './BotsCanvasToolbar';
 import { useCanvasFullscreen } from './use-canvas-fullscreen';
 import { useBotNodeLayout } from './use-bot-node-layout';
@@ -13,10 +14,21 @@ import { useCanvasViewport } from '@/components/editor/canvas/canvas/use-canvas-
 import type { BotServiceFailure } from './bot-service-failure';
 import type { BotToken } from '@shared/schema';
 
+/** Высота строки, зарезервированной под карточку проекта. */
+const PROJECT_ROW_HEIGHT = 128;
+
 /** Пропсы холста ботов */
 interface BotsCanvasProps {
   /** ID проекта */
   projectId: number;
+  /** Название текущего проекта. */
+  projectName: string;
+  /** Режим запуска проекта по умолчанию. */
+  projectLaunchMode: 'polling' | 'webhook';
+  /** Выбрана ли карточка проекта. */
+  projectSelected: boolean;
+  /** Открывает панель проекта. */
+  onSelectProject: () => void;
   /** Токены */
   tokens: BotToken[];
   /** tokenId → running */
@@ -38,6 +50,10 @@ interface BotsCanvasProps {
  */
 export function BotsCanvas({
   projectId,
+  projectName,
+  projectLaunchMode,
+  projectSelected,
+  onSelectProject,
   tokens,
   runningByTokenId,
   failureByTokenId = {},
@@ -50,6 +66,10 @@ export function BotsCanvas({
   const { isFullscreen, cssFullscreen, toggleFullscreen } = useCanvasFullscreen(rootRef);
   const tokenIds = useMemo(() => tokens.map((t) => t.id), [tokens]);
   const { positions, setNodePos, contentSize } = useBotNodeLayout(projectId, tokenIds);
+  /** Сдвигаем отображаемые координаты, оставляя сохранённую раскладку совместимой. */
+  const botPositions = useMemo(() => Object.fromEntries(
+    Object.entries(positions).map(([id, pos]) => [id, { ...pos, top: pos.top + PROJECT_ROW_HEIGHT }]),
+  ), [positions]);
 
   const isEmptyTarget = useCallback((target: HTMLElement) => (
     !target.closest('[data-canvas-node]') && !target.closest('[data-canvas-controls]')
@@ -77,7 +97,7 @@ export function BotsCanvas({
 
   useFocusSelectedBot({
     selectedTokenId,
-    positions,
+    positions: botPositions,
     canvasRef,
     zoomRef,
     panRef,
@@ -120,28 +140,41 @@ export function BotsCanvas({
           className="origin-top-left"
           style={{
             width: contentSize.width,
-            height: contentSize.height,
+            height: contentSize.height + PROJECT_ROW_HEIGHT,
             transform: `translate3d(${Math.round(pan.x)}px, ${Math.round(pan.y)}px, 0) scale(${scale})`,
             transition: animateTransform ? 'transform 200ms ease-out' : 'none',
             backfaceVisibility: 'hidden',
           }}
         >
-          <div className="relative" style={{ width: contentSize.width, height: contentSize.height }}>
+          <div className="relative h-full w-full">
+            <BotProjectNode
+              name={projectName}
+              launchMode={projectLaunchMode}
+              botCount={tokens.length}
+              selected={projectSelected}
+              onSelect={() => {
+                if (isFullscreen) void toggleFullscreen().then(onSelectProject);
+                else onSelectProject();
+              }}
+            />
             {tokens.map((token) => {
-              const pos = positions[token.id];
+              const pos = botPositions[token.id];
               if (!pos) return null;
               return (
                 <BotServiceNode
                   key={token.id}
                   token={token}
                   projectId={projectId}
+                  projectLaunchMode={projectLaunchMode}
                   isRunning={!!runningByTokenId[token.id]}
                   failure={failureByTokenId[token.id] ?? null}
                   selected={selectedTokenId === token.id}
                   onSelect={() => onSelectToken(token.id)}
                   position={pos}
                   scale={scale}
-                  onMove={(next, persist) => setNodePos(token.id, next, persist)}
+                  onMove={(next, persist) => setNodePos(
+                    token.id, { ...next, top: next.top - PROJECT_ROW_HEIGHT }, persist,
+                  )}
                 />
               );
             })}

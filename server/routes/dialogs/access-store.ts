@@ -21,21 +21,24 @@ export async function saveChatAccess(projectId: number, tokenId: number, chatId:
 /**
  * Дополняет существующий ответ списка UI, сохраняя его формат.
  * @param projectId - Проект
- * @param tokenId - Выбранный бот; без него статус неизвестен
+ * @param tokenId - Выбранный бот; в общей области используется бот каждой записи
  * @param entries - Записи списка
  * @returns Записи с сохранёнными состояниями
  */
-export async function enrichDialogAccess<T extends { userId: string; isGroup?: boolean }>(
+export async function enrichDialogAccess<T extends { userId: string; tokenId?: number | null; isGroup?: boolean }>(
   projectId: number, tokenId: number | null, entries: T[],
 ) {
   const ids = entries.map((entry) => String(entry.userId));
-  const rows = tokenId && ids.length ? (await dbPool.query(
-    `SELECT chat_id, status, checked_at FROM chat_access
-     WHERE project_id = $1 AND token_id = $2 AND chat_id = ANY($3::text[])`, [projectId, tokenId, ids],
+  /** Статусы одинакового чата у разных ботов не должны подменять друг друга. */
+  const tokenIds = [...new Set(entries.map(entry => tokenId ?? entry.tokenId)
+    .filter((id): id is number => Number.isSafeInteger(id) && Number(id) > 0))];
+  const rows = tokenIds.length && ids.length ? (await dbPool.query(
+    `SELECT token_id, chat_id, status, checked_at FROM chat_access
+     WHERE project_id = $1 AND token_id = ANY($2::integer[]) AND chat_id = ANY($3::text[])`, [projectId, tokenIds, ids],
   )).rows : [];
-  const statuses = new Map(rows.map((row) => [row.chat_id, row]));
+  const statuses = new Map(rows.map((row) => [`${row.token_id}:${row.chat_id}`, row]));
   return entries.map((entry) => {
-    const access = statuses.get(String(entry.userId));
+    const access = statuses.get(`${tokenId ?? entry.tokenId}:${entry.userId}`);
     return { ...entry, accessStatus: access?.status ?? 'unknown', accessCheckedAt: access?.checked_at ?? null };
   });
 }

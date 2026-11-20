@@ -1,17 +1,15 @@
-/** @fileoverview Выбор бота в диалогах с подтверждённой аудиторией из общего снимка аналитики. */
-import { useMemo } from 'react';
+/** @fileoverview Выбор одного или всех ботов в диалогах с подтверждёнными счётчиками аудитории. */
 import type { BotToken } from '@shared/schema';
 import { BotTokenSelector } from '../components/header/bot-token-selector';
-import { useAnalyticsSnapshot } from '@/components/editor/analytics/use-analytics-snapshot';
-import { initialReportFilter } from '@/components/editor/analytics/analytics-report-filter';
+import { useBotAudienceCounts } from '../components/header/use-bot-audience-counts';
 
-/** Параметры выбора конкретного бота для переписки. */
+/** Параметры выбора области переписки: один бот либо все боты проекта. */
 interface DialogBotSelectorProps {
   /** Открытый проект. */ projectId: number;
   /** Боты проекта. */ tokens: BotToken[];
-  /** Выбранный бот. */ selectedTokenId: number | null;
+  /** Выбранный бот; null означает всех ботов проекта. */ selectedTokenId: number | null;
   /** Обработчик выбора бота. */ onSelect: (id: number | null) => void;
-  /** Совместимость с вызовами селектора конкретного бота. */ allowAll?: false;
+  /** Показывать общую область всех ботов проекта. */ allowAll?: boolean;
 }
 
 /**
@@ -20,13 +18,8 @@ interface DialogBotSelectorProps {
  * @returns Селектор с подтверждённой аудиторией без счётчика сохранённых профилей.
  */
 export function DialogBotSelector(props: DialogBotSelectorProps) {
-  const filter = useMemo(() => initialReportFilter(props.projectId), [props.projectId]);
-  const snapshot = useAnalyticsSnapshot(props.projectId, null, filter);
-  /** При ошибке или смене проекта не подставляет чужие либо устаревшие счётчики. */
-  const counts = useMemo(() => new Map(
-    !snapshot.isError && snapshot.data?.project_id === props.projectId
-      ? snapshot.data.token_audiences?.map(item => [item.token_id, item.total_users] as const) ?? []
-      : [],
-  ), [props.projectId, snapshot.data, snapshot.isError]);
-  return <BotTokenSelector {...props} allowAll={false} audienceCounts={counts} />;
+  /** Счётчики загружаются независимо от тяжёлого снимка аналитики. */
+  const query = useBotAudienceCounts(props.projectId);
+  return <BotTokenSelector {...props} allowAll={props.allowAll ?? true} audienceCounts={query.counts}
+    countsError={query.isError && !query.data} onRetryCounts={() => { void query.refetch(); }} />;
 }

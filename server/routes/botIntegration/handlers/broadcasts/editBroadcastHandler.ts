@@ -9,6 +9,7 @@ import { db } from "../../../../database/db";
 import { broadcasts } from "@shared/schema";
 import { editBroadcastBodySchema } from "./broadcast-body-schemas";
 import { editBroadcastMessages } from "./edit-broadcast-messages";
+import { BroadcastEditConflict, broadcastEditResponse } from "./broadcast-edit-state";
 
 /**
  * Обрабатывает PUT /api/projects/:projectId/broadcasts/:broadcastId
@@ -45,15 +46,19 @@ export async function editBroadcastHandler(req: Request, res: Response): Promise
       return;
     }
 
-    const { edited, failed } = await editBroadcastMessages(
+    const stats = await editBroadcastMessages(
       projectId,
       broadcastId,
       broadcast.tokenId,
       messageText,
     );
 
-    res.json({ ok: true, edited, failed });
+    res.json(broadcastEditResponse(stats));
   } catch (error) {
+    if (error instanceof BroadcastEditConflict) {
+      res.status(409).json({ message: error.message });
+      return;
+    }
     console.error("[editBroadcastHandler] Ошибка:", error);
     res.status(500).json({ message: "Внутренняя ошибка сервера" });
   }

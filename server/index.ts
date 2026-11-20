@@ -4,6 +4,7 @@
  */
 
 import { apiLogPath, mayLogApiResponse } from "./utils/api-log-policy";
+import { startCheckScheduleWorker } from './routes/check-history/schedule-worker';
 
 
 import { captureAgentBody } from "./auth/agent/signature";
@@ -152,6 +153,8 @@ app.use((req, res, next) => {
  */
 (async () => {
   const httpServer = createServer(app);
+  /** Расписания исполняются после миграций и готовности HTTP, без зависимости от открытой вкладки. */
+  httpServer.once('listening', () => { const stop = startCheckScheduleWorker(); httpServer.once('close', stop); });
   await runMigrations();
   /** После миграций обрабатываем накопленные снимки и удаления S3. */
   startVersionObjectWorker();
@@ -304,8 +307,9 @@ app.use((req, res, next) => {
       });
     }
 
-    // Восстанавливаем боты после готовности Redis (боты используют Redis для FSM/lock/pubsub)
-    if (botRuntimeMode === 'combined') void (async () => {
+    /** В локальной разработке можно оставить запуск ботов полностью ручным. */
+    const manualDevStarts = process.env.NODE_ENV === 'development' && process.env.BOT_DEV_MANUAL_START === 'true';
+    if (botRuntimeMode === 'combined' && !manualDevStarts) void (async () => {
       try {
         if (process.env.REDIS_URL?.trim()) {
           await waitForRedisInit();

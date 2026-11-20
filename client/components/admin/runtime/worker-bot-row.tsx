@@ -19,7 +19,8 @@ export function WorkerBotIdentity({ bot }: Props) {
 }
 /** Различает выбор бота, общее значение и значение по умолчанию. */
 export function WorkerBotSelectedMode({ bot }: Props) {
-  const source = bot.source === 'bot' ? 'Выбран у бота' : bot.source === 'server' ? 'Общая настройка' : 'По умолчанию';
+  /** Показывает, где задан режим, с учётом наследования от проекта. */
+  const source = { bot: 'Выбран у бота', project: 'Из проекта', server: 'Общая настройка', default: 'По умолчанию' }[bot.source];
   return <div><p>{workerBotMode(bot.effectiveMode)}</p><p className="mt-1 text-xs text-muted-foreground">{source} · {bot.launchMode === 'webhook' ? 'Webhook' : 'Polling'}</p>
     {bot.configurationError ? <p className="mt-1 text-xs text-amber-200">{bot.configurationError}</p> : null}
     {!bot.configurationError && !bot.transportCompatible ? <p className="mt-1 text-xs text-amber-200">Режим несовместим с транспортом</p> : null}

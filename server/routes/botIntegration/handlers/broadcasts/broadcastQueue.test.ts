@@ -3,14 +3,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   storage: { getBroadcastById: vi.fn(), getBroadcastResults: vi.fn(), getUsersForBroadcast: vi.fn(), updateBroadcast: vi.fn(),
     createBroadcastResult: vi.fn(), createBotMessage: vi.fn() },
-  event: vi.fn(), send: vi.fn(), pause: vi.fn(), sync: vi.fn(), unauthorized: vi.fn(), preflight: vi.fn(),
+  media: vi.fn(), event: vi.fn(), send: vi.fn(), pause: vi.fn(), sync: vi.fn(), unauthorized: vi.fn(), preflight: vi.fn(),
 }));
 vi.mock("../../../../storages/storage", () => ({ storage: mocks.storage }));
 vi.mock("../../../../terminal/broadcastProjectEvent", () => ({ broadcastProjectEvent: mocks.event }));
 vi.mock("../messages/send-telegram-message", () => ({ sendTelegramMessage: mocks.send }));
 vi.mock("../messages/telegram-message-limiter", () => ({ pauseTelegramMessages: mocks.pause }));
 vi.mock("../messages/replace-variables", () => ({ replaceVariablesInText: async ({ text }: { text: string }) => text }));
-vi.mock("../messages/build-media-files", () => ({ buildMediaFiles: () => [] }));
+vi.mock("../messages/build-media-files", () => ({ buildMediaFiles: mocks.media }));
 vi.mock("./preflight-broadcast-media", () => ({ preflightBroadcastMedia: mocks.preflight }));
 vi.mock("../messages/extract-buttons", () => ({ extractButtonsFromNode: () => [] }));
 vi.mock("./sync-campaign-aggregates", () => ({ syncCampaignAggregates: mocks.sync }));
@@ -29,12 +29,13 @@ describe("Общие счётчики пользователей и групп",
     vi.clearAllMocks();
     activeBroadcasts.clear();
     mocks.preflight.mockResolvedValue(undefined);
+    mocks.media.mockReturnValue([]);
     mocks.storage.getBroadcastById.mockResolvedValue({ id: 1, projectId: 4, tokenId: 2,
       messageText: "Текст", filters: { groupIds: ["-1", "-1", "-2"] }, campaignId: 9 });
     mocks.storage.getUsersForBroadcast.mockResolvedValue([]);
     mocks.storage.getBroadcastResults.mockResolvedValue([]);
     mocks.send.mockResolvedValue({ ok: true, result: { message_id: 5 } });
-    mocks.storage.createBotMessage.mockResolvedValue(undefined);
+    mocks.storage.createBotMessage.mockImplementation(async input => ({ ...input, id: 71, createdAt: new Date("2026-11-17T05:00:00Z") }));
     mocks.storage.createBroadcastResult.mockResolvedValue(undefined);
   });
   it("учитывает уникальные группы в total, БД, событиях и итогах", async () => {
@@ -46,6 +47,24 @@ describe("Общие счётчики пользователей и групп",
     expect(progress.every(x => x.data.totalCount === 2)).toBe(true);
     expect(mocks.sync).toHaveBeenCalledTimes(4);
     expect(mocks.send).toHaveBeenCalledTimes(2);
+  });
+  it("сохраняет Telegram ID, раскладку и публикует настоящую запись для пользователей и групп", async () => {
+    mocks.storage.getUsersForBroadcast.mockResolvedValue([{ userId: "42" }]);
+    mocks.media.mockReturnValue([{ type: "photo", url: "https://example.com/photo.jpg" }]);
+    mocks.storage.getBroadcastById.mockResolvedValue({ id: 1, projectId: 4, tokenId: 2,
+      messageText: "Текст", buttons: [{ id: "support", text: "Поддержка", action: "url", url: "https://example.com" }],
+      buttonsPerRow: 2, filters: { groupIds: ["-1"] } });
+    await runBroadcastQueue(1, "test-token");
+    expect(mocks.storage.createBotMessage).toHaveBeenCalledTimes(2);
+    for (const [input] of mocks.storage.createBotMessage.mock.calls) {
+      expect(input.telegramMessageId).toBe(5);
+      expect(input.messageData).toMatchObject({ buttonsPerRow: 2, buttons: [{ id: "support" }],
+        broadcastMediaUrl: "https://example.com/photo.jpg", broadcastMediaType: "photo" });
+    }
+    const messages = mocks.event.mock.calls.map(call => call[1]).filter(event => event.type === "new-message");
+    expect(messages).toHaveLength(2);
+    for (const event of messages) expect(event.data).toMatchObject({ id: 71, telegramMessageId: 5,
+      createdAt: "2026-11-17T05:00:00.000Z", messageData: { buttonsPerRow: 2 } });
   });
   it("суммирует успех пользователей и ошибку группы", async () => {
     mocks.storage.getUsersForBroadcast.mockResolvedValue([{ userId: "42" }]);
@@ -69,6 +88,18 @@ describe("Общие счётчики пользователей и групп",
     expect(finalUpdate()).toMatchObject({ status: "done", deliveredCount: 2, failedCount: 0 });
     expect(mocks.send).toHaveBeenCalledTimes(2);
     expect(mocks.storage.createBroadcastResult).toHaveBeenCalledTimes(2);
+    log.mockRestore();
+  });
+  it("не повторяет личную доставку при ошибке записи истории", async () => {
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    mocks.storage.getBroadcastById.mockResolvedValue({ id: 1, projectId: 4, tokenId: 2,
+      messageText: "Текст", filters: {} });
+    mocks.storage.getUsersForBroadcast.mockResolvedValue([{ userId: "42" }]);
+    mocks.storage.createBotMessage.mockRejectedValueOnce(new Error("history failure"));
+    await runBroadcastQueue(1, "test-token");
+    expect(mocks.send).toHaveBeenCalledTimes(1);
+    expect(finalUpdate()).toMatchObject({ status: "done", deliveredCount: 1, failedCount: 0 });
+    expect(mocks.storage.createBroadcastResult).toHaveBeenCalledTimes(1);
     log.mockRestore();
   });
   it("сохраняет прогресс и прекращает отправки после остановки группы", async () => {

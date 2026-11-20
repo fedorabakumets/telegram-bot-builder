@@ -7,8 +7,8 @@
  * @module use-collaborators
  */
 
-import { useState, useEffect, useCallback } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useState, useCallback } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/queryClient';
 import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
@@ -32,12 +32,16 @@ export interface UseCollaboratorsResult {
   collaborators: ProjectCollaborator[];
   /** Идёт ли загрузка */
   isLoading: boolean;
+  /** Есть ошибка получения участников */
+  isError: boolean;
+  /** Повторить загрузку списка */
+  refetch: () => Promise<unknown>;
   /** Идёт ли добавление */
   isAdding: boolean;
   /** Идёт ли удаление */
   isRemoving: boolean;
   /** Добавить коллаборатора по Telegram ID */
-  add: (userId: number) => Promise<void>;
+  add: (userId: number) => Promise<boolean>;
   /** Удалить коллаборатора по Telegram ID */
   remove: (userId: number) => Promise<void>;
   /** Telegram ID текущего пользователя */
@@ -45,14 +49,26 @@ export interface UseCollaboratorsResult {
 }
 
 /**
+ * Извлекает сообщение о доступе или ошибке из ответа сервера.
+ * @param error - Ошибка запроса.
+ * @param fallback - Сообщение при отсутствии деталей.
+ * @returns Сообщение для уведомления.
+ */
+function collaboratorError(error: unknown, fallback: string): string {
+  if (!(error instanceof Error)) return fallback;
+  const detail = (error as Error & { /** Ошибка в ответе API. */ error?: unknown }).error;
+  if (detail === 'UNAUTHORIZED') return 'Войдите, чтобы управлять доступом к проекту';
+  return typeof detail === 'string' ? detail : fallback;
+}
+
+/**
  * Хук для управления коллабораторами проекта
  *
  * @param projectId - ID проекта
+ * @param loadRoster - Нужно ли загружать отдельный список приглашённых участников
  * @returns Состояние и методы управления коллабораторами
  */
-export function useCollaborators(projectId: number): UseCollaboratorsResult {
-  const [collaborators, setCollaborators] = useState<ProjectCollaborator[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+export function useCollaborators(projectId: number, loadRoster = true): UseCollaboratorsResult {
   const [isAdding, setIsAdding] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
   const { toast } = useToast();
@@ -62,54 +78,41 @@ export function useCollaborators(projectId: number): UseCollaboratorsResult {
   /** Telegram ID текущего пользователя (null для гостей) */
   const currentTelegramId = user && isTelegramUser(user) ? user.id : null;
 
-  /** Обновить кэш имён/аватаров после изменений */
-  const invalidateProfiles = useCallback(() => {
-    void queryClient.invalidateQueries({ queryKey: ['/api/projects', projectId, 'collaborators'] });
-  }, [queryClient, projectId]);
+  const endpoint = `/api/bot/projects/${projectId}/collaborators`;
+  const { data, isLoading, isError, refetch } = useQuery<CollaboratorsResponse>({
+    queryKey: [endpoint, currentTelegramId],
+    queryFn: () => apiRequest('GET', endpoint),
+    enabled: loadRoster && projectId > 0 && currentTelegramId !== null,
+  });
 
-  /** Загрузить список коллабораторов */
-  const fetchCollaborators = useCallback(async () => {
-    if (!currentTelegramId) return;
-    setIsLoading(true);
-    try {
-      const data: CollaboratorsResponse = await apiRequest(
-        'GET',
-        `/api/bot/projects/${projectId}/collaborators?telegram_id=${currentTelegramId}`,
-      );
-      setCollaborators(data.items ?? []);
-    } catch {
-      setCollaborators([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [projectId, currentTelegramId]);
-
-  useEffect(() => {
-    fetchCollaborators();
-  }, [fetchCollaborators]);
+  /** Обновляет список участников и их профили после изменения доступа. */
+  const invalidateLists = useCallback(async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: [endpoint] }),
+      queryClient.invalidateQueries({ queryKey: ['/api/projects', projectId, 'collaborators'] }),
+    ]);
+  }, [endpoint, projectId, queryClient]);
 
   /**
    * Добавить коллаборатора
    * @param userId - Telegram ID добавляемого пользователя
+   * @returns Успешно ли выдан доступ
    */
   const add = useCallback(async (userId: number) => {
-    if (!currentTelegramId) return;
+    if (!currentTelegramId) return false;
     setIsAdding(true);
     try {
-      await apiRequest(
-        'POST',
-        `/api/bot/projects/${projectId}/collaborators?telegram_id=${currentTelegramId}`,
-        { user_id: userId },
-      );
-      toast({ title: 'Добавлено', description: `Владелец ${userId} добавлен` });
-      await fetchCollaborators();
-      invalidateProfiles();
-    } catch {
-      toast({ title: 'Ошибка', description: 'Не удалось добавить владельца', variant: 'destructive' });
+      await apiRequest('POST', endpoint, { user_id: userId });
+      toast({ title: 'Участник добавлен', description: `Telegram ID ${userId}` });
+      await invalidateLists();
+      return true;
+    } catch (error) {
+      toast({ title: 'Ошибка', description: collaboratorError(error, 'Не удалось добавить участника'), variant: 'destructive' });
+      return false;
     } finally {
       setIsAdding(false);
     }
-  }, [projectId, currentTelegramId, fetchCollaborators, invalidateProfiles, toast]);
+  }, [endpoint, currentTelegramId, invalidateLists, toast]);
 
   /**
    * Удалить коллаборатора
@@ -119,19 +122,15 @@ export function useCollaborators(projectId: number): UseCollaboratorsResult {
     if (!currentTelegramId) return;
     setIsRemoving(true);
     try {
-      await apiRequest(
-        'DELETE',
-        `/api/bot/projects/${projectId}/collaborators/${userId}?telegram_id=${currentTelegramId}`,
-      );
-      toast({ title: 'Удалено', description: `Владелец ${userId} удалён` });
-      await fetchCollaborators();
-      invalidateProfiles();
-    } catch {
-      toast({ title: 'Ошибка', description: 'Не удалось удалить владельца', variant: 'destructive' });
+      await apiRequest('DELETE', `${endpoint}/${userId}`);
+      toast({ title: 'Доступ участника закрыт', description: `Telegram ID ${userId}` });
+      await invalidateLists();
+    } catch (error) {
+      toast({ title: 'Ошибка', description: collaboratorError(error, 'Не удалось удалить участника'), variant: 'destructive' });
     } finally {
       setIsRemoving(false);
     }
-  }, [projectId, currentTelegramId, fetchCollaborators, invalidateProfiles, toast]);
+  }, [endpoint, currentTelegramId, invalidateLists, toast]);
 
-  return { collaborators, isLoading, isAdding, isRemoving, add, remove, currentTelegramId };
+  return { collaborators: data?.items ?? [], isLoading, isError, refetch, isAdding, isRemoving, add, remove, currentTelegramId };
 }

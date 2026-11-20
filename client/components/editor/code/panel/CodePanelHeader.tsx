@@ -4,7 +4,9 @@
 import { Code2 } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { useCodeHeaderTarget } from '@/components/layout/flexible/components/code-view-navigation';
-import { WorkspaceCollapsibleHeader } from '@/components/ui/workspace-collapsible-header';
+import { WorkspaceAdaptiveHeader } from '@/components/ui/workspace-adaptive-header';
+import '@/components/editor/database/user-database/content/users-workspace.css';
+import './code-header.css';
 import { WorkspaceTabHeading } from '@/components/ui/workspace-tab-heading';
 import { WorkspaceTabActions } from '@/components/ui/workspace-tab-actions';
 import { WorkspaceProjectScope, type WorkspaceProjectScopeProps } from '@/components/ui/workspace-project-scope';
@@ -35,9 +37,9 @@ const SHORTCUTS = [
 export function CodePanelHeader({ projectId, projects, onProjectChange, onRefresh, isRefreshing }: CodePanelHeaderProps) {
   const headerTarget = useCodeHeaderTarget();
   /** Заголовок раздела отображается в обоих режимах просмотра. */
-  const heading = <div className="code-workspace-heading"><WorkspaceCollapsibleHeader><div className="space-y-4"><WorkspaceTabHeading title="Код проекта" icon={<Code2 />}
+  const heading = <div className="code-workspace-heading"><WorkspaceAdaptiveHeader className="code-header-content" scopeSelector=".workspace-project-scope" actionsSelector=".workspace-tab-actions"><WorkspaceTabHeading title="Код проекта" icon={<Code2 />}
     actions={onRefresh && <WorkspaceTabActions docsPath="interface/code" section="Код проекта" onRefresh={onRefresh} isRefreshing={isRefreshing} />}
-    description="Выберите файл, чтобы посмотреть код или скачать его." /><WorkspaceProjectScope projectId={projectId} projects={projects} onProjectChange={onProjectChange} /></div></WorkspaceCollapsibleHeader></div>;
+    description="Выберите файл, чтобы посмотреть код или скачать его." /><WorkspaceProjectScope projectId={projectId} projects={projects} onProjectChange={onProjectChange} /></WorkspaceAdaptiveHeader></div>;
   return (
     <div className="code-panel-header space-y-6">
       {headerTarget ? createPortal(heading, headerTarget) : heading}

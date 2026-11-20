@@ -11,7 +11,7 @@
 
 import type { Request, Response } from "express";
 import { z } from "zod";
-import { storage } from "../../../../storages/storage";
+import { saveBotInheritedSetting } from "../../../../bots/saveBotInheritedSetting";
 import {
   isMessagesRetentionDays,
   MESSAGES_RETENTION_DAYS_VALUES,
@@ -20,8 +20,8 @@ import { emitTokenUpdated } from "../../../../terminal/emitTokenUpdated";
 
 /** Тело запроса обновления срока хранения */
 const bodySchema = z.object({
-  /** Срок в днях: 0 или 7/30/60/90/180/365 */
-  messagesRetentionDays: z.number().int(),
+  /** Срок в днях или команда использования настройки проекта. */
+  messagesRetentionDays: z.union([z.number().int(), z.literal('inherit')]),
 });
 
 /**
@@ -52,14 +52,14 @@ export async function updateMessagesRetentionHandler(
     }
 
     const { messagesRetentionDays } = parsed.data;
-    if (!isMessagesRetentionDays(messagesRetentionDays)) {
+    if (messagesRetentionDays !== 'inherit' && !isMessagesRetentionDays(messagesRetentionDays)) {
       res.status(400).json({
         message: `messagesRetentionDays должен быть одним из: ${MESSAGES_RETENTION_DAYS_VALUES.join(", ")}`,
       });
       return;
     }
 
-    const updated = await storage.updateBotToken(tokenId, { messagesRetentionDays });
+    const updated = await saveBotInheritedSetting(projectId, tokenId, 'messagesRetentionDays', messagesRetentionDays);
     if (!updated) {
       res.status(404).json({ message: "Токен не найден" });
       return;
@@ -68,11 +68,12 @@ export async function updateMessagesRetentionHandler(
     void emitTokenUpdated({
       projectId,
       tokenId,
-      changedFields: ['messagesRetentionDays'],
+      changedFields: ['messagesRetentionDays', 'inheritBotSettings'],
       source: 'api',
     }).catch((err) => console.error('[messages-retention] emitTokenUpdated:', err));
 
-    res.json({ success: true, messagesRetentionDays });
+    res.json({ success: true, messagesRetentionDays: updated.botSettings.messagesRetentionDays,
+      inheritBotSettings: updated.inheritBotSettings });
   } catch (error) {
     console.error("[messages-retention] Ошибка обновления:", error);
     res.status(500).json({ message: "Ошибка обновления срока хранения сообщений" });

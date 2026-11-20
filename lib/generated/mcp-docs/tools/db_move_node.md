@@ -9,6 +9,7 @@
 
 ```json
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "project_id": {
@@ -24,10 +25,11 @@
       "description": "ID целевого листа"
     },
     "from_sheet_id": {
-      "type": "string",
-      "description": "ID исходного листа (по умолчанию автопоиск)"
+      "description": "ID исходного листа (по умолчанию автопоиск)",
+      "type": "string"
     },
     "position": {
+      "description": "Новая позиция на целевом листе (по умолчанию сохраняется текущая)",
       "type": "object",
       "properties": {
         "x": {
@@ -40,22 +42,18 @@
       "required": [
         "x",
         "y"
-      ],
-      "additionalProperties": false,
-      "description": "Новая позиция на целевом листе (по умолчанию сохраняется текущая)"
+      ]
     },
     "commit_message": {
-      "type": "string",
-      "description": "Заметка к версии (ручной чекпоинт)"
+      "description": "Заметка к версии (ручной чекпоинт)",
+      "type": "string"
     }
   },
   "required": [
     "project_id",
     "node_id",
     "to_sheet_id"
-  ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  ]
 }
 ```
 
@@ -94,6 +92,7 @@
 
 ```json
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "data": {
@@ -163,11 +162,13 @@
             },
             "projectId": {
               "type": "integer",
-              "exclusiveMinimum": 0
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             },
             "revision": {
               "type": "integer",
-              "minimum": 0
+              "minimum": 0,
+              "maximum": 9007199254740991
             }
           },
           "required": [
@@ -177,6 +178,9 @@
         },
         "sideEffects": {
           "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
           "additionalProperties": {}
         }
       },
@@ -193,10 +197,10 @@
     }
   },
   "required": [
+    "data",
     "execution"
   ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  "additionalProperties": false
 }
 ```
 

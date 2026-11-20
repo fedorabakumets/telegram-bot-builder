@@ -12,7 +12,6 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Badge } from '@/components/ui/badge';
 import { BotToken, BotProject } from '@shared/schema';
 import { type BotInfo } from './bot-types';
 import { resolveBotCanvasStatus } from './canvas/bot-canvas-status';
@@ -94,7 +93,6 @@ export function BotControl({ projectId, onBotStarted, onBotStopped, onBotDeleted
     startBotMutation,
     stopBotMutation,
     deleteBotMutation,
-    toggleDatabaseMutation,
     createBotMutation,
     parseBotInfoMutation,
     updateBotInfoMutation,
@@ -103,7 +101,6 @@ export function BotControl({ projectId, onBotStarted, onBotStopped, onBotDeleted
     startOfflineAllMutation,
     isParsingBot,
   } = useBotMutations({
-    projectId,
     allTokensFlat,
     onBotStarted: (pid, tokenId, botName) => {
       // Фиксируем время старта локально — сразу, не дожидаясь instance из API
@@ -213,40 +210,16 @@ export function BotControl({ projectId, onBotStarted, onBotStopped, onBotDeleted
   };
 
   const getStatusBadge = (token: Pick<BotToken, 'id' | 'isDefault' | 'isActive' | 'authorizationError'>) => {
-    /** Только подтверждённая ошибка Telegram означает недействительный токен. */
-    if (token.authorizationError === 'unauthorized') {
-      return (
-        <Badge variant="destructive">
-          Недействительный токен
-        </Badge>
-      );
-    }
     // Ищем по tokenId (добавлен при маппинге) или через instance
     const status = allBotStatuses.find(
       s => s.tokenId === token.id || s.instance?.tokenId === token.id,
     );
-    /** Общая модель сохраняет независимое состояние процесса при ограничении Telegram. */
-    if (status?.frozen) return <BotRunStatusBadge status={resolveBotCanvasStatus({
-      frozen: true, authorizationError: token.authorizationError, isActive: token.isActive,
-      isRunning: status.status === 'running', unknown: status.status === 'unknown',
+    /** Список и холст показывают статусы по одним правилам. */
+    return <BotRunStatusBadge status={resolveBotCanvasStatus({
+      frozen: status?.frozen, authorizationError: token.authorizationError, isActive: token.isActive,
+      isRunning: status?.status === 'running', unknown: !status || status.status === 'unknown',
+      hasFailure: status?.status === 'error',
     })} />;
-    if (token.isActive === 0) return <Badge variant="outline">Отключён</Badge>;
-    if (status?.status === 'running') {
-      return (
-        <Badge variant="default" className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border-green-200 dark:border-green-800">
-          <div className="flex items-center gap-1">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-            Активный
-          </div>
-        </Badge>
-      );
-    }
-    if (token.isDefault) return (
-      <Badge variant="outline" className="border-border text-foreground/80 bg-muted/40">
-        По умолчанию
-      </Badge>
-    );
-    return <Badge variant="outline">Готов</Badge>;
   };
 
   return (
@@ -264,7 +237,6 @@ export function BotControl({ projectId, onBotStarted, onBotStopped, onBotDeleted
       startBotMutation,
       stopBotMutation,
       deleteBotMutation,
-      toggleDatabaseMutation,
       restartAllBotsMutation,
       startOfflineAllMutation,
       setSelectedProject,

@@ -13,6 +13,8 @@ import { formatUserName } from '../utils';
 import { GroupAccessStatus } from './group-access-status';
 import { useGroupAccess } from '../hooks/use-group-access';
 import type { GroupSyncStatus } from '../hooks/group-sync-request';
+import type { GroupAccessData } from '../hooks/group-sync-request';
+import { dialogAccessStatus } from './dialog-access-status';
 
 /**
  * Маппинг текстовых плейсхолдеров медиа на читаемый вид с эмодзи
@@ -32,6 +34,8 @@ const MEDIA_MAP: Record<string, string> = {
  * Расширенный тип диалога с полями последнего сообщения и флагом группы
  */
 type DialogWithMeta = UserBotData & {
+  /** Сохранённое состояние доступа из общего списка ботов. */
+  accessStatus?: GroupAccessData['status'];
   /** Текст последнего сообщения из JOIN на сервере */
   lastMessageText?: string | null;
   /** Время последнего сообщения из JOIN на сервере */
@@ -82,6 +86,8 @@ interface DialogListItemProps {
   tokenId?: number | null;
   /** Результат проверки доступа выбранного бота к группе. */
   groupSyncStatus?: GroupSyncStatus;
+  /** Подпись исходного бота в общем списке переписок. */
+  botLabel?: string;
 }
 
 /**
@@ -97,10 +103,11 @@ export function DialogListItem({
   projectId,
   tokenId,
   groupSyncStatus,
+  botLabel,
 }: DialogListItemProps): React.JSX.Element {
   const entry = user as DialogWithMeta;
   const chatType = entry.isGroup ? (entry.chatType ?? 'group') : 'private';
-  const { data: access } = useGroupAccess(projectId, tokenId, String(user.userId), chatType);
+  const { data: access, botAvailability } = useGroupAccess(projectId, tokenId, String(user.userId), chatType);
   const [groupAvatarError, setGroupAvatarError] = useState<string | null>(null);
   const preview = formatPreview(entry.lastMessageText);
   const timestamp = formatRelativeTime(entry.lastMessageAt ?? user.lastInteraction);
@@ -110,17 +117,15 @@ export function DialogListItem({
   const groupAvatarUrl = entry.isGroup
     ? (access?.avatarUrl !== undefined ? access.avatarUrl : user.avatarUrl ?? null) : null;
   const showGroupPhoto = !!groupAvatarUrl && groupAvatarError !== groupAvatarUrl;
+  /** Статус одного представительного бота не описывает доступность общего диалога у нескольких ботов. */
+  const showAccessStatus = entry.isGroup || !botLabel || (user.botMemberships?.length ?? 0) <= 1;
 
   return (
     <button
       type="button"
       onClick={onClick}
-      className={[
-        'w-full flex items-center gap-3 px-3 py-3 text-left',
-        'transition-colors border-b border-border/30',
-        'hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-        isSelected ? 'bg-primary/15 border-l-2 border-l-primary' : '',
-      ].join(' ')}
+      aria-pressed={isSelected}
+      className="dialogs-list-row"
     >
       {/* Аватар: для групп — фото из Telegram или иконка, для пользователей — фото */}
       <div className="flex-shrink-0">
@@ -136,22 +141,17 @@ export function DialogListItem({
           ) : (
           <div
             style={{ width: 40, height: 40 }}
-            className={[
-              'rounded-full flex items-center justify-center',
-              isChannel
-                ? 'bg-rose-100 dark:bg-rose-900'
-                : 'bg-violet-100 dark:bg-violet-900',
-            ].join(' ')}
+            className="dialogs-row-symbol rounded-full flex items-center justify-center"
           >
             {isChannel ? (
               <Radio
                 style={{ width: 20, height: 20 }}
-                className="text-rose-600 dark:text-rose-400"
+                className="text-muted-foreground"
               />
             ) : (
               <Users
                 style={{ width: 20, height: 20 }}
-                className="text-violet-600 dark:text-violet-400"
+                className="text-muted-foreground"
               />
             )}
           </div>
@@ -174,12 +174,7 @@ export function DialogListItem({
             <span className="text-sm font-medium truncate">{name}</span>
             {entry.isGroup && (
               <span
-                className={[
-                  'text-[10px] px-1 py-0.5 rounded font-medium flex-shrink-0',
-                  isChannel
-                    ? 'bg-rose-100 text-rose-700 dark:bg-rose-900/50 dark:text-rose-300'
-                    : 'bg-violet-100 text-violet-700 dark:bg-violet-900/50 dark:text-violet-300',
-                ].join(' ')}
+                className="dialogs-kind-label text-xs text-muted-foreground flex-shrink-0"
               >
                 {formatChatType(entry.chatType)}
               </span>
@@ -187,8 +182,9 @@ export function DialogListItem({
           </div>
           <span className="text-xs text-muted-foreground flex-shrink-0">{timestamp}</span>
         </div>
+        {botLabel && <p className="text-xs text-muted-foreground truncate mt-0.5" title={botLabel}>{botLabel}</p>}
         <p className="text-xs text-muted-foreground truncate mt-0.5">{preview}</p>
-        <GroupAccessStatus status={access?.status ?? groupSyncStatus} chatType={chatType} />
+        {showAccessStatus && <GroupAccessStatus status={dialogAccessStatus(entry, access?.status ?? groupSyncStatus)} chatType={chatType} botAvailability={botAvailability} />}
       </div>
     </button>
   );

@@ -41,14 +41,14 @@ export function classifyChatAction(input: {
     return { kind: 'retry', status: 'error', retryAfter: Math.min(Math.max(input.retryAfter ?? 1, 1), 60) };
   }
   if (input.httpOk && input.ok) return { kind: 'available', status: 'available' };
-  if (text.includes('deactivated') || text.includes('user is deleted')
-    || (input.errorCode === 400 && text.includes('chat not found'))) {
+  /** Только явное удаление пользователя меняет его статус; отсутствие чата этого не доказывает. */
+  if (text.includes('user is deactivated') || text.includes('user_deactivated') || text.includes('user is deleted')) {
     return { kind: 'deleted', status: 'error' };
   }
   if (text.includes("can't initiate") || text.includes('cannot initiate')) {
     return { kind: 'error', status: 'error' };
   }
-  if (input.errorCode === 403 || text.includes('bot was blocked')) {
+  if (input.errorCode === 403 && text.includes('bot was blocked by the user')) {
     return { kind: 'kicked', status: 'kicked' };
   }
   return { kind: 'error', status: 'error' };

@@ -36,7 +36,8 @@ export function registerProjectBroadcastsMutatePaths(
     summary: "Редактировать текст рассылки",
     description:
       "Обновляет `messageText` в БД и через `editMessageText` у получателей " +
-      "(throttle ~25/s). Текст 1…4096 после trim.\n\n" +
+      "(throttle ~25/s), сохраняя inline-клавиатуру. Текст 1…4096 после trim. " +
+      "Проверяйте edited/failed: ok подтверждает обработку запроса, а не успех у всех получателей.\n\n" +
       "**Клиент:** `broadcast-dialog-panel`.\n\n" +
       "```bash\ncurl -s -X PUT -b cookies.txt -H 'Content-Type: application/json' \\\n" +
       "  -d '{\"messageText\":\"Обновлённый текст\"}' \\\n" +

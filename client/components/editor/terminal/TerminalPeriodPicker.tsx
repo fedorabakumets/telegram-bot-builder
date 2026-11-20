@@ -11,6 +11,8 @@ import { LOG_PERIOD_OPTIONS, parseCustomLogRange, type LogPeriod, type LogPeriod
 
 /** Свойства выбора периода. */
 interface TerminalPeriodPickerProps {
+  /** Подпись режима логов текущего или последнего запуска. */
+  launchLabel?: string;
   /** Выбранный период */
   period: LogPeriod;
   /** Активный диапазон */
@@ -36,7 +38,7 @@ function localInputValue(value: string): string {
  * @param props - Выбранный период и обработчики
  * @returns Панель выбора времени
  */
-export function TerminalPeriodPicker({ period, range, onChange, onCustomRange }: TerminalPeriodPickerProps) {
+export function TerminalPeriodPicker({ period, range, onChange, onCustomRange, launchLabel = 'Текущий запуск' }: TerminalPeriodPickerProps) {
   const [open, setOpen] = useState(false);
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
@@ -57,7 +59,7 @@ export function TerminalPeriodPicker({ period, range, onChange, onCustomRange }:
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="outline" aria-label="Период логов" className="h-8 w-[170px] justify-between px-3 text-xs">
-            {LOG_PERIOD_OPTIONS.find(option => option.value === period)?.label}
+            {period === 'live' ? launchLabel : LOG_PERIOD_OPTIONS.find(option => option.value === period)?.label}
             <ChevronDown className="h-4 w-4 opacity-50" />
           </Button>
         </DropdownMenuTrigger>
@@ -70,7 +72,7 @@ export function TerminalPeriodPicker({ period, range, onChange, onCustomRange }:
         }}>
           <DropdownMenuRadioGroup value={period} onValueChange={value => onChange(value as LogPeriod)}>
             {LOG_PERIOD_OPTIONS.filter(option => option.value !== 'custom').map(option => (
-              <DropdownMenuRadioItem key={option.value} value={option.value}>{option.label}</DropdownMenuRadioItem>
+              <DropdownMenuRadioItem key={option.value} value={option.value}>{option.value === 'live' ? launchLabel : option.label}</DropdownMenuRadioItem>
             ))}
           </DropdownMenuRadioGroup>
           <DropdownMenuItem className="pl-8" onSelect={() => { pendingCustom.current = true; }}>

@@ -23,6 +23,8 @@ export const botInstances = pgTable("bot_instances", {
   tokenId: integer("token_id").references(() => botTokens.id, { onDelete: "cascade" }).notNull(),
   /** Статус экземпляра ("running", "stopped", "error") */
   status: text("status").notNull(),
+  /** Способ получения обновлений, выбранный при запуске экземпляра. */
+  launchMode: text("launch_mode", { enum: ["polling", "webhook"] }),
   /** Желаемое состояние; null сохраняет поведение старых записей */
   desiredStatus: text("desired_status"),
   /** Версия намерения для защиты от устаревших команд */
@@ -55,6 +57,8 @@ export const insertBotInstanceSchema = z.object({
   tokenId: z.number().int(),
   /** Статус экземпляра */
   status: z.enum(["running", "stopped", "error"]),
+  /** Режим запуска экземпляра, при отсутствии сохраняется совместимость со старой записью. */
+  launchMode: z.enum(["polling", "webhook"]).nullable().optional(),
   /** Желаемое состояние */
   desiredStatus: z.enum(["running", "stopped"]).nullable().optional(),
   /** Версия намерения */

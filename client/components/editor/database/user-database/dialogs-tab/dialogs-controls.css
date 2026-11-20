@@ -1,0 +1,50 @@
+/** @fileoverview Мягкое наведение и устойчивые состояния элементов управления диалогов. */
+/** Кнопки разных ролей объединены явно, без изменения аватаров и миниатюр. */
+.dialogs-workspace :is(.dialogs-new-broadcast,
+  .dialogs-action, .dialogs-attachment-trigger,
+  .dialogs-composer .col-span-3.row-start-1 button, .dialogs-edit-actions > button,
+  .dialogs-broadcast-actions > button) {
+  box-shadow: none;
+  transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+/** У иконок заранее зарезервирована рамка; поля выбора сохраняют собственный контур. */
+.dialogs-workspace .dialogs-composer .col-span-3.row-start-1 button,
+.dialogs-workspace .dialogs-broadcast-actions > button,
+.dialogs-workspace .dialogs-edit-actions > button,
+.dialogs-workspace :is(.dialogs-action, .dialogs-attachment-trigger) { border: 1px solid transparent; }
+.dialogs-workspace .dialogs-new-broadcast { border-color: var(--border); }
+.dialogs-workspace :is(.dialogs-new-broadcast,
+  .dialogs-action, .dialogs-attachment-trigger,
+  .dialogs-composer .col-span-3.row-start-1 button, .dialogs-edit-actions > button,
+  .dialogs-broadcast-actions > button):hover {
+  background: var(--muted); color: var(--foreground); border-color: var(--border); box-shadow: none;
+}
+.dialogs-workspace .dialogs-attachment-trigger[data-state='open'] {
+  background: var(--muted); border-color: var(--muted-foreground);
+}
+/** Селекторы повторяют рамку и спокойное наведение вкладки пользователей. */
+.dialogs-workspace .dialogs-conversation-heading [role='combobox']:is(:hover, [data-state='open']) {
+  background: var(--background); border-color: #52525b;
+}
+.dialogs-workspace .dialogs-conversation-heading [role='combobox'] > svg { color: var(--muted-foreground); opacity: 1; }
+.dialogs-workspace .dialogs-broadcast-actions > button { background: transparent; color: var(--muted-foreground); }
+.dialogs-workspace .dialogs-broadcast-actions > button[data-action='delete']:hover { color: var(--destructive); }
+.dialogs-workspace .dialogs-broadcast-actions > button[data-action='stop']:hover { color: #d97706; }
+/** Текстовые фильтры сохраняют подчёркивание выбора и не получают плашку. */
+.dialogs-workspace .dialogs-segment { transition: color 120ms ease; }
+.dialogs-workspace .dialogs-segment:hover { background: transparent; color: var(--foreground); }
+.dialogs-workspace .dialogs-list-row { transition: background-color 120ms ease, border-color 120ms ease; }
+.dialogs-workspace .dialog-message-buttons > a { transition: background-color 120ms ease, border-color 120ms ease; }
+/** Меню вложений выводится через портал, поэтому получает палитру вкладки отдельно. */
+body:has(.dialogs-workspace) .dialogs-attachment-menu {
+  background: #fff; color: #202024; border: 1px solid #dddde2; border-radius: 8px;
+  font-family: Manrope, Geist, sans-serif;
+}
+.dark body:has(.dialogs-workspace) .dialogs-attachment-menu { background: #09090b; color: #ededf0; border-color: #29292e; }
+body:has(.dialogs-workspace) .dialogs-attachment-menu [role='menuitem'] { border-radius: 6px; transition: background-color 120ms ease, color 120ms ease; }
+body:has(.dialogs-workspace) .dialogs-attachment-menu [role='menuitem'][data-highlighted] { background: #f0f0f2; color: #202024; }
+.dark body:has(.dialogs-workspace) .dialogs-attachment-menu [role='menuitem'][data-highlighted] { background: #151517; color: #ededf0; }
+@media (prefers-reduced-motion: reduce) {
+  .dialogs-workspace :is(button, a, [role='combobox']),
+  body:has(.dialogs-workspace) .dialogs-attachment-menu [role='menuitem'] { transition: none; }
+}

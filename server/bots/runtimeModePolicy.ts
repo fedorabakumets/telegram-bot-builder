@@ -1,5 +1,6 @@
 /** @fileoverview Проверка и разрешение сохранённого режима обработчика бота. */
 import { runtimeEnv } from '../services/runtime-overlay';
+import { resolveProjectSleepMode } from '../../shared/bot-execution-settings';
 
 /** Допустимые способы исполнения обработчика. */
 export type RuntimeMode = 'direct' | 'ondemand' | 'process';
@@ -25,23 +26,26 @@ export function validateRuntimeMode(mode: RuntimeMode, launchMode: string): void
   }
 }
 
-/** Возвращает настройку бота с приоритетом над общим окружением сервера. */
+/** Возвращает режим выбранного источника с запасным значением из окружения сервера. */
 export function resolveRuntimeModeSettings(
   variables: ReadonlyArray<{ key: string; value: string }>,
   launchMode: string | null | undefined,
   env: NodeJS.ProcessEnv = process.env,
   tokenId?: number,
+  projectSleepMode?: string | null,
+  inheritSleepMode?: boolean,
 ) {
+  const project = resolveProjectSleepMode(projectSleepMode, inheritSleepMode);
   /** Последняя индивидуальная настройка имеет приоритет без зависимости от ES2022. */
   const ownModes = variables.filter((item) => item.key === 'BOT_POLLING_MODE');
-  const own = ownModes[ownModes.length - 1];
+  const own = inheritSleepMode ? undefined : ownModes[ownModes.length - 1];
   const server = runtimeEnv('BOT_POLLING_MODE', env);
   const selected = runtimeEnv('BOT_ON_DEMAND_TOKEN_IDS', env)?.split(',').map((id) => id.trim()).filter(Boolean) ?? [];
-  const excluded = !own && tokenId !== undefined && selected.length > 0 && !selected.includes(String(tokenId));
-  const configuredMode = parseRuntimeMode(own ? own.value : server || 'direct');
+  const excluded = !project && !own && tokenId !== undefined && selected.length > 0 && !selected.includes(String(tokenId));
+  const configuredMode = project ?? parseRuntimeMode(own ? own.value : server || 'direct');
   return {
     mode: excluded ? 'direct' as const : configuredMode,
-    source: own ? 'bot' as const : server ? 'server' as const : 'default' as const,
+    source: project ? 'project' as const : own ? 'bot' as const : server ? 'server' as const : 'default' as const,
     launchMode: launchMode === 'webhook' ? 'webhook' as const : 'polling' as const,
     requiresRestart: true as const,
   };

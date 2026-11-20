@@ -1,7 +1,7 @@
 /** @fileoverview Защищённое API настройки времени жизни обработчика бота. */
 
 import type { Request, Response } from 'express';
-import { getRuntimeModeSettings, saveRuntimeMode } from '../../../bots/runtimeModeSettings';
+import { getRuntimeModeSettings, saveRuntimeMode, saveRuntimeModeSettings } from '../../../bots/runtimeModeSettings';
 import { RuntimeModeValidationError } from '../../../bots/runtimeModePolicy';
 import { emitTokenUpdated } from '../../../terminal/emitTokenUpdated';
 
@@ -21,14 +21,16 @@ export async function handleBotRuntimeSettings(req: Request, res: Response): Pro
       return;
     }
     const settings = req.method === 'PUT'
-      ? await saveRuntimeMode(tokenId, req.body.mode, projectId)
+      ? req.body.mode === 'inherit'
+        ? await saveRuntimeModeSettings(tokenId, { resetMode: true }, projectId)
+        : await saveRuntimeMode(tokenId, req.body.mode, projectId)
       : await getRuntimeModeSettings(tokenId, projectId);
     if (!settings) {
       res.status(404).json({ message: 'Бот не найден в проекте' });
       return;
     }
     if (req.method === 'PUT') {
-      void emitTokenUpdated({ projectId, tokenId, changedFields: ['pollingMode'], source: 'api' })
+      void emitTokenUpdated({ projectId, tokenId, changedFields: ['pollingMode', 'inheritSleepMode'], source: 'api' })
         .catch(() => console.error('[runtime-settings] Не удалось отправить событие обновления'));
     }
     res.json(settings);

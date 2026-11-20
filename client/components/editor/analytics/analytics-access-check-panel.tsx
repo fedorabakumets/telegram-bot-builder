@@ -12,11 +12,14 @@ import { useProjectTokens } from '@/hooks/use-project-tokens';
 import { useChatAccessCheckJob } from './use-chat-access-check-job';
 import { useChatAccessCheckLive } from './use-chat-access-check-live';
 import { mergeJob } from './analytics-access-check-merge';
-
+import { useChatAccessBatch } from './use-chat-access-batch';
+import { AnalyticsAccessBatchProgress } from './analytics-access-batch-progress';
 /**
  * Пропсы блока проверки.
  */
 interface AnalyticsAccessCheckPanelProps {
+  /** Класс оформления портального подтверждения в принимающей вкладке. */
+  overlayClassName?: string;
   /** Показывать старую сводку; новый отчёт рисует точные показатели отдельно. */
   showSummary?: boolean;
   /** Проект. */
@@ -38,7 +41,6 @@ interface AnalyticsAccessCheckPanelProps {
   /** Человек есть больше чем в одной из строк мест. */
   usersInSeveralPlaces?: number;
 }
-
 /**
  * Читает скрытый итог проверки для выбранного бота.
  * @param key - Ключ sessionStorage
@@ -56,15 +58,18 @@ function readDismissedJobId(key: string | null): number | null {
  * @returns JSX элемент или null
  */
 export function AnalyticsAccessCheckPanel({
-  projectId, tokenId, totalUsers, blockedBotUsers = 0, deletedUsers = 0, showSummary = true,
+  projectId, tokenId, totalUsers, blockedBotUsers = 0, deletedUsers = 0, showSummary = true, overlayClassName,
   privateUsers = 0, groupUsers = 0, channelUsers = 0, usersInSeveralPlaces = 0,
 }: AnalyticsAccessCheckPanelProps) {
   const queryClient = useQueryClient();
   const tokens = useProjectTokens([projectId])[0]?.tokens ?? [];
   /** Локальный выбор для проверки при общей аналитике проекта. */
-  const [checkTokenId, setCheckTokenId] = useState<number | null>(null);
-  /** «Все боты» при одном токене — это и есть выбранный бот. */
-  const selected = tokens.some(token => token.id === checkTokenId) ? checkTokenId : tokenId ?? (tokens.length === 1 ? tokens[0].id : null);
+  const [checkTokenId, setCheckTokenId] = useState<number | 'all' | null>(null);
+  /** Общая область по умолчанию предлагает проверку всех ботов проекта. */
+  const selection = checkTokenId === 'all' ? 'all' : tokens.some(token => token.id === checkTokenId) ? checkTokenId : tokenId ?? 'all';
+  const selected = typeof selection === 'number' ? selection : null;
+  const batchCheck = useChatAccessBatch(projectId);
+  const batchActive = !!batchCheck.batch && isActiveChatAccessCheckStatus(batchCheck.batch.status);
   /** При смене общей области сбрасывает локальный выбор проверки. */
   useEffect(() => { setCheckTokenId(null); }, [projectId, tokenId]);
   const dismissKey = selected ? `chat-access-dismissed:${projectId}:${selected}` : null;
@@ -75,7 +80,7 @@ export function AnalyticsAccessCheckPanel({
     () => (progress ? mergeJob(job, progress, projectId) : job),
     [job, progress, projectId],
   );
-  const active = Boolean(view && isActiveChatAccessCheckStatus(view.status));
+  const active = batchActive || Boolean(view && isActiveChatAccessCheckStatus(view.status));
   const summaryHidden = Boolean(view && !active && dismissedJobId === view.jobId);
 
   useEffect(() => {
@@ -90,7 +95,9 @@ export function AnalyticsAccessCheckPanel({
     if (!view) return undefined;
     const timer = window.setTimeout(() => {
       void queryClient.invalidateQueries({
-        predicate: (query) => String(query.queryKey[0] ?? '').includes(`/projects/${projectId}/users/stats`),
+        /** Обновляет и верхнюю сводку, и общий источник чисел фильтра после проверки. */
+        predicate: (query) => String(query.queryKey[0] ?? '').includes(`/projects/${projectId}/users/stats`)
+          || (query.queryKey[0] === 'infinite-users' && query.queryKey[1] === projectId),
       });
     }, 700);
     return () => window.clearTimeout(timer);
@@ -108,7 +115,7 @@ export function AnalyticsAccessCheckPanel({
     />
   ) : null;
   const canCheck = totalUsers > 0 || active;
-  if (!canCheck) return note;
+
 
   return (
     <div className="space-y-2">
@@ -116,15 +123,18 @@ export function AnalyticsAccessCheckPanel({
         {note && <div className="min-w-0 basis-full">{note}</div>}
         {!active && (
           <AnalyticsAccessCheckButton
-            tokens={tokens} selectedTokenId={selected} onSelectToken={setCheckTokenId}
+            projectId={projectId} overlayClassName={overlayClassName}
+            tokens={tokens} selectedTokenId={selection} onSelectToken={setCheckTokenId}
             totalUsers={totalUsers}
-            pending={isStarting}
-            disabled={tokens.length === 0}
-            onConfirm={start}
+            pending={isStarting || batchCheck.isStarting}
+            disabled={tokens.length === 0 || !canCheck}
+            onConfirm={selection === 'all' ? batchCheck.start : start}
           />
         )}
       </div>
-      {view && !summaryHidden && (active || view.processedCount > 0 || view.status === 'failed') && (
+      {batchCheck.batch && (batchActive || selection === 'all') && <AnalyticsAccessBatchProgress batch={batchCheck.batch}
+        tokens={tokens} cancelling={batchCheck.isCancelling} onCancel={() => batchCheck.cancel(batchCheck.batch!.id)} />}
+      {!batchActive && selection !== 'all' && view && !summaryHidden && (active || view.processedCount > 0 || view.status === 'failed') && (
         <AnalyticsAccessCheckProgress
           {...view}
           cancelling={isCancelling}

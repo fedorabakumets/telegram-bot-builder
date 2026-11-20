@@ -63,7 +63,8 @@ function updateUserInCache(
   const now = (messageAt ?? new Date()).toISOString();
   queryClient.setQueriesData<InfiniteData<UsersPageResponse>>(
     { queryKey: ['infinite-users', projectId, normalizedTokenId ?? undefined],
-      predicate: (query) => isPrivate || !isDialogListCache(query.queryKey) },
+      /** Общий список обновляется из БД, чтобы одинаковые собеседники разных ботов не смешивали превью. */
+      predicate: (query) => isDialogListCache(query.queryKey) ? isPrivate && normalizedTokenId !== null : true },
     (old) => {
       if (!old) return old;
       return {

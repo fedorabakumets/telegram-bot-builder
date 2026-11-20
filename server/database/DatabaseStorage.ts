@@ -8,6 +8,7 @@ import { IStorage } from "../storages/storage";
 import type { MessageMedia } from "../storages/message-media";
 import type { StorageBotGroupInput, StorageBotGroupUpdate, StorageBotInstanceInput, StorageBotInstanceUpdate, StorageBotLaunchHistoryInput, StorageBotLaunchHistoryUpdate, StorageBotLogInput, StorageBotMessageInput, StorageBotMessageMediaInput, StorageBotProjectInput, StorageBotProjectUpdate, StorageBotTemplateInput, StorageBotTemplateUpdate, StorageBotTokenInput, StorageBotTokenUpdate, StorageGroupMemberInput, StorageGroupMemberUpdate, StorageMediaFileInput, StorageMediaFileUpdate, StorageTelegramUserInput, StorageBroadcastInput, StorageBroadcastUpdate, StorageBroadcastResultInput, StorageBroadcastCampaignInput, StorageBroadcastCampaignUpdate, StorageBotEnvVariableInput, StorageBotEnvVariableUpdate, StorageBotTableInput, StorageBotTableColumnInput, StorageBotTableRowInput, StorageWorkerProcessInput } from "../storages/storageTypes";
 import { db } from "./db";
+import { botSettingsToInheritOnCreate } from "@shared/bot-setting-inheritance-on-create";
 import { selectProjectVersionList, type ProjectVersionMetadata, type ProjectVersionPage, type ProjectVersionPageOptions } from "./project-version-list";
 import { revokeOwnedAgentToken } from "../auth/agent/repository";
 import { generateAgentToken, hashAgentToken } from "../utils/agent-token-crypto";
@@ -480,7 +481,16 @@ export class DatabaseStorage implements IStorage {
 
     const [token] = await this.db
       .insert(botTokens)
-      .values(insertToken)
+      .values({
+        ...insertToken,
+        /** Явный способ получения обновлений при создании считается индивидуальным. */
+        inheritLaunchMode: insertToken.inheritLaunchMode ?? (insertToken.launchMode == null),
+        /** Явные параметры автоперезапуска остаются настройками конкретного бота. */
+        inheritAutoRestart: insertToken.inheritAutoRestart ?? (insertToken.autoRestart == null),
+        inheritMaxRestartAttempts: insertToken.inheritMaxRestartAttempts ?? (insertToken.maxRestartAttempts == null),
+        /** Остальные общие настройки наследуются, если при создании не заданы явно. */
+        inheritBotSettings: botSettingsToInheritOnCreate(insertToken, insertToken.inheritBotSettings),
+      })
       .returning();
     return token;
   }

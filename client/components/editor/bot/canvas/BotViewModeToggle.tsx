@@ -28,13 +28,14 @@ export function BotViewModeToggle({ mode, onModeChange }: BotViewModeToggleProps
       className="w-auto flex-shrink-0"
     >
       <TabsList className="grid h-8 grid-cols-2 bg-muted/60 p-0.5">
-        <TabsTrigger value="list" className="h-7 gap-1 px-2 text-xs @[560px]:px-2.5" aria-label="Список">
+        {/* На средней ширине подписи доступны в подсказках. */}
+        <TabsTrigger value="list" className="h-7 gap-1 px-2 text-xs @[920px]:px-2.5" aria-label="Список" title="Список">
           <LayoutList className="h-3.5 w-3.5" />
-          <span className="hidden @[560px]:inline">Список</span>
+          <span className="hidden @[920px]:inline">Список</span>
         </TabsTrigger>
-        <TabsTrigger value="canvas" className="h-7 gap-1 px-2 text-xs @[560px]:px-2.5" aria-label="Холст">
+        <TabsTrigger value="canvas" className="h-7 gap-1 px-2 text-xs @[920px]:px-2.5" aria-label="Холст" title="Холст">
           <Network className="h-3.5 w-3.5" />
-          <span className="hidden @[560px]:inline">Холст</span>
+          <span className="hidden @[920px]:inline">Холст</span>
         </TabsTrigger>
       </TabsList>
     </Tabs>

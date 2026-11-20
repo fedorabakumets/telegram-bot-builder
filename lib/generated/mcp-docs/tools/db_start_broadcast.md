@@ -9,6 +9,7 @@
 
 ```json
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "project_id": {
@@ -18,12 +19,13 @@
     },
     "requestId": {
       "type": "string",
-      "format": "uuid"
+      "format": "uuid",
+      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
     },
     "name": {
+      "default": "",
       "type": "string",
-      "maxLength": 200,
-      "default": ""
+      "maxLength": 200
     },
     "messageText": {
       "type": "string",
@@ -31,15 +33,16 @@
       "maxLength": 4096
     },
     "mediaUrls": {
+      "default": [],
+      "maxItems": 10,
       "type": "array",
       "items": {
         "type": "string",
         "maxLength": 16384
-      },
-      "maxItems": 10,
-      "default": []
+      }
     },
     "buttons": {
+      "maxItems": 100,
       "type": "array",
       "items": {
         "type": "object",
@@ -51,6 +54,7 @@
             "type": "string"
           },
           "action": {
+            "default": "goto",
             "type": "string",
             "enum": [
               "goto",
@@ -65,8 +69,7 @@
               "web_app",
               "request_managed_bot",
               "pay"
-            ],
-            "default": "goto"
+            ]
           },
           "copyText": {
             "type": "string"
@@ -87,21 +90,21 @@
             "type": "boolean"
           },
           "buttonType": {
+            "default": "normal",
             "type": "string",
             "enum": [
               "normal",
               "option",
               "complete"
-            ],
-            "default": "normal"
+            ]
           },
           "skipDataCollection": {
-            "type": "boolean",
-            "default": false
+            "default": false,
+            "type": "boolean"
           },
           "hideAfterClick": {
-            "type": "boolean",
-            "default": false
+            "default": false,
+            "type": "boolean"
           },
           "customCallbackData": {
             "type": "string"
@@ -127,28 +130,26 @@
         "required": [
           "id",
           "text"
-        ],
-        "additionalProperties": false
-      },
-      "maxItems": 100,
-      "default": []
+        ]
+      }
     },
     "buttonsPerRow": {
+      "default": 0,
       "type": "integer",
       "minimum": 0,
-      "maximum": 8,
-      "default": 0
+      "maximum": 8
     },
     "filters": {
+      "default": {},
       "type": "object",
       "properties": {
         "tags": {
+          "maxItems": 50,
           "type": "array",
           "items": {
             "type": "string",
             "maxLength": 128
-          },
-          "maxItems": 50
+          }
         },
         "registeredFrom": {
           "type": "string"
@@ -163,47 +164,50 @@
           "type": "string"
         },
         "userIds": {
+          "maxItems": 10000,
           "type": "array",
           "items": {
             "type": "string",
             "maxLength": 64
-          },
-          "maxItems": 10000
+          }
         },
         "groupIds": {
+          "maxItems": 200,
           "type": "array",
           "items": {
             "type": "string",
             "maxLength": 64
-          },
-          "maxItems": 200
+          }
         }
-      },
-      "additionalProperties": false,
-      "default": {}
+      }
     },
     "tokenId": {
       "type": "integer",
-      "exclusiveMinimum": 0
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
     },
     "tokenIds": {
+      "minItems": 1,
+      "maxItems": 100,
       "type": "array",
       "items": {
         "type": "integer",
-        "exclusiveMinimum": 0
-      },
-      "minItems": 1,
-      "maxItems": 100
+        "exclusiveMinimum": 0,
+        "maximum": 9007199254740991
+      }
     },
     "groupsByTokenId": {
       "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
       "additionalProperties": {
+        "maxItems": 200,
         "type": "array",
         "items": {
           "type": "string",
           "maxLength": 64
-        },
-        "maxItems": 200
+        }
       }
     }
   },
@@ -211,9 +215,7 @@
     "project_id",
     "requestId",
     "messageText"
-  ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  ]
 }
 ```
 
@@ -258,6 +260,7 @@
 
 ```json
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "data": {
@@ -327,11 +330,13 @@
             },
             "projectId": {
               "type": "integer",
-              "exclusiveMinimum": 0
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             },
             "revision": {
               "type": "integer",
-              "minimum": 0
+              "minimum": 0,
+              "maximum": 9007199254740991
             }
           },
           "required": [
@@ -341,6 +346,9 @@
         },
         "sideEffects": {
           "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
           "additionalProperties": {}
         }
       },
@@ -357,10 +365,10 @@
     }
   },
   "required": [
+    "data",
     "execution"
   ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  "additionalProperties": false
 }
 ```
 

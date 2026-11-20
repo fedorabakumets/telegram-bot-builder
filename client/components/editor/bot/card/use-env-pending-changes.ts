@@ -81,6 +81,8 @@ export function useEnvPendingChanges(projectId: number, tokenId: number) {
   /** Инвалидировать кэши после сохранения */
   const invalidateAll = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/tokens`] });
+    queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/bot/launch-default`] });
+    queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/bot/setting-defaults`] });
     queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/tokens/${tokenId}/env-variables`] });
     queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/tokens/${tokenId}/runtime-settings`] });
     queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/admin-ids`] });

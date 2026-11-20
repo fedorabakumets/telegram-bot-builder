@@ -2,7 +2,7 @@
  * @fileoverview Сетка настроек бота
  *
  * Компонент объединяет все настройки бота в единую сетку:
- * - Переключатель базы данных
+ * - Настройки хранения данных бота
  * - Переключатель автоперезапуска
  * - Список администраторов
  * - История запусков
@@ -12,25 +12,19 @@
  * @module BotSettingsGrid
  */
 
+import { BotInheritedSettings } from './BotInheritedSettings';
 import { BotRuntimeModeSettings } from './BotRuntimeModeSettings';
-import { BotDatabaseToggle } from './BotDatabaseToggle';
 import { BotAutoRestartToggle } from './BotAutoRestartToggle';
-import { BotLogLevelSelect } from './BotLogLevelSelect';
-import { BotProtectContentToggle } from './BotProtectContentToggle';
-import { BotSaveMediaToggle } from './BotSaveMediaToggle';
-import { BotMessagesRetentionSelect } from './BotMessagesRetentionSelect';
-import { BotCatchAllToggle } from './BotCatchAllToggle';
-import { BotBlockTrackingToggle } from './BotBlockTrackingToggle';
-import { BotGroupMembershipToggle } from './BotGroupMembershipToggle';
-import { BotContentCacheToggle } from './BotContentCacheToggle';
 import { BotAdminIds } from '../profile/BotAdminIds';
 import { ProjectCollaborators } from '../profile/ProjectCollaborators';
 import { BotLaunchHistory } from './BotLaunchHistory';
 import { BotLaunchSettings } from './BotLaunchSettings';
+import { effectiveLaunchMode } from './bot-launch-helpers';
 import { BotTokenSettings } from './BotTokenSettings';
 import { BotUserbotSettings } from './BotUserbotSettings';
 import { SettingsSection } from './SettingsSection';
-import type { BotToken } from '@shared/schema';
+import type { BotProject, BotToken } from '@shared/schema';
+import { resolveProjectBotSettings } from '@shared/bot-inherited-settings';
 
 /** Пропсы сетки настроек бота */
 interface BotSettingsGridProps {
@@ -45,16 +39,17 @@ interface BotSettingsGridProps {
   /** Включена ли база данных пользователей (1 — да, 0/null — нет) */
   userDatabaseEnabled: number | null;
   /** Данные токена для настроек автоперезапуска */
-  token: Pick<BotToken, 'id' | 'token' | 'autoRestart' | 'maxRestartAttempts' | 'logLevel' | 'protectContent' | 'saveIncomingMedia' | 'messagesRetentionDays' | 'catchAllHandlers' | 'trackUserBlocks' | 'trackGroupMembership' | 'contentCache' | 'userbotEnabled' | 'userbotApiId' | 'userbotApiHash' | 'userbotSessionString'>;
-  /** Мутация переключения базы данных */
-  toggleDatabaseMutation: {
-    /** Флаг ожидания ответа */
-    isPending: boolean;
-    /** Функция мутации */
-    mutate: (enabled: boolean) => void;
-  };
+  token: BotToken;
+  /** Проектные значения автоперезапуска. */
+  restartDefaults: Pick<BotProject, 'defaultAutoRestart' | 'defaultMaxRestartAttempts'>;
+  /** Общие значения наследуемых настроек. */
+  inheritedDefaults: BotProject['botSettingDefaults'];
+  /** Получает несохранённое значение из очереди. */
+  getPendingValue?: (key: string) => string | undefined;
   /** Режим запуска бота */
   launchMode: string | null;
+  /** Способ получения обновлений из настроек проекта. */
+  projectLaunchMode?: string | null;
   /** Базовый URL для webhook */
   webhookBaseUrl: string | null;
   /** Секретный токен webhook */
@@ -73,6 +68,10 @@ interface BotSettingsGridProps {
   pendingRuntimeMode?: string;
   /** Несохранённый способ получения обновлений из общей очереди. */
   pendingLaunchMode?: string;
+  /** Черновик включения автоперезапуска. */
+  pendingAutoRestart?: string;
+  /** Черновик числа попыток автоперезапуска. */
+  pendingMaxAttempts?: string;
   /** Выполняется сохранение общей очереди. */
   settingsSaving?: boolean;
 }
@@ -88,8 +87,11 @@ export function BotSettingsGrid({
   botName,
   userDatabaseEnabled,
   token,
-  toggleDatabaseMutation,
+  restartDefaults,
+  inheritedDefaults,
+  getPendingValue,
   launchMode,
+  projectLaunchMode,
   webhookBaseUrl,
   webhookSecretToken,
   hasWebhookSecret,
@@ -100,9 +102,12 @@ export function BotSettingsGrid({
   isLiveRunning = false,
   pendingRuntimeMode,
   pendingLaunchMode,
+  pendingAutoRestart,
+  pendingMaxAttempts,
   settingsSaving,
 }: BotSettingsGridProps) {
   const resolvedBotName = botName ?? `Бот ${tokenId}`;
+  const launchModeChoice = pendingLaunchMode ?? launchMode;
 
   return (
     <div className="space-y-6">
@@ -115,89 +120,43 @@ export function BotSettingsGrid({
         <BotLaunchSettings
           tokenId={tokenId}
           projectId={projectId}
-          launchMode={pendingLaunchMode ?? launchMode}
-          webhookBaseUrl={webhookBaseUrl}
-          webhookSecretToken={webhookSecretToken}
+          launchMode={launchModeChoice}
+          projectLaunchMode={projectLaunchMode}
+          webhookBaseUrl={getPendingValue?.('WEBHOOK_BASE_URL')
+            ?? (token.inheritBotSettings?.includes('webhookBaseUrl') ? 'inherit' : webhookBaseUrl)}
+          projectWebhookBaseUrl={resolveProjectBotSettings(inheritedDefaults).webhookBaseUrl}
+          addressDisabled={!canManage || !!settingsSaving}
+          webhookSecretToken={getPendingValue?.('WEBHOOK_SECRET_TOKEN') ?? webhookSecretToken}
           hasWebhookSecret={hasWebhookSecret}
           onPendingChange={onPendingChange}
         />
         <BotRuntimeModeSettings projectId={projectId} tokenId={tokenId} canManage={canManage}
-          launchMode={pendingLaunchMode ?? launchMode} onPendingChange={onPendingChange}
+          launchMode={effectiveLaunchMode(launchModeChoice, projectLaunchMode)} onPendingChange={onPendingChange}
           pendingRuntimeMode={pendingRuntimeMode} settingsSaving={settingsSaving} />
         <BotAutoRestartToggle
           projectId={projectId}
-          tokenId={tokenId}
-          autoRestart={token.autoRestart}
-          maxRestartAttempts={token.maxRestartAttempts}
-          onPendingChange={onPendingChange ? (ar, ma) => {
-            onPendingChange('AUTO_RESTART', ar);
-            onPendingChange('MAX_RESTART_ATTEMPTS', ma);
-          } : undefined}
+          token={token}
+          defaults={restartDefaults}
+          canManage={canManage}
+          pendingAutoRestart={pendingAutoRestart}
+          pendingMaxAttempts={pendingMaxAttempts}
+          settingsSaving={settingsSaving}
+          onPendingChange={onPendingChange}
         />
       </SettingsSection>
 
       <SettingsSection title="Данные">
-        <BotDatabaseToggle
-          projectId={projectId}
-          tokenId={tokenId}
-          userDatabaseEnabled={userDatabaseEnabled}
-          toggleDatabaseMutation={toggleDatabaseMutation}
-          onPendingChange={onPendingChange}
-        />
-        <BotSaveMediaToggle
-          projectId={projectId}
-          tokenId={tokenId}
-          saveIncomingMedia={token.saveIncomingMedia ?? 0}
-          userDatabaseEnabled={userDatabaseEnabled}
-          onPendingChange={onPendingChange}
-        />
-        <BotMessagesRetentionSelect
-          projectId={projectId}
-          tokenId={tokenId}
-          messagesRetentionDays={token.messagesRetentionDays ?? 0}
-          userDatabaseEnabled={userDatabaseEnabled}
-          onPendingChange={onPendingChange}
-        />
-        <BotContentCacheToggle
-          projectId={projectId}
-          tokenId={tokenId}
-          contentCache={token.contentCache ?? 0}
-          userDatabaseEnabled={userDatabaseEnabled}
-          onPendingChange={onPendingChange}
-        />
+        {userDatabaseEnabled === 1 ? (
+          <BotInheritedSettings section="data" projectId={projectId} token={token} defaults={inheritedDefaults}
+            disabled={!canManage || !!settingsSaving} getPendingValue={getPendingValue} onPendingChange={onPendingChange} />
+        ) : (
+          <p className="text-sm text-muted-foreground">База данных пользователей выключена в настройках проекта.</p>
+        )}
       </SettingsSection>
 
       <SettingsSection title="Логи и поведение">
-        <BotLogLevelSelect
-          projectId={projectId}
-          tokenId={tokenId}
-          logLevel={token.logLevel ?? 'WARNING'}
-          onPendingChange={onPendingChange}
-        />
-        <BotCatchAllToggle
-          projectId={projectId}
-          tokenId={tokenId}
-          catchAllHandlers={token.catchAllHandlers ?? 1}
-          onPendingChange={onPendingChange}
-        />
-        <BotBlockTrackingToggle
-          projectId={projectId}
-          tokenId={tokenId}
-          trackUserBlocks={token.trackUserBlocks ?? 1}
-          onPendingChange={onPendingChange}
-        />
-        <BotGroupMembershipToggle
-          projectId={projectId}
-          tokenId={tokenId}
-          trackGroupMembership={token.trackGroupMembership ?? 1}
-          onPendingChange={onPendingChange}
-        />
-        <BotProtectContentToggle
-          projectId={projectId}
-          tokenId={tokenId}
-          protectContent={token.protectContent ?? 0}
-          onPendingChange={onPendingChange}
-        />
+        <BotInheritedSettings section="behavior" projectId={projectId} token={token} defaults={inheritedDefaults}
+          disabled={!canManage || !!settingsSaving} getPendingValue={getPendingValue} onPendingChange={onPendingChange} />
       </SettingsSection>
 
       <SettingsSection title="Администраторы">

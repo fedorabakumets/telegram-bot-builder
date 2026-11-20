@@ -3,8 +3,9 @@
  * @module shared/schema/tables/bot-tokens
  */
 
-import { pgTable, text, serial, integer, timestamp, bigint } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, timestamp, bigint, boolean, jsonb } from "drizzle-orm/pg-core";
 import { z } from "zod";
+import { BOT_INHERITED_SETTING_KEYS } from "../../bot-inherited-settings";
 
 import { botProjects } from "./bot-projects";
 import { telegramUsers } from "./telegram-users";
@@ -57,8 +58,12 @@ export const botTokens = pgTable("bot_tokens", {
   totalExecutionSeconds: integer("total_execution_seconds").default(0),
   /** Флаг автоперезапуска при краше (0 = выключено, 1 = включено) */
   autoRestart: integer("auto_restart").default(0),
+  /** Бот наследует флаг автоперезапуска проекта. */
+  inheritAutoRestart: boolean("inherit_auto_restart").notNull().default(true),
   /** Максимальное количество попыток автоперезапуска подряд */
   maxRestartAttempts: integer("max_restart_attempts").default(3),
+  /** Бот наследует предел попыток автоперезапуска проекта. */
+  inheritMaxRestartAttempts: boolean("inherit_max_restart_attempts").notNull().default(true),
   /** Уровень логирования Python-бота (DEBUG, INFO, WARNING, ERROR) */
   logLevel: text("log_level").default("DEBUG"),
   /** Защита контента от копирования/пересылки (0 = выключено, 1 = включено) */
@@ -89,6 +94,12 @@ export const botTokens = pgTable("bot_tokens", {
   contentCache: integer("content_cache").default(0),
   /** Режим запуска бота: 'polling' (по умолчанию) или 'webhook' */
   launchMode: text("launch_mode").default("polling"),
+  /** Бот использует способ получения обновлений из настроек проекта */
+  inheritLaunchMode: boolean("inherit_launch_mode").notNull().default(true),
+  /** Бот наследует режим жизни обработчика проекта. */
+  inheritSleepMode: boolean("inherit_sleep_mode").notNull().default(true),
+  /** Ключи общих настроек поведения и данных, которые наследует бот. */
+  inheritBotSettings: jsonb("inherit_bot_settings").$type<string[]>().notNull().default([...BOT_INHERITED_SETTING_KEYS]),
   /** Базовый URL для webhook режима (например https://example.com) */
   webhookBaseUrl: text("webhook_base_url"),
   /** Секретный токен для верификации webhook запросов */
@@ -157,15 +168,19 @@ export const insertBotTokenSchema = z.object({
   /** Общее время выполнения в секундах */
   totalExecutionSeconds: z.number().min(0).default(0),
   /** Флаг автоперезапуска при краше (0 = выключено, 1 = включено) */
-  autoRestart: z.number().min(0).max(1).default(0),
+  autoRestart: z.union([z.literal(0), z.literal(1)]).optional(),
+  /** Явный выбор наследования флага автоперезапуска. */
+  inheritAutoRestart: z.boolean().optional(),
   /** Максимальное количество попыток автоперезапуска подряд */
-  maxRestartAttempts: z.number().min(1).max(10).default(3),
+  maxRestartAttempts: z.number().int().min(1).max(10).optional(),
+  /** Явный выбор наследования предела попыток автоперезапуска. */
+  inheritMaxRestartAttempts: z.boolean().optional(),
   /** Уровень логирования Python-бота (DEBUG, INFO, WARNING, ERROR) */
-  logLevel: z.enum(['DEBUG', 'INFO', 'WARNING', 'ERROR']).default('DEBUG').optional(),
+  logLevel: z.enum(['DEBUG', 'INFO', 'WARNING', 'ERROR']).optional(),
   /** Защита контента от копирования/пересылки (0 = выключено, 1 = включено) */
-  protectContent: z.number().min(0).max(1).default(0),
+  protectContent: z.number().min(0).max(1).optional(),
   /** Флаг сохранения входящих медиафайлов от пользователей (0 = выключено, 1 = включено) */
-  saveIncomingMedia: z.number().min(0).max(1).default(0),
+  saveIncomingMedia: z.number().min(0).max(1).optional(),
   /**
    * Срок хранения сообщений в днях (0 = безлимит; иначе 7/30/60/90/180/365)
    */
@@ -179,18 +194,23 @@ export const insertBotTokenSchema = z.object({
       z.literal(180),
       z.literal(365),
     ])
-    .default(0)
     .optional(),
   /** Генерировать catch-all обработчики (0 = выключено, 1 = включено) */
-  catchAllHandlers: z.number().min(0).max(1).default(1),
+  catchAllHandlers: z.number().min(0).max(1).optional(),
   /** Отслеживать блокировки через Telegram my_chat_member (0/1) */
-  trackUserBlocks: z.number().min(0).max(1).default(1),
+  trackUserBlocks: z.number().min(0).max(1).optional(),
   /** Сохранять добавление и исключение бота в группах (0/1) */
-  trackGroupMembership: z.number().min(0).max(1).default(1),
+  trackGroupMembership: z.number().min(0).max(1).optional(),
   /** Живое обновление контента из таблицы _content (0 = выключено, 1 = включено; по умолчанию выкл) */
-  contentCache: z.number().min(0).max(1).default(0),
+  contentCache: z.number().min(0).max(1).optional(),
   /** Режим запуска бота: polling или webhook */
-  launchMode: z.enum(['polling', 'webhook']).default('polling').optional(),
+  launchMode: z.enum(['polling', 'webhook']).optional(),
+  /** Явный выбор наследования способа получения обновлений */
+  inheritLaunchMode: z.boolean().optional(),
+  /** Явный выбор наследования режима жизни обработчика. */
+  inheritSleepMode: z.boolean().optional(),
+  /** Явный список наследуемых настроек при создании бота. */
+  inheritBotSettings: z.array(z.enum(BOT_INHERITED_SETTING_KEYS)).max(BOT_INHERITED_SETTING_KEYS.length).optional(),
   /** Базовый URL для webhook режима */
   webhookBaseUrl: z.string().nullable().optional(),
   /** Секретный токен для верификации webhook запросов */

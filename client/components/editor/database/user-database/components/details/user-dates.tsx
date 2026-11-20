@@ -9,6 +9,8 @@ import { formatDate } from '../../../utils';
  * Пропсы компонента UserDates
  */
 interface UserDatesProps {
+  /** Первое сохранённое входящее сообщение, независимо от регистрации карточки. */
+  firstSavedMessageAt?: string | null;
   /** Дата создания */
   createdAt: unknown;
   /** Дата обновления */
@@ -24,6 +26,7 @@ interface UserDatesProps {
  */
 export function UserDates({
   createdAt,
+  firstSavedMessageAt,
   updatedAt,
   lastInteraction,
 }: UserDatesProps): React.JSX.Element {
@@ -35,6 +38,8 @@ export function UserDates({
           <span className="text-sm text-muted-foreground">Регистрация:</span>{' '}
           {String(formatDate(createdAt ?? null))}
         </div>
+        {firstSavedMessageAt && <div><span className="text-sm text-muted-foreground">Первое сохранённое сообщение:</span>{' '}
+          {formatDate(firstSavedMessageAt)}</div>}
         {updatedAt != null && <div>
           <span className="text-sm text-muted-foreground">Последнее обновление:</span>{' '}
           {String(formatDate(updatedAt))}

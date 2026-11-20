@@ -20,6 +20,14 @@ function props(overrides: Partial<BotLaunchSettingsProps> = {}): BotLaunchSettin
 beforeEach(() => { vi.useFakeTimers(); vi.clearAllMocks(); });
 afterEach(() => { cleanup(); vi.useRealTimers(); });
 describe('черновик настроек webhook', () => {
+  it('передаёт сброс индивидуального режима в общую очередь', () => {
+    const onPendingChange = vi.fn();
+    const { result } = renderHook(() => useBotLaunchSettings(props({ onPendingChange })));
+    act(() => result.current.handleModeChange('inherit'));
+    expect(result.current.localMode).toBe('inherit');
+    expect(onPendingChange).toHaveBeenCalledWith('LAUNCH_MODE', 'inherit');
+    expect(mocks.mutate).not.toHaveBeenCalled();
+  });
   it('наследует адрес API и не сохраняет конфигурацию при открытии', () => {
     const { result } = renderHook(() => useBotLaunchSettings(props()));
     expect(result.current.effectiveBaseUrl).toBe('https://api.example');
@@ -31,11 +39,21 @@ describe('черновик настроек webhook', () => {
     const { result } = renderHook(() => useBotLaunchSettings(props()));
     act(() => result.current.handleBaseUrlChange('https://custom.example'));
     act(() => vi.advanceTimersByTime(800));
-    expect(mocks.mutate).toHaveBeenLastCalledWith({ mode: 'webhook', url: 'https://custom.example', secret: null });
+    expect(mocks.mutate).toHaveBeenLastCalledWith({ webhookBaseUrl: 'https://custom.example' });
     act(() => result.current.handleBaseUrlChange(''));
     act(() => vi.advanceTimersByTime(800));
     expect(result.current.effectiveBaseUrl).toBe('https://api.example');
-    expect(mocks.mutate).toHaveBeenLastCalledWith({ mode: 'webhook', url: null, secret: null });
+    expect(mocks.mutate).toHaveBeenLastCalledWith({ webhookBaseUrl: null });
+  });
+  it('отличает пустой собственный адрес от наследования проекта', () => {
+    const onPendingChange = vi.fn();
+    const initialProps = props({ projectWebhookBaseUrl: 'https://project.example/', onPendingChange });
+    const { result } = renderHook(() => useBotLaunchSettings(initialProps));
+    expect(result.current.effectiveBaseUrl).toBe('https://api.example');
+    act(() => result.current.handleBaseUrlChange('inherit'));
+    expect(result.current.effectiveBaseUrl).toBe('https://project.example');
+    expect(onPendingChange).toHaveBeenCalledWith('WEBHOOK_BASE_URL', 'inherit');
+    expect(mocks.mutate).not.toHaveBeenCalled();
   });
   it('синхронизирует адрес и секрет после отмены общей очереди', () => {
     const onPendingChange = vi.fn();

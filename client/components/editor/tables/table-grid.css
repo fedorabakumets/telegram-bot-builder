@@ -28,12 +28,7 @@
 .table-actions-menu [data-highlighted] { background: var(--muted); color: var(--foreground); }
 
 /** Локальные флажки остаются видимыми при глобальном сбросе нативного оформления. */
-.table-cell-dialog input[type="checkbox"] { appearance: auto; width: 16px; height: 16px; accent-color: var(--muted-foreground); vertical-align: middle; }
 /** Флажки сетки не имеют серой заливки, выбранное состояние остаётся заметным. */
-.table-data-grid .table-number input[type="checkbox"] { appearance: none; display: inline-grid; place-content: center; width: 16px; height: 16px; margin: 0; vertical-align: middle; border: 1px solid var(--muted-foreground); border-radius: 3px; background: var(--background); cursor: pointer; }
-.table-data-grid .table-number input[type="checkbox"]:checked { background: var(--primary); border-color: var(--primary); }
-.table-data-grid .table-number input[type="checkbox"]:checked::before { content: ''; width: 8px; height: 5px; border-left: 2px solid var(--primary-foreground); border-bottom: 2px solid var(--primary-foreground); transform: translateY(-1px) rotate(-45deg); }
-.table-data-grid .table-number input[type="checkbox"]:indeterminate::before { content: ''; width: 8px; border-top: 2px solid var(--muted-foreground); }
 
 /** Заголовки отделены от данных спокойной поверхностью, линии не спорят с текстом. */
 .table-data-grid th { background: var(--card); font-weight: 500; }
@@ -59,3 +54,6 @@
 
 /** Заголовок номера не переносит компактные элементы на вторую строку. */
 .table-data-grid th.table-number { white-space: nowrap; }
+
+/** Флажки таблиц используют общую контрастную тему. */
+.table-cell-dialog input[type="checkbox"] { vertical-align: middle; }

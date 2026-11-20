@@ -16,7 +16,7 @@ function fixture(initialDelivered = 0) {
       if (result.ok) counts.deliveredCount++;
       else counts.failedCount++;
     }),
-    history: vi.fn(async (_id: string) => undefined),
+    history: vi.fn(async (_id: string, _result: GroupSendResult) => undefined),
     progress: vi.fn(async () => { snapshots.push({ ...counts }); }),
     log: vi.fn(),
   };
@@ -29,6 +29,7 @@ describe("Групповая очередь рассылки", () => {
     await runBroadcastGroups(["-1", "-2"], f.actions);
     expect(f.counts).toEqual({ sentCount: 2, deliveredCount: 2, failedCount: 0 });
     expect(f.snapshots.map(x => x.sentCount)).toEqual([1, 2]);
+    expect(f.actions.history).toHaveBeenCalledWith("-1", { ok: true, messageId: 11 });
   });
   it("продолжает общий прогресс после пользователей и сохраняет ошибки", async () => {
     const f = fixture(3);

@@ -64,3 +64,24 @@ test('переключает уже сохранённый process на webhook 
     { action: 'update', key: 'LAUNCH_MODE', value: 'webhook' },
   ], [{ id: 7, key: 'BOT_POLLING_MODE', value: 'process' }], 'polling'), false);
 });
+
+
+/** Проверяет реальный транспорт проекта при возврате к наследованию. */
+test('проверяет совместимость webhook проекта с итоговым режимом обработчика', () => {
+  const inherit = { action: 'update', key: 'LAUNCH_MODE', value: 'inherit' };
+  const dormant = [{ id: 7, key: 'BOT_POLLING_MODE', value: 'ondemand' }];
+  assert.throws(() => validateRuntimeModeBatch([inherit], dormant, 'polling', 'direct', 9, 'webhook'),
+    /сон обработчика доступен только через polling/);
+  assert.equal(validateRuntimeModeBatch([
+    inherit, { action: 'update', key: 'BOT_POLLING_MODE', value: 'process' },
+  ], dormant, 'polling', 'direct', 9, 'webhook'), true);
+});
+
+/** Неактивная собственная настройка не мешает включению транспорта, допустимого для проекта. */
+test('учитывает проектный режим обработчика при проверке транспорта и сбросе источника', () => {
+  const dormant = [{ id: 7, key: 'BOT_POLLING_MODE', value: 'ondemand' }];
+  const webhook = { action: 'update', key: 'LAUNCH_MODE', value: 'webhook' };
+  assert.equal(validateRuntimeModeBatch([webhook], dormant, 'polling', undefined, 9, 'polling', 'process', true), false);
+  const inherit = { action: 'update', key: 'BOT_POLLING_MODE', value: 'inherit' };
+  assert.equal(validateRuntimeModeBatch([webhook, inherit], dormant, 'polling', undefined, 9, 'polling', 'direct', false), true);
+});

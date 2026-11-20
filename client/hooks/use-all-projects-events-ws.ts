@@ -13,7 +13,7 @@ import { subscribeSharedTerminalWs, onSharedTerminalWsReconnect } from '@/lib/sh
 import type { ProjectEvent, StartOfflineProgressPayload } from '@shared/project-sync/project-event';
 import { startOfflineProgressQueryKey } from '@/components/editor/bot/start-offline-progress-query';
 import { invalidateAllBotStatusQueries, invalidateBotStatusQueries } from '@/components/editor/bot/invalidate-bot-status-queries';
-import { invalidateRuntimeSettingsAfterReconnect, invalidateTokenRuntimeSettings } from './invalidate-token-runtime-settings';
+import { invalidateProjectRuntimeDefaults, invalidateRuntimeSettingsAfterReconnect, invalidateTokenRuntimeSettings } from './invalidate-token-runtime-settings';
 import { invalidateTokenMetadata } from './invalidate-token-metadata';
 import { invalidateBotLifecycle, invalidateLaunchHistories } from './invalidate-bot-lifecycle';
 
@@ -133,6 +133,10 @@ export function useAllProjectsEventsWs(options?: UseAllProjectsEventsWsOptions):
     const unsubscribe = subscribeSharedTerminalWs((raw) => {
       try {
         const msg = raw as AllProjectsWsEvent;
+        if (msg.type === 'project-runtime-defaults-updated' || msg.type === 'project-launch-default-updated'
+          || msg.type === 'project-bot-settings-updated') {
+          invalidateProjectRuntimeDefaults(queryClient, msg.projectId);
+        }
 
         // Логи бота (stdout/stderr) — всегда записываем в BotLogsContext.
         // Дедупликация в addLog (500ms окно) предотвращает дубли с live-терминалом.

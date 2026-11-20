@@ -11,6 +11,7 @@ import type { Request, Response } from 'express';
 import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { storage } from '../../../storages/storage';
+import { encodeAdminIdsForStorage, parseAdminIds } from '../../../bots/adminIdsStorage';
 
 /**
  * Находит путь к .env файлу бота по projectId
@@ -59,33 +60,33 @@ async function findBotEnvPath(projectId: number): Promise<string | null> {
 }
 
 /**
- * Читает значение ADMIN_IDS из БД (с fallback на .env файл)
+ * Читает сохранённый список проекта с резервным чтением старого окружения.
+ * @param projectId - Идентификатор проекта.
+ * @returns Список ID администраторов.
+ */
+async function loadAdminIds(projectId: number): Promise<string[]> {
+  const project = await storage.getBotProject(projectId);
+  const saved = project?.adminIds?.trim();
+  if (saved) return parseAdminIds(saved);
+
+  const envPath = await findBotEnvPath(projectId);
+  if (!envPath) return [];
+  const content = readFileSync(envPath, 'utf8');
+  const match = content.match(/^ADMIN_IDS=([\s\S]*?)(?=\n[A-Z_]+=|\n#|\s*$)/m);
+  return parseAdminIds(match?.[1].replace(/\s+/g, ' ') ?? '');
+}
+
+/**
+ * Возвращает список администраторов с каноническим представлением пустого списка.
+ * @param req - Запрос с идентификатором проекта.
+ * @param res - Ответ со списком администраторов.
+ * @returns Завершение обработчика.
  */
 export async function getAdminIdsHandler(req: Request, res: Response): Promise<void> {
   try {
     const projectId = parseInt(req.params.id);
-
-    // Сначала читаем из БД
-    const project = await storage.getBotProject(projectId);
-    if (project?.adminIds?.trim()) {
-      const raw = project.adminIds.trim();
-      const ids = raw.split(',').map(s => s.trim()).filter(Boolean);
-      res.json({ adminIds: raw, items: ids.map(id => ({ id })), count: ids.length });
-      return;
-    }
-
-    // Fallback: читаем из .env файла
-    const envPath = await findBotEnvPath(projectId);
-    if (!envPath) {
-      res.json({ adminIds: '', items: [], count: 0 });
-      return;
-    }
-
-    const content = readFileSync(envPath, 'utf8');
-    const match = content.match(/^ADMIN_IDS=([\s\S]*?)(?=\n[A-Z_]+=|\n#|\s*$)/m);
-    const raw = match ? match[1].replace(/\s+/g, ' ').trim() : '';
-    const ids = raw.split(',').map(s => s.trim()).filter(Boolean);
-    res.json({ adminIds: raw, items: ids.map(id => ({ id })), count: ids.length });
+    const ids = await loadAdminIds(projectId);
+    res.json({ adminIds: ids.join(','), items: ids.map(id => ({ id })), count: ids.length });
   } catch (error) {
     res.status(500).json({ message: 'Ошибка чтения ADMIN_IDS', error: String(error) });
   }
@@ -99,9 +100,12 @@ export async function getAdminIdsHandler(req: Request, res: Response): Promise<v
 export async function updateAdminIdsHandler(req: Request, res: Response): Promise<void> {
   try {
     const projectId = parseInt(req.params.id);
-    const { adminIds } = req.body as { adminIds: string };
-
-    await storage.updateBotProject(projectId, { adminIds });
+    if (typeof req.body?.adminIds !== 'string') {
+      res.status(400).json({ message: 'Укажите список администраторов строкой' });
+      return;
+    }
+    const adminIds = parseAdminIds(req.body.adminIds).join(',');
+    await storage.updateBotProject(projectId, { adminIds: encodeAdminIdsForStorage(adminIds) });
     res.json({ success: true, adminIds });
   } catch (error) {
     res.status(500).json({ message: 'Ошибка обновления ADMIN_IDS', error: String(error) });
@@ -121,12 +125,13 @@ export async function removeAdminIdHandler(req: Request, res: Response): Promise
     // Извлекаем числовой ID из callback_data вида "del_admin_123"
     const cleanId = adminId.replace(/^del_admin_/, '').trim();
 
-    const project = await storage.getBotProject(projectId);
-    const currentIds = (project?.adminIds ?? '').split(',').map(s => s.trim()).filter(Boolean);
+    const currentIds = await loadAdminIds(projectId);
     const updatedIds = currentIds.filter(id => id !== cleanId);
     const newAdminIds = updatedIds.join(',');
 
-    await storage.updateBotProject(projectId, { adminIds: newAdminIds });
+    if (updatedIds.length !== currentIds.length) {
+      await storage.updateBotProject(projectId, { adminIds: encodeAdminIdsForStorage(newAdminIds) });
+    }
     res.json({ success: true, adminIds: newAdminIds });
   } catch (error) {
     res.status(500).json({ message: 'Ошибка удаления администратора', error: String(error) });

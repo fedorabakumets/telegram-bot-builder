@@ -26,6 +26,16 @@ export const botProjects = pgTable("bot_projects", {
   botToken: text("bot_token"),
   /** Флаг включения пользовательской базы данных (0 = выключена, 1 = включена) */
   userDatabaseEnabled: integer("user_database_enabled").default(1),
+  /** Способ получения обновлений для ботов, наследующих настройку проекта */
+  defaultLaunchMode: text("default_launch_mode", { enum: ["polling", "webhook"] }).notNull().default("polling"),
+  /** Режим жизни обработчика по умолчанию; null использует серверное значение. */
+  defaultSleepMode: text("default_sleep_mode", { enum: ["direct", "process"] }),
+  /** Автоперезапуск по умолчанию: 0 — выключен, 1 — включён. */
+  defaultAutoRestart: integer("default_auto_restart").notNull().default(0),
+  /** Максимальное количество попыток автоперезапуска по умолчанию. */
+  defaultMaxRestartAttempts: integer("default_max_restart_attempts").notNull().default(3),
+  /** Переопределённые значения общих настроек поведения и данных ботов. */
+  botSettingDefaults: jsonb("bot_setting_defaults").$type<Record<string, unknown>>().notNull().default({}),
   /** ID последней экспортированной Google Таблицы пользователей */
   lastExportedGoogleSheetId: text("last_exported_google_sheet_id"),
   /** URL последней экспортированной Google Таблицы пользователей */
@@ -66,6 +76,14 @@ export const insertBotProjectSchema = z.object({
   botToken: z.string().nullable().optional(),
   /** Флаг включения пользовательской базы данных */
   userDatabaseEnabled: z.number().min(0).max(1).default(1),
+  /** Способ получения обновлений по умолчанию */
+  defaultLaunchMode: z.enum(["polling", "webhook"]).optional(),
+  /** Общий режим жизни обработчика или серверное значение. */
+  defaultSleepMode: z.enum(["direct", "process"]).nullable().optional(),
+  /** Общий флаг автоперезапуска. */
+  defaultAutoRestart: z.union([z.literal(0), z.literal(1)]).optional(),
+  /** Общий предел попыток автоперезапуска. */
+  defaultMaxRestartAttempts: z.number().int().min(1).max(10).optional(),
   /** ID последней экспортированной Google Таблицы пользователей */
   lastExportedGoogleSheetId: z.string().nullable().optional(),
   /** URL последней экспортированной Google Таблицы пользователей */

@@ -9,7 +9,10 @@ import type { BotToken } from '@shared/schema';
 import type { ReactNode } from 'react';
 import { FileImage, FolderOpen, RefreshCw } from 'lucide-react';
 
-import { WorkspaceCollapsibleHeader } from '@/components/ui/workspace-collapsible-header';
+import { WorkspaceAdaptiveHeader } from '@/components/ui/workspace-adaptive-header';
+import './files-header-adaptive.css';
+import '@/components/editor/database/user-database/content/users-workspace.css';
+import { useBotAudienceCounts } from '@/components/editor/database/user-database/components/header/use-bot-audience-counts';
 import { WorkspaceTabHeading } from '@/components/ui/workspace-tab-heading';
 import { Button } from '@/components/ui/button';
 import { ProjectSelector } from '@/components/editor/database/user-database/components/header/project-selector';
@@ -62,6 +65,8 @@ function HeaderSelectors({
   FileStorageHeaderProps,
   'projectId' | 'tokens' | 'selectedTokenId' | 'onSelectToken' | 'allProjects' | 'onProjectChange'
 >): React.JSX.Element | null {
+  /** Подтверждённая аудитория общая для всех селекторов рабочих вкладок. */
+  const audience = useBotAudienceCounts(projectId);
   if (allProjects.length <= 1 && tokens.length === 0) return null;
 
   return (
@@ -70,6 +75,7 @@ function HeaderSelectors({
         <ProjectSelector
           projects={allProjects}
           selectedProjectId={projectId}
+          showBotCount={selectedTokenId == null}
           onSelect={onProjectChange}
         />
       )}
@@ -77,6 +83,9 @@ function HeaderSelectors({
         <BotTokenSelector
           projectId={projectId}
           tokens={tokens}
+          audienceCounts={audience.counts}
+          countsError={audience.isError && !audience.data}
+          onRetryCounts={() => { void audience.refetch(); }}
           selectedTokenId={selectedTokenId}
           onSelect={onSelectToken}
         />
@@ -127,15 +136,18 @@ export function FileStorageHeader(props: FileStorageHeaderProps): React.JSX.Elem
       data-testid="file-storage-header"
       data-mode="page"
     >
-      <WorkspaceCollapsibleHeader><div className="space-y-4"><WorkspaceTabHeading title="Файлы" icon={<FileImage />}
+      <WorkspaceAdaptiveHeader className="files-header-content" scopeSelector=".files-scope-controls" actionsSelector=".workspace-tab-actions"><WorkspaceTabHeading title="Файлы" icon={<FileImage />}
         description="Медиа для блоков бота."
-        actions={<div className="flex shrink-0 items-center gap-2"><FileStorageDocsLink /><Button variant="ghost" size="icon" className="files-action h-8 w-8" onClick={onRefresh}
-          disabled={props.isRefreshing} aria-label="Обновить список файлов" title="Обновить список файлов" data-testid="file-storage-refresh">
-          <RefreshCw className="h-4 w-4" aria-hidden="true" />
+        actions={<div className="workspace-tab-actions flex shrink-0 items-center gap-2"><FileStorageDocsLink />
+          {/* При обновлении сохраняем оформление кнопки и блокируем повторный запрос. */}
+          <Button variant="ghost" size="icon" className="files-action h-8 w-8" onClick={() => { if (!props.isRefreshing) onRefresh(); }}
+          aria-disabled={props.isRefreshing} aria-busy={props.isRefreshing} aria-label="Обновить список файлов" title="Обновить список файлов" data-testid="file-storage-refresh">
+          {/* Иконка показывает обновление списка файлов. */}
+          <RefreshCw className={props.isRefreshing ? 'h-4 w-4 motion-safe:animate-spin' : 'h-4 w-4'} aria-hidden="true" />
           <span className="files-heading-action-label">Обновить</span>
         </Button></div>} />
       <HeaderSelectors {...props} />
-      <div className="files-header-actions flex flex-wrap items-center gap-2">{actions}{props.quota}</div></div></WorkspaceCollapsibleHeader>
+      <div className="files-header-actions flex flex-wrap items-center gap-2">{actions}{props.quota}</div></WorkspaceAdaptiveHeader>
     </div>
   );
 }

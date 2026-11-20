@@ -6,7 +6,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { Play, RefreshCw } from 'lucide-react';
+import { Play, RotateCw } from 'lucide-react';
 import {
   startOfflineProgressQueryKey,
   type StartOfflineProgressCache,
@@ -74,8 +74,10 @@ export function ProjectBotBulkActions({
           disabled={isRestartingAll || isStartingOffline}
           aria-label="Перезапустить всех запущенных ботов проекта"
         >
-          <RefreshCw className={`w-3 h-3 sm:mr-1 ${isRestartingAll ? 'animate-spin' : ''}`} />
-          <span className="hidden sm:inline">
+          {/* Стрелка по часовой отличает перезапуск от обновления данных. */}
+          <RotateCw className={`w-3 h-3 sm:mr-1 ${isRestartingAll ? 'motion-safe:animate-spin' : ''}`} />
+          {/* Подпись можно скрыть в компактной шапке; у кнопки есть доступное имя. */}
+          <span data-bulk-label className="hidden sm:inline">
             {isRestartingAll ? 'Перезапуск...' : 'Перезапустить'}
           </span>
         </Button>
@@ -88,7 +90,7 @@ export function ProjectBotBulkActions({
           aria-label="Запустить офлайн-ботов проекта"
         >
           <Play className={`w-3 h-3 sm:mr-1 ${isStartingOffline ? 'animate-pulse' : ''}`} />
-          <span className="hidden sm:inline">
+          <span data-bulk-label className="hidden sm:inline">
             {isStartingOffline
               ? (progressLabel ? `Запуск ${progressLabel}` : 'Запуск...')
               : offlineCount > 0

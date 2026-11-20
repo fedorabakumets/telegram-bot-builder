@@ -6,9 +6,10 @@
 import { useTerminalWebSocket } from './use-terminal-websocket';
 import { useEffect, useRef } from 'react';
 import { Terminal as TerminalComponent, type TerminalHandle } from './Terminal';
-import { TerminalLogsContextBar } from './TerminalLogsContextBar';
 
 interface BotTerminalProps {
+  /** Имя бота для сводки логов. */
+  botName?: string;
   /** Идентификатор проекта */
   projectId: number;
   /** Идентификатор токена бота */
@@ -22,7 +23,7 @@ interface BotTerminalProps {
  * @param props - Свойства компонента
  * @returns JSX элемент
  */
-export function BotTerminal({ projectId, tokenId, isBotRunning = false }: BotTerminalProps) {
+export function BotTerminal({ projectId, tokenId, botName, isBotRunning = false }: BotTerminalProps) {
   const terminalRef = useRef<TerminalHandle>(null);
 
   const { status: wsStatus, wsConnection, connect } = useTerminalWebSocket({
@@ -39,15 +40,6 @@ export function BotTerminal({ projectId, tokenId, isBotRunning = false }: BotTer
 
   return (
     <div className="h-full w-full flex flex-col min-h-0">
-      <TerminalLogsContextBar
-        title="Живые логи"
-        statusLabel={isBotRunning ? 'Онлайн' : 'Офлайн'}
-        statusClassName={
-          isBotRunning
-            ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
-            : 'bg-muted text-muted-foreground border-border'
-        }
-      />
       <div className="flex-1 min-h-0">
         <TerminalComponent
           ref={terminalRef}
@@ -55,6 +47,8 @@ export function BotTerminal({ projectId, tokenId, isBotRunning = false }: BotTer
           wsConnection={wsConnection}
           projectId={projectId}
           tokenId={tokenId}
+          botName={botName}
+          isBotRunning={isBotRunning}
         />
       </div>
     </div>

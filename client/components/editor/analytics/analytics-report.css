@@ -443,11 +443,6 @@
 @container analytics (max-width: 400px) { .analytics-selected-interval { padding: 12px; } .analytics-selected-interval-values { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; } }
 
 /** Флажок развёрнутого графика контрастен независимо от стилей страницы. */
-.analytics-chart-dialog .analytics-chart-view-controls input[type="checkbox"] { appearance: none; display: inline-grid; place-content: center; flex: none; width: 16px; height: 16px; border: 1px solid var(--muted-foreground); border-radius: 4px; background: var(--background); }
-.analytics-chart-dialog .analytics-chart-view-controls input[type="checkbox"]::before { content: ""; width: 8px; height: 5px; border-left: 2px solid var(--primary-foreground); border-bottom: 2px solid var(--primary-foreground); transform: translateY(-1px) rotate(-45deg); opacity: 0; }
-.analytics-chart-dialog .analytics-chart-view-controls input[type="checkbox"]:checked { background: var(--primary); border-color: var(--primary); }
-.analytics-chart-dialog .analytics-chart-view-controls input[type="checkbox"]:checked::before { opacity: 1; }
-.analytics-chart-dialog .analytics-chart-view-controls input[type="checkbox"]:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 /** Переключатели развёрнутого графика помещаются в одну строку на узком экране. */
 @media (max-width: 400px) {
   .analytics-chart-dialog .analytics-chart-view-controls { display: grid; grid-template-columns: minmax(96px, 1fr) auto; gap: 4px; align-items: center; }

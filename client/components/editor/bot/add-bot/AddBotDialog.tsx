@@ -103,13 +103,12 @@ export function AddBotDialog({
         <AddBotDialogHeader />
 
         <div className="space-y-4 sm:space-y-5 py-2">
-          {!projectForNewBot && (
-            <AddBotProjectSelect
-              projects={projects}
-              projectForNewBot={projectForNewBot}
-              setProjectForNewBot={setProjectForNewBot}
-            />
-          )}
+          {/* Проект можно сменить и после автоматического выбора. */}
+          <AddBotProjectSelect
+            projects={projects}
+            projectForNewBot={projectForNewBot}
+            setProjectForNewBot={setProjectForNewBot}
+          />
 
           {hasExistingTokens && (
             <div className="flex gap-2">

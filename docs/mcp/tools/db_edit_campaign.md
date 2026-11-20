@@ -1,7 +1,7 @@
 <!-- @fileoverview Автоматическая карточка реального действия MCP. -->
 # `db_edit_campaign`
 
-Изменяет текст уже отправленных сообщений рассылки в Telegram. Возможны частичные результаты.
+Изменяет текст уже отправленных сообщений рассылки в Telegram, сохраняя клавиатуру. Проверяйте edited/failed: ok означает обработку запроса, возможны частичные результаты.
 
 Раздел: broadcasts. Транспорт: http, stdio.
 
@@ -9,6 +9,7 @@
 
 ```json
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "project_id": {
@@ -17,7 +18,9 @@
       "maximum": 9007199254740991
     },
     "resource_id": {
-      "$ref": "#/properties/project_id"
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
     },
     "messageText": {
       "type": "string",
@@ -29,9 +32,7 @@
     "project_id",
     "resource_id",
     "messageText"
-  ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  ]
 }
 ```
 
@@ -49,7 +50,18 @@
 
 ## Пример вызова
 
-Безопасный универсальный пример не сгенерирован. Используйте точную схему и данные пользователя; секреты в документацию не подставляются.
+```json
+{
+  "action_id": "db_edit_campaign",
+  "args": {
+    "project_id": 1,
+    "resource_id": 1,
+    "messageText": "1"
+  }
+}
+```
+
+Структурный пример проверен Zod; ID и данные замените реальными.
 
 ## Ответ и ошибки
 
@@ -59,6 +71,7 @@
 
 ```json
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "data": {
@@ -128,11 +141,13 @@
             },
             "projectId": {
               "type": "integer",
-              "exclusiveMinimum": 0
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             },
             "revision": {
               "type": "integer",
-              "minimum": 0
+              "minimum": 0,
+              "maximum": 9007199254740991
             }
           },
           "required": [
@@ -142,6 +157,9 @@
         },
         "sideEffects": {
           "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
           "additionalProperties": {}
         }
       },
@@ -158,10 +176,10 @@
     }
   },
   "required": [
+    "data",
     "execution"
   ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  "additionalProperties": false
 }
 ```
 

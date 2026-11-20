@@ -1,0 +1,9 @@
+/** @fileoverview Прикладная строка списка, экспорта и импорта под общей шапкой таблиц. */
+.tables-header-content .tables-header-tools { grid-column: 1 / -1; }
+.tables-header-tools .tables-transfer-actions { margin-left: auto; }
+.tables-header-tools > [role='alert'] { flex-basis: 100%; }
+/** На узкой панели действия переносятся, сохраняя компактные подписи рядом с иконками. */
+@container (max-width: 479px) {
+  .tables-header-tools .tables-transfer-actions { display: flex; flex-wrap: wrap; min-width: 0; }
+  .tables-header-tools .tables-transfer-actions > .tables-control { flex-direction: row; height: 32px; min-height: 32px; padding: 4px 8px; gap: 6px; }
+}

@@ -12,6 +12,7 @@ import { storage } from "../../../storages/storage";
 import { getOwnerIdFromRequest } from "../../../telegram/auth-middleware";
 import { toProjectListItem, type ProjectListItem } from "../project-list-dto";
 import { parseArchivedQuery } from "../parse-archived-query";
+import { getProjectBotCounts } from '../project-bot-counts';
 
 /**
  * Считает количество узлов и листов в data проекта
@@ -51,7 +52,11 @@ export async function listProjectsHandler(req: Request, res: Response): Promise<
             const { nodeCount, sheetsCount } = countNodesAndSheets(project.data);
             return toProjectListItem(project, nodeCount, sheetsCount, archived);
         });
-        res.json(projectsList);
+        /** Дополнительная метрика выдаётся без секретов и только для доступных проектов. */
+        if (req.query.includeBotCounts === 'true') {
+            const counts = await getProjectBotCounts(projectsList.map(project => project.id));
+            res.json(projectsList.map(project => ({ ...project, botCount: counts.get(project.id) ?? 0 })));
+        } else res.json(projectsList);
     } catch {
         res.status(500).json({ message: "Не удалось получить список проектов" });
     }

@@ -36,7 +36,8 @@ export function registerProjectTokensSettingsTogglesPaths(
     tags: ["project-tokens"],
     summary: "Автоперезапуск бота",
     description:
-      "`autoRestart` 0|1, `maxRestartAttempts` 1–10.\n\n" +
+      "Передайте хотя бы одно поле. `autoRestart` принимает 0 или 1, `maxRestartAttempts` принимает 1–10. " +
+      "Значение `inherit` возвращает наследование выбранного поля.\n\n" +
       auth +
       "```bash\ncurl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/auto-restart \\\n" +
       "  -b cookies.txt -H 'Content-Type: application/json' \\\n" +
@@ -56,7 +57,7 @@ export function registerProjectTokensSettingsTogglesPaths(
         content: {
           "application/json": {
             schema: AutoRestartResponseSchema,
-            example: { success: true, autoRestart: 1, maxRestartAttempts: 3 },
+            example: { success: true, autoRestart: 1, maxRestartAttempts: 3, inheritAutoRestart: false, inheritMaxRestartAttempts: false },
           },
         },
       },

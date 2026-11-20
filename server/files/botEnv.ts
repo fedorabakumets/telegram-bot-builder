@@ -8,15 +8,27 @@ import { join } from "node:path";
 import { parse } from "dotenv";
 import { resolveBotDatabaseUrl, warnBotRuntimeIfNeeded } from "../bots/resolveBotDatabaseUrl";
 import { withTelegramBotApiUrl } from "./telegramBotApiEnv";
-import { withPollingRuntimeEnv } from "../bots/pollingRuntimeEnv";
+import { withPollingRuntimeEnv, type ProjectPollingRuntimeScope } from "../bots/pollingRuntimeEnv";
 import { withDatabaseRuntimeEnv } from "../bots/databaseRuntimeEnv";
 import { resolveWebhookBaseUrl } from "../bots/webhookBaseUrl";
+import { resolveBotLaunchMode } from "../../shared/bot-launch-mode";
+import { resolveBotInheritedSettings, type BotInheritedSettings } from "../../shared/bot-inherited-settings";
 
 /** Как переменные попадают к боту: файл .env в папке бота или поле env в команде start_bot */
 export type BotEnvSource = "file" | "inline";
 
 /** Заглушка ADMIN_IDS, если администраторы не заданы */
 const ADMIN_IDS_PLACEHOLDER = "123456789";
+
+/** Параметры транспорта и обработчика, выбранные для запуска. */
+interface BotEnvLaunchSnapshot {
+  /** Базовый адрес webhook либо null для polling. */
+  webhookBaseUrl: string | null;
+  /** Источник режима обработчика. */
+  sleep?: ProjectPollingRuntimeScope;
+  /** Общие и индивидуальные настройки, выбранные при запуске. */
+  settings?: BotInheritedSettings;
+}
 
 /**
  * Режим передачи переменных из `BOT_ENV_SOURCE`.
@@ -48,9 +60,10 @@ export function readLegacyAdminIds(botDir: string): string | null {
  * @param botDir - Папка бота (для старого ADMIN_IDS)
  * @param projectId - ID проекта
  * @param tokenId - ID токена
+ * @param launch - Снимок транспорта и обработчика.
  * @returns Содержимое .env
  */
-export async function buildBotEnvContent(botDir: string, projectId: number, tokenId: number): Promise<string> {
+export async function buildBotEnvContent(botDir: string, projectId: number, tokenId: number, launch?: BotEnvLaunchSnapshot): Promise<string> {
   const { generateEnvFile } = await import("@shared/scaffolding-wrapper");
   const { storage } = await import("../storages/storage");
   const { resolveBotEnvVariables } = await import("../bots/resolveBotEnvReference");
@@ -58,14 +71,20 @@ export async function buildBotEnvContent(botDir: string, projectId: number, toke
   const project = await storage.getBotProject(projectId);
   const adminIds = project?.adminIds?.trim() || readLegacyAdminIds(botDir) || ADMIN_IDS_PLACEHOLDER;
 
-  const launchMode = tokenRecord?.launchMode ?? "polling";
-  /** Файл и команда запуска используют одинаковое наследование публичного адреса. */
-  const webhookBaseUrl = resolveWebhookBaseUrl(tokenRecord?.webhookBaseUrl);
-  const webhookPort = launchMode === "webhook" && webhookBaseUrl ? 9000 + tokenId : null;
+  const mode = resolveBotLaunchMode(project?.defaultLaunchMode, tokenRecord?.launchMode, tokenRecord?.inheritLaunchMode);
+  const settings = launch?.settings ?? resolveBotInheritedSettings(project?.botSettingDefaults, tokenRecord);
+  /** Файл и команда запуска используют один снимок адреса. */
+  const webhookBaseUrl = launch ? launch.webhookBaseUrl
+    : mode === "webhook" ? resolveWebhookBaseUrl(settings.webhookBaseUrl) : null;
+  const webhookPort = webhookBaseUrl ? 9000 + tokenId : null;
 
   // Ссылки ${{VAR}} раскрываются только для разрешённых переменных сервера (botEnvPolicy)
   /** Настройки пула передаются удалённому исполнителю вместе с окружением бота. */
-  const customVariables = withDatabaseRuntimeEnv(withPollingRuntimeEnv(withTelegramBotApiUrl(resolveBotEnvVariables(await storage.getEnvVariables(tokenId)))));
+  const scope = launch?.sleep ?? { defaultMode: project?.defaultSleepMode, inherited: tokenRecord?.inheritSleepMode };
+  /** Старый пользовательский WEBHOOK_URL не должен включать webhook при запуске через polling. */
+  const ownVariables = resolveBotEnvVariables(await storage.getEnvVariables(tokenId))
+    .filter(({ key }) => key !== "WEBHOOK_URL");
+  const customVariables = withDatabaseRuntimeEnv(withPollingRuntimeEnv(withTelegramBotApiUrl(ownVariables), undefined, scope));
   const { isRailwayProject, railwayBotEnvDefaults } = await import("../bots/railway/railwayConfig");
   // Боту на Railway адреса панели недоступны — подставляем адреса из RAILWAY_BOT_*
   const remoteDefaults = isRailwayProject(projectId) ? railwayBotEnvDefaults() : {};
@@ -94,16 +113,16 @@ export async function buildBotEnvContent(botDir: string, projectId: number, toke
     tokenRecord?.token || "YOUR_BOT_TOKEN_HERE",
     adminIds,
     projectId,
-    tokenRecord?.logLevel || "WARNING",
+    settings.logLevel || "WARNING",
     "redis://localhost:6379",
-    launchMode === "webhook" ? webhookBaseUrl : null,
+    webhookBaseUrl,
     webhookPort,
-    tokenRecord?.protectContent === 1,
-    tokenRecord?.saveIncomingMedia === 1,
+    settings.protectContent === 1,
+    settings.saveIncomingMedia === 1,
     tokenId,
     customVariables,
-    tokenRecord?.catchAllHandlers !== 0,
-    tokenRecord?.contentCache === 1,
+    settings.catchAllHandlers !== 0,
+    settings.contentCache === 1,
   );
 }
 

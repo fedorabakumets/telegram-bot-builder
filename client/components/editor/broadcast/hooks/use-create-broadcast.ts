@@ -4,6 +4,7 @@
  */
 
 import { useMutation } from '@tanstack/react-query';
+import { validateFixedAudience } from '../utils/fixed-audience';
 import { apiRequest } from '@/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import type { NewBroadcastFormData } from '../types';
@@ -55,6 +56,7 @@ export function useCreateBroadcast({
     mutationFn: async (formData: NewBroadcastFormData) => {
       /** Пустая повторная аудитория не должна превращаться в отправку всем. */
       validateRetryAudience(formData);
+      validateFixedAudience(formData);
       const { audienceType, ...filterFields } = formData.filters;
       // Строим фильтры в зависимости от типа аудитории
       const filters =

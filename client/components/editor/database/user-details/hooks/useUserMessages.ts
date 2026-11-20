@@ -11,13 +11,13 @@ import { BotMessageWithMedia } from '../types';
 /**
  * Загружает сообщения пользователя и считает статистику
  * @param projectId - Идентификатор проекта
- * @param userId - Идентификатор пользователя
+ * @param userId - Telegram ID пользователя без обязательного преобразования строки в число
  * @param selectedTokenId - Идентификатор выбранного токена
  * @returns Сообщения и статистика
  */
 export function useUserMessages(
   projectId: number,
-  userId: number | undefined,
+  userId: string | number | undefined,
   selectedTokenId?: number | null
 ) {
   const requestUrl = buildUsersApiUrl(

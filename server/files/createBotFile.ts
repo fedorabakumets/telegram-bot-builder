@@ -19,6 +19,8 @@ export interface BotPaths {
 export interface CreateCompleteBotFilesOptions {
   /** Не перезаписывать .py, project.json и прочие — только .env */
   skipCodeAndData?: boolean;
+  /** Базовый адрес конкретного запуска или null для polling. */
+  launch?: Parameters<typeof prepareBotEnv>[3];
 }
 
 /**
@@ -101,7 +103,7 @@ export async function createCompleteBotFiles(
   const assets: string[] = [];
 
   if (options?.skipCodeAndData) {
-    const { envPath, env } = await prepareBotEnv(botDir, projectId, tokenId);
+    const { envPath, env } = await prepareBotEnv(botDir, projectId, tokenId, options?.launch);
     if (envPath) assets.push(envPath);
     return { mainFile, assets, env };
   }
@@ -143,7 +145,7 @@ export async function createCompleteBotFiles(
   writeFileSync(jsonPath, JSON.stringify(normalizedBotData, null, 2), 'utf8');
   assets.push(jsonPath);
 
-  const { envPath, env } = await prepareBotEnv(botDir, projectId, tokenId);
+  const { envPath, env } = await prepareBotEnv(botDir, projectId, tokenId, options?.launch);
   if (envPath) assets.push(envPath);
 
   return { mainFile, assets, env };

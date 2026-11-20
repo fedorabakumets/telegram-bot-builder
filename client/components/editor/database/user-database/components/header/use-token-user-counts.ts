@@ -67,6 +67,6 @@ export function sortTokensByUserCountDesc<T extends { id: number }>(
   return [...tokens].sort((left, right) => {
     const rightCount = counts.get(right.id) ?? -1;
     const leftCount = counts.get(left.id) ?? -1;
-    return rightCount - leftCount;
+    return rightCount - leftCount || left.id - right.id;
   });
 }

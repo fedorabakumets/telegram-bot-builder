@@ -75,6 +75,7 @@ export function UserDetailsDialog(props: UserDetailsDialogProps): React.JSX.Elem
           <UserStatusToggle selectedUser={selectedUser} handleUserStatusToggle={handleUserStatusToggle} />
 
           <UserDates
+            firstSavedMessageAt={selectedUser.firstSavedMessageAt}
             createdAt={selectedUser.createdAt}
             updatedAt={getUserUpdatedAt(selectedUser)}
             lastInteraction={selectedUser.lastInteraction}
