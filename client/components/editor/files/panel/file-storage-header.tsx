@@ -5,6 +5,7 @@
  * @module components/editor/files/panel/file-storage-header
  */
 
+import { WorkspaceHeaderActionItems } from '@/components/ui/workspace-header-action-items';
 import type { BotToken } from '@shared/schema';
 import type { ReactNode } from 'react';
 import { FolderOpen } from 'lucide-react';
@@ -68,15 +69,16 @@ function HeaderSelectors({
 
   return (
     <div role="group" aria-label="Проект и бот" className="files-scope-controls flex min-w-0 flex-wrap items-center gap-3">
-      {allProjects.length > 1 && (
+      <WorkspaceHeaderActionItems kind="selectors" items={[
+      { id: 'project', content: allProjects.length > 1 && (
         <ProjectSelector
           projects={allProjects}
           selectedProjectId={projectId}
           showBotCount={selectedTokenId == null}
           onSelect={onProjectChange}
         />
-      )}
-      {tokens.length > 0 && (
+      ) },
+      { id: 'bot', content: tokens.length > 0 && (
         <BotTokenSelector
           projectId={projectId}
           tokens={tokens}
@@ -86,7 +88,8 @@ function HeaderSelectors({
           selectedTokenId={selectedTokenId}
           onSelect={onSelectToken}
         />
-      )}
+      ) },
+      ]} />
     </div>
   );
 }

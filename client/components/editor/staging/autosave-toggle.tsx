@@ -11,7 +11,7 @@ interface AutosaveToggleProps {
 }
 
 /**
- * Галочка «Автосохранение» в верхней панели холста.
+ * Галочка «Автосохранение» с подписью на широкой панели холста.
  * Свой квадрат, потому что общие стили чекбоксов сливают его с фоном.
  * @param props - Свойства
  * @returns Подпись с чекбоксом
@@ -24,6 +24,7 @@ export function AutosaveToggle({ checked, onChange }: AutosaveToggleProps) {
         role="checkbox"
         aria-checked={checked}
         aria-label="Автосохранение"
+        title="Автосохранение"
         onClick={() => onChange(!checked)}
         style={{
           width: 16,
@@ -45,7 +46,7 @@ export function AutosaveToggle({ checked, onChange }: AutosaveToggleProps) {
           </svg>
         )}
       </button>
-      Автосохранение
+      <span className="hidden @[520px]:inline">Автосохранение</span>
     </label>
   );
 }

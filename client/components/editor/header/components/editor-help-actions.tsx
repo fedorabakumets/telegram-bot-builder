@@ -1,9 +1,10 @@
 /** @fileoverview Адаптивные действия обучения, поддержки и сообщества в редакторе. */
 import { CircleHelp, Ellipsis, Github, GraduationCap, MessageCircle, Send } from 'lucide-react';
 import { useRef } from 'react';
+import { WorkspaceHeaderActionItems } from '@/components/ui/workspace-header-action-items';
 import { Button } from '@/components/ui/button';
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuPortal, DropdownMenuSeparator,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuPortal,
   DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { EditorLearnButton } from '@/components/editor/canvas/learn/EditorLearnButton';
@@ -26,14 +27,14 @@ interface EditorHelpActionsProps {
 /** Показывает ссылки на репозиторий и чат сообщества. */
 function HelpLinks() {
   return (
-    <>
-      <DropdownMenuItem asChild><a href={GITHUB_REPOSITORY_URL} target="_blank" rel="noopener noreferrer">
+    <WorkspaceHeaderActionItems items={[
+      { id: 'github', content: <DropdownMenuItem asChild><a href={GITHUB_REPOSITORY_URL} target="_blank" rel="noopener noreferrer">
         <Github aria-hidden="true" /> GitHub
-      </a></DropdownMenuItem>
-      <DropdownMenuItem asChild><a href={TELEGRAM_CHAT_URL} target="_blank" rel="noopener noreferrer">
+      </a></DropdownMenuItem> },
+      { id: 'telegram', content: <DropdownMenuItem asChild><a href={TELEGRAM_CHAT_URL} target="_blank" rel="noopener noreferrer">
         <Send aria-hidden="true" /> Telegram
-      </a></DropdownMenuItem>
-    </>
+      </a></DropdownMenuItem> },
+    ]} />
   );
 }
 
@@ -52,37 +53,33 @@ export function EditorHelpActions({ compact = false, canUseSupport, showLearning
       <>
         {/* Единый интервал между действиями, как в соседних рабочих вкладках. */}
         {!compact && <div className="hidden shrink-0 items-center gap-2 @[480px]:flex">
-          {showLearning && <EditorLearnButton showLabel active={learnActive} onStart={requestEditorLearn} />}
-          {openSupport && <Button type="button" variant="outline" size="sm"
+          <WorkspaceHeaderActionItems items={[
+            { id: 'learning', content: showLearning && <EditorLearnButton showLabel active={learnActive} onStart={requestEditorLearn} /> },
+            { id: 'support', content: openSupport && <Button type="button" variant="outline" size="sm"
             className="h-8 shrink-0 gap-1.5 px-2" data-testid="button-support-chat"
             onClick={(event) => openSupport(event.currentTarget)}>
             <MessageCircle className="h-4 w-4" aria-hidden="true" /> Поддержка
             {unreadLabel && <span className="tabular-nums text-primary" aria-label={`Непрочитанных ответов: ${unread}`}>{unreadLabel}</span>}
-          </Button>}
-          {/* При достаточной ширине ссылки доступны прямо в шапке. */}
-          <div className="hidden shrink-0 items-center gap-2 @[800px]:flex">
-            <Button asChild variant="outline" size="sm" className="h-8 gap-1.5 px-2">
-              <a href={GITHUB_REPOSITORY_URL} target="_blank" rel="noopener noreferrer">
-                <Github className="h-4 w-4" aria-hidden="true" /> GitHub
-              </a>
-            </Button>
-            <Button asChild variant="outline" size="sm" className="h-8 gap-1.5 px-2">
-              <a href={TELEGRAM_CHAT_URL} target="_blank" rel="noopener noreferrer">
-                <Send className="h-4 w-4" aria-hidden="true" /> Telegram
-              </a>
-            </Button>
-          </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button type="button" variant="outline" size="sm" className="h-8 shrink-0 gap-1.5 px-2 @[800px]:hidden">
-                <Ellipsis className="h-4 w-4" aria-hidden="true" /> Ещё
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end"><HelpLinks /></DropdownMenuContent>
-          </DropdownMenu>
+          </Button> },
+            { id: 'github', content: <Button asChild variant="outline" size="sm" className="hidden h-8 gap-1.5 px-2 @[800px]:inline-flex">
+              <a href={GITHUB_REPOSITORY_URL} target="_blank" rel="noopener noreferrer"><Github className="h-4 w-4" aria-hidden="true" /> GitHub</a>
+            </Button> },
+            { id: 'telegram', content: <Button asChild variant="outline" size="sm" className="hidden h-8 gap-1.5 px-2 @[800px]:inline-flex">
+              <a href={TELEGRAM_CHAT_URL} target="_blank" rel="noopener noreferrer"><Send className="h-4 w-4" aria-hidden="true" /> Telegram</a>
+            </Button> },
+            { id: 'more', content: <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button type="button" variant="outline" size="sm" className="h-8 shrink-0 gap-1.5 px-2 @[800px]:hidden">
+                  <Ellipsis className="h-4 w-4" aria-hidden="true" /> Ещё
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end"><HelpLinks /></DropdownMenuContent>
+            </DropdownMenu> },
+          ]} />
         </div>}
         <div className={compact ? 'shrink-0' : 'shrink-0 @[480px]:hidden'}>
-          <DropdownMenu modal={false}>
+          {/* На узкой панели действия помощи собраны в одну кнопку. */}
+          <WorkspaceHeaderActionItems items={[{ id: 'help', content: <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
               <Button ref={helpTriggerRef} type="button" variant="outline" size="sm" className="h-8 shrink-0 gap-1.5 px-2">
                 <CircleHelp className="h-4 w-4" aria-hidden="true" /> Помощь
@@ -90,21 +87,22 @@ export function EditorHelpActions({ compact = false, canUseSupport, showLearning
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              {showLearning && <DropdownMenuSub>
+              <WorkspaceHeaderActionItems items={[
+              { id: 'learning', content: showLearning && <DropdownMenuSub>
                 <DropdownMenuSubTrigger><GraduationCap aria-hidden="true" /> Обучение</DropdownMenuSubTrigger>
                 <DropdownMenuPortal>
                   <DropdownMenuSubContent className="max-h-[var(--radix-dropdown-menu-content-available-height)] w-64 max-w-[calc(100vw-1rem)] overflow-y-auto">
                     <EditorLearnMenuItems onStart={requestEditorLearn} />
                   </DropdownMenuSubContent>
                 </DropdownMenuPortal>
-              </DropdownMenuSub>}
-              {openSupport && <DropdownMenuItem onSelect={() => openSupport(helpTriggerRef.current ?? undefined)}>
+              </DropdownMenuSub> },
+              { id: 'support', content: openSupport && <DropdownMenuItem onSelect={() => openSupport(helpTriggerRef.current ?? undefined)}>
                 <MessageCircle aria-hidden="true" /> Поддержка
-              </DropdownMenuItem>}
-              {(showLearning || openSupport) && <DropdownMenuSeparator />}
+              </DropdownMenuItem> },
+              ]} />
               <HelpLinks />
             </DropdownMenuContent>
-          </DropdownMenu>
+          </DropdownMenu> }]} />
         </div>
       </>
     );

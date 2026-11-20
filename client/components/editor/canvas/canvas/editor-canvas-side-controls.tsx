@@ -57,7 +57,7 @@ export function EditorCanvasSideControls({
   return (
     <div
       data-canvas-controls="true"
-      className="absolute bottom-20 left-4 z-40 flex flex-col gap-2 pointer-events-auto"
+      className="absolute bottom-4 left-4 z-40 flex flex-col gap-2 pointer-events-auto"
     >
       <div className={GROUP}>
         <button type="button" className={BTN} onClick={onZoomIn} disabled={!canZoomIn} title="Приблизить" aria-label="Приблизить">

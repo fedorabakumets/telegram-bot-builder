@@ -85,3 +85,22 @@
   .bot-workspace-header .workspace-header-tab-tools [data-testid='button-connect-bot'] { width: 28px; padding-inline: 0; }
   .workspace-adaptive-header > [role='group'] [role='combobox'] { height: 32px; }
 }
+/** Личные настройки изменяют раскладку, сохраняя общий адаптивный каркас. */
+.workspace-adaptive-header[data-hide-icon] .workspace-tab-heading > div:first-child > div > span,
+.workspace-adaptive-header > [role='group']:empty {
+  display: none;
+}
+.workspace-adaptive-header[data-selectors-below] > [role='group'] {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  flex-wrap: wrap;
+}
+.workspace-adaptive-header[data-actions-below] .workspace-tab-heading > div:last-child:not(:first-child) {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  min-width: 0;
+}
+.workspace-adaptive-header[data-actions-below] .workspace-tab-actions { flex-wrap: wrap; }
+.workspace-adaptive-header[data-actions-below]:not(:has(> [role='group']:not(:empty))) .workspace-tab-heading > div:last-child:not(:first-child) {
+  grid-row: 2;
+}

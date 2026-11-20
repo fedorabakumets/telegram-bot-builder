@@ -2,6 +2,7 @@
 import { BookOpen, RefreshCw } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Button } from './button';
+import { WorkspaceHeaderActionItems, type WorkspaceHeaderActionItem } from './workspace-header-action-items';
 
 /** Параметры служебных действий вкладки. */
 interface WorkspaceTabActionsProps {
@@ -13,6 +14,10 @@ interface WorkspaceTabActionsProps {
   onRefresh: () => void;
   /** Запрос уже выполняется. */
   isRefreshing?: boolean;
+  /** Действия, которые изначально предшествуют документации. */
+  before?: WorkspaceHeaderActionItem[];
+  /** Действия, которые изначально следуют после обновления. */
+  after?: WorkspaceHeaderActionItem[];
 }
 
 /**
@@ -20,7 +25,7 @@ interface WorkspaceTabActionsProps {
  * @param props - Раздел документации и обработчик обновления
  * @returns Группа служебных действий
  */
-export function WorkspaceTabActions({ docsPath, section, onRefresh, isRefreshing = false }: WorkspaceTabActionsProps) {
+export function WorkspaceTabActions({ docsPath, section, onRefresh, isRefreshing = false, before = [], after = [] }: WorkspaceTabActionsProps) {
   const [feedbackUntil, setFeedbackUntil] = useState(0);
   /** Подтверждение нажатия видно даже при мгновенном обновлении. */
   useEffect(() => {
@@ -29,13 +34,15 @@ export function WorkspaceTabActions({ docsPath, section, onRefresh, isRefreshing
     return () => window.clearTimeout(timeout);
   }, [feedbackUntil]);
 
-  return <div className="workspace-tab-actions flex shrink-0 items-center gap-2">
+  /** Стандартные действия участвуют в том же порядке, что и кнопки вкладки. */
+  const docs = (
     <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" asChild>
       <a href={`https://fedorabakumets.github.io/telegram-bot-builder/docs/${docsPath}`} target="_blank" rel="noopener noreferrer" aria-label={`Документация: ${section}`} title={`Документация: ${section}`}>
         <BookOpen className="h-4 w-4" aria-hidden="true" /><span>Документация</span>
       </a>
     </Button>
-    {/* Сохраняем ширину, яркость и наведение кнопки во время запроса. */}
+  );
+  const refresh = (
     <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground"
       onClick={() => {
         if (isRefreshing) return;
@@ -47,5 +54,8 @@ export function WorkspaceTabActions({ docsPath, section, onRefresh, isRefreshing
       <RefreshCw className={isRefreshing || feedbackUntil ? 'h-4 w-4 motion-safe:animate-spin' : 'h-4 w-4'}
         style={isRefreshing || feedbackUntil ? { color: '#3b82f6' } : undefined} aria-hidden="true" /><span>Обновить</span>
     </Button>
+  );
+  return <div className="workspace-tab-actions flex shrink-0 items-center gap-2">
+    <WorkspaceHeaderActionItems items={[...before, { id: 'docs', content: docs }, { id: 'refresh', content: refresh }, ...after]} />
   </div>;
 }

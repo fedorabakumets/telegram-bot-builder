@@ -10,6 +10,8 @@
 
 import { useRef, useCallback, useState, useEffect, useMemo } from 'react';
 import { CanvasSheets } from '@/components/editor/canvas/canvas-sheets';
+import { CanvasSheetsFrame } from '@/components/editor/canvas/canvas-sheets-frame';
+import { useCanvasSheetsPosition } from '@/components/editor/canvas/use-canvas-sheets-position';
 import { useCanvasViewport } from './use-canvas-viewport';
 import { useCanvasFullscreen } from '@/components/editor/bot/canvas/use-canvas-fullscreen';
 import { editorGridStep, paintEditorViewport } from './paint-editor-viewport';
@@ -295,6 +297,8 @@ export function Canvas({
   }, [learn.active]);
   const canvasRef = useRef<HTMLDivElement>(null);
   const mainRef = useRef<HTMLElement | null>(null);
+  const sheetsPosition = useCanvasSheetsPosition();
+  const sheetsVertical = sheetsPosition === 'left' || sheetsPosition === 'right';
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { isFullscreen, cssFullscreen, toggleFullscreen } = useCanvasFullscreen(mainRef);
   const cssFullscreenRef = useRef(false);
@@ -1201,22 +1205,9 @@ export function Canvas({
     const contentHeight = nodeBounds.bottom - nodeBounds.top;
     if (contentWidth <= 0 || contentHeight <= 0) return;
 
-    // Берём размеры из main — он занимает всю видимую область
-    const mainEl = canvasRef.current.closest('main');
-    if (!mainEl) return;
-    const mainRect = mainEl.getBoundingClientRect();
-    const containerWidth = mainRect.width;
-    const containerHeight = mainRect.height;
-
-    // Измеряем реальные высоты toolbar и sheets через data-атрибуты
-    const toolbarEl = mainEl.querySelector<HTMLElement>('[data-canvas-toolbar]');
-    const sheetsEl = mainEl.querySelector<HTMLElement>('[data-canvas-sheets]');
-    const toolbarHeight = toolbarEl ? toolbarEl.getBoundingClientRect().height : 60;
-    const sheetsHeight = sheetsEl ? sheetsEl.getBoundingClientRect().height : 0;
-
-    // Видимая область между toolbar и sheets
-    const visibleWidth = containerWidth;
-    const visibleHeight = containerHeight - toolbarHeight - sheetsHeight;
+    /** Измеряем область холста, которую оставляют панели инструментов и листов. */
+    const visibleWidth = scrollContainerRef.current?.clientWidth ?? 0;
+    const visibleHeight = scrollContainerRef.current?.clientHeight ?? 0;
 
     if (visibleWidth <= 0 || visibleHeight <= 0) return;
 
@@ -1787,8 +1778,9 @@ export function Canvas({
   }, [selectedNodeIds, moveNodesToNewSheet, addAction, clearSelection, botData]);
 
   return (
-    <main ref={mainRef} className={`w-full h-full relative overflow-hidden bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 dark:from-slate-950 dark:via-gray-950 dark:to-slate-900 max-md:flex max-md:flex-col${cssFullscreen ? ' !fixed inset-0 z-[200]' : ''}`}>
-      <div ref={scrollContainerRef} className="absolute inset-x-0 top-[60px] bottom-[60px] overflow-auto max-md:!static max-md:flex-1 max-md:min-h-0 max-md:pt-[60px]">
+    <main ref={mainRef} className={`relative flex h-full w-full overflow-hidden bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 dark:from-slate-950 dark:via-gray-950 dark:to-slate-900 ${sheetsVertical ? 'flex-row' : 'flex-col'}${cssFullscreen ? ' !fixed inset-0 z-[200]' : ''}`}>
+      <div className="relative grid min-h-0 min-w-0 flex-1 grid-cols-[minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)] overflow-hidden [&>[data-canvas-toolbar]]:relative [&>[data-canvas-toolbar]]:col-start-1 [&>[data-canvas-toolbar]]:row-start-1">
+      <div ref={scrollContainerRef} className="col-start-1 row-start-2 min-h-0 overflow-auto">
 
         {/* Enhanced Canvas Grid */}
         <div
@@ -1980,10 +1972,13 @@ export function Canvas({
         onMoveToProject={handleGroupMoveToProject}
       />
 
-      {/* На узком экране панель в потоке колонки, а не bottom-0 у слишком высокого 100vh */}
+      </div>
+
+      {/* Расположение листов определяет границы рабочей области холста. */}
       {botData && botData.sheets && botData.sheets.length > 0 && onBotDataUpdate && (
-        <div data-canvas-sheets className="absolute bottom-0 left-0 right-0 z-30 pointer-events-auto max-md:!static max-md:shrink-0">
+        <CanvasSheetsFrame position={sheetsPosition}>
           <CanvasSheets
+            vertical={sheetsVertical}
             sheets={botData.sheets}
             activeSheetId={botData.activeSheetId || botData.sheets[0]?.id || null}
             onSheetSelect={handleSheetSelect}
@@ -1993,7 +1988,7 @@ export function Canvas({
             onSheetDuplicate={handleSheetDuplicate}
             maxVisibleTabs={5}
           />
-        </div>
+        </CanvasSheetsFrame>
       )}
     </main>
   );

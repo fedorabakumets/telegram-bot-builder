@@ -4,6 +4,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { CanvasSheetsCompact } from './canvas-sheets-compact';
+import { CanvasSheetsVertical } from './canvas-sheets-vertical';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 // Убираем DropdownMenu и Dialog - теперь всё просто
@@ -21,6 +22,8 @@ import { useIsMobile } from '@/components/editor/header/hooks/use-mobile';
 import { generateNextSheetName } from '@/utils/sheets/generate-next-sheet-name';
 
 interface CanvasSheetsProps {
+  /** Показывать листы вертикальным списком сбоку. */
+  vertical?: boolean;
   sheets: CanvasSheet[];
   activeSheetId: string | null;
   onSheetSelect: (sheetId: string) => void;
@@ -32,6 +35,7 @@ interface CanvasSheetsProps {
 }
 
 export function CanvasSheets({
+  vertical = false,
   sheets,
   activeSheetId,
   onSheetSelect,
@@ -68,7 +72,7 @@ export function CanvasSheets({
         activeTab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
       }
     }
-  }, [activeSheetId]);
+  }, [activeSheetId, vertical]);
 
   const canScrollLeft = scrollPosition > 0;
   const canScrollRight = sheets.length > maxVisibleTabs;
@@ -185,6 +189,12 @@ export function CanvasSheets({
     const newSheetName = generateNextSheetName(sheets);
     onSheetAdd(newSheetName);
   };
+
+  if (vertical) {
+    return <CanvasSheetsVertical sheets={sheets} activeSheetId={activeSheetId}
+      onSheetSelect={onSheetSelect} onAdd={addNewSheet} onSheetDelete={onSheetDelete}
+      onSheetRename={onSheetRename} onSheetDuplicate={onSheetDuplicate} />;
+  }
 
   return (
     <div className="@container w-full">

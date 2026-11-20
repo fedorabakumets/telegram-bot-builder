@@ -5,6 +5,7 @@ import { WorkspaceAdaptiveHeader } from '@/components/ui/workspace-adaptive-head
 import { WorkspaceTabHeading } from '@/components/ui/workspace-tab-heading';
 import { cn } from '@/utils/utils';
 import { ProjectSelector } from '@/components/editor/database/user-database/components/header/project-selector';
+import { WorkspaceHeaderActionItems } from '@/components/ui/workspace-header-action-items';
 
 /** Содержимое горизонтальной шапки редактора. */
 interface EditorHorizontalHeaderProps {
@@ -58,7 +59,7 @@ export function EditorHorizontalHeader({
         <WorkspaceTabHeading title={title} icon={icon} actions={actions} />
         {/** Одиночный селектор может занимать оставшееся место между названием и справкой. */}
         <div role="group" aria-label="Проект" className={projectActions ? undefined : 'workspace-project-scope'}>
-          {projects?.length && currentProjectId != null && onProjectChange ? (
+          <WorkspaceHeaderActionItems kind="selectors" items={[{ id: 'project', content: projects?.length && currentProjectId != null && onProjectChange ? (
             <ProjectSelector
               projects={projects}
               selectedProjectId={currentProjectId}
@@ -68,7 +69,7 @@ export function EditorHorizontalHeader({
             />
           ) : (
             projectName && <span className="min-w-0 truncate text-sm" title={projectName}>{projectName}</span>
-          )}
+          ) }]} />
           {projectActions}
         </div>
       </WorkspaceAdaptiveHeader>

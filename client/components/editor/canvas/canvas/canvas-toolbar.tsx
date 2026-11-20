@@ -5,6 +5,9 @@
  * РѕС‚РјРµРЅС‹/РїРѕРІС‚РѕСЂР°, РёСЃС‚РѕСЂРёРё РґРµР№СЃС‚РІРёР№ Рё РґСЂСѓРіРёРјРё РёРЅСЃС‚СЂСѓРјРµРЅС‚Р°РјРё.
  */
 
+import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { canvasToolbarTitles, useCanvasToolbarPreferences, type CanvasToolbarKey } from './canvas-toolbar-preferences';
+import { CanvasToolbarMore, CanvasToolbarMoreRow } from './canvas-toolbar-more';
 import { ZoomControls } from './zoom-controls';
 import { UndoRedoButtons } from './undo-redo-buttons';
 import { ActionHistory } from './action-history';
@@ -148,7 +151,6 @@ export function CanvasToolbar({
   hasClipboardData,
   headerVisible,
   sidebarVisible,
-  canvasVisible,
   propertiesVisible,
   onZoomOut,
   onZoomIn,
@@ -170,7 +172,6 @@ export function CanvasToolbar({
   clickTransform,
   onToggleHeader,
   onToggleSidebar,
-  onToggleCanvas,
   onToggleProperties,
   handleMouseDownAction,
   handleMouseOverAction,
@@ -190,132 +191,118 @@ export function CanvasToolbar({
   projectId,
   onRestoreVersion,
 }: CanvasToolbarProps) {
+  const toolbarRef = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(0);
+
+  /** Следит за шириной холста при изменении размеров соседних панелей. */
+  useLayoutEffect(() => {
+    const toolbar = toolbarRef.current;
+    if (!toolbar) return;
+    const measure = () => setWidth(toolbar.clientWidth);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(toolbar);
+    return () => observer.disconnect();
+  }, []);
+
+  const roomy = width >= 520;
+  const gap = roomy ? 8 : 4;
+  const preferences = useCanvasToolbarPreferences();
+  const tools: { /** Ключ команды */ key: CanvasToolbarKey; /** Подпись в меню */ label: string; /** Ширина группы */ size: number; /** Элементы управления */ content: ReactNode }[] = [];
+
+  /**
+   * Регистрирует доступный инструмент холста.
+   * @param key - Ключ команды.
+   * @param size - Ширина кнопки или группы.
+   * @param content - Элементы управления.
+   */
+  const add = (key: CanvasToolbarKey, size: number, content: ReactNode) => tools.push({ key, label: canvasToolbarTitles[key], size, content });
+
+  add('save', 36, <SaveButton onSave={onSave} isSaving={isSaving} />);
+  if (onNodeFocus) add('search', 36, <NodeSearchButton nodes={nodes} onNodeFocus={onNodeFocus} open={searchOpen} onOpenChange={onSearchOpenChange} />);
+  add('undo', 36, <UndoRedoButtons only="undo" canUndo={canUndo ?? actionHistory.length > 0} onUndo={onUndo} />);
+  add('redo', 36, <UndoRedoButtons only="redo" canUndo={false} canRedo={canRedo} onRedo={onRedo} />);
+  if (onViewChange) add('view', width >= 360 ? 140 : 100, (<CanvasViewToggle value={canvasView ?? 'canvas'} onChange={onViewChange} />));
+  if (onAutosaveChange) add('autosave', roomy ? 128 : 24, (<AutosaveToggle checked={!!autosave} onChange={onAutosaveChange} />));
+  add('layout', 36, <AutoLayoutButton onAutoLayout={onAutoLayout} />);
+  add('actions', 36, (<ActionHistory
+    actionHistory={actionHistory}
+    handleMouseDownAction={handleMouseDownAction}
+    handleMouseOverAction={handleMouseOverAction}
+    toggleActionSelection={toggleActionSelection}
+    selectedActionsForUndo={selectedActionsForUndo}
+    handleUndoSelected={handleUndoSelected}
+  />));
+  if (projectId != null) add('versions', 36, <VersionHistoryButton projectId={projectId} onRestored={onRestoreVersion} />);
+  if (onToggleMarquee) add('marquee', 36, <MarqueeSelectButton active={marqueeActive ?? false} onToggle={onToggleMarquee} />);
+  if (onTogglePortals) add('portals', 36, <PortalsToggleButton active={showPortals ?? false} onToggle={onTogglePortals} count={portalsCount} />);
+  if (onSaveWithNote) add('checkpoint', 24, <SaveCheckpointPopover onSaveWithNote={onSaveWithNote} isSaving={isSaving} />);
+  if (onCopyToClipboard && selectedNodeId) {
+    add('copy', 36, <ClipboardButtons selectedNodeId={selectedNodeId} onCopyToClipboard={onCopyToClipboard} />);
+  }
+  if (onPasteFromClipboard && hasClipboardData) {
+    add('paste', 36, <ClipboardButtons selectedNodeId={null} hasClipboardData onPasteFromClipboard={onPasteFromClipboard}
+      lastClickPosition={lastClickPosition} clickTransform={clickTransform} />);
+  }
+  add('fit', 36, (<ZoomControls
+    zoom={zoom}
+    canZoomOut={zoom > 1}
+    canZoomIn={zoom < 200}
+    canFitToContent={nodes.length > 0}
+    onZoomOut={onZoomOut}
+    onZoomIn={onZoomIn}
+    onResetZoom={onResetZoom}
+    onFitToContent={onFitToContent}
+    onZoomLevelChange={onZoomLevelChange}
+    canRestorePreviousView={canRestorePreviousView}
+    onRestorePreviousView={onRestorePreviousView}
+    hideScaleButtons
+  />));
+  if (headerVisible === false || sidebarVisible === false) {
+    if (onToggleHeader) add('header', 36, <InterfaceToggles headerVisible={headerVisible} onToggleHeader={onToggleHeader} />);
+    if (onToggleSidebar) add('sidebar', 36, <InterfaceToggles sidebarVisible={sidebarVisible} onToggleSidebar={onToggleSidebar} />);
+    if (onToggleProperties) add('properties', 36, <InterfaceToggles propertiesVisible={propertiesVisible} onToggleProperties={onToggleProperties} />);
+  }
+  add('help', 36, <KeyboardShortcutsHelp />);
+
+  const byKey = new Map<string, typeof tools[number]>(tools.map(tool => [tool.key, tool]));
+  const ordered = preferences.order.flatMap(key => {
+    const tool = byKey.get(key);
+    return tool && (!preferences.hidden.includes(key) || (key === 'search' && searchOpen)) ? [tool] : [];
+  });
+  /** Резервируем место для поиска, чтобы Ctrl + F открывал его и на узком холсте. */
+  const search = ordered.find(tool => tool.key === 'search');
+  /** Переключатель режима занимает место перед меню независимо от порядка инструментов. */
+  const view = ordered.find(tool => tool.key === 'view');
+  const available = width - (roomy ? 32 : 16);
+  const total = ordered.reduce((sum, tool) => sum + tool.size + gap, 0) - gap;
+  let remaining = available - (total > available ? (width >= 360 ? 64 : 34) : -gap);
+  if (search) remaining -= search.size + gap;
+  if (view) remaining -= view.size + gap;
+  const visible = [];
+  const overflow = [];
+  for (const tool of ordered) {
+    if (tool === view) continue;
+    if (tool === search || tool.size + gap <= remaining) {
+      visible.push(tool);
+      if (tool !== search) remaining -= tool.size + gap;
+    } else {
+      overflow.push(tool);
+    }
+  }
+
   return (
-    <div data-canvas-toolbar className="absolute top-0 z-40 pointer-events-none w-full transition-all duration-300" style={{ left: 0, right: 0 }}>
-      <div className="flex items-center gap-3 relative z-50 w-full px-4 py-3 bg-gradient-to-r from-white via-slate-50 to-white dark:from-slate-950/95 dark:via-slate-900/95 dark:to-slate-950/95 backdrop-blur-md border-b border-slate-200/50 dark:border-slate-600/50 shadow-lg shadow-slate-300/10 dark:shadow-black/20 pointer-events-auto">
-        <div className="flex items-center canvas-controls overflow-x-auto w-full gap-2 text-sm">
-          <div className="flex items-center flex-shrink-0 gap-2">
-            {/* РљРЅРѕРїРєРё РѕС‚РјРµРЅС‹/РїРѕРІС‚РѕСЂР° */}
-            <span data-learn-toolbar="undo" className="inline-flex items-center gap-2">
-            <UndoRedoButtons
-              canUndo={canUndo ?? actionHistory.length > 0}
-              canRedo={canRedo}
-              onUndo={onUndo}
-              onRedo={onRedo}
-            />
-
-            {/* РСЃС‚РѕСЂРёСЏ РґРµР№СЃС‚РІРёР№ */}
-            <ActionHistory
-              actionHistory={actionHistory}
-              handleMouseDownAction={handleMouseDownAction}
-              handleMouseOverAction={handleMouseOverAction}
-              toggleActionSelection={toggleActionSelection}
-              selectedActionsForUndo={selectedActionsForUndo}
-              handleUndoSelected={handleUndoSelected}
-            />
-            </span>
-
-            <span data-learn-toolbar="save" className="inline-flex items-center gap-2">
-
-            {/* История версий проекта */}
-            {projectId != null && (
-              <VersionHistoryButton projectId={projectId} onRestored={onRestoreVersion} />
-            )}
-
-            {onAutosaveChange && (
-              <AutosaveToggle checked={!!autosave} onChange={onAutosaveChange} />
-            )}
-            <SaveButton onSave={onSave} isSaving={isSaving} />
-
-            {onSaveWithNote && <SaveCheckpointPopover onSaveWithNote={onSaveWithNote} isSaving={isSaving} />}
-            </span>
-
-            <span data-learn-toolbar="layout" className="inline-flex items-center">
-              <AutoLayoutButton onAutoLayout={onAutoLayout} />
-            </span>
-
-            <span data-learn-toolbar="clipboard" className="inline-flex items-center gap-2">
-
-            {/* РњРµР¶РїСЂРѕРµРєС‚РЅРѕРµ РєРѕРїРёСЂРѕРІР°РЅРёРµ/РІСЃС‚Р°РІРєР° */}
-            <ClipboardButtons
-              onCopyToClipboard={onCopyToClipboard}
-              onPasteFromClipboard={onPasteFromClipboard}
-              lastClickPosition={lastClickPosition}
-              clickTransform={clickTransform}
-              selectedNodeId={selectedNodeId}
-              hasClipboardData={hasClipboardData}
-            />
-            </span>
-
-            {/* Масштаб на левой панели; «A» — перед поиском */}
-            <span data-learn-toolbar="zoom" className="inline-flex items-center gap-2">
-            <ZoomControls
-              zoom={zoom}
-              canZoomOut={zoom > 1}
-              canZoomIn={zoom < 200}
-              canFitToContent={nodes.length > 0}
-              onZoomOut={onZoomOut}
-              onZoomIn={onZoomIn}
-              onResetZoom={onResetZoom}
-              onFitToContent={onFitToContent}
-              onZoomLevelChange={onZoomLevelChange}
-              canRestorePreviousView={canRestorePreviousView}
-              onRestorePreviousView={onRestorePreviousView}
-              hideScaleButtons
-            />
-            </span>
-
-            <span data-learn-toolbar="search" className="inline-flex items-center gap-2">
-
-            {/* Поиск узлов на текущем листе */}
-            {onNodeFocus && (
-              <NodeSearchButton
-                nodes={nodes}
-                onNodeFocus={onNodeFocus}
-                open={searchOpen}
-                onOpenChange={onSearchOpenChange}
-              />
-            )}
-
-            {/* Инструмент рамочного выделения нескольких узлов */}
-            {onToggleMarquee && (
-              <MarqueeSelectButton active={marqueeActive ?? false} onToggle={onToggleMarquee} />
-            )}
-
-            {/* Переключатель видимости порталов к другим листам */}
-            {onTogglePortals && (
-              <PortalsToggleButton active={showPortals ?? false} onToggle={onTogglePortals} count={portalsCount} />
-            )}
-            </span>
-
-            {/* Р Р°Р·РґРµР»РёС‚РµР»СЊ */}
-            <div className="h-6 w-px bg-slate-300/50 dark:bg-slate-600/50" />
-
-            {/* Кнопки управления интерфейсом — показываются когда любая панель скрыта */}
-            {(headerVisible === false || sidebarVisible === false) && (onToggleHeader || onToggleSidebar || onToggleProperties || onToggleCanvas) && (
-              <InterfaceToggles
-                headerVisible={headerVisible}
-                sidebarVisible={sidebarVisible}
-                canvasVisible={canvasVisible}
-                propertiesVisible={propertiesVisible}
-                onToggleHeader={onToggleHeader}
-                onToggleSidebar={onToggleSidebar}
-                onToggleCanvas={onToggleCanvas}
-                onToggleProperties={onToggleProperties}
-              />
-            )}
-          </div>
-
-          {/* Справка */}
-          <KeyboardShortcutsHelp />
-
-          {/* Переключатель Холст / JSON */}
-          {onViewChange && (
-            <div data-learn-toolbar="view" className="ml-auto flex-shrink-0">
-              <CanvasViewToggle value={canvasView ?? 'canvas'} onChange={onViewChange} />
-            </div>
-          )}
-        </div>
+    <div ref={toolbarRef} data-canvas-toolbar className="@container pointer-events-none absolute inset-x-0 top-0 z-40">
+      <div className="canvas-controls pointer-events-auto relative z-50 flex items-center gap-1 border-b border-border bg-background/95 px-2 py-1.5 text-sm shadow-sm backdrop-blur-md @[520px]:gap-2 @[520px]:px-4">
+        {visible.map(({ key, content }) => (
+          <span key={key} data-learn-toolbar={key} className="inline-flex shrink-0 items-center gap-0.5">{content}</span>
+        ))}
+        {view && <span data-learn-toolbar="view" className="ml-auto inline-flex shrink-0">{view.content}</span>}
+        {overflow.length > 0 && (
+          <CanvasToolbarMore learnTargets={overflow.map(tool => tool.key).join(' ')}>
+            {overflow.map(({ key, label, content }) => <CanvasToolbarMoreRow key={key} label={label}>{content}</CanvasToolbarMoreRow>)}
+          </CanvasToolbarMore>
+        )}
       </div>
     </div>
   );

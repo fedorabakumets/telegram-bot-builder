@@ -1,0 +1,65 @@
+/** @fileoverview Размещение общей панели навигации по четырём сторонам окна. */
+.app-viewport:has(> aside[data-sidebar-position='right']) { flex-direction: row-reverse; }
+.app-viewport:has(> aside[data-sidebar-position='top']) { flex-direction: column; }
+.app-viewport:has(> aside[data-sidebar-position='bottom']) { flex-direction: column-reverse; }
+.app-viewport:has(> aside:is([data-sidebar-position='top'], [data-sidebar-position='bottom'])) > :not(aside) {
+  min-height: 0;
+  height: auto;
+}
+
+aside[data-sidebar-position='right'] { border-right-width: 0; border-left-width: 1px; }
+
+/** Горизонтальная полоса оставляет профиль на виду, а список разделов прокручивается. */
+aside:is([data-sidebar-position='top'], [data-sidebar-position='bottom']) {
+  flex: 0 0 auto;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+  height: auto;
+  min-height: 48px;
+  border-right-width: 0;
+}
+aside[data-sidebar-position='top'] { border-bottom-width: 1px; }
+aside[data-sidebar-position='bottom'] {
+  border-top-width: 1px;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+aside:is([data-sidebar-position='top'], [data-sidebar-position='bottom']) :is(.app-sidebar-brand, .app-sidebar-divider, .app-sidebar-navigation > hr) {
+  display: none;
+}
+aside:is([data-sidebar-position='top'], [data-sidebar-position='bottom']) .app-sidebar-navigation {
+  min-width: 0;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 8px;
+}
+aside:is([data-sidebar-position='top'], [data-sidebar-position='bottom']) .app-sidebar-navigation :is(nav, .app-sidebar-tools, .app-sidebar-tools > div) {
+  flex-direction: row;
+  flex: 0 0 auto;
+}
+aside:is([data-sidebar-position='top'], [data-sidebar-position='bottom']) .app-sidebar-navigation :is(button, a) {
+  width: 36px;
+  flex-shrink: 0;
+}
+aside:is([data-sidebar-position='top'], [data-sidebar-position='bottom']) .app-sidebar-footer {
+  flex: 0 0 auto;
+  border-inline-start: 1px solid var(--border);
+  padding: 4px 8px;
+}
+aside:is([data-sidebar-position='top'], [data-sidebar-position='bottom']) .app-sidebar-footer-content,
+aside:is([data-sidebar-position='top'], [data-sidebar-position='bottom']) .app-sidebar-account-actions {
+  flex-direction: row;
+  gap: 4px;
+  padding-top: 0;
+}
+
+/** На широкой горизонтальной панели шестерёнка сохраняет подпись профиля. */
+@media (min-width: 850px) {
+  aside:is([data-sidebar-position='top'], [data-sidebar-position='bottom']) .app-sidebar-profile-link {
+    width: auto;
+    padding-inline: 8px;
+  }
+  aside:is([data-sidebar-position='top'], [data-sidebar-position='bottom']) .app-sidebar-profile-label { display: inline; }
+}

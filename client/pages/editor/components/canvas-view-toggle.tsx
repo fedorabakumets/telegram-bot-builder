@@ -18,37 +18,39 @@ interface CanvasViewToggleProps {
 }
 
 /**
- * Segmented-control переключатель между режимами «Холст» и «JSON»
+ * Переключатель режимов с синей рамкой активного варианта.
  * @param props - Свойства компонента
  * @returns JSX элемент переключателя
  */
 export function CanvasViewToggle({ value, onChange }: CanvasViewToggleProps) {
   return (
-    <div className="flex h-7 rounded-md border bg-muted p-0.5 gap-0">
+    <div className="flex h-7 gap-0.5 p-0.5">
       <button
         type="button"
+        aria-pressed={value === 'canvas'}
         onClick={() => onChange('canvas')}
         className={cn(
-          'flex items-center gap-1.5 h-6 px-3 text-xs rounded-sm transition-all',
+          'flex h-6 items-center gap-1.5 rounded-sm border px-2 text-xs transition-colors !bg-transparent !bg-none !shadow-none @[360px]:px-3',
           value === 'canvas'
-            ? 'bg-background shadow-sm text-foreground'
-            : 'text-muted-foreground hover:text-foreground',
+            ? '!border-primary/60 text-primary'
+            : '!border-transparent text-muted-foreground hover:text-foreground',
         )}
       >
-        <PenLine className="h-3 w-3" />
+        <PenLine className="hidden size-3 @[360px]:block" aria-hidden="true" />
         Холст
       </button>
       <button
         type="button"
+        aria-pressed={value === 'json'}
         onClick={() => onChange('json')}
         className={cn(
-          'flex items-center gap-1.5 h-6 px-3 text-xs rounded-sm transition-all',
+          'flex h-6 items-center gap-1.5 rounded-sm border px-2 text-xs transition-colors !bg-transparent !bg-none !shadow-none @[360px]:px-3',
           value === 'json'
-            ? 'bg-background shadow-sm text-foreground'
-            : 'text-muted-foreground hover:text-foreground',
+            ? '!border-primary/60 text-primary'
+            : '!border-transparent text-muted-foreground hover:text-foreground',
         )}
       >
-        <Braces className="h-3 w-3" />
+        <Braces className="hidden size-3 @[360px]:block" aria-hidden="true" />
         JSON
       </button>
     </div>

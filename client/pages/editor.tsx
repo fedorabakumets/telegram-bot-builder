@@ -85,6 +85,8 @@ import { useBotEditor } from '@/components/editor/canvas/canvas/use-bot-editor';
 import { useMoveNodeToSheet } from '@/components/editor/canvas/canvas/use-move-node-to-sheet';
 import { useIsMobile } from '@/components/editor/header/hooks/use-mobile';
 import { useToast } from '@/hooks/use-toast';
+import { ClipboardPaste, Copy, Scissors } from 'lucide-react';
+import { copyTextToClipboard } from '@/utils/copy-text';
 import { useCanvasSync } from '@/hooks/use-canvas-sync';
 import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
 import type { CanvasActor } from '@shared/canvas-sync/canvas-actor';
@@ -983,6 +985,46 @@ export default function Editor() {
     handleJsonChangeRaw(value);
   }, [isDirty, handleJsonChangeRaw, handleActionLog]);
 
+  /** Снимок помогает не затереть правки, внесённые во время запроса к буферу. */
+  const jsonClipboardContext = useRef({ jsonContent, canvasView, currentTab, projectId: activeProject?.id });
+  useEffect(() => {
+    jsonClipboardContext.current = { jsonContent, canvasView, currentTab, projectId: activeProject?.id };
+  }, [jsonContent, canvasView, currentTab, activeProject?.id]);
+
+  /**
+   * Копирует или вырезает весь текст либо заменяет его содержимым буфера.
+   * @param action - Действие с буфером обмена.
+   */
+  const handleCanvasJsonClipboard = async (action: 'copy' | 'cut' | 'paste') => {
+    const context = jsonClipboardContext.current;
+    if (action === 'paste') {
+      try {
+        const text = await navigator.clipboard.readText();
+        if (context !== jsonClipboardContext.current) return;
+        if (!text) {
+          toast({ title: 'В буфере обмена нет текста' });
+          return;
+        }
+        if (text !== context.jsonContent) handleJsonChange(text);
+        toast({ title: 'Текст вставлен' });
+      } catch {
+        toast({ title: 'Не удалось прочитать буфер обмена', variant: 'destructive' });
+      }
+      return;
+    }
+
+    if (!(await copyTextToClipboard(context.jsonContent))) {
+      toast({ title: 'Не удалось скопировать JSON', variant: 'destructive' });
+      return;
+    }
+    if (action === 'cut' && context === jsonClipboardContext.current) {
+      handleJsonChange('');
+      toast({ title: 'JSON вырезан' });
+    } else {
+      toast({ title: 'JSON скопирован' });
+    }
+  };
+
   /**
    * Обёртка над handleViewChange — при переходе в JSON разворачивает все блоки редактора
    * @param view - Новый режим просмотра
@@ -1818,9 +1860,21 @@ export default function Editor() {
 
           {/* JSON-редактор — абсолютно поверх Canvas, виден только в json-режиме вкладки editor */}
           {currentTab === 'editor' && canvasView === 'json' && (
-            <div className="absolute inset-0 z-10 flex flex-col">
-              {/* Тулбар JSON-режима: кнопки fold/unfold и переключатель вида */}
-              <div className="flex items-center justify-end gap-2 px-4 py-2 bg-gradient-to-r from-white via-slate-50 to-white dark:from-slate-950/95 dark:via-slate-900/95 dark:to-slate-950/95 border-b border-slate-200/50 dark:border-slate-600/50 shrink-0">
+            <div className="@container absolute inset-0 z-10 flex flex-col">
+              {/* Подписи действий зависят от ширины панели JSON. */}
+              <div className="flex shrink-0 items-center justify-end gap-2 px-4 py-2 bg-gradient-to-r from-white via-slate-50 to-white dark:from-slate-950/95 dark:via-slate-900/95 dark:to-slate-950/95 border-b border-slate-200/50 dark:border-slate-600/50">
+                {([
+                  ['copy', 'Копировать', 'Копировать весь JSON', Copy],
+                  ['cut', 'Вырезать всё', 'Вырезать весь JSON', Scissors],
+                  ['paste', 'Вставить', 'Заменить текст из буфера обмена', ClipboardPaste],
+                ] as const).map(([action, label, title, Icon]) => (
+                  <button key={action} type="button" onClick={() => void handleCanvasJsonClipboard(action)}
+                    disabled={action !== 'paste' && !jsonContent} aria-label={label} title={title}
+                    className="flex h-6 shrink-0 items-center gap-1 rounded-sm border bg-background px-2 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50">
+                    <Icon className="size-3" aria-hidden="true" />
+                    <span className="hidden @[480px]:inline">{label}</span>
+                  </button>
+                ))}
                 <button
                   type="button"
                   onClick={() => setAreAllCollapsed(!areAllCollapsed)}
