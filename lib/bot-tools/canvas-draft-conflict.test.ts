@@ -19,18 +19,67 @@ class Channel {
 }
 /** Сокет-заглушка, не открывающий соединение. */
 class Socket {
+  /** Сокеты, доступные для доставки запоздавших событий. */
+  static instances: Socket[] = [];
   /** Константа состояния протокола. */
   static OPEN = 1;
-  /** Незавершённое соединение не запускает keepalive. */
-  readyState = 0;
-  /** Игнорирует отправку тестового сообщения. */
-  send() {}
+  /** Открытое соединение без реальной сети. */
+  readyState = Socket.OPEN;
+  /** Обработчик закрытия для управляемой доставки события. */
+  onclose?: () => void;
+  /** Запись тестовых сообщений. */
+  send = vi.fn();
   /** Закрывает тестовое соединение. */
   close() {}
+  /** Регистрирует экземпляр без подключения к серверу. */
+  constructor() { Socket.instances.push(this); }
 }
 
-afterEach(() => { cleanup(); vi.unstubAllGlobals(); Channel.instances = []; });
+afterEach(() => { cleanup(); vi.unstubAllGlobals(); Channel.instances = []; Socket.instances = []; });
 describe('Черновик и внешнее сохранение', () => {
+  it('не рассылает открытый или одинаковый снимок, но принимает подтверждение новой ревизии', () => {
+    vi.stubGlobal('BroadcastChannel', Channel); vi.stubGlobal('WebSocket', Socket);
+    const data = { sheets: [], version: 2 };
+    const onUpdate = vi.fn();
+    const onSync = vi.fn();
+    renderHook(() => useCanvasSync({ projectId: 1, savedRevision: 5,
+      botDataWithSheets: data, onRemoteUpdate: onUpdate, onRemoteSync: onSync }));
+    const channel = Channel.instances[0];
+    expect(channel.postMessage).not.toHaveBeenCalled();
+    const incoming = { type: 'canvas-sync', projectId: 1, tabId: 'other-window', timestamp: 100, data };
+    act(() => channel.onmessage?.({ data: incoming }));
+    expect(onUpdate).not.toHaveBeenCalled();
+    expect(onSync).not.toHaveBeenCalled();
+    const confirmed = { ...incoming, revision: 6 };
+    act(() => channel.onmessage?.({ data: confirmed }));
+    expect(onUpdate).not.toHaveBeenCalled();
+    expect(onSync).toHaveBeenCalledExactlyOnceWith(confirmed);
+  });
+
+  it('рассылает только изменившийся локальный черновик текущего проекта', () => {
+    vi.stubGlobal('BroadcastChannel', Channel); vi.stubGlobal('WebSocket', Socket);
+    const data = { sheets: [], activeSheetId: 'first', version: 2 };
+    const initialProps = { projectId: 1, localDraftProjectId: undefined as number | undefined, botDataWithSheets: data };
+    const onUpdate = vi.fn();
+    const { rerender } = renderHook((props) => useCanvasSync({ ...props, debounceMs: 0,
+      onRemoteUpdate: onUpdate }), { initialProps });
+    rerender({ ...initialProps, localDraftProjectId: 1 });
+    expect(Channel.instances[0].postMessage).not.toHaveBeenCalled();
+
+    const changed = { ...data, activeSheetId: 'second' };
+    rerender({ ...initialProps, localDraftProjectId: 1, botDataWithSheets: changed });
+    rerender({ ...initialProps, localDraftProjectId: 1, botDataWithSheets: { ...changed } });
+    expect(Channel.instances[0].postMessage).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ projectId: 1, data: changed }));
+
+    rerender({ projectId: 2, localDraftProjectId: 1, botDataWithSheets: changed });
+    expect(Channel.instances[1].postMessage).not.toHaveBeenCalled();
+    act(() => Socket.instances[0].onclose?.());
+    const nextDraft = { ...data, activeSheetId: 'third' };
+    rerender({ projectId: 2, localDraftProjectId: 2, botDataWithSheets: nextDraft });
+    expect(Channel.instances[1].postMessage).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ projectId: 2, data: nextDraft }));
+    expect(Socket.instances[1].send).toHaveBeenCalledOnce();
+  });
+
   it('откладывает revision6, сохраняет draft/base5 и получает CAS409 вместо перезаписи', async () => {
     vi.stubGlobal('BroadcastChannel', Channel); vi.stubGlobal('WebSocket', Socket);
     vi.stubGlobal('requestAnimationFrame', (callback: () => void) => { callback(); return 1; });
@@ -41,6 +90,9 @@ describe('Черновик и внешнее сохранение', () => {
       hasLocalChanges: dirty, botDataWithSheets: local as never,
       onRemoteUpdate: onUpdate, onRemoteSync: onSync, onRemoteConflict: onConflict,
       onRemoteReset: onReset }), { initialProps: { dirty: true } });
+    act(() => Channel.instances[0].onmessage?.({ data: { type: 'canvas-sync', projectId: 1,
+      tabId: 'other-window', timestamp: 99, data: remote } }));
+    expect(onConflict).not.toHaveBeenCalled();
     act(() => Channel.instances[0].onmessage?.({ data: { type: 'canvas-sync', projectId: 1, tabId: 'agent', timestamp: 100,
       revision: 6, actor: { kind: 'agent', sessionId: 'test', displayName: 'Агент' }, data: remote } }));
     expect(onUpdate).not.toHaveBeenCalled(); expect(onSync).not.toHaveBeenCalled(); expect(onConflict).toHaveBeenCalledOnce();

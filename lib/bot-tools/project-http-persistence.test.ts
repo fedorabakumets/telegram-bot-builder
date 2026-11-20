@@ -23,6 +23,18 @@ describe('HTTP сохранение проекта', () => {
   expect(mocks.updateBotProject).toHaveBeenCalledWith(1, { data: {} }, 3);
   expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ outcome: 'saved', persistence: { confirmed: true, projectId: 1, revision: 4 } }));
  });
+ /** Проверяет, что отдельное изменение сохраняет только присланные настройки. */
+ it.each([
+  { name: 'Новое имя' },
+  { userDatabaseEnabled: 0 },
+  { sortOrder: 0, restartOnUpdate: false },
+ ])('сохраняет явно переданные поля без подстановки остальных: %j', async (fields) => {
+  mocks.updateBotProject.mockResolvedValue({ id: 1, revision: 4 });
+  mocks.effects.mockResolvedValue({});
+  const { req, res } = request(fields);
+  await updateProjectHandler(req, res);
+  expect(mocks.updateBotProject).toHaveBeenCalledWith(1, fields, undefined);
+ });
  it('не сообщает saved при нуле изменённых строк из-за конфликта', async () => {
   mocks.updateBotProject.mockResolvedValue(undefined); mocks.getBotProject.mockResolvedValue({ id: 1, revision: 4 });
   const { req, res } = request({ data: {}, expectedRevision: 3 });

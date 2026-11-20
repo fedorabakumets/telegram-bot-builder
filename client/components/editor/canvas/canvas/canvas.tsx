@@ -24,6 +24,7 @@ import { CanvasContent } from './canvas-content';
 import { MobileCanvasFab } from './mobile-canvas-fab';
 import { useConnectionDrag } from './use-connection-drag';
 import { useCanvasViewHistory } from './use-canvas-view-history';
+import { hasCanvasShortcutBlocker } from './canvas-shortcut-scope';
 import { useMarqueeSelection } from './use-marquee-selection';
 import { useMoveNodesToSheet } from './use-move-nodes-to-sheet';
 import { useMoveNodesToProject } from './use-move-nodes-to-project';
@@ -1035,17 +1036,13 @@ export function Canvas({
 
   // Обработчики для работы с листами
   const handleSheetSelect = useCallback((sheetId: string) => {
-    if (!botData || !onBotDataUpdate) return;
+    if (!botData || !onBotDataUpdate || sheetId === botData.activeSheetId || !botData.sheets.some(sheet => sheet.id === sheetId)) return;
 
-    // ВАЖНО: Сначала сохраняем текущее состояние редактора в активный лист
-    let dataWithCurrentSheetSaved = botData;
-    if (botData.activeSheetId) {
-      dataWithCurrentSheetSaved = SheetsManager.updateSheetData(
-        botData,
-        botData.activeSheetId,
-        nodes
-      );
-    }
+    /** При просмотре другого листа переносим узлы в локальный черновик без изменения даты. */
+    const dataWithCurrentSheetSaved = {
+      ...botData,
+      sheets: botData.sheets.map(sheet => sheet.id === botData.activeSheetId ? { ...sheet, nodes } : sheet),
+    };
 
     // Затем переключаемся на новый лист
     const updatedData = SheetsManager.setActiveSheet(dataWithCurrentSheetSaved, sheetId);
@@ -1067,24 +1064,28 @@ export function Canvas({
     }
 
     const updatedData = SheetsManager.addSheet(dataWithCurrentSheetSaved, name);
+    addAction('sheet_add', `Добавлен лист "${name}"`);
     onBotDataUpdate(updatedData);
-  }, [botData, onBotDataUpdate, nodes]);
+  }, [botData, onBotDataUpdate, nodes, addAction]);
 
   const handleSheetDelete = useCallback((sheetId: string) => {
-    if (!botData || !onBotDataUpdate) return;
+    if (!botData || !onBotDataUpdate || !botData.sheets.some(sheet => sheet.id === sheetId)) return;
     try {
       const updatedData = SheetsManager.deleteSheet(botData, sheetId);
+      addAction('sheet_delete', 'Удалён лист');
       onBotDataUpdate(updatedData);
     } catch (error) {
       console.error('Ошибка удаления листа:', error);
     }
-  }, [botData, onBotDataUpdate]);
+  }, [botData, onBotDataUpdate, addAction]);
 
   const handleSheetRename = useCallback((sheetId: string, newName: string) => {
-    if (!botData || !onBotDataUpdate) return;
+    const sheet = botData?.sheets.find(item => item.id === sheetId);
+    if (!botData || !onBotDataUpdate || !sheet || sheet.name === newName) return;
     const updatedData = SheetsManager.renameSheet(botData, sheetId, newName);
+    addAction('sheet_rename', `Лист переименован в "${newName}"`);
     onBotDataUpdate(updatedData);
-  }, [botData, onBotDataUpdate]);
+  }, [botData, onBotDataUpdate, addAction]);
 
   const handleSheetDuplicate = useCallback((sheetId: string) => {
     if (!botData || !onBotDataUpdate) return;
@@ -1100,11 +1101,12 @@ export function Canvas({
       }
 
       const updatedData = SheetsManager.duplicateSheetInProject(dataWithCurrentSheetSaved, sheetId);
+      addAction('sheet_duplicate', 'Лист продублирован');
       onBotDataUpdate(updatedData);
     } catch (error) {
       console.error('Ошибка дублирования листа:', error);
     }
-  }, [botData, onBotDataUpdate, nodes]);
+  }, [botData, onBotDataUpdate, nodes, addAction]);
 
   // Функция для получения центральной позиции видимой области canvas
   const getCenterPosition = useCallback(() => {
@@ -1259,8 +1261,8 @@ export function Canvas({
     
     
     const handleKeyDown = (e: KeyboardEvent) => {
-      // В JSON-режиме не перехватываем горячие клавиши — Monaco Editor должен их обрабатывать сам
-      if (canvasView === 'json') return;
+      /** Редактор JSON и открытая история владеют вводом до команд фонового холста. */
+      if (canvasView === 'json' || hasCanvasShortcutBlocker(document)) return;
 
       // Проверяем, что фокус не находится на input или textarea
       const target = e.target as HTMLElement;
@@ -1755,8 +1757,8 @@ export function Canvas({
   const handleGroupCopy = useCallback(() => {
     if (selectedNodeIds.size === 0 || !onCopyToClipboard) return;
     onCopyToClipboard(Array.from(selectedNodeIds));
-    addAction('duplicate', `Скопировано узлов в буфер: ${selectedNodeIds.size}`);
-  }, [selectedNodeIds, onCopyToClipboard, addAction]);
+    /** Копирование не помечает черновик изменённым. */
+  }, [selectedNodeIds, onCopyToClipboard]);
 
   /** Групповое перемещение выделенных узлов в существующий лист */
   const handleGroupMoveToSheet = useCallback((sheetId: string) => {

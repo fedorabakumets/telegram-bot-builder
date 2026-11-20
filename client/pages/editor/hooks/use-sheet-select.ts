@@ -1,177 +1,52 @@
-/**
- * @fileoverview Хук для переключения между листами в проекте
- *
- * Предоставляет функцию для выбора активного листа с сохранением
- * текущих данных холста и логированием действий.
- *
- * @module UseSheetSelect
- */
-
+/** @fileoverview Переключение листов без записи проекта и потери локальных правок. */
 import { useCallback } from 'react';
-import type { BotDataWithSheets } from '@shared/schema';
-import { SheetsManager } from '@/utils/sheets/sheets-manager';
-import { logSheetSwitch } from '@/components/editor/properties';
+import type { BotData, BotDataWithSheets } from '@shared/schema';
 import type { ToasterToast } from '@/hooks/use-toast';
-import type { QueryClient } from '@tanstack/react-query';
+import type { NodeSizeMap } from '../types/node-size';
 
-/** Параметры хука useSheetSelect */
+/** Параметры переключения активного листа. */
 interface UseSheetSelectParams {
-  /** Текущие данные проекта с листами */
+  /** Текущий черновик проекта. */
   botDataWithSheets: BotDataWithSheets | null;
-  /** Функция получения данных бота с холста */
-  getBotData: () => { nodes: any[] };
-  /** Функция обновления данных листов */
+  /** Читает последние узлы с холста до его переключения. */
+  getBotData: () => Pick<BotData, 'nodes'>;
+  /** Обновляет локальные данные листов. */
   setBotDataWithSheets: (data: BotDataWithSheets) => void;
-  /** Функция установки данных бота на холсте */
-  setBotData: (data: { nodes: any[] }, name?: string, sizes?: any, skipLayout?: boolean) => void;
-  /** Функция логирования действий */
-  handleActionLog: (type: string, description: string) => void;
-  /** Функция сохранения в историю */
-  saveToHistory: () => void;
-  /** Функция мутации сохранения проекта */
-  updateProjectMutation: { mutate: (variables?: any) => void };
-  /** Toast для уведомлений */
+  /** Загружает узлы выбранного листа на холст. */
+  setBotData: (data: BotData, name?: string, sizes?: NodeSizeMap, skipLayout?: boolean) => void;
+  /** Сообщает об отсутствующем листе. */
   toast: (props: Omit<ToasterToast, 'id'>) => void;
-  /** QueryClient для инвалидации кэша */
-  queryClient: QueryClient;
-  /** Текущие размеры узлов */
-  currentNodeSizes: any;
-  /** ID активного проекта */
-  activeProjectId: number | null;
-  /** Колбэк после успешного переключения листа (например для fitToContent) */
+  /** Текущие размеры узлов. */
+  currentNodeSizes: NodeSizeMap;
+  /** Выполняет действия после загрузки листа, например обновляет область просмотра. */
   onAfterSelect?: () => void;
 }
 
 /**
- * Хук для переключения между листами в проекте
- *
- * @param params - Параметры хука
- * @returns Объект с функцией handleSheetSelect
+ * Переключает лист в локальном состоянии с сохранением правок исходного холста.
+ * @param params - Черновик проекта и обработчики холста.
+ * @returns Обработчик выбора листа.
  */
-export function useSheetSelect(params: UseSheetSelectParams) {
-  const {
-    botDataWithSheets,
-    getBotData,
-    setBotDataWithSheets,
-    setBotData,
-    handleActionLog,
-    saveToHistory,
-    updateProjectMutation,
-    toast,
-    queryClient,
-    currentNodeSizes,
-    activeProjectId,
-    onAfterSelect,
-  } = params;
-
-  /**
-   * Обработчик выбора листа
-   *
-   * @param sheetId - ID выбираемого листа
-   */
+export function useSheetSelect({
+  botDataWithSheets, getBotData, setBotDataWithSheets, setBotData, toast, currentNodeSizes, onAfterSelect,
+}: UseSheetSelectParams) {
+  /** @param sheetId - Идентификатор листа назначения. */
   const handleSheetSelect = useCallback((sheetId: string) => {
-    if (!botDataWithSheets) return;
-
-    try {
-      // Находим текущий и новый листы для логирования
-      const currentSheet = botDataWithSheets.sheets.find(
-        s => s.id === botDataWithSheets.activeSheetId
-      );
-      const newSheet = botDataWithSheets.sheets.find(s => s.id === sheetId);
-
-      // Логируем ДО изменений
-      if (newSheet) {
-        logSheetSwitch({
-          fromSheet: currentSheet?.name,
-          toSheet: newSheet.name,
-          onActionLog: handleActionLog,
-        });
-      }
-
-      // Сохраняем в историю ДО изменений
-      saveToHistory();
-
-      // Проверяем существование листа
-      const sheetExists = botDataWithSheets.sheets.some(sheet => sheet.id === sheetId);
-      if (!sheetExists) {
-        console.warn(`Лист ${sheetId} не найден в проекте`);
-
-        // Переключаемся на первый доступный лист
-        if (botDataWithSheets.sheets.length > 0) {
-          const firstSheet = botDataWithSheets.sheets[0];
-          const updatedData = SheetsManager.setActiveSheet(botDataWithSheets, firstSheet.id);
-          setBotDataWithSheets(updatedData);
-
-          const newActiveSheet = SheetsManager.getActiveSheet(updatedData);
-          if (newActiveSheet) {
-            setBotData({ nodes: newActiveSheet.nodes }, undefined, currentNodeSizes, true);
-            onAfterSelect?.();
-          }
-
-          if (activeProjectId) {
-            setTimeout(() => {
-              queryClient.invalidateQueries({ queryKey: [`/api/projects/${activeProjectId}`] });
-              queryClient.refetchQueries({ queryKey: [`/api/projects/${activeProjectId}`] });
-            }, 100);
-          }
-        }
-
-        toast({
-          title: 'Лист был удален',
-          description: 'Переключились на другой лист',
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      // Сохраняем текущие данные холста в активном листе
-      const currentCanvasData = getBotData();
-      const activeSheetId = botDataWithSheets.activeSheetId;
-      const updatedSheets = botDataWithSheets.sheets.map(sheet =>
-        sheet.id === activeSheetId
-          ? { ...sheet, nodes: currentCanvasData.nodes, updatedAt: new Date() }
-          : sheet
-      );
-
-      // Переключаемся на новый лист
-      const updatedData = SheetsManager.setActiveSheet(
-        { ...botDataWithSheets, sheets: updatedSheets },
-        sheetId
-      );
-      setBotDataWithSheets(updatedData);
-
-      // Загружаем данные нового активного листа (без автоиерархии)
-      const newActiveSheet = SheetsManager.getActiveSheet(updatedData);
-      if (newActiveSheet) {
-        setBotData({ nodes: newActiveSheet.nodes }, undefined, currentNodeSizes, true);
-        onAfterSelect?.();
-      }
-
-      // Сохраняем изменения
-      if (activeProjectId) {
-        updateProjectMutation.mutate();
-      }
-    } catch (error) {
-      toast({
-        title: 'Ошибка переключения',
-        description: 'Не удалось переключиться на лист',
-        variant: 'destructive',
-      });
+    if (!botDataWithSheets || sheetId === botDataWithSheets.activeSheetId) return;
+    const nextSheet = botDataWithSheets.sheets.find((sheet) => sheet.id === sheetId);
+    if (!nextSheet) {
+      toast({ title: 'Лист не найден', description: 'Остались на текущем листе.', variant: 'destructive' });
+      return;
     }
-  }, [
-    botDataWithSheets,
-    getBotData,
-    setBotData,
-    setBotDataWithSheets,
-    handleActionLog,
-    saveToHistory,
-    updateProjectMutation,
-    toast,
-    queryClient,
-    currentNodeSizes,
-    activeProjectId,
-    onAfterSelect,
-  ]);
+
+    const { nodes } = getBotData();
+    const sheets = botDataWithSheets.sheets.map((sheet) =>
+      sheet.id === botDataWithSheets.activeSheetId && sheet.nodes !== nodes ? { ...sheet, nodes } : sheet,
+    );
+    setBotDataWithSheets({ ...botDataWithSheets, sheets, activeSheetId: sheetId });
+    setBotData({ nodes: nextSheet.nodes }, undefined, currentNodeSizes, true);
+    onAfterSelect?.();
+  }, [botDataWithSheets, getBotData, setBotDataWithSheets, setBotData, toast, currentNodeSizes, onAfterSelect]);
 
   return { handleSheetSelect };
 }

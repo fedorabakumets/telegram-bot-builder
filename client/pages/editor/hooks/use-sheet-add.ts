@@ -28,8 +28,6 @@ interface UseSheetAddParams {
   handleActionLog: (type: string, description: string) => void;
   /** Функция сохранения в историю */
   saveToHistory: () => void;
-  /** Функция мутации сохранения проекта */
-  updateProjectMutation: { mutate: (variables?: any) => void };
   /** Функция toast для уведомлений */
   toast: (props: Toast) => void;
   /** Текущие размеры узлов */
@@ -49,7 +47,6 @@ export function useSheetAdd(params: UseSheetAddParams) {
     setBotData,
     handleActionLog,
     saveToHistory,
-    updateProjectMutation,
     toast,
     currentNodeSizes,
   } = params;
@@ -79,8 +76,7 @@ export function useSheetAdd(params: UseSheetAddParams) {
         setBotData({ nodes: newSheet.nodes }, undefined, currentNodeSizes, false);
       }
 
-      // Сохраняем изменения
-      updateProjectMutation.mutate();
+      /** Черновик сохраняется через общую панель или общий таймер редактора. */
 
       toast({
         title: 'Лист создан',
@@ -93,7 +89,7 @@ export function useSheetAdd(params: UseSheetAddParams) {
         variant: 'destructive',
       });
     }
-  }, [botDataWithSheets, setBotData, setBotDataWithSheets, handleActionLog, saveToHistory, updateProjectMutation, toast, currentNodeSizes]);
+  }, [botDataWithSheets, setBotData, setBotDataWithSheets, handleActionLog, saveToHistory, toast, currentNodeSizes]);
 
   return { handleSheetAdd };
 }
