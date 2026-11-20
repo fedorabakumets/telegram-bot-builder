@@ -82,8 +82,10 @@ export function useWorkspaceHeaderSpace(scopeSelector = "[role='group']", action
       const scopeInTitleRow = scope && scope.childElementCount > 0 && getComputedStyle(scope).gridRowStart !== '2';
       const spacing = gap * (scopeInTitleRow ? 2 : 1);
       const extraLabels = new Set<string>();
-      /** Подпись запуска имеет приоритет над перезапуском, если обе не помещаются. */
-      for (const group of ['view', 'connect', 'bulk-start', 'bulk-restart']) {
+      const compactBotView = getComputedStyle(header).getPropertyValue('--workspace-compact-bot-view').trim() === '1';
+      /** Названия разделов важнее подписей действий, а запуск важнее перезапуска. */
+      for (const group of ['bot-section', 'view', 'connect', 'bulk-start', 'bulk-restart']) {
+        if (group === 'view' && compactBotView) continue;
         if (!header.querySelector(`[data-workspace-label="${group}"]`)) continue;
         extraLabels.add(group);
         const available = actionsBelow && !group.startsWith('bulk-') ? actionWidth(false, extraLabels)
@@ -105,6 +107,31 @@ export function useWorkspaceHeaderSpace(scopeSelector = "[role='group']", action
       /** Документация получает подпись раньше обновления, когда обе подписи не помещаются. */
       const documentationWidth = occupied + actionWidth(true, extraLabels);
       header.dataset.documentationLabel = String(documentationWidth <= header.clientWidth);
+      /** На вкладке ботов повторно проверяем место с выбранными подписями. */
+      if (fitsInline && scope?.querySelector('.bot-workspace-scope')) {
+        const controls = Array.from(scope.querySelectorAll('button, a'));
+        /** Учитывает зарезервированное место для названия проекта и границы кнопок. */
+        const overlapsActions = () => {
+          const actionsLeft = actions.getBoundingClientRect().left;
+          return controls.some(control => control.getClientRects().length > 0
+            && control.getBoundingClientRect().right + gap > actionsLeft);
+        };
+        for (const label of ['view', 'connect', 'bulk-restart', 'bulk-start']) {
+          if (!overlapsActions()) break;
+          extraLabels.delete(label);
+          header.dataset.extraLabels = [...extraLabels].join(' ');
+        }
+        if (overlapsActions()) {
+          header.dataset.compactActions = 'true';
+          header.dataset.documentationLabel = 'false';
+        }
+        if (overlapsActions() && extraLabels.delete('bot-section')) {
+          header.dataset.extraLabels = [...extraLabels].join(' ');
+        }
+        if (overlapsActions()) {
+          header.dataset.scopeInline = 'false';
+        }
+      }
     };
     /** Объединяет изменения размеров и текста в одно измерение за кадр. */
     const schedule = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(measure); };
