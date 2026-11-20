@@ -3,52 +3,56 @@
  * @module server/utils/resolveSessionCookie
  */
 
-/**
- * Опции cookie для express-session
- */
-export interface SessionCookieOptions {
-  /** Срок жизни cookie в миллисекундах */
-  maxAge: number;
-  /** Cookie недоступна из JS */
-  httpOnly: boolean;
-  /** Только по HTTPS */
-  secure: boolean;
-  /** Политика SameSite */
-  sameSite: "none" | "lax";
-}
+import type { Request } from "express";
+
+/** Срок жизни сессии в миллисекундах. */
+export const SESSION_COOKIE_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
+
+/** Сведения о соединении, на которых основан режим cookie. */
+type SessionCookieRequest = Pick<Request, "headers" | "secure"> & {
+  /** Фактические адреса TCP, которые не задаются HTTP-заголовками. */
+  socket: Pick<Request["socket"], "localAddress" | "remoteAddress"> & {
+    /** Признак TLS при WebSocket-запросе до обработки Express. */
+    encrypted?: boolean;
+  };
+};
+
+/** Адреса прямого локального соединения для IPv4 и IPv6. */
+const LOOPBACK_ADDRESSES = new Set(["127.0.0.1", "::1", "::ffff:127.0.0.1"]);
 
 /**
- * Включает защиту cookie в production и при явном использовании HTTPS.
- * Локальный HTTP в production допускается только при привязке к loopback
- * и явном `COOKIE_SECURE=false`.
- *
- * @returns true если cookie должны быть Secure + SameSite=None
+ * Разрешает исключение только для прямого локального HTTP-запроса.
+ * @param req - Сведения о запросе и сокете.
+ * @returns Нужно ли устанавливать Secure.
  */
-export function shouldUseSecureSessionCookie(): boolean {
-  if (process.env.COOKIE_SECURE === "true") return true;
-  if (process.env.NODE_ENV !== "production") return false;
-  if (process.env.RAILWAY_PUBLIC_DOMAIN || process.env.RAILWAY_STATIC_URL) {
-    return true;
-  }
+export function shouldUseSecureSessionCookie(req: SessionCookieRequest): boolean {
+  if (req.secure || req.socket.encrypted || process.env.COOKIE_SECURE === "true"
+    || process.env.RAILWAY_PUBLIC_DOMAIN || process.env.RAILWAY_STATIC_URL) return true;
   const baseUrl = process.env.API_BASE_URL || process.env.WEBHOOK_BASE_URL || "";
   if (baseUrl.trim().toLowerCase().startsWith("https://")) return true;
-  /** Разрешаем локальный тест собранной версии без ослабления внешнего сервера. */
-  const listenHost = process.env.HOST?.trim();
-  const loopback = listenHost === "127.0.0.1" || listenHost === "::1" || listenHost === "localhost";
-  return !loopback || process.env.COOKIE_SECURE !== "false";
+  if (process.env.NODE_ENV === "production") {
+    /** Собранный сервер включает локальный HTTP только по явному запросу. */
+    const host = process.env.HOST?.trim();
+    const localHost = host === "127.0.0.1" || host === "::1" || host === "localhost";
+    if (!localHost || process.env.COOKIE_SECURE !== "false") return true;
+  }
+  const localSocket = LOOPBACK_ADDRESSES.has(req.socket.localAddress ?? "")
+    && LOOPBACK_ADDRESSES.has(req.socket.remoteAddress ?? "");
+  const host = req.headers.host ?? "";
+  const localHost = /^(?:localhost|127\.0\.0\.1|\[::1\])(?::[0-9]{1,5})?$/i.test(host);
+  const forwarded = Object.keys(req.headers).some(key =>
+    key === "forwarded" || key === "x-real-ip" || key === "via" || key.startsWith("x-forwarded-"));
+  return !localSocket || !localHost || forwarded;
 }
 
 /**
- * Собирает опции session cookie с учётом HTTP/HTTPS окружения
- *
- * @returns Опции cookie для express-session
+ * Применяет режим запроса к созданной или загруженной сессии.
+ * @param req - Запрос с загруженной сессией.
  */
-export function resolveSessionCookieOptions(): SessionCookieOptions {
-  const secure = shouldUseSecureSessionCookie();
-  return {
-    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 дней
-    httpOnly: true,
-    secure,
-    sameSite: secure ? "none" : "lax",
-  };
+export function applySessionCookiePolicy(req: Request): void {
+  if (!req.session?.cookie) return;
+  const secure = shouldUseSecureSessionCookie(req);
+  req.session.cookie.httpOnly = true;
+  req.session.cookie.secure = secure;
+  req.session.cookie.sameSite = secure ? "none" : "lax";
 }

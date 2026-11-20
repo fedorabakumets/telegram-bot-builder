@@ -8,6 +8,7 @@
  */
 
 import type { Request } from "express";
+import { applySessionCookiePolicy } from "../../../utils/resolveSessionCookie";
 
 /**
  * Промисифицирует метод regenerate сессии
@@ -21,6 +22,7 @@ export function regenerateSession(req: Request): Promise<void> {
             if (err) {
                 reject(err);
             } else {
+                applySessionCookiePolicy(req);
                 resolve();
             }
         });

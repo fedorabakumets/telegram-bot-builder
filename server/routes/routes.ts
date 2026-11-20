@@ -87,7 +87,7 @@ import { deleteProjectTokenHandler } from "./botTokens/handlers/deleteProjectTok
 import { isMaskedOrPlaceholderToken, toPublicBotToken } from "./botTokens/to-public-bot-token";
 import { checkUrlAccessibility } from "../utils/checkUrlAccessibility";
 import { validateExternalUrl } from "../utils/validateExternalUrl";
-import { resolveSessionCookieOptions } from "../utils/resolveSessionCookie";
+import { applySessionCookiePolicy, SESSION_COOKIE_MAX_AGE_MS } from "../utils/resolveSessionCookie";
 import { resolveSessionSecret } from "../utils/resolveSessionSecret";
 import { fetchWithProxy } from "../utils/telegram-proxy";
 import { describeTelegramError } from "../admin/telegram-connection-test";
@@ -477,19 +477,22 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     console.log('[Session] Хранилище сессий: PostgreSQL (Redis недоступен)');
   }
 
-  const sessionCookie = resolveSessionCookieOptions();
-  console.log(
-    `[Session] Cookie: secure=${sessionCookie.secure}, sameSite=${sessionCookie.sameSite}`,
-  );
-
-  const sessionMiddleware = session({
+  const loadSession = session({
     store: store,
     secret: resolveSessionSecret(),
     resave: false,
     saveUninitialized: false,
-    /** В production cookie по умолчанию передаётся только по HTTPS. */
-    cookie: sessionCookie,
+    /** Сессия создаётся с безопасными флагами до проверки локального исключения. */
+    cookie: { secure: true, httpOnly: true, sameSite: "none", maxAge: SESSION_COOKIE_MAX_AGE_MS },
   });
+
+  /** При загрузке старой сессии флаги обновляются для текущего соединения. */
+  const sessionMiddleware: RequestHandler = (req, res, next) => {
+    loadSession(req, res, (error?: unknown) => {
+      if (!error) applySessionCookiePolicy(req);
+      next(error);
+    });
+  };
 
   app.use(sessionMiddleware);
   /** Проверяет источник изменений через cookie до API и административных обработчиков. */
