@@ -1,6 +1,20 @@
 /** @fileoverview Потоковый HTTP и WebSocket прокси к единственному настроенному backend. */
 import http from 'node:http';
 import https from 'node:https';
+
+/** Разрешает прямой локальный HTTP только при явной привязке frontend к loopback. */
+function isDirectLocalHttp(req) {
+  const loopback = new Set(['127.0.0.1', '::1', '::ffff:127.0.0.1']);
+  const host = process.env.HOST?.trim();
+  return (host === 'localhost' || loopback.has(host))
+    && !req.socket.encrypted
+    && loopback.has(req.socket.localAddress)
+    && loopback.has(req.socket.remoteAddress)
+    && /^(?:localhost|127\.0\.0\.1|\[::1\])(?::[0-9]{1,5})?$/i.test(req.headers.host ?? '')
+    && !Object.keys(req.headers).some(key =>
+      key === 'forwarded' || key === 'x-real-ip' || key === 'via' || key.startsWith('x-forwarded-'));
+}
+
 /** Исключает служебные заголовки транспорта, сохраняя cookies и исходный адрес клиента. */
 function requestHeaders(req, websocket) {
   const headers = { ...req.headers };
@@ -8,6 +22,7 @@ function requestHeaders(req, websocket) {
     for (const key of String(headers.connection || '').split(',')) delete headers[key.trim().toLowerCase()];
     for (const key of ['connection', 'upgrade', 'proxy-authorization', 'proxy-connection', 'keep-alive', 'te', 'trailer', 'transfer-encoding']) delete headers[key];
   }
+  if (isDirectLocalHttp(req)) return headers;
   headers['x-forwarded-host'] = req.headers.host;
   headers['x-forwarded-proto'] = req.headers['x-forwarded-proto'] === 'https' || req.socket.encrypted ? 'https' : 'http';
   headers['x-forwarded-for'] = req.socket.remoteAddress;
