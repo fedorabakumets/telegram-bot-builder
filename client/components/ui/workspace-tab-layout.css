@@ -33,11 +33,12 @@
 }
 @media (min-width: 640px) { .workspace-tab-frame { padding: 12px 24px 24px; } }
 
-/** Шапка без вертикальных отступов растёт при переносе содержимого. */
+/** Шапка сохраняет небольшой отступ слева и растёт при переносе содержимого. */
 .workspace-tab-frame.workspace-tab-bar {
   container-type: inline-size;
   min-height: 48px;
   padding-block: 0;
+  padding-inline-start: 8px;
   align-content: center;
 }
 

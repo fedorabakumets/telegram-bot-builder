@@ -49,6 +49,8 @@ export function ProjectSelector({
 }: ProjectSelectorProps): React.JSX.Element {
   const selectedProject = projects.find((p) => p.id === selectedProjectId);
   const counts = useProjectBotCounts(projects.length > 0);
+  /** Скрывает нулевой счётчик у выбранного проекта. */
+  const selectedCount = counts.get(selectedProjectId);
   /** Подпись количества одинакова в выбранном значении и списке проектов. */
   const botCountLabel = (id: number) => {
     const count = counts.get(id);
@@ -68,7 +70,7 @@ export function ProjectSelector({
             <span className="flex min-w-0 flex-1 items-center gap-2">
               <span className="min-w-0 truncate">{selectedProject?.name ?? selectedProjectName}</span>
             </span>
-            {showBotCount && <span className="shrink-0 tabular-nums" title={botCountLabel(selectedProjectId)}>{counts.get(selectedProjectId)?.toLocaleString('ru-RU') ?? '—'}</span>}
+            {showBotCount && selectedCount !== 0 && <span className="shrink-0 tabular-nums" title={botCountLabel(selectedProjectId)}>{selectedCount?.toLocaleString('ru-RU') ?? '—'}</span>}
           </span></SelectValue>
         </SelectTrigger>
         <SelectContent className="users-portal project-selector-menu" align="start" collisionPadding={12}>
@@ -81,7 +83,7 @@ export function ProjectSelector({
             >
               <span className="flex w-full min-w-0 items-center gap-3">
                 <ProjectOptionLabel name={project.name} id={project.id} className="project-selector-option min-w-0 flex-1" />
-                <span className="shrink-0 tabular-nums">{botCountLabel(project.id)}</span>
+                {counts.get(project.id) !== 0 && <span className="shrink-0 tabular-nums">{botCountLabel(project.id)}</span>}
               </span>
             </SelectItem>
           ))}

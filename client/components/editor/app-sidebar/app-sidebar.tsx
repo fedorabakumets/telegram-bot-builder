@@ -35,7 +35,6 @@ export function AppSidebar({
         /** Нейтральный фон совпадает с рабочей областью без синего оттенка. */
         'bg-background',
         'border-r border-border/50',
-        'transition-all duration-300',
         isCollapsed ? 'w-14' : 'w-fit'
       )}
     >
@@ -53,6 +52,9 @@ export function AppSidebar({
         {/* Кнопка сворачивания — всегда видна */}
         {onToggleCollapsed && (
           <button
+            type="button"
+            aria-label={isCollapsed ? 'Развернуть сайдбар' : 'Свернуть сайдбар'}
+            aria-expanded={!isCollapsed}
             onClick={onToggleCollapsed}
             className={cn(
               'flex-shrink-0 h-6 w-6 rounded flex items-center justify-center',
@@ -70,23 +72,24 @@ export function AppSidebar({
       {/* Основной контент */}
       <div
         className={cn(
-          'flex flex-1 flex-col gap-1 overflow-y-auto p-2',
+          'flex min-h-0 flex-1 flex-col overflow-y-auto p-2',
           isCollapsed && '[scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
         )}
       >
-        <SidebarNav
-          currentTab={currentTab}
-          onTabChange={onTabChange}
-          isCollapsed={isCollapsed}
-        />
+        {/* Подписи групп видны, когда в панели есть место для текста. */}
+        {!isCollapsed && <p className="mb-1 px-2 text-xs font-medium text-muted-foreground">Проект</p>}
+        <SidebarNav currentTab={currentTab} onTabChange={onTabChange} isCollapsed={isCollapsed} />
         <SidebarSeparator />
-        <SidebarAgentLink active={currentTab === 'agent'} isCollapsed={isCollapsed} onOpen={() => onTabChange('agent')} />
-        <SidebarActions
-          onLoadTemplate={onLoadTemplate}
-          onSaveAsTemplate={onSaveAsTemplate}
-          isCollapsed={isCollapsed}
-        />
-        <SidebarAdminLink isCollapsed={isCollapsed} />
+        <div role="group" aria-label="Инструменты" className="flex flex-col gap-1">
+          {!isCollapsed && <p className="px-2 text-xs font-medium text-muted-foreground">Инструменты</p>}
+          <SidebarAgentLink active={currentTab === 'agent'} isCollapsed={isCollapsed} onOpen={() => onTabChange('agent')} />
+          <SidebarActions
+            onLoadTemplate={onLoadTemplate}
+            onSaveAsTemplate={onSaveAsTemplate}
+            isCollapsed={isCollapsed}
+          />
+          <SidebarAdminLink isCollapsed={isCollapsed} />
+        </div>
       </div>
 
       <div className="px-2">

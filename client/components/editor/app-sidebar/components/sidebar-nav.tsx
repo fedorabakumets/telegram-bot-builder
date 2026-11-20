@@ -52,13 +52,16 @@ export const SIDEBAR_NAV_ITEMS: readonly NavItem[] = [
  */
 export function SidebarNav({ currentTab, onTabChange, isCollapsed }: SidebarNavProps) {
   return (
-    <nav className="flex flex-col gap-1">
+    <nav aria-label="Разделы проекта" className="flex flex-col gap-1">
       {SIDEBAR_NAV_ITEMS.map(({ tab, label, icon: Icon }) => {
         const isActive = currentTab === tab;
         return (
           <Button
             key={tab}
             variant="ghost"
+            aria-label={label}
+            aria-current={isActive ? 'page' : undefined}
+            title={isCollapsed ? label : undefined}
             onClick={() => onTabChange(tab)}
             className={cn(
               'w-full justify-start gap-2 h-9 px-2',
