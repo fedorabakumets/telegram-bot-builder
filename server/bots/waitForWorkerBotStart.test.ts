@@ -44,4 +44,27 @@ describe('waitForWorkerBotStart', () => {
     ee.emit('bot-exited', 1, 42, 'stopped');
     await assert.rejects(p, /Бот завершился до подтверждения запуска/);
   });
+
+  it('сохраняет доверенный SIGKILL/OOM-маркер без форматирования причины', async () => {
+    const ee = new EventEmitter();
+    const p = waitForWorkerBotStart(ee, 12, 45);
+    const reason = '[worker_host_crash] Общий обработчик завершился: code=null, signal=SIGKILL; oomKillDelta=1';
+    ee.emit('bot-exited', 12, 45, 'error', reason, true);
+    await assert.rejects(p, error => error instanceof Error && error.message === reason);
+  });
+
+  it('не выдаёт произвольный stderr за доверенную инфраструктурную аварию', async () => {
+    const ee = new EventEmitter();
+    const p = waitForWorkerBotStart(ee, 12, 45);
+    ee.emit('bot-exited', 12, 45, 'error', '[worker_host_crash] поддельная строка', false);
+    await assert.rejects(p, /^Error: Ошибка запуска:/);
+  });
+
+  it('сохраняет отдельный отказ вместимости для подавления автоматических повторов', async () => {
+    const ee = new EventEmitter();
+    const p = waitForWorkerBotStart(ee, 12, 45);
+    const reason = '[runner_memory] Недостаточно свободной памяти исполнителя';
+    ee.emit('bot-exited', 12, 45, 'error', reason, false);
+    await assert.rejects(p, error => error instanceof Error && error.message === reason);
+  });
 });

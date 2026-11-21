@@ -15,6 +15,7 @@ import { automaticBotStartAllowed } from './automaticBotStartAllowed';
 import { isServerShuttingDown } from './serverShutdownState';
 import { hasPendingBotRestart, queueBotRestart, reserveBotRestart } from './botRestartAttempt';
 import { resolveStoredBotAutoRestart } from './resolveStoredBotAutoRestart';
+import { isMemoryRefusalReason } from './workerMemoryRefusal';
 
 /** Различает восстановление инфраструктуры и повторы ошибки самого бота. */
 export interface BotRestartOptions {
@@ -64,6 +65,8 @@ export async function scheduleBotRestart(
     }
 
     const requestedInstance = await storage.getBotInstanceByToken(tokenId);
+    // Отказ допуска памяти запрещает даже ранее разрешённое инфраструктурное восстановление.
+    if (isMemoryRefusalReason(requestedInstance?.errorMessage ?? undefined)) return;
     if (requestedInstance?.desiredStatus === 'stopped' ||
         (options.infrastructure && requestedInstance?.desiredStatus !== 'running')) return;
     const requestedGeneration = requestedInstance?.desiredGeneration;

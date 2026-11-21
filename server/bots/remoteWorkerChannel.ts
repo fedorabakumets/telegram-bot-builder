@@ -8,6 +8,7 @@ import { EventEmitter } from "node:events";
 import type { RunnerEvent } from "../redis/workerStreams";
 import type { RemoteRunnerHub, RunnerEventSink } from "./remoteRunnerHub";
 import type { WorkerChannel } from "./workerChannel";
+import { decodeWorkerExitCode } from "../redis/workerExitCode";
 
 /** Сколько ждать подтверждения kill от исполнителя, прежде чем считать воркер завершённым (мс) */
 const KILL_CONFIRM_MS = 5_000;
@@ -77,7 +78,8 @@ export class RemoteWorkerChannel extends EventEmitter implements WorkerChannel, 
     if (this.exited) return;
     if (event.k === "line" && event.l !== undefined) this.emit("line", event.l);
     else if (event.k === "stderr" && event.l) this.emit("stderr", event.l);
-    else if (event.k === "exit") this.finish(event.c !== undefined ? Number(event.c) : null, event.s ?? null);
+    // Старое «null» и повреждённые поля не превращаются в NaN или штатный код 0.
+    else if (event.k === "exit") this.finish(decodeWorkerExitCode(event.c), event.s ?? null);
     else if (event.k === "error") {
       this.exited = true;
       this.hub.unregister(this.instance);

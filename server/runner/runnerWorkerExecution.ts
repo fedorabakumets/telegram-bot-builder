@@ -10,6 +10,7 @@ import { validateProcessBuild } from "./polling/validateBuild";
 import { RunnerLegacyRoutes } from "./runnerLegacyRoutes";
 import { SharedPollingHost } from "./polling/sharedHost";
 import { RunnerMemoryTotals } from "./runnerMemoryTotals";
+import { encodeWorkerExitCode } from "../redis/workerExitCode";
 /** Разделяет маршруты выполнения без выдачи виртуальной группы за Python-процесс. */
 export class RunnerWorkerExecution {
   /** Старый общий Python запускается только при необходимости. */
@@ -40,7 +41,8 @@ export class RunnerWorkerExecution {
       this.emit({ ...this.base, k: "line", l: JSON.stringify(event) });
     }, memoryKb => this.emit({ ...this.base, k: "line", l: JSON.stringify({ type: "system", content: `memory_kb:${memoryKb}` }) }));
     if (this.unified) this.unified.onPermanentCrash = result => {
-      void this.finish({ ...this.base, k: "exit", c: String(result.code), s: result.signal ?? undefined });
+      // Отсутствующий код при сигнале не сериализуется строкой «null».
+      void this.finish({ ...this.base, k: "exit", c: encodeWorkerExitCode(result.code), s: result.signal ?? undefined });
     };
     if (config.processPolling !== "node") this.ensureLegacy();
     else queueMicrotask(() => { if (!this.closed) this.system("worker_ready"); });

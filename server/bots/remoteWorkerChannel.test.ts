@@ -47,6 +47,18 @@ describe("encodeFields / decodeFields", () => {
 });
 
 describe("RemoteWorkerChannel", () => {
+  /** Проверяет сигнал без кода, старый null и повреждённое поле исполнителя. */
+  it("сохраняет SIGKILL и неизвестный код без NaN", () => {
+    for (const code of [undefined, "null", "NaN", "bad", ""]) {
+      const { hub, channel } = makeChannel();
+      const exits: unknown[] = [];
+      channel.on("exit", (c, s) => exits.push([c, s]));
+      hub.sinks.get(channel.instance)!.handle({ k: "exit", w: "7", i: channel.instance, c: code, s: "SIGKILL" });
+      assert.deepStrictEqual(exits, [[null, "SIGKILL"]]);
+    }
+  });
+
+
   it("подключается к существующему воркеру без повторного spawn", () => {
     const hub = new FakeHub();
     const channel = RemoteWorkerChannel.attach(hub as unknown as RemoteRunnerHub, 7, "existing");

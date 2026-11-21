@@ -5,5 +5,5 @@ import path from "node:path";
 /** Проверяются только сценарии восстановления намерений ботов. */
 export default defineConfig({
   resolve: { alias: { "@shared": path.resolve("shared") } },
-  test: { environment: "node", include: ["server/bots/runtime-reconcile.test.ts"] },
+  test: { environment: "node", include: ["server/bots/runtime-reconcile.test.ts", "server/bots/recoverMemoryWaiters.test.ts", "server/bots/runtime-reconcile-concurrency.test.ts"] },
 });

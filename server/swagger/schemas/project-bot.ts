@@ -62,7 +62,7 @@ export const ProjectBotStopOkSchema = z
   })
   .openapi("ProjectBotStopOk");
 
-/** Успех restart-all */
+/** Окончательный результат restart-all внутри снимка фонового задания. */
 export const ProjectBotRestartAllOkSchema = z
   .object({
     message: z.string().optional(),

@@ -7,19 +7,15 @@ import { storage } from '../storages/storage';
 import { workerManager } from './botWorkerManager';
 import { isWorkerPoolEnabled } from './isWorkerPoolEnabled';
 import { findActiveProcessForToken } from '../utils/findActiveProcessForToken';
-import { refuseInactiveBotStart } from './refuse-inactive-bot-start';
-import { isExpectedStop } from './expectedStops';
 import { isServerShuttingDown } from './serverShutdownState';
-import { startBotWithRetries } from './restoreRetry';
-import { BOT_LOCK_BUSY_ERROR } from './waitForBotRedisLock';
-import { BOT_START_CANCELLED_ERROR } from './botStartState';
 import {
   selectSweepCandidates,
   SERVER_RESTART_MARKER,
   type SweepInstanceInput,
 } from './restoreSweepSelect';
 import { RESTORE_SWEEP_DELAY_MS } from './restoreSweepConstants';
-import { automaticBotStartAllowed } from './automaticBotStartAllowed';
+import { runRestoreProjects, mapRestoreCandidates } from './restoreGrouping';
+import { restoreSweepCandidate } from './restoreSweepCandidate';
 
 export {
   selectSweepCandidates,
@@ -103,69 +99,13 @@ export async function runRestoreSweep(
     }
 
     console.log(`[RestoreSweep] Кандидатов: ${candidates.length}`);
-    let raised = 0;
-
-    for (const inst of candidates) {
-      if (isServerShuttingDown()) break;
-      if (inst.tokenId == null) continue;
-      if (isExpectedStop(inst.tokenId)) {
-        console.log(`[RestoreSweep] Пропуск token=${inst.tokenId}: ожидаемый стоп`);
-        continue;
-      }
-
-      const tokenRecord = await storage.getBotToken(inst.tokenId);
-      const launchToken = tokenRecord?.token;
-      if (!launchToken) {
-        console.error(`[RestoreSweep] Нет токена token=${inst.tokenId}`);
-        continue;
-      }
-
-      const inactiveError = refuseInactiveBotStart(tokenRecord.isActive, tokenRecord.authorizationError);
-      if (inactiveError) {
-        console.log(`[RestoreSweep] Пропуск token=${inst.tokenId}: ${inactiveError}`);
-        continue;
-      }
-      if (!await automaticBotStartAllowed(inst.projectId, inst.tokenId)) continue;
-
-      if (isBotActuallyRunning(inst.projectId, inst.tokenId)) {
-        console.log(`[RestoreSweep] token=${inst.tokenId} уже жив — пропуск`);
-        continue;
-      }
-
-      const reason = inst.errorMessage === SERVER_RESTART_MARKER
-        ? 'маркер __server_restart__'
-        : inst.status === 'running'
-          ? 'числится running, но воркер пуст'
-          : 'неудача основного restore';
-
-      console.log(
-        `[RestoreSweep] token=${inst.tokenId} ${reason} — поднимаю`,
-      );
-
-      const result = await startBotWithRetries(
-        inst.projectId,
-        launchToken,
-        inst.tokenId,
-        { canStart: () => automaticBotStartAllowed(inst.projectId, inst.tokenId!) },
-      );
-
-      if (result.success) {
-        raised += 1;
-        console.log(
-          `[RestoreSweep] token=${inst.tokenId} поднят (попыток: ${result.attempts})`,
-        );
-      } else if (result.error === BOT_LOCK_BUSY_ERROR || result.error === BOT_START_CANCELLED_ERROR) {
-        console.log(`[RestoreSweep] token=${inst.tokenId} занят другим экземпляром; состояние не меняем`);
-      } else {
-        console.error(
-          `[RestoreSweep] token=${inst.tokenId} не поднялся: ${result.error}`,
-        );
-        await storage.updateBotInstance(inst.id, {
-          status: 'error',
-          errorMessage: result.error ?? 'Ошибка контрольного восстановления',
-        });
-      }
-    }
+    // В группе не более пяти попыток; общий startBot ограничивает все проекты вместе.
+    const counts = await runRestoreProjects(candidates, async group => {
+      const results = await mapRestoreCandidates(group, async instance =>
+        isServerShuttingDown() ? 0 : restoreSweepCandidate(instance, isBotActuallyRunning));
+      return results.reduce((sum, count) => sum + count, 0);
+    });
+    const raised = counts.reduce((sum, count) => sum + count, 0);
 
     console.log(`[RestoreSweep] Готово: поднято ${raised} из ${candidates.length}`);
     return raised;

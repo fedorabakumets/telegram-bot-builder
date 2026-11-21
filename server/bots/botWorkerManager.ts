@@ -43,6 +43,8 @@ import { isFrozenBotError } from './frozenBotStatus';
 import { handleRuntimeTokenFrozen } from './handle-runtime-token-frozen';
 import { getActiveLaunchId } from '../terminal/activeLaunchIds';
 import { isBotDiagnosticError, parseWorkerHostCrash } from './workerBotDiagnostics';
+import { workerProcessExit } from './workerProcessExit';
+import { isWorkerMemoryRefusal, isMemoryRefusalReason, MEMORY_REFUSAL_REASON } from './workerMemoryRefusal';
 
 /** Задержка перед killWorker когда activeBots пуст (мс) */
 const WORKER_DRAIN_MS = 2_000;
@@ -143,6 +145,8 @@ interface ProjectWorker {
   projects: Set<number> | null;
   /** Память, которую сообщил сам воркер (МБ); для контейнера PID — это docker CLI */
   memoryMb?: number;
+  /** Проверенная причина аварии общего процесса, включая ещё запускаемые боты. */
+  hostCrashReason?: string;
 }
 
 /**
@@ -467,12 +471,16 @@ class BotWorkerManager extends EventEmitter {
 
         const intentional = this.intentionalKills.has(projectId);
         this.intentionalKills.delete(projectId);
-        // Неожиданная смерть процесса (OOM/cgroup/kill -9), не кнопка Стоп и не shutdown
-        const unexpected = !intentional;
 
         // Уведомляем о завершении каждого бота
         for (const tokenId of worker.activeBots) {
-          this.emit("bot-exited", this.projectOf(tokenId, projectId), tokenId, code, undefined, unexpected);
+          // Финальный exit канала не должен затирать уже полученную SIGKILL/OOM-диагностику.
+          const exit = workerProcessExit(code, signal, intentional,
+            this.workerHostCrashes.get(tokenId) ?? worker.hostCrashReason, this.lastBotErrors.get(tokenId));
+          this.workerHostCrashes.delete(tokenId);
+          this.lastBotErrors.delete(tokenId);
+          this.emit("bot-exited", this.projectOf(tokenId, projectId), tokenId,
+            exit.status, exit.runtimeError, exit.unexpected, this.startArgs.get(tokenId)?.token);
         }
         worker.activeBots.clear();
         // Старый процесс может завершиться после создания нового воркера с тем же ключом
@@ -531,12 +539,22 @@ class BotWorkerManager extends EventEmitter {
       const botProjectId = msg.token_id === undefined ? undefined : this.tokenProjects.get(msg.token_id);
       if (reason && msg.token_id !== undefined && botProjectId !== undefined && this.keyOf(botProjectId) === projectId) {
         this.workerHostCrashes.set(msg.token_id, reason);
+        // Общая причина нужна также боту, который погиб до собственного bot_started.
+        const worker = this.workers.get(projectId);
+        if (worker) worker.hostCrashReason = reason;
       }
       return;
     }
     /** Отказ авторизации обрабатывается до выхода, независимо от последующих логов. */
     if (msg.type === 'bot_runtime_error' && msg.token_id !== undefined) {
       const botProjectId = this.tokenProjects.get(msg.token_id);
+      // Допуск вместимости не должен превращаться в причину краша или отзыв токена.
+      if (botProjectId !== undefined && this.keyOf(botProjectId) === projectId
+          && isWorkerMemoryRefusal(msg, getActiveLaunchId(msg.token_id))) {
+        this.lastBotErrors.set(msg.token_id, MEMORY_REFUSAL_REASON);
+        this.workerHostCrashes.delete(msg.token_id);
+        return;
+      }
       if (botProjectId !== undefined) {
         /** Exit ожидает сохранение причины до решения об автоперезапуске. */
         const observedToken = this.startArgs.get(msg.token_id)?.token;
@@ -575,7 +593,8 @@ class BotWorkerManager extends EventEmitter {
       if (msg.type === "stderr") {
         const diagnosticError = isBotDiagnosticError(content, msg.level);
         /** Последующие строки очистки не затирают подтверждённый отказ Telegram. */
-        if (diagnosticError && !isRuntimeTokenUnauthorized(this.lastBotErrors.get(msg.token_id)) && !isFrozenBotError(this.lastBotErrors.get(msg.token_id))) {
+        if (diagnosticError && !isRuntimeTokenUnauthorized(this.lastBotErrors.get(msg.token_id)) && !isFrozenBotError(this.lastBotErrors.get(msg.token_id))
+            && !isMemoryRefusalReason(this.lastBotErrors.get(msg.token_id))) {
           this.lastBotErrors.set(msg.token_id, content);
         }
         const preview = content.replace(/^\[\d{2}:\d{2}:\d{2}\]\s*/, "").split("\n")[0];
@@ -612,6 +631,8 @@ class BotWorkerManager extends EventEmitter {
     }
 
     if (ev.kind === "bot_started" && ev.tokenId !== undefined) {
+      // Новый подтверждённый запуск не должен наследовать причину прошлой аварии.
+      if (worker) worker.hostCrashReason = undefined;
       this.lastBotErrors.delete(ev.tokenId);
       this.workerHostCrashes.delete(ev.tokenId);
       worker?.activeBots.add(ev.tokenId);

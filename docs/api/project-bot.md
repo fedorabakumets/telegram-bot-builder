@@ -46,56 +46,21 @@ curl -s -X POST -b cookies.txt -H 'Content-Type: application/json' \
 
 ### `POST` /api/projects/{id}/bot/restart-all
 
-Перезапустить всех running ботов
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-Останавливает все running-токены проекта, cooldown, затем start со stagger. Офлайн не трогает (для них — start-offline-all).
-
-**Клиент/MCP:** `restartAllBotsMutation`, `db_restart_all_bots`.
-
-```bash
-curl -s -X POST -b cookies.txt 'http://localhost:5000/api/projects/42/bot/restart-all'
-```
-
-**Operation ID:** `post_api_projects_id_bot_restart_all_647e086d9ebad916`
-
-#### Параметры
-
-| Имя | In | Обязательный | Описание | Пример |
-|-----|-----|--------------|----------|--------|
-| `id` | path | да | ID проекта | `"42"` |
-| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Сводка перезапуска |
-| 401 | Нет session / PAT |
-| 403 | Нет доступа к проекту |
-| 404 | Нет токенов |
-
-#### Пример ответа `200`
+Принимает массовый перезапуск running-ботов в фоне. Ответ **202** подтверждает только принятие задания, не успешный запуск ботов. Cookie/PAT и доступ к проекту обязательны. Повторный POST во время работы возвращает тот же `jobId`.
 
 ```json
-{
-  "restarted": 2,
-  "results": [
-    {
-      "tokenId": 7,
-      "success": true,
-      "processId": "12345"
-    },
-    {
-      "tokenId": 8,
-      "success": true,
-      "processId": "12346"
-    }
-  ]
-}
+{"jobId":"6c93054e-074a-4d15-9d72-c2e09f8eb7dc","projectId":42,"status":"queued","progress":{"phase":"queued","total":0,"completed":0,"stopped":0,"stopFailed":0,"attempted":0,"restarted":0,"failed":0,"results":[]},"createdAt":"2026-11-21T09:00:00.000Z","updatedAt":"2026-11-21T09:00:00.000Z"}
 ```
+
+Ответы: 202 — принято; 400 — неверный ID; 401/403 — нет доступа; 409 — внутренний перезапуск уже идёт; 503 — очередь заполнена.
+
+### `GET` /api/projects/{id}/bot/restart-all/jobs/{jobId}
+
+Возвращает 200 с тем же снимком: `queued`, `running`, `completed` либо `failed`. Поле `progress.phase` меняется через `stopping`, `cooldown`, `starting`, `completed`. Завершённая работа содержит `result` (`ok`, `restarted`, `failed`, `results`, необязательный `message`); ошибка всего задания — безопасное поле `error`. `completed` не исключает ошибок отдельных токенов: проверяйте `result.failed`.
+
+Доступ к проекту проверяется заново. Задания хранятся в памяти панели до часа, максимум 200. Ответ 404 `RESTART_JOB_NOT_FOUND` после перезапуска панели или истечения срока означает неизвестный исход: перечитайте статусы ботов, не запускайте повтор автоматически. Офлайн-боты не включаются в restart-all. Опрос не держит HTTP-запрос до окончания запуска.
+
+**Клиент/MCP:** `restartAllBotsMutation`, `db_restart_all_bots`; после принятия требуется опрос задания.
 
 ### `POST` /api/projects/{id}/bot/start
 

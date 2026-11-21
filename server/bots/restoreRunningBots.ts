@@ -4,10 +4,6 @@
  */
 
 import { storage } from "../storages/storage";
-import {
-  RESTORE_START_STAGGER_MS,
-  waitRestoreStagger,
-} from "./restoreStartStagger";
 import { refuseInactiveBotStart } from "./refuse-inactive-bot-start";
 import { startBotWithRetries } from "./restoreRetry";
 import { BOT_LOCK_BUSY_ERROR } from './waitForBotRedisLock';
@@ -17,7 +13,7 @@ import {
   markRestoreStarted,
   markTokenRestored,
 } from "./restoreState";
-import { groupRestoreInstancesByProject } from "./restoreGrouping";
+import { runRestoreProjects, mapRestoreCandidates } from "./restoreGrouping";
 import { workerManager } from './botWorkerManager';
 import { automaticBotStartAllowed } from './automaticBotStartAllowed';
 
@@ -48,7 +44,7 @@ function isAbruptShutdown(errorMessage: string | null | undefined): boolean {
 }
 
 /**
- * Восстанавливает одну группу ботов одного проекта последовательно (один WorkerPool).
+ * Восстанавливает группу проекта с максимум пятью незавершёнными попытками.
  * @param group - Инстансы одного projectId
  * @returns Счётчики успеха и неудач
  */
@@ -59,8 +55,7 @@ async function restoreProjectGroup(
   const failedTokenIds: number[] = [];
   const groupTotal = group.length;
 
-  for (let i = 0; i < group.length; i++) {
-    const instance = group[i];
+  await mapRestoreCandidates(group, async (instance, i) => {
     const tokenId = instance.tokenId;
 
     try {
@@ -84,7 +79,7 @@ async function restoreProjectGroup(
         });
         if (tokenId != null) failedTokenIds.push(tokenId);
         markTokenRestored(tokenId ?? -1);
-        continue;
+        return;
       }
 
       const inactiveError = refuseInactiveBotStart(tokenRecord.isActive, tokenRecord.authorizationError);
@@ -98,9 +93,9 @@ async function restoreProjectGroup(
           errorMessage: inactiveError,
         });
         markTokenRestored(tokenId);
-        continue;
+        return;
       }
-      if (!await automaticBotStartAllowed(instance.projectId, tokenId)) continue;
+      if (!await automaticBotStartAllowed(instance.projectId, tokenId)) return;
 
       const result = await startBotWithRetries(
         instance.projectId,
@@ -144,17 +139,18 @@ async function restoreProjectGroup(
       }
     }
 
-    if (i < group.length - 1) {
-      await waitRestoreStagger(RESTORE_START_STAGGER_MS);
-    }
-  }
+    // Общая очередь startBot допускает пять запусков с интервалом 250 мс.
+  });
 
-  return { restored, failedTokenIds };
+  // Ошибки возвращаются в исходном порядке независимо от времени ответа Telegram.
+  const failed = new Set(failedTokenIds);
+  return { restored, failedTokenIds: group.flatMap(instance =>
+    instance.tokenId != null && failed.has(instance.tokenId) ? [instance.tokenId] : []) };
 }
 
 /**
  * Восстанавливает все боты, которые были запущены до перезапуска сервера.
- * Проекты поднимаются параллельно; внутри проекта — последовательно.
+ * Проекты поднимаются параллельно; в проекте допускается до пяти попыток.
  *
  * @returns Итог: сколько поднято и список неудачных tokenId
  */
@@ -187,8 +183,8 @@ export async function restoreRunningBots(): Promise<RestoreRunningBotsResult> {
 
     console.log(`🤖 Найдено ${runningInstances.length} бот(ов) для восстановления.`);
 
-    const groups = groupRestoreInstancesByProject(runningInstances);
-    const groupResults = await Promise.all(groups.map((g) => restoreProjectGroup(g)));
+    // Проекты независимы; фактический параллелизм регулирует центральный startBot.
+    const groupResults = await runRestoreProjects(runningInstances, restoreProjectGroup);
 
     let restored = 0;
     const failedTokenIds: number[] = [];

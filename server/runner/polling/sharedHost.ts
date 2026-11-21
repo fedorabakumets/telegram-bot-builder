@@ -7,16 +7,14 @@ import type { PollingBot } from "./dispatcherTypes";
 import type { PythonPollingChild } from "./pythonChild";
 import { SharedPythonTransport, type SharedTransportOptions } from "./sharedTransport";
 import { reportSharedHostCrash, sharedHostMemory, type SharedHostExit } from "./sharedHostCrash";
+import { PermanentMemory } from "./permanentMemory";
+import { runnerMemoryAdmission, startWithMemory, type MemoryAdmission } from "./memoryAdmission";
 /** Отдельная активация, которую нельзя перепутать с повторным запуском того же бота. */
 interface Activation {
-  /** Идентификатор бота. */
-  tokenId: number;
-  /** Подтверждение готовности сценария. */
-  ready(): void;
-  /** Отказ запуска сценария. */
-  fail(error: Error): void;
-  /** Завершение сценария и очистки состояния. */
-  finish(result: { code: number | null; signal: string | null }): void;
+  /** Идентификатор бота. */ tokenId: number;
+  /** Подтверждение готовности сценария. */ ready(): void;
+  /** Отказ запуска сценария. */ fail(error: Error): void;
+  /** Завершение сценария и очистки состояния. */ finish(result: { code: number | null; signal: string | null }): void;
 }
 /** Общий интерпретатор существует только пока есть запускающиеся или активные сценарии. */
 export class SharedPollingHost {
@@ -36,15 +34,16 @@ export class SharedPollingHost {
   private paused = false;
   /** Постоянные сценарии удерживают общий процесс после сна временных. */
   private readonly permanent = new PermanentActivations();
-  /** Наблюдатель замеров временных активаций при внешнем владельце хоста. */
-  processObserver?: (event: Record<string, unknown>) => void;
-  /** Сбой процесса с постоянными ботами требует восстановления всей группы. */
-  onPermanentCrash?: (result: SharedHostExit) => void;
+  /** Резервы ещё не подтвердивших готовность постоянных сценариев. */
+  private readonly startingMemory = new PermanentMemory();
+  /** Наблюдатель замеров временных активаций при внешнем владельце хоста. */ processObserver?: (event: Record<string, unknown>) => void;
+  /** Сбой процесса с постоянными ботами требует восстановления всей группы. */ onPermanentCrash?: (result: SharedHostExit) => void;
   /** Принимает безопасные события и отдельно общую память; launch используется в адресных тестах. */
   constructor(private readonly config: RunnerConfig,
     private readonly onEvent: (event: Record<string, unknown>) => void,
     private readonly onMemory: (memoryKb: number, actualPid?: number) => void = () => {},
-    private readonly launch?: Omit<SharedTransportOptions, "onEvent" | "onLog">) {}
+    private readonly launch?: Omit<SharedTransportOptions, "onEvent" | "onLog">,
+    private readonly admission: Pick<MemoryAdmission, "acquire"> = runnerMemoryAdmission) {}
   /** Создаёт общий процесс только при первом настоящем обновлении. */
   private getTransport(): SharedPythonTransport {
     if (this.closed) throw new Error("Общий обработчик остановлен");
@@ -68,6 +67,7 @@ export class SharedPollingHost {
       const permanentFailed = this.permanent.tokens.size > 0;
       for (const tokenId of this.permanent.tokens) this.onEvent({ type: "system", content: `bot_exited:${tokenId}:error` });
       this.activations.clear(); this.permanent.clear(); this.memoryKb = 0; this.actualPid = undefined; this.onMemory(0);
+      this.startingMemory.clear();
       if (this.transport === transport) this.transport = undefined;
       if (permanentFailed && !this.closed) this.onPermanentCrash?.(result);
     });
@@ -88,9 +88,8 @@ export class SharedPollingHost {
     if (command.cmd === "stop_bot" && !this.permanent.tokens.has(tokenId)) {
       this.onEvent({ type: "system", content: `bot_stopped:${tokenId}` }); return;
     }
-    if (command.cmd === "start_bot") this.permanent.tokens.add(tokenId);
-    try { await this.getTransport().ready; await this.transport!.send(command); }
-    catch (error) { if (command.cmd === "start_bot") this.permanent.tokens.delete(tokenId); this.closeIdle(); throw error; }
+    return this.startingMemory.send(command, this.admission, this.onEvent, this.permanent.tokens,
+      async () => { await this.getTransport().ready; await this.transport!.send(command); }, () => this.closeIdle());
   }
   /** Ожидает освобождение постоянного сценария перед передачей токена Node. */
   stopPermanent(tokenId: number): Promise<void> {
@@ -100,6 +99,7 @@ export class SharedPollingHost {
   private event(event: Record<string, unknown>): void {
     if (event.type === "process") this.processObserver?.(event);
     if (event.type === "system") {
+      this.startingMemory.observe(event);
       if (this.permanent.observe(event)) { this.closeIdle(); return; }
       const memory = typeof event.content === "string" ? /^memory_kb:(\d+)$/.exec(event.content) : null;
       if (memory) { this.memoryKb = Number(memory[1]); this.onMemory(this.memoryKb, this.actualPid); }
@@ -133,10 +133,10 @@ export class SharedPollingHost {
   /** Пробуждает сценарий, не создавая отдельный интерпретатор на каждого бота. */
   async start(bot: PollingBot, signal: AbortSignal): Promise<PythonPollingChild> {
     const owner = this;
-    return startSharedActivation({ get closing() { return owner.closing; },
+    return startWithMemory(this.admission, () => startSharedActivation({ get closing() { return owner.closing; },
       get actualPid() { return owner.actualPid; }, get paused() { return owner.paused; },
       activations: this.activations, getTransport: () => this.getTransport(),
-      closeIdle: () => this.closeIdle(), pauseOutput: paused => this.pauseOutput(paused) }, bot, signal);
+      closeIdle: () => this.closeIdle(), pauseOutput: paused => this.pauseOutput(paused) }, bot, signal));
   }
   /** Возвращает общий RSS отдельно от количества активных сценариев. */
   counters() { return { shared: true, pid: this.transport?.pid, actualPid: this.actualPid,

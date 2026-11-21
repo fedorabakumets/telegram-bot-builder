@@ -287,7 +287,8 @@ app.use((req, res, next) => {
       log(`Привязка к исполнителю отложена: ${error instanceof Error ? error.message : String(error)}`);
     }
     /** Сначала привязывает уже живые воркеры, затем сверяет намерения запуска. */
-    const stopReconcile = scheduleRuntimeReconcile(30_000, () => workerManager.reattachRemoteWorkers());
+    // Очередь ожидания памяти проверяется раз в пять секунд.
+    const stopReconcile = scheduleRuntimeReconcile(5_000, () => workerManager.reattachRemoteWorkers());
     httpServer.once('close', stopReconcile);
   }
   httpServer.listen(Number(port), host, () => {

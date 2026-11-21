@@ -5,6 +5,8 @@
 
 import type { EventEmitter } from 'node:events';
 import { formatBotRuntimeErrorShort } from './formatBotRuntimeError';
+import { isInfrastructureHostCrash } from './workerExitDiagnostic';
+import { isMemoryRefusalReason } from './workerMemoryRefusal';
 
 /** Таймаут ожидания bot_started (мс). Крупные bot.py компилятся >30с */
 export const WORKER_START_CONFIRM_TIMEOUT_MS = 120_000;
@@ -46,11 +48,14 @@ export function waitForWorkerBotStart(
     };
 
     /** Завершает ожидание, если бот уже вышел до подтверждения запуска. */
-    const onExit = (pid: number, tid: number, _status: string | number, runtimeError?: string) => {
+    const onExit = (pid: number, tid: number, _status: string | number, runtimeError?: string, processDeathUnexpected = false) => {
       if (pid !== projectId || tid !== tokenId || settled) return;
       settled = true;
       cleanup();
-      reject(new Error(runtimeError ? formatBotRuntimeErrorShort(runtimeError) : 'Бот завершился до подтверждения запуска'));
+      // Машинный маркер нужен outer startBot для сохранения причины и безопасной сверки.
+      const preserve = isInfrastructureHostCrash(runtimeError, processDeathUnexpected) || isMemoryRefusalReason(runtimeError);
+      reject(new Error(runtimeError ? preserve ? runtimeError : formatBotRuntimeErrorShort(runtimeError)
+        : 'Бот завершился до подтверждения запуска'));
     };
 
     const timer = setTimeout(() => finish(false), timeoutMs);
