@@ -6,7 +6,7 @@
 
 # ── Сборка исполнителя в один JS-файл ────────────────────────────────────────
 # Бандл не зависит от архитектуры, поэтому собирается на платформе сборщика
-FROM --platform=$BUILDPLATFORM node:24-bookworm-slim AS builder
+FROM --platform=$BUILDPLATFORM node:26-bookworm-slim AS builder
 
 WORKDIR /app
 COPY package*.json .npmrc ./
