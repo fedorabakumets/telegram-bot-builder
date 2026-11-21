@@ -187,7 +187,7 @@
     },
     {
       "file": "server/routes/projectTelegramAccounts/project-telegram-accounts-routes.ts",
-      "line": 123,
+      "line": 124,
       "method": "DELETE",
       "expression": "`${path}/:accountId`",
       "resolvedPath": "/api/projects/{projectId}/telegram-accounts/{accountId}"
@@ -201,14 +201,14 @@
     },
     {
       "file": "server/routes/projectTelegramAccounts/register-legacy-migration-cutover.ts",
-      "line": 62,
+      "line": 63,
       "method": "POST",
       "expression": "`${path}/apply`",
       "resolvedPath": "/api/projects/{projectId}/telegram-accounts/migration/apply"
     },
     {
       "file": "server/routes/projectTelegramAccounts/register-legacy-migration-cutover.ts",
-      "line": 107,
+      "line": 109,
       "method": "POST",
       "expression": "`${path}/rollback`",
       "resolvedPath": "/api/projects/{projectId}/telegram-accounts/migration/rollback"
@@ -1277,7 +1277,7 @@
     },
     {
       "file": "server/routes/projectTelegramAccounts/project-telegram-accounts-routes.ts",
-      "line": 123,
+      "line": 124,
       "method": "DELETE",
       "expression": "`${path}/:accountId`",
       "resolvedPath": "/api/projects/{projectId}/telegram-accounts/{accountId}"
@@ -1291,14 +1291,14 @@
     },
     {
       "file": "server/routes/projectTelegramAccounts/register-legacy-migration-cutover.ts",
-      "line": 62,
+      "line": 63,
       "method": "POST",
       "expression": "`${path}/apply`",
       "resolvedPath": "/api/projects/{projectId}/telegram-accounts/migration/apply"
     },
     {
       "file": "server/routes/projectTelegramAccounts/register-legacy-migration-cutover.ts",
-      "line": 107,
+      "line": 109,
       "method": "POST",
       "expression": "`${path}/rollback`",
       "resolvedPath": "/api/projects/{projectId}/telegram-accounts/migration/rollback"
