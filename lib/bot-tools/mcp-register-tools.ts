@@ -5,6 +5,7 @@
  * @module lib/bot-tools/mcp-register-tools
  */
 
+import { getBotRestartJobInDb } from './bot-restart-job-db.ts';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { scenarioNodeSchema, scenarioNodePatchSchema, scenarioOperationsSchema } from '../../shared/scenario-operation-schema.ts';
@@ -1151,7 +1152,7 @@ export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOpt
   server.registerTool(
     'db_restart_all_bots',
     {
-      description: 'Перезапустить ВСЕ запущенные боты проекта. ТРЕБУЕТ confirm: true (затрагивает все боты). Возвращает сводку restarted/failed/results. История и UI обновляются автоматически.',
+      description: 'Перезапустить ВСЕ запущенные боты проекта. ТРЕБУЕТ confirm: true (затрагивает все боты). Возвращает jobId фонового задания. Прогресс и итог читать через db_get_restart_all_job; приём задания не означает завершение.',
       inputSchema: {
         project_id: z.number(),
         confirm: z.boolean().describe('Обязательное подтверждение перезапуска всех ботов проекта'),
@@ -1160,12 +1161,18 @@ export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOpt
     async ({ project_id, confirm }) => textResult(await restartAllBotsInDb(project_id, { confirm })),
   );
 
+  // Чтение задания безопасно и не повторяет перезапуск.
+  server.registerTool('db_get_restart_all_job', {
+    description: 'Прочитать прогресс и итог массового перезапуска по jobId. Ничего не запускает.',
+    inputSchema: { project_id: z.number().int().positive(), job_id: z.string().uuid() },
+  }, async ({ project_id, job_id }) => textResult(await getBotRestartJobInDb(project_id, job_id)));
+
   server.registerTool(
     'db_start_offline_bots',
     {
       description:
         'Запустить всех ОФЛАЙН ботов проекта (уже running и недействительные токены не трогает). ТРЕБУЕТ confirm: true. '
-        + 'Последовательно вызывает startBot; UI обновляется live через WS bot-started и start-offline-progress. '
+        + 'Вызывает startBot через общий предел 5 и интервал 250 мс; UI обновляется live через WS bot-started и start-offline-progress. '
         + 'Эквивалент кнопки «Запустить офлайн» и POST /api/projects/:id/bot/start-offline-all.',
       inputSchema: {
         project_id: z.number().describe('ID проекта'),

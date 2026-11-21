@@ -48,6 +48,25 @@ beforeEach(() => {
 });
 
 describe("сверка исполнителя", () => {
+  /** Стандартный интервал очереди — пять секунд, без повторной привязки во время ожидания. */
+  it("проверяет очередь раз в пять секунд без наложения проходов", async () => {
+    vi.useFakeTimers();
+    let release!: () => void;
+    const reattach = vi.fn(() => new Promise<void>(resolve => { release = resolve; }));
+    const stop = scheduleRuntimeReconcile(undefined, reattach);
+    try {
+      await vi.advanceTimersByTimeAsync(4_999);
+      expect(reattach).not.toHaveBeenCalled();
+      await vi.advanceTimersByTimeAsync(1);
+      expect(reattach).toHaveBeenCalledTimes(1);
+      await vi.advanceTimersByTimeAsync(10_000);
+      expect(reattach).toHaveBeenCalledTimes(1);
+      release(); await vi.advanceTimersByTimeAsync(0);
+      await vi.advanceTimersByTimeAsync(5_000);
+      expect(reattach).toHaveBeenCalledTimes(2);
+      release(); await vi.advanceTimersByTimeAsync(0);
+    } finally { stop(); vi.useRealTimers(); }
+  });
   /** После недоступности исполнителя повторяет привязку и не прерывает таймер. */
   it("повторяет привязку после ошибки", async () => {
     vi.useFakeTimers();
@@ -102,6 +121,19 @@ describe("сверка исполнителя", () => {
     await reconcileBotDesiredState();
     expect(state.restart).toHaveBeenCalledWith(7, 9, "worker_host_crash", { infrastructure: true });
     expect(state.start).not.toHaveBeenCalled();
+  });
+
+  /** Нехватка памяти восстанавливается отдельной очередью с паузой вместо аварийного планировщика. */
+  it("восстанавливает отказ памяти один раз и не повторяет без паузы", async () => {
+    state.instances = [{ id: 1, projectId: 12, tokenId: 45, status: "error", desiredStatus: "running", desiredGeneration: 2,
+      errorMessage: "Ошибка выполнения: [runner_memory] Недостаточно свободной памяти исполнителя" }];
+    await reconcileBotDesiredState();
+    expect(state.start).toHaveBeenCalledTimes(1);
+    expect(state.start).toHaveBeenCalledWith(12, 'token', 45,
+      { clearLogs: false, reuseGeneratedCode: true, waitForExistingLock: true });
+    await reconcileBotDesiredState();
+    expect(state.start).toHaveBeenCalledTimes(1);
+    expect(state.restart).not.toHaveBeenCalled();
   });
 
   /** Старое предупреждение и запреты токена не превращаются в разрешение восстановления. */

@@ -194,7 +194,7 @@
     },
     {
       "file": "server/routes/setupBotManagementRoutes.ts",
-      "line": 100,
+      "line": 102,
       "method": "PUT",
       "expression": "'/api/projects/:projectId/bot/launch-inheritance'",
       "resolvedPath": "/api/projects/{projectId}/bot/launch-inheritance"
@@ -2031,28 +2031,35 @@
     },
     {
       "file": "server/routes/setupBotManagementRoutes.ts",
-      "line": 98,
+      "line": 99,
+      "method": "GET",
+      "expression": "\"/api/projects/:id/bot/restart-all/jobs/:jobId\"",
+      "resolvedPath": "/api/projects/{id}/bot/restart-all/jobs/{jobId}"
+    },
+    {
+      "file": "server/routes/setupBotManagementRoutes.ts",
+      "line": 100,
       "method": "POST",
       "expression": "\"/api/projects/:id/bot/start-offline-all\"",
       "resolvedPath": "/api/projects/{id}/bot/start-offline-all"
     },
     {
       "file": "server/routes/setupBotManagementRoutes.ts",
-      "line": 100,
+      "line": 102,
       "method": "PUT",
       "expression": "'/api/projects/:projectId/bot/launch-inheritance'",
       "resolvedPath": "/api/projects/{projectId}/bot/launch-inheritance"
     },
     {
       "file": "server/routes/setupBotManagementRoutes.ts",
-      "line": 102,
+      "line": 104,
       "method": "GET",
       "expression": "\"/api/projects/:id/bot/statuses\"",
       "resolvedPath": "/api/projects/{id}/bot/statuses"
     },
     {
       "file": "server/routes/setupBotManagementRoutes.ts",
-      "line": 103,
+      "line": 105,
       "method": "DELETE",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId/logs\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/logs"

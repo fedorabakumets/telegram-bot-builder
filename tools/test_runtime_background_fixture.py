@@ -7,10 +7,28 @@ from pathlib import Path
 import sys
 from types import SimpleNamespace as NS
 import unittest
+from unittest.mock import patch
 
 from runtime_background_fixture import seed_background, warm_background, background_snapshot
 
 SOURCES = json.loads(Path(sys.argv.pop()).read_text(encoding='utf-8')) if len(sys.argv) > 1 and sys.argv[-1].endswith('.json') else {}
+
+
+class Transaction:
+    """Отдельный контекст транзакции для проверки обязательного условия asyncpg-курсора."""
+    def __init__(self, connection):
+        """Сохранить подключение без копирования синтетических строк."""
+        self.connection = connection
+
+    async def __aenter__(self):
+        """Отметить вход в транзакцию перед потоковым чтением."""
+        self.connection.transaction_depth += 1
+        return self
+
+    async def __aexit__(self, *args):
+        """Снять отметку и передать ошибку настоящему обработчику шаблона."""
+        self.connection.transaction_depth -= 1
+        return False
 
 
 class Connection:
@@ -19,6 +37,7 @@ class Connection:
         """Создаёт независимое хранилище и журнал изменяющих операций."""
         self.database, self.writes = database, []
         self.tables, self.columns, self.rows, self.media, self.tokens = [], [], [], [], []
+        self.transaction_depth, self.cursor_calls = 0, []
 
     async def fetchval(self, query, *args):
         """Возвращает имя тестовой базы для проверки seed-ограничения."""
@@ -61,6 +80,21 @@ class Connection:
         """Возвращает независимый асинхронный контекст подключения."""
         return self
 
+    def transaction(self):
+        """Вернуть самостоятельную транзакцию, необходимую для серверного курсора."""
+        return Transaction(self)
+
+    async def cursor(self, query, *args, prefetch):
+        """Читать исходные строки по одной без подмены потокового пути fetch-списком."""
+        if self.transaction_depth != 1 or prefetch != 128:
+            raise AssertionError('Курсор должен читать порциями по 128 внутри транзакции')
+        if 'SELECT data FROM bot_table_rows' not in query:
+            raise AssertionError('Неожиданный запрос потокового чтения')
+        self.cursor_calls.append((args[0], prefetch))
+        for table, data, _ in self.rows:
+            if table == args[0]:
+                yield {'data': data}
+
     async def __aenter__(self):
         """Передаёт тестовое подключение шаблону."""
         return self
@@ -80,7 +114,7 @@ def namespace(source, connection):
     values = dict(asyncio=asyncio, logging=logging, db_pool=connection, PROJECT_ID=987654321,
                   TOKEN_ID=18004, BOT_TOKEN='fixture', user_data={}, _user_last_seen={},
                   _bot_tables_cache=None, _bot_tables_cache_ts=0, _bot_tables_cache_lock=asyncio.Lock(),
-                  _content_cache={}, _content_table_id=None, _media_file_id_cache={},
+                  _content_cache={}, _content_table_id=None, _content_reload_lock=asyncio.Lock(), _media_file_id_cache={},
                   _sched_running_scheduled=False, _sched_count_scheduled=0,
                   types=NS(User=lambda **args: NS(**args), CallbackQuery=object), FSMContext=object,
                   replace_variables_in_text=lambda text, variables: text)
@@ -111,10 +145,15 @@ class BackgroundFixtureTest(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(metadata['synthetic'])
         self.assertEqual(len(connection.rows), 118)
         values = namespace(SOURCES['11'], connection)
-        await values['load_content'](connection)
+        # Ошибка протокола fake не должна скрываться обработчиком предупреждений шаблона.
+        with patch.object(logging, 'warning') as warning:
+            await values['load_content'](connection)
+        warning.assert_not_called()
         await warm_background(values, '11')
         snapshot = background_snapshot(values)
         self.assertEqual((snapshot['contentKeys'], snapshot['tableKeys'], snapshot['tableRows'], snapshot['userCount']), (84, 3, 118, 2))
+        self.assertEqual(connection.cursor_calls, [(connection.tables[0][0], 128)])
+        self.assertEqual(connection.transaction_depth, 0)
         variables = await values['init_all_user_vars'](91001)
         self.assertEqual(variables['fixture_nested.items[-1].value'], '7')
         self.assertEqual(variables['table.fixture_items[31].column_3'], '31')
@@ -124,6 +163,7 @@ class BackgroundFixtureTest(unittest.IsolatedAsyncioTestCase):
         await values['reload_content'](connection)
         self.assertEqual(previous, values['_content_cache'])
         self.assertIsNot(previous, values['_content_cache'])
+        self.assertEqual(len(connection.cursor_calls), 2)
         media = namespace(SOURCES['5'], connection)
         media['TOKEN_ID'] = 18003
         await media['_load_media_file_id_cache']()

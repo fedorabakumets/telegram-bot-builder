@@ -12,6 +12,7 @@ import {
   type StartOfflineProgressCache,
 } from '../start-offline-progress-query';
 import { StartOfflineConfirmDialog } from './StartOfflineConfirmDialog';
+import { restartAllProgressKey, restartAllProgressLabel, savedRestartJob, type RestartAllJob } from '../restart-all-job';
 
 /** Свойства bulk-действий проекта */
 export interface ProjectBotBulkActionsProps {
@@ -52,6 +53,12 @@ export function ProjectBotBulkActions({
   adaptiveLabels = false,
 }: ProjectBotBulkActionsProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
+  // После сетевой ошибки следующая попытка проверяет прежнее задание, не запускает ботов снова.
+  const needsStatusCheck = !isRestartingAll && savedRestartJob()?.projectId === projectId;
+  // Счётчик задания приходит из коротких запросов статуса, а не из ответа долгого POST.
+  const { data: restartProgress } = useQuery<RestartAllJob | undefined>({
+    queryKey: restartAllProgressKey(projectId), queryFn: () => undefined, enabled: false, staleTime: Infinity,
+  });
   const { data: progress } = useQuery<StartOfflineProgressCache | undefined>({
     queryKey: startOfflineProgressQueryKey(projectId),
     queryFn: () => undefined,
@@ -77,14 +84,16 @@ export function ProjectBotBulkActions({
           className={adaptiveLabels ? 'h-8 min-w-8 gap-1.5 px-2 text-xs text-muted-foreground' : 'h-7 px-1.5 text-xs text-muted-foreground sm:px-2'}
           onClick={onRestartAll}
           disabled={isRestartingAll || isStartingOffline}
-          aria-label="Перезапустить всех запущенных ботов проекта"
+          aria-label={needsStatusCheck ? 'Проверить статус предыдущего перезапуска' : 'Перезапустить всех запущенных ботов проекта'}
         >
           {/* Стрелка по часовой отличает перезапуск от обновления данных. */}
           <RotateCw className={`h-3 w-3 ${adaptiveLabels ? '' : 'sm:mr-1'} ${isRestartingAll ? 'motion-safe:animate-spin' : ''}`} />
           {/* Подпись можно скрыть в компактной шапке; у кнопки есть доступное имя. */}
           {/* Подписи запуска и перезапуска оцениваются отдельно. */}
           <span data-workspace-label={adaptiveLabels ? 'bulk-restart' : undefined} className={adaptiveLabels ? undefined : 'hidden sm:inline'}>
-            {isRestartingAll ? 'Перезапуск...' : 'Перезапустить'}
+            {isRestartingAll
+              ? restartAllProgressLabel(restartProgress)
+              : needsStatusCheck ? 'Проверить статус' : 'Перезапустить'}
           </span>
         </Button>
         <Button

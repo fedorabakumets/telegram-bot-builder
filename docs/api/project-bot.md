@@ -1,6 +1,6 @@
 # project-bot
 
-Эндпоинтов: **8**
+Эндпоинтов: **9**
 
 ### `POST` /api/projects/{id}/bot/restart
 
@@ -46,17 +46,11 @@ curl -s -X POST -b cookies.txt -H 'Content-Type: application/json' \
 
 ### `POST` /api/projects/{id}/bot/restart-all
 
-Перезапустить всех running ботов
+Принять массовый перезапуск в фоне
 
 **Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
-Останавливает все running-токены проекта, cooldown, затем start со stagger. Офлайн не трогает (для них — start-offline-all).
-
-**Клиент/MCP:** `restartAllBotsMutation`, `db_restart_all_bots`.
-
-```bash
-curl -s -X POST -b cookies.txt 'http://localhost:5000/api/projects/42/bot/restart-all'
-```
+Сразу возвращает 202 и jobId; это принятие, а не подтверждение перезапуска. Опросите GET /api/projects/{id}/bot/restart-all/jobs/{jobId} до completed или failed. Повтор во время работы возвращает тот же jobId и не запускает вторую работу. Перезапускаются только running-боты. Результат может содержать частичные ошибки. Задания хранятся в памяти панели до часа: после перезапуска панели GET даёт 404, при котором нужно перечитать статусы ботов, а не считать операцию успешной.
 
 **Operation ID:** `post_api_projects_id_bot_restart_all_647e086d9ebad916`
 
@@ -72,30 +66,66 @@ curl -s -X POST -b cookies.txt 'http://localhost:5000/api/projects/42/bot/restar
 
 | Код | Описание |
 |-----|----------|
-| 200 | Сводка перезапуска |
-| 401 | Нет session / PAT |
-| 403 | Нет доступа к проекту |
-| 404 | Нет токенов |
+| 202 | Задание принято либо уже выполняется |
+| 400 | Запрос отклонён |
+| 401 | Запрос отклонён |
+| 403 | Запрос отклонён |
+| 409 | Другой перезапуск проекта уже выполняется |
+| 503 | Запрос отклонён |
 
-#### Пример ответа `200`
+#### Пример ответа `202`
 
 ```json
 {
-  "restarted": 2,
-  "results": [
-    {
-      "tokenId": 7,
-      "success": true,
-      "processId": "12345"
-    },
-    {
-      "tokenId": 8,
-      "success": true,
-      "processId": "12346"
-    }
-  ]
+  "jobId": "6c93054e-074a-4d15-9d72-c2e09f8eb7dc",
+  "projectId": 42,
+  "status": "queued",
+  "progress": {
+    "phase": "queued",
+    "total": 0,
+    "completed": 0,
+    "stopped": 0,
+    "stopFailed": 0,
+    "attempted": 0,
+    "restarted": 0,
+    "failed": 0,
+    "results": []
+  },
+  "createdAt": "2026-11-21T09:00:00.000Z",
+  "updatedAt": "2026-11-21T09:00:00.000Z"
 }
 ```
+
+### `GET` /api/projects/{id}/bot/restart-all/jobs/{jobId}
+
+Прочитать прогресс массового перезапуска
+
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+
+Доступ заново проверяется для проекта. Чужой или утраченный jobId не раскрывает результаты. Опрос не блокируется на длительных операциях остановки и запуска.
+
+**Operation ID:** `get_api_projects_id_bot_restart_all_jobs_jobId_cd572dfdcd485104`
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `id` | path | да | ID проекта | `"42"` |
+| `jobId` | path | да | — | — |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Текущий снимок задания |
+| 400 | Запрос отклонён |
+| 401 | Запрос отклонён |
+| 403 | Запрос отклонён |
+| 404 | Задание не найдено либо истекло; перечитайте статусы ботов |
+| 409 | Другой перезапуск проекта уже выполняется |
+| 503 | Запрос отклонён |
 
 ### `POST` /api/projects/{id}/bot/start
 

@@ -1,8 +1,9 @@
-# ═══ Загрузка контента из таблицы _content ═══
+# @fileoverview Загрузка контента порциями с атомарной заменой кэша.
 
 _content_cache: dict = {}
 {%- if contentCache %}
 _content_table_id: int | None = None
+_content_reload_lock = asyncio.Lock()
 
 async def load_content(pool):
     """Загрузка контента из таблицы _content при старте"""
@@ -26,30 +27,35 @@ async def reload_content(pool):
     if not _content_table_id:
         return
     try:
-        rows = await pool.fetch(
-            "SELECT data FROM bot_table_rows WHERE table_id = $1",
-            _content_table_id
-        )
-        new_cache = {}
-        for r in rows:
-            raw_data = r["data"]
-            if isinstance(raw_data, str):
-                try:
-                    import json
-                    data = json.loads(raw_data)
-                except Exception:
-                    continue
-            else:
-                data = raw_data
-            if isinstance(data, dict) and len(data) >= 4:
-                numeric_items = [(k, v) for k, v in data.items() if k.isdigit()]
-                sorted_values = [v for _, v in sorted(numeric_items, key=lambda x: int(x[0]))]
-                if len(sorted_values) >= 4:
-                    key_val = sorted_values[0]
-                    value_val = sorted_values[3]
-                    if key_val and value_val:
-                        new_cache[str(key_val)] = str(value_val)
-        _content_cache = new_cache
+        # Таймер и Redis не собирают два полных снимка одновременно.
+        async with _content_reload_lock:
+            new_cache = {}
+            async with pool.acquire() as connection:
+                async with connection.transaction():
+                    # Курсор держит лишь небольшую порцию исходных JSON-строк.
+                    async for r in connection.cursor(
+                        "SELECT data FROM bot_table_rows WHERE table_id = $1",
+                        _content_table_id, prefetch=128
+                    ):
+                        raw_data = r["data"]
+                        if isinstance(raw_data, str):
+                            try:
+                                import json
+                                data = json.loads(raw_data)
+                            except Exception:
+                                continue
+                        else:
+                            data = raw_data
+                        if isinstance(data, dict) and len(data) >= 4:
+                            numeric_items = [(k, v) for k, v in data.items() if k.isdigit()]
+                            sorted_values = [v for _, v in sorted(numeric_items, key=lambda x: int(x[0]))]
+                            if len(sorted_values) >= 4:
+                                key_val = sorted_values[0]
+                                value_val = sorted_values[3]
+                                if key_val and value_val:
+                                    new_cache[str(key_val)] = str(value_val)
+            # Сбой чтения оставляет предыдущий рабочий снимок целиком.
+            _content_cache = new_cache
     except Exception as e:
         logging.warning(f"📋 [content] Ошибка перезагрузки: {e}")
 

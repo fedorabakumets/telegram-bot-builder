@@ -65,6 +65,33 @@ it('останавливает повторы после трёх неудачн
   expect(mocks.update).toHaveBeenCalledWith(3, { status: 'error', errorMessage: 'Автоперезапуск исчерпан (3 попыток)' });
 });
 
+/** Вместимость не исправляется расходованием бюджета автоматических перезапусков. */
+it('не планирует инфраструктурный повтор уже сохранённого отказа памяти', async () => {
+  mocks.instance.errorMessage = '[runner_memory] Недостаточно памяти';
+  await scheduleBotRestart(7, 42, 'host crash', { infrastructure: true });
+  await vi.runAllTimersAsync();
+  expect(mocks.attempts).toBe(0);
+  expect(mocks.start).not.toHaveBeenCalled();
+});
+
+/** Отказ во время восстановления терминален до явного действия пользователя. */
+it('не повторяет старт после результата memory refusal даже для инфраструктуры', async () => {
+  mocks.start.mockResolvedValue({ success: false, error: '[runner_memory] Недостаточно памяти' });
+  await scheduleBotRestart(7, 42, 'host crash', { infrastructure: true });
+  await vi.runAllTimersAsync();
+  expect(mocks.attempts).toBe(1);
+  expect(mocks.start).toHaveBeenCalledTimes(1);
+  expect(mocks.update).not.toHaveBeenCalled();
+});
+
+/** Ошибка допуска, возникшая в период ожидания, отменяет уже существующий таймер. */
+it('отменяет отложенный старт после сохранения memory refusal', async () => {
+  await scheduleBotRestart(7, 42, 'host crash', { infrastructure: true });
+  mocks.instance.errorMessage = '[runner_memory] Недостаточно памяти';
+  await vi.runAllTimersAsync();
+  expect(mocks.start).not.toHaveBeenCalled();
+});
+
 /** Отзыв токена в период ожидания отменяет восстановление. */
 it('не запускает токен, отозванный во время задержки', async () => {
   await scheduleBotRestart(7, 42, 'host crash', { infrastructure: true });

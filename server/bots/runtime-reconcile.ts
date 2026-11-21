@@ -14,6 +14,8 @@ import { HOST_CRASH_PREFIX } from "./workerExitDiagnostic";
 import { scheduleBotRestart } from "./scheduleBotRestart";
 import { automaticBotStartAllowed } from "./automaticBotStartAllowed";
 import { refuseInactiveBotStart } from "./refuse-inactive-bot-start";
+import { mapRestoreCandidates } from './restoreGrouping';
+import { recoverMemoryWaiters } from './recoverMemoryWaiters';
 
 /** Итог одного прохода сверки. */
 export interface ReconcileResult {
@@ -34,15 +36,19 @@ let inFlight: Promise<ReconcileResult> | null = null;
  * @param beforeReconcile - Привязка к уже работающим воркерам перед сверкой
  * @returns Остановка регулярной сверки
  */
-export function scheduleRuntimeReconcile(intervalMs = 30_000, beforeReconcile?: () => Promise<unknown>): () => void {
+export function scheduleRuntimeReconcile(intervalMs = 5_000, beforeReconcile?: () => Promise<unknown>): () => void {
   if (!Number.isSafeInteger(intervalMs) || intervalMs < 1_000) throw new Error("Некорректный интервал сверки");
+  // Медленная привязка или запуск не должны создавать параллельные проходы таймера.
+  let ticking = false;
   const timer = setInterval(() => {
+    if (ticking) return;
+    ticking = true;
     void (async () => {
       await beforeReconcile?.();
       return reconcileBotDesiredState();
     })().catch((error) => {
       console.error("[RuntimeReconcile] Не удалось сверить состояние ботов:", error);
-    });
+    }).finally(() => { ticking = false; });
   }, intervalMs);
   timer.unref();
   return () => clearInterval(timer);
@@ -77,10 +83,12 @@ async function runReconcile(): Promise<ReconcileResult> {
     }
   }
   const result: ReconcileResult = { started: 0, stopped: 0, failed: 0 };
-  for (const instance of instances) {
+  // До пяти кандидатов, включая один проект; startBot задаёт общий интервал и проверяет память.
+  await mapRestoreCandidates(instances, async instance => {
+    try {
     const tokenId = instance.tokenId;
-    if (tokenId == null) continue;
-    if (!getProjectPlacement(instance.projectId).runnerId) continue;
+    if (tokenId == null) return;
+    if (!getProjectPlacement(instance.projectId).runnerId) return;
     const desired = instance.desiredStatus ?? (instance.status === "running" ? "running" : "stopped");
     const expiredBuildLink = isBuildLinkExpired(instance.errorMessage);
     // Только доверенный машинный признак общей аварии допускает восстановление непустой ошибки.
@@ -89,26 +97,29 @@ async function runReconcile(): Promise<ReconcileResult> {
     if (desired === "running" && !occupied.has(tokenId) && recoverable) {
       const current = await storage.getBotInstanceByToken(tokenId);
       if (!current || current.desiredGeneration !== instance.desiredGeneration || current.desiredStatus === "stopped" ||
-          current.errorMessage !== instance.errorMessage) continue;
-      if (expiredBuildLink && !await claimBuildLinkRetry(instance.id, instance.desiredGeneration)) continue;
+          current.errorMessage !== instance.errorMessage) return;
+      if (expiredBuildLink && !await claimBuildLinkRetry(instance.id, instance.desiredGeneration)) return;
       const token = await storage.getBotToken(tokenId);
       if (!token?.token || refuseInactiveBotStart(token.isActive, token.authorizationError) ||
-          !await automaticBotStartAllowed(instance.projectId, tokenId)) continue;
+          !await automaticBotStartAllowed(instance.projectId, tokenId)) return;
       if (infrastructure) {
         // Планировщик разделяет общий лимит и очередь с немедленным восстановлением после аварии.
         await scheduleBotRestart(instance.projectId, tokenId, "worker_host_crash", { infrastructure: true });
-        continue;
+        return;
       }
       const started = await startBot(instance.projectId, token.token, tokenId, { reuseGeneratedCode: true });
       if (started.success) result.started++;
       else result.failed++;
     } else if (desired === "stopped" && live.has(tokenId)) {
       const current = await storage.getBotInstanceByToken(tokenId);
-      if (!current || current.desiredGeneration !== instance.desiredGeneration || current.desiredStatus === "running") continue;
+      if (!current || current.desiredGeneration !== instance.desiredGeneration || current.desiredStatus === "running") return;
       const stopped = await stopBot(instance.projectId, tokenId);
       if (stopped.success) result.stopped++;
       else result.failed++;
     }
-  }
+    } catch { result.failed++; }
+  });
+  // Отказы вместимости имеют отдельную очередь, а не аварийные автоповторы.
+  await recoverMemoryWaiters(instances, occupied, projectId => !!getProjectPlacement(projectId).runnerId);
   return result;
 }

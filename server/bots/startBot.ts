@@ -101,6 +101,8 @@ import { recordBotInstanceLaunch, recordBotInstanceLaunchFailure } from './recor
 import type { BotCommandFence } from './botWorkerManager';
 import { resolveWebhookBaseUrl } from './webhookBaseUrl';
 import { resolveStoredBotAutoRestart } from './resolveStoredBotAutoRestart';
+import { acquireBotStartupSlot } from './acquireBotStartupSlot';
+import { isServerShuttingDown } from './serverShutdownState';
 
 
 
@@ -147,12 +149,19 @@ export async function startBot(
   options?: { clearLogs?: boolean; reuseGeneratedCode?: boolean; waitForExistingLock?: boolean },
 ): Promise<{ success: boolean; error?: string; processId?: string | undefined; }> {
   const shouldClearLogs = options?.clearLogs !== false; // по умолчанию true
+  if (isServerShuttingDown()) return { success: false, error: BOT_START_CANCELLED_ERROR };
   if (!beginBotStart(tokenId)) return { success: false, error: 'Бот уже запускается' };
   const startRevision = getBotStartRevision(tokenId);
   let pendingInstanceId: number | undefined;
   let commandFence: BotCommandFence | undefined;
   let launchError = BOT_START_CANCELLED_ERROR;
+  let releaseStartupSlot: (() => void) | undefined;
   try {
+    // Все источники запуска используют общий лимит до блокировок БД и подготовки сборки.
+    releaseStartupSlot = await acquireBotStartupSlot(projectId, tokenId, startRevision);
+    if (!releaseStartupSlot || isServerShuttingDown() || getBotStartRevision(tokenId) !== startRevision) {
+      return { success: false, error: BOT_START_CANCELLED_ERROR };
+    }
     /** Версия намерения фиксируется до подготовки сборки бота. */
     commandFence = await resolveBotCommandFence(tokenId, 'start');
     const tokenRecord = await storage.getBotToken(tokenId);
@@ -770,6 +779,7 @@ export async function startBot(
         console.error('Ошибка сохранения состояния запуска бота:', error);
       });
     }
+    releaseStartupSlot?.();
     finishBotStart(tokenId);
   }
 }

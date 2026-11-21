@@ -479,13 +479,13 @@ export async function restartBotInDb(
  * { message, restarted: 0 } без results (в таком случае results будет []).
  * @param projectId - Числовой ID проекта из URL редактора
  * @param options - Опции запроса: URL API и обязательное подтверждение confirm
- * @returns Сводка { ok, restarted, failed, results, message? } либо ошибка { error }
+ * @returns Принятое задание { jobId, status }, совместимая сводка старого API либо ошибка.
  */
 export async function restartAllBotsInDb(
   projectId: number,
   options?: ReadDbOptions & { confirm?: boolean },
 ): Promise<MutationResult<
-  { ok: true; restarted: number; failed: number; results: unknown[]; message?: string } | { error: string }
+  { ok: true; restarted: number; failed: number; results: unknown[]; message?: string } | { ok: true; jobId: string; status: string; projectId: number } | { error: string }
 >> {
   if (options?.confirm !== true) {
     return { error: 'Перезапуск всех ботов проекта. Передайте confirm: true для подтверждения.' };
@@ -507,6 +507,16 @@ export async function restartAllBotsInDb(
     const body = await res.text().catch(() => '');
     if (res.status === 404) return { error: `HTTP 404: ${body || 'токены проекта не найдены'}` };
     return { error: body ? `HTTP ${res.status}: ${body}` : `HTTP ${res.status}`, ...(res.status >= 500 ? { outcome: "unknown" as const } : {}) };
+  }
+
+  // HTTP 202 подтверждает лишь приём задания; результат читается отдельным действием.
+  if (res.status === 202) {
+    let accepted: { jobId?: string; status?: string; projectId?: number };
+    try { accepted = await res.json(); }
+    catch { return { error: 'Ответ задания не удалось прочитать; перечитайте состояние перед повтором', outcome: 'unknown' }; }
+    if (!accepted.jobId || accepted.projectId !== projectId) return { error: 'Нет идентификатора фонового задания', outcome: 'unknown' };
+    return { ok: true, jobId: accepted.jobId, projectId, status: accepted.status || 'queued',
+      effect: 'external', outcome: 'pending', persistence: { confirmed: false, method: 'accepted' } };
   }
 
   let body: { restarted?: number; failed?: number; results?: unknown[]; message?: string };

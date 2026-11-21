@@ -5,6 +5,7 @@
 
 import type { Request, Response } from 'express';
 import { startBot } from '../../../bots/startBot';
+import { mapRestoreCandidates } from '../../../bots/restoreGrouping';
 import { storage } from '../../../storages/storage';
 import { broadcastProjectEvent } from '../../../terminal/broadcastProjectEvent';
 import {
@@ -16,9 +17,6 @@ import { isTokenPendingRestore } from '../../../bots/restoreState';
 import { shouldSkipBulkStartDuringRestore } from '../../../../shared/should-skip-bulk-start-during-restore';
 import { setBotDesiredStatus } from '../../../bots/setBotDesiredStatus';
 import { resolveActualBotStatus, type RunnerInspectionCache } from '../resolve-actual-bot-status';
-
-/** Пауза между стартами, чтобы не устроить thundering herd */
-const START_DELAY_MS = 400;
 
 /**
  * Результат запуска одного токена (без секретов)
@@ -53,7 +51,7 @@ async function emitProgress(
 }
 
 /**
- * Запускает всех офлайн-ботов проекта последовательно
+ * Запускает офлайн-ботов пятью задачами через общий допуск startBot
  * @param req - Express request (params.id = projectId)
  * @param res - Express response
  */
@@ -128,52 +126,46 @@ export async function handleBotStartOfflineAll(req: Request, res: Response): Pro
       source,
     });
 
-    for (let i = 0; i < offlineTokens.length; i++) {
-      const token = offlineTokens[i];
-      let instance = await storage.getBotInstanceByToken(token.id);
-      if (!instance) {
-        instance = await storage.createBotInstance({
-          projectId, tokenId: token.id, token: token.token, status: 'stopped',
-        });
+    // Пять ожидающих задач проекта разделяют глобальные пять мест и интервал 250 мс.
+    const orderedResults = await mapRestoreCandidates(offlineTokens, async (token): Promise<TokenStartResult> => {
+      let outcome: TokenStartResult;
+      try {
+        let instance = await storage.getBotInstanceByToken(token.id);
+        if (!instance) {
+          instance = await storage.createBotInstance({
+            projectId, tokenId: token.id, token: token.token, status: 'stopped',
+          });
+        }
+        const generation = await setBotDesiredStatus(instance.id, 'running');
+        const current = await storage.getBotInstanceByToken(token.id);
+        if (!current || current.desiredStatus !== 'running' || current.desiredGeneration !== generation) {
+          outcome = { tokenId: token.id, success: false, error: 'Запуск отменён новым запросом' };
+        } else {
+          const startResult = await startBot(projectId, token.token, token.id);
+          outcome = { tokenId: token.id, success: startResult.success,
+            ...(startResult.success ? { processId: startResult.processId }
+              : { error: startResult.error || 'Не удалось запустить' }) };
+          if (!startResult.success) {
+            // Новая остановка пользователя не должна стать ошибкой устаревшего массового запуска.
+            const latest = await storage.getBotInstanceByToken(token.id);
+            if (latest?.desiredStatus === 'running' && latest.desiredGeneration === generation) {
+              await storage.updateBotInstance(instance.id, { status: 'error', errorMessage: outcome.error });
+            }
+          }
+        }
+      } catch (error) {
+        const detail = error instanceof Error ? error.message : 'Не удалось запустить';
+        outcome = { tokenId: token.id, success: false,
+          error: detail.split(token.token || '\0').join('[скрыто]') };
       }
-      const generation = await setBotDesiredStatus(instance.id, 'running');
-      const current = await storage.getBotInstanceByToken(token.id);
-      if (!current || current.desiredStatus !== 'running' || current.desiredGeneration !== generation) {
-        failed += 1;
-        results.push({ tokenId: token.id, success: false, error: 'Запуск отменён новым запросом' });
-        continue;
-      }
-      const startResult = await startBot(projectId, token.token, token.id);
-
-      if (startResult.success) {
-        started += 1;
-        results.push({ tokenId: token.id, success: true, processId: startResult.processId });
-      } else {
-        await storage.updateBotInstance(instance.id, {
-          status: 'error', errorMessage: startResult.error || 'Не удалось запустить',
-        });
-        failed += 1;
-        results.push({
-          tokenId: token.id,
-          success: false,
-          error: startResult.error || 'Не удалось запустить',
-        });
-      }
-
+      if (outcome.success) started++; else failed++;
+      // Ошибка уведомления не завершает HTTP-ответ до остальных незавершённых запусков.
       await emitProgress(projectId, {
-        started,
-        failed,
-        skipped: skippedRunning,
-        total,
-        currentTokenId: token.id,
-        status: 'running',
-        source,
-      });
-
-      if (i < offlineTokens.length - 1) {
-        await new Promise((resolve) => setTimeout(resolve, START_DELAY_MS));
-      }
-    }
+        started, failed, skipped: skippedRunning, total, currentTokenId: token.id, status: 'running', source,
+      }).catch(error => console.error('Ошибка прогресса массового запуска:', error));
+      return outcome;
+    });
+    results.push(...orderedResults);
 
     await emitProgress(projectId, {
       started,
