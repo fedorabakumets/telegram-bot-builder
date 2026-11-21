@@ -5,14 +5,46 @@ import socket
 import unittest
 from unittest.mock import Mock, patch
 
-from aiohttp import web
+from aiohttp import ClientSession, ClientTimeout, web
 from aiohttp.web import _run_app
 
-from telethon_broker_startup import listen_address, report_ready
+from telethon_broker_startup import listen_address, listen_hosts, report_ready
 
 
 class StartupReadyTest(unittest.IsolatedAsyncioTestCase):
     """Проверяет порядок startup и привязки сокета без клиента Telegram."""
+
+    async def test_cloud_binds_ipv4_health_and_ipv6_private_network_on_same_port(self):
+        """Проверяет реальные HTTP-соединения обеих семей без Telegram и Redis."""
+        self.assertEqual(listen_hosts("127.0.0.1"), "127.0.0.1")
+        if not socket.has_ipv6:
+            self.skipTest("IPv6 недоступен")
+        with socket.socket(socket.AF_INET6) as probe:
+            try:
+                probe.bind(("::1", 0))
+            except OSError:
+                self.skipTest("Loopback IPv6 отключён")
+        with socket.socket() as probe:
+            probe.bind(("127.0.0.1", 0))
+            port = probe.getsockname()[1]
+        app, ready = web.Application(), asyncio.Event()
+
+        async def health(_request):
+            """Имитирует безопасную проверку готовности без открытия сессии."""
+            return web.json_response({"status": "ready"})
+
+        app.router.add_get("/healthz", health)
+        task = asyncio.create_task(_run_app(app, host=listen_hosts("::"), port=port, print=lambda _message: ready.set()))
+        try:
+            await asyncio.wait_for(ready.wait(), 2)
+            async with ClientSession(timeout=ClientTimeout(total=2)) as http:
+                for host in ("127.0.0.1", "[::1]"):
+                    async with http.get(f"http://{host}:{port}/healthz") as response:
+                        self.assertEqual(response.status, 200)
+                        self.assertEqual(await response.json(), {"status": "ready"})
+        finally:
+            task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
 
     def test_private_network_requires_explicit_opt_in_and_uses_platform_port(self):
         """Облачная привязка явно разрешается, локальный запуск сохраняет прежние значения."""
