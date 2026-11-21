@@ -109,15 +109,127 @@
       "resolvedPath": "/api/runtime/media/incoming-photo"
     },
     {
+      "file": "server/routes/projectTelegramAccounts/project-telegram-account-connection-routes.ts",
+      "line": 85,
+      "method": "POST",
+      "expression": "`${path}/auth/send-code`",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/{accountId}/auth/send-code"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/project-telegram-account-connection-routes.ts",
+      "line": 100,
+      "method": "POST",
+      "expression": "`${path}/auth/sign-in`",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/{accountId}/auth/sign-in"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/project-telegram-account-connection-routes.ts",
+      "line": 101,
+      "method": "POST",
+      "expression": "`${path}/auth/sign-in-2fa`",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/{accountId}/auth/sign-in-2fa"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/project-telegram-account-connection-routes.ts",
+      "line": 102,
+      "method": "POST",
+      "expression": "`${path}/import`",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/{accountId}/import"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/project-telegram-account-connection-routes.ts",
+      "line": 106,
+      "method": "POST",
+      "expression": "`${path}/auth/verify`",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/{accountId}/auth/verify"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/project-telegram-account-connection-routes.ts",
+      "line": 108,
+      "method": "POST",
+      "expression": "`${path}/profile`",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/{accountId}/profile"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/project-telegram-account-connection-routes.ts",
+      "line": 124,
+      "method": "POST",
+      "expression": "`${path}/proxy/test`",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/{accountId}/proxy/test"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/project-telegram-accounts-routes.ts",
+      "line": 108,
+      "method": "GET",
+      "expression": "path",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/project-telegram-accounts-routes.ts",
+      "line": 114,
+      "method": "POST",
+      "expression": "path",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/project-telegram-accounts-routes.ts",
+      "line": 116,
+      "method": "PUT",
+      "expression": "`${path}/:accountId/bots`",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/{accountId}/bots"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/project-telegram-accounts-routes.ts",
+      "line": 118,
+      "method": "PUT",
+      "expression": "`${path}/:accountId/proxy`",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/{accountId}/proxy"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/project-telegram-accounts-routes.ts",
+      "line": 123,
+      "method": "DELETE",
+      "expression": "`${path}/:accountId`",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/{accountId}"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/register-legacy-migration-cutover.ts",
+      "line": 51,
+      "method": "GET",
+      "expression": "`${path}/operations`",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/migration/operations"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/register-legacy-migration-cutover.ts",
+      "line": 62,
+      "method": "POST",
+      "expression": "`${path}/apply`",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/migration/apply"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/register-legacy-migration-cutover.ts",
+      "line": 107,
+      "method": "POST",
+      "expression": "`${path}/rollback`",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/migration/rollback"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/register-legacy-migration-preview.ts",
+      "line": 14,
+      "method": "GET",
+      "expression": "'/api/projects/:projectId/telegram-accounts/migration/preview'",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/migration/preview"
+    },
+    {
       "file": "server/routes/routes.ts",
-      "line": 1438,
+      "line": 1442,
       "method": "GET",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId/webhook-secret/reveal\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/webhook-secret/reveal"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 1443,
+      "line": 1447,
       "method": "GET",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId/reveal\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/reveal"
@@ -242,7 +354,7 @@
       {
         "candidate": {
           "file": "server/index.ts",
-          "line": 91,
+          "line": 92,
           "method": "USE",
           "expression": "express.json({ limit: '50mb', verify: captureAgentBody })"
         },
@@ -252,7 +364,7 @@
       {
         "candidate": {
           "file": "server/index.ts",
-          "line": 92,
+          "line": 93,
           "method": "USE",
           "expression": "express.urlencoded({ extended: false, limit: '50mb' })"
         },
@@ -262,7 +374,7 @@
       {
         "candidate": {
           "file": "server/index.ts",
-          "line": 94,
+          "line": 95,
           "method": "USE",
           "expression": "express.text({ limit: '50mb', type: 'text/plain' })"
         },
@@ -272,7 +384,7 @@
       {
         "candidate": {
           "file": "server/index.ts",
-          "line": 108,
+          "line": 109,
           "method": "USE",
           "expression": "(req, res, next) => {\n  const start = Date.now();\n  const path = apiLogPath(req.originalUrl);\n  let capturedJsonResponse: Record<string, any> | undefined = undefined;\n\n  const originalResJson = res.json;\n  res.json = function (bodyJson, ...args) {\n    capturedJsonResponse = bodyJson;\n    return orig…"
         },
@@ -282,7 +394,7 @@
       {
         "candidate": {
           "file": "server/index.ts",
-          "line": 179,
+          "line": 180,
           "method": "USE",
           "expression": "apiErrorHandler"
         },
@@ -364,7 +476,7 @@
       {
         "candidate": {
           "file": "server/routes/routes.ts",
-          "line": 497,
+          "line": 500,
           "method": "USE",
           "expression": "sessionMiddleware"
         },
@@ -374,7 +486,7 @@
       {
         "candidate": {
           "file": "server/routes/routes.ts",
-          "line": 499,
+          "line": 503,
           "method": "USE",
           "expression": "['/api', '/admin/api']"
         },
@@ -797,44 +909,44 @@
     },
     {
       "file": "server/index.ts",
-      "line": 91,
+      "line": 92,
       "method": "USE",
       "expression": "express.json({ limit: '50mb', verify: captureAgentBody })"
     },
     {
       "file": "server/index.ts",
-      "line": 92,
+      "line": 93,
       "method": "USE",
       "expression": "express.urlencoded({ extended: false, limit: '50mb' })"
     },
     {
       "file": "server/index.ts",
-      "line": 94,
+      "line": 95,
       "method": "USE",
       "expression": "express.text({ limit: '50mb', type: 'text/plain' })"
     },
     {
       "file": "server/index.ts",
-      "line": 108,
+      "line": 109,
       "method": "USE",
       "expression": "(req, res, next) => {\n  const start = Date.now();\n  const path = apiLogPath(req.originalUrl);\n  let capturedJsonResponse: Record<string, any> | undefined = undefined;\n\n  const originalResJson = res.json;\n  res.json = function (bodyJson, ...args) {\n    capturedJsonResponse = bodyJson;\n    return orig…"
     },
     {
       "file": "server/index.ts",
-      "line": 165,
+      "line": 166,
       "method": "USE",
       "expression": "\"/api\"",
       "resolvedPath": "/api"
     },
     {
       "file": "server/index.ts",
-      "line": 179,
+      "line": 180,
       "method": "USE",
       "expression": "apiErrorHandler"
     },
     {
       "file": "server/index.ts",
-      "line": 221,
+      "line": 222,
       "method": "GET",
       "expression": "\"env\"",
       "resolvedPath": "env"
@@ -1080,475 +1192,594 @@
       "expression": "`${S3_PROXY_BASE}/:configId/*`"
     },
     {
+      "file": "server/routes/project-telegram-runner-route.ts",
+      "line": 14,
+      "method": "POST",
+      "expression": "'/internal/project-telegram/:projectId/:tokenId/execute'",
+      "resolvedPath": "/internal/project-telegram/{projectId}/{tokenId}/execute"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/project-telegram-account-connection-routes.ts",
+      "line": 85,
+      "method": "POST",
+      "expression": "`${path}/auth/send-code`",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/{accountId}/auth/send-code"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/project-telegram-account-connection-routes.ts",
+      "line": 100,
+      "method": "POST",
+      "expression": "`${path}/auth/sign-in`",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/{accountId}/auth/sign-in"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/project-telegram-account-connection-routes.ts",
+      "line": 101,
+      "method": "POST",
+      "expression": "`${path}/auth/sign-in-2fa`",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/{accountId}/auth/sign-in-2fa"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/project-telegram-account-connection-routes.ts",
+      "line": 102,
+      "method": "POST",
+      "expression": "`${path}/import`",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/{accountId}/import"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/project-telegram-account-connection-routes.ts",
+      "line": 106,
+      "method": "POST",
+      "expression": "`${path}/auth/verify`",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/{accountId}/auth/verify"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/project-telegram-account-connection-routes.ts",
+      "line": 108,
+      "method": "POST",
+      "expression": "`${path}/profile`",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/{accountId}/profile"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/project-telegram-account-connection-routes.ts",
+      "line": 124,
+      "method": "POST",
+      "expression": "`${path}/proxy/test`",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/{accountId}/proxy/test"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/project-telegram-accounts-routes.ts",
+      "line": 108,
+      "method": "GET",
+      "expression": "path",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/project-telegram-accounts-routes.ts",
+      "line": 114,
+      "method": "POST",
+      "expression": "path",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/project-telegram-accounts-routes.ts",
+      "line": 116,
+      "method": "PUT",
+      "expression": "`${path}/:accountId/bots`",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/{accountId}/bots"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/project-telegram-accounts-routes.ts",
+      "line": 118,
+      "method": "PUT",
+      "expression": "`${path}/:accountId/proxy`",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/{accountId}/proxy"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/project-telegram-accounts-routes.ts",
+      "line": 123,
+      "method": "DELETE",
+      "expression": "`${path}/:accountId`",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/{accountId}"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/register-legacy-migration-cutover.ts",
+      "line": 51,
+      "method": "GET",
+      "expression": "`${path}/operations`",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/migration/operations"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/register-legacy-migration-cutover.ts",
+      "line": 62,
+      "method": "POST",
+      "expression": "`${path}/apply`",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/migration/apply"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/register-legacy-migration-cutover.ts",
+      "line": 107,
+      "method": "POST",
+      "expression": "`${path}/rollback`",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/migration/rollback"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/register-legacy-migration-preview.ts",
+      "line": 14,
+      "method": "GET",
+      "expression": "'/api/projects/:projectId/telegram-accounts/migration/preview'",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/migration/preview"
+    },
+    {
       "file": "server/routes/routes.ts",
-      "line": 497,
+      "line": 500,
       "method": "USE",
       "expression": "sessionMiddleware"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 499,
+      "line": 503,
       "method": "USE",
       "expression": "['/api', '/admin/api']"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 508,
+      "line": 512,
       "method": "USE",
       "expression": "\"/api\"",
       "resolvedPath": "/api"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 509,
+      "line": 513,
       "method": "USE",
       "expression": "\"/api\"",
       "resolvedPath": "/api"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 510,
+      "line": 514,
       "method": "USE",
       "expression": "\"/uploads\"",
       "resolvedPath": "/uploads"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 511,
+      "line": 515,
       "method": "USE",
       "expression": "\"/api\"",
       "resolvedPath": "/api"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 552,
+      "line": 556,
       "method": "USE",
       "expression": "\"/api\"",
       "resolvedPath": "/api"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 553,
+      "line": 557,
       "method": "USE",
       "expression": "\"/api\"",
       "resolvedPath": "/api"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 562,
+      "line": 566,
       "method": "USE",
       "expression": "\"/api\"",
       "resolvedPath": "/api"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 573,
+      "line": 577,
       "method": "GET",
       "expression": "\"/api/health\"",
       "resolvedPath": "/api/health"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 581,
+      "line": 585,
       "method": "HEAD",
       "expression": "\"/api/health\"",
       "resolvedPath": "/api/health"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 625,
+      "line": 629,
       "method": "GET",
       "expression": "\"/api/bots\"",
       "resolvedPath": "/api/bots"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 652,
+      "line": 656,
       "method": "GET",
       "expression": "\"/api/projects/:id/tokens\"",
       "resolvedPath": "/api/projects/{id}/tokens"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 687,
+      "line": 691,
       "method": "POST",
       "expression": "\"/api/projects/:id/tokens/parse\"",
       "resolvedPath": "/api/projects/{id}/tokens/parse"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 880,
+      "line": 884,
       "method": "PUT",
       "expression": "\"/api/projects/:id/tokens/:tokenId/bot-info\"",
       "resolvedPath": "/api/projects/{id}/tokens/{tokenId}/bot-info"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 967,
+      "line": 971,
       "method": "POST",
       "expression": "\"/api/projects/:id/tokens\"",
       "resolvedPath": "/api/projects/{id}/tokens"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 1058,
+      "line": 1062,
       "method": "PUT",
       "expression": "\"/api/projects/:id/tokens/:tokenId\"",
       "resolvedPath": "/api/projects/{id}/tokens/{tokenId}"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 1061,
+      "line": 1065,
       "method": "DELETE",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 1071,
+      "line": 1075,
       "method": "PUT",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId/auto-restart\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/auto-restart"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 1108,
+      "line": 1112,
       "method": "PUT",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId/protect-content\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/protect-content"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 1137,
+      "line": 1141,
       "method": "PUT",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId/messages-retention\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/messages-retention"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 1147,
+      "line": 1151,
       "method": "PUT",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId/save-incoming-media\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/save-incoming-media"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 1179,
+      "line": 1183,
       "method": "PUT",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId/catch-all-handlers\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/catch-all-handlers"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 1204,
+      "line": 1208,
       "method": "PUT",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId/track-user-blocks\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/track-user-blocks"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 1221,
+      "line": 1225,
       "method": "PUT",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId/track-group-membership\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/track-group-membership"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 1246,
+      "line": 1250,
       "method": "PUT",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId/content-cache\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/content-cache"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 1274,
+      "line": 1278,
       "method": "PUT",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId/userbot\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/userbot"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 1309,
+      "line": 1313,
       "method": "POST",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId/userbot/send-code\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/userbot/send-code"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 1347,
+      "line": 1351,
       "method": "POST",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId/userbot/sign-in\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/userbot/sign-in"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 1381,
+      "line": 1385,
       "method": "POST",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId/userbot/sign-in-2fa\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/userbot/sign-in-2fa"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 1409,
+      "line": 1413,
       "method": "PUT",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId/log-level\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/log-level"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 1438,
+      "line": 1442,
       "method": "GET",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId/webhook-secret/reveal\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/webhook-secret/reveal"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 1443,
+      "line": 1447,
       "method": "GET",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId/reveal\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/reveal"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 1447,
+      "line": 1451,
       "method": "PUT",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId/launch-settings\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/launch-settings"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 1486,
+      "line": 1490,
       "method": "GET",
       "expression": "\"/api/projects/:id/tokens/first\"",
       "resolvedPath": "/api/projects/{id}/tokens/first"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 1495,
+      "line": 1499,
       "method": "POST",
       "expression": "\"/api/media/upload/:projectId\"",
       "resolvedPath": "/api/media/upload/{projectId}"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 1637,
+      "line": 1641,
       "method": "POST",
       "expression": "\"/api/media/upload-multiple/:projectId\"",
       "resolvedPath": "/api/media/upload-multiple/{projectId}"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 1756,
+      "line": 1760,
       "method": "POST",
       "expression": "\"/api/media/check-url\"",
       "resolvedPath": "/api/media/check-url"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 1825,
+      "line": 1829,
       "method": "POST",
       "expression": "\"/api/media/download-url/:projectId\"",
       "resolvedPath": "/api/media/download-url/{projectId}"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 1966,
+      "line": 1970,
       "method": "POST",
       "expression": "\"/api/media/download-urls/:projectId\"",
       "resolvedPath": "/api/media/download-urls/{projectId}"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 2114,
+      "line": 2118,
       "method": "GET",
       "expression": "\"/api/media/project/:projectId\"",
       "resolvedPath": "/api/media/project/{projectId}"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 2133,
+      "line": 2137,
       "method": "GET",
       "expression": "\"/api/media/:id\"",
       "resolvedPath": "/api/media/{id}"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 2151,
+      "line": 2155,
       "method": "PUT",
       "expression": "\"/api/media/:id\"",
       "resolvedPath": "/api/media/{id}"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 2173,
+      "line": 2177,
       "method": "DELETE",
       "expression": "\"/api/media/:id\"",
       "resolvedPath": "/api/media/{id}"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 2206,
+      "line": 2210,
       "method": "GET",
       "expression": "\"/api/media/search/:projectId\"",
       "resolvedPath": "/api/media/search/{projectId}"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 2226,
+      "line": 2230,
       "method": "POST",
       "expression": "\"/api/media/:id/use\"",
       "resolvedPath": "/api/media/{id}/use"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 2246,
+      "line": 2250,
       "method": "GET",
       "expression": "\"/api/projects/:id/users\"",
       "resolvedPath": "/api/projects/{id}/users"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 2568,
+      "line": 2572,
       "method": "GET",
       "expression": "\"/api/projects/:id/users/stats\"",
       "resolvedPath": "/api/projects/{id}/users/stats"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 2642,
+      "line": 2646,
       "method": "GET",
       "expression": "\"/api/projects/:id/users/traffic\"",
       "resolvedPath": "/api/projects/{id}/users/traffic"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 2702,
+      "line": 2706,
       "method": "GET",
       "expression": "\"/api/projects/:id/users/activity\"",
       "resolvedPath": "/api/projects/{id}/users/activity"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 2726,
+      "line": 2730,
       "method": "GET",
       "expression": "\"/api/projects/:id/users/growth\"",
       "resolvedPath": "/api/projects/{id}/users/growth"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 2841,
+      "line": 2845,
       "method": "GET",
       "expression": "\"/api/projects/:id/users/growth-by-source\"",
       "resolvedPath": "/api/projects/{id}/users/growth-by-source"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 2949,
+      "line": 2953,
       "method": "GET",
       "expression": "\"/api/projects/:id/users/popular-buttons\"",
       "resolvedPath": "/api/projects/{id}/users/popular-buttons"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 2997,
+      "line": 3001,
       "method": "GET",
       "expression": "\"/api/projects/:id/logs/all\"",
       "resolvedPath": "/api/projects/{id}/logs/all"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 3024,
+      "line": 3028,
       "method": "GET",
       "expression": "\"/api/projects/:id/launches/all\"",
       "resolvedPath": "/api/projects/{id}/launches/all"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 3051,
+      "line": 3055,
       "method": "GET",
       "expression": "\"/api/projects/:id/users/variables\"",
       "resolvedPath": "/api/projects/{id}/users/variables"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 3112,
+      "line": 3116,
       "method": "GET",
       "expression": "\"/api/projects/:id/messages/all\"",
       "resolvedPath": "/api/projects/{id}/messages/all"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 3146,
+      "line": 3150,
       "method": "GET",
       "expression": "\"/api/projects/:id/messages/activity\"",
       "resolvedPath": "/api/projects/{id}/messages/activity"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 3318,
+      "line": 3322,
       "method": "PUT",
       "expression": "\"/api/projects/:projectId/users/:userId\"",
       "resolvedPath": "/api/projects/{projectId}/users/{userId}"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 3326,
+      "line": 3330,
       "method": "DELETE",
       "expression": "\"/api/projects/:projectId/users/:userId\"",
       "resolvedPath": "/api/projects/{projectId}/users/{userId}"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 3334,
+      "line": 3338,
       "method": "DELETE",
       "expression": "\"/api/projects/:id/users\"",
       "resolvedPath": "/api/projects/{id}/users"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 3407,
+      "line": 3412,
       "method": "GET",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId/env-variables\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/env-variables"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 3425,
+      "line": 3430,
       "method": "POST",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId/env-variables\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/env-variables"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 3464,
+      "line": 3469,
       "method": "PUT",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId/env-variables/:id\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/env-variables/{id}"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 3520,
+      "line": 3525,
       "method": "DELETE",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId/env-variables/:id\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/env-variables/{id}"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 3547,
+      "line": 3552,
       "method": "GET",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId/env-variables/:id/reveal\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/env-variables/{id}/reveal"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 3568,
+      "line": 3573,
       "method": "GET",
       "expression": "\"/api/server/env-keys\"",
       "resolvedPath": "/api/server/env-keys"
     },
     {
       "file": "server/routes/routes.ts",
-      "line": 3589,
+      "line": 3594,
       "method": "PUT",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId/env-batch\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/env-batch"
