@@ -34,6 +34,7 @@ export function resolveWorkerPollingFailure(event: PollingFailureEvent, token: s
   if (event.telegram_code === 409 && event.reason === 'webhook_conflict')
     return 'Telegram polling: конфликт 409 — у бота установлен webhook';
   if (event.reason === 'telegram_rejected') return `Telegram polling: отказ Bot API, код ${event.telegram_code}`;
+  return undefined;
 }
 
 /** Не позволяет последующим сообщениям очистки затереть подтверждённый отказ polling. */
