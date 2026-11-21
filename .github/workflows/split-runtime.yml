@@ -74,6 +74,9 @@ jobs:
         run: node --import tsx --test scripts/railway-telegram-contracts.test.mjs scripts/dev-process-group.test.mjs scripts/dev-service-plan.test.mjs
       - name: Полная цепочка двух ботов с имитацией Telegram
         run: npx vitest run --config lib/tests/project-telegram-chain.vitest.config.ts
+      # Сохранённые ответы сайтов и ботов проверяются без сети и настоящих сессий Telegram.
+      - name: Общий минимум и экономия обменников
+        run: node --test tools/bot-compare/combined-summary-patch.test.mjs
       # Обе упаковки используют синтетические сессии; отказ владения не должен запускать runtime.
       - name: Отдельный и встроенный брокер без Telegram
         run: npx vitest run --config lib/tests/project-telegram-deployment-modes.vitest.config.ts

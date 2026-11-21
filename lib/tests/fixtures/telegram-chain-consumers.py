@@ -61,6 +61,13 @@ async def main():
         assert buttons[0].data == b"value" and buttons[1].url == "https://example.com"
         assert messages.buttons[0][0].text == "Ответ"
         assert (await messages.buttons[0][0].click()).message == "Нажато"
+        # Ошибка отсутствующей кнопки проходит до обоих настоящих bridge с HTTP 404.
+        for consumer in clients:
+            try:
+                await consumer._execute("click_button", target=7, message_id=1, data_b64="bWlzc2luZw==")
+                raise AssertionError("Отсутствующая кнопка должна дать ошибку операции")
+            except namespace["_ProjectTelegramRequestError"] as error:
+                assert error.code == "BUTTON_NOT_FOUND" and "404" in str(error) and "503" not in str(error)
         inline = await first.inline_query("@synthetic", "buy_btc 0.001")
         assert inline[0].title == "К оплате 1000 RUB"
         try:
