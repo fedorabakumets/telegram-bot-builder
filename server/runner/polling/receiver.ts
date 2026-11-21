@@ -3,6 +3,8 @@ import { setTimeout as sleep } from "node:timers/promises";
 import { requestUpdates, type PollResponse } from "./transport";
 import { TelegramTokenUnauthorized } from "./telegramUnauthorized";
 import { TelegramBotFrozen } from "./telegramFrozen";
+import { PollingRejected, pollingRejectionReason } from "./pollingRejected";
+export { PollingRejected } from "./pollingRejected";
 
 /** Событие Telegram с обязательным идентификатором. */
 export interface PollUpdate {
@@ -41,9 +43,6 @@ export const ALLOWED_UPDATES = ["message", "edited_message", "channel_post", "ed
   "my_chat_member", "chat_member", "chat_join_request", "chat_boost", "removed_chat_boost", "managed_bot",
   "subscription", "stopped_message_generation"];
 
-/** Обозначает окончательный отказ Telegram, включая конфликт владельцев токена. */
-export class PollingRejected extends Error {}
-
 /** Проверяет пакет до записи, исключая подтверждение некорректного обновления. */
 function parseUpdates(value: unknown): PollUpdate[] {
   if (!Array.isArray(value) || value.some((item) => !item || !Number.isSafeInteger(item.update_id)
@@ -64,7 +63,9 @@ export async function runPollingReceiver(options: PollingReceiverOptions): Promi
         limit: 100, allowed_updates: ALLOWED_UPDATES }, signal);
       if (response.body.ok !== true) {
         const code = Number(response.body.error_code ?? response.status);
-        if ([400, 401, 403, 404, 409].includes(code)) throw new PollingRejected(`Telegram отклонил polling: код ${code}`);
+        // В журнал попадает только известная разновидность ответа, без произвольного описания Telegram.
+        if ([400, 401, 403, 404, 409].includes(code))
+          throw new PollingRejected(token, code, pollingRejectionReason(response.status, response.body));
         const retry = Number((response.body.parameters as { retry_after?: unknown } | undefined)?.retry_after);
         await wait(Number.isFinite(retry) ? Math.min(Math.max(retry, 1), 60) * 1_000 : delay, signal);
         continue;

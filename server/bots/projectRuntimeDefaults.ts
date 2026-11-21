@@ -3,6 +3,7 @@
 import { eq } from 'drizzle-orm';
 import { botProjects } from '@shared/schema';
 import { db } from '../database/db';
+import { cachedOps } from '../database/db-cache';
 
 /** Общие параметры запуска и восстановления ботов проекта. */
 export interface ProjectRuntimeDefaults {
@@ -47,5 +48,7 @@ export async function saveProjectRuntimeDefaults(
     defaultAutoRestart: changes.autoRestart,
     defaultMaxRestartAttempts: changes.maxRestartAttempts,
   }).where(eq(botProjects.id, projectId)).returning(runtimeColumns);
+  // Автовосстановление не должно использовать прежний флаг из кеша проекта.
+  if (updated) cachedOps.invalidateProject(projectId);
   return updated ?? null;
 }
