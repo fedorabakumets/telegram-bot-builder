@@ -17,7 +17,8 @@ export function createRunnerStartupCleanup() {
         for (const action of actions.reverse()) {
           try { await action(); } catch (error) { errors.push(error); }
         }
-        if (errors.length) throw new AggregateError(errors, 'Не все ресурсы исполнителя закрылись');
+        /** Сохраняет исходные ошибки без зависимости от AggregateError новой библиотеки ES. */
+        if (errors.length) throw Object.assign(new Error('Не все ресурсы исполнителя закрылись'), { errors });
       })();
       return closing;
     },

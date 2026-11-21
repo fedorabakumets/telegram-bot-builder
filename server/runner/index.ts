@@ -111,7 +111,7 @@ async function main(): Promise<void> {
     leaseRedis.disconnect();
     // Даём событиям exit уйти в Redis до закрытия соединения
     if (!lost) await writer.quit().catch(() => writer.disconnect());
-    if (process.connected) process.disconnect();
+    if (process.connected) process.disconnect?.();
     process.exit(lost ? 1 : 0);
   };
   /** Неподтверждённое закрытие завершается явной ошибкой, сохраняя защиту владения сессией. */
