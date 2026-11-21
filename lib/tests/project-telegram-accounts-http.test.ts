@@ -281,3 +281,42 @@ describe('HTTP API Telegram-аккаунтов', () => {
     expect(state.broker).not.toHaveBeenCalled();
   });
 });
+
+describe('Квоты внутреннего исполнителя', () => {
+  /** Подмена идентификаторов и неподписанных заголовков не создаёт новые квоты источника. */
+  it('ограничивает неподписанные обращения до чтения БД и возвращает время повтора', async () => {
+    for (let batch = 0; batch < 12; batch++) {
+      const responses = await Promise.all(Array.from({ length: 50 }, (_, index) =>
+        call('POST', `/internal/project-telegram/9/${batch * 50 + index + 1}/execute`, 0,
+          { operation: 'status', args: {} }, `Bearer fake-${batch}-${index}`)));
+      expect(responses.every(response => [401, 429].includes(response.status))).toBe(true);
+    }
+    const response = await fetch(`http://127.0.0.1:${port}/internal/project-telegram/9/5/execute`, {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ operation: 'status', args: {} }),
+    });
+    expect(response.status).toBe(429);
+    expect(Number(response.headers.get('retry-after'))).toBeGreaterThan(0);
+    expect(await response.json()).toEqual({ code: 'RUNNER_RATE_LIMITED' });
+    expect(state.forBot).not.toHaveBeenCalled();
+    expect(state.broker).not.toHaveBeenCalled();
+  });
+
+  /** Переполнение квоты одного подписанного бота не блокирует другого на том же IP runtime. */
+  it('изолирует квоты разных ботов и сохраняет лимит при смене поколения ключа', async () => {
+    for (let batch = 0; batch < 12; batch++) {
+      const key = `Bearer ${projectTelegramRunnerKey(9, 5, batch)}`;
+      await Promise.all(Array.from({ length: 50 }, () => call('POST', '/internal/project-telegram/9/5/execute',
+        0, { operation: 'status', args: { extra: true } }, key)));
+    }
+    expect((await call('POST', '/internal/project-telegram/9/5/execute', 0,
+      { operation: 'status', args: {} }, `Bearer ${projectTelegramRunnerKey(9, 5, 13)}`)).status).toBe(429);
+    expect(state.forBot).not.toHaveBeenCalled();
+    state.forBot.mockResolvedValue({ accountId: 81, session: { apiId: '123', apiHash: 'fake', sessionString: 'fake' } });
+    state.broker.mockResolvedValue({ authorized: true });
+    expect(await call('POST', '/internal/project-telegram/9/62/execute', 0,
+      { operation: 'status', args: {} }, `Bearer ${projectTelegramRunnerKey(9, 62, 0, 81)}`))
+      .toEqual({ status: 200, body: { result: { authorized: true } } });
+    expect(state.broker).toHaveBeenCalledTimes(1);
+  });
+});
