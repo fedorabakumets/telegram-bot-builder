@@ -31,7 +31,7 @@ it('не повторяет отказ по памяти и завершает �
   expect(mocks.start).toHaveBeenCalledTimes(2);
   expect(result).toMatchObject({ ok: true, restarted: 1, failed: 1,
     results: [{ tokenId: 45, success: false, error: memoryError }, { tokenId: 46, success: true }] });
-  expect(progress.at(-1)).toMatchObject({ phase: 'completed', total: 2, completed: 2,
+  expect(progress[progress.length - 1]).toMatchObject({ phase: 'completed', total: 2, completed: 2,
     stopped: 2, attempted: 2, restarted: 1, failed: 1 });
   expect(isRestartAllRunning(120045)).toBe(false);
   expect(JSON.stringify(progress)).not.toContain('qa-secret');

@@ -10,7 +10,6 @@ import { findActiveProcessForToken } from '../utils/findActiveProcessForToken';
 import { isServerShuttingDown } from './serverShutdownState';
 import {
   selectSweepCandidates,
-  SERVER_RESTART_MARKER,
   type SweepInstanceInput,
 } from './restoreSweepSelect';
 import { RESTORE_SWEEP_DELAY_MS } from './restoreSweepConstants';

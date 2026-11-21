@@ -28,9 +28,9 @@ it('показывает этапы и завершённые исходы бе�
   expect(result.restarted).toBe(1);
   expect(result.failed).toBe(1);
   expect(progress.map(p => p.phase)).toEqual(['stopping', 'stopping', 'stopping', 'cooldown', 'starting', 'starting', 'starting', 'completed']);
-  expect(progress.at(-1)).toMatchObject({ total: 2, stopped: 2, completed: 2, attempted: 2, restarted: 1, failed: 1 });
+  expect(progress[progress.length - 1]).toMatchObject({ total: 2, stopped: 2, completed: 2, attempted: 2, restarted: 1, failed: 1 });
   expect(JSON.stringify(progress)).not.toContain('secret-one');
-  expect(mocks.stop.mock.invocationCallOrder.at(-1)).toBeLessThan(mocks.start.mock.invocationCallOrder[0]);
+  expect(mocks.stop.mock.invocationCallOrder[mocks.stop.mock.invocationCallOrder.length - 1]).toBeLessThan(mocks.start.mock.invocationCallOrder[0]);
   // Пауза проекта 250 мс теперь только в общем startBot limiter, без двойного ожидания пакетом.
   expect(mocks.sleep.mock.calls).toEqual([[5000]]);
 });
@@ -58,12 +58,12 @@ it('не блокирует второй старт медленным перв�
   const progress: RestartAllProgress[] = [];
   const pending = restartAllRunningBots(12, { onProgress: event => progress.push(event) });
   await vi.waitFor(() => expect(mocks.start).toHaveBeenCalledTimes(2));
-  expect(progress.at(-1)).toMatchObject({ phase: 'starting', attempted: 1 });
+  expect(progress[progress.length - 1]).toMatchObject({ phase: 'starting', attempted: 1 });
   complete({ success: true });
   const result = await pending;
   expect(mocks.start).toHaveBeenCalledTimes(2);
   expect(result.results.map(row => row.tokenId)).toEqual([1, 2]);
-  expect(progress.at(-1)).toMatchObject({ phase: 'completed', attempted: 2 });
+  expect(progress[progress.length - 1]).toMatchObject({ phase: 'completed', attempted: 2 });
   expect(mocks.sleep.mock.calls).toEqual([[5000]]);
 });
 
