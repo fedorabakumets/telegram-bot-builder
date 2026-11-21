@@ -1,0 +1,29 @@
+# @fileoverview Приватный сервис общего клиента Telegram для аккаунтов проектов.
+FROM python:3.13-slim-bookworm
+WORKDIR /app
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    HOME=/var/lib/botcraft-telegram \
+    TELETHON_BROKER_LOCK_FILE=/var/lib/botcraft-telegram/broker.lock
+
+# Инициализатор передаёт сигналы Python, а gosu снимает привилегии после подготовки тома Railway.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends tini gosu \
+    && rm -rf /var/lib/apt/lists/*
+COPY requirements.txt ./
+# Версии берутся из единственного списка, но брокеру не устанавливаются зависимости Bot API.
+RUN python -c "import re; from pathlib import Path; Path('/tmp/broker-requirements.txt').write_text('\n'.join(line for line in Path('requirements.txt').read_text().splitlines() if re.match(r'^(aiohttp|telethon|python-socks|redis)(?:\[|=)', line)))" \
+    && pip install --no-cache-dir -r /tmp/broker-requirements.txt \
+    && rm /tmp/broker-requirements.txt
+COPY server/python/telethon_account_broker.py server/python/telethon_broker_*.py ./broker/
+
+# Проверка готовности не открывает Telegram-сессию и не передаёт внутренний секрет.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+    CMD python -c "import os, urllib.request; port=os.environ.get('TELETHON_BROKER_PORT') or os.environ.get('PORT', '8765'); urllib.request.build_opener(urllib.request.ProxyHandler({})).open('http://localhost:'+port+'/healthz', timeout=3).close()"
+
+# Приватный bind включается явно через окружение Railway; по умолчанию остаётся loopback.
+EXPOSE 8765
+STOPSIGNAL SIGTERM
+ENTRYPOINT ["/usr/bin/tini", "--"]
+# Новый том Railway принадлежит root: подготавливаем только каталог состояния, затем работаем от UID 10001.
+CMD ["sh", "-ec", "mkdir -p /var/lib/botcraft-telegram; chown -R 10001:10001 /var/lib/botcraft-telegram; exec gosu 10001:10001 python -u /app/broker/telethon_account_broker.py"]

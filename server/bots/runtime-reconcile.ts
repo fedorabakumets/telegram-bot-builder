@@ -16,6 +16,7 @@ import { automaticBotStartAllowed } from "./automaticBotStartAllowed";
 import { refuseInactiveBotStart } from "./refuse-inactive-bot-start";
 import { mapRestoreCandidates } from './restoreGrouping';
 import { recoverMemoryWaiters } from './recoverMemoryWaiters';
+import { isManualDevBotStart } from './manual-dev-bot-start';
 
 /** Итог одного прохода сверки. */
 export interface ReconcileResult {
@@ -38,6 +39,8 @@ let inFlight: Promise<ReconcileResult> | null = null;
  */
 export function scheduleRuntimeReconcile(intervalMs = 5_000, beforeReconcile?: () => Promise<unknown>): () => void {
   if (!Number.isSafeInteger(intervalMs) || intervalMs < 1_000) throw new Error("Некорректный интервал сверки");
+  /** Ручная dev-сессия не создаёт фоновый таймер восстановления других ботов. */
+  if (isManualDevBotStart()) return () => {};
   // Медленная привязка или запуск не должны создавать параллельные проходы таймера.
   let ticking = false;
   const timer = setInterval(() => {
@@ -60,6 +63,8 @@ export function scheduleRuntimeReconcile(intervalMs = 5_000, beforeReconcile?: (
  * @returns Число выполненных операций
  */
 export function reconcileBotDesiredState(): Promise<ReconcileResult> {
+  /** Защищает также прямые вызовы сверки вне HTTP-точки входа. */
+  if (isManualDevBotStart()) return Promise.resolve({ started: 0, stopped: 0, failed: 0 });
   if (inFlight) return inFlight;
   inFlight = runReconcile().finally(() => { inFlight = null; });
   return inFlight;

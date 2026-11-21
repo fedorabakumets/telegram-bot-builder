@@ -8,7 +8,7 @@
  */
 
 import fs from 'fs';
-import { execSync } from 'child_process';
+import { execSync, execFileSync } from 'child_process';
 import { generatePythonCode } from '../bot-generator.ts';
 
 function makeCleanProject(nodes: any[]) {
@@ -175,6 +175,76 @@ test('D03', 'тройные кавычки в исходнике → синта�
     makeMessageNode('msg1'),
   ]);
   syntax(gen(p, 'd03'), 'd03');
+});
+
+/** Доказывает, что ожидание Redis-очереди не расходует таймер выполнения пользовательского кода. */
+test('D04', 'отмеченный процесс ждёт очередь аккаунта до таймера 180 секунд', () => {
+  const generated = gen(makeCleanProject([makeCodeNode('code1')]), 'd04');
+  syntax(generated, 'd04');
+  const start = generated.indexOf('import textwrap as _code_textwrap');
+  const source = generated.slice(start, generated.indexOf('# Обработчики узлов code', start));
+  execFileSync('python', ['-'], { input: `
+import asyncio, os, logging, re, sys
+from types import SimpleNamespace
+from contextlib import asynccontextmanager
+${source}
+user_data = {}
+saved, timers, keys = [], [], []
+async def init_all_user_vars(user_id): return {}
+async def set_user_var(user_id, key, value): saved.append((user_id, key, value))
+@asynccontextmanager
+async def _scoped_user_lock(*args): yield
+async def verify():
+    entered, release = asyncio.Event(), asyncio.Event()
+    closed = []
+    class Lock:
+        async def __aenter__(self):
+            entered.set()
+            await release.wait()
+        async def __aexit__(self, *args): pass
+    class Redis:
+        @staticmethod
+        def from_url(url):
+            assert url == 'redis://synthetic.invalid/0'
+            return Redis()
+        def lock(self, name, **options):
+            keys.append((name, options))
+            return Lock()
+        async def aclose(self): closed.append(True)
+    sys.modules['redis.asyncio'] = SimpleNamespace(Redis=Redis)
+    os.environ['REDIS_URL'] = 'redis://synthetic.invalid/0'
+    globals()['userbot_client'] = SimpleNamespace(_account_id=17)
+    original_wait_for = asyncio.wait_for
+    async def timed(coro, timeout):
+        timers.append(timeout)
+        return await original_wait_for(coro, timeout)
+    asyncio.wait_for = timed
+    try:
+        task = asyncio.create_task(_run_code_node(1, '# botcraft:shared-account-workflow\\nresult = 42'))
+        await entered.wait()
+        assert not timers and not saved, (timers, saved)
+        release.set()
+        await task
+        assert timers == [180], timers
+        assert (1, 'result', 42) in saved
+        assert keys == [('tbb:telegram:code-workflow:account:17', {'timeout': 240, 'blocking_timeout': 900})]
+        assert closed == [True]
+        async with _code_shared_account_scope(userbot_client, 'result = 1'): pass
+        async with _code_shared_account_scope(None, '# botcraft:shared-account-workflow'): pass
+        assert len(keys) == 1
+        release.clear()
+        entered.clear()
+        task = asyncio.create_task(_run_code_node(2, '# botcraft:shared-account-workflow\\nresult = 99'))
+        await entered.wait()
+        task.cancel()
+        try: await task
+        except asyncio.CancelledError: pass
+        assert closed == [True, True]
+        assert timers == [180]
+    finally:
+        asyncio.wait_for = original_wait_for
+asyncio.run(verify())
+`, stdio: 'pipe' });
 });
 
 console.log('\n══════════════════════════════════════════════════════════════════');

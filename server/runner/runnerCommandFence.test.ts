@@ -2,7 +2,8 @@
 import { afterEach, expect, it, vi } from 'vitest';
 
 /** Подмена драйвера исключает обращения к реальной базе данных. */
-const mocks = vi.hoisted(() => ({ query: vi.fn(), end: vi.fn(), create: vi.fn() }));
+const mocks = vi.hoisted(() => ({ query: vi.fn(), end: vi.fn(), create: vi.fn(), prepare: vi.fn() }));
+vi.mock('./runnerStartCommand', () => ({ prepareWorkerLine: mocks.prepare }));
 vi.mock('pg', () => ({ Pool: class {
   /** Сохраняет настройки создаваемого пула. */
   constructor(options: unknown) { mocks.create(options); }
@@ -14,6 +15,7 @@ vi.mock('pg', () => ({ Pool: class {
   on = vi.fn();
 } }));
 import { closeBotCommandFence, isCurrentBotCommand } from './runnerCommandFence';
+import { RunnerWorkers } from './runnerWorkers';
 
 afterEach(async () => { await closeBotCommandFence(); vi.clearAllMocks(); vi.unstubAllEnvs(); });
 
@@ -42,4 +44,29 @@ it('передаёт ошибку запроса вызывающему вмес
   vi.stubEnv('DATABASE_URL', 'postgres://localhost/test');
   mocks.query.mockRejectedValueOnce(new Error('unavailable'));
   await expect(isCurrentBotCommand({ instance_id: 9, token_id: 4, desired_generation: 3 }, 'start_bot')).rejects.toThrow('unavailable');
+});
+
+it.each([true, false])('сообщает об ошибке подготовки только для актуальной команды: %s', async (current) => {
+  vi.stubEnv('DATABASE_URL', 'postgres://localhost/test');
+  mocks.query.mockResolvedValueOnce({ rows: [{ tokenId: 4, desiredGeneration: 3, desiredStatus: 'running' }] })
+    .mockResolvedValueOnce({ rows: [{ tokenId: 4, desiredGeneration: current ? 3 : 4, desiredStatus: 'running' }] });
+  mocks.prepare.mockResolvedValueOnce({ tokenId: 4, error: 'Сборка недоступна' });
+  const emit = vi.fn();
+  const workers = new RunnerWorkers({
+    runnerId: 'test', redisUrl: 'redis://unused', pythonPath: 'unused', workerScript: 'unused',
+    cacheDir: 'unused', buildsKeep: 1, requireFence: true,
+  }, emit);
+  const internal = workers as unknown as {
+    /** Подменяет процессы исполнителя для проверки без запуска Python. */
+    workers: Map<string, unknown>;
+    /** Помещает одну команду в очередь подменённого процесса. */
+    forward: (workerKey: string, instance: string, line: string) => Promise<void>;
+  };
+  const pendingTokenIds = new Set<number>();
+  internal.workers.set('1', { instance: 'current', queue: Promise.resolve(), pendingTokenIds });
+  await internal.forward('1', 'current', JSON.stringify({
+    cmd: 'start_bot', token_id: 4, desired_generation: 3, instance_id: 9,
+  }));
+  expect(emit).toHaveBeenCalledTimes(current ? 2 : 0);
+  expect(pendingTokenIds.size).toBe(0);
 });

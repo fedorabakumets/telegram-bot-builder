@@ -1,11 +1,11 @@
-{# Триггер редактирования сообщения через Telethon userbot #}
+{# @fileoverview Триггер редактирования сообщения через Telethon userbot #}
 {# Срабатывает когда сообщение отредактировано в указанном чате #}
 
 # ─── Триггер редактирования: {{ nodeId }} ─────────────────────────────────
 {%- if userbotEntity %}
-@userbot_client.on(events.MessageEdited(chats={{ userbotEntity | tojson }}))
+@_subscribe_userbot_edit(events.MessageEdited(chats={{ userbotEntity | tojson }}))
 {%- else %}
-@userbot_client.on(events.MessageEdited())
+@_subscribe_userbot_edit(events.MessageEdited())
 {%- endif %}
 async def handle_userbot_edit_{{ nodeId | replace('-', '_') }}(event):
     """Триггер редактирования сообщения (узел {{ nodeId }})"""

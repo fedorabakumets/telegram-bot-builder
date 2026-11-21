@@ -11,6 +11,7 @@
  * @module BotControlPanel
  */
 
+import { useState } from 'react';
 import { BotControlPanelHeader } from './BotControlPanelHeader';
 import { BotControlPanelLoading } from './BotControlPanelLoading';
 import { BotControlPanelEmpty } from './BotControlPanelEmpty';
@@ -22,6 +23,10 @@ import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-a
 import { useTelegramLogin } from '@/components/editor/header/hooks/use-telegram-login';
 import { isGuest } from '@/types/telegram-user';
 import { useBotViewMode } from '../canvas/use-bot-view-mode';
+import type { BotWorkspaceMode } from '../accounts/BotWorkspaceModeSwitch';
+import { BotAccountsWorkspace } from '../accounts/BotAccountsWorkspace';
+import { BotDemoAccountContext } from '../accounts/bot-demo-account-setting';
+import { useProjectTelegramAccounts } from '../accounts/use-project-telegram-accounts';
 import type { BotProject, BotToken } from '@shared/schema';
 
 /**
@@ -78,6 +83,7 @@ export function BotControlPanel({
   const { user, isLoading: authLoading } = useTelegramAuth();
   const { handleTelegramLogin } = useTelegramLogin();
   const { viewMode, setViewMode } = useBotViewMode();
+  const [workspaceMode, setWorkspaceMode] = useState<BotWorkspaceMode>('bots');
 
   /** Является ли текущий пользователь гостем */
   const isGuestUser = !authLoading && (!user || isGuest(user));
@@ -88,6 +94,10 @@ export function BotControlPanel({
   const currentProjectIndex = projects.findIndex((p) => p.id === currentProjectId);
   const currentProjectTokens =
     currentProjectIndex >= 0 ? (allTokens[currentProjectIndex] || []) : [];
+  /** Модель использует рабочие данные только при включённой функции и подтверждённом входе. */
+  const accounts = useProjectTelegramAccounts(currentProjectId, currentProjectTokens.map(bot => ({
+    id: `project-bot-${bot.id}`, name: bot.botFirstName || bot.name, username: bot.botUsername ?? '',
+  })), !authLoading && user && !isGuest(user) ? user.id : null);
 
   /** При открытии формы выбирает текущий проект, если он доступен. */
   const openConnectBot = () => {
@@ -105,9 +115,19 @@ export function BotControlPanel({
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         currentProjectTokens={currentProjectTokens}
+        workspaceMode={workspaceMode}
+        onWorkspaceModeChange={setWorkspaceMode}
+        onAddAccount={accounts.createAccount}
+        canAddAccount={accounts.canManage && !accounts.busy}
+        demoAccounts={accounts.demo}
       />
 
-      <div
+      {workspaceMode === 'accounts' && (
+        <div className="min-h-0 flex-1 overflow-hidden">
+          <BotAccountsWorkspace model={accounts} />
+        </div>
+      )}
+      {workspaceMode === 'bots' && <div
         className={
           isCanvas
             ? 'flex-1 min-h-0 overflow-hidden p-0 sm:p-0'
@@ -126,16 +146,18 @@ export function BotControlPanel({
         ) : projects.length === 0 ? (
           <BotControlPanelEmpty />
         ) : (
+          <BotDemoAccountContext.Provider value={accounts}>
           <BotManagementInterface
             projects={projects}
             allTokens={allTokens}
             currentProjectId={currentProjectId}
             viewMode={viewMode}
           />
+          </BotDemoAccountContext.Provider>
         )}
-      </div>
+      </div>}
 
-      <AddBotDialog
+      {workspaceMode === 'bots' && <AddBotDialog
         showAddBot={showAddBot}
         setShowAddBot={setShowAddBot}
         projectForNewBot={projectForNewBot}
@@ -147,7 +169,7 @@ export function BotControlPanel({
         createBotMutation={createBotMutation}
         handleAddBot={handleAddBot}
         allTokensFlat={allTokensFlat}
-      />
+      />}
     </div>
   );
 }

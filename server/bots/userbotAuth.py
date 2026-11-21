@@ -34,7 +34,8 @@ async def handle_send_code(data):
     api_hash = data["api_hash"]
     phone = data["phone"]
 
-    client = TelegramClient(StringSession(), api_id, api_hash)
+    options = {"proxy": data["proxy"]} if data.get("proxy") else {}
+    client = TelegramClient(StringSession(), api_id, api_hash, **options)
     await client.connect()
 
     result = await client.send_code_request(phone)
@@ -56,8 +57,7 @@ async def handle_sign_in(data):
 
     try:
         await client.sign_in(phone, code, phone_code_hash=phone_hash)
-        session_string = client.session.save()
-        return {"ok": True, "session_string": session_string}
+        return await signed_in_result(data)
     except SessionPasswordNeededError:
         return {"ok": True, "needs_2fa": True}
     except PhoneCodeInvalidError:
@@ -78,10 +78,30 @@ async def handle_sign_in_2fa(data):
 
     try:
         await client.sign_in(password=password)
-        session_string = client.session.save()
-        return {"ok": True, "session_string": session_string}
+        return await signed_in_result(data)
     except PasswordHashInvalidError:
         return {"ok": False, "error": "invalid_password", "message": "Неверный пароль"}
+
+
+async def signed_in_result(data):
+    """
+    Возвращает сессию и, по запросу, данные подтверждённого аккаунта.
+    @param data - Параметры текущего шага авторизации.
+    @returns Результат успешной авторизации.
+    """
+    result = {"ok": True, "session_string": client.session.save()}
+    if data.get("include_identity"):
+        try:
+            identity = await asyncio.wait_for(client.get_me(), timeout=5)
+            if identity:
+                result.update(
+                    telegram_user_id=str(identity.id),
+                    telegram_name=" ".join(filter(None, (identity.first_name, identity.last_name))),
+                    telegram_username=identity.username,
+                )
+        except Exception:
+            pass  # Сессия уже получена, имя можно обновить позже.
+    return result
 
 
 async def handle_disconnect():

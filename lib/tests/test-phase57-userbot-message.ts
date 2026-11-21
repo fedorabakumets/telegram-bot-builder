@@ -11,7 +11,7 @@
  */
 
 import fs from 'fs';
-import { execSync } from 'child_process';
+import { execFileSync, execSync } from 'child_process';
 import { generatePythonCode } from '../bot-generator.ts';
 
 // ─── Утилиты ─────────────────────────────────────────────────────────────────
@@ -163,6 +163,133 @@ test('A10', 'содержит userbot_client.disconnect() в finally', () => {
   const p = makeCleanProject([makeUserbotMessageNode('ub1')]);
   const code = gen(p, 'a10');
   ok(code.includes('userbot_client.disconnect'), 'userbot_client.disconnect должен быть в коде');
+});
+
+/** Проверяет адаптер объектов сценария без создания дополнительной сессии Telethon. */
+test('A13', 'общий клиент возвращает объекты кнопок и поддерживает чтение inline-предложений', () => {
+  const code = gen(makeCleanProject([makeUserbotMessageNode('ub1')]), 'a13');
+  ok(code.includes('async def inline_query(self, bot, query)'), 'Нужно чтение inline-предложений');
+  ok(code.includes('SimpleNamespace(**button, click=click)'), 'Кнопка должна иметь метод click');
+  ok(code.includes('message["buttons"] = [row.buttons for row in rows]'), 'Сценарий получает объекты вместо словарей');
+  ok(code.includes('payload.get("code", "BROKER_UNAVAILABLE")'), 'Ошибка должна содержать безопасный код');
+  syntax(code, 'a13');
+});
+
+test('A11', 'общая сессия передаёт типизированную отправку и возвращает ответы', () => {
+  const code = gen(makeCleanProject([makeUserbotMessageNode('ub1', { saveResponseIdTo: 'answer' })]), 'a11');
+  const source = code.slice(code.indexOf('import base64 as _project_telegram_base64'), code.indexOf('userbot_client = _ProjectTelegramBridge()'));
+  ok(source.includes('class _ProjectTelegramBridge'), 'Адаптер должен входить в конфигурацию');
+  ok(code.includes('_shared_responses = sent.responses'), 'Ответ должен браться из одной команды отправки');
+  syntax(code, 'a11');
+  execFileSync('python', ['-'], { input: `
+import asyncio, os, re, sys
+from types import SimpleNamespace
+sys.modules["aiohttp"] = SimpleNamespace()
+os.environ.update(PROJECT_ID="12", BOT_TOKEN_ID="34", PROJECT_TELEGRAM_API_BASE="http://bridge.invalid", PROJECT_TELEGRAM_RUNNER_KEY="test")
+TOKEN_ID = 0
+${source}
+
+async def verify():
+    bridge = _ProjectTelegramBridge()
+    try:
+        bridge.add_event_handler(None, object())
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("Неподдерживаемая подписка не должна молча игнорироваться")
+    assert bridge._endpoint == "http://bridge.invalid/internal/project-telegram/12/34/execute"
+    calls = []
+
+    async def execute(operation, **args):
+        calls.append((operation, args))
+        if operation == "status":
+            return {"authorized": True}
+        return {"id": 1, "responses": [{"id": 2, "text": "ответ"}]}
+
+    bridge._execute = execute
+    await bridge.connect()
+    assert await bridge.is_user_authorized()
+    sent = await bridge.send_message("me", "текст", wait_seconds=30)
+    assert sent.id == 1 and sent.responses[0].id == 2
+    assert calls[-1][0] == "send_message" and calls[-1][1]["wait_seconds"] == 25
+    assert bridge.choose_response(sent.responses, "last").text == "ответ"
+    await bridge.disconnect()
+    assert not bridge.is_connected()
+    assert len(calls) == 2
+
+asyncio.run(verify())
+` });
+});
+
+/** Проверяет доставку событий и фильтры настоящих builders без подключения Telegram. */
+test('A14', 'общий клиент подписывает NewMessage и MessageEdited одним потоком', () => {
+  const code = gen(makeCleanProject([makeUserbotMessageNode('ub1')]), 'a14');
+  const source = code.slice(code.indexOf('import base64 as _project_telegram_base64'), code.indexOf('userbot_client = _ProjectTelegramBridge()'));
+  syntax(code, 'a14');
+  execFileSync('python', ['-'], { input: `
+import asyncio, os, re, logging
+from types import SimpleNamespace
+from telethon import events
+os.environ.update(PROJECT_ID="12", BOT_TOKEN_ID="34", PROJECT_TELEGRAM_API_BASE="http://bridge.invalid", PROJECT_TELEGRAM_RUNNER_KEY="test")
+TOKEN_ID = 0
+${source}
+
+async def verify():
+    bridge = _ProjectTelegramBridge()
+    calls, delivered = [], []
+    queue = asyncio.Queue()
+    async def execute(operation, **args):
+        calls.append((operation, args))
+        if operation == "status": return {"authorized": True}
+        assert operation == "events_poll"
+        if args["wait_seconds"] == 0:
+            return {"cursor": 1, "events": [], "resolved_targets": {"@chat": 7}}
+        return await queue.get()
+    bridge._execute = execute
+    @bridge.on(events.NewMessage(chats="@chat", incoming=True, pattern="hello"))
+    async def on_new(event): delivered.append(("new", event.chat_id, event.pattern_match.group()))
+    async def on_edit(event): delivered.append(("edited", event.message.text))
+    bridge.add_event_handler(on_edit, events.MessageEdited(chats=7))
+    extra = events.MessageEdited(chats=99)
+    bridge.add_event_handler(on_edit, extra)
+    assert bridge.remove_event_handler(on_edit, extra) == 1
+    assert len(bridge._event_handlers) == 2
+    await bridge.connect()
+    assert bridge._event_ready.is_set()
+    def event(kind, text, out=False):
+        return {"kind": kind, "chat_id": 7, "message": {"id": 2, "sender_id": 9, "text": text, "out": out}}
+    await queue.put({"cursor": 5, "resolved_targets": {"@chat": 7}, "events": [
+        event("new", "hello world"), event("new", "ignored"), event("new", "hello", True), event("edited", "changed")
+    ]})
+    for _ in range(20):
+        if len(delivered) == 2: break
+        await asyncio.sleep(0)
+    assert delivered == [("new", 7, "hello"), ("edited", "changed")], delivered
+    assert bridge.remove_event_handler(on_new) == 1
+    await bridge.ensure_event_subscription()
+    await bridge.disconnect()
+    assert bridge._event_task is None
+    assert all(name != "get_messages" for name, _ in calls)
+    bridge._connected = True
+    bridge._event_failure = RuntimeError("CURSOR_EXPIRED")
+    try:
+        await bridge.ensure_event_subscription()
+    except RuntimeError as error:
+        assert str(error) == "CURSOR_EXPIRED"
+    else:
+        raise AssertionError("Ошибка потока должна сохраняться до явного изменения подписки")
+    bridge._connected = False
+asyncio.run(verify())
+` });
+});
+
+test('A12', 'триггер редактирования получает объявление клиента без других узлов юзербота', () => {
+  const code = gen(makeCleanProject([{
+    id: 'edit-trigger', type: 'userbot_edit_trigger', position: { x: 0, y: 0 }, data: {},
+  }]), 'a12');
+  ok(code.includes('userbot_client = _ProjectTelegramBridge()'), 'Нужен условный клиент даже без отправки сообщения');
+  ok(code.includes('@_subscribe_userbot_edit(events.MessageEdited()'), 'Триггер регистрируется через безопасный декоратор');
+  syntax(code, 'a12');
 });
 
 // ════════════════════════════════════════════════════════════════════════════

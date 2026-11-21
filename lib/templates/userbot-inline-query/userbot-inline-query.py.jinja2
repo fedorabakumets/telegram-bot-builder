@@ -77,19 +77,27 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
         return
 
     try:
-        # Выполняем inline-запрос
-        _results = await userbot_client.inline_query(_bot, _query)
+        _target = int(_target_chat) if _target_chat.lstrip('-').isdigit() else _target_chat
+        if _PROJECT_TELEGRAM_ACCOUNT:
+            _sent = await userbot_client.inline_send(_bot, _query, _target, _idx)
+            if not _sent.id:
+                logging.warning("Inline-запрос не вернул результатов")
+                return
+            _result = _sent
+        else:
+            # Выполняем inline-запрос
+            _results = await userbot_client.inline_query(_bot, _query)
 
-        if not _results or len(_results) == 0:
-            logging.warning(f"⚠️ Узел {{ nodeId }}: inline-запрос к {_bot} вернул 0 результатов")
-            return
+            if not _results or len(_results) == 0:
+                logging.warning(f"⚠️ Узел {{ nodeId }}: inline-запрос к {_bot} вернул 0 результатов")
+                return
 
-        if _idx >= len(_results):
-            logging.warning(f"⚠️ Узел {{ nodeId }}: индекс {_idx} >= количество результатов {len(_results)}")
-            _idx = 0
+            if _idx >= len(_results):
+                logging.warning(f"⚠️ Узел {{ nodeId }}: индекс {_idx} >= количество результатов {len(_results)}")
+                _idx = 0
 
-        _result = _results[_idx]
-        logging.info(f"✅ Inline-запрос к {_bot}: получено {len(_results)} результатов, выбран [{_idx}]")
+            _result = _results[_idx]
+            logging.info(f"✅ Inline-запрос к {_bot}: получено {len(_results)} результатов, выбран [{_idx}]")
 
 {%- if saveResultTitleTo %}
         # Сохраняем title результата
@@ -106,8 +114,8 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
 {%- endif %}
 
         # Отправляем результат в целевой чат
-        _target = int(_target_chat) if _target_chat.lstrip('-').isdigit() else _target_chat
-        _sent = await _result.click(_target)
+        if not _PROJECT_TELEGRAM_ACCOUNT:
+            _sent = await _result.click(_target)
 
 {%- if saveResponseIdTo %}
         # Сохраняем ID отправленного сообщения

@@ -340,9 +340,9 @@ async def main():
         if userbot_client:
             await userbot_client.connect()
             if not await userbot_client.is_user_authorized():
-                logging.error("❌ Userbot не авторизован — проверьте USERBOT_SESSION_STRING")
+                logging.error("❌ Userbot не авторизован — проверьте настройки Telegram-аккаунта")
             else:
-                logging.info("🟣 Telethon userbot подключён")
+                logging.info("🟣 Telegram-аккаунт проекта подключён" if _PROJECT_TELEGRAM_ACCOUNT else "🟣 Telethon userbot подключён")
 {%- endif %}
 
 {%- if projectId and contentCache %}

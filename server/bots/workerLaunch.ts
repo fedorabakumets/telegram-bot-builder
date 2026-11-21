@@ -5,6 +5,7 @@
  */
 
 import { execFileSync } from "node:child_process";
+import { randomUUID } from "node:crypto";
 import { cpSync, mkdirSync, rmSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import { getDockerWorkerConfig, isDockerWorkerRuntime } from "./workerRuntime";
@@ -26,6 +27,8 @@ export interface WorkerLaunch {
   projects: Set<number> | null;
   /** true, если воркер работает в контейнере */
   docker: boolean;
+  /** Уникальный идентификатор контейнера, который записывает запускающий CLI. */
+  dockerCidFile?: string;
   /** ID исполнителя для WORKER_RUNTIME=remote; null — воркер запускается на этой машине */
   runnerId: string | null;
   /** ID проекта, если исполнитель — его сервис на Railway (поднимается перед запуском) */
@@ -94,16 +97,18 @@ export async function prepareWorkerLaunch(
     stagedBotsDir: staged,
   });
   removeStaleContainer(cmd.name);
+  const dockerCidFile = join(dirname(staged), `${randomUUID()}.cid`);
   const clientEnv: NodeJS.ProcessEnv = {};
   for (const key of ["PATH", "DOCKER_HOST", "DOCKER_CONFIG", "DOCKER_CONTEXT", "DOCKER_CERT_PATH", "DOCKER_TLS_VERIFY"]) {
     if (process.env[key]) clientEnv[key] = process.env[key];
   }
   return {
     command: "docker",
-    args: cmd.args,
+    args: [cmd.args[0], "--cidfile", dockerCidFile, ...cmd.args.slice(1)],
     env: { ...clientEnv, ...cmd.env },
     projects: projectIds ? new Set(projectIds) : null,
     docker: true,
+    dockerCidFile,
     runnerId: null,
   };
 }

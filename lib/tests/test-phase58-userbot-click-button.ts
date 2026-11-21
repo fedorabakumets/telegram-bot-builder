@@ -63,6 +63,7 @@ function makeUserbotClickButtonNode(id: string, opts: any = {}) {
       saveButtonsTo: opts.saveButtonsTo || '',
       saveHasMediaTo: opts.saveHasMediaTo || '',
       saveMediaTo: opts.saveMediaTo || '',
+      responseStrategy: opts.responseStrategy || 'edit',
       autoTransitionTo: opts.autoTransitionTo || '',
       enableAutoTransition: !!opts.autoTransitionTo,
     },
@@ -187,6 +188,14 @@ test('A08', 'clickDelivery=await → msg.click с timeout 5с', () => {
   syntax(code, 'a08');
 });
 
+test('A09', 'общий аккаунт нажимает callback-кнопку и ждёт ответ одной командой', () => {
+  const code = gen(makeCleanProject([makeUserbotClickButtonNode('ucb1', { responseStrategy: 'new_message' })]), 'a09');
+  ok(code.includes('_shared_click = await userbot_client.click_button('), 'Нужен вызов общей команды нажатия');
+  ok(code.includes('response_mode="new_message"'), 'Команда должна передать режим ожидания');
+  ok(code.includes('_updated = _shared_click.response'), 'Ответ берётся из результата команды');
+  syntax(code, 'a09');
+});
+
 // ════════════════════════════════════════════════════════════════════════════
 // БЛОК B: Режимы поиска кнопки
 // ════════════════════════════════════════════════════════════════════════════
@@ -203,10 +212,31 @@ test('B02', 'clickMode=data → поиск по callback_data + fire msg.click',
   const p = makeCleanProject([makeUserbotClickButtonNode('ucb1', { clickMode: 'data', clickValue: 'play_game' })]);
   const code = gen(p, 'b02');
   ok(
-    code.includes("_click_val.encode('utf-8') in _btn.data"),
+    code.includes("_click_val.encode('utf-8') in _button_callback_data(_btn)"),
     'поиск кнопки по callback_data должен быть в коде',
   );
-  ok(code.includes('_msg.click(data=_click_btn.data)'), 'fire click по data должен быть в коде');
+  ok(code.includes('_msg.click(data=_btn_click_data)'), 'fire click по data должен быть в коде');
+});
+
+/** Проверяет чтение callback на имитациях нового формата Telethon и DTO без сети. */
+test('B02a', 'Telethon нового формата и DTO брокера читают одинаковые callback', () => {
+  const code = gen(makeCleanProject([makeUserbotClickButtonNode('ucb1')]), 'b02a');
+  const helper = code.match(/        def _button_callback_data\(button\):\n(?:            .*\n)+/);
+  ok(!!helper, 'генератор должен включать совместимый обработчик callback');
+  const python = helper![0].split('\n').map(line => line.slice(8)).join('\n');
+  execSync('python -', { input: `from types import SimpleNamespace\n${python}\nassert _button_callback_data(SimpleNamespace(type=SimpleNamespace(data=b'callback'))) == b'callback'\nassert _button_callback_data(SimpleNamespace(data=b'callback')) == b'callback'\nassert _button_callback_data(SimpleNamespace(type=SimpleNamespace(url='https://example.com'))) is None\nassert _button_callback_data(None) is None\n`, stdio: ['pipe', 'pipe', 'pipe'] });
+  ok(!code.includes('_click_btn.data'), 'нажатие не должно читать удалённое поле');
+});
+
+/** Выполняет сгенерированную сериализацию новых типов без Telegram и сетевых запросов. */
+test('B02b', 'URL, inline, web-app и callback сохраняют полезную нагрузку нового формата', () => {
+  const code = gen(makeCleanProject([makeUserbotClickButtonNode('ucb1', { saveButtonsTo: 'buttons' })]), 'b02b');
+  const helpers = ['_button_callback_data', '_serialize_userbot_button'].map(name => {
+    const helper = code.match(new RegExp(`        def ${name}\\(button\\):\\n(?:            .*\\n)+`));
+    ok(!!helper, `отсутствует ${name}`);
+    return helper![0].split('\n').map(line => line.slice(8)).join('\n');
+  }).join('\n');
+  execSync('python -', { input: `from types import SimpleNamespace\n${helpers}\ndef button(kind, **fields):\n    return SimpleNamespace(text='Кнопка', type=type(kind, (), fields)())\nassert _serialize_userbot_button(button('InlineButtonTypeUrl', url='https://example.com')) == {'text': 'Кнопка', 'type': 'url', 'url': 'https://example.com'}\nassert _serialize_userbot_button(button('InlineButtonTypeWebView', url='https://example.com'))['type'] == 'web_app'\nassert _serialize_userbot_button(button('InlineButtonTypeSwitchInline', query='поиск'))['query'] == 'поиск'\nassert _serialize_userbot_button(button('InlineButtonTypeCallback', data=b'payload'))['data'] == 'payload'\nassert _serialize_userbot_button(button('ButtonTypeRequestPhone'))['type'] == 'request_phone'\nassert _serialize_userbot_button(button('ButtonTypeRequestGeoLocation'))['type'] == 'request_location'\nassert _serialize_userbot_button(button('InlineButtonTypeBuy'))['type'] == 'buy'\nassert _serialize_userbot_button(button('InlineButtonTypeGame'))['type'] == 'game'\n`, stdio: ['pipe', 'pipe', 'pipe'] });
 });
 
 test('B03', 'clickMode=index → _idx_parts и msg.click(row, col)', () => {

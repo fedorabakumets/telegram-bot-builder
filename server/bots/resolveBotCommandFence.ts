@@ -5,18 +5,19 @@
 import { storage } from '../storages/storage';
 import type { BotCommandFence } from './botWorkerManager';
 import { resolveBotRuntimeMode } from '../runtime/bot-runtime-mode';
+import { getWorkerRuntime } from './workerRuntime';
 
 /**
  * Читает версию команды до долгой подготовки сборки или ожидания воркера.
  * @param tokenId - Идентификатор токена бота
  * @param operation - Запуск или остановка
- * @returns Версия команды либо undefined в совместном режиме
+ * @returns Версия команды либо undefined для локального транспорта
  */
 export async function resolveBotCommandFence(
   tokenId: number,
   operation: 'start' | 'stop',
 ): Promise<BotCommandFence | undefined> {
-  if (resolveBotRuntimeMode() !== 'api') return undefined;
+  if (resolveBotRuntimeMode() !== 'api' && getWorkerRuntime() !== 'remote') return undefined;
   const instance = await storage.getBotInstanceByToken(tokenId);
   if (!instance || !instance.desiredStatus) {
     throw new Error(`Для бота ${tokenId} не записано желаемое состояние`);

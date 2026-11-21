@@ -3,6 +3,14 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { workerManager } from './botWorkerManager';
 
+/** Отсутствие воркера не доказывает остановку перед переносом сессии. */
+test('строгая остановка требует известного воркера', async () => {
+  const projectId = 987690;
+  const tokenId = 987691;
+  assert.equal(await workerManager.stopBot(projectId, tokenId), true);
+  assert.equal(await workerManager.stopBot(projectId, tokenId, undefined, true), false);
+});
+
 test('несовпадение проекта не отправляет команду чужому боту', async (t) => {
   const manager = workerManager as any;
   const projectId = 987680;

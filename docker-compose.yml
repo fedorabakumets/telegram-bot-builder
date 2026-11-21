@@ -86,6 +86,14 @@ services:
       WORKER_RUNTIME: remote
       WORKER_RUNNER_ID: default
       BOT_RUNTIME_MODE: api
+      # Общие аккаунты включаются только явной локальной настройкой.
+      PROJECT_TELEGRAM_ACCOUNTS_ENABLED: "${PROJECT_TELEGRAM_ACCOUNTS_ENABLED:-0}"
+      PROJECT_TELEGRAM_ACCOUNT_CUTOVER_ENABLED: "${PROJECT_TELEGRAM_ACCOUNT_CUTOVER_ENABLED:-0}"
+      PROJECT_TELEGRAM_API_BASE: "http://api:5000"
+      PROJECT_TELEGRAM_RUNNER_SECRET: "${PROJECT_TELEGRAM_RUNNER_SECRET:-}"
+      STORAGE_ENCRYPTION_KEY: "${STORAGE_ENCRYPTION_KEY:-}"
+      TELETHON_BROKER_URL: "http://127.0.0.1:8765"
+      TELETHON_BROKER_SECRET: "${TELETHON_BROKER_SECRET:-}"
       BOT_ARTIFACT_SOURCE: storage
       BOT_BUILDS_STORAGE_ID: "${BOT_BUILDS_STORAGE_ID:-}"
       S3_BUCKET: "${S3_BUCKET:-}"
@@ -137,7 +145,20 @@ services:
     depends_on:
       - api
 
+  # Брокер слушает loopback в сетевом пространстве API.
+  telegram-accounts:
+    profiles: [telegram-accounts]
+    build:
+      context: .
+      dockerfile: Dockerfile.telegram-accounts
+    network_mode: "service:api"
+    environment:
+      TELETHON_BROKER_SECRET: "${TELETHON_BROKER_SECRET:-}"
+    volumes:
+      - telegram_account_state:/var/lib/botcraft-telegram
+
 volumes:
+  telegram_account_state:
   postgres_data:
     name: bot-builder-postgres-data
   redis_data:

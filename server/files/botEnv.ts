@@ -13,6 +13,9 @@ import { withDatabaseRuntimeEnv } from "../bots/databaseRuntimeEnv";
 import { resolveWebhookBaseUrl } from "../bots/webhookBaseUrl";
 import { resolveBotLaunchMode } from "../../shared/bot-launch-mode";
 import { resolveBotInheritedSettings, type BotInheritedSettings } from "../../shared/bot-inherited-settings";
+import { projectTelegramRunnerKey } from "../bots/project-telegram-runner-auth";
+import { legacySessionCandidates } from "./legacy-session-candidates";
+import { withoutManagedTelegramEnvironment } from "./project-telegram-env-policy";
 
 /** Как переменные попадают к боту: файл .env в папке бота или поле env в команде start_bot */
 export type BotEnvSource = "file" | "inline";
@@ -82,7 +85,7 @@ export async function buildBotEnvContent(botDir: string, projectId: number, toke
   /** Настройки пула передаются удалённому исполнителю вместе с окружением бота. */
   const scope = launch?.sleep ?? { defaultMode: project?.defaultSleepMode, inherited: tokenRecord?.inheritSleepMode };
   /** Старый пользовательский WEBHOOK_URL не должен включать webhook при запуске через polling. */
-  const ownVariables = resolveBotEnvVariables(await storage.getEnvVariables(tokenId))
+  const ownVariables = withoutManagedTelegramEnvironment(resolveBotEnvVariables(await storage.getEnvVariables(tokenId)))
     .filter(({ key }) => key !== "WEBHOOK_URL");
   const customVariables = withDatabaseRuntimeEnv(withPollingRuntimeEnv(withTelegramBotApiUrl(ownVariables), undefined, scope));
   const { isRailwayProject, railwayBotEnvDefaults } = await import("../bots/railway/railwayConfig");
@@ -98,7 +101,36 @@ export async function buildBotEnvContent(botDir: string, projectId: number, toke
       customVariables.push({ key, value: fallback });
     }
   }
-  if (tokenRecord?.userbotEnabled === 1) {
+  /** Раннер привязанного бота получает только ключ вызова сервиса, без сессии Telegram. */
+  const accountId = process.env.PROJECT_TELEGRAM_ACCOUNTS_ENABLED === "1"
+    ? await (await import("../database/project-telegram-accounts-store")).getProjectTelegramAccountIdForBot(projectId, tokenId)
+    : undefined;
+  /** Проверяем каждую возможную сессию: пользовательская переменная не должна обходить защиту записи токена. */
+  const legacySessions = legacySessionCandidates(tokenRecord?.userbotSessionString, customVariables);
+  const legacyBlocked = accountId != null || (tokenRecord != null && (await Promise.all(
+    (legacySessions.length ? legacySessions : [null]).map(async session =>
+      (await import("../database/project-telegram-accounts-store"))
+        .isProjectTelegramLegacySessionBlocked(projectId, tokenId, session)),
+  )).some(Boolean));
+  if (legacyBlocked) {
+    /** Удаляем старые реквизиты, если их вручную добавили в переменные бота. */
+    for (let index = customVariables.length - 1; index >= 0; index--) {
+      if (/^USERBOT_(?:API_ID|API_HASH|SESSION_STRING)$/i.test(customVariables[index].key)) {
+        customVariables.splice(index, 1);
+      }
+    }
+  }
+  if (accountId != null) {
+    const base = process.env.PROJECT_TELEGRAM_API_BASE?.trim();
+    const instance = await storage.getBotInstanceByToken(tokenId);
+    const runnerKey = projectTelegramRunnerKey(projectId, tokenId, instance?.desiredGeneration ?? 0, accountId);
+    if (!base || !runnerKey) throw new Error("Сервис Telegram-аккаунтов не настроен для раннера");
+    customVariables.push(
+      { key: "PROJECT_TELEGRAM_ACCOUNT_ID", value: String(accountId) },
+      { key: "PROJECT_TELEGRAM_API_BASE", value: base },
+      { key: "PROJECT_TELEGRAM_RUNNER_KEY", value: runnerKey },
+    );
+  } else if (!legacyBlocked && tokenRecord?.userbotEnabled === 1) {
     const userbot = {
       USERBOT_API_ID: tokenRecord.userbotApiId,
       USERBOT_API_HASH: tokenRecord.userbotApiHash,

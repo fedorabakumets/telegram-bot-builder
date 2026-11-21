@@ -25,6 +25,7 @@
 .workspace-adaptive-header .workspace-tab-actions { display: flex; align-items: center; gap: 8px; }
 /** Дополнительные подписи открываются независимо по фактической ширине шапки. */
 .workspace-adaptive-header [data-workspace-label] { display: none; }
+.workspace-adaptive-header[data-extra-labels~='bot-section'] [data-workspace-label='bot-section'],
 .workspace-adaptive-header[data-extra-labels~='view'] [data-workspace-label='view'],
 .workspace-adaptive-header[data-extra-labels~='connect'] [data-workspace-label='connect'],
 .workspace-adaptive-header[data-extra-labels~='bulk-start'] [data-workspace-label='bulk-start'],
@@ -37,6 +38,24 @@
 .workspace-adaptive-header[data-compact-actions][data-documentation-label='true'] .workspace-tab-actions > a > span { display: inline; }
 .workspace-adaptive-header[data-compact-actions='false'] .workspace-tab-actions > :is(a,button) > span,
 .workspace-adaptive-header[data-documentation-label='true'] .workspace-tab-actions > a > span { display: inline; }
+
+/** Область проекта занимает свою колонку или целиком переходит на вторую строку. */
+.bot-workspace-header .workspace-header-tab-tools { align-items: center; }
+@container (min-width: 800px) {
+  .bot-workspace-header .workspace-adaptive-header[data-scope-inline='true'] .bot-workspace-scope { flex-wrap: nowrap; }
+  /** Оставляем место для названия проекта, прежде чем раскрывать подписи действий. */
+  .bot-workspace-header .workspace-adaptive-header[data-scope-inline='true'] .bot-workspace-project { min-width: 9rem; }
+  .bot-workspace-header .workspace-adaptive-header:not([data-scope-inline='true']) { grid-template-columns: minmax(0,1fr) auto; }
+  .bot-workspace-header .workspace-adaptive-header:not([data-scope-inline='true']) .workspace-tab-heading > div:last-child:not(:first-child) { grid-column: 2; }
+  .bot-workspace-header .workspace-adaptive-header:not([data-scope-inline='true']) > [role='group'] { grid-column: 1 / -1; grid-row: 2; }
+}
+/** В плотной шапке оставляем подписи разделов, а действия обозначаем иконками. */
+@container (min-width: 800px) and (max-width: 1040px) {
+  .bot-workspace-header .workspace-adaptive-header { --workspace-compact-bot-view: 1; }
+  .bot-workspace-header .workspace-adaptive-header [data-workspace-label]:not([data-workspace-label='bot-section']) { display: none; }
+  .bot-workspace-header .workspace-adaptive-header .workspace-tab-actions > :is(a,button)[aria-label] { width: 32px; padding-inline: 0; }
+  .bot-workspace-header .workspace-adaptive-header .workspace-tab-actions > :is(a,button)[aria-label] > span { display: none; }
+}
 @container (max-width: 799px) {
   /** Компактные кнопки освобождают место для селектора без скрытия подписей. */
   .workspace-adaptive-header { gap: 8px; --workspace-action-gap: 4px; --workspace-action-padding: 6px; --workspace-action-font-size: 12px; }

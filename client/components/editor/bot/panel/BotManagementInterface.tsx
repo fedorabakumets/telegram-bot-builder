@@ -7,7 +7,9 @@
  * @module BotManagementInterface
  */
 
-import { useState } from 'react';
+import { useContext, useState } from 'react';
+import { BotDemoAccountContext } from '../accounts/bot-demo-account-setting';
+import { BotAccountsWorkspace } from '../accounts/BotAccountsWorkspace';
 import { ProjectHeader } from '../project/ProjectHeader';
 import { countStartableOfflineBots } from '../project/count-startable-offline-bots';
 import { EmptyBotsState } from './EmptyBotsState';
@@ -49,6 +51,7 @@ export function BotManagementInterface({
     startOfflineAllMutation,
   } = useBotControl();
   const [collapsedState, setCollapsedState] = useState<Record<number, boolean>>({});
+  const accounts = useContext(BotDemoAccountContext);
 
   const sortedEntries = projects
     .map((project, index) => ({ project, tokens: allTokens[index] || [], botInfo: allBotInfos[index] }))
@@ -65,7 +68,13 @@ export function BotManagementInterface({
     return (
       <div className="flex h-full min-h-0 flex-col p-0 sm:p-0">
         <div className="min-h-0 flex-1">
-          <BotsCanvasWorkspace project={activeEntry.project} tokens={activeEntry.tokens} />
+          {accounts && accounts.projectId === activeEntry.project.id ? (
+            <BotAccountsWorkspace model={accounts} renderCanvas={cards => (
+              <BotsCanvasWorkspace project={activeEntry.project} tokens={activeEntry.tokens}
+                accounts={cards} accountBots={accounts.bots} selectedAccountId={accounts.selectedAccount?.id}
+                onSelectAccount={accounts.selectAccount} />
+            )} />
+          ) : <BotsCanvasWorkspace project={activeEntry.project} tokens={activeEntry.tokens} />}
         </div>
       </div>
     );

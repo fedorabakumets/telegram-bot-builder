@@ -57,7 +57,15 @@ for line in sys.stdin:
     await eventually(() => events.some((event) => event.l?.includes("start_bot")));
     assert.ok(execution.pid);
     assert.equal(events.filter((event) => event.l?.includes("worker_ready")).length, 1);
-    await execution.shutdown();
+    let confirmations = 0;
+    const shutdown = execution.shutdownForCutover(() => {
+      assert.equal(execution.exitConfirmed, true);
+      assert.equal(events.some(event => event.k === "exit"), false);
+      confirmations++;
+    });
+    assert.equal(execution.exitConfirmed, false);
+    await shutdown;
+    assert.equal(confirmations, 1);
     assert.equal(events.filter((event) => event.k === "exit").length, 1);
   } finally {
     execution.kill();

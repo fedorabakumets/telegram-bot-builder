@@ -276,10 +276,21 @@ db_pool = None
 _USERBOT_API_ID = int(os.getenv("USERBOT_API_ID", "0"))
 _USERBOT_API_HASH = os.getenv("USERBOT_API_HASH", "")
 _USERBOT_SESSION = os.getenv("USERBOT_SESSION_STRING", "")
+_PROJECT_TELEGRAM_ACCOUNT = os.getenv("PROJECT_TELEGRAM_ACCOUNT_ID", "").strip()
 
-userbot_client = TelegramClient(
+{%- include "config/project-telegram-runtime.py.jinja2" %}
+
+userbot_client = _ProjectTelegramBridge() if _PROJECT_TELEGRAM_ACCOUNT else (TelegramClient(
     StringSession(_USERBOT_SESSION),
     _USERBOT_API_ID,
     _USERBOT_API_HASH
-) if _USERBOT_API_ID and _USERBOT_API_HASH and _USERBOT_SESSION else None
+) if _USERBOT_API_ID and _USERBOT_API_HASH and _USERBOT_SESSION else None)
+
+
+def _subscribe_userbot_edit(event):
+    """Подключает триггер редактирования, если отдельный клиент настроен."""
+    if userbot_client is None:
+        logging.warning("Триггер редактирования Telegram не подключён: клиент не настроен")
+        return lambda handler: handler
+    return userbot_client.on(event)
 {%- endif %}

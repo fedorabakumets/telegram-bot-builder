@@ -19,8 +19,8 @@ export interface RunnerCommand {
    * spawn — поднять воркер; line — строка в stdin; kill — убить; reset — убить все воркеры;
    * ping — проверка, что исполнитель слушает команды (ответ — событие pong)
    */
-  k: "spawn" | "line" | "kill" | "reset" | "ping" | "inspect";
-  /** ID запроса снимка состояния */
+  k: "spawn" | "line" | "kill" | "reset" | "ping" | "inspect" | "retire";
+  /** ID запроса снимка состояния или подтверждения завершения. */
   q?: string;
   /** Ключ воркера */
   w?: string;
@@ -37,8 +37,8 @@ export interface RunnerEvent {
    * hello — исполнитель (пере)запущен, воркеров прошлого запуска больше нет (w и i пустые);
    * pong — ответ на ping (w и i пустые)
    */
-  k: "line" | "stderr" | "exit" | "error" | "hello" | "pong" | "snapshot";
-  /** ID запроса снимка состояния */
+  k: "line" | "stderr" | "exit" | "error" | "hello" | "pong" | "snapshot" | "retired";
+  /** ID запроса снимка состояния или подтверждения завершения. */
   q?: string;
   /** Сериализованный снимок исполнителя */
   d?: string;
@@ -52,6 +52,8 @@ export interface RunnerEvent {
   c?: string;
   /** Сигнал завершения */
   s?: string;
+  /** Подтверждение физического завершения для команды retire. */
+  confirmed?: "1" | "0";
 }
 
 /**

@@ -6,6 +6,7 @@ dockerfilePath = "Dockerfile.runner"
 watchPatterns = ["/server/runner/**", "/server/redis/**", "/server/bots/**", "/server/services/runtime-overlay.ts", "/server/utils/**", "/server/python/**", "/requirements.txt", "/package.json", "/package-lock.json", "/tsconfig.node.json", "/Dockerfile.runner", "/railway.runtime.toml"]
 
 [deploy]
-startCommand = "node /app/runner.cjs"
+# Переходная конфигурация повторяет IaC: Railway переопределяет ENTRYPOINT контейнера.
+startCommand = "/usr/bin/tini -- sh /app/runtime-entrypoint.sh node /app/runner.cjs"
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10

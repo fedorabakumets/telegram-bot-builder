@@ -1,6 +1,23 @@
 # Раздельный запуск одной кодовой базы
 
-Обычный `npm run dev` запускает совмещённую панель на порту 5000. Существующий `npm run dev:split` запускает API и frontend двумя процессами. Для проверки трёх сервисов запустите в отдельных терминалах `npm run dev:api`, `npm run dev:runtime` и `npm run dev:frontend`. В трёхсервисном режиме frontend слушает порт 5000, API — 5001, а runtime принимает команды через Redis без HTTP-порта. Укажите одинаковый `REDIS_URL` для API и runtime; `WORKER_RUNNER_ID` API должен совпадать с `RUNNER_ID` исполнителя (по умолчанию `default`). Рассылки исполняются внутри API как в совмещённом, так и в раздельном режиме. Runtime занимается только процессами ботов и проверкой актуальности команд. `dev:api` задаёт `BOT_RUNTIME_MODE=api`; `dev:runtime` и Compose включают `RUNNER_REQUIRE_FENCE=true`. Для этой проверки runtime нужен `DATABASE_URL`, но общий слой БД панели и её фоновые службы не загружаются.
+Обычный `npm run dev` запускает совмещённую панель на порту 5000. Существующий `npm run dev:split` запускает API и frontend двумя процессами. Для проверки трёх сервисов запустите в отдельных терминалах `npm run dev:api`, `npm run dev:runtime` и `npm run dev:frontend`. В трёхсервисном режиме frontend слушает порт 5000, API — 5001, а runtime принимает команды ботов через Redis; в режиме embedded отдельно открывается порт дочернего брокера. Укажите одинаковый `REDIS_URL` для API и runtime; `WORKER_RUNNER_ID` API должен совпадать с `RUNNER_ID` исполнителя (по умолчанию `default`). Рассылки исполняются внутри API как в совмещённом, так и в раздельном режиме. Runtime управляет процессами ботов и проверкой актуальности команд; при embedded он также владеет дочерним брокером аккаунтов. `dev:api` задаёт `BOT_RUNTIME_MODE=api`; `dev:runtime` и Compose включают `RUNNER_REQUIRE_FENCE=true`. Для этой проверки runtime нужен `DATABASE_URL`, но общий слой БД панели и её фоновые службы не загружаются.
+
+## Общий Telegram-аккаунт: три или четыре сервиса
+
+`npm run dev:services` согласует порты, runner ID и `PROJECT_TELEGRAM_API_BASE=http://127.0.0.1:5001`. По умолчанию `TELETHON_BROKER_MODE=external`: запускаются frontend, API, runtime и отдельный брокер. При `embedded` отдельного элемента broker в плане нет: его дочерний Python-процесс принадлежит runtime. Получаются три управляемых сервиса, но дополнительный процесс Python всё равно существует. Это один брокер на весь runtime, а не на каждого бота.
+
+```sh
+# Четыре управляемых сервиса, отдельный брокер:
+npx --no-install cross-env TELETHON_BROKER_MODE=external npm run dev:services
+# Три управляемых сервиса, брокером владеет runtime:
+npx --no-install cross-env TELETHON_BROKER_MODE=embedded npm run dev:services
+```
+
+До запуска задайте `REDIS_URL`, `DATABASE_URL`, `PROJECT_TELEGRAM_RUNNER_SECRET`, `TELETHON_BROKER_SECRET` и Python из окружения с зависимостями (`RUNNER_PYTHON` либо `PYTHON_PATH`). Singleton Redis инициализируется вручную только при остановленных владельцах по [инструкции аккаунтов](TELEGRAM_ACCOUNTS.md). Общий запуск не сбрасывает занятое владение автоматически. Для ботов без общих аккаунтов отдельный брокер не обязателен.
+
+`npm run dev:runtime` учитывает тот же режим. `npm run dev:broker` всегда явно запускает отдельного владельца, поэтому не используйте его одновременно с embedded-runtime. Переключение `.env` не передаёт живую сессию: сначала остановите потребителей и прежнего владельца, подтвердите закрытие клиентов, затем запускайте новый вариант с тем же постоянным lock-файлом. Стандартный путь lock-файла — `.local/telethon-broker.lock`; вместе с ним сохраняется файл заблокированных аккаунтов.
+
+В обоих режимах frontend — 5000, API — 5001, брокер — 8765 по умолчанию. API обращается к loopback брокера, сценарии — к внутреннему API. Embedded-runtime не начинает обычную работу до готовности дочернего брокера; ошибка старта должна завершить группу, а не оставить один watcher. Поддерживается только один embedded-runtime. Не запускайте dev-владельца с той же сессией одновременно с Railway, даже если они используют разные Redis.
 
 Когда API и runtime работают на одном компьютере, задайте в локальном `.env` `MEDIA_RUNTIME_BASE_URL=http://127.0.0.1:5001`, `MEDIA_RUNTIME_ALLOW_INSECURE_REMOTE=true` и `MEDIA_RUNTIME_ALLOW_LOCAL_LOOPBACK=true`. Для медиа нужен постоянный `MEDIA_RUNTIME_SECRET` длиной не менее 32 символов. Разрешение loopback действует только при `NODE_ENV=development` и не распространяется на проекты с отдельным Railway-исполнителем. В обычном `npm run dev` эти переменные не нужны.
 
