@@ -136,6 +136,18 @@ it('проводит два актуальных bridge через API и общ
     });
     expect(stopped.status).toBe(401);
     state.status = 'running';
+    /** Оба бота получают точный код отсутствующей кнопки от общего имитатора Telegram. */
+    for (const token of [5, 62]) {
+      const missing = await fetch(`${base}/internal/project-telegram/9/${token}/execute`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json',
+          Authorization: `Bearer ${projectTelegramRunnerKey(9, token, 1, 81)}` },
+        body: JSON.stringify({ operation: 'click_button', args: {
+          target: 7, message_id: 1, data_b64: Buffer.from('missing').toString('base64'),
+        } }),
+      });
+      expect(missing.status).toBe(404);
+      expect(await missing.json()).toEqual({ code: 'BUTTON_NOT_FOUND' });
+    }
     const stats = await fetch(`${brokerBase}/test/stats`, { headers: {
       Authorization: 'Bearer synthetic_broker_secret_for_chain_test_only',
     } });

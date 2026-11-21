@@ -14,7 +14,9 @@ export class ProjectTelegramBrokerError extends Error {
   constructor(code: string) {
     super('Общий клиент Telegram не выполнил операцию');
     this.code = code;
+    /** Отсутствие кнопки является результатом операции, а не отказом сервиса. */
     this.status = code === 'FLOOD_WAIT' || code === 'ACCOUNT_BUSY' ? 429
+      : code === 'BUTTON_NOT_FOUND' ? 404
       : code === 'BROKER_TIMEOUT' ? 504
       : code === 'TELEGRAM_FAILED' ? 502
       : code === 'BROKER_FAILED' ? 500
