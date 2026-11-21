@@ -31,7 +31,7 @@
       "bot-json-prompt"
     ],
     "folder_titles": {},
-    "updated_at": "2026-11-21T13:19:15+03:00",
+    "updated_at": "2026-11-21T21:39:08+03:00",
     "tags": [],
     "author": ""
   },
@@ -583,7 +583,7 @@
     "folder_titles": {
       "database": "Database"
     },
-    "updated_at": "2026-11-20T15:17:39Z",
+    "updated_at": "2026-11-21T18:40:27Z",
     "tags": [],
     "author": ""
   },
@@ -763,7 +763,7 @@
     "folder_titles": {
       "database": "Database"
     },
-    "updated_at": "2026-11-20T15:17:39Z",
+    "updated_at": "2026-11-21T18:40:27Z",
     "tags": [],
     "author": ""
   },
@@ -838,7 +838,7 @@
     "folder_titles": {
       "database": "Database"
     },
-    "updated_at": "2026-11-20T15:17:39Z",
+    "updated_at": "2026-11-21T18:40:27Z",
     "tags": [],
     "author": ""
   },
@@ -1004,6 +1004,36 @@
       "database": "Database"
     },
     "updated_at": "2026-07-04T19:19:59+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "database/project_telegram_account_bots",
+    "title": "project_telegram_account_bots",
+    "excerpt": "Связь нескольких ботов с одним аккаунтом внутри проекта.",
+    "parts": [
+      "database",
+      "project_telegram_account_bots"
+    ],
+    "folder_titles": {
+      "database": "Database"
+    },
+    "updated_at": "2026-11-21T18:40:27Z",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "database/project_telegram_accounts",
+    "title": "project_telegram_accounts",
+    "excerpt": "Telegram-аккаунты, принадлежащие проекту.",
+    "parts": [
+      "database",
+      "project_telegram_accounts"
+    ],
+    "folder_titles": {
+      "database": "Database"
+    },
+    "updated_at": "2026-11-21T18:40:27Z",
     "tags": [],
     "author": ""
   },
@@ -1213,7 +1243,7 @@
     "folder_titles": {
       "deployment": "🚀 Деплой"
     },
-    "updated_at": "2026-11-21T13:19:15+03:00",
+    "updated_at": "2026-11-21T22:16:47+03:00",
     "tags": [],
     "author": ""
   },
@@ -1333,7 +1363,37 @@
     "folder_titles": {
       "deployment": "🚀 Деплой"
     },
-    "updated_at": "2026-11-11T14:18:54+03:00",
+    "updated_at": "2026-11-21T22:16:47+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "deployment/TELEGRAM_ACCOUNTS",
+    "title": "Общие Telegram-аккаунты",
+    "excerpt": "Перед выпуском проверьте функцию на отдельном окружении с тестовым проектом, двумя тестовыми ботами и выделенным Telegram-аккаунтом. Для кар",
+    "parts": [
+      "deployment",
+      "TELEGRAM_ACCOUNTS"
+    ],
+    "folder_titles": {
+      "deployment": "🚀 Деплой"
+    },
+    "updated_at": "2026-11-21T22:16:47+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "deployment/TELEGRAM_ACCOUNTS_RAILWAY",
+    "title": "Общие Telegram-аккаунты на Railway",
+    "excerpt": "Это инструкция контролируемого выпуска, а не подтверждение выполненного деплоя. Конфиги в репозитории не создают сервисы и не переносят дейс",
+    "parts": [
+      "deployment",
+      "TELEGRAM_ACCOUNTS_RAILWAY"
+    ],
+    "folder_titles": {
+      "deployment": "🚀 Деплой"
+    },
+    "updated_at": "2026-11-21T22:23:43+03:00",
     "tags": [],
     "author": ""
   },
@@ -1580,7 +1640,7 @@
   {
     "path": "development/frontend-backend-split",
     "title": "Раздельные frontend и backend",
-    "excerpt": "<!-- @fileoverview Запуск интерфейса отдельно от API, подготовка Railway и безопасный откат. -->",
+    "excerpt": "Репозиторий поддерживает совмещённый запуск и два отдельных процесса. Боты пока",
     "parts": [
       "development",
       "frontend-backend-split"
@@ -1588,7 +1648,7 @@
     "folder_titles": {
       "development": "🛠️ Разработка"
     },
-    "updated_at": "2026-11-10T06:30:06+03:00",
+    "updated_at": "2026-11-21T21:39:08+03:00",
     "tags": [],
     "author": ""
   },
@@ -1738,7 +1798,7 @@
     "folder_titles": {
       "features": "🧩 Возможности"
     },
-    "updated_at": "2026-11-21T13:19:15+03:00",
+    "updated_at": "2026-11-21T21:39:08+03:00",
     "tags": [],
     "author": ""
   },
