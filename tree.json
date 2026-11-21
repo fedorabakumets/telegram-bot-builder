@@ -31,7 +31,7 @@
       "bot-json-prompt"
     ],
     "folder_titles": {},
-    "updated_at": "2026-11-14T10:58:53+03:00",
+    "updated_at": "2026-11-21T13:19:15+03:00",
     "tags": [],
     "author": ""
   },
@@ -58,7 +58,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-11-11T14:58:46+03:00",
+    "updated_at": "2026-11-21T10:20:27Z",
     "tags": [],
     "author": ""
   },
@@ -275,7 +275,7 @@
   {
     "path": "api/project-bot",
     "title": "project-bot",
-    "excerpt": "Эндпоинтов: **8**",
+    "excerpt": "Эндпоинтов: **9**",
     "parts": [
       "api",
       "project-bot"
@@ -283,7 +283,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-11-03T07:33:45+03:00",
+    "updated_at": "2026-11-21T10:20:27Z",
     "tags": [],
     "author": ""
   },
@@ -1213,7 +1213,7 @@
     "folder_titles": {
       "deployment": "🚀 Деплой"
     },
-    "updated_at": "2026-11-11T14:18:54+03:00",
+    "updated_at": "2026-11-21T13:19:15+03:00",
     "tags": [],
     "author": ""
   },
@@ -1738,7 +1738,7 @@
     "folder_titles": {
       "features": "🧩 Возможности"
     },
-    "updated_at": "2026-11-14T10:58:53+03:00",
+    "updated_at": "2026-11-21T13:19:15+03:00",
     "tags": [],
     "author": ""
   },
