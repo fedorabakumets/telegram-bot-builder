@@ -3,7 +3,7 @@
  * @module bot/canvas/BotsCanvas
  */
 
-import { useCallback, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { BotServiceNode } from './BotServiceNode';
 import { BotProjectNode } from './BotProjectNode';
 import { BotsCanvasToolbar } from './BotsCanvasToolbar';
@@ -13,9 +13,13 @@ import { useFocusSelectedBot } from './use-focus-selected-bot';
 import { useCanvasViewport } from '@/components/editor/canvas/canvas/use-canvas-viewport';
 import type { BotServiceFailure } from './bot-service-failure';
 import type { BotToken } from '@shared/schema';
+import { BotAccountCanvasCard } from '../accounts/BotAccountCanvasCard';
+import type { MockAccountBot, MockTelegramAccount } from '../accounts/mock-account-types';
 
 /** Высота строки, зарезервированной под карточку проекта. */
 const PROJECT_ROW_HEIGHT = 128;
+/** Верхняя граница первой карточки аккаунта под карточкой проекта. */
+const ACCOUNT_ROW_TOP = PROJECT_ROW_HEIGHT + 38;
 
 /** Пропсы холста ботов */
 interface BotsCanvasProps {
@@ -41,6 +45,14 @@ interface BotsCanvasProps {
   onSelectToken: (tokenId: number) => void;
   /** Ширина правого overlay (0 = закрыт); для фокуса камеры */
   overlayPanelWidth?: number;
+  /** Аккаунты проекта на том же холсте. */
+  accounts?: readonly MockTelegramAccount[];
+  /** Боты для отображения подписей привязки. */
+  accountBots?: readonly MockAccountBot[];
+  /** Выбранная карточка аккаунта. */
+  selectedAccountId?: string;
+  /** Открывает настройки выбранного аккаунта. */
+  onSelectAccount?: (id: string) => void;
 }
 
 /**
@@ -60,16 +72,41 @@ export function BotsCanvas({
   selectedTokenId,
   onSelectToken,
   overlayPanelWidth = 0,
+  accounts = [],
+  accountBots = [],
+  selectedAccountId,
+  onSelectAccount,
 }: BotsCanvasProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
   const { isFullscreen, cssFullscreen, toggleFullscreen } = useCanvasFullscreen(rootRef);
   const tokenIds = useMemo(() => tokens.map((t) => t.id), [tokens]);
   const { positions, setNodePos, contentSize } = useBotNodeLayout(projectId, tokenIds);
+  const { saved: savedAccountPositions, setNodePos: setAccountPosition } = useBotNodeLayout(projectId, [], 'account');
   /** Сдвигаем отображаемые координаты, оставляя сохранённую раскладку совместимой. */
   const botPositions = useMemo(() => Object.fromEntries(
     Object.entries(positions).map(([id, pos]) => [id, { ...pos, top: pos.top + PROJECT_ROW_HEIGHT }]),
   ), [positions]);
+  const botColumns = Object.values(botPositions).map(position => position.left);
+  const accountLeft = Math.max(38, ...botColumns) + 276;
+  /** Новые карточки занимают ячейки сетки, пока пользователь их не переместит. */
+  const accountCards = accounts.map((account, index) => ({
+    account,
+    position: savedAccountPositions[account.id] ?? {
+      left: accountLeft + index % 2 * 268, top: ACCOUNT_ROW_TOP + Math.floor(index / 2) * 132,
+    },
+  }));
+  const accountBottom = Math.max(ACCOUNT_ROW_TOP, ...accountCards.map(card => card.position.top + 148));
+  const accountRight = Math.max(accountLeft + 264, ...accountCards.map(card => card.position.left + 264));
+  const accountCardColumns = accountCards.map(card => card.position.left);
+  const accountHeadingLeft = accountCards.length
+    ? (Math.min(...accountCardColumns) + Math.max(...accountCardColumns) + 240) / 2 : accountLeft;
+  const accountHeadingTop = Math.min(...accountCards.map(card => card.position.top)) - 40;
+  const columns = [...botColumns, ...accountCardColumns];
+  /** Центр карточки проекта совпадает с серединой зазора между двумя группами. */
+  const projectLeft = botColumns.length && accountCardColumns.length
+    ? (Math.max(...botColumns) + Math.min(...accountCardColumns)) / 2
+    : columns.length ? (Math.min(...columns) + Math.max(...columns)) / 2 : 48;
 
   const isEmptyTarget = useCallback((target: HTMLElement) => (
     !target.closest('[data-canvas-node]') && !target.closest('[data-canvas-controls]')
@@ -79,6 +116,7 @@ export function BotsCanvas({
     pan,
     zoom,
     setPan,
+    setZoom,
     panRef,
     zoomRef,
     isPanning,
@@ -107,10 +145,28 @@ export function BotsCanvas({
   });
 
   const scale = zoom / 100;
+  const fittedProject = useRef<number | null>(null);
 
   const fitToContent = useCallback(() => {
-    resetZoom();
-  }, [resetZoom]);
+    const viewport = canvasRef.current;
+    if (!viewport || accounts.length === 0) {
+      resetZoom();
+      return;
+    }
+    const width = Math.max(accountRight, ...Object.values(botPositions).map(pos => pos.left + 264));
+    const height = Math.max(accountBottom, ...Object.values(botPositions).map(pos => pos.top + 140));
+    const percent = Math.max(1, Math.min(100, Math.floor(100 * Math.min(
+      viewport.clientWidth / width, viewport.clientHeight / height,
+    ))));
+    setZoom(percent);
+    setPan({ x: 0, y: 0 });
+  }, [accounts.length, accountRight, accountBottom, botPositions, resetZoom, setPan, setZoom]);
+
+  useEffect(() => {
+    if (accounts.length === 0 || selectedTokenId !== null || fittedProject.current === projectId) return;
+    fittedProject.current = projectId;
+    fitToContent();
+  }, [accounts.length, fitToContent, projectId, selectedTokenId]);
 
   return (
     <div
@@ -139,8 +195,8 @@ export function BotsCanvas({
         <div
           className="origin-top-left"
           style={{
-            width: contentSize.width,
-            height: contentSize.height + PROJECT_ROW_HEIGHT,
+            width: accounts.length ? Math.max(contentSize.width, accountRight) : contentSize.width,
+            height: Math.max(contentSize.height + PROJECT_ROW_HEIGHT, accountBottom),
             transform: `translate3d(${Math.round(pan.x)}px, ${Math.round(pan.y)}px, 0) scale(${scale})`,
             transition: animateTransform ? 'transform 200ms ease-out' : 'none',
             backfaceVisibility: 'hidden',
@@ -149,6 +205,7 @@ export function BotsCanvas({
           <div className="relative h-full w-full">
             <BotProjectNode
               name={projectName}
+              left={projectLeft}
               launchMode={projectLaunchMode}
               botCount={tokens.length}
               selected={projectSelected}
@@ -178,6 +235,23 @@ export function BotsCanvas({
                 />
               );
             })}
+            {accounts.length > 0 && (
+              <span className="pointer-events-none absolute -translate-x-1/2 whitespace-nowrap text-sm font-medium text-muted-foreground"
+                style={{ left: accountHeadingLeft, top: accountHeadingTop }}>
+                Telegram-аккаунты
+              </span>
+            )}
+            {accountCards.map(({ account, position }) => (
+              <BotAccountCanvasCard key={account.id} account={account}
+                linkedBots={accountBots.filter(bot => account.botIds.includes(bot.id))}
+                selected={account.id === selectedAccountId}
+                position={position}
+                onMove={(next, persist) => setAccountPosition(account.id, next, persist)}
+                scale={scale} onSelect={() => {
+                  if (isFullscreen) void toggleFullscreen().then(() => onSelectAccount?.(account.id));
+                  else onSelectAccount?.(account.id);
+                }} />
+            ))}
           </div>
         </div>
         {tokens.length === 0 && (

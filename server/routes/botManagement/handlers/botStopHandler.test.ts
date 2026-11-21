@@ -13,6 +13,7 @@ import { handleBotStop } from './botStopHandler';
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.getInstance.mockResolvedValue({ id: 3 });
+  mocks.desired.mockResolvedValue(7);
   mocks.stop.mockResolvedValue({ success: true });
 });
 
@@ -25,6 +26,15 @@ it.each([
   const res = { json: vi.fn(), status: vi.fn().mockReturnThis() };
   await handleBotStop({ params: { id: '2' }, body: { tokenId: 10 } } as unknown as Request, res as unknown as Response);
   expect(mocks.desired).toHaveBeenCalledWith(3, 'stopped');
-  expect(mocks.stop).toHaveBeenCalledWith(2, 10);
+  expect(mocks.stop).toHaveBeenCalledWith(2, 10, { expectedDesiredGeneration: 7 });
   expect(res.json).toHaveBeenCalledWith({ message: 'Бот успешно остановлен' });
+});
+
+it('не отправляет остановку после исчезновения экземпляра до записи намерения', async () => {
+  mocks.getToken.mockResolvedValue({ id: 10, projectId: 2 });
+  mocks.desired.mockResolvedValueOnce(null);
+  const res = { json: vi.fn(), status: vi.fn().mockReturnThis() };
+  await handleBotStop({ params: { id: '2' }, body: { tokenId: 10 } } as unknown as Request, res as unknown as Response);
+  expect(mocks.stop).not.toHaveBeenCalled();
+  expect(res.status).toHaveBeenCalledWith(409);
 });

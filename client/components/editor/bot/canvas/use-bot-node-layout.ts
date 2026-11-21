@@ -35,20 +35,22 @@ export function defaultGridPos(index: number): NodePos {
 /**
  * Ключ localStorage для layout проекта
  * @param projectId - ID проекта
+ * @param group - Тип карточек
  * @returns Ключ
  */
-function storageKey(projectId: number): string {
-  return `bot-canvas-layout:${projectId}`;
+function storageKey(projectId: number, group: 'bot' | 'account'): string {
+  return `${group}-canvas-layout:${projectId}`;
 }
 
 /**
  * Читает сохранённые позиции из localStorage
  * @param projectId - ID проекта
+ * @param group - Тип карточек
  * @returns Карта позиций (ключи-строки)
  */
-function readSaved(projectId: number): Record<string, NodePos> {
+function readSaved(projectId: number, group: 'bot' | 'account'): Record<string, NodePos> {
   try {
-    const raw = localStorage.getItem(storageKey(projectId));
+    const raw = localStorage.getItem(storageKey(projectId, group));
     if (raw) return JSON.parse(raw) as Record<string, NodePos>;
   } catch { /* */ }
   return {};
@@ -58,14 +60,15 @@ function readSaved(projectId: number): Record<string, NodePos> {
  * Позиции нод с персистом; drag обновляет left/top
  * @param projectId - ID проекта
  * @param tokenIds - ID токенов на холсте
- * @returns positions, setNodePos, contentSize
+ * @param group - Тип карточек для раздельного хранения позиций
+ * @returns Позиции, размеры холста и сохранённые координаты
  */
-export function useBotNodeLayout(projectId: number, tokenIds: number[]) {
-  const [saved, setSaved] = useState<Record<string, NodePos>>(() => readSaved(projectId));
+export function useBotNodeLayout(projectId: number, tokenIds: number[], group: 'bot' | 'account' = 'bot') {
+  const [saved, setSaved] = useState<Record<string, NodePos>>(() => readSaved(projectId, group));
 
   useEffect(() => {
-    setSaved(readSaved(projectId));
-  }, [projectId]);
+    setSaved(readSaved(projectId, group));
+  }, [projectId, group]);
 
   const idsKey = tokenIds.join(',');
   const positions = useMemo(() => {
@@ -76,18 +79,18 @@ export function useBotNodeLayout(projectId: number, tokenIds: number[]) {
     return next;
   }, [idsKey, saved]);
 
-  const setNodePos = useCallback((tokenId: number, pos: NodePos, persistNow = false) => {
+  const setNodePos = useCallback((tokenId: number | string, pos: NodePos, persistNow = false) => {
     const clamped = { left: Math.max(0, pos.left), top: Math.max(0, pos.top) };
     setSaved((prev) => {
       const next = { ...prev, [String(tokenId)]: clamped };
       if (persistNow) {
         try {
-          localStorage.setItem(storageKey(projectId), JSON.stringify(next));
+          localStorage.setItem(storageKey(projectId, group), JSON.stringify(next));
         } catch { /* */ }
       }
       return next;
     });
-  }, [projectId]);
+  }, [projectId, group]);
 
   const contentSize = useMemo(() => {
     let maxL = PAD + COLS * NODE_W + (COLS - 1) * GAP_X;
@@ -99,5 +102,5 @@ export function useBotNodeLayout(projectId: number, tokenIds: number[]) {
     return { width: Math.max(1400, maxL), height: Math.max(1000, maxT) };
   }, [positions]);
 
-  return { positions, setNodePos, contentSize };
+  return { positions, setNodePos, contentSize, saved };
 }

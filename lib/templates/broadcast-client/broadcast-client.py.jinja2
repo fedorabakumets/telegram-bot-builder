@@ -16,6 +16,8 @@ async def handle_broadcast_{{ safeNodeId }}(callback_query, user_id):
     logging.info(f"📢 Запуск рассылки из узла {{ nodeId }}")
     _error_msg = {{ errorMsg | format_python_text }}
     _success_msg = {{ successMsg | format_python_text }}
+    # Привязанный аккаунт использует общий клиент уже запущенного раннера.
+    _shared_account = bool(globals().get("_PROJECT_TELEGRAM_ACCOUNT"))
 
     # ── Проверка сессии Client API ──────────────────────────────────────────
 {%- if botRuntimeRole %}
@@ -44,7 +46,7 @@ async def handle_broadcast_{{ safeNodeId }}(callback_query, user_id):
         return
 {%- endif %}
 
-    if not client_session:
+    if not _shared_account and not client_session:
         logging.error("❌ Client API не авторизован")
         await callback_query.message.answer("⚠️ Требуется авторизация Client API во вкладке Telegram Client")
         return
@@ -96,7 +98,7 @@ async def handle_broadcast_{{ safeNodeId }}(callback_query, user_id):
     api_id_val = client_session["api_id"] if client_session else None
     api_hash_val = client_session["api_hash"] if client_session else None
     session_string_val = client_session["session_string"] if client_session else None
-    if not api_id_val or not api_hash_val or not session_string_val:
+    if not _shared_account and (not api_id_val or not api_hash_val or not session_string_val):
         logging.error("❌ Client API: отсутствуют credentials или сессия")
         error_msg = "⚠️ Client API не настроен: "
         if not api_id_val or not api_hash_val: error_msg += "Нет API credentials. "
@@ -109,11 +111,14 @@ async def handle_broadcast_{{ safeNodeId }}(callback_query, user_id):
     import os
     import re
 
-    api_id = int(client_session["api_id"])
-    api_hash = client_session["api_hash"]
-    session_string = client_session["session_string"]
-    logging.info(f"🔧 Инициализация Telethon: api_id={api_id}, session={'задана' if session_string else 'нет'}")
-    app = TelegramClient(StringSession(session_string), api_id=api_id, api_hash=api_hash)
+    if _shared_account:
+        if any(any(node.get(key) for key in ("attachedMedia", "imageUrl", "audioUrl", "videoUrl", "documentUrl"))
+               for node in broadcast_nodes):
+            await callback_query.message.answer("⚠️ Общий Telegram-аккаунт поддерживает только текстовую рассылку")
+            return
+        app = userbot_client
+    else:
+        app = TelegramClient(StringSession(session_string_val), api_id=int(api_id_val), api_hash=api_hash_val)
 
     # ── Отправка ────────────────────────────────────────────────────────────
     success_count = 0
@@ -125,7 +130,7 @@ async def handle_broadcast_{{ safeNodeId }}(callback_query, user_id):
         for recipient_id in recipients:
             try:
                 from telethon.tl.types import PeerUser
-                recipient = PeerUser(user_id=int(recipient_id))
+                recipient = int(recipient_id) if _shared_account else PeerUser(user_id=int(recipient_id))
             except ValueError:
                 recipient = recipient_id
 
@@ -213,7 +218,8 @@ async def handle_broadcast_{{ safeNodeId }}(callback_query, user_id):
                         logging.error(f"❌ Ошибка отправки {recipient_id}: {send_error}")
                     current_node_index += 1
     finally:
-        await app.disconnect()
+        if not _shared_account:
+            await app.disconnect()
 
     report = f"{_success_msg}\n👤 Метод: Client API (Userbot)\n✅ Успешно: {success_count}\n⚠️ Ошибок: {error_count}\n🚫 Заблокировано: {blocked_count}"
     logging.info(report)

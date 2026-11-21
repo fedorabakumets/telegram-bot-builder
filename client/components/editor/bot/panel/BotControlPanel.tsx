@@ -26,7 +26,7 @@ import { useBotViewMode } from '../canvas/use-bot-view-mode';
 import type { BotWorkspaceMode } from '../accounts/BotWorkspaceModeSwitch';
 import { BotAccountsWorkspace } from '../accounts/BotAccountsWorkspace';
 import { BotDemoAccountContext } from '../accounts/bot-demo-account-setting';
-import { useMockTelegramAccounts } from '../accounts/use-mock-telegram-accounts';
+import { useProjectTelegramAccounts } from '../accounts/use-project-telegram-accounts';
 import type { BotProject, BotToken } from '@shared/schema';
 
 /**
@@ -94,10 +94,10 @@ export function BotControlPanel({
   const currentProjectIndex = projects.findIndex((p) => p.id === currentProjectId);
   const currentProjectTokens =
     currentProjectIndex >= 0 ? (allTokens[currentProjectIndex] || []) : [];
-  /** Для привязок передаём только подписи уже загруженных ботов проекта. */
-  const mockAccounts = useMockTelegramAccounts(currentProjectId, currentProjectTokens.map(bot => ({
+  /** Модель использует рабочие данные только при включённой функции и подтверждённом входе. */
+  const accounts = useProjectTelegramAccounts(currentProjectId, currentProjectTokens.map(bot => ({
     id: `project-bot-${bot.id}`, name: bot.botFirstName || bot.name, username: bot.botUsername ?? '',
-  })));
+  })), !authLoading && user && !isGuest(user) ? user.id : null);
 
   /** При открытии формы выбирает текущий проект, если он доступен. */
   const openConnectBot = () => {
@@ -117,12 +117,14 @@ export function BotControlPanel({
         currentProjectTokens={currentProjectTokens}
         workspaceMode={workspaceMode}
         onWorkspaceModeChange={setWorkspaceMode}
-        onAddMockAccount={mockAccounts.createAccount}
+        onAddAccount={accounts.createAccount}
+        canAddAccount={accounts.canManage && !accounts.busy}
+        demoAccounts={accounts.demo}
       />
 
       {workspaceMode === 'accounts' && (
         <div className="min-h-0 flex-1 overflow-hidden">
-          <BotAccountsWorkspace model={mockAccounts} />
+          <BotAccountsWorkspace model={accounts} />
         </div>
       )}
       {workspaceMode === 'bots' && <div
@@ -144,7 +146,7 @@ export function BotControlPanel({
         ) : projects.length === 0 ? (
           <BotControlPanelEmpty />
         ) : (
-          <BotDemoAccountContext.Provider value={mockAccounts}>
+          <BotDemoAccountContext.Provider value={accounts}>
           <BotManagementInterface
             projects={projects}
             allTokens={allTokens}

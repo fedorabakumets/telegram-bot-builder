@@ -157,9 +157,10 @@ export function computeFeatureFlags(context: GenerationContext): FeatureFlags {
       n => n.type === 'command_trigger' &&
            (n.data as any)?.command === '/start'
     ),
-    hasUserbotNodesResult: nodes.some(
-      n => (n.type as string) === 'userbot_message' || (n.type as string) === 'userbot_click_button' || (n.type as string) === 'userbot_inline_query' || (n.type as string) === 'code'
-    ),
+    /** Общий клиент нужен также для триггера редактирования и рассылки Client API. */
+    hasUserbotNodesResult: nodes.some(n => [
+      'userbot_message', 'userbot_click_button', 'userbot_inline_query', 'userbot_edit_trigger', 'code',
+    ].includes(n.type) || (n.type === 'broadcast' && n.data?.broadcastApiType === 'client')),
     // Catch-all генерируются если флаг не выключен ЛИБО есть зависимости-предохранители
     generateCatchAllResult:
       context.options.catchAllHandlers !== false || hasCatchAllDependencies(nodes),

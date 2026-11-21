@@ -20,8 +20,8 @@ interface BotAccountsCanvasProps {
   selectedAccountId: string | null;
   /** Открывает карточку аккаунта. */
   onSelectAccount: (id: string) => void;
-  /** Открывает демонстрационную форму импорта. */
-  onImport: () => void;
+  /** Открывает создание аккаунта, когда оно доступно. */
+  onImport?: () => void;
   /** Ширина панели, перекрывающей холст справа. */
   overlayPanelWidth?: number;
 }
@@ -124,9 +124,9 @@ export function BotAccountsCanvas({
               data-canvas-controls="true">
               <UsersRound aria-hidden="true" className="h-6 w-6 text-muted-foreground" />
               <p className="text-sm font-semibold">Нет аккаунтов в проекте</p>
-              <Button type="button" variant="outline" size="sm" onClick={onImport}>
+              {onImport && <Button type="button" variant="outline" size="sm" onClick={onImport}>
                 <Upload aria-hidden="true" className="h-4 w-4" /> Импортировать сессию
-              </Button>
+              </Button>}
             </div>
           </div>
         )}

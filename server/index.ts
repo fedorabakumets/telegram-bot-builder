@@ -14,6 +14,7 @@ import { apiErrorHandler } from './middleware/api-error-handler';
 import { createServer } from "http";
 import { startFileMonitoring } from "./files/file-monitoring";
 import { restoreRunningBots } from "./bots/restoreRunningBots";
+import { isManualDevBotStart } from './bots/manual-dev-bot-start';
 import { scheduleRestoreSweep } from "./bots/restoreSweep";
 import { reconcileOrphanLaunchHistories } from "./bots/reconcileLaunchHistory";
 import { workerManager } from "./bots/botWorkerManager";
@@ -278,7 +279,9 @@ app.use((req, res, next) => {
   // Используем 0.0.0.0 в dev чтобы слушать на всех интерфейсах включая IPv4.
   /** Railway допускает HOST=:: для доступа по внутренней IPv6-сети. */
   const host = process.env.HOST?.trim() || '0.0.0.0';
-  if (botRuntimeMode === 'api') {
+  /** Ручной dev-режим одинаково исключает восстановление combined и API. */
+  const manualDevStarts = isManualDevBotStart();
+  if (botRuntimeMode === 'api' || getWorkerRuntime() === 'remote') {
     /** Недоступный исполнитель не должен останавливать HTTP API; следующая сверка повторит привязку. */
     try {
       const attached = await workerManager.reattachRemoteWorkers();
@@ -286,10 +289,12 @@ app.use((req, res, next) => {
     } catch (error) {
       log(`Привязка к исполнителю отложена: ${error instanceof Error ? error.message : String(error)}`);
     }
-    /** Сначала привязывает уже живые воркеры, затем сверяет намерения запуска. */
-    // Очередь ожидания памяти проверяется раз в пять секунд.
-    const stopReconcile = scheduleRuntimeReconcile(5_000, () => workerManager.reattachRemoteWorkers());
-    httpServer.once('close', stopReconcile);
+    if (botRuntimeMode === 'api' && !manualDevStarts) {
+      /** Сначала привязывает уже живые воркеры, затем сверяет намерения запуска. */
+      // Очередь ожидания памяти проверяется раз в пять секунд без параллельных запусков.
+      const stopReconcile = scheduleRuntimeReconcile(5_000, () => workerManager.reattachRemoteWorkers());
+      httpServer.once('close', stopReconcile);
+    }
   }
   httpServer.listen(Number(port), host, () => {
     // Отображаем localhost в логах даже при привязке к 0.0.0.0 для внешних подключений
@@ -300,7 +305,7 @@ app.use((req, res, next) => {
       log(`OpenAPI docs (dev): http://${displayHost}:${port}/docs`);
     }
 
-    if (botRuntimeMode === 'api') {
+    if (botRuntimeMode === 'api' && !manualDevStarts) {
       void reconcileBotDesiredState().then((result) => {
         log(`Сверка ботов: запущено ${result.started}, остановлено ${result.stopped}, ошибок ${result.failed}`);
       }).catch((error: unknown) => {
@@ -308,8 +313,6 @@ app.use((req, res, next) => {
       });
     }
 
-    /** В локальной разработке можно оставить запуск ботов полностью ручным. */
-    const manualDevStarts = process.env.NODE_ENV === 'development' && process.env.BOT_DEV_MANUAL_START === 'true';
     if (botRuntimeMode === 'combined' && !manualDevStarts) void (async () => {
       try {
         if (process.env.REDIS_URL?.trim()) {

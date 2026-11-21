@@ -29,7 +29,7 @@ export function generateRequirementsTxt(): string {
     'certifi>=2024.8.30',
     'google-auth>=2.0.0',
     'gspread>=6.0.0',
-    'telethon>=1.42.0  # For Client API (Userbot) broadcast functionality',
+    'telethon>=1.46.0,<2  # Для актуальных типов кнопок и совместимого клиентского API Telegram',
     'redis>=5.0.0  # Для Redis кэша, FSM хранилища и Pub/Sub уведомлений (redis[asyncio] включён)',
     'pytz>=2025.2  # Для работы с часовыми поясами (schedule_trigger)',
     'croniter>=6.0.0  # Для cron-выражений в schedule_trigger',

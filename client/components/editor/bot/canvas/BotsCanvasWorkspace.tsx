@@ -13,6 +13,7 @@ import { useBotControl } from '../bot-control-context';
 import { useBotDetailPanelWidth } from './use-bot-detail-panel-width';
 import { buildFailureByTokenId } from './bot-service-failure';
 import type { BotProject, BotToken } from '@shared/schema';
+import type { MockAccountBot, MockTelegramAccount } from '../accounts/mock-account-types';
 
 /** Пропсы workspace холста */
 interface BotsCanvasWorkspaceProps {
@@ -20,6 +21,14 @@ interface BotsCanvasWorkspaceProps {
   project: BotProject;
   /** Токены проекта */
   tokens: BotToken[];
+  /** Аккаунты, размещённые рядом с ботами. */
+  accounts?: readonly MockTelegramAccount[];
+  /** Подписи привязанных ботов. */
+  accountBots?: readonly MockAccountBot[];
+  /** Идентификатор открытой карточки аккаунта. */
+  selectedAccountId?: string;
+  /** Открывает или закрывает карточку аккаунта. */
+  onSelectAccount?: (id: string | null) => void;
 }
 
 /**
@@ -28,7 +37,7 @@ interface BotsCanvasWorkspaceProps {
  * @param props - Свойства компонента
  * @returns JSX элемент
  */
-export function BotsCanvasWorkspace({ project, tokens }: BotsCanvasWorkspaceProps) {
+export function BotsCanvasWorkspace({ project, tokens, accounts, accountBots, selectedAccountId, onSelectAccount }: BotsCanvasWorkspaceProps) {
   const { allBotStatuses } = useBotControl();
   const useSheet = useMediaQuery('(max-width: 639px)');
   const [selectedTokenId, setSelectedTokenId] = useState<number | null>(null);
@@ -60,7 +69,7 @@ export function BotsCanvasWorkspace({ project, tokens }: BotsCanvasWorkspaceProp
 
   const selectedToken = tokens.find((t) => t.id === selectedTokenId) ?? null;
   const projectSelected = selectedProjectId === project.id;
-  const panelOpen = projectSelected || !!selectedToken;
+  const panelOpen = !selectedAccountId && (projectSelected || !!selectedToken);
   const overlayOpen = panelOpen && !useSheet;
   /** Закрывает панель независимо от выбранной карточки. */
   const closePanel = () => {
@@ -90,6 +99,7 @@ export function BotsCanvasWorkspace({ project, tokens }: BotsCanvasWorkspaceProp
         projectLaunchMode={project.defaultLaunchMode ?? 'polling'}
         projectSelected={projectSelected}
         onSelectProject={() => {
+          onSelectAccount?.(null);
           setSelectedTokenId(null);
           setSelectedProjectId(project.id);
           projectPanelWasOpen.current = true;
@@ -99,11 +109,19 @@ export function BotsCanvasWorkspace({ project, tokens }: BotsCanvasWorkspaceProp
         failureByTokenId={failureByTokenId}
         selectedTokenId={selectedTokenId}
         onSelectToken={(tokenId) => {
+          onSelectAccount?.(null);
           setSelectedProjectId(null);
           setSelectedTokenId(tokenId);
           projectPanelWasOpen.current = false;
         }}
         overlayPanelWidth={overlayOpen ? panelWidth : 0}
+        accounts={accounts}
+        accountBots={accountBots}
+        selectedAccountId={selectedAccountId}
+        onSelectAccount={id => {
+          closePanel();
+          onSelectAccount?.(id);
+        }}
       />
 
       {overlayOpen && (

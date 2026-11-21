@@ -29,6 +29,8 @@ export interface RunnerWorkerSnapshot {
   tokenIds: number[];
   /** Боты, команда запуска которых ещё обрабатывается */
   pendingTokenIds: number[];
+  /** Группа не перекрывается с прежним исполнением без подтверждённого выхода. */
+  cutoverEligible?: true;
   /** Режимы отправленных запусков и доступная фактическая активность. */
   bots?: RunnerBotMode[];
   /** Фактические процессы и суммарная память Python внутри данной группы. */
@@ -55,6 +57,8 @@ export interface RunnerSnapshot {
     uptimeSeconds: number;
     /** Ограниченная выборка задержек пробуждения и обработки без пользовательских данных. */
     latency: ReturnType<typeof pollingTimingMetrics>;
+    /** Исполнитель умеет подтверждать завершение точной группы с проверкой версии команд. */
+    cutoverExitProof?: true;
   };
 }
 
@@ -68,6 +72,8 @@ interface RunnerWorker {
   channel: RunnerWorkerExecution;
   /** Очередь строк в stdin: подготовка сборки не должна менять порядок команд */
   queue: Promise<void>;
+  /** Команды новых запусков больше не допускаются во время подтверждаемой остановки. */
+  retiring?: boolean;
   /** Отпечатки сборок запущенных ботов: tokenId → отпечаток (не удаляются из кеша) */
   builds: RunnerBuildPins;
   /** Боты, подтвердившие запуск */
@@ -86,6 +92,8 @@ interface RunnerWorker {
 export class RunnerWorkers {
   /** Ключ воркера → запущенный воркер */
   private readonly workers = new Map<string, RunnerWorker>();
+  /** Все группы без подтверждённого физического выхода, включая заменённых владельцев. */
+  private readonly unconfirmedWorkers = new Map<string, Set<symbol>>();
   /** Команды, уже выполненные в этом процессе до подтверждения Redis */
   private readonly handledCommands = new Set<string>();
   /** Объединённая очистка, исключающая подготовку сборок во время удаления. */
@@ -169,6 +177,7 @@ export class RunnerWorkers {
     if (command.k === "spawn") this.spawn(command.w, command.i);
     else if (command.k === "line" && command.l !== undefined) await this.forward(command.w, command.i, command.l);
     else if (command.k === "kill") this.kill(command.w, command.i);
+    else if (command.k === "retire" && command.q) await this.retire(command.w, command.i, command.q);
   }
 
   /**
@@ -178,10 +187,13 @@ export class RunnerWorkers {
   snapshot(): RunnerSnapshot {
     return { runtime: { processPolling: this.config.processPolling ?? "python",
       processHandler: this.config.processHandler ?? "shared", pid: process.pid,
-      nodeRssBytes: process.memoryUsage.rss(), uptimeSeconds: process.uptime(), latency: pollingTimingMetrics() },
+      nodeRssBytes: process.memoryUsage.rss(), uptimeSeconds: process.uptime(), latency: pollingTimingMetrics(),
+      ...(this.config.requireFence ? { cutoverExitProof: true as const } : {}) },
       workers: [...this.workers].map(([workerKey, worker]) => ({
       workerKey: Number(workerKey), instance: worker.instance, tokenIds: [...worker.tokenIds],
       pendingTokenIds: [...worker.pendingTokenIds],
+        ...(this.config.requireFence && this.unconfirmedWorkers.get(workerKey)?.size === 1
+          ? { cutoverEligible: true as const } : {}),
       bots: worker.modes.snapshot(worker.channel.memoryCounters().polling?.bots),
       execution: worker.channel.memoryCounters(),
       pythonCounters: worker.counters.snapshot(),
@@ -206,8 +218,13 @@ export class RunnerWorkers {
    */
   private spawn(workerKey: string, instance: string): void {
     if (this.current(workerKey, instance)) return;
+    if (this.workers.get(workerKey)?.retiring) {
+      this.emitEvent({ w: workerKey, i: instance, k: "error", l: "Воркер завершает перенос аккаунта" });
+      return;
+    }
     this.workers.get(workerKey)?.channel.kill();
     console.log(`🛰️ Воркер ${workerKey} запускается (${instance.slice(0, 8)})`);
+    const incarnation = Symbol(instance);
     const channel = new RunnerWorkerExecution(this.config, { w: workerKey, i: instance }, (event) => {
       if (event.k === "line" && event.l) {
         try {
@@ -238,7 +255,9 @@ export class RunnerWorkers {
       }
       this.emitEvent(event);
     }, () => {
-      if (this.workers.get(workerKey)?.instance === instance) {
+      const groups = this.unconfirmedWorkers.get(workerKey);
+      if (worker.channel.exitConfirmed && groups?.delete(incarnation) && !groups.size) this.unconfirmedWorkers.delete(workerKey);
+      if (this.workers.get(workerKey) === worker) {
         this.workers.delete(workerKey);
         this.cachePruner.request();
       }
@@ -248,6 +267,9 @@ export class RunnerWorkers {
       instance, channel, queue: Promise.resolve(), builds: new RunnerBuildPins(), tokenIds: new Set(), pendingTokenIds: new Set(), modes: new RunnerBotModes(), counters: new RunnerRuntimeCounters(),
     };
     channel.pauseOutput(this.outputPaused);
+    const groups = this.unconfirmedWorkers.get(workerKey) ?? new Set<symbol>();
+    groups.add(incarnation);
+    this.unconfirmedWorkers.set(workerKey, groups);
     this.workers.set(workerKey, worker);
   }
 
@@ -260,11 +282,16 @@ export class RunnerWorkers {
    */
   private async forward(workerKey: string, instance: string, line: string): Promise<void> {
     const worker = this.current(workerKey, instance);
-    if (!worker) return;
+    if (!worker || worker.retiring) return;
     const parsed = JSON.parse(line);
-    if (parsed.cmd === "start_bot" || parsed.cmd === "stop_bot") {
+    const isStart = parsed.cmd === "start_bot";
+    const isStop = parsed.cmd === "stop_bot";
+    const checksFence = this.config.requireFence && (isStart || isStop);
+    /** Читает актуальное намерение для этой же команды, включая проверку после скачивания. */
+    const isCurrent = async () => (await import("./runnerCommandFence")).isCurrentBotCommand(parsed, parsed.cmd);
+    if (checksFence) {
       const fenced = Number.isSafeInteger(parsed.instance_id) && Number.isSafeInteger(parsed.desired_generation);
-      if (!fenced && this.config.requireFence) {
+      if (!fenced) {
         const reason = `нет версии намерения для ${parsed.cmd}`;
         if (parsed.cmd === "start_bot" && Number.isSafeInteger(parsed.token_id)) {
           botFailedEvents({ w: workerKey, i: instance }, parsed.token_id, reason).forEach(this.emitEvent);
@@ -272,33 +299,29 @@ export class RunnerWorkers {
         console.error(`🛰️ ${reason}`);
         return;
       }
-      if (this.config.requireFence && fenced && !await (await import("./runnerCommandFence")).isCurrentBotCommand(parsed, parsed.cmd)) {
+      if (!await isCurrent()) {
         console.warn(`🛰️ Устаревшая команда ${parsed.cmd} для бота ${parsed.token_id} пропущена`);
         return;
       }
     }
-    try {
-      if (parsed.cmd === "start_bot" && Number.isSafeInteger(parsed.token_id)) worker.pendingTokenIds.add(parsed.token_id);
-      if (parsed.cmd === "stop_bot" && Number.isSafeInteger(parsed.token_id)) worker.pendingTokenIds.delete(parsed.token_id);
-    } catch { /* Неизвестную строку обработает Python-воркер. */ }
+    if (worker.retiring || this.current(workerKey, instance) !== worker) return;
     worker.queue = worker.queue
       .then(() => this.cachePruner.protect(async () => {
+        if (this.current(workerKey, instance) !== worker) return;
+        if (isStart && Number.isSafeInteger(parsed.token_id)) worker.pendingTokenIds.add(parsed.token_id);
         const prepared = await prepareWorkerLine(line, this.config.cacheDir, this.fetchBuild);
+        if (this.current(workerKey, instance) !== worker) return;
+        /** Ошибка старой загрузки также не должна менять состояние нового запуска. */
+        if (checksFence && !await isCurrent()) {
+          if (isStart) worker.pendingTokenIds.delete(parsed.token_id);
+          console.warn(`🛰️ Команда ${parsed.cmd} устарела во время подготовки и пропущена`);
+          return;
+        }
         if ("error" in prepared) {
           worker.pendingTokenIds.delete(prepared.tokenId);
           console.error(`🛰️ Воркер ${workerKey}, бот ${prepared.tokenId}: ${prepared.error}`);
           botFailedEvents({ w: workerKey, i: instance }, prepared.tokenId, prepared.error).forEach(this.emitEvent);
           return;
-        }
-        if (this.config.requireFence && (parsed.cmd === "start_bot" || parsed.cmd === "stop_bot")
-          && Number.isSafeInteger(parsed.instance_id) && Number.isSafeInteger(parsed.desired_generation)) {
-          const current = await import("./runnerCommandFence").then(({ isCurrentBotCommand }) =>
-            isCurrentBotCommand(parsed, parsed.cmd));
-          if (!current) {
-            worker.pendingTokenIds.delete(parsed.token_id);
-            console.warn(`🛰️ Команда ${parsed.cmd} устарела во время подготовки и пропущена`);
-            return;
-          }
         }
         if (prepared.fingerprint && prepared.tokenId !== undefined) worker.builds.prepare(prepared.tokenId, prepared.fingerprint);
         if (this.current(workerKey, instance) !== worker) return;
@@ -310,13 +333,16 @@ export class RunnerWorkers {
           worker.webhookProjects.delete(parsed.token_id);
           if (webhookProject !== undefined) worker.webhookProjects.set(parsed.token_id, webhookProject);
         }
-        if (parsed.cmd === "stop_bot") worker.webhookProjects.delete(parsed.token_id);
+        if (isStop) {
+          worker.pendingTokenIds.delete(parsed.token_id);
+          worker.webhookProjects.delete(parsed.token_id);
+        }
         if (parsed.cmd === "start_bot" && (worker.pendingTokenIds.has(parsed.token_id) || worker.tokenIds.has(parsed.token_id))) {
           worker.modes.start(JSON.parse(prepared.line));
           if (worker.tokenIds.has(parsed.token_id)) worker.modes.observe(`bot_started:${parsed.token_id}`);
         }
       }))
-      .catch((error) => {
+      .catch(async (error) => {
         console.error(`🛰️ Воркер ${workerKey}: ошибка подготовки команды:`, error);
         try {
           const command = JSON.parse(line);
@@ -325,13 +351,41 @@ export class RunnerWorkers {
             worker.pendingTokenIds.delete(command.token_id);
             worker.builds.stopped(command.token_id, true);
             this.cachePruner.request();
-            botFailedEvents({ w: workerKey, i: instance }, command.token_id, String(error)).forEach(this.emitEvent);
+            if (this.current(workerKey, instance) === worker && (!checksFence || await isCurrent().catch(() => false))) {
+              botFailedEvents({ w: workerKey, i: instance }, command.token_id, String(error)).forEach(this.emitEvent);
+            }
             return;
           }
         } catch { /* Неразбираемая команда остаётся без подтверждения. */ }
         throw error;
       });
     await worker.queue;
+  }
+
+  /**
+   * Подтверждает выход ровно указанной группы после её полной остановки.
+   * @param workerKey - Ключ логической группы.
+   * @param instance - Уникальный экземпляр группы.
+   * @param q - Номер запроса доказательства.
+   */
+  private async retire(workerKey: string, instance: string, q: string): Promise<void> {
+    const worker = this.current(workerKey, instance);
+    /** Ответ привязан к экземпляру и исходному запросу. */
+    const answer = (confirmed: "0" | "1") => this.emitEvent({ w: workerKey, i: instance, k: "retired", q, confirmed });
+    if (!this.config.requireFence || !worker || worker.retiring
+      || this.unconfirmedWorkers.get(workerKey)?.size !== 1) { answer("0"); return; }
+    worker.retiring = true;
+    let proven = false;
+    try {
+      await worker.queue;
+      if (this.current(workerKey, instance) !== worker || worker.tokenIds.size || worker.pendingTokenIds.size) return;
+      await worker.channel.shutdownForCutover(() => { proven = true; answer("1"); });
+    } catch {
+      /* Ошибка очереди или остановки оставляет состояние неизвестным. */
+    } finally {
+      worker.retiring = false;
+      if (!proven) answer("0");
+    }
   }
 
   /**

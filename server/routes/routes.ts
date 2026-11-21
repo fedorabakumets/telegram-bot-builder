@@ -57,6 +57,7 @@ import { registerBotAudienceCounts } from './users/bot-audience-counts';
 import { registerChatAccessBatchRoutes } from './dialogs/chat-access-batch-routes';
 /** Подключает сохранённые связи пользователя с ботами общей карточки. */
 import { registerDialogProfileBotsRoutes } from './dialogs/dialog-profile-bots-routes';
+import { registerProjectTelegramAccountsRoutes } from './projectTelegramAccounts/project-telegram-accounts-routes';
 /** Подключает сохранённые группы пользователя общей карточки. */
 import { registerDialogProfileGroupsRoutes } from './dialogs/dialog-profile-groups-routes';
 /** Подключает сохранённые материалы общей карточки пользователя. */
@@ -82,6 +83,7 @@ import { clearBotUsersHandler } from "./botUsers/handlers/clearBotUsersHandler";
 import { deleteBotUserHandler } from "./botUsers/handlers/deleteBotUserHandler";
 import { updateBotUserHandler } from "./botUsers/handlers/updateBotUserHandler";
 import { botTokenWriteReceipt } from "./botTokens/token-write-receipt";
+import { guardLegacyUserbotMutation } from './botTokens/guard-legacy-userbot-mutation';
 import { updateProjectTokenHandler } from "./botTokens/handlers/updateProjectTokenHandler";
 import { deleteProjectTokenHandler } from "./botTokens/handlers/deleteProjectTokenHandler";
 import { isMaskedOrPlaceholderToken, toPublicBotToken } from "./botTokens/to-public-bot-token";
@@ -136,6 +138,7 @@ import { sessionActivityMiddleware } from "../auth/session-registry";
 import { attachAdminAudit } from "../admin/admin-audit";
 import { setupSwagger } from "../swagger/setup-swagger";
 import { cookieCsrf } from '../middleware/cookie-csrf';
+import { registerProjectTelegramRunnerRoute } from './project-telegram-runner-route';
 import {
   CHART_WINDOW_INTERVAL,
   getChartSeriesGranularity,
@@ -495,6 +498,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   };
 
   app.use(sessionMiddleware);
+  registerProjectTelegramRunnerRoute(app);
   /** Проверяет источник изменений через cookie до API и административных обработчиков. */
   app.use(['/api', '/admin/api'], cookieCsrf);
   // Экспортируем для использования в WebSocket (прикрепление сессии к WS запросам)
@@ -1271,7 +1275,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
    * Обновление настроек Telethon userbot для токена бота
    * PUT /api/projects/:projectId/tokens/:tokenId/userbot
    */
-  app.put("/api/projects/:projectId/tokens/:tokenId/userbot", requireTokenOwnership, async (req, res) => {
+  app.put("/api/projects/:projectId/tokens/:tokenId/userbot", requireTokenOwnership, guardLegacyUserbotMutation(async (req, res) => {
     try {
       const tokenId = parseInt(req.params.tokenId);
       const projectId = parseInt(req.params.projectId);
@@ -1300,13 +1304,13 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       res.status(500).json({ message: "Ошибка обновления настроек юзербота" });
     }
     return;
-  });
+  }));
 
   /**
    * Авторизация Telethon userbot — шаг 1: отправка кода
    * POST /api/projects/:projectId/tokens/:tokenId/userbot/send-code
    */
-  app.post("/api/projects/:projectId/tokens/:tokenId/userbot/send-code", userbotSignInLimit, requireTokenOwnership, async (req, res) => {
+  app.post("/api/projects/:projectId/tokens/:tokenId/userbot/send-code", userbotSignInLimit, requireTokenOwnership, guardLegacyUserbotMutation(async (req, res) => {
     try {
       const tokenId = parseInt(req.params.tokenId);
       const { apiId, phone } = req.body as { apiId: string; apiHash: string; phone: string };
@@ -1338,13 +1342,13 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       res.status(500).json({ ok: false, message: error.message || "Ошибка отправки кода" });
     }
     return;
-  });
+  }));
 
   /**
    * Авторизация Telethon userbot — шаг 2: ввод кода
    * POST /api/projects/:projectId/tokens/:tokenId/userbot/sign-in
    */
-  app.post("/api/projects/:projectId/tokens/:tokenId/userbot/sign-in", userbotSignInLimit, requireTokenOwnership, async (req, res) => {
+  app.post("/api/projects/:projectId/tokens/:tokenId/userbot/sign-in", userbotSignInLimit, requireTokenOwnership, guardLegacyUserbotMutation(async (req, res) => {
     try {
       const tokenId = parseInt(req.params.tokenId);
       const { phone, code } = req.body as { phone: string; code: string };
@@ -1372,13 +1376,13 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       res.status(500).json({ ok: false, message: error.message || "Ошибка авторизации" });
     }
     return;
-  });
+  }));
 
   /**
    * Авторизация Telethon userbot — шаг 3: ввод 2FA пароля
    * POST /api/projects/:projectId/tokens/:tokenId/userbot/sign-in-2fa
    */
-  app.post("/api/projects/:projectId/tokens/:tokenId/userbot/sign-in-2fa", userbotSignInLimit, requireTokenOwnership, async (req, res) => {
+  app.post("/api/projects/:projectId/tokens/:tokenId/userbot/sign-in-2fa", userbotSignInLimit, requireTokenOwnership, guardLegacyUserbotMutation(async (req, res) => {
     try {
       const tokenId = parseInt(req.params.tokenId);
       const { password } = req.body as { password: string };
@@ -1400,7 +1404,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       res.status(500).json({ ok: false, message: error.message || "Ошибка 2FA авторизации" });
     }
     return;
-  });
+  }));
 
   /**
    * Обновление уровня логирования для токена бота
@@ -3344,6 +3348,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   registerBotAudienceCounts(app);
   registerChatAccessBatchRoutes(app);
   registerDialogProfileBotsRoutes(app);
+  registerProjectTelegramAccountsRoutes(app);
   registerDialogProfileGroupsRoutes(app);
   registerDialogProfileContentRoutes(app);
 

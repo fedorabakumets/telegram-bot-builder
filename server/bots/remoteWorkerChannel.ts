@@ -25,6 +25,8 @@ export class RemoteWorkerChannel extends EventEmitter implements WorkerChannel, 
 
   /** Таймер ожидания подтверждения kill */
   private killTimer: ReturnType<typeof setTimeout> | null = null;
+  /** Текущий запрос подтверждённой остановки и функция его завершения. */
+  private retirement?: { /** Номер запроса. */ id: string; /** Завершение ожидания. */ finish: (confirmed: boolean) => void };
 
   /** PID на этой машине нет */
   readonly pid = undefined;
@@ -71,16 +73,65 @@ export class RemoteWorkerChannel extends EventEmitter implements WorkerChannel, 
   }
 
   /**
+   * Проверяет поддержку протокола и существование нужной группы до остановки ботов.
+   * @param timeoutMs - Сколько ждать свежий снимок исполнителя.
+   * @param botIds - Боты, которым разрешено оставаться в группе до её остановки.
+   * @returns Исполнитель поддерживает доказательство для текущего экземпляра.
+   */
+  async canConfirmCutoverExit(timeoutMs: number, botIds: readonly number[]): Promise<boolean> {
+    if (this.exited) return false;
+    try {
+      const snapshot = await this.hub.inspect(timeoutMs);
+      return !this.exited && snapshot.runtime?.cutoverExitProof === true
+        && snapshot.workers.some(worker => worker.workerKey === this.workerKey && worker.instance === this.instance
+          && worker.cutoverEligible === true
+          && [...worker.tokenIds, ...worker.pendingTokenIds].every(id => botIds.includes(id)));
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Ждёт авторитетный ответ для этого процесса и запроса.
+   * @param timeoutMs - Максимальное время ожидания ответа исполнителя.
+   * @returns Подтверждение фактического выхода или false при неопределённости.
+   */
+  confirmCutoverExit(timeoutMs: number): Promise<boolean> {
+    if (this.exited || this.retirement) return Promise.resolve(false);
+    const id = randomUUID();
+    return new Promise(resolve => {
+      const timer = setTimeout(() => finish(false), timeoutMs);
+      /** Снимает ожидание только для текущего запроса. */
+      const finish = (confirmed: boolean) => {
+        if (this.retirement?.id !== id) return;
+        clearTimeout(timer);
+        this.retirement = undefined;
+        resolve(confirmed);
+      };
+      this.retirement = { id, finish };
+      void Promise.resolve(this.hub.send({ k: "retire", w: String(this.workerKey), i: this.instance, q: id }))
+        .catch(() => finish(false));
+    });
+  }
+
+  /**
    * Обрабатывает событие воркера от исполнителя
    * @param event - Событие
    */
   handle(event: RunnerEvent): void {
     if (this.exited) return;
+    if (event.k === "retired") {
+      if (event.i !== this.instance || event.w !== String(this.workerKey) || event.q !== this.retirement?.id) return;
+      this.retirement?.finish(event.confirmed === "1");
+      if (event.confirmed === "1") this.finish(0, null);
+      return;
+    }
     if (event.k === "line" && event.l !== undefined) this.emit("line", event.l);
     else if (event.k === "stderr" && event.l) this.emit("stderr", event.l);
     // Старое «null» и повреждённые поля не превращаются в NaN или штатный код 0.
     else if (event.k === "exit") this.finish(decodeWorkerExitCode(event.c), event.s ?? null);
     else if (event.k === "error") {
+      this.retirement?.finish(false);
       this.exited = true;
       this.hub.unregister(this.instance);
       this.emit("error", new Error(event.l || "Исполнитель не смог запустить воркер"));
@@ -95,6 +146,7 @@ export class RemoteWorkerChannel extends EventEmitter implements WorkerChannel, 
   private finish(code: number | null, signal: string | null): void {
     if (this.exited) return;
     this.exited = true;
+    this.retirement?.finish(false);
     if (this.killTimer) clearTimeout(this.killTimer);
     this.hub.unregister(this.instance);
     this.emit("exit", code, signal);
@@ -107,6 +159,7 @@ export class RemoteWorkerChannel extends EventEmitter implements WorkerChannel, 
   private fail(error: unknown): void {
     if (this.exited) return;
     this.exited = true;
+    this.retirement?.finish(false);
     if (this.killTimer) clearTimeout(this.killTimer);
     this.hub.unregister(this.instance);
     this.emit("error", error instanceof Error ? error : new Error(String(error)));

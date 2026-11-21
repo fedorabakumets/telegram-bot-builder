@@ -5,6 +5,7 @@
  */
 
 import { WorkspaceHeaderActionItems } from '@/components/ui/workspace-header-action-items';
+import './bot-control-panel-header.css';
 import { Button } from '@/components/ui/button';
 import { Bot, Plus } from 'lucide-react';
 import { TabHeader } from '@/components/ui/tab-header';
@@ -43,8 +44,12 @@ interface BotControlPanelHeaderProps {
   workspaceMode: BotWorkspaceMode;
   /** Переключает ботов и аккаунты. */
   onWorkspaceModeChange: (mode: BotWorkspaceMode) => void;
-  /** Создаёт демонстрационный аккаунт. */
-  onAddMockAccount: () => void;
+  /** Создаёт аккаунт в выбранном режиме. */
+  onAddAccount: () => void;
+  /** Пользователь может создавать аккаунты. */
+  canAddAccount: boolean;
+  /** Показываются демонстрационные данные. */
+  demoAccounts: boolean;
 }
 
 /**
@@ -62,7 +67,9 @@ export function BotControlPanelHeader({
   currentProjectTokens = [],
   workspaceMode,
   onWorkspaceModeChange,
-  onAddMockAccount,
+  onAddAccount,
+  canAddAccount,
+  demoAccounts,
 }: BotControlPanelHeaderProps) {
   const { user, isLoading: authLoading } = useTelegramAuth();
   const queryClient = useQueryClient();
@@ -97,7 +104,7 @@ export function BotControlPanelHeader({
         <>
         <BotWorkspaceModeSwitch mode={workspaceMode} onModeChange={onWorkspaceModeChange} />
         {workspaceMode === 'accounts' ? (
-          <Button variant="outline" size="sm" onClick={onAddMockAccount}>
+          <Button variant="outline" size="sm" onClick={onAddAccount} disabled={!canAddAccount}>
             <Plus className="size-4" aria-hidden="true" /> Аккаунт
           </Button>
         ) : <WorkspaceTabActions docsPath="interface/bot" section="Боты" onRefresh={refreshBots} before={[
@@ -133,7 +140,7 @@ export function BotControlPanelHeader({
           </div>
         ) : null }]} />
         {workspaceMode === 'accounts' ? (
-          <span className="text-xs text-muted-foreground">Демонстрационные данные</span>
+          demoAccounts && <span className="text-xs text-muted-foreground">Демонстрационные данные</span>
         ) : <WorkerPoolStatus projects={allProjects} />}
         {workspaceMode === 'bots' && currentProjectId != null && (
           <div className="shrink-0">
