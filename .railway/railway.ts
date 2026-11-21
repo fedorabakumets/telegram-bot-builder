@@ -40,7 +40,8 @@ export const railwayForTopology = (mode: TelegramBrokerTopology) => defineRailwa
     },
     /** Исполнитель пересобирается только при изменении зависимостей управления ботами. */
     build: { buildEnvironment: "V3", builder: "DOCKERFILE", dockerfilePath: "Dockerfile.runner", watchPatterns: ["/server/runner/**", "/server/redis/**", "/server/bots/**", "/server/services/runtime-overlay.ts", "/server/utils/**", "/server/python/**", "/requirements.txt", "/package.json", "/package-lock.json", "/tsconfig.node.json", "/Dockerfile.runner", "/.railway/railway.ts", "/.railway/telegram-broker-topology.ts"] },
-    start: "node /app/runner.cjs",
+    /** Railway заменяет ENTRYPOINT образа: явно сохраняем обработку сигналов и подготовку тома. */
+    start: "/usr/bin/tini -- sh /app/runtime-entrypoint.sh node /app/runner.cjs",
     /** Встроенный брокер подтверждает владение до переключения трафика платформой. */
     healthcheck: topology.embedded ? "/healthz" : undefined,
     healthcheckTimeout: topology.embedded ? 120 : undefined,

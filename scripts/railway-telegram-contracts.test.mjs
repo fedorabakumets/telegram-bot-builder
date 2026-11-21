@@ -152,6 +152,12 @@ test('образ общего runtime сохраняет подготовку т
   assert.ok(entry, 'Встроенному владельцу нужен entrypoint, не обходящий подготовку тома');
   const command = JSON.parse(entry[1]);
   assert.deepEqual(command.slice(0, 3), ['/usr/bin/tini', '--', 'sh']);
+  /** Railway заменяет ENTRYPOINT, поэтому проверяем фактическую команду обоих графов и переходного TOML. */
+  const expectedStart = [...command, 'node', '/app/runner.cjs'].join(' ');
+  assert.equal(runtime.deploy.startCommand, expectedStart);
+  assert.equal(service('bot runtime', standalone).deploy.startCommand, expectedStart);
+  const legacy = readFileSync(resolve(root, 'railway.runtime.toml'), 'utf8');
+  assert.equal(legacy.match(/^startCommand = "([^"]+)"/m)?.[1], expectedStart);
   const scriptName = command[3].split('/').pop();
   assert.match(docker, new RegExp(`COPY server/runner/${scriptName.replaceAll('.', '\\.')} `));
   const init = readFileSync(resolve(root, 'server/runner', scriptName), 'utf8');

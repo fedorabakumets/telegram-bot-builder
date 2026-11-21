@@ -45,6 +45,6 @@ ENV RUNNER_WORKER_SCRIPT=/app/python/worker.py \
 
 # REDIS_URL и RUNNER_ID задают транспорт; DATABASE_URL нужен при RUNNER_REQUIRE_FENCE=true.
 STOPSIGNAL SIGTERM
-# Точка входа сохраняется и при команде Railway, поэтому права тома готовятся в обоих режимах.
+# IaC и переходный startCommand Railway явно повторяют эту точку входа перед запуском Node.
 ENTRYPOINT ["/usr/bin/tini", "--", "sh", "/app/runtime-entrypoint.sh"]
 CMD ["node", "/app/runner.cjs"]

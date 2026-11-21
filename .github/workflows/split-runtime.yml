@@ -216,6 +216,15 @@ jobs:
       - uses: actions/checkout@v4
       # Образы только собираются локально на runner, без публикации и деплоя.
       - run: docker build -f Dockerfile.${{ matrix.service }} -t botcraft-${{ matrix.service }}:check .
+      # Эмулируем замену ENTRYPOINT Railway: том доступен UID 10001, сеть и Telegram отключены.
+      - name: Права тома и запуск общего runtime без root
+        if: matrix.service == 'runner'
+        run: |
+          docker run --rm --network none \
+            --tmpfs /var/lib/botcraft-telegram:rw,noexec,nosuid,size=4m \
+            --tmpfs /app/cache:rw,noexec,nosuid,size=4m \
+            --entrypoint /usr/bin/tini botcraft-runner:check -- \
+            sh /app/runtime-entrypoint.sh sh -ec 'test "$(id -u)" = 10001; test -w /app/cache; test -w /var/lib/botcraft-telegram; node --version; python -c "import aiohttp, redis, telethon"'
       # Результаты видны в журнале; найденные уязвимости не блокируют слияние.
       - name: Проверить образ на уязвимости
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0

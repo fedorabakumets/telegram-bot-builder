@@ -38,6 +38,8 @@ IaC выбирает топологию константой `TELEGRAM_BROKER_TO
 
 В embedded IaC задаёт runtime `PORT=8765` и healthcheck `/healthz` с таймаутом 120 секунд: готовность требует подтверждённого Redis-владения брокера. Webhook продолжает слушать отдельный `RUNNER_WEBHOOK_PORT=9080`. Закрытие брокера получает до 70 секунд на штатный cleanup; после принудительного завершения успешное закрытие сессий не подтверждается и автоматического захвата владения нет.
 
+Railway переопределяет `ENTRYPOINT` при заданном `startCommand`. Поэтому IaC и переходный `railway.runtime.toml` явно запускают `/usr/bin/tini -- sh /app/runtime-entrypoint.sh node /app/runner.cjs`. Не сокращайте эту команду до прямого запуска Node: подготовка прав подключённого тома и понижение привилегий должны выполняться до runtime. Сам Docker-образ использует тот же wrapper по умолчанию.
+
 | Размещение | Standalone | Embedded |
 |---|---|---|
 | Процесс брокера | Сервис `telegram-accounts` | Дочерний процесс `bot runtime` |
