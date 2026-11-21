@@ -11,7 +11,9 @@ import type { MockTelegramAccount } from './mock-account-types';
 export function AccountProfileDetails({ account }: { /** Открытый аккаунт. */ account: MockTelegramAccount }) {
   if (account.status !== 'connected') return null;
 
-  const number = Number(account.id.split('-').at(-1)) || 1;
+  /** Номер образца берётся из последней части идентификатора без Array.at. */
+  const idParts = account.id.split('-');
+  const number = Number(idParts[idParts.length - 1]) || 1;
   const profile = account.profile ?? createMockAccountProfile(number);
   const kind = account.sessionKind;
   /** Подпись поля и его отображаемое значение. */

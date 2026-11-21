@@ -44,7 +44,7 @@ export function encodeTelegramSession(dc: unknown, host: unknown, port: unknown,
   const address = typeof host === 'string' ? host : '';
   const family = isIP(address);
   if (typeof dc !== 'number' || !Number.isInteger(dc) || dc < 1 || dc > 5 ||
-      !family || !telegramAddresses.check(address, family === 4 ? 'ipv4' : 'ipv6') ||
+      (family !== 4 && family !== 6) || !telegramAddresses.check(address, family === 4 ? 'ipv4' : 'ipv6') ||
       port !== 443 || !(key instanceof Uint8Array) || key.length !== 256 || !key.some(byte => byte !== 0)) {
     throw new ProjectTelegramInputError('Сессия содержит неподдерживаемые данные подключения Telegram.');
   }

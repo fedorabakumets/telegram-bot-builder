@@ -38,7 +38,7 @@ export function normalizeProjectTelegramProxy(raw: unknown): ProjectTelegramAcco
   const { type, host: suppliedHost, port, username, password } = telegramInput(raw);
   const host = typeof suppliedHost === 'string' ? suppliedHost.trim().toLowerCase().replace(/^\[([^\]]+)\]$/, '$1') : '';
   const labels = host.split('.');
-  const validDomain = host.length <= 253 && labels.length > 1 && /[a-z]/.test(labels.at(-1) ?? '')
+  const validDomain = host.length <= 253 && labels.length > 1 && /[a-z]/.test(labels[labels.length - 1] ?? '')
     && labels.every(label => /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/.test(label));
   if (host.includes('%') || (!isIP(host) && !validDomain) || (isIP(host) && !isPublicAddress(host))) {
     throw new ProjectTelegramInputError('Укажите публичный адрес прокси без схемы.');

@@ -17,7 +17,8 @@ export function unsupportedSharedTelegramNodes(data: unknown): string[] {
     if (node.type === 'code') return /\b(?:userbot_client|TelegramClient|StringSession)\b/.test(String(node.data?.code ?? ''));
     if (node.type === 'userbot_message') return !!node.data?.attachedMedia?.length;
     if (node.type === 'broadcast' && node.data?.broadcastApiType === 'client') {
-      return collectBroadcastNodes(nodes, node.id).some(message => message.attachedMedia.length > 0
+      /** Текстовые сообщения рассылки могут не содержать массива вложений. */
+      return collectBroadcastNodes(nodes, node.id).some(message => !!message.attachedMedia?.length
         || !!(message.imageUrl || message.audioUrl || message.videoUrl || message.documentUrl));
     }
     return false;

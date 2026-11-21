@@ -107,7 +107,8 @@ describe("RemoteWorkerChannel", () => {
   it("подтверждает остановку только ответом с идентификатором запроса", async () => {
     const { hub, channel } = makeChannel();
     const confirmation = channel.confirmCutoverExit(1_000);
-    const command = hub.sent.at(-1);
+    /** Последняя команда читается без требования библиотеки ES2022. */
+    const command = hub.sent[hub.sent.length - 1];
     assert.equal(command?.k, "retire");
     assert.equal(command.w, "7");
     assert.equal(command.i, channel.instance);
@@ -123,7 +124,8 @@ describe("RemoteWorkerChannel", () => {
     t.mock.timers.enable({ apis: ["setTimeout"] });
     const { hub, channel } = makeChannel();
     const confirmation = channel.confirmCutoverExit(50);
-    const query = hub.sent.at(-1)?.q;
+    /** Идентификатор последней команды доступен и при прежней цели сборки. */
+    const query = hub.sent[hub.sent.length - 1]?.q;
     const sink = hub.sinks.get(channel.instance);
     assert.ok(query && sink);
     sink.handle({ k: "retired", w: "7", i: channel.instance, q: "предыдущий-запрос", confirmed: "1" });
@@ -137,7 +139,8 @@ describe("RemoteWorkerChannel", () => {
   it("возвращает отказ владельца и оставляет канал доступным", async () => {
     const { hub, channel } = makeChannel();
     const confirmation = channel.confirmCutoverExit(1_000);
-    const query = hub.sent.at(-1)?.q;
+    /** Индекс последнего элемента не требует поддержки Array.at. */
+    const query = hub.sent[hub.sent.length - 1]?.q;
     const sink = hub.sinks.get(channel.instance);
     assert.ok(query && sink);
     sink.handle({ k: "retired", w: "7", i: channel.instance, q: query, confirmed: "0" });

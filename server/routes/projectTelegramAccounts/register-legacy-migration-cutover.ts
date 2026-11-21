@@ -1,5 +1,5 @@
 /** @fileoverview Управляемые владельцем запуск и откат переноса старых Telegram-сессий. */
-import type { Express, RequestHandler } from 'express';
+import type { Express, Request, RequestHandler, Response } from 'express';
 import { z } from 'zod';
 import { pool } from '../../database/db';
 import { createTelegramAccountCutoverJournal } from '../../database/project-telegram-account-cutover-journal';
@@ -59,7 +59,8 @@ export function registerLegacyTelegramMigrationCutover(
       res.status(500).json({ message: 'Не удалось загрузить операции переноса' });
     }
   });
-  app.post(`${path}/apply`, middleware, async (req, res) => {
+  /** Явные типы не зависят от выбора перегрузки Express с массивом middleware. */
+  app.post(`${path}/apply`, middleware, async (req: Request, res: Response) => {
     const parsed = applyInput.safeParse(req.body);
     if (!parsed.success) {
       res.status(400).json({ message: 'Некорректные параметры переноса' });
@@ -104,7 +105,8 @@ export function registerLegacyTelegramMigrationCutover(
         ? error.message : 'Не удалось подтвердить перенос. Повторите с тем же идентификатором или выполните откат' });
     }
   });
-  app.post(`${path}/rollback`, middleware, async (req, res) => {
+  /** Откат использует тот же типизированный контракт запроса и ответа. */
+  app.post(`${path}/rollback`, middleware, async (req: Request, res: Response) => {
     const parsed = rollbackInput.safeParse(req.body);
     if (!parsed.success) {
       res.status(400).json({ message: 'Некорректный идентификатор переноса' });

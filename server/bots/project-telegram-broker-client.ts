@@ -54,7 +54,8 @@ export async function callProjectTelegramBroker(
       body: JSON.stringify(payload),
     });
     const data = await response.json() as { /** Результат операции. */ result?: unknown; /** Стабильный код ошибки. */ code?: string };
-    if (!response.ok || !Object.hasOwn(data, 'result')) {
+    /** Проверка собственного поля совместима с целевой библиотекой ES проекта. */
+    if (!response.ok || !Object.prototype.hasOwnProperty.call(data, 'result')) {
       throw new ProjectTelegramBrokerError(data.code && safeCodes.has(data.code) ? data.code : 'BROKER_UNAVAILABLE');
     }
     return data.result;
