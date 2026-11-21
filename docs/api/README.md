@@ -6,7 +6,7 @@
 
 > Сгенерировано из OpenAPI spec (`npm run docs:api`). Интерактивная документация: `/admin/docs`.
 
-В снимке 288 HTTP-операций. Число маршрутов HTTP не равно числу действий основного MCP.
+В снимке 289 HTTP-операций. Число маршрутов HTTP не равно числу действий основного MCP.
 
 ## Сборка и границы покрытия
 
@@ -38,7 +38,7 @@
 | [hooks](./hooks.md) | 5 |
 | [launch](./launch.md) | 1 |
 | [media](./media.md) | 14 |
-| [project-bot](./project-bot.md) | 8 |
+| [project-bot](./project-bot.md) | 9 |
 | [project-broadcasts](./project-broadcasts.md) | 12 |
 | [project-dialogs](./project-dialogs.md) | 9 |
 | [project-files](./project-files.md) | 5 |

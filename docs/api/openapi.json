@@ -11526,6 +11526,139 @@
           "nextCursor",
           "total"
         ]
+      },
+      "ProjectRestartJob": {
+        "type": "object",
+        "properties": {
+          "jobId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "projectId": {
+            "type": "integer"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "running",
+              "completed",
+              "failed"
+            ]
+          },
+          "progress": {
+            "type": "object",
+            "properties": {
+              "phase": {
+                "type": "string",
+                "enum": [
+                  "queued",
+                  "stopping",
+                  "cooldown",
+                  "starting",
+                  "completed"
+                ]
+              },
+              "total": {
+                "type": "integer"
+              },
+              "completed": {
+                "type": "integer"
+              },
+              "stopped": {
+                "type": "integer"
+              },
+              "stopFailed": {
+                "type": "integer"
+              },
+              "attempted": {
+                "type": "integer"
+              },
+              "restarted": {
+                "type": "integer"
+              },
+              "failed": {
+                "type": "integer"
+              },
+              "results": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "tokenId": {
+                      "type": "integer"
+                    },
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "processId": {
+                      "type": "string"
+                    },
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "tokenId",
+                    "success"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "phase",
+              "total",
+              "completed",
+              "stopped",
+              "stopFailed",
+              "attempted",
+              "restarted",
+              "failed",
+              "results"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "result": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ProjectBotRestartAllOk"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "ok": {
+                    "type": "boolean"
+                  },
+                  "failed": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "ok",
+                  "failed"
+                ]
+              }
+            ]
+          },
+          "error": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "jobId",
+          "projectId",
+          "status",
+          "progress",
+          "createdAt",
+          "updatedAt"
+        ]
       }
     },
     "parameters": {}
@@ -24038,8 +24171,8 @@
         "tags": [
           "project-bot"
         ],
-        "summary": "Перезапустить всех running ботов",
-        "description": "Останавливает все running-токены проекта, cooldown, затем start со stagger. Офлайн не трогает (для них — start-offline-all).\n\n**Клиент/MCP:** `restartAllBotsMutation`, `db_restart_all_bots`.\n\n```bash\ncurl -s -X POST -b cookies.txt 'http://localhost:5000/api/projects/42/bot/restart-all'\n```",
+        "summary": "Принять массовый перезапуск в фоне",
+        "description": "Сразу возвращает 202 и jobId; это принятие, а не подтверждение перезапуска. Опросите GET /api/projects/{id}/bot/restart-all/jobs/{jobId} до completed или failed. Повтор во время работы возвращает тот же jobId и не запускает вторую работу. Перезапускаются только running-боты. Результат может содержать частичные ошибки. Задания хранятся в памяти панели до часа: после перезапуска панели GET даёт 404, при котором нужно перечитать статусы ботов, а не считать операцию успешной.",
         "security": [
           {
             "cookieAuth": []
@@ -24087,64 +24220,78 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "Сводка перезапуска",
+          "202": {
+            "description": "Задание принято либо уже выполняется",
             "content": {
               "application/json": {
                 "example": {
-                  "restarted": 2,
-                  "results": [
-                    {
-                      "tokenId": 7,
-                      "success": true,
-                      "processId": "12345"
-                    },
-                    {
-                      "tokenId": 8,
-                      "success": true,
-                      "processId": "12346"
-                    }
-                  ]
+                  "jobId": "6c93054e-074a-4d15-9d72-c2e09f8eb7dc",
+                  "projectId": 42,
+                  "status": "queued",
+                  "progress": {
+                    "phase": "queued",
+                    "total": 0,
+                    "completed": 0,
+                    "stopped": 0,
+                    "stopFailed": 0,
+                    "attempted": 0,
+                    "restarted": 0,
+                    "failed": 0,
+                    "results": []
+                  },
+                  "createdAt": "2026-11-21T09:00:00.000Z",
+                  "updatedAt": "2026-11-21T09:00:00.000Z"
                 },
                 "schema": {
-                  "$ref": "#/components/schemas/ProjectBotRestartAllOk"
+                  "$ref": "#/components/schemas/ProjectRestartJob"
                 }
               }
             }
           },
-          "401": {
-            "description": "Нет session / PAT",
+          "400": {
+            "description": "Запрос отклонён",
             "content": {
               "application/json": {
-                "example": {
-                  "error": "UNAUTHORIZED"
-                },
-                "schema": {
-                  "$ref": "#/components/schemas/UnauthorizedError"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Нет доступа к проекту",
-            "content": {
-              "application/json": {
-                "example": {
-                  "message": "Нет прав доступа к проекту"
-                },
                 "schema": {
                   "$ref": "#/components/schemas/MessageError"
                 }
               }
             }
           },
-          "404": {
-            "description": "Нет токенов",
+          "401": {
+            "description": "Запрос отклонён",
             "content": {
               "application/json": {
-                "example": {
-                  "message": "Токены проекта не найдены"
-                },
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Запрос отклонён",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Другой перезапуск проекта уже выполняется",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Запрос отклонён",
+            "content": {
+              "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/MessageError"
                 }
@@ -52897,6 +53044,161 @@
           }
         },
         "operationId": "get_api_bot_tokens_tokenId_users_userId_photo_6639e50fb04185ff"
+      }
+    },
+    "/api/projects/{id}/bot/restart-all/jobs/{jobId}": {
+      "get": {
+        "tags": [
+          "project-bot"
+        ],
+        "summary": "Прочитать прогресс массового перезапуска",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "agentToken": []
+          }
+        ],
+        "description": "Доступ заново проверяется для проекта. Чужой или утраченный jobId не раскрывает результаты. Опрос не блокируется на длительных операциях остановки и запуска.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "42",
+              "description": "ID проекта"
+            },
+            "required": true,
+            "description": "ID проекта",
+            "example": "42",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "jobId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Текущий снимок задания",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectRestartJob"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Запрос отклонён",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Запрос отклонён",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Запрос отклонён",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Задание не найдено либо истекло; перечитайте статусы ботов",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/MessageError"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "RESTART_JOB_NOT_FOUND"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "code"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Другой перезапуск проекта уже выполняется",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Запрос отклонён",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
+          }
+        },
+        "operationId": "get_api_projects_id_bot_restart_all_jobs_jobId_cd572dfdcd485104"
       }
     }
   }
