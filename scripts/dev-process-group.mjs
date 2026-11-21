@@ -16,7 +16,9 @@ export function startDevProcessGroup({ services, root, env = process.env, platfo
   let deadline;
   let startupDeadline;
   let brokerReady = false;
-  const broker = services.find(service => service.name === 'broker');
+  /** Общий runtime сам управляет вложенным брокером и закрывает его после своих потребителей. */
+  const broker = services.find(service => service.name === 'broker' || service.ownsBroker);
+  const readyMarker = broker?.ownsBroker ? 'TELETHON_RUNTIME_READY' : 'TELETHON_BROKER_READY';
   /** Завершает дерево конкретного процесса, не затрагивая соседние запуски. */
   function kill(child, signal = 'SIGTERM') {
     if (!child.pid) return;
@@ -29,22 +31,30 @@ export function startDevProcessGroup({ services, root, env = process.env, platfo
     stopping = true;
     if (startupDeadline) clearTimer(startupDeadline);
     onExitCode(code);
-    for (const [child, name] of children) if (name !== 'broker') kill(child);
-    for (const [child, name] of children) if (name === 'broker') child.stdin?.end('shutdown\n');
+    for (const [child, name] of children) if (name !== broker?.name) kill(child);
+    for (const [child, name] of children) if (name === broker?.name) {
+      if (broker.ownsBroker) {
+        /** IPC сохраняет штатное завершение runtime на Windows, где SIGTERM принудителен. */
+        if (child.connected) child.send({ type: 'shutdown' }, error => {
+          if (error) report('Не удалось передать запрос остановки общему runtime; ожидаем подтверждения выхода.');
+        });
+      } else child.stdin?.end('shutdown\n');
+    }
     /** Даём завершиться HTTP-операции до 55 секунд и отключению клиента до 10 секунд. */
     deadline = setTimer(() => {
       if (!children.size) return;
       report('Превышено время остановки. При принудительном выходе брокера владение остаётся заблокировано; нужна проверка и ручное восстановление.');
       for (const child of children.keys()) kill(child, 'SIGKILL');
       forceExit(code || 1);
-    }, 75000);
+    }, broker?.ownsBroker ? 120000 : 75000);
     deadline.unref?.();
   }
   /** Создаёт процесс и наблюдает его завершение, не запуская соседей при ошибке. */
   function launch(service) {
     const child = spawnProcess(service.command, service.args, {
       cwd: root, windowsHide: true, detached: platform !== 'win32',
-      stdio: service.name === 'broker' ? ['pipe', 'pipe', 'inherit'] : 'inherit',
+      stdio: service.ownsBroker ? ['pipe', 'pipe', 'inherit', 'ipc']
+        : service.name === 'broker' ? ['pipe', 'pipe', 'inherit'] : 'inherit',
       env: { ...env, ...service.env, ...(service.name === 'broker' ? { TELETHON_BROKER_STDIN_CONTROL: '1' } : {}) },
     });
     children.set(child, service.name);
@@ -61,7 +71,7 @@ export function startDevProcessGroup({ services, root, env = process.env, platfo
       if (!stopping) { report(`Сервис ${service.name} завершился (${code ?? 'сигнал'})`); stop(code || 1); }
       if (!children.size && deadline) clearTimer(deadline);
     });
-    if (service.name === 'broker') {
+    if (service === broker) {
       let pendingLine = '';
       /** Маркер выводится Python только после ownership acquire и успешного bind/listen. */
       child.stdout.on('data', chunk => {
@@ -69,18 +79,18 @@ export function startDevProcessGroup({ services, root, env = process.env, platfo
         pendingLine += chunk.toString();
         const lines = pendingLine.split('\n');
         pendingLine = lines.pop().slice(-256);
-        if (!stopping && !brokerReady && lines.some(line => line.trim() === 'TELETHON_BROKER_READY')) {
+        if (!stopping && !brokerReady && lines.some(line => line.trim() === readyMarker)) {
           brokerReady = true;
           clearTimer(startupDeadline);
           startupDeadline = undefined;
-          for (const consumer of services) if (consumer.name !== 'broker') launch(consumer);
+          for (const consumer of services) if (consumer !== broker) launch(consumer);
         }
       });
     }
   }
   if (broker) {
     startupDeadline = setTimer(() => {
-      report('Брокер не подтвердил готовность за 30 секунд; API и runtime не запущены.');
+      report('Брокер не подтвердил готовность за 30 секунд; зависимые сервисы не запущены.');
       stop(1);
     }, 30000);
     launch(broker);

@@ -11,6 +11,7 @@ from telethon_broker_clients import BrokerError, TelethonClientBroker
 from telethon_broker_config import account_id, create_client, parse_config
 from telethon_broker_operations import OPERATIONS
 from telethon_broker_profile import read_profile
+from telethon_broker_stdin import request_broker_shutdown
 from telethon_broker_health import readiness_handler
 
 
@@ -128,7 +129,7 @@ def build_app(secret, factory=create_client, config_parser=parse_config, blocked
         """Запрещает приём запросов до подтверждения единственного владельца."""
         if ownership:
             await ownership.acquire()
-            ownership.watch(broker.close)
+            ownership.watch(broker.close, request_broker_shutdown)
 
     app = web.Application(middlewares=[guard], client_max_size=64 * 1024)
     app.add_routes([web.get("/healthz", readiness_handler(broker, ownership)),

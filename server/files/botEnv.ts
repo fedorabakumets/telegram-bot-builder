@@ -13,8 +13,9 @@ import { withDatabaseRuntimeEnv } from "../bots/databaseRuntimeEnv";
 import { resolveWebhookBaseUrl } from "../bots/webhookBaseUrl";
 import { resolveBotLaunchMode } from "../../shared/bot-launch-mode";
 import { resolveBotInheritedSettings, type BotInheritedSettings } from "../../shared/bot-inherited-settings";
-import { projectTelegramEnvKeys, projectTelegramRunnerKey } from "../bots/project-telegram-runner-auth";
+import { projectTelegramRunnerKey } from "../bots/project-telegram-runner-auth";
 import { legacySessionCandidates } from "./legacy-session-candidates";
+import { withoutManagedTelegramEnvironment } from "./project-telegram-env-policy";
 
 /** Как переменные попадают к боту: файл .env в папке бота или поле env в команде start_bot */
 export type BotEnvSource = "file" | "inline";
@@ -84,8 +85,8 @@ export async function buildBotEnvContent(botDir: string, projectId: number, toke
   /** Настройки пула передаются удалённому исполнителю вместе с окружением бота. */
   const scope = launch?.sleep ?? { defaultMode: project?.defaultSleepMode, inherited: tokenRecord?.inheritSleepMode };
   /** Старый пользовательский WEBHOOK_URL не должен включать webhook при запуске через polling. */
-  const ownVariables = resolveBotEnvVariables(await storage.getEnvVariables(tokenId))
-    .filter(({ key }) => key !== "WEBHOOK_URL" && !projectTelegramEnvKeys.some(managed => managed === key.toUpperCase()));
+  const ownVariables = withoutManagedTelegramEnvironment(resolveBotEnvVariables(await storage.getEnvVariables(tokenId)))
+    .filter(({ key }) => key !== "WEBHOOK_URL");
   const customVariables = withDatabaseRuntimeEnv(withPollingRuntimeEnv(withTelegramBotApiUrl(ownVariables), undefined, scope));
   const { isRailwayProject, railwayBotEnvDefaults } = await import("../bots/railway/railwayConfig");
   // Боту на Railway адреса панели недоступны — подставляем адреса из RAILWAY_BOT_*

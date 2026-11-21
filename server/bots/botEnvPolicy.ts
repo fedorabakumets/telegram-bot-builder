@@ -9,6 +9,7 @@
 
 import { runtimeEnv } from "../services/runtime-overlay";
 import { parseEnvNameList } from "./workerRuntime";
+import { isManagedTelegramEnvironmentKey } from "../files/project-telegram-env-policy";
 
 /** Имена, которые никогда не отдаются боту как серверная переменная */
 export const SERVER_ENV_DENY_EXACT: readonly string[] = [
@@ -42,6 +43,7 @@ export const SERVER_ENV_DENY_SUBSTRINGS: readonly string[] = [
 export function isServerEnvDenied(name: string): boolean {
   const upper = name.toUpperCase();
   return (
+    isManagedTelegramEnvironmentKey(upper) ||
     SERVER_ENV_DENY_EXACT.includes(upper) ||
     SERVER_ENV_DENY_PREFIXES.some((prefix) => upper.startsWith(prefix)) ||
     SERVER_ENV_DENY_SUBSTRINGS.some((part) => upper.includes(part))

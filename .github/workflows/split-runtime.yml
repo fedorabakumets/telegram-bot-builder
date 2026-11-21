@@ -11,7 +11,11 @@ on:
       - 'Dockerfile.*'
       - 'docker-compose.yml'
       - 'railway.*.toml'
+      - '.railway/**'
       - 'scripts/*split*'
+      - 'scripts/*telegram*'
+      - 'scripts/*broker*'
+      - 'scripts/dev-*'
       - 'scripts/build-server.mjs'
       - 'tools/runtime*'
       - 'tools/test_runtime*'
@@ -66,10 +70,19 @@ jobs:
       # Общий аккаунт проверяется только с имитацией Telegram и изолированной тестовой схемой БД.
       - name: Брокер Telegram-аккаунтов без внешних подключений
         run: python -m unittest discover -s server/python -p 'test_telethon_broker*.py' -v
-      - name: Контракты Railway и жизненный цикл dev-сервисов
+      - name: Обе топологии Railway и жизненный цикл dev-сервисов
         run: node --import tsx --test scripts/railway-telegram-contracts.test.mjs scripts/dev-process-group.test.mjs scripts/dev-service-plan.test.mjs
       - name: Полная цепочка двух ботов с имитацией Telegram
         run: npx vitest run --config lib/tests/project-telegram-chain.vitest.config.ts
+      # Обе упаковки используют синтетические сессии; отказ владения не должен запускать runtime.
+      - name: Отдельный и встроенный брокер без Telegram
+        run: npx vitest run --config lib/tests/project-telegram-deployment-modes.vitest.config.ts
+      # Поддельный дочерний процесс проверяет таймаут, раннюю аварию и запрет автоматического повтора.
+      - name: Готовность и отказ встроенного брокера до запуска ботов
+        run: node --import tsx --test server/runner/telegram-broker-process.test.ts server/runner/telegram-broker-process-env.test.ts server/files/project-telegram-env-policy.test.ts
+      # Незавершённая подготовка не оставляет владельца и закрывает ресурсы в обратном порядке.
+      - name: Очистка при отказе подготовки runtime
+        run: npx vitest run --config server/runner/runner-startup-cleanup.vitest.config.ts
       - name: Полномочия исполнителя Telegram-аккаунта
         run: npx vitest run --config server/bots/project-telegram-runner-auth.vitest.config.ts
       - name: Привязки Telegram-аккаунтов в тестовой PostgreSQL

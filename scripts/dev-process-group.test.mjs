@@ -5,11 +5,12 @@ import test from 'node:test';
 import { startDevProcessGroup } from './dev-process-group.mjs';
 
 /** Создаёт полностью поддельные процессы и фиксирует порядок управления ими. */
-function fixture(ready = true) {
+function fixture(ready = true, embedded = false) {
   const children = [], events = [];
   let callback;
   const group = startDevProcessGroup({
-    services: ['broker', 'api', 'runtime', 'frontend'].map(name => ({ name, command: name, args: [], env: {} })),
+    services: (embedded ? ['runtime', 'api', 'frontend'] : ['broker', 'api', 'runtime', 'frontend'])
+      .map(name => ({ name, command: name, args: [], env: {}, ownsBroker: embedded && name === 'runtime' })),
     root: '/workspace', env: {}, platform: 'win32',
     spawnProcess(command, args, options) {
       const child = new EventEmitter();
@@ -17,6 +18,8 @@ function fixture(ready = true) {
       child.stdin = new EventEmitter();
       child.stdin.end = value => events.push(['stdin', command, value]);
       child.stdout = new EventEmitter();
+      child.connected = true;
+      child.send = (message, done) => { events.push(['ipc', command, message]); done?.(); };
       child.options = options;
       children.push(child);
       return child;
@@ -30,7 +33,7 @@ function fixture(ready = true) {
     forwardOutput() {},
   });
   if (ready) {
-    children[0].stdout.emit('data', Buffer.from('TELETHON_BROKER_READY\n'));
+    children[0].stdout.emit('data', Buffer.from(embedded ? 'TELETHON_RUNTIME_READY\n' : 'TELETHON_BROKER_READY\n'));
     events.length = 0;
   }
   return { group, children, events, expire: () => callback() };
@@ -84,4 +87,34 @@ test('Падение сервиса останавливает соседей и
   expire();
   assert.equal(events.filter(event => event[0] === 'kill').length, 5);
   assert.deepEqual(events.at(-1), ['forceExit', 2]);
+});
+
+test('Общий runtime запускается один и подтверждает собственную готовность до API', () => {
+  const { children } = fixture(false, true);
+  assert.equal(children.length, 1);
+  assert.deepEqual(children[0].options.stdio, ['pipe', 'pipe', 'inherit', 'ipc']);
+  children[0].stdout.emit('data', Buffer.from('TELETHON_BROKER_READY\n'));
+  assert.equal(children.length, 1);
+  children[0].stdout.emit('data', Buffer.from('TELETHON_RUNTIME_READY\n'));
+  assert.equal(children.length, 3);
+});
+
+test('Windows получает штатный IPC shutdown runtime вместо немедленного убийства вложенного брокера', () => {
+  const { group, children, events, expire } = fixture(true, true);
+  group.stop();
+  assert.equal(events.filter(event => event[0] === 'kill').length, 2);
+  assert.deepEqual(events.find(event => event[0] === 'ipc'), ['ipc', 'runtime', { type: 'shutdown' }]);
+  assert.ok(events.some(event => event[0] === 'deadline' && event[1] === 120000));
+  assert.equal(events.filter(event => event[0] === 'stdin').length, 0);
+  expire();
+  assert.equal(events.filter(event => event[0] === 'kill').length, 5);
+  children.forEach(child => child.emit('exit', 0));
+});
+
+test('Ошибка общего runtime до готовности не запускает зависимые процессы', () => {
+  const { children, events } = fixture(false, true);
+  children[0].emit('exit', 1);
+  children[0].stdout.emit('data', Buffer.from('TELETHON_RUNTIME_READY\n'));
+  assert.equal(children.length, 1);
+  assert.deepEqual(events.find(event => event[0] === 'exitCode'), ['exitCode', 1]);
 });

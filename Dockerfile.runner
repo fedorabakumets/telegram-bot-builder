@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-# @fileoverview Образ исполнителя только ботов с отдельной сборкой JavaScript.
+# @fileoverview Образ исполнителя ботов с необязательным общим Telethon-брокером и отдельной сборкой JavaScript.
 # Образ исполнителя ботов (`WORKER_RUNTIME=remote`): исполнитель, worker.py
 # и Python-зависимости ботов, без панели и клиента. Подробно: docs/deployment/BOT_RUNNER.md
 # Собирается BuildKit (`docker buildx build`): кеш npm/pip между сборками, amd64 и arm64.
@@ -21,7 +21,7 @@ RUN npx esbuild server/runner/index.ts --bundle --platform=node --target=node24 
 FROM python:3.12-slim-bookworm
 
 RUN apt-get update \
- && apt-get install -y --no-install-recommends libstdc++6 \
+ && apt-get install -y --no-install-recommends libstdc++6 tini gosu \
  && rm -rf /var/lib/apt/lists/*
 # node берётся из образа целевой архитектуры, а не из сборщика
 COPY --from=node:24-bookworm-slim /usr/local/bin/node /usr/local/bin/node
@@ -31,12 +31,20 @@ COPY requirements.txt ./
 RUN pip install -r requirements.txt
 
 COPY server/python ./python
+COPY server/runner/runtime-entrypoint.sh ./runtime-entrypoint.sh
 COPY --from=builder /app/dist-runner/runner.cjs ./runner.cjs
 
 ENV RUNNER_WORKER_SCRIPT=/app/python/worker.py \
     RUNNER_PYTHON=python3 \
     RUNNER_CACHE_DIR=/app/cache \
+    TELETHON_BROKER_SCRIPT=/app/python/telethon_account_broker.py \
+    TELETHON_BROKER_LOCK_FILE=/var/lib/botcraft-telegram/broker.lock \
+    HOME=/home/botcraft \
+    PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
 # REDIS_URL и RUNNER_ID задают транспорт; DATABASE_URL нужен при RUNNER_REQUIRE_FENCE=true.
+STOPSIGNAL SIGTERM
+# Точка входа сохраняется и при команде Railway, поэтому права тома готовятся в обоих режимах.
+ENTRYPOINT ["/usr/bin/tini", "--", "sh", "/app/runtime-entrypoint.sh"]
 CMD ["node", "/app/runner.cjs"]

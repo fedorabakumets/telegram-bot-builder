@@ -164,4 +164,5 @@ async def main():
         assert client.closes == 1 and registry.value == "unowned"
 
 
-asyncio.run(main())
+if __name__ == "__main__":
+    asyncio.run(main())
