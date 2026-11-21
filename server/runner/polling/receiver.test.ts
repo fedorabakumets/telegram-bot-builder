@@ -35,7 +35,7 @@ describe("лёгкий приёмник", () => {
     await expect(runPollingReceiver({ token: "secret", signal: new AbortController().signal,
       queue: { offset: async () => null, enqueue: async () => {} }, onUpdates: async () => {},
       request: async () => ({ status: 409, body: { ok: false, description: "secret", error_code: 409 } }),
-    })).rejects.toThrow(new PollingRejected("Telegram отклонил polling: код 409"));
+    })).rejects.toThrow(new PollingRejected("secret", 409));
   });
   it("отменяет HTTP до освобождения общей блокировки", async () => {
     const controller = new AbortController(), calls: string[] = [];

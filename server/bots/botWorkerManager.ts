@@ -45,6 +45,7 @@ import { getActiveLaunchId } from '../terminal/activeLaunchIds';
 import { isBotDiagnosticError, parseWorkerHostCrash } from './workerBotDiagnostics';
 import { workerProcessExit } from './workerProcessExit';
 import { isWorkerMemoryRefusal, isMemoryRefusalReason, MEMORY_REFUSAL_REASON } from './workerMemoryRefusal';
+import { resolveWorkerPollingFailure, isWorkerPollingFailure } from './workerPollingFailure';
 
 /** Задержка перед killWorker когда activeBots пуст (мс) */
 const WORKER_DRAIN_MS = 2_000;
@@ -61,6 +62,10 @@ interface WorkerMessage {
   data?: any;
   /** Подтверждённый код ошибки Telegram без секрета. */
   code?: unknown;
+  /** Числовой код подтверждённого отказа polling. */
+  telegram_code?: unknown;
+  /** Безопасная классификация отказа polling. */
+  reason?: unknown;
   /** Источник структурированной ошибки. */
   source?: unknown;
   /** Метод Bot API, вернувший ошибку. */
@@ -558,6 +563,14 @@ class BotWorkerManager extends EventEmitter {
       if (botProjectId !== undefined) {
         /** Exit ожидает сохранение причины до решения об автоперезапуске. */
         const observedToken = this.startArgs.get(msg.token_id)?.token;
+        // Поздний отказ прежнего запуска не меняет причину нового и не отключает токен.
+        const pollingFailure = observedToken && this.keyOf(botProjectId) === projectId
+          ? resolveWorkerPollingFailure(msg, observedToken, getActiveLaunchId(msg.token_id)) : undefined;
+        if (msg.code === 'telegram_polling_rejected') {
+          // Конфликт приёма не отзывает токен; поздний или чужой отказ полностью игнорируется.
+          if (pollingFailure) this.lastBotErrors.set(msg.token_id, pollingFailure);
+          return;
+        }
         if (observedToken && isRuntimeAuthorizationForToken(msg, observedToken)) {
           this.lastBotErrors.set(msg.token_id, 'TelegramUnauthorizedError: Telegram отклонил токен');
         }
@@ -594,7 +607,8 @@ class BotWorkerManager extends EventEmitter {
         const diagnosticError = isBotDiagnosticError(content, msg.level);
         /** Последующие строки очистки не затирают подтверждённый отказ Telegram. */
         if (diagnosticError && !isRuntimeTokenUnauthorized(this.lastBotErrors.get(msg.token_id)) && !isFrozenBotError(this.lastBotErrors.get(msg.token_id))
-            && !isMemoryRefusalReason(this.lastBotErrors.get(msg.token_id))) {
+            && !isMemoryRefusalReason(this.lastBotErrors.get(msg.token_id))
+            && !isWorkerPollingFailure(this.lastBotErrors.get(msg.token_id))) {
           this.lastBotErrors.set(msg.token_id, content);
         }
         const preview = content.replace(/^\[\d{2}:\d{2}:\d{2}\]\s*/, "").split("\n")[0];
@@ -646,7 +660,8 @@ class BotWorkerManager extends EventEmitter {
       const status = ev.status || "stopped";
       const stderrError = this.lastBotErrors.get(ev.tokenId);
       /** Подтверждённый отказ Telegram остаётся окончательным даже при последующей смерти процесса. */
-      const telegramFailure = isRuntimeTokenUnauthorized(stderrError) || isFrozenBotError(stderrError);
+      const telegramFailure = isRuntimeTokenUnauthorized(stderrError) || isFrozenBotError(stderrError)
+        || isWorkerPollingFailure(stderrError);
       const hostCrash = this.workerHostCrashes.get(ev.tokenId);
       const runtimeError = telegramFailure ? stderrError : hostCrash ?? stderrError;
       const processDeathUnexpected = Boolean(hostCrash) && !telegramFailure;
