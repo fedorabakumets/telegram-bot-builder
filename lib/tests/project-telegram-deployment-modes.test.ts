@@ -78,7 +78,8 @@ async function environment() {
   const port = await freePort();
   return { directory, registry, env: {
     PATH: process.env.PATH, SystemRoot: process.env.SystemRoot, TEMP: process.env.TEMP, TMP: process.env.TMP,
-    PYTHONIOENCODING: 'utf-8', TELETHON_BROKER_MODE: 'embedded', TELETHON_BROKER_HOST: '127.0.0.1',
+    /** Облачный IPv6 bind обязан одновременно принимать IPv4 healthcheck. */
+    PYTHONIOENCODING: 'utf-8', TELETHON_BROKER_MODE: 'embedded', TELETHON_BROKER_HOST: '::', TELETHON_BROKER_ALLOW_PRIVATE_NETWORK: '1',
     TELETHON_BROKER_PORT: String(port), TELETHON_BROKER_URL: `http://127.0.0.1:${port}`,
     TELETHON_BROKER_SECRET: secret, TELETHON_BROKER_SCRIPT: fixture,
     TELETHON_BROKER_LOCK_FILE: join(directory, 'broker.lock'), TELETHON_BROKER_STDIN_CONTROL: '1',

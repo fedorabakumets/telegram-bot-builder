@@ -27,6 +27,11 @@ def listen_address(env):
     return host, port
 
 
+def listen_hosts(host):
+    """Открывает IPv4 для healthcheck и IPv6 для приватной сети без изменения loopback-режима."""
+    return ["0.0.0.0", "::"] if host == "::" else host
+
+
 def main():
     """Запускает брокер только после локальной и распределённой проверки владения."""
     from telethon_account_broker import build_app
@@ -38,4 +43,4 @@ def main():
                         ownership=create_ownership(os.environ.get("REDIS_URL")))
         if os.environ.get("TELETHON_BROKER_STDIN_CONTROL") == "1":
             app.on_startup.append(enable_stdin_shutdown)
-        web.run_app(app, host=host, port=port, access_log=None, print=report_ready)
+        web.run_app(app, host=listen_hosts(host), port=port, access_log=None, print=report_ready)
