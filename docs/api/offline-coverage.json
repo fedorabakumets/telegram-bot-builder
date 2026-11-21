@@ -1193,7 +1193,7 @@
     },
     {
       "file": "server/routes/project-telegram-runner-route.ts",
-      "line": 14,
+      "line": 34,
       "method": "POST",
       "expression": "'/internal/project-telegram/:projectId/:tokenId/execute'",
       "resolvedPath": "/internal/project-telegram/{projectId}/{tokenId}/execute"
