@@ -63,6 +63,19 @@ jobs:
       - run: npm ci
       - run: python -m pip install -r requirements.txt
       - run: python -m pip check
+      # Общий аккаунт проверяется только с имитацией Telegram и изолированной тестовой схемой БД.
+      - name: Брокер Telegram-аккаунтов без внешних подключений
+        run: python -m unittest discover -s server/python -p 'test_telethon_broker*.py' -v
+      - name: Контракты Railway и жизненный цикл dev-сервисов
+        run: node --import tsx --test scripts/railway-telegram-contracts.test.mjs scripts/dev-process-group.test.mjs scripts/dev-service-plan.test.mjs
+      - name: Полная цепочка двух ботов с имитацией Telegram
+        run: npx vitest run --config lib/tests/project-telegram-chain.vitest.config.ts
+      - name: Полномочия исполнителя Telegram-аккаунта
+        run: npx vitest run --config server/bots/project-telegram-runner-auth.vitest.config.ts
+      - name: Привязки Telegram-аккаунтов в тестовой PostgreSQL
+        run: npx vitest run lib/tests/project-telegram-accounts-postgres.test.ts
+        env:
+          TELEGRAM_ACCOUNTS_TEST_DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/postgres
       - run: python -m unittest discover -s server/python -p 'test_polling_lifecycle.py' -v
       # Проверяем инвалидацию байткода и совместимость общих пространств имён моделей.
       - run: python -m unittest discover -s server/python -p 'test_bot_code_cache.py' -v
@@ -184,7 +197,8 @@ jobs:
     timeout-minutes: 25
     strategy:
       matrix:
-        service: [frontend, backend, runner]
+        # Брокер проверяется сборкой образа без запуска Telegram-сессий.
+        service: [frontend, backend, runner, telegram-accounts]
     steps:
       - uses: actions/checkout@v4
       # Образы только собираются локально на runner, без публикации и деплоя.
