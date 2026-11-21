@@ -5,6 +5,7 @@ import { resolveBotLaunchMode } from '@shared/bot-launch-mode';
 import { resolveProjectBotSettings } from '@shared/bot-inherited-settings';
 import { botProjects, botTokens } from '@shared/schema';
 import { db } from '../database/db';
+import { cachedOps } from '../database/db-cache';
 import { resolveWebhookBaseUrl } from './webhookBaseUrl';
 
 /** Полный набор значений, используемый наследующими ботами. */
@@ -34,7 +35,7 @@ export async function saveProjectBotSettingDefaults(
   projectId: number,
   changes: Partial<ProjectBotSettingDefaults>,
 ): Promise<ProjectBotSettingDefaults | null> {
-  return db.transaction(async (tx) => {
+  const result = await db.transaction(async (tx) => {
     const [project] = await tx.select({ defaults: botProjects.botSettingDefaults, launchMode: botProjects.defaultLaunchMode })
       .from(botProjects).where(eq(botProjects.id, projectId)).for('update');
     if (!project) return null;
@@ -53,4 +54,7 @@ export async function saveProjectBotSettingDefaults(
     await tx.update(botProjects).set({ botSettingDefaults: next }).where(eq(botProjects.id, projectId));
     return resolveProjectBotSettings(next);
   });
+  // Чтение настроек и следующий запуск должны видеть уже подтверждённую запись.
+  if (result) cachedOps.invalidateProject(projectId);
+  return result;
 }
