@@ -511,7 +511,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   setupInvoiceMediaRoute(app);
   app.use("/api", setupGuard);
   app.use("/api", authMiddleware);
-  app.use("/uploads", authMiddleware);
+  // Сессия + PAT: TorLink/MCP тянут приватные /uploads/ с Bearer без cookie.
+  app.use("/uploads", authMiddleware, identifyAgent);
   app.use("/api", sessionActivityMiddleware);
 
   /** Ограничивает проверки личности без воздействия на поток событий ботов и проверку готовности. */
