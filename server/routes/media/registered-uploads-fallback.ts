@@ -39,6 +39,7 @@ const defaults: RegisteredUploadsDeps = {
   find: url => db.select().from(mediaFiles).where(eq(mediaFiles.url, url)).limit(2),
   list: async () => (await ensureStorageRegistryLoaded()).list(),
   canAccess: async (req, projectId) => {
+    // owner из session (authMiddleware) или из Bearer PAT (identifyAgent на /uploads).
     const owner = getOwnerIdFromRequest(req);
     return owner !== null && storage.hasProjectAccess(projectId, owner);
   },
