@@ -6,6 +6,13 @@ import "express-session";
 declare module "express-session" {
   interface SessionData {
     telegramUser?: TelegramUserDB;
+    /** Временные данные Telegram OIDC redirect (PKCE) */
+    telegramOidc?: {
+      state: string;
+      codeVerifier: string;
+      returnTo: string;
+      redirectUri: string;
+    };
   }
 }
 

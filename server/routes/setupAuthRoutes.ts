@@ -11,6 +11,8 @@ import { setupAgentAutoAuthRoutes } from "../auth/agent/routes";
 import type { Express, RequestHandler } from "express";
 import { handleLogin } from "./auth/handlers/loginHandler";
 import { handleTelegramAuth } from "./auth/handlers/telegramAuthHandler";
+import { handleTelegramOidcStart } from "./auth/handlers/telegramOidcStartHandler";
+import { handleTelegramOidcCallback } from "./auth/handlers/telegramOidcCallbackHandler";
 import { handleGetUser } from "./auth/handlers/getUserHandler";
 import { handleMiniAppAuth } from "./auth/handlers/miniAppAuthHandler";
 import { handleDevLogin } from "./auth/handlers/devLoginHandler";
@@ -44,6 +46,8 @@ export function setupAuthRoutes(app: Express): void {
     app.post("/api/auth/logout", ...withAuthLimit(handleLogout));
     app.post("/api/auth/telegram/logout", ...withAuthLimit(handleLogout));
     app.post("/api/auth/telegram", ...withAuthLimit(handleTelegramAuth));
+    app.get("/api/auth/telegram/start", ...withAuthLimit(handleTelegramOidcStart));
+    app.get("/api/auth/telegram/callback", ...withAuthLimit(handleTelegramOidcCallback));
     app.get("/api/auth/telegram/user/:id", handleGetUser);
     app.post("/api/auth/telegram/miniapp", ...withAuthLimit(handleMiniAppAuth));
     app.post("/api/auth/dev-login", ...withAuthLimit(handleDevLogin));

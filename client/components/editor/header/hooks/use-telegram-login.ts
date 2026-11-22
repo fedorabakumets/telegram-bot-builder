@@ -1,164 +1,41 @@
 /**
- * @fileoverview Хук инициализации и открытия Telegram Login виджета
+ * @fileoverview Хук входа через Telegram: OIDC redirect или dev-форма.
  * @module components/editor/header/hooks/use-telegram-login
  */
 
-import { useEffect, useCallback, useRef } from 'react';
+import { useCallback } from 'react';
 import { useTelegramAuth } from './use-telegram-auth';
 import { useToast } from '@/hooks/use-toast';
 import { useAppConfig } from '@/hooks/use-app-config';
 
-declare global {
-  interface Window {
-    Telegram?: {
-      Login?: {
-        /** Инициализирует виджет с параметрами и колбэком */
-        init: (options: object, callback: (data: any) => void) => void;
-        /** Открывает диалог авторизации */
-        open: (callback?: (data: any) => void) => void;
-        /** Альтернативный метод авторизации */
-        auth: (options: object, callback: (data: any) => void) => void;
-      };
-      WebApp?: {
-        /** Строка initData для верификации на сервере */
-        initData: string;
-        /** Распарсенные данные инициализации */
-        initDataUnsafe: {
-          user?: {
-            id: number;
-            first_name: string;
-            last_name?: string;
-            username?: string;
-            photo_url?: string;
-          };
-        };
-        /** Разворачивает приложение на весь экран */
-        expand?: () => void;
-        /** Сигнализирует Telegram что приложение готово */
-        ready?: () => void;
-      };
-    };
-  }
-}
-
-/** Идентификатор Telegram-приложения (берётся из переменной окружения VITE_TELEGRAM_CLIENT_ID) */
-const CLIENT_ID_FALLBACK = Number(import.meta.env.VITE_TELEGRAM_CLIENT_ID) || 0;
-const TELEGRAM_LOGIN_SRC = 'https://oauth.telegram.org/js/telegram-login.js?3';
-const TELEGRAM_LOGIN_SCRIPT_ID = 'telegram-login-sdk';
-
-function waitForTelegramLogin(timeoutMs: number): Promise<boolean> {
-  if (typeof window === 'undefined') return Promise.resolve(false);
-  if (typeof window.Telegram?.Login?.init === 'function') return Promise.resolve(true);
-
-  return new Promise((resolve) => {
-    const startedAt = Date.now();
-    const tick = () => {
-      if (typeof window.Telegram?.Login?.init === 'function') {
-        resolve(true);
-        return;
-      }
-      if (Date.now() - startedAt >= timeoutMs) {
-        resolve(false);
-        return;
-      }
-      setTimeout(tick, 120);
-    };
-    tick();
-  });
-}
-
-function ensureTelegramLogin(timeoutMs = 2500): Promise<boolean> {
-  if (typeof window === 'undefined') return Promise.resolve(false);
-  if (typeof window.Telegram?.Login?.init === 'function') return Promise.resolve(true);
-
-  const existing = document.getElementById(TELEGRAM_LOGIN_SCRIPT_ID) as HTMLScriptElement | null;
-  if (existing) {
-    return waitForTelegramLogin(timeoutMs);
-  }
-
-  return new Promise((resolve) => {
-    const script = document.createElement('script');
-    script.id = TELEGRAM_LOGIN_SCRIPT_ID;
-    script.async = true;
-    script.src = TELEGRAM_LOGIN_SRC;
-    script.onload = () => {
-      waitForTelegramLogin(timeoutMs).then(resolve);
-    };
-    script.onerror = () => resolve(false);
-    document.head.appendChild(script);
-  });
-}
-
 /**
- * Хук инициализации Telegram Login виджета.
- * В dev-режиме (виджет недоступен) открывает старый popup /api/auth/login.
+ * Хук входа через Telegram.
+ * При telegram_widget — full-page OIDC redirect (работает во встроенном браузере Cursor).
+ * При skipAuth — popup с dev-формой.
  *
  * @returns Объект с функцией handleTelegramLogin
  */
 export function useTelegramLogin() {
-  const { login, acceptSession } = useTelegramAuth();
+  const { acceptSession } = useTelegramAuth();
   const { toast } = useToast();
-  const didInit = useRef(false);
-  // Читаем clientId с сервера в рантайме — решает проблему Docker build stage
   const { data: appConfig } = useAppConfig();
-  const clientId = appConfig?.telegramClientId || CLIENT_ID_FALLBACK;
   const isDev = appConfig?.skipAuth ?? true;
 
   /**
-   * Обрабатывает результат Telegram Login и сохраняет пользователя.
-   * @param data - Ответ Telegram Login SDK
-   * @returns Ничего не возвращает
-   */
-  const handleTelegramAuth = useCallback((data: any): void => {
-    if (!data || data.error) return;
-    const user = data.user ?? data;
-    const idToken =
-      data.id_token ?? data.idToken ?? user.id_token ?? user.idToken;
-    login({
-      id: user.id ?? user.sub,
-      firstName: user.first_name ?? user.name ?? '',
-      lastName: user.last_name,
-      username: user.username ?? user.preferred_username,
-      photoUrl: user.photo_url ?? user.picture,
-      authDate: user.auth_date,
-      idToken: typeof idToken === 'string' ? idToken : undefined,
-    });
-  }, [login]);
-
-  const init = useCallback(() => {
-    if (didInit.current) return;
-    if (typeof window.Telegram?.Login?.init !== 'function') return;
-    if (!clientId) return;
-    window.Telegram.Login.init(
-      { client_id: clientId, request_access: ['write'] },
-      handleTelegramAuth
-    );
-    didInit.current = true;
-  }, [clientId, handleTelegramAuth]);
-
-  useEffect(() => {
-    if (typeof window.Telegram?.Login?.init === 'function' && clientId) {
-      init();
-    }
-  }, [init, clientId]);
-
-  /**
-   * Открывает диалог авторизации Telegram.
-   * В dev-режиме — всегда открывает popup /api/auth/login с dev-формой.
-   * В prod — использует Telegram Login виджет.
+   * Открывает вход: OIDC redirect или popup /api/auth/login.
    */
   const handleTelegramLogin = useCallback(async () => {
-    // В dev-режиме всегда используем dev-форму, не ждём виджет
     if (isDev) {
-      const w = 500, h = 600;
+      const w = 500;
+      const h = 600;
       const left = window.innerWidth / 2 - w / 2;
       const top = window.innerHeight / 2 - h / 2;
-      const popup = window.open('/api/auth/login', 'telegram_login', `width=${w},height=${h},left=${left},top=${top}`);
+      const popup = window.open(
+        '/api/auth/login',
+        'telegram_login',
+        `width=${w},height=${h},left=${left},top=${top}`,
+      );
 
-      /**
-       * Обрабатывает postMessage от popup с данными пользователя.
-       * @param event - MessageEvent с полем data.type === 'telegram-auth'
-       */
       const onMessage = async (event: MessageEvent) => {
         if (event.origin !== window.location.origin) return;
         if (event.data?.type !== 'telegram-auth') return;
@@ -167,7 +44,6 @@ export function useTelegramLogin() {
 
         const user = event.data.user;
         try {
-          // Popup уже создал сессию через POST /api/auth/dev-login
           if (event.data?.sessionReady && user) {
             await acceptSession(user, false);
             return;
@@ -177,16 +53,28 @@ export function useTelegramLogin() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
-            body: JSON.stringify({ id: user.id, firstName: user.firstName, username: user.username }),
+            body: JSON.stringify({
+              id: user.id,
+              firstName: user.firstName,
+              username: user.username,
+            }),
           });
           const data = await resp.json();
           if (data.success && data.user) {
             await acceptSession(data.user, Boolean(data.switched));
           } else {
-            toast({ title: 'Ошибка входа', description: data.error, variant: 'destructive' });
+            toast({
+              title: 'Ошибка входа',
+              description: data.error,
+              variant: 'destructive',
+            });
           }
         } catch {
-          toast({ title: 'Ошибка входа', description: 'Не удалось выполнить dev-login', variant: 'destructive' });
+          toast({
+            title: 'Ошибка входа',
+            description: 'Не удалось выполнить dev-login',
+            variant: 'destructive',
+          });
         }
       };
 
@@ -194,20 +82,10 @@ export function useTelegramLogin() {
       return;
     }
 
-    // Prod: используем Telegram Login виджет
-    const ready = await ensureTelegramLogin();
-    if (!ready || typeof window.Telegram?.Login?.open !== 'function') {
-      toast({
-        title: 'Telegram недоступен',
-        description: 'Не удалось загрузить виджет. Откройте сайт в Telegram или попробуйте позже.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    init();
-    window.Telegram.Login.open(handleTelegramAuth);
-  }, [handleTelegramAuth, init, isDev, acceptSession, toast]);
+    const returnTo = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    const startUrl = `/api/auth/telegram/start?return_to=${encodeURIComponent(returnTo || '/')}`;
+    window.location.assign(startUrl);
+  }, [acceptSession, isDev, toast]);
 
   return { handleTelegramLogin };
 }
