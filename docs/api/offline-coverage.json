@@ -235,6 +235,20 @@
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/reveal"
     },
     {
+      "file": "server/routes/setupAuthRoutes.ts",
+      "line": 49,
+      "method": "GET",
+      "expression": "\"/api/auth/telegram/start\"",
+      "resolvedPath": "/api/auth/telegram/start"
+    },
+    {
+      "file": "server/routes/setupAuthRoutes.ts",
+      "line": 50,
+      "method": "GET",
+      "expression": "\"/api/auth/telegram/callback\"",
+      "resolvedPath": "/api/auth/telegram/callback"
+    },
+    {
       "file": "server/routes/setupBotIntegrationRoutes.ts",
       "line": 72,
       "method": "GET",
@@ -1821,91 +1835,105 @@
     },
     {
       "file": "server/routes/setupAuthRoutes.ts",
-      "line": 42,
+      "line": 44,
       "method": "GET",
       "expression": "\"/api/auth/login\"",
       "resolvedPath": "/api/auth/login"
     },
     {
       "file": "server/routes/setupAuthRoutes.ts",
-      "line": 43,
+      "line": 45,
       "method": "GET",
       "expression": "\"/api/auth/me\"",
       "resolvedPath": "/api/auth/me"
     },
     {
       "file": "server/routes/setupAuthRoutes.ts",
-      "line": 44,
+      "line": 46,
       "method": "POST",
       "expression": "\"/api/auth/logout\"",
       "resolvedPath": "/api/auth/logout"
     },
     {
       "file": "server/routes/setupAuthRoutes.ts",
-      "line": 45,
+      "line": 47,
       "method": "POST",
       "expression": "\"/api/auth/telegram/logout\"",
       "resolvedPath": "/api/auth/telegram/logout"
     },
     {
       "file": "server/routes/setupAuthRoutes.ts",
-      "line": 46,
+      "line": 48,
       "method": "POST",
       "expression": "\"/api/auth/telegram\"",
       "resolvedPath": "/api/auth/telegram"
     },
     {
       "file": "server/routes/setupAuthRoutes.ts",
-      "line": 47,
+      "line": 49,
+      "method": "GET",
+      "expression": "\"/api/auth/telegram/start\"",
+      "resolvedPath": "/api/auth/telegram/start"
+    },
+    {
+      "file": "server/routes/setupAuthRoutes.ts",
+      "line": 50,
+      "method": "GET",
+      "expression": "\"/api/auth/telegram/callback\"",
+      "resolvedPath": "/api/auth/telegram/callback"
+    },
+    {
+      "file": "server/routes/setupAuthRoutes.ts",
+      "line": 51,
       "method": "GET",
       "expression": "\"/api/auth/telegram/user/:id\"",
       "resolvedPath": "/api/auth/telegram/user/{id}"
     },
     {
       "file": "server/routes/setupAuthRoutes.ts",
-      "line": 48,
+      "line": 52,
       "method": "POST",
       "expression": "\"/api/auth/telegram/miniapp\"",
       "resolvedPath": "/api/auth/telegram/miniapp"
     },
     {
       "file": "server/routes/setupAuthRoutes.ts",
-      "line": 49,
+      "line": 53,
       "method": "POST",
       "expression": "\"/api/auth/dev-login\"",
       "resolvedPath": "/api/auth/dev-login"
     },
     {
       "file": "server/routes/setupAuthRoutes.ts",
-      "line": 50,
+      "line": 54,
       "method": "GET",
       "expression": "\"/api/profile/sessions\"",
       "resolvedPath": "/api/profile/sessions"
     },
     {
       "file": "server/routes/setupAuthRoutes.ts",
-      "line": 51,
+      "line": 55,
       "method": "DELETE",
       "expression": "\"/api/profile/sessions/:id\"",
       "resolvedPath": "/api/profile/sessions/{id}"
     },
     {
       "file": "server/routes/setupAuthRoutes.ts",
-      "line": 52,
+      "line": 56,
       "method": "DELETE",
       "expression": "\"/api/profile/sessions\"",
       "resolvedPath": "/api/profile/sessions"
     },
     {
       "file": "server/routes/setupAuthRoutes.ts",
-      "line": 53,
+      "line": 57,
       "method": "GET",
       "expression": "\"/api/config\"",
       "resolvedPath": "/api/config"
     },
     {
       "file": "server/routes/setupAuthRoutes.ts",
-      "line": 54,
+      "line": 58,
       "method": "GET",
       "expression": "\"/api/disabled-node-types\"",
       "resolvedPath": "/api/disabled-node-types"
