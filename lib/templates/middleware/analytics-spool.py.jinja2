@@ -2,6 +2,7 @@
 
 import sqlite3 as _AnalyticsSqlite
 import time as _AnalyticsTime
+import re as _AnalyticsRe
 from pathlib import Path as _AnalyticsPath
 from functools import wraps as _analytics_wraps
 from contextlib import closing as _analytics_closing
@@ -11,21 +12,59 @@ _analytics_system_keys = _AnalyticsContextVar('analytics_system_keys', default=N
 _analytics_scope_deleted = False
 
 
+def _analytics_spool_error(error, operation, path):
+    """Помечает этап сбоя без добавления события или текста исключения в диагностику."""
+    error._analytics_operation = operation
+    error._analytics_path = str(path)
+    return error
+
+
+def _analytics_spool_diagnostics(error):
+    """Возвращает путь и errno, скрывая секреты окружения и управляющие символы."""
+    operation = getattr(error, '_analytics_operation', 'flush')
+    errno = getattr(error, 'errno', None)
+    try:
+        path = getattr(error, '_analytics_path', '<не определён>')
+        secrets = [value for key, value in os.environ.items() if value and
+                   _AnalyticsRe.search(r'(TOKEN|SECRET|PASSWORD|CREDENTIAL|KEY|DATABASE_URL|REDIS_URL)$', key.upper())]
+        for value in sorted(secrets, key=len, reverse=True):
+            path = path.replace(value, '[скрыто]')
+        path = _AnalyticsRe.sub(r'\d{5,}:[A-Za-z0-9_-]{20,}', '[скрыто]', path)
+        safe_path = json.dumps(path[:512], ensure_ascii=False)
+    except Exception:
+        # Ошибка дополнительной диагностики не должна завершать доставщик аналитики.
+        safe_path = '<диагностика пути недоступна>'
+    return operation, safe_path, errno
+
+
 def _analytics_spool_directory():
     """Вычисляет стабильный путь только по числовым ID, без Telegram-токена."""
-    root = _AnalyticsPath(os.environ.get('ANALYTICS_SPOOL_DIR') or (_AnalyticsPath.home() / '.botcraft' / 'analytics-spool')).resolve()
-    directory = root / str(PROJECT_ID) / str(TOKEN_ID)
-    if not directory.resolve().is_relative_to(root) or directory.is_symlink():
-        raise PermissionError('Каталог очереди выходит за настроенную область')
-    return directory
+    operation, path = 'home', '<домашний каталог>'
+    try:
+        root = os.environ.get('ANALYTICS_SPOOL_DIR') or (_AnalyticsPath.home() / '.botcraft' / 'analytics-spool')
+        operation, path = 'resolve_root', root
+        root = _AnalyticsPath(root).resolve()
+        directory = root / str(PROJECT_ID) / str(TOKEN_ID)
+        operation, path = 'validate_directory', directory
+        if not directory.resolve().is_relative_to(root) or directory.is_symlink():
+            raise PermissionError('Каталог очереди выходит за настроенную область')
+        return directory
+    except (OSError, RuntimeError) as error:
+        raise _analytics_spool_error(error, operation, path)
 
 
 def _analytics_spool_connection():
     """Открывает приватную очередь вне каталога сборки; production требует постоянного тома."""
     directory = _analytics_spool_directory()
-    directory.mkdir(parents=True, exist_ok=True, mode=0o700)
+    try:
+        directory.mkdir(parents=True, exist_ok=True, mode=0o700)
+    except OSError as error:
+        raise _analytics_spool_error(error, 'mkdir', directory)
     path = directory / 'pending.sqlite3'
-    connection = _AnalyticsSqlite.connect(str(path), timeout=5)
+    try:
+        connection = _AnalyticsSqlite.connect(str(path), timeout=5)
+    except (OSError, _AnalyticsSqlite.Error) as error:
+        raise _analytics_spool_error(error, 'sqlite_connect', path)
     try:
         directory.chmod(0o700)
         path.chmod(0o600)
@@ -36,9 +75,11 @@ def _analytics_spool_connection():
         connection.execute('PRAGMA synchronous=FULL')
         connection.execute('CREATE TABLE IF NOT EXISTS pending (event_key TEXT PRIMARY KEY, payload TEXT NOT NULL, start_tag TEXT, attempts INTEGER NOT NULL DEFAULT 0, retry_at REAL NOT NULL DEFAULT 0)')
         return connection
-    except BaseException:
+    except BaseException as error:
         # Ошибка подготовки не должна оставлять открытыми дескриптор и кеш SQLite.
         connection.close()
+        if isinstance(error, (OSError, _AnalyticsSqlite.Error)):
+            _analytics_spool_error(error, 'sqlite_prepare', path)
         raise
 
 
@@ -112,18 +153,27 @@ async def _analytics_spool_worker():
     """Возобновляет очередь при запуске и доставляет новые факты независимо от Redis."""
     first = True
     retry_connection_at = 0
+    filesystem_failures = 0
     while True:
+        delay = 2
         try:
             if not db_pool and _AnalyticsTime.time() >= retry_connection_at:
                 retry_connection_at = _AnalyticsTime.time() + 30
                 await asyncio.wait_for(init_database(), timeout=10)
             await asyncio.wait_for(_analytics_spool_flush(force=first), timeout=20)
+            filesystem_failures = 0
         except asyncio.TimeoutError:
             logging.warning('Очередь аналитики: доставка продолжится после тайм-аута')
         except Exception as error:
-            logging.error('Очередь аналитики недоступна, тип %s', type(error).__name__)
+            # Недоступный диск не опрашивается каждые две секунды; успешная доставка сбрасывает паузу.
+            if isinstance(error, (OSError, _AnalyticsSqlite.Error)) or getattr(error, '_analytics_operation', None) == 'home':
+                filesystem_failures = min(filesystem_failures + 1, 9)
+                delay = min(300, 2 ** filesystem_failures)
+            operation, path, errno = _analytics_spool_diagnostics(error)
+            logging.error('Очередь аналитики недоступна, тип %s, операция=%s, путь=%s, errno=%s, повтор через %s с',
+                          type(error).__name__, operation, path, errno, delay)
         first = False
-        await asyncio.sleep(2)
+        await asyncio.sleep(delay)
 
 
 def _analytics_guard_system(handler):
