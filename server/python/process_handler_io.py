@@ -9,10 +9,11 @@ FRAME_LIMIT = 65536
 
 
 def child_environment():
-    """Передаёт только системные настройки запуска, исключая секреты панели."""
+    """Передаёт системные настройки и путь очереди, исключая секреты панели."""
     allowed = ("PATH", "SYSTEMROOT", "WINDIR", "TEMP", "TMP", "HOME",
                "USERPROFILE", "HOMEDRIVE", "HOMEPATH", "APPDATA", "LOCALAPPDATA",
-               "LANG", "LC_ALL", "SSL_CERT_FILE", "SSL_CERT_DIR")
+               "LANG", "LC_ALL", "SSL_CERT_FILE", "SSL_CERT_DIR",
+               "ANALYTICS_SPOOL_DIR")
     return {**{key: os.environ[key] for key in allowed if key in os.environ},
             "PYTHONIOENCODING": "utf-8", "PYTHONUNBUFFERED": "1"}
 

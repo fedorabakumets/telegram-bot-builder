@@ -127,7 +127,7 @@ export function BotControlPanelHeader({
         </>
       }
     >
-      {/* На узком экране область проекта и воркеров может переноситься. */}
+      {/* Проект уступает место действиям, не растягивая второй ряд на всю ширину. */}
       <div className="bot-workspace-scope flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1.5">
         <WorkspaceHeaderActionItems kind="selectors" items={[{ id: 'project', content: allProjects && allProjects.length > 1 && onProjectChange && currentProjectId ? (
           <div className="bot-workspace-project w-max min-w-0 max-w-full shrink">
@@ -135,6 +135,7 @@ export function BotControlPanelHeader({
             <ProjectSelector
               projects={allProjects}
               selectedProjectId={currentProjectId}
+              ariaLabel="Проект ботов"
               onSelect={onProjectChange}
             />
           </div>

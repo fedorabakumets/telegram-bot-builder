@@ -3,6 +3,7 @@ import asyncio
 import json
 import logging
 import os
+import sqlite3
 from pathlib import Path
 from types import SimpleNamespace as NS
 import sys
@@ -90,7 +91,8 @@ class SpoolResourcesTests(unittest.IsolatedAsyncioTestCase):
     async def test_initialization_failure_closes_connection(self):
         """Неуспешная подготовка SQLite освобождает ещё не выданное соединение."""
         connection = BrokenConnection()
-        self.runtime['_AnalyticsSqlite'] = NS(connect=lambda *args, **kwargs: connection)
+        # Подмена соединения сохраняет настоящий тип исключений SQLite для диагностики.
+        self.runtime['_AnalyticsSqlite'] = NS(connect=lambda *args, **kwargs: connection, Error=sqlite3.Error)
         with self.assertRaises(OSError):
             self.runtime['_analytics_spool_connection']()
         self.assertEqual(connection.closed, 1)
