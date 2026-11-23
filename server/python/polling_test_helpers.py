@@ -18,7 +18,8 @@ def polling_block():
     return namespace['observe']
 
 
-def startup_callback(stop_event, ready, commit, *, external=False, webhook=''):
+def startup_callback(stop_event, ready, commit, *, external=False, webhook='',
+                     drain=None, dispatcher=None, bot=None):
     """Создаёт callback шаблона в замыкании, как при настоящем запуске main."""
     template = Path(__file__).resolve().parents[2] / 'lib/templates/main/main.py.jinja2'
     source = template.read_text(encoding='utf-8')
@@ -26,9 +27,11 @@ def startup_callback(stop_event, ready, commit, *, external=False, webhook=''):
     end = source.index('        # Выбор режима запуска:', start)
     namespace = {'_stop_event': stop_event, '_worker_bot_ready': ready,
                  '_worker_direct_commit': commit, 'WEBHOOK_URL': webhook,
-                 '_external_mode': external}
+                 '_external_mode': external, '_worker_direct_drain': drain,
+                 'dp': dispatcher, 'bot': bot}
     body = textwrap.dedent(source[start:end])
-    exec('def create_callback():\n    _direct_state_committed = False\n' +
+    # Оба nonlocal принадлежат main; извлечённый callback сохраняет эту область.
+    exec('def create_callback():\n    _direct_state_committed = False\n    _direct_draining = False\n' +
          textwrap.indent(body, '    ') +
          '\n    return _notify_worker_ready\n', namespace)
     return namespace['create_callback']()

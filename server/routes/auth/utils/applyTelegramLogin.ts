@@ -10,17 +10,25 @@ import type { TelegramUserDB } from "@shared/schema";
 
 /** Входные поля профиля после OIDC / widget */
 export interface TelegramLoginProfile {
+  /** Числовой Telegram ID либо его десятичная запись из OIDC. */
   id: number | string;
+  /** Имя, если оно доступно у провайдера. */
   firstName?: string;
+  /** Фамилия пользователя. */
   lastName?: string;
+  /** Публичное имя Telegram. */
   username?: string;
+  /** Адрес фотографии профиля. */
   photoUrl?: string;
+  /** Время подтверждения авторизации. */
   authDate?: number;
 }
 
 /** Результат применения логина к сессии */
 export interface ApplyTelegramLoginResult {
+  /** Сохранённый пользователь. */
   user: TelegramUserDB;
+  /** Была ли заменена авторизованная учётная запись. */
   switched: boolean;
 }
 
@@ -38,9 +46,17 @@ export async function applyTelegramLogin(
     throw new Error("Сессия не инициализирована");
   }
 
+  // Не допускаем округления ID и преобразования пустых строк, дробей или экспонент.
+  const id = typeof profile.id === "number" ? profile.id
+    : typeof profile.id === "string" && /^\d+$/.test(profile.id) ? Number(profile.id) : NaN;
+  if (!Number.isSafeInteger(id) || id <= 0) {
+    throw new Error("Некорректный Telegram user id");
+  }
+  // В OIDC имя необязательно, но хранилище требует непустое значение.
+  const firstName = profile.firstName?.trim() || profile.username?.trim() || "User";
   const userData = await storage.getTelegramUserOrCreate({
-    id: profile.id,
-    firstName: profile.firstName,
+    id,
+    firstName,
     lastName: profile.lastName,
     username: profile.username,
     photoUrl: profile.photoUrl,

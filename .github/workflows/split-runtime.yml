@@ -92,7 +92,17 @@ jobs:
         run: npx vitest run lib/tests/project-telegram-accounts-postgres.test.ts
         env:
           TELEGRAM_ACCOUNTS_TEST_DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/postgres
-      - run: python -m unittest discover -s server/python -p 'test_polling_lifecycle.py' -v
+      # Проверяем перенос до готовности polling; реальные Redis-ключи изолированы случайными идентификаторами.
+      - name: Очередь ondemand, атомарный перенос в direct и барьер Telegram
+        working-directory: server/python
+        run: python -m unittest test_demand_handoff_preflight test_demand_direct_drain test_demand_handoff_fences test_demand_direct_barrier -v
+        env:
+          DEMAND_TEST_REDIS_URL: redis://127.0.0.1:6379/0
+      - name: Готовность polling после переноса и повтор после ошибки commit
+        run: python -m unittest discover -s server/python -p 'test_polling_lifecycle.py' -v
+      # Ранний отказ обязан освобождать резерв памяти, сохраняя работающего соседа.
+      - name: Завершение отклонённых запусков без утечки резерва
+        run: python -m unittest discover -s server/python -p 'test_worker_start_rejection.py' -v
       # Проверяем инвалидацию байткода и совместимость общих пространств имён моделей.
       - run: python -m unittest discover -s server/python -p 'test_bot_code_cache.py' -v
       # Проверяем холодную компиляцию вне рабочего процесса и восстановление повреждённого кеша.
@@ -164,7 +174,8 @@ jobs:
       # Проверяем доставку между сервисами, секрет Telegram и читаемость безопасных журналов.
       - name: Доставка webhook и маскировка секретов
         run: node --import tsx --test server/runner/runnerWebhookServer.test.ts server/routes/telegramWebhookHandler.test.ts server/routes/telegramWebhookDelivery.test.ts server/routes/telegramWebhook.integration.test.ts server/bots/webhookBaseUrl.test.ts server/utils/secret-environment-key.test.ts
-      - run: node --import tsx --test server/bots/webhookSecret.test.ts server/bots/generatedCodeFingerprint.test.ts server/runner/runnerWebhookProject.test.ts server/routes/botTokens/to-public-bot-token.test.ts server/routes/projectRoutes/bot-token-list-dto.test.ts
+      # Версия корневых исходников должна инвалидировать старые сборки наравне с отпечатком настроек.
+      - run: node --import tsx --test server/bots/webhookSecret.test.ts server/bots/generatedCodeFingerprint.test.ts server/bots/generatorVersion.test.ts server/runner/runnerWebhookProject.test.ts server/routes/botTokens/to-public-bot-token.test.ts server/routes/projectRoutes/bot-token-list-dto.test.ts
       - run: python -m unittest discover -s server/python -p 'test_log_redaction.py' -v
       # Проверяем доверенную заморозку aiogram, личность запуска и отсутствие ложных событий из логов.
       - run: python -m unittest discover -s server/python -p 'test_worker_telegram_failure.py' -v

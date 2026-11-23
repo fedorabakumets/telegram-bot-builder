@@ -4,6 +4,8 @@
  */
 
 import { useEffect, useRef } from 'react';
+// Подключаем контракт SDK также при адресной компиляции этого хука.
+import type {} from '@/types/telegram-mini-app';
 import { useTelegramAuth } from './use-telegram-auth';
 
 /**

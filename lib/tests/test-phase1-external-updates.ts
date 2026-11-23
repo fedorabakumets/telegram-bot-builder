@@ -18,11 +18,12 @@ payload = json.loads(sys.stdin.buffer.read().decode("utf-8"))
 events = []
 class Observer:
     def __init__(self): self.callbacks = []
-    def middleware(self, *args): pass
+    def middleware(self, callback): self.middleware_callback = callback
     def register(self, callback): self.callbacks.append(callback)
 class Redis:
     async def set(self, *args, **kwargs):
         events.append("lock")
+        self.owner = args[1]
         return True
     async def eval(self, *args):
         events.append("unlock")
@@ -39,6 +40,8 @@ class Dispatcher:
     async def start_polling(self, bot, **kwargs):
         events.append("startup")
         for callback in self.startup.callbacks: await callback()
+        if payload["failure"] == "direct_drain_success":
+            await self.message.middleware_callback(replay_handler, None, {})
         namespace["_bot_stop_event"].set()
     def resolve_used_update_types(self): return ["message"]
     async def emit_shutdown(self, **kwargs):
@@ -66,14 +69,29 @@ namespace = dict(__name__="external_test", asyncio=asyncio,
     cleanup_user_data=cleanup_user_data, stale_update_filter_middleware=object(),
     _worker_external_updates=external, _worker_bot_ready=lambda: events.append("ready"))
 async def direct_prepare(lease_owned):
+    # Право переноса привязано к собственному токену захваченной блокировки.
+    if lease_owned is not None:
+        assert isinstance(lease_owned, str) and lease_owned == namespace["_redis_client"].owner
     events.append("direct_prepare" if lease_owned else "direct_prepare_without_lease")
     if payload["failure"] in {"direct_prepare", "direct_no_lease"}:
         raise RuntimeError("Проверка отказа переноса состояния")
 async def direct_commit(): events.append("direct_commit")
+async def stale_filter(handler, event, data):
+    events.append("stale_filter")
+    return await handler(event, data)
+async def replay_handler(event, data): events.append("replayed")
+async def direct_drain(dp, bot, stop_event):
+    events.append("direct_drain")
+    await dp.message.middleware_callback(replay_handler, None, {})
+    if payload["failure"] == "direct_drain_error": raise RuntimeError("Ошибка переноса очереди")
+    if payload["failure"] == "direct_drain_stop": stop_event.set()
 if payload["failure"].startswith("direct_"):
     namespace.pop("_worker_external_updates")
     namespace["_worker_direct_prepare"] = direct_prepare
     namespace["_worker_direct_commit"] = direct_commit
+    if payload["failure"].startswith("direct_drain"):
+        namespace["_worker_direct_drain"] = direct_drain
+        namespace["stale_update_filter_middleware"] = stale_filter
 if payload.get("cleanupHooks"):
     def unwrap():
         events.append("unwrap")
@@ -129,7 +147,7 @@ test('обычная сборка поддерживает внешний при
   assert.ok(code.includes('if _external_mode and (not _redis_connected or _redis_client is None):'));
   assert.ok(code.includes('_WORKER_EXTERNAL_UPDATES_SAFE = True'));
   assert.ok(code.includes('if not WEBHOOK_URL and not _external_mode and _redis_connected'));
-  assert.match(code, /if not _external_mode:\s+dp\.message\.middleware\(stale_update_filter_middleware\)/);
+  assert.ok(code.includes('dp.message.middleware(_direct_stale_filter)'));
   /** Воркер управляет сигналами сам; отдельный запуск сохраняет обработку сигналов aiogram. */
   assert.match(code, /dp\.start_polling\(\s*bot,\s*allowed_updates=dp\.resolve_used_update_types\(\),\s*handle_signals=not globals\(\)\.get\('_worker_manages_signals', False\)\s*\)/);
   assert.ok(code.includes('if WEBHOOK_URL and not _external_mode:'));
@@ -179,6 +197,25 @@ test('ошибка запуска direct не подтверждает удал�
     'lock', 'direct_prepare', 'get_me', 'unlock', 'redis_close', 'session_close',
   ]);
 });
+
+/** Перенос выполняется после startup и не теряет старые сообщения из надёжной очереди. */
+test('direct переносит очередь до commit и готовности, обходя фильтр возраста', () => {
+  assert.deepEqual(executeMain('direct_drain_success'), [
+    'lock', 'direct_prepare', 'get_me', 'startup', 'direct_drain', 'replayed',
+    'direct_commit', 'ready', 'stale_filter', 'replayed', 'unlock', 'redis_close', 'session_close',
+  ]);
+  assert.ok(generateMain({}).includes('_WORKER_DIRECT_DRAIN_PROTOCOL = 1'));
+});
+
+/** Ошибка или остановка переноса сохраняет снимок и не открывает обычный polling. */
+for (const failure of ['direct_drain_error', 'direct_drain_stop']) {
+  test(`${failure} не подтверждает запуск direct`, () => {
+    assert.deepEqual(executeMain(failure), [
+      'lock', 'direct_prepare', 'get_me', 'startup', 'direct_drain', 'replayed',
+      'unlock', 'redis_close', 'session_close',
+    ]);
+  });
+}
 
 /** Проверяет webhook пробуждение без bind сокета, регистрации и удаления webhook в Python. */
 test('Node webhook обрабатывает внешнюю очередь и сохраняет регистрацию после сна', () => {
