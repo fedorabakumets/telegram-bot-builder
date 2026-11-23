@@ -16,6 +16,13 @@ it('не запускает авторизацию, если Telegram недос
   expect(fetchMock).not.toHaveBeenCalled();
 });
 
+it('ожидает данные запуска при частично загруженном SDK', () => {
+  const fetchMock = vi.fn(); vi.stubGlobal('fetch', fetchMock);
+  window.Telegram = { WebApp: { initDataUnsafe: {} } };
+  renderHook(() => useMiniAppAuth());
+  expect(fetchMock).not.toHaveBeenCalled();
+});
+
 it('авторизует после поздней загрузки Telegram API', async () => {
   const fetchMock = vi.fn().mockResolvedValue({ status: 200, json: async () => ({ success: true, user: { id: 42 } }) });
   vi.stubGlobal('fetch', fetchMock);

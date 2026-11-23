@@ -273,20 +273,26 @@ test('E01', 'stale_update_filter_middleware определён при выклю
     'stale_update_filter_middleware не определён при DB=false → NameError при старте');
 });
 
-test('E02', 'main() регистрирует stale_update_filter_middleware при выключенной БД', () => {
+test('E02', 'main() регистрирует обёртку stale-фильтра при выключенной БД', () => {
   const code = gen('E02', false);
-  ok(code.includes('dp.message.middleware(stale_update_filter_middleware)'),
-    'main() не регистрирует stale_update_filter_middleware');
+  // Восстановленные сообщения обходят проверку возраста, обычные проходят исходный фильтр.
+  ok(code.includes('dp.message.middleware(_direct_stale_filter)'),
+    'main() не регистрирует обёртку stale-фильтра');
+  ok(/if _direct_draining:\s+return await handler\(event, data\)\s+return await stale_update_filter_middleware\(handler, event, data\)/.test(code),
+    'Обёртка должна сохранять фильтрацию обычных сообщений и пропускать сохранённую очередь');
 });
 
 test('E03', 'регистрация stale-фильтра идёт после его определения', () => {
   const code = gen('E03', false, 263);
   const defIdx = code.indexOf('async def stale_update_filter_middleware');
-  const useIdx = code.indexOf('dp.message.middleware(stale_update_filter_middleware)');
+  // Регистрируется обёртка, делегирующая исходному фильтру вне обработки очереди.
+  const wrapperIdx = code.indexOf('async def _direct_stale_filter');
+  const useIdx = code.indexOf('dp.message.middleware(_direct_stale_filter)');
   ok(defIdx !== -1, 'определение stale_update_filter_middleware не найдено');
-  ok(useIdx !== -1, 'регистрация stale_update_filter_middleware не найдена');
-  ok(defIdx < useIdx,
-    'stale_update_filter_middleware регистрируется раньше определения → NameError');
+  ok(wrapperIdx !== -1, 'определение обёртки stale-фильтра не найдено');
+  ok(useIdx !== -1, 'регистрация обёртки stale-фильтра не найдена');
+  ok(defIdx < wrapperIdx && wrapperIdx < useIdx,
+    'Фильтр и его обёртка должны быть определены до регистрации → NameError');
 });
 
 test('E04', 'message_logging_middleware отсутствует при выключенной БД', () => {
