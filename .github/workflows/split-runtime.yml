@@ -16,6 +16,7 @@ on:
       - 'scripts/*telegram*'
       - 'scripts/*broker*'
       - 'scripts/dev-*'
+      - 'scripts/runtime-entrypoint*'
       - 'scripts/build-server.mjs'
       - 'tools/runtime*'
       - 'tools/test_runtime*'
@@ -116,7 +117,7 @@ jobs:
       - run: npx tsx lib/tests/test-phase-main-cleanup-resources.ts
       # Безопасные настройки передаются локальному, удалённому и Docker-исполнителю без секретов панели.
       - name: Окружение пула БД, polling и медиа
-        run: node --import tsx --test server/bots/databaseRuntimeEnv.test.ts server/bots/pollingRuntimeEnv.test.ts server/bots/mediaRuntimeEnv.test.ts
+        run: node --import tsx --test server/bots/databaseRuntimeEnv.test.ts server/bots/pollingRuntimeEnv.test.ts server/bots/mediaRuntimeEnv.test.ts scripts/runtime-entrypoint-home.test.mjs
       # Проверяем снятие подписок Redis и освобождение активаций рядом с постоянным ботом.
       - run: npx vitest run --project lib lib/templates/utils/redis-log-lifecycle.test.ts
       - run: python -m unittest discover -s server/python -p 'test_worker_unload_hooks.py' -v
@@ -179,7 +180,7 @@ jobs:
       - run: python -m unittest discover -s server/python -p 'test_log_redaction.py' -v
       # Проверяем доверенную заморозку aiogram, личность запуска и отсутствие ложных событий из логов.
       - run: python -m unittest discover -s server/python -p 'test_worker_telegram_failure.py' -v
-      - run: npx vitest run --project client client/components/editor/bot/card/use-bot-launch-settings.test.tsx client/components/editor/bot/card/BotLaunchSettings.test.tsx client/components/editor/bot/card/WebhookSecretReveal.test.tsx client/components/editor/bot/card/BotActions.test.tsx client/components/editor/bot/card/BotRuntimeModeSettings.test.tsx client/components/editor/bot/card/launch-history-utils.test.ts client/components/editor/bot/canvas/bot-canvas-status.test.ts client/components/editor/bot/canvas/bot-run-status-badge.test.tsx client/components/editor/bot/card/BotLaunchCard.test.tsx client/hooks/invalidate-token-metadata.test.ts client/hooks/invalidate-bot-lifecycle.test.ts client/hooks/use-project-events-ws.runtime.integration.test.tsx
+      - run: npx vitest run --project client client/components/editor/bot/card/use-bot-launch-settings.test.tsx client/components/editor/bot/card/BotLaunchSettings.test.tsx client/components/editor/bot/card/WebhookSecretReveal.test.tsx client/components/editor/bot/card/BotActions.test.tsx client/components/editor/bot/card/BotRuntimeModeSettings.test.tsx client/components/editor/bot/card/launch-history-utils.test.ts client/components/editor/bot/canvas/bot-canvas-status.test.ts client/components/editor/bot/canvas/bot-run-status-badge.test.tsx client/components/editor/bot/card/BotLaunchCard.test.tsx client/hooks/invalidate-token-metadata.test.ts client/hooks/invalidate-bot-lifecycle.test.ts client/hooks/use-project-events-ws.runtime.integration.test.tsx client/components/editor/bot/card/BotLaunchHistory.test.tsx client/components/editor/bot/hooks/use-launch-logs.test.tsx client/components/editor/terminal/LaunchHistoryStatus.test.tsx client/components/editor/terminal/TerminalLaunchSelector.test.tsx client/components/editor/bot/card/LaunchLogsModal.test.tsx
       # Проверяем отдельное авторизованное раскрытие секрета без кеширования и журналирования тела.
       - run: npx vitest run --config server/routes/botTokens/webhook-secret.vitest.config.ts
       # Проверяем удалённый статус истории и возможность остановки ограниченного Telegram бота.
@@ -238,7 +239,14 @@ jobs:
             --tmpfs /var/lib/botcraft-telegram:rw,noexec,nosuid,size=4m \
             --tmpfs /app/cache:rw,noexec,nosuid,size=4m \
             --entrypoint /usr/bin/tini botcraft-runner:check -- \
-            sh /app/runtime-entrypoint.sh sh -ec 'test "$(id -u)" = 10001; test -w /app/cache; test -w /var/lib/botcraft-telegram; node --version; python -c "import aiohttp, redis, telethon"'
+            sh /app/runtime-entrypoint.sh sh -ec 'test "$(id -u)" = 10001; test -w /app/cache; test -w /var/lib/botcraft-telegram; node --version; python -c "import aiohttp, redis, telethon"; python /app/python/runtime_analytics_home_probe.py --home /home/botcraft'
+          # Числовой UID без passwd не должен сбрасывать HOME или явный путь очереди.
+          docker run --rm --network none \
+            --tmpfs /var/lib/botcraft-telegram:rw,noexec,nosuid,size=4m \
+            --tmpfs /app/cache:rw,noexec,nosuid,size=4m \
+            -e RUNTIME_UID=10002 -e ANALYTICS_SPOOL_DIR=/app/cache/custom-analytics \
+            --entrypoint /usr/bin/tini botcraft-runner:check -- \
+            sh /app/runtime-entrypoint.sh sh -ec 'test "$(id -u)" = 10002; python /app/python/runtime_analytics_home_probe.py --home /home/botcraft --spool /app/cache/custom-analytics'
       # Результаты видны в журнале; найденные уязвимости не блокируют слияние.
       - name: Проверить образ на уязвимости
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0

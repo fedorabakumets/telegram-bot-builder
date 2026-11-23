@@ -48,7 +48,7 @@ export function BotLaunchHistory({
   const stopping = stopBotMutation.isPending && stopBotMutation.variables?.tokenId === tokenId;
   const liveStatus = resolveLaunchLiveStatus(live?.status, isLiveRunning, stopping);
   const { history, isLoading } = useLaunchHistory(tokenId);
-  const { openHistoryTab } = useActiveTerminals();
+  const { addTerminal, openHistoryTab } = useActiveTerminals();
   const detailTab = useBotDetailTabOptional();
   const [historyOpen, setHistoryOpen] = useState(true);
 
@@ -57,14 +57,14 @@ export function BotLaunchHistory({
     [history, liveStatus, compact],
   );
 
+  /** Текущий работающий процесс открывает живой поток; прошлый запуск остаётся историей. */
   const handleShowLogs = (id: number, startedAt: Date | string | null) => {
-    openHistoryTab({
-      projectId,
-      tokenId,
-      botName,
-      launchId: id,
-      launchStartedAt: startedAt ? String(startedAt) : null,
-    });
+    if (id === current?.id && (liveStatus === 'running' || liveStatus === 'stopping')) {
+      addTerminal({ projectId, tokenId, botName, isRunning: liveStatus === 'running' });
+    } else {
+      openHistoryTab({ projectId, tokenId, botName, launchId: id,
+        launchStartedAt: startedAt ? String(startedAt) : null });
+    }
     detailTab?.setTab('terminal');
   };
 

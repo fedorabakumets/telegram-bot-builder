@@ -17,6 +17,7 @@ import { TerminalLogDetail } from './TerminalLogDetail';
 import { copyTerminalOutput, saveTerminalOutput } from './terminalUtils';
 import { botLogToTerminalLine } from './bot-log-utils';
 import { isVisibleTerminalNotice } from './terminal-log-notices';
+import { LaunchHistoryStatus } from './LaunchHistoryStatus';
 
 /** Пропсы компонента просмотра истории запуска */
 interface LaunchHistoryViewerProps {
@@ -34,7 +35,7 @@ interface LaunchHistoryViewerProps {
  * @returns JSX элемент
  */
 export function LaunchHistoryViewer({ launchId, startedAt, botName }: LaunchHistoryViewerProps) {
-  const { logs, isLoading } = useLaunchLogs(launchId);
+  const { logs, isLoading, isError, isRefreshing, retry } = useLaunchLogs(launchId);
   const {
     terminalBgClass, terminalTextClass, placeholderTextClass, stderrTextClass,
   } = useTerminalTheme();
@@ -79,9 +80,9 @@ export function LaunchHistoryViewer({ launchId, startedAt, botName }: LaunchHist
     : undefined;
 
   return (
-    <div className={`h-full flex flex-col font-mono text-sm ${terminalBgClass}`}>
+    <div aria-busy={isLoading || isRefreshing} className={`h-full flex flex-col font-mono text-sm ${terminalBgClass}`}>
       <TerminalLogsContextBar
-        title="Прошлый запуск"
+        title="Сохранённый запуск"
         startedAt={startedAt}
         botName={botName}
         errorCount={stderrCount(lines)}
@@ -108,19 +109,15 @@ export function LaunchHistoryViewer({ launchId, startedAt, botName }: LaunchHist
         onClose={handleClose}
       />
       <TerminalRepeatedErrors lines={lines} onOpenLine={setSelectedLineId} />
-      {isLoading ? (
-        <div className={`flex-1 flex items-center justify-center ${placeholderTextClass} italic`}>
-          Загрузка логов...
-        </div>
-      ) : logs.length === 0 ? (
-        <div className={`flex-1 flex items-center justify-center ${placeholderTextClass} italic`}>
-          Логи не сохранены
-        </div>
-      ) : (
+      {/* Ошибка запроса не подменяет отсутствие строк и не удаляет уже загруженную таблицу. */}
+      <LaunchHistoryStatus isLoading={isLoading} isError={isError} isRefreshing={isRefreshing}
+        hasLogs={logs.length > 0} textClassName={placeholderTextClass} onRetry={retry} />
+      {logs.length > 0 && (
         <div className="flex flex-1 overflow-hidden min-h-0">
           <div className="min-w-0 flex-1">
           <TerminalOutput
             lines={visibleLines}
+            emptyMessage="Нет строк для выбранного фильтра."
             containerRef={containerRef}
             scale={scale}
             terminalTextClass={terminalTextClass}
