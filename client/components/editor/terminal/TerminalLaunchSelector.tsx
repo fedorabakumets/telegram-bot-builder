@@ -53,6 +53,7 @@ export function TerminalLaunchSelector({ terminal, onCurrent, onHistory }: Termi
       return;
     }
     const launch = history.find(entry => String(entry.id) === value);
+    /** Числовой ID всегда означает выбранную историю, даже если старый статус остался running. */
     if (launch) onHistory(launch.id, launch.startedAt);
   }
 
