@@ -4,6 +4,7 @@ import { setTimeout as sleep } from "node:timers/promises";
 import type Redis from "ioredis";
 import { TelegramTokenUnauthorized } from "./telegramUnauthorized";
 import { TelegramBotFrozen } from "./telegramFrozen";
+import { PollingRejected } from "./receiver";
 
 /** Выполняет Redis-операцию с конечным ожиданием, не раскрывая параметры подключения. */
 async function deadline<T>(operation: Promise<T>): Promise<T> {
@@ -43,7 +44,9 @@ export async function withPollingLease(redis: Pick<Redis, "set" | "eval">, token
   const receiving = Promise.resolve().then(() => receive(combined));
   try { await Promise.race([renewal, receiving]); }
   catch (error) {
-    if (!signal.aborted && (error instanceof TelegramTokenUnauthorized || error instanceof TelegramBotFrozen)) throw error;
+    // Типизированный отказ сохраняет безопасную причину после освобождения lease.
+    if (!signal.aborted && (error instanceof TelegramTokenUnauthorized || error instanceof TelegramBotFrozen
+      || error instanceof PollingRejected)) throw error;
     if (!signal.aborted) throw error instanceof Error
       && /^(Потеряна блокировка polling|Telegram отклонил polling: код \d+)$/.test(error.message)
       ? error : new Error("Приём обновлений Telegram остановлен");
