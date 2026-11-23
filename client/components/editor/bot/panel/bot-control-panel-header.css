@@ -1,57 +1,57 @@
 /** @fileoverview Локальная адаптация шапки ботов: проект и действия делят ширину панели. */
 /** Сохраняет выбранную пользователем видимость переключателя ботов и аккаунтов. */
-.bot-workspace-header .workspace-header-tab-tools > [aria-label='Раздел вкладки „Боты“'] { display: none; }
+.bot-workspace-header.bot-workspace-header .workspace-header-tab-tools > [aria-label='Раздел вкладки „Боты“'] { display: none; }
 
 @container (max-width: 1100px) {
-  /** Обычная раскладка сокращает подписи, прежде чем переносить область проекта. */
-  .bot-workspace-header .workspace-adaptive-header:not([data-selectors-below]):not([data-actions-below]) {
+  /** Локальный приоритет выше общих атрибутных правил: порядок импорта CSS не меняет раскладку. */
+  .bot-workspace-header.bot-workspace-header .workspace-adaptive-header:not([data-selectors-below]):not([data-actions-below]) {
     grid-template-columns: auto minmax(0, 1fr) auto;
     gap: 8px;
   }
-  .bot-workspace-header .workspace-adaptive-header:not([data-selectors-below]):not([data-actions-below]) .workspace-tab-heading > div:last-child:not(:first-child) {
+  .bot-workspace-header.bot-workspace-header .workspace-adaptive-header:not([data-selectors-below]):not([data-actions-below]) .workspace-tab-heading > div:last-child:not(:first-child) {
     grid-column: 3;
     grid-row: 1;
   }
-  .bot-workspace-header .workspace-adaptive-header:not([data-selectors-below]):not([data-actions-below]) > [role='group'] {
+  .bot-workspace-header.bot-workspace-header .workspace-adaptive-header:not([data-selectors-below]):not([data-actions-below]) > [role='group'] {
     grid-column: 2;
     grid-row: 1;
     width: 100%;
   }
-  .bot-workspace-header .workspace-adaptive-header .bot-workspace-scope {
+  .bot-workspace-header.bot-workspace-header .workspace-adaptive-header .bot-workspace-scope {
     flex: 1 1 auto;
     flex-wrap: nowrap;
     width: 100%;
     gap: 4px;
   }
-  .bot-workspace-header .workspace-adaptive-header .bot-workspace-project {
+  .bot-workspace-header.bot-workspace-header .workspace-adaptive-header .bot-workspace-project {
     flex: 1 1 160px;
     width: auto;
     min-width: 0;
     max-width: 240px;
   }
-  .bot-workspace-header .bot-workspace-project > div,
-  .bot-workspace-header .workspace-adaptive-header .bot-workspace-project [role='combobox'] { width: 100%; }
-  .bot-workspace-header .bot-workspace-project > div > svg { display: none; }
+  .bot-workspace-header.bot-workspace-header .bot-workspace-project > div,
+  .bot-workspace-header.bot-workspace-header .workspace-adaptive-header .bot-workspace-project [role='combobox'] { width: 100%; }
+  .bot-workspace-header.bot-workspace-header .bot-workspace-project > div > svg { display: none; }
 
   /** Действия сохраняют доступные имена, даже когда показана только иконка. */
-  .bot-workspace-header .workspace-adaptive-header .workspace-tab-actions > :is(a, button)[aria-label],
-  .bot-workspace-header .bot-workspace-scope button[aria-label='Статус Worker Pool'] {
+  .bot-workspace-header.bot-workspace-header .workspace-adaptive-header .workspace-tab-actions > :is(a, button)[aria-label],
+  .bot-workspace-header.bot-workspace-header .bot-workspace-scope button[aria-label='Статус Worker Pool'] {
     width: 32px;
     min-width: 32px;
     height: 32px;
     padding-inline: 0;
     justify-content: center;
   }
-  .bot-workspace-header .workspace-adaptive-header .workspace-tab-actions > :is(a, button)[aria-label] > span,
-  .bot-workspace-header .workspace-adaptive-header [data-workspace-label='bulk-restart'],
-  .bot-workspace-header .workspace-adaptive-header [data-workspace-label='bulk-start'],
-  .bot-workspace-header .bot-workspace-scope button[aria-label='Статус Worker Pool'] > :not(:first-child) { display: none; }
-  .bot-workspace-header .workspace-header-tab-tools { flex-wrap: nowrap; gap: 4px; }
+  .bot-workspace-header.bot-workspace-header .workspace-adaptive-header .workspace-tab-actions > :is(a, button)[aria-label] > span,
+  .bot-workspace-header.bot-workspace-header .workspace-adaptive-header [data-workspace-label='bulk-restart'],
+  .bot-workspace-header.bot-workspace-header .workspace-adaptive-header [data-workspace-label='bulk-start'],
+  .bot-workspace-header.bot-workspace-header .bot-workspace-scope button[aria-label='Статус Worker Pool'] > :not(:first-child) { display: none; }
+  .bot-workspace-header.bot-workspace-header .workspace-header-tab-tools { flex-wrap: nowrap; gap: 4px; }
 }
 
 @container (max-width: 700px) {
   /** Название остаётся доступным для чтения с экрана; место получает выбранный проект. */
-  .bot-workspace-header .workspace-adaptive-header .workspace-tab-heading h2 {
+  .bot-workspace-header.bot-workspace-header .workspace-adaptive-header .workspace-tab-heading h2 {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -61,23 +61,23 @@
     clip-path: inset(50%);
     white-space: nowrap;
   }
-  .bot-workspace-header .workspace-adaptive-header .workspace-tab-heading > div:first-child > div { gap: 0; }
-  .bot-workspace-header .workspace-adaptive-header [data-workspace-label='view'] { display: none; }
+  .bot-workspace-header.bot-workspace-header .workspace-adaptive-header .workspace-tab-heading > div:first-child > div { gap: 0; }
+  .bot-workspace-header.bot-workspace-header .workspace-adaptive-header [data-workspace-label='view'] { display: none; }
 }
 
 @container (max-width: 479px) {
   /** Второй ряд занимает нужную ширину и сохраняет массовые действия на телефоне. */
-  .bot-workspace-header .workspace-adaptive-header:not([data-actions-below]) { grid-template-columns: auto minmax(0, 1fr); }
-  .bot-workspace-header .workspace-adaptive-header:not([data-selectors-below]):not([data-actions-below]) .workspace-tab-heading > div:last-child:not(:first-child) {
+  .bot-workspace-header.bot-workspace-header .workspace-adaptive-header:not([data-selectors-below]):not([data-actions-below]) { grid-template-columns: auto minmax(0, 1fr); }
+  .bot-workspace-header.bot-workspace-header .workspace-adaptive-header:not([data-selectors-below]):not([data-actions-below]) .workspace-tab-heading > div:last-child:not(:first-child) {
     grid-column: 2;
     min-width: 0;
   }
-  .bot-workspace-header .workspace-adaptive-header:not([data-actions-below]) > [role='group'] {
+  .bot-workspace-header.bot-workspace-header .workspace-adaptive-header:not([data-selectors-below]):not([data-actions-below]) > [role='group'] {
     grid-column: 1 / -1;
     grid-row: 2;
     width: auto;
   }
-  .bot-workspace-header .workspace-adaptive-header .bot-workspace-scope { flex: 0 1 auto; width: auto; }
-  .bot-workspace-header .workspace-adaptive-header .bot-workspace-project { flex: 0 1 auto; width: max-content; max-width: 240px; }
-  .bot-workspace-header .workspace-adaptive-header .bot-workspace-project [role='combobox'] { height: 32px; font-size: 14px; }
+  .bot-workspace-header.bot-workspace-header .workspace-adaptive-header .bot-workspace-scope { flex: 0 1 auto; width: auto; }
+  .bot-workspace-header.bot-workspace-header .workspace-adaptive-header .bot-workspace-project { flex: 0 1 auto; width: max-content; max-width: 240px; }
+  .bot-workspace-header.bot-workspace-header .workspace-adaptive-header .bot-workspace-project [role='combobox'] { height: 32px; font-size: 14px; }
 }
