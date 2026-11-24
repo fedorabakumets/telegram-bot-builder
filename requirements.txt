@@ -1,5 +1,5 @@
 # @fileoverview Проверенные прямые зависимости Python для запуска ботов.
-aiogram==3.31.0
+aiogram==3.33.0
 aiohttp==3.14.5
 asyncpg==0.32.0
 telethon==1.46.0
