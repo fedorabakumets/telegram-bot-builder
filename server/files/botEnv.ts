@@ -3,6 +3,7 @@
  * @module server/files/botEnv
  */
 
+import { readProjectForLaunch } from "../bots/projectSettingsCache";
 import { existsSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { parse } from "dotenv";
@@ -71,7 +72,8 @@ export async function buildBotEnvContent(botDir: string, projectId: number, toke
   const { storage } = await import("../storages/storage");
   const { resolveBotEnvVariables } = await import("../bots/resolveBotEnvReference");
   const tokenRecord = await storage.getBotToken(tokenId);
-  const project = await storage.getBotProject(projectId);
+  /** Запуск читает свежие настройки, независимо от кэшей процессов панели. */
+  const project = await readProjectForLaunch(projectId);
   const adminIds = project?.adminIds?.trim() || readLegacyAdminIds(botDir) || ADMIN_IDS_PLACEHOLDER;
 
   const mode = resolveBotLaunchMode(project?.defaultLaunchMode, tokenRecord?.launchMode, tokenRecord?.inheritLaunchMode);

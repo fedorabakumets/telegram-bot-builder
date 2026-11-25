@@ -3,6 +3,7 @@
 import { eq } from 'drizzle-orm';
 import { botProjects } from '@shared/schema';
 import { db } from '../database/db';
+import { withProjectSettingsInvalidation } from './projectSettingsCache';
 
 /** Общие параметры запуска и восстановления ботов проекта. */
 export interface ProjectRuntimeDefaults {
@@ -41,11 +42,14 @@ export async function saveProjectRuntimeDefaults(
   projectId: number,
   changes: Partial<ProjectRuntimeDefaults>,
 ): Promise<ProjectRuntimeDefaults | null> {
-  /** Прежний запрос со значением null сохраняет включённый сон. */
-  const [updated] = await db.update(botProjects).set({
-    defaultSleepMode: changes.sleepMode === null ? 'process' : changes.sleepMode,
-    defaultAutoRestart: changes.autoRestart,
-    defaultMaxRestartAttempts: changes.maxRestartAttempts,
-  }).where(eq(botProjects.id, projectId)).returning(runtimeColumns);
-  return updated ?? null;
+  /** Сброс кэша выполняется после завершения записи. */
+  return withProjectSettingsInvalidation(projectId, async () => {
+    /** Прежний запрос со значением null сохраняет включённый сон. */
+    const [updated] = await db.update(botProjects).set({
+      defaultSleepMode: changes.sleepMode === null ? 'process' : changes.sleepMode,
+      defaultAutoRestart: changes.autoRestart,
+      defaultMaxRestartAttempts: changes.maxRestartAttempts,
+    }).where(eq(botProjects.id, projectId)).returning(runtimeColumns);
+    return updated ?? null;
+  });
 }
