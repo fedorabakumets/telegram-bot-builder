@@ -8,6 +8,7 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: [
+      'server/bots/projectSettingsCache.test.ts',
       'server/bots/runtimeModeInheritance.test.ts',
       'server/bots/adoptProjectLaunchMode.test.ts',
       'server/database/cleanupOldMessages.test.ts',
