@@ -142,11 +142,13 @@ export function MultiMediaSelector({
 
   return (
     <div className="space-y-4">
-      {/* Header */}
-      <div className="flex items-center gap-2">
-        <i className="fas fa-images text-slate-600 dark:text-slate-400 text-sm"></i>
-        <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">{label}</label>
-      </div>
+      {/* Пустая подпись скрывает весь заголовок вместе с иконкой. */}
+      {label && (
+        <div className="flex items-center gap-2">
+          <i className="fas fa-images text-slate-600 dark:text-slate-400 text-sm"></i>
+          <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">{label}</label>
+        </div>
+      )}
 
       {/* Files List */}
       {files.length > 0 && (

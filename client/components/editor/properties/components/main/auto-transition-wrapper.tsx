@@ -55,8 +55,6 @@ export function AutoTransitionWrapper({
       selectedNode={selectedNode}
       getAllNodesFromAllSheets={getAllNodesFromAllSheets}
       onNodeUpdate={onNodeUpdate}
-      isOpen={isOpen}
-      onToggle={onToggle}
     />
   );
 }

@@ -33,7 +33,7 @@ interface MessageRecipientSectionProps {
 const SUPPORTED_NODE_TYPES = ['message', 'start', 'command', 'media'] as const;
 
 /**
- * Карточка одного получателя
+ * Выбор чата для отправки сообщения
  * @param props - Свойства карточки
  * @returns JSX элемент карточки
  */
@@ -53,37 +53,22 @@ function RecipientCard({
   /** Обновление полей получателя */
   onUpdate: (updates: Partial<MessageSendRecipient>) => void;
   /** Удаление получателя */
-  onRemove: () => void;
+  onRemove?: () => void;
 }) {
   return (
-    <div className="border border-blue-200/40 dark:border-blue-800/40 bg-white/50 dark:bg-slate-950/30 rounded-xl p-3 space-y-2">
-      <div className="flex items-center justify-between gap-2">
-        <Label className="text-xs font-medium text-blue-700 dark:text-blue-300">
-          Получатель {index + 1}
-        </Label>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="h-7 px-2 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
-          onClick={onRemove}
-        >
-          <i className="fas fa-trash text-xs mr-1" />
-          Удалить
-        </Button>
-      </div>
-
+    <div className="border border-border bg-card rounded-lg p-3 space-y-2">
       {/* Выбор типа получателя */}
       <Select
         value={recipient.type}
         onValueChange={(v) => onUpdate({ type: v as MessageSendRecipientType })}
       >
-        <SelectTrigger className="bg-card/70 border border-blue-200/50 dark:border-blue-800/50">
+        <SelectTrigger aria-label={`Куда отправить сообщение, строка ${index + 1}`} className="bg-background border-border h-auto min-h-9 text-left">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="user">Пользователю</SelectItem>
-          <SelectItem value="chat_id">По ID</SelectItem>
+          {recipient.type === 'admin_ids' && <SelectItem value="admin_ids">Администраторам бота</SelectItem>}
+          <SelectItem value="user">В текущий чат</SelectItem>
+          <SelectItem value="chat_id">В чат по ID или @имени</SelectItem>
         </SelectContent>
       </Select>
 
@@ -102,7 +87,7 @@ function RecipientCard({
             </label>
           </div>
           <div className="flex items-center gap-1">
-            <span className="text-xs text-muted-foreground w-16 flex-shrink-0">Чат/канал:</span>
+            <span className="text-xs text-muted-foreground w-16 flex-shrink-0">ID или @имя</span>
             <Input
               value={recipient.chatId ?? ''}
               onChange={(e) => onUpdate({ chatId: e.target.value })}
@@ -115,7 +100,7 @@ function RecipientCard({
             />
           </div>
           <div className="flex items-center gap-1">
-            <span className="text-xs text-muted-foreground w-16 flex-shrink-0">Топик (опц.):</span>
+            <span className="text-xs text-muted-foreground w-16 flex-shrink-0">ID темы (необяз.)</span>
             <Input
               value={recipient.threadId ?? ''}
               onChange={(e) => onUpdate({ threadId: e.target.value })}
@@ -129,7 +114,7 @@ function RecipientCard({
           </div>
 
           {/* Разделитель */}
-          <div className="border-t border-blue-200/30 dark:border-blue-800/30 my-1" />
+          <div className="border-t border-border my-1" />
 
           {/* Токен бота */}
           <div className="flex items-center gap-1">
@@ -155,13 +140,25 @@ function RecipientCard({
         </div>
       )}
 
-      {/* Подсказка для admin_ids — оставлена для обратной совместимости */}
+      {onRemove && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-7 px-2 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
+          aria-label={`Убрать чат из рассылки сообщения, строка ${index + 1}`}
+          onClick={onRemove}
+        >
+          <i className="fas fa-trash text-xs mr-1" />
+          Убрать чат
+        </Button>
+      )}
     </div>
   );
 }
 
 /**
- * Секция списка получателей сообщения
+ * Выбор чатов для отправки сообщения. Дополнительный чат задаётся по ID или имени.
  * @param props - Свойства компонента
  * @returns JSX элемент или null, если тип узла не поддерживается
  */
@@ -200,8 +197,8 @@ export function MessageRecipientSection({ selectedNode, onNodeUpdate, textVariab
   }
 
   return (
-    <div className="bg-gradient-to-br from-blue-50/40 to-cyan-50/20 dark:from-blue-950/30 dark:to-cyan-900/20 border border-blue-200/40 dark:border-blue-800/40 rounded-xl p-3 space-y-2">
-      <Label className="text-xs font-medium text-blue-700 dark:text-blue-300">Получатели</Label>
+    <div className="border-t border-border pt-3 space-y-2">
+      <Label className="text-xs font-medium text-foreground">Куда отправить сообщение?</Label>
 
       {recipients.map((r, i) => (
         <RecipientCard
@@ -210,18 +207,18 @@ export function MessageRecipientSection({ selectedNode, onNodeUpdate, textVariab
           index={i}
           textVariables={textVariables}
           onUpdate={(updates) => update(i, updates)}
-          onRemove={() => remove(i)}
+          onRemove={recipients.length > 1 ? () => remove(i) : undefined}
         />
       ))}
 
       <Button
         type="button"
         variant="outline"
-        className="w-full border-dashed border-blue-300 text-blue-700 hover:bg-blue-50 dark:border-blue-700 dark:text-blue-300 dark:hover:bg-blue-950/20"
-        onClick={() => save([...recipients, createRecipient()])}
+        className="w-full border-dashed border-border text-foreground hover:bg-muted"
+        onClick={() => save([...recipients, createRecipient('chat_id')])}
       >
         <i className="fas fa-plus mr-2" />
-        Добавить получателя
+        Добавить ещё один чат
       </Button>
     </div>
   );

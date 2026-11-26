@@ -3,6 +3,7 @@
  * @module components/editor/properties/hooks/use-properties-view
  */
 
+import { describeJsonError } from './describe-json-error';
 import { useCallback, useEffect, useState } from 'react';
 import type { Node } from '@shared/schema';
 import type { PropertiesView } from '../components/layout/properties-view-toggle';
@@ -137,7 +138,7 @@ export function usePropertiesView({
       JSON.parse(value);
       setJsonError(null);
     } catch (e) {
-      setJsonError(e instanceof Error ? e.message : 'Невалидный JSON');
+      setJsonError(describeJsonError(value, e));
     }
   }, []);
 
@@ -159,7 +160,7 @@ export function usePropertiesView({
       setJsonError(null);
       return true;
     } catch (e) {
-      setJsonError(e instanceof Error ? e.message : 'Невалидный JSON');
+      setJsonError(e instanceof SyntaxError ? describeJsonError(jsonDraft, e) : 'Не удалось применить настройки блока.');
       return false;
     }
   }, [selectedNode, jsonDraft, onNodeDataReplace]);

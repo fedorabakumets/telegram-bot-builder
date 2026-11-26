@@ -1,5 +1,5 @@
 /**
- * @fileoverview Универсальная панель инструментов редактора
+ * @fileoverview В панели свойств инструменты размещаются в прокручиваемой строке. Универсальная панель инструментов редактора
  * @description Поддерживает обычный и компактный режимы через проп `compact`
  */
 
@@ -99,8 +99,8 @@ export function Toolbar({
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <div className="flex flex-wrap items-center gap-1 sm:gap-1.5">
+    <div role="group" aria-label="Форматирование сообщения" className="flex min-w-0 max-w-full items-center gap-2 overflow-x-auto p-1 [&>*]:shrink-0">
+      <div className="flex items-center gap-1 sm:gap-1.5">
         {formatOptions.map((format) => {
           const isActive = activeFormats?.has(format.command) ?? false;
           return (
@@ -122,7 +122,7 @@ export function Toolbar({
           );
         })}
       </div>
-      <div className="flex flex-wrap items-center gap-1 sm:gap-1.5">
+      <div className="flex items-center gap-1 sm:gap-1.5">
         <Button variant="ghost" size="sm" onClick={undo} disabled={!canUndo}
           className="h-8 sm:h-9 w-8 sm:w-9 p-0 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 transition-colors disabled:opacity-40"
           title="Отменить (Ctrl+Z)">

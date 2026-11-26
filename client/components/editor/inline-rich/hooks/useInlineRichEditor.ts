@@ -77,9 +77,14 @@ export function useInlineRichEditor(
   const { toast } = useToast();
 
   const { wordCount, charCount } = useTextStats(props.value);
+  /** При переходе по истории разрешает синхронизировать текст в поле сразу после ввода. */
+  const restoreValue = (value: string) => {
+    isFormattingRef.current = false;
+    props.onChange(value);
+  };
   const { undo, redo, saveToUndoStack, undoStack, redoStack } = useUndoRedo(
     props.value,
-    props.onChange
+    restoreValue
   );
 
   useEditorSync({
@@ -93,7 +98,10 @@ export function useInlineRichEditor(
   const { handleInput } = useEditorInput({
     editorRef,
     htmlToValue,
-    onChange: props.onChange,
+    onChange: (next) => {
+      if (next !== props.value) saveToUndoStack();
+      props.onChange(next);
+    },
     enableMarkdown: props.enableMarkdown ?? false,
     setIsFormatting
   });

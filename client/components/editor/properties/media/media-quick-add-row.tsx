@@ -79,16 +79,6 @@ export function MediaQuickAddRow({
   };
 
   /**
-   * Плюс: если в поле есть текст — добавить URL, иначе открыть выбор файла.
-   * @returns void
-   */
-  const handlePlus = (): void => {
-    if (busy) return;
-    if (urlInput.trim()) void addUrl();
-    else fileRef.current?.click();
-  };
-
-  /**
    * Вставка картинки из буфера прямо в поле URL.
    * @param event - Событие paste
    * @returns void
@@ -124,54 +114,29 @@ export function MediaQuickAddRow({
         })
       }
     >
-      <div className="space-y-3 p-0.5">
-        <div className="flex gap-1">
-          <Input
-            value={urlInput}
-            onChange={(e) => setUrlInput(e.target.value)}
-            placeholder={placeholder}
-            title="Сюда можно перетащить файл, вставить картинку (Ctrl+V) или ссылку на неё"
-            disabled={busy}
-            className="h-10 flex-1 text-sm"
-            onKeyDown={(e) => e.key === 'Enter' && void addUrl()}
-            onPaste={handlePaste}
-          />
+      <div className="grid min-w-0 gap-2">
+        <Button type="button" className="w-full gap-2" disabled={busy}
+          onClick={() => fileRef.current?.click()} data-testid="media-quick-add-plus">
+          <Upload className="size-4" /> {isUploading ? 'Загрузка…' : 'Загрузить файл'}
+        </Button>
+        <input ref={fileRef} type="file" multiple={multiple} className="hidden"
+          data-testid="media-quick-add-file" onChange={handleFiles} />
+        <MediaFieldButton projectId={projectId} nodeId={nodeId} nodeName={nodeName}
+          field="attachedMedia" multi={multiple} onAttach={onAttached}
+          label="Из хранилища" className="w-full gap-2" />
+        <div className="flex items-center gap-1">
+          <Input value={urlInput} onChange={(e) => setUrlInput(e.target.value)}
+            placeholder={placeholder} aria-label="Ссылка на файл" disabled={busy}
+            className="h-9 min-w-0 flex-1 text-sm" onPaste={handlePaste}
+            onKeyDown={(e) => e.key === 'Enter' && void addUrl()} />
+          {urlInput.trim() && (
+            <Button type="button" variant="outline" size="icon" disabled={busy}
+              title="Добавить по ссылке" onClick={() => void addUrl()}>
+              <Plus className="size-4" />
+            </Button>
+          )}
           <FileClipboardButton compact disabled={busy} onFiles={(files) => void uploadAndAttach(takeFiles(files))} />
-          <Button
-            type="button"
-            size="icon"
-            className="h-10 w-10 shrink-0"
-            disabled={busy}
-            onClick={handlePlus}
-            title={urlInput.trim() ? 'Добавить URL' : 'Загрузить файл с устройства'}
-            data-testid="media-quick-add-plus"
-          >
-            {urlInput.trim() ? <Plus className="h-4 w-4" /> : <Upload className="h-4 w-4" />}
-          </Button>
-          <input
-            ref={fileRef}
-            type="file"
-            multiple={multiple}
-            className="hidden"
-            data-testid="media-quick-add-file"
-            onChange={handleFiles}
-          />
         </div>
-        <div className="flex items-center gap-2">
-          <div className="h-px flex-1 bg-slate-300/30" />
-          <span className="text-xs text-slate-500">или выбрать уже лежащий</span>
-          <div className="h-px flex-1 bg-slate-300/30" />
-        </div>
-        <MediaFieldButton
-          projectId={projectId}
-          nodeId={nodeId}
-          nodeName={nodeName}
-          field="attachedMedia"
-          multi={multiple}
-          onAttach={onAttached}
-          label="Из хранилища"
-          className="h-10 w-full gap-1.5"
-        />
       </div>
     </MediaDropZone>
   );

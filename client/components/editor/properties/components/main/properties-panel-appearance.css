@@ -1,0 +1,32 @@
+/** @fileoverview Компактные поверхности разделов свойств и оформление иконок по настройке профиля. */
+[data-properties-panel] .properties-sections :is(div, section):has(> [data-properties-section-heading]),
+[data-properties-panel] .properties-sections > .bg-gradient-to-br {
+  @apply min-w-0 rounded-lg border border-zinc-200 bg-zinc-50 bg-none px-2 py-1.5 dark:border-zinc-800 dark:bg-zinc-950;
+}
+
+[data-properties-panel][data-colored-icons="false"] [data-properties-icon] {
+  filter: grayscale(1);
+}
+
+/** Подпись действия переносится по ширине панели, а кнопка растёт вместе с текстом. */
+[data-properties-panel] button {
+  max-inline-size: 100%;
+  min-inline-size: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+[data-properties-panel] button.whitespace-nowrap:not([role]):not([aria-haspopup]):not(.w-7):not(.w-8):not(.w-9):not(.w-10),
+[data-properties-panel] button:has(> span.hidden, > span.sm\:hidden) {
+  height: auto;
+  min-height: 2rem;
+  padding: 0.375rem 0.5rem;
+  line-height: 1.25;
+}
+
+[data-properties-panel] button > span {
+  min-inline-size: 0;
+}
+[data-properties-panel] button.whitespace-nowrap > i {
+  margin-inline: 0;
+}

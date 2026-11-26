@@ -44,37 +44,26 @@ export function SectionHeader({
   icon,
   iconGradient,
   iconColor,
-  titleGradient,
-  descriptionColor = 'text-slate-600/70 dark:text-slate-400/70',
   className = '',
   extraContent
 }: SectionHeaderProps): JSX.Element {
   return (
-    <div className={`flex items-start gap-2.5 sm:gap-3 w-full hover:opacity-75 transition-opacity duration-200 group ${className}`}>
-      <button
-        type="button"
-        className="flex items-start gap-2.5 sm:gap-3 w-full"
-        title={isOpen ? 'Свернуть' : 'Развернуть'}
-        onClick={onToggle}
-      >
-        <div className={`w-8 sm:w-9 h-8 sm:h-9 rounded-lg bg-gradient-to-br ${iconGradient} flex items-center justify-center flex-shrink-0 pt-0.5`}>
-          <i className={`fas fa-${icon} ${iconColor} text-sm sm:text-base`}></i>
-        </div>
-        <div className="flex-1 min-w-0">
-          <h3 className={`text-sm sm:text-base font-bold ${titleGradient || 'text-slate-900 dark:text-slate-100'} text-left`}>
-            {title}
-          </h3>
-          {description && (
-            <p className={`text-xs sm:text-sm mt-0.5 text-left ${descriptionColor}`}>
-              {description}
-            </p>
-          )}
-        </div>
+    <button
+      type="button"
+      data-properties-section-heading
+      aria-expanded={isOpen}
+      onClick={onToggle}
+      className={`grid w-full min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2 gap-y-1 rounded text-left hover:bg-muted/40 focus-visible:outline focus-visible:outline-2 ${className}`}
+    >
+      <span data-properties-icon className={`flex size-7 items-center justify-center rounded-md bg-gradient-to-br ${iconGradient}`}>
+        <i aria-hidden="true" className={`fas fa-${icon} ${iconColor} text-sm`} />
+      </span>
+      <span className="min-w-0 break-words text-sm font-semibold leading-tight text-foreground">{title}</span>
+      <span className="flex items-center gap-1 text-xs text-muted-foreground">
         {extraContent}
-      </button>
-      <i
-        className={`fas fa-chevron-down text-xs sm:text-sm ${iconColor} ml-auto flex-shrink-0 transition-transform duration-300 ${isOpen ? 'rotate-0' : '-rotate-90'}`}
-      ></i>
-    </div>
+        <i aria-hidden="true" className={`fas fa-chevron-down transition-transform ${isOpen ? '' : '-rotate-90'}`} />
+      </span>
+      {description && <span className="col-span-full text-xs leading-snug text-muted-foreground">{description}</span>}
+    </button>
   );
 }

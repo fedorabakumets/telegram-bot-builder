@@ -57,8 +57,8 @@ export function EditorTabViewSettings() {
         <SelectContent>{canvasSheetsPositions.map(([position, label]) => <SelectItem key={position} value={position}>{label}</SelectItem>)}</SelectContent>
       </Select>
       <AppearanceSwitch setting="blockLabels" label="Подписи над содержимым блоков на холсте" />
-      <AppearanceSwitch setting="coloredIcons" label="Цветные иконки в палитре" />
-      <Label htmlFor="profile-tab-highlight" className="block pt-2">Выделение вкладок «Элементы / Проекты»</Label>
+      <AppearanceSwitch setting="coloredIcons" label="Цветные иконки в панелях компонентов и свойств" />
+      <Label htmlFor="profile-tab-highlight" className="block pt-2">Выделение вкладок в панелях редактора</Label>
       <Select value={underlineTabs ? 'line' : 'fill'} onValueChange={value => setEditorAppearance('underlineTabs', value === 'line')}>
         <SelectTrigger id="profile-tab-highlight"><SelectValue /></SelectTrigger>
         <SelectContent>

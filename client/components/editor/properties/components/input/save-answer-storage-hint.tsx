@@ -77,14 +77,17 @@ interface SaveAnswerStorageHintProps {
 }
 
 /**
- * Блок подсказки под заголовком панели «Сохранение ответа».
+ * Раскрываемая справка о формате выбранного ответа.
  * @param props - Тип ввода для контекстного текста
  * @returns JSX элемент с пояснением
  */
 export function SaveAnswerStorageHint({ inputType }: SaveAnswerStorageHintProps) {
   return (
-    <p className="text-xs leading-relaxed text-cyan-600/90 dark:text-cyan-400/90">
-      {getSaveAnswerStorageHint(inputType)}
-    </p>
+    <details className="border-t border-border pt-2">
+      <summary className="cursor-pointer text-sm">Что сохранится в переменной?</summary>
+      <p className="mt-2 break-words text-xs leading-relaxed text-muted-foreground">
+        {getSaveAnswerStorageHint(inputType)}
+      </p>
+    </details>
   );
 }

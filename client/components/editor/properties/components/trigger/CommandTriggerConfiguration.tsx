@@ -31,6 +31,8 @@ import type { Variable } from '../../../inline-rich/types';
  * Пропсы компонента CommandTriggerConfiguration
  */
 interface CommandTriggerConfigurationProps {
+  /** Основная панель размещает выбор перехода после расширенных настроек. */
+  separateTarget?: boolean;
   /** Выбранный узел типа command_trigger */
   selectedNode: Node;
   /** Функция обновления данных узла */
@@ -55,6 +57,7 @@ interface CommandTriggerConfigurationProps {
  * @returns JSX элемент панели настроек триггера
  */
 export function CommandTriggerConfiguration({
+  separateTarget = false,
   selectedNode,
   onNodeUpdate,
   getAllNodesFromAllSheets,
@@ -144,13 +147,13 @@ export function CommandTriggerConfiguration({
       </div>
 
       {/* Следующий узел — задаёт выходное соединение (жёлтая линия на холсте) */}
-      <TriggerTargetSelector
+      {!separateTarget && <TriggerTargetSelector
         selectedNode={selectedNode}
         autoTransitionTo={selectedNode.data?.autoTransitionTo || ''}
         getAllNodesFromAllSheets={getAllNodesFromAllSheets}
         onNodeUpdate={onNodeUpdate}
         formatNodeDisplay={formatNodeDisplay}
-      />
+      />}
     </div>
   );
 }

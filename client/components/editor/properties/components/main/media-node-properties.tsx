@@ -37,7 +37,6 @@ export function MediaNodeProperties({
   onNodeUpdate,
 }: MediaNodePropertiesProps) {
   const [isMediaOpen, setIsMediaOpen] = useState(true);
-  const [isAutoTransitionOpen, setIsAutoTransitionOpen] = useState(false);
 
   /** Текстовые переменные для вставки в поля получателей */
   const textVariables = useMemo((): Variable[] => {
@@ -56,17 +55,15 @@ export function MediaNodeProperties({
         onNodeUpdate={onNodeUpdate}
         getAllNodesFromAllSheets={getAllNodesFromAllSheets}
       />
-      <AutoTransitionSection
-        selectedNode={selectedNode}
-        getAllNodesFromAllSheets={getAllNodesFromAllSheets}
-        onNodeUpdate={onNodeUpdate}
-        isOpen={isAutoTransitionOpen}
-        onToggle={() => setIsAutoTransitionOpen(!isAutoTransitionOpen)}
-      />
       <MessageRecipientSection
         selectedNode={selectedNode}
         onNodeUpdate={onNodeUpdate}
         textVariables={textVariables}
+      />
+      <AutoTransitionSection
+        selectedNode={selectedNode}
+        getAllNodesFromAllSheets={getAllNodesFromAllSheets}
+        onNodeUpdate={onNodeUpdate}
       />
     </div>
   );

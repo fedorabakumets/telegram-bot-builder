@@ -91,12 +91,12 @@ export function PropertiesHeader({
   const nodeColor = getNodeColor(selectedNode.type as string);
 
   return (
-    <div className="bg-gradient-to-br from-slate-50/50 to-slate-100/30 dark:from-slate-950/40 dark:to-slate-900/30 border-b border-border/50 backdrop-blur-sm">
-      <div className="p-3 sm:p-4 space-y-3">
+    <div className="border-b border-border/50 bg-background">
+      <div className="px-2 py-2 space-y-1">
 
         {/** Название и копируемый идентификатор образуют единый блок рядом с иконкой узла. */}
         <div className="flex items-center gap-2.5">
-          <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${nodeColor}`}>
+          <div data-properties-icon className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${nodeColor}`}>
             <i aria-hidden="true" className={nodeIcon} />
           </div>
           <div className="min-w-0 flex-1">

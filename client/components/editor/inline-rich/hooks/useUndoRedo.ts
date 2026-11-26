@@ -35,10 +35,10 @@ export function useUndoRedo(
   const [redoStack, setRedoStack] = useState<string[]>([]);
 
   /**
-   * Сохраняет текущее значение в стек отмены
+   * Сохраняет текущее значение один раз, даже если действие также вызвало событие ввода
    */
   const saveToUndoStack = useCallback(() => {
-    setUndoStack(prev => [...prev.slice(-19), value]);
+    setUndoStack(prev => prev[prev.length - 1] === value ? prev : [...prev.slice(-19), value]);
     setRedoStack([]);
   }, [value]);
 
