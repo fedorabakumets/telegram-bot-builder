@@ -142,14 +142,13 @@ export function ComponentsSidebar({
 
   // Рефы для импорта файлов
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const pythonFileInputRef = useRef<HTMLInputElement>(null);
 
   const isActuallyMobile = useIsMobile();
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
   // Хук загрузки файлов
-  const { handleFileUpload, handlePythonFileUpload } = useSidebarFileUpload({
+  const { handleFileUpload } = useSidebarFileUpload({
     setImportJsonText,
     setImportPythonText,
     setImportError,
@@ -397,9 +396,7 @@ export function ComponentsSidebar({
               onErrorChange={setImportError}
               onImport={handleImportProject}
               fileInputRef={fileInputRef}
-              pythonFileInputRef={pythonFileInputRef}
               onFileUpload={handleFileUpload}
-              onPythonFileUpload={handlePythonFileUpload}
             />
 
             {/* Список проектов */}

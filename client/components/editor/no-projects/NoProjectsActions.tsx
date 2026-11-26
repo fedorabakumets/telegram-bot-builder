@@ -1,118 +1,84 @@
-/**
- * @fileoverview Кнопки действий экрана «нет проектов» с появлением по очереди
- * @module components/editor/no-projects/NoProjectsActions
- */
-
-import type { ReactNode } from 'react';
-import { FileJson, LayoutTemplate, LogOut, Plus } from 'lucide-react';
+/** @fileoverview Понятный выбор способа создания первого проекта BotCraft. */
 import { Button } from '@/components/ui/button';
-import { cn } from '@/utils/utils';
+import { TELEGRAM_CHAT_URL } from '../header/components/telegram-chat-invite';
 
-/** Пропсы блока действий */
+/** Свойства способов начала работы. */
 export interface NoProjectsActionsProps {
-  /** Диалог допечатан — можно показывать кнопки */
+  /** Доступность действий. */
   ready: boolean;
-  /** Без задержек каскада (повторный визит) */
+  /** Мгновенное отображение при повторном визите. */
   instant?: boolean;
-  /** Создать проект */
+  /** Создание пустого проекта. */
   onCreate: () => void;
-  /** Импорт JSON */
+  /** Загрузка файла BotCraft. */
   onImport: () => void;
-  /** Шаблоны */
+  /** Открытие каталога шаблонов. */
   onTemplates: () => void;
-  /** Выход */
+  /** Выход из учётной записи. */
   onLogout: () => void;
-  /** Идёт импорт */
+  /** Выполняется импорт файла. */
   isImporting: boolean;
 }
 
+/** Свойства одного способа начала работы. */
+interface StartOptionProps {
+  /** Заголовок действия. */
+  title: string;
+  /** Пояснение результата. */
+  description: string;
+  /** Обработчик выбора. */
+  onClick: () => void;
+  /** Временная недоступность. */
+  disabled?: boolean;
+}
+
 /**
- * Обёртка с анимацией появления
- * @param props - visible, задержка и children
- * @returns JSX элемент
+ * Показывает плитку действия; на узком экране сохраняет компактную строку.
+ * @param props - Текст, состояние и обработчик выбора.
+ * @returns Кнопка способа начала работы.
  */
-function RevealSlot({
-  visible,
-  delayMs = 0,
-  instant = false,
-  children,
-}: {
-  visible: boolean;
-  delayMs?: number;
-  instant?: boolean;
-  children: ReactNode;
-}) {
+function StartOption({ title, description, onClick, disabled }: StartOptionProps) {
   return (
-    <div
-      className={cn(
-        !instant && 'transition-all duration-500 ease-out',
-        visible
-          ? 'opacity-100 translate-y-0 max-h-14'
-          : 'opacity-0 translate-y-3 max-h-0 overflow-hidden pointer-events-none',
-      )}
-      style={{ transitionDelay: !instant && visible ? `${delayMs}ms` : '0ms' }}
-      aria-hidden={!visible}
-    >
-      {children}
-    </div>
+    <button type="button" onClick={onClick} disabled={disabled}
+      className={`group flex w-full items-start gap-3 rounded-lg border px-3 py-3 text-center
+        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
+        active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50
+        border-border bg-background hover:bg-card`}>
+      <span className="min-w-0 flex-1 space-y-1">
+        <span className="block text-base font-semibold text-foreground">{title}</span>
+        <span className="block text-sm text-foreground opacity-70 text-pretty">{description}</span>
+      </span>
+    </button>
   );
 }
 
 /**
- * Кнопки create / template / import / logout — каскад после диалога
- * @param props - Свойства
- * @returns JSX элемент
+ * Объясняет разницу между пустым проектом, шаблонами и импортом.
+ * @param props - Обработчики существующих сценариев создания проекта.
+ * @returns Варианты старта и помощь с переносом.
  */
-export function NoProjectsActions({
-  ready,
-  instant = false,
-  onCreate,
-  onImport,
-  onTemplates,
-  onLogout,
-  isImporting,
-}: NoProjectsActionsProps) {
-  const d = (ms: number) => (instant ? 0 : ms);
-
+export function NoProjectsActions({ ready, onCreate, onImport, onTemplates, onLogout, isImporting }: NoProjectsActionsProps) {
   return (
-    <div className="flex flex-col gap-2">
-      <RevealSlot visible={ready} delayMs={d(0)} instant={instant}>
-        <Button className="w-full" onClick={onCreate} disabled={!ready}>
-          <Plus className="h-4 w-4 mr-2" />
-          Создать проект
-        </Button>
-      </RevealSlot>
-
-      <RevealSlot visible={ready} delayMs={d(120)} instant={instant}>
-        <Button className="w-full" variant="outline" onClick={onTemplates} disabled={!ready}>
-          <LayoutTemplate className="h-4 w-4 mr-2" />
-          Начать с шаблона
-        </Button>
-      </RevealSlot>
-
-      <RevealSlot visible={ready} delayMs={d(240)} instant={instant}>
-        <Button
-          className="w-full"
-          variant="outline"
-          onClick={onImport}
-          disabled={isImporting || !ready}
-        >
-          <FileJson className="h-4 w-4 mr-2" />
-          {isImporting ? 'Импорт...' : 'Импортировать JSON'}
-        </Button>
-      </RevealSlot>
-
-      <RevealSlot visible={ready} delayMs={d(360)} instant={instant}>
-        <Button
-          className="w-full text-destructive"
-          variant="ghost"
-          onClick={onLogout}
-          disabled={!ready}
-        >
-          <LogOut className="h-4 w-4 mr-2" />
-          Выйти
-        </Button>
-      </RevealSlot>
+    <div className="space-y-3">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+        <StartOption title="Выбрать шаблон"
+          description="Выберите бота и настройте под себя."
+          onClick={onTemplates} disabled={!ready} />
+        <StartOption title="Создать с нуля" description="Соберите свой сценарий."
+          onClick={onCreate} disabled={!ready} />
+        <StartOption title={isImporting ? 'Загружаем файл…' : 'Импорт проекта'}
+          description="Вставьте JSON или загрузите файл."
+          onClick={onImport} disabled={!ready || isImporting} />
+      </div>
+      <div className="w-full rounded-lg bg-[color-mix(in_srgb,var(--background)_35%,var(--card))] px-4 py-3 text-center text-sm text-pretty">
+        <p className="font-medium">Бот в другом конструкторе?</p>
+        <p className="mt-1 text-foreground opacity-70">Напишите в группу, поможем с переносом.</p>
+        <a href={TELEGRAM_CHAT_URL} target="_blank" rel="noopener noreferrer"
+          className="mt-1 inline-flex rounded-sm font-semibold text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          Написать в группу
+        </a>
+      </div>
+      <Button className="h-8 w-full text-foreground opacity-70" variant="ghost" onClick={onLogout} disabled={!ready}>Выйти</Button>
     </div>
   );
 }
