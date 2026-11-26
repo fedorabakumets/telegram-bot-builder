@@ -51,7 +51,7 @@ export function NoProjectsScreen() {
 
   return (
     <div className="flex items-center justify-center min-h-dvh bg-background py-4 dark:bg-[#08080a]">
-      <Card className="w-full max-w-[44rem] mx-4 rounded-xl border-0 shadow-none dark:bg-[#0d0d10] dark:text-foreground/[0.85]">
+      <Card className="w-full max-w-[44rem] mx-4 rounded-xl border-0 shadow-none dark:bg-[#0d0d10] dark:text-white/[0.85]">
         <CardHeader className="items-center text-center space-y-2 px-4 pb-6 pt-6">
           <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-transparent">
             <Bot className="size-7 text-primary" />
