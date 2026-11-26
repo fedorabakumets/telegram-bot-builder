@@ -1891,3 +1891,62 @@
   border-color: rgba(139, 92, 246, 0.5);
   color: rgb(167, 139, 250);
 }
+
+/** Плавающий поиск занимает только свою область поверх холста. */
+[data-panel-group]:has(> #combo-left-panel [data-compact-palette]) {
+  position: relative;
+  container-type: inline-size;
+}
+#combo-left-panel:has([data-compact-palette]) {
+  flex: 0 0 0px !important;
+  position: static;
+  overflow: visible !important;
+}
+#combo-left-panel:has([data-compact-palette]) > div {
+  overflow: visible;
+}
+#combo-left-panel:has([data-compact-palette]) + [data-panel-resize-handle-id] {
+  display: none;
+}
+#combo-left-panel [data-compact-palette] {
+  position: absolute;
+  z-index: 60;
+  inset: 3.5rem auto auto .75rem;
+  width: min(21rem, 48cqw);
+  height: auto;
+  max-height: calc(100% - 5rem);
+  border: 1px solid var(--border);
+  border-radius: .75rem;
+  box-shadow: 0 2px 8px #0002;
+}
+:is(#combo-left-panel, [data-mobile-palette]) [data-compact-palette]:not([data-floating-projects]) > div > :first-child,
+:is(#combo-left-panel, [data-mobile-palette]) [data-compact-palette]:not([data-search-open]) [data-component-list] > :not([data-component-search]) {
+  display: none;
+}
+:is(#combo-left-panel, [data-mobile-palette]) [data-compact-palette] [data-component-search] {
+  margin: 0;
+  gap: .25rem;
+}
+:is(#combo-left-panel, [data-mobile-palette]) [data-compact-palette] [data-component-search] input {
+  border-color: transparent;
+  box-shadow: none;
+}
+:is(#combo-left-panel, [data-mobile-palette]) [data-compact-palette] [data-search-projects],
+:is(#combo-left-panel, [data-mobile-palette]) [data-compact-palette] [data-search-toggle] {
+  display: inline-flex;
+}
+
+
+/** Панель телефона занимает высоту содержимого и прокручивает только открытый список. */
+[data-mobile-palette] > aside {
+  height: auto;
+  min-height: 0;
+  border: 1px solid var(--border);
+  border-radius: .75rem;
+  box-shadow: 0 2px 8px #0002;
+}
+[data-mobile-palette] [data-component-search] button,
+[data-mobile-palette] [data-floating-projects] > div > :first-child button {
+  min-height: 44px;
+  min-width: 44px;
+}

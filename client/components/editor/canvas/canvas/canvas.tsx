@@ -182,6 +182,8 @@ interface CanvasProps {
 
   // Мобильные функции
   /** Открытие мобильной боковой панели */
+  /** Компактная палитра над рабочей областью телефона. */
+  mobilePalette?: React.ReactNode;
   onOpenMobileSidebar?: () => void;
   /** Открытие мобильной панели свойств */
   onOpenMobileProperties?: () => void;
@@ -284,6 +286,7 @@ export function Canvas({
   suppressAutoFit,
   projectId,
   projects = [],
+  mobilePalette,
   onOpenMobileSidebar,
   onOpenMobileProperties,
   onPortalNavigate,
@@ -1956,6 +1959,7 @@ export function Canvas({
       />
 
       {/* Плавающая панель для мобильных устройств */}
+      {mobilePalette && <div data-mobile-palette className="absolute left-2 right-2 top-2 z-40 row-start-2 max-h-[80%] max-w-sm flex flex-col">{mobilePalette}</div>}
       <MobileCanvasFab
         sidebarVisible={sidebarVisible}
         propertiesVisible={propertiesVisible}

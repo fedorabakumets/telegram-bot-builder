@@ -28,7 +28,7 @@ import { useSidebarTouch } from './hooks/use-sidebar-touch';
 import { useSidebarFileUpload } from './hooks/use-sidebar-file-upload';
 import { useProjectsQuery } from './hooks/use-projects-query';
 import { useArchiveProjectMutation } from './hooks/use-archive-project-mutation';
-import type { ProjectsViewMode } from './components/projects-view-toggle';
+import { ProjectsViewToggle, type ProjectsViewMode } from './components/projects-view-toggle';
 import { useCreateProjectMutation } from './hooks/use-create-project-mutation';
 import { useDeleteProjectMutation } from './hooks/use-delete-project-mutation';
 import { useDuplicateProjectMutation } from './hooks/use-duplicate-project-mutation';
@@ -42,7 +42,7 @@ import { ImportDialog } from './components/import-dialog';
 
 import { Button } from '@/components/ui/button';
 
-import { Home, Plus } from 'lucide-react';
+import { ArrowLeft, Home, Play, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useDisabledNodeTypes } from '@/hooks/use-disabled-node-types';
 import { apiRequest } from '@/queryClient';
@@ -74,6 +74,8 @@ export function ComponentsSidebar({
   onSheetDuplicate,
   onSheetSelect,
   isMobile = false,
+  mobilePaletteOpen,
+  onMobilePaletteChange,
   onClose,
   onNodeFocus,
 }: ComponentsSidebarProps) {
@@ -324,12 +326,51 @@ export function ComponentsSidebar({
     }
   }, [projects, queryClient, toast]);
 
+  /** Помнит, что проекты открыли из плавающей строки поиска. */
+  const projectsFromSearch = useRef(false);
+  /** Сохраняет состояние раскрытия списка проектов в мини-панели. */
+  const [desktopProjectsOpen, setDesktopProjectsOpen] = useState(true);
+  const [desktopSearchOpen, setDesktopSearchOpen] = useState(false);
+
+  /** На телефоне обе вкладки раскрываются в одной панели над холстом. */
+  const mobilePalette = mobilePaletteOpen !== undefined;
+  const projectsOpen = mobilePaletteOpen ?? desktopProjectsOpen;
+  const paletteSearchOpen = mobilePaletteOpen ?? desktopSearchOpen;
+  const setProjectsOpen = mobilePalette && onMobilePaletteChange || setDesktopProjectsOpen;
+  const setPaletteSearchOpen = mobilePalette && onMobilePaletteChange || setDesktopSearchOpen;
+
+  /** На десктопе свёрнутая палитра занимает высоту списка, включая результаты поиска. */
+  const fitPalette = !isActuallyMobile && !isMobile && currentTab === 'elements'
+    && visibleCategories.every(category => collapsedCategories.has(category.title));
+
+  const floatingProjects = currentTab === 'projects' && (mobilePalette || (!isActuallyMobile && !isMobile && projectsFromSearch.current));
+  /** Возвращает из проектов к раскрытому списку элементов. */
+  function showElements() {
+    projectsFromSearch.current = false;
+    setPaletteSearchOpen(true);
+    setCurrentTab('elements');
+  }
   const sidebarContent = (
-    <div className="h-full flex flex-col overflow-hidden">
+    <div className={`flex min-h-0 flex-col overflow-hidden ${fitPalette ? "max-h-full" : "h-full"}`}>
       {/* Sidebar Header */}
-      <SidebarHeader
+      {floatingProjects ? (
+        <div className="flex shrink-0 flex-wrap items-center justify-between gap-1 border-b border-border px-2 py-1">
+          <ProjectsViewToggle value={projectsView} onChange={setProjectsView} />
+          <Button type="button" variant="ghost" size="sm" className="h-8 gap-1 px-2 text-xs" onClick={showElements}>
+            <ArrowLeft aria-hidden="true" className="size-4" />
+            К элементам
+          </Button>
+          <button type="button" aria-expanded={projectsOpen}
+            aria-label={projectsOpen ? 'Свернуть список проектов' : 'Раскрыть список проектов'}
+            title={projectsOpen ? 'Свернуть список проектов' : 'Раскрыть список проектов'}
+            className="inline-flex h-8 w-7 shrink-0 items-center justify-center rounded bg-muted text-muted-foreground hover:text-foreground"
+            onClick={() => setProjectsOpen(!projectsOpen)}>
+            <Play aria-hidden="true" className={projectsOpen ? 'size-3 rotate-180 fill-current' : 'size-3 fill-current'} />
+          </button>
+        </div>
+      ) : <SidebarHeader
         currentTab={currentTab}
-        onTabChange={setCurrentTab}
+        onTabChange={(tab) => { if (tab === 'elements') projectsFromSearch.current = false; setPaletteSearchOpen(false); setCurrentTab(tab); }}
         showLayoutButtons={showLayoutButtons}
         canvasVisible={canvasVisible}
         headerVisible={headerVisible}
@@ -338,13 +379,17 @@ export function ComponentsSidebar({
         onToggleHeader={onToggleHeader}
         onToggleProperties={onToggleProperties}
         onShowFullLayout={onShowFullLayout}
-        onClose={onClose}
+        onClose={projectsFromSearch.current ? () => {
+          projectsFromSearch.current = false;
+          setPaletteSearchOpen(false);
+          setCurrentTab('elements');
+        } : onClose}
         projectsView={projectsView}
         onProjectsViewChange={setProjectsView}
-      />
+      />}
 
       {/** Боковые отступы палитры задаёт вкладка элементов. */}
-      <div className={`flex-1 overflow-y-auto pb-4 space-y-4 ${currentTab === 'elements' ? '' : 'px-4'}`}>
+      <div hidden={floatingProjects && !projectsOpen} className={`min-h-0 overflow-y-auto space-y-4 ${fitPalette ? '' : 'flex-1'} ${currentTab === 'elements' ? '' : 'px-4 pb-4'}`}>
         {currentTab === 'projects' && (
           <div className="space-y-4 pt-3">
             {/** Действия над списком располагаются под заголовком и переносятся по ширине панели. */}
@@ -586,6 +631,9 @@ export function ComponentsSidebar({
             collapsedCategories={collapsedCategories}
             touchState={touchHook.touchState}
             onToggleCategory={toggleCategory}
+            searchOpen={paletteSearchOpen}
+            onSearchOpenChange={setPaletteSearchOpen}
+            onShowProjects={() => { projectsFromSearch.current = true; setPaletteSearchOpen(false); setProjectsOpen(true); setCurrentTab('projects'); }}
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
@@ -598,13 +646,15 @@ export function ComponentsSidebar({
   );
 
   // На мобильных устройствах возвращаем содержимое для использования в Sheet из editor.tsx
-  if (isActuallyMobile || isMobile) {
+  if (!mobilePalette && (isActuallyMobile || isMobile)) {
     return <>{sidebarContent}</>;
   }
 
   // Десктопная версия
   return (
-    <aside data-node-palette className="w-full bg-background h-full flex flex-col overflow-hidden">
+    <aside data-node-palette data-compact-palette={currentTab === 'elements' || floatingProjects || undefined} data-floating-projects={floatingProjects || undefined}
+      data-search-open={paletteSearchOpen || undefined}
+      className={`w-full bg-background flex flex-col overflow-hidden ${fitPalette ? 'max-h-full' : 'h-full'}`}>
       {sidebarContent}
     </aside>
   );
