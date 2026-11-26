@@ -5,6 +5,7 @@
 
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import './catalog-text.css';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { apiRequest } from '@/queryClient';
@@ -86,7 +87,7 @@ export default function ScenariyPage() {
 
   if (isError || isFeaturedError || isMyError) {
     return (
-      <div className="min-h-screen bg-background dark:bg-[#08080a] flex items-center justify-center">
+      <div className="catalog-text min-h-screen bg-background dark:bg-[#08080a] flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-xl font-bold text-destructive mb-2">Ошибка загрузки сценариев</h2>
           <p className="text-muted-foreground mb-4">Обновите страницу и попробуйте снова.</p>
@@ -97,21 +98,21 @@ export default function ScenariyPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background dark:bg-[#08080a]">
+    <div className="catalog-text min-h-screen bg-background dark:bg-[#08080a]">
       <ScenariyPageHeader
         backLabel={backLabel}
         learnActive={learn.active}
         onStartLearn={learn.restart}
       />
 
-      <div className="container mx-auto px-4 py-6">
+      <div className="mx-auto w-full max-w-6xl px-4 py-4 sm:py-6">
         {awaitingGate ? (
           <div className="flex justify-center py-16" aria-busy="true">
-            <Loader2 className="h-7 w-7 animate-spin text-muted-foreground" />
+            <Loader2 className="h-7 w-7 animate-spin text-sky-700 dark:text-sky-400" />
           </div>
         ) : (
           <div className="flex flex-col lg:flex-row gap-6">
-            <div className="flex-1 space-y-3 xs:space-y-4 sm:space-y-4">
+            <div className="min-w-0 flex-1 space-y-3 xs:space-y-4 sm:space-y-4">
               {learn.active ? (
                 <ScenariyLearnPanel
                   step={learn.step}

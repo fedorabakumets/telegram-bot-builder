@@ -56,7 +56,7 @@ export function NoProjectsScreen() {
           <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-transparent">
             <Bot className="size-7 text-primary" />
           </div>
-          <h1 className="text-2xl font-medium text-balance">{firstName ? `Привет, ${firstName}!` : 'Привет!'} </h1>
+          <h1 className="text-2xl font-normal text-balance">{firstName ? `Привет, ${firstName}!` : 'Привет!'} </h1>
           <p className="text-base text-muted-foreground">
             Что хотите сделать?
           </p>

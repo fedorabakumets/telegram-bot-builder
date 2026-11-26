@@ -34,23 +34,23 @@ export function ScenariyPageHeader({
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/50 bg-background">
-      <div className="container mx-auto px-4 py-3">
+      <div className="mx-auto w-full max-w-6xl px-4 py-2">
         <div className="flex items-center gap-2 sm:gap-3 min-h-9">
-          <Link to="/">
-            <Button variant="ghost" size="sm" className="shrink-0 min-w-[7.5rem] justify-start">
-              <ArrowLeft className="h-4 w-4 mr-2 shrink-0" />
-              <span className="truncate">{label}</span>
-            </Button>
-          </Link>
-          <h1 className="text-lg sm:text-xl font-bold truncate flex-1 min-w-0">
+          <Button asChild variant="ghost" size="sm" className="shrink-0 gap-1.5 font-normal hover:bg-transparent hover:text-sky-700 dark:hover:text-sky-400">
+            <Link to="/" aria-label={label}>
+              <ArrowLeft className="h-4 w-4 shrink-0 text-sky-700 dark:text-sky-400" />
+              <span className="hidden sm:inline">{label}</span>
+            </Link>
+          </Button>
+          <h1 className="text-lg sm:text-xl font-normal truncate flex-1 min-w-0">
             Сценарии ботов
           </h1>
           {onStartLearn ? (
             <Button
               type="button"
-              variant={learnActive ? 'secondary' : 'outline'}
+              variant={learnActive ? 'secondary' : 'ghost'}
               size="sm"
-              className="shrink-0 gap-1.5"
+              className="shrink-0 gap-1.5 font-normal hover:bg-transparent hover:text-violet-700 dark:hover:text-violet-400"
               onClick={onStartLearn}
               title={
                 learnActive
@@ -58,7 +58,7 @@ export function ScenariyPageHeader({
                   : 'Пройти обучение по каталогу'
               }
             >
-              <GraduationCap className="h-4 w-4" />
+              <GraduationCap className="h-4 w-4 text-violet-700 dark:text-violet-400" />
               <span className="hidden xs:inline">Обучение</span>
             </Button>
           ) : null}

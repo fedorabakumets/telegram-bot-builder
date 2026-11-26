@@ -32,7 +32,7 @@ export function TemplateGrid({
   if (isLoading) {
     return (
       <div className="flex justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin" />
+        <Loader2 className="h-8 w-8 animate-spin text-sky-700 dark:text-sky-400" />
       </div>
     );
   }
@@ -42,7 +42,7 @@ export function TemplateGrid({
   }
 
   return (
-    <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-2 xs:gap-2.5 sm:gap-3 md:gap-4 lg:gap-5">
+    <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,18rem),1fr))] gap-3 sm:gap-4">
       {templates.map((template, index) => {
         if (!template || typeof template.id === 'undefined') return null;
 

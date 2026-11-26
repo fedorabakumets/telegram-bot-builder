@@ -32,16 +32,16 @@ interface TemplateTabsFullProps extends TemplateTabsProps {
   showCards?: boolean;
 }
 
-/** Активную подборку выделяет линия под названием. */
+/** Активную подборку выделяет среднее начертание текста, а клавиатурный фокус — пунктир. */
 const BAZOVYE_KLASSY =
-  'gap-1.5 rounded-none border-b-2 border-transparent px-2 py-2 text-xs sm:text-sm data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none hover:text-foreground';
+  'gap-1.5 rounded-none transition-colors focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:underline focus-visible:decoration-dotted focus-visible:underline-offset-4 px-2 py-2 text-xs sm:text-sm text-foreground font-normal data-[state=active]:font-medium data-[state=active]:bg-transparent data-[state=active]:shadow-none hover:text-foreground';
 
 /** Вкладки по порядку */
 const TAB_ITEMS = [
-  { value: 'all', label: 'Все', Icon: Layers },
-  { value: 'featured', label: 'Рекомендуемые', Icon: Sparkles },
-  { value: 'popular', label: 'Популярные', Icon: Flame },
-  { value: 'my', label: 'Мои', Icon: Bookmark },
+  { value: 'all', label: 'Все', Icon: Layers, color: 'text-sky-700 dark:text-sky-400' },
+  { value: 'featured', label: 'Рекомендуемые', Icon: Sparkles, color: 'text-violet-700 dark:text-violet-400' },
+  { value: 'popular', label: 'Популярные', Icon: Flame, color: 'text-orange-700 dark:text-orange-400' },
+  { value: 'my', label: 'Мои', Icon: Bookmark, color: 'text-emerald-700 dark:text-emerald-400' },
 ] as const;
 
 /**
@@ -70,12 +70,12 @@ export function TemplateTabs({
       {visibleItems.length > 0 ? (
         <TabsList
           className={cn(
-            'flex w-full flex-wrap sm:flex-nowrap items-stretch gap-1.5',
+            'flex w-full min-w-0 flex-nowrap justify-start overflow-x-auto items-stretch gap-1',
             'bg-transparent p-0 h-auto rounded-none',
-            'border-b border-border/60',
+            '[scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
           )}
         >
-          {visibleItems.map(({ value, label, Icon }) => (
+          {visibleItems.map(({ value, label, Icon, color }) => (
             <TabsTrigger
               key={value}
               value={value}
@@ -83,11 +83,11 @@ export function TemplateTabs({
                 BAZOVYE_KLASSY,
                 visibleItems.length === 1
                   ? 'w-full'
-                  : 'flex-1 basis-[calc(50%-0.375rem)] sm:basis-0',
-                guideMode && 'animate-in fade-in zoom-in-95 duration-300',
+                  : 'shrink-0 sm:flex-1',
+                guideMode && 'animate-in fade-in duration-300',
               )}
             >
-              <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+              <Icon className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0", color)} />
               <span>{label}</span>
             </TabsTrigger>
           ))}

@@ -24,12 +24,12 @@ import type { TemplateDeleteDialogProps } from '../types/scenariy-tipy';
 export function TemplateDeleteDialog({ template, onConfirm, onCancel }: TemplateDeleteDialogProps) {
   return (
     <AlertDialog open={template !== null} onOpenChange={(open) => { if (!open) onCancel(); }}>
-      <AlertDialogContent>
+      <AlertDialogContent className="catalog-text">
         <AlertDialogHeader>
           <AlertDialogTitle>Удалить сценарий?</AlertDialogTitle>
           <AlertDialogDescription>
             Вы уверены, что хотите удалить сценарий{' '}
-            <span className="font-semibold text-foreground">«{template?.name}»</span>?
+            <span className="break-words font-semibold text-foreground">«{template?.name}»</span>?
             Это действие нельзя отменить.
           </AlertDialogDescription>
         </AlertDialogHeader>

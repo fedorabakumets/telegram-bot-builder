@@ -21,7 +21,7 @@ const METKI_SORTIROVKI: Record<SortBy, string> = {
 };
 
 const SELECT_TRIGGER =
-  'h-10 text-sm rounded-xl border-border/50 bg-background/70 shadow-none hover:bg-background hover:border-border focus:ring-1 focus:ring-primary/20';
+  'h-10 text-sm rounded-xl border-0 bg-background shadow-none hover:bg-background focus:ring-0 focus:ring-offset-0 focus-visible:underline focus-visible:underline-offset-4';
 
 /**
  * Поиск, категория и сортировка сценариев
@@ -48,20 +48,16 @@ export function TemplateFilters({
 
   return (
     <div className="space-y-2.5">
-      <div
-        className={cn(
-          'rounded-2xl border border-border/50 bg-card/40 p-2 sm:p-2.5',
-          'shadow-sm shadow-black/[0.02] dark:shadow-none',
-        )}
-      >
+      <div className="p-2 sm:p-2.5">
         <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
           <div className="relative flex-1 min-w-0">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-blue-600 dark:text-blue-400" />
             <Input
+              aria-label="Поиск шаблонов по названию"
               placeholder="Найти шаблон по названию…"
               value={searchTerm}
               onChange={(e) => onSearchChange(e.target.value)}
-              className="h-10 rounded-lg border-border bg-background pl-10 pr-9 text-sm shadow-none focus-visible:ring-ring"
+              className="h-10 rounded-lg border-0 bg-background pl-10 pr-9 text-sm shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
             />
             {searchTerm ? (
               <button
@@ -70,22 +66,22 @@ export function TemplateFilters({
                 onClick={() => onSearchChange('')}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
               >
-                <X className="h-3.5 w-3.5" />
+                <X className="h-3.5 w-3.5 text-sky-700 dark:text-sky-400" />
               </button>
             ) : null}
           </div>
 
           <div className="flex flex-col gap-2 xs:flex-row lg:w-auto lg:shrink-0">
             <Select value={selectedCategory} onValueChange={onCategoryChange}>
-              <SelectTrigger className={cn(SELECT_TRIGGER, 'w-full xs:flex-1 lg:w-[200px]')}>
+              <SelectTrigger aria-label="Категория" className={cn(SELECT_TRIGGER, 'min-w-0 w-full xs:flex-1 lg:w-[200px] [&>svg]:text-emerald-700 dark:[&>svg]:text-emerald-400')}>
                 <div className="flex min-w-0 items-center gap-2">
-                  <SlidersHorizontal className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  <SlidersHorizontal className="h-3.5 w-3.5 shrink-0 text-emerald-700 dark:text-emerald-400" />
                   <SelectValue placeholder="Категория" />
                 </div>
               </SelectTrigger>
-              <SelectContent className="rounded-xl">
+              <SelectContent className="catalog-text rounded-xl">
                 {KATEGORII.map((k) => (
-                  <SelectItem key={k.value} value={k.value} className="text-sm">
+                  <SelectItem key={k.value} value={k.value} className="text-sm focus:bg-transparent focus:text-emerald-700 dark:focus:text-emerald-400">
                     {k.label}
                   </SelectItem>
                 ))}
@@ -93,15 +89,15 @@ export function TemplateFilters({
             </Select>
 
             <Select value={sortBy} onValueChange={(v) => onSortChange(v as SortBy)}>
-              <SelectTrigger className={cn(SELECT_TRIGGER, 'w-full xs:flex-1 lg:w-[180px]')}>
+              <SelectTrigger aria-label="Сортировка" className={cn(SELECT_TRIGGER, 'min-w-0 w-full xs:flex-1 lg:w-[180px] [&>svg]:text-violet-700 dark:[&>svg]:text-violet-400')}>
                 <div className="flex min-w-0 items-center gap-2">
-                  <ArrowDownWideNarrow className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  <ArrowDownWideNarrow className="h-3.5 w-3.5 shrink-0 text-violet-700 dark:text-violet-400" />
                   <SelectValue placeholder="Сортировка" />
                 </div>
               </SelectTrigger>
-              <SelectContent className="rounded-xl">
+              <SelectContent className="catalog-text rounded-xl">
                 {(Object.entries(METKI_SORTIROVKI) as [SortBy, string][]).map(([val, label]) => (
-                  <SelectItem key={val} value={val} className="text-sm">
+                  <SelectItem key={val} value={val} className="text-sm focus:bg-transparent focus:text-violet-700 dark:focus:text-violet-400">
                     {label}
                   </SelectItem>
                 ))}
@@ -114,7 +110,7 @@ export function TemplateFilters({
       {hasActive ? (
         <div className="flex flex-wrap items-center gap-1.5 px-0.5">
           {searchTerm ? (
-            <Badge variant="secondary" className="gap-1 rounded-lg font-normal">
+            <Badge variant="outline" className="max-w-full break-all border-transparent bg-transparent font-normal text-blue-600 dark:text-blue-400">
               Поиск: {searchTerm}
             </Badge>
           ) : null}

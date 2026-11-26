@@ -1,0 +1,12 @@
+/** @fileoverview Яркость основного текста каталога и его всплывающих меню в тёмной теме. */
+.catalog-text {
+  font-weight: 400;
+}
+
+.dark .catalog-text {
+  --foreground: rgb(255 255 255 / 85%);
+  --card-foreground: var(--foreground);
+  --popover-foreground: var(--foreground);
+  --secondary-foreground: var(--foreground);
+  color: var(--foreground);
+}
