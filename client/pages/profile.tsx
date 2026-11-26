@@ -1,5 +1,5 @@
 /**
- * @fileoverview Профиль текущего пользователя в account-level области
+ * @fileoverview Разделы профиля пользователя с общим подвижным питомцем.
  * @module pages/profile
  */
 
@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link, useLocation, useSearch } from 'wouter';
 import { ExternalLink, FolderOpen, LogOut, Monitor, RefreshCw, ShieldCheck, UserRound } from 'lucide-react';
 import { AppSidebar } from '@/components/editor/app-sidebar';
+import { StartPet } from '@/components/editor/no-projects/StartPet';
 import { ActiveSessionsCard } from '@/components/profile/active-sessions-card';
 import { InterfaceSettingsCard } from '@/components/profile/interface-settings-card';
 import { Button } from '@/components/ui/button';
@@ -109,6 +110,7 @@ export default function ProfilePage() {
           </div>
         </div>
       </main>
+      <StartPet tab={section} />
     </div>
   );
 }

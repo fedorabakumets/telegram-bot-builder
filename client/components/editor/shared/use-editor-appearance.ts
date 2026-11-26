@@ -1,15 +1,18 @@
 /** @fileoverview Параметры оформления редактора для текущего браузера. */
 import { useSyncExternalStore } from 'react';
 
-/** Каждый параметр включён по умолчанию, его значение сохраняется отдельно. */
-type AppearanceKey = 'blockLabels' | 'coloredIcons' | 'underlineTabs';
+/** Ключи независимо сохраняемых параметров оформления. */
+type AppearanceKey = 'blockLabels' | 'coloredIcons' | 'underlineTabs' | 'miniVisible' | `miniTab-${string}`;
 const prefix = 'botcraft-editor-appearance-';
 const fallback = new Map<AppearanceKey, boolean>();
 
 /** Читает параметр из хранилища или памяти при ограниченном доступе. */
 function read(key: AppearanceKey): boolean {
-  try { return window.localStorage.getItem(prefix + key) !== 'false'; }
-  catch { return fallback.get(key) ?? true; }
+  const defaultValue = key !== 'miniTab-editor';
+  try {
+    const value = window.localStorage.getItem(prefix + key);
+    return value === null ? defaultValue : value !== 'false';
+  } catch { return fallback.get(key) ?? defaultValue; }
 }
 
 /** Подписывает редактор на изменения в текущей и соседних вкладках. */
@@ -24,7 +27,12 @@ function subscribe(listener: () => void) {
 
 /** Возвращает текущее значение выбранного параметра оформления. */
 export function useEditorAppearance(key: AppearanceKey) {
-  return useSyncExternalStore(subscribe, () => read(key), () => true);
+  return useSyncExternalStore(subscribe, () => read(key), () => key !== 'miniTab-editor');
+}
+
+/** Проверяет, включены ли все выбранные параметры оформления. */
+export function useAllEditorAppearance(keys: readonly AppearanceKey[]) {
+  return useSyncExternalStore(subscribe, () => keys.every(read), () => !keys.includes('miniTab-editor'));
 }
 
 /** Сохраняет параметр и уведомляет открытый редактор. */

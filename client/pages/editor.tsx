@@ -1,5 +1,5 @@
 /**
- * @fileoverview Компонент редактора бота
+ * @fileoverview Редактор бота с общим подвижным питомцем на всех вкладках проекта.
  *
  * Этот компонент предоставляет основной интерфейс для создания и редактирования
  * телеграм-ботов с использованием визуального редактора узлов.
@@ -10,6 +10,7 @@
 import { useCodeGenerator as useCodeGeneratorServer } from '@/components/editor/code/hooks';
 import type { CodeFormat } from '@/components/editor/code/hooks';
 import { AppSidebar } from '@/components/editor/app-sidebar';
+import { StartPet } from '@/components/editor/no-projects/StartPet';
 import { useSidebarState } from '@/components/editor/app-sidebar/hooks/use-sidebar-state';
 import { ComponentsSidebar } from '@/components/editor/sidebar/components-sidebar';
 import { PropertiesPanel } from '@/components/editor/properties/components/main/properties-panel';
@@ -2594,6 +2595,8 @@ export default function Editor() {
         />
         </UserMessagesLiveProvider>
       )}
+
+      <StartPet tab={currentTab} />
 
       {showLayoutManager && (
         <LayoutManager

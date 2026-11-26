@@ -1,10 +1,11 @@
-/** @fileoverview Настройки интерфейса профиля с сохранением в текущем браузере. */
+/** @fileoverview Настройки оформления, навигации и видимости Mini в этом браузере. */
 import { useTheme } from '@/components/editor/header/utils/theme-provider';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { WorkspaceLayoutSettings } from './workspace-layout-settings';
+import { MiniVisibilitySetting } from './mini-visibility-setting';
 import { setSidebarPosition, sidebarPositions, useSidebarPosition } from '@/components/editor/app-sidebar/hooks/use-sidebar-position';
 
 /** Состояние боковой панели передаёт профиль. */
@@ -61,6 +62,7 @@ export function InterfaceSettingsCard({ isSidebarCollapsed, onToggleSidebar, pre
           <Switch id="profile-interface-sidebar" checked={isSidebarCollapsed} onCheckedChange={onToggleSidebar}
             disabled={sidebarPosition === 'top' || sidebarPosition === 'bottom'} />
         </div>
+        <MiniVisibilitySetting />
         <WorkspaceLayoutSettings projectId={previewProjectId} />
       </CardContent>
     </Card>
