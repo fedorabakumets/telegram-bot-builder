@@ -1943,10 +1943,10 @@
 #combo-left-panel [data-compact-palette] {
   position: absolute;
   z-index: 60;
-  inset: 3.5rem auto auto .75rem;
+  inset: calc(var(--canvas-toolbar-bottom, 3rem) + .5rem) auto auto .75rem;
   width: min(21rem, 48cqw);
   height: auto;
-  max-height: calc(100% - 5rem);
+  max-height: calc(100% - var(--canvas-toolbar-bottom, 3rem) - 1rem);
   border: 1px solid var(--border);
   border-radius: .75rem;
   box-shadow: 0 2px 8px #0002;

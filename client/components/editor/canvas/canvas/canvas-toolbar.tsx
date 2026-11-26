@@ -198,11 +198,24 @@ export function CanvasToolbar({
   useLayoutEffect(() => {
     const toolbar = toolbarRef.current;
     if (!toolbar) return;
-    const measure = () => setWidth(toolbar.clientWidth);
+    const group = toolbar.closest('#combo-center-panel')?.parentElement;
+    const canvas = toolbar.closest('main');
+    /** Привязывает плавающий поиск к нижнему краю панели инструментов холста. */
+    const measure = () => {
+      setWidth(toolbar.clientWidth);
+      if (group) {
+        const bottom = toolbar.getBoundingClientRect().bottom - group.getBoundingClientRect().top;
+        group.style.setProperty('--canvas-toolbar-bottom', `${bottom}px`);
+      }
+    };
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(toolbar);
-    return () => observer.disconnect();
+    if (canvas) observer.observe(canvas);
+    return () => {
+      observer.disconnect();
+      group?.style.removeProperty('--canvas-toolbar-bottom');
+    };
   }, []);
 
   const roomy = width >= 520;
