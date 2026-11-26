@@ -7,7 +7,7 @@
 import { AutoTransitionSection } from '../navigation/auto-transition-section';
 import type { Node } from '@shared/schema';
 
-/** Пропсы компонента */
+/** Параметры узла для отображения автоперехода. */
 interface AutoTransitionWrapperProps {
   /** Выбранный узел */
   selectedNode: Node;
@@ -15,10 +15,6 @@ interface AutoTransitionWrapperProps {
   getAllNodesFromAllSheets: any[];
   /** Функция обновления данных узла */
   onNodeUpdate: (nodeId: string, updates: Partial<any>) => void;
-  /** Флаг открытости секции */
-  isOpen: boolean;
-  /** Функция переключения открытости */
-  onToggle: () => void;
   /** Тип клавиатуры */
   keyboardType?: string;
   /** Флаг сбора пользовательского ввода */
@@ -35,8 +31,6 @@ export function AutoTransitionWrapper({
   selectedNode,
   getAllNodesFromAllSheets,
   onNodeUpdate,
-  isOpen,
-  onToggle,
   keyboardType,
   collectUserInput
 }: AutoTransitionWrapperProps) {
