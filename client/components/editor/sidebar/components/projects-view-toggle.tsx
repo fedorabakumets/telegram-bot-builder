@@ -3,6 +3,8 @@
  * @module components/editor/sidebar/components/projects-view-toggle
  */
 
+import { useEditorAppearance } from '../../shared/use-editor-appearance';
+
 /** Режим отображения списка проектов */
 export type ProjectsViewMode = 'active' | 'archived';
 
@@ -22,30 +24,23 @@ export interface ProjectsViewToggleProps {
  * @returns JSX элемент переключателя
  */
 export function ProjectsViewToggle({ value, onChange }: ProjectsViewToggleProps) {
+  const activeStyle = useEditorAppearance('underlineTabs')
+    ? 'text-foreground underline decoration-2 underline-offset-4'
+    : 'bg-blue-600 text-white';
+
   return (
-    <div className="flex space-x-1 bg-gradient-to-r from-slate-200/40 to-slate-100/20 dark:from-slate-800/40 dark:to-slate-700/20 rounded-lg p-1 backdrop-blur-sm border border-slate-300/20 dark:border-slate-600/20">
-      <button
-        type="button"
-        onClick={() => onChange('active')}
-        className={`flex-1 px-2 py-1.5 text-xs font-semibold rounded-md transition-all duration-200 ${
-          value === 'active'
-            ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/30'
-            : 'text-muted-foreground hover:text-foreground hover:bg-white/40 dark:hover:bg-slate-700/30'
-        }`}
-      >
-        Активные
-      </button>
-      <button
-        type="button"
-        onClick={() => onChange('archived')}
-        className={`flex-1 px-2 py-1.5 text-xs font-semibold rounded-md transition-all duration-200 ${
-          value === 'archived'
-            ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/30'
-            : 'text-muted-foreground hover:text-foreground hover:bg-white/40 dark:hover:bg-slate-700/30'
-        }`}
-      >
-        Архив
-      </button>
+    <div role="group" aria-label="Фильтр проектов" className="flex gap-1">
+      {(['active', 'archived'] as const).map(mode => (
+        <button
+          key={mode}
+          type="button"
+          aria-pressed={value === mode}
+          onClick={() => onChange(mode)}
+          className={`min-w-0 flex-1 rounded px-1 py-1 text-xs font-semibold focus-visible:ring-2 focus-visible:ring-ring ${value === mode ? activeStyle : 'text-muted-foreground hover:text-foreground'}`}
+        >
+          {mode === 'active' ? 'Активные' : 'Архив'}
+        </button>
+      ))}
     </div>
   );
 }

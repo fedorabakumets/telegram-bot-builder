@@ -1,5 +1,5 @@
 /**
- * @fileoverview Секция настроек сбора ответов и управления связью `message` с `input`-узлом.
+ * @fileoverview Панель настроек сбора ответов и управления связью `message` с `input`-узлом.
  */
 
 import { useEffect, useMemo, useRef } from 'react';
@@ -184,7 +184,7 @@ export function UserInputSettingsSection({
   return (
     <div className="w-full bg-gradient-to-br from-blue-50/40 to-cyan-50/20 dark:from-blue-950/30 dark:to-cyan-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-blue-200/40 dark:border-blue-800/40 backdrop-blur-sm">
       <SectionHeader
-        title={isMessageNode ? 'Ответ пользователя' : 'Сбор ответов'}
+        title={isMessageNode ? 'Сохранить ответ пользователя' : 'Сбор ответов'}
         description={isMessageNode ? 'Управление связанным узлом сохранения ответа' : 'Собирать ввод пользователя в переменные'}
         isOpen={isOpen}
         onToggle={onToggle}
@@ -195,8 +195,8 @@ export function UserInputSettingsSection({
       />
 
       {isOpen && (
-        <div className={`space-y-3 sm:space-y-4 rounded-xl p-3 sm:p-4 md:p-5 border ${isMessageNode ? 'bg-gradient-to-br from-cyan-50/40 to-sky-50/20 dark:from-cyan-950/15 dark:to-sky-950/5 border-cyan-200/25 dark:border-cyan-800/25' : 'bg-gradient-to-br from-blue-50/40 to-indigo-50/20 dark:from-blue-950/15 dark:to-indigo-950/5 border-blue-200/25 dark:border-blue-800/25'}`}>
-          <div className="flex items-center justify-between gap-3 rounded-xl border border-white/40 dark:border-slate-800/50 bg-white/70 dark:bg-slate-950/30 px-3 py-3">
+        <div className="space-y-3 border-t border-border pt-3">
+          <div className="flex items-center justify-between gap-3">
             <div className="space-y-0.5">
               <Label className="text-sm font-medium">{isMessageNode ? 'Сбор ответа' : 'Сбор ответа'}</Label>
               <p className="text-xs text-slate-500 dark:text-slate-400">

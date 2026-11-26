@@ -2,6 +2,8 @@
  * @fileoverview Панель свойств узлов редактора с нижней секцией linked-input для message.
  */
 
+import './properties-panel-appearance.css';
+import { useEditorAppearance } from '@/components/editor/shared/use-editor-appearance';
 import type { NodeDataPatch } from '../../types/node-data-patch';
 import { Node, Button } from '@shared/schema';
 import { getCommandSuggestions, STANDARD_COMMANDS } from '@lib/commands';
@@ -64,6 +66,9 @@ import { FoursquareIntegrationSection } from '../configuration/foursquare-integr
 import { MapServicesSection } from '../configuration/map-services-section';
 import { BroadcastNodeProperties } from '../broadcast/broadcast-properties';
 import { ClientAuthProperties } from '../client-auth/client-auth-properties';
+import { TriggerTargetSelector } from '../trigger/TriggerTargetSelector';
+import { TransitionDelayField } from '../navigation/transition-delay-field';
+import { AutoTransitionSection } from '../navigation/auto-transition-section';
 import { MediaNodeProperties } from './media-node-properties';
 import { HttpRequestConfiguration } from '../configuration/http-request-configuration';
 import { ApiResponseConfiguration } from '../configuration/api-response-configuration';
@@ -168,7 +173,6 @@ export function PropertiesPanel({
   allNodes = [],
   onNodeUpdate,
   onNodeDataReplace,
-  onNodeTypeChange,
   onNodeIdChange,
   onButtonAdd,
   onButtonUpdate,
@@ -182,6 +186,7 @@ export function PropertiesPanel({
   onSaveProject,
   focusButtonId,
 }: PropertiesPanelProps) {
+  const coloredIcons = useEditorAppearance('coloredIcons');
   const [commandInput, setCommandInput] = useState('');
   const [showCommandSuggestions, setShowCommandSuggestions] = useState(false);
   const [isBasicSettingsOpen, setIsBasicSettingsOpen] = useState(false);
@@ -301,6 +306,8 @@ export function PropertiesPanel({
   /**
    * РњРµРјРѕРёР·РёСЂРѕРІР°РЅРЅС‹Рµ С‚РµРєСЃС‚РѕРІС‹Рµ Рё РјРµРґРёР° РїРµСЂРµРјРµРЅРЅС‹Рµ
    */
+  const delayTarget = getAllNodesFromAllSheets.find(({ node }) => node.id === selectedNode?.data.autoTransitionTo)?.node;
+
   const { textVariables, mediaVariables } = useMemo(() => extractVariables(allNodes, botTables), [allNodes, botTables]);
 
   /**
@@ -351,10 +358,9 @@ export function PropertiesPanel({
 
   if (selectedNode.type === 'keyboard') {
     return (
-      <aside className="w-full h-full bg-background border-l border-border flex flex-col shadow-lg md:shadow-none overflow-hidden" data-properties-panel>
+      <aside className="w-full h-full bg-background border-l border-border flex flex-col shadow-lg md:shadow-none overflow-hidden" data-properties-panel data-colored-icons={coloredIcons}>
         <PropertiesHeader
           selectedNode={selectedNode}
-          onNodeTypeChange={onNodeTypeChange}
           onClose={onClose}
           displayNodeId={displayNodeId}
           {...headerFooterProps}
@@ -378,6 +384,7 @@ export function PropertiesPanel({
             onButtonDelete={onButtonDelete}
           />
           )}
+
         </div>
         <PropertiesFooterWrapper
           selectedNode={selectedNode}
@@ -392,10 +399,9 @@ export function PropertiesPanel({
 
   if (selectedNode.type === 'input') {
     return (
-      <aside className="w-full h-full bg-background border-l border-border flex flex-col shadow-lg md:shadow-none overflow-hidden" data-properties-panel>
+      <aside className="w-full h-full bg-background border-l border-border flex flex-col shadow-lg md:shadow-none overflow-hidden" data-properties-panel data-colored-icons={coloredIcons}>
         <PropertiesHeader
           selectedNode={selectedNode}
-          onNodeTypeChange={onNodeTypeChange}
           onClose={onClose}
           displayNodeId={displayNodeId}
           {...headerFooterProps}
@@ -432,11 +438,10 @@ export function PropertiesPanel({
   }
 
   return (
-    <aside className="w-full h-full bg-background border-l border-border flex flex-col shadow-lg md:shadow-none overflow-hidden" data-properties-panel>
+    <aside className="w-full h-full bg-background border-l border-border flex flex-col shadow-lg md:shadow-none overflow-hidden" data-properties-panel data-colored-icons={coloredIcons}>
       {/* Properties Header */}
       <PropertiesHeader
         selectedNode={selectedNode}
-        onNodeTypeChange={onNodeTypeChange}
         onClose={onClose}
         displayNodeId={displayNodeId}
         {...headerFooterProps}
@@ -452,7 +457,7 @@ export function PropertiesPanel({
             onApply={applyJson}
           />
         ) : (
-        <div className="space-y-0">
+        <div className="properties-sections min-w-0 space-y-1 px-2 py-1.5">
 
           {/* Basic Settings Section - СЃРєСЂС‹С‚Рѕ РґР»СЏ СѓР·Р»Р° СЂР°СЃСЃС‹Р»РєР°, client_auth, С‚СЂРёРіРіРµСЂРѕРІ, СѓСЃР»РѕРІРёСЏ Рё РјРµРґРёР°-РЅРѕРґС‹ */}
           {selectedNode.type !== 'broadcast' && selectedNode.type !== 'client_auth' && selectedNode.type !== 'media' && (selectedNode.type as any) !== 'http_request' && (selectedNode.type as any) !== 'api_response' && (selectedNode.type as any) !== 'get_managed_bot_token' && (selectedNode.type as any) !== 'answer_callback_query' && (selectedNode.type as any) !== 'edit_message' && (selectedNode.type as any) !== 'delete_message' && (selectedNode.type as any) !== 'kick_user' && (selectedNode.type as any) !== 'set_variable' && (selectedNode.type as any) !== 'psql_query' && (selectedNode.type as any) !== 'convert_file' && (selectedNode.type as any) !== 'loop' && (selectedNode.type as any) !== 'bot_table' && (selectedNode.type as any) !== 'delay' && (selectedNode.type as any) !== 'send_invoice' && (selectedNode.type as any) !== 'create_invoice_link' && (selectedNode.type as any) !== 'refund_stars' && (selectedNode.type as any) !== 'edit_star_subscription' && (selectedNode.type as any) !== 'get_star_balance' && (selectedNode.type as any) !== 'code' && (selectedNode.type as any) !== 'userbot_message' && (selectedNode.type as any) !== 'userbot_click_button' && (selectedNode.type as any) !== 'userbot_inline_query' && (selectedNode.type as any) !== 'parallel_split' && (selectedNode.type as any) !== 'stop_processing' && (selectedNode.type as any) !== 'rate_counter' && (selectedNode.type as any) !== 'comment' && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && (
@@ -858,7 +863,7 @@ export function PropertiesPanel({
 
           {/* Trigger Section - С‚РѕР»СЊРєРѕ РґР»СЏ СѓР·Р»РѕРІ-С‚СЂРёРіРіРµСЂРѕРІ */}
           {isTriggerNode(selectedNode.type) && selectedNode.type === 'command_trigger' && (
-            <CommandTriggerConfiguration
+            <CommandTriggerConfiguration separateTarget
               selectedNode={selectedNode}
               onNodeUpdate={onNodeUpdate}
               getAllNodesFromAllSheets={getAllNodesFromAllSheets}
@@ -1148,6 +1153,7 @@ export function PropertiesPanel({
           </div>
         )}
 
+
         {/* Universal User Input Collection - скрыто для узлов управления, триггеров, условия и медиа-нодов */}
           {!isManagementNode(selectedNode.type) && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && selectedNode.type !== 'media' && (selectedNode.type as any) !== 'http_request' && (selectedNode.type as any) !== 'api_response' && (selectedNode.type as any) !== 'get_managed_bot_token' && (selectedNode.type as any) !== 'answer_callback_query' && (selectedNode.type as any) !== 'edit_message' && (selectedNode.type as any) !== 'set_variable' && (
             <UserInputSettingsSection
@@ -1168,7 +1174,20 @@ export function PropertiesPanel({
           isOpen={isAdvancedSettingsOpen}
           onToggle={() => setIsAdvancedSettingsOpen(!isAdvancedSettingsOpen)}
         />
+        {['message', 'start', 'command'].includes(selectedNode.type) && !selectedNode.data.collectUserInput && (selectedNode.data.keyboardType || 'none') === 'none' && (
+          <AutoTransitionSection selectedNode={selectedNode} getAllNodesFromAllSheets={getAllNodesFromAllSheets} onNodeUpdate={onNodeUpdate} />
+        )}
+        {selectedNode.type === 'command_trigger' && (
+          <TriggerTargetSelector selectedNode={selectedNode} autoTransitionTo={selectedNode.data.autoTransitionTo}
+            getAllNodesFromAllSheets={getAllNodesFromAllSheets} onNodeUpdate={onNodeUpdate} formatNodeDisplay={formatNodeDisplay} />
+        )}
 
+        {onNodeAdd && (selectedNode.type === 'command_trigger' || (
+          ['message', 'start', 'command'].includes(selectedNode.type) && selectedNode.data.enableAutoTransition
+          && !selectedNode.data.collectUserInput && (selectedNode.data.keyboardType || 'none') === 'none'
+        )) && delayTarget && delayTarget.type !== 'delay' && (
+          <TransitionDelayField key={selectedNode.id} source={selectedNode} target={delayTarget} add={onNodeAdd} update={onNodeUpdate} />
+        )}
         </div>
         )}
       </div>

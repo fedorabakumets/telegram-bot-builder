@@ -8,7 +8,7 @@ import { ComponentDefinition } from "@shared/schema";
 /** Триггер исходящего сообщения — срабатывает когда бот отправляет сообщение */
 export const outgoingMessageTrigger: ComponentDefinition = {
   id: 'outgoing-message-trigger',
-  name: 'Триггер исходящего сообщения',
+  name: 'Когда бот отправляет сообщение',
   description: 'Срабатывает когда бот отправляет сообщение в чат. Работает параллельно с основным потоком.',
   icon: 'fas fa-paper-plane',
   color: 'bg-purple-100 text-purple-600',

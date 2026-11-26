@@ -1764,6 +1764,46 @@ export default function Editor() {
   }
 
   // Функция рендеринга содержимого для гибкого макета
+  /** Общая палитра для мобильного холста и боковой панели на планшете. */
+  const mobileSidebar = (
+    <ComponentsSidebar
+      onComponentDrag={handleComponentDrag}
+      onComponentAdd={handleComponentAdd}
+      onLayoutChange={updateLayoutConfig}
+      onGoToProjects={handleGoToProjects}
+      onProjectSelect={handleProjectSelect}
+      currentProjectId={activeProject?.id}
+      activeSheetId={botDataWithSheets?.activeSheetId}
+      onToggleCanvas={handleToggleCanvas}
+      onToggleHeader={handleToggleHeader}
+      onToggleProperties={handleToggleProperties}
+      onShowFullLayout={() => {
+        setFlexibleLayoutConfig(prev => ({
+          ...prev,
+          elements: prev.elements.map(element => ({ ...element, visible: true }))
+        }))
+      }}
+      canvasVisible={flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible ?? true}
+      headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
+      propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
+      showLayoutButtons={!flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible && !flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible}
+      onSheetAdd={handleSheetAdd}
+      onSheetDelete={handleSheetDelete}
+      onSheetRename={handleSheetRename}
+      onSheetDuplicate={handleSheetDuplicate}
+      onSheetSelect={handleSheetSelect}
+      isMobile={isMobile}
+      mobilePaletteOpen={isMobile ? showMobileSidebar : undefined}
+      onMobilePaletteChange={setShowMobileSidebar}
+      onClose={() => setShowMobileSidebar(false)}
+      onNodeFocus={(nodeId, buttonId) => {
+        handleNodeFocusWithUrl(nodeId, buttonId);
+        setShowMobileSidebar(false);
+        setShowMobileProperties(true);
+      }}
+    />
+  );
+
   const renderFlexibleLayoutContent = () => {
     /** В этом макете основные переходы и действия уже выведены в AppSidebar. */
     const headerContent = (
@@ -1956,7 +1996,8 @@ export default function Editor() {
                 sidebarVisible={flexibleLayoutConfig.elements.find(el => el.id === 'sidebar')?.visible ?? true}
                 propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
                 canvasVisible={flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible ?? true}
-                onOpenMobileSidebar={handleOpenMobileSidebar}
+                mobilePalette={isMobile ? mobileSidebar : undefined}
+                  onOpenMobileSidebar={isMobile ? undefined : handleOpenMobileSidebar}
                 onOpenMobileProperties={handleOpenMobileProperties}
                 onNodeSizesChange={handleNodeSizesChange}
                 onActionLog={handleActionLog}
@@ -2418,7 +2459,8 @@ export default function Editor() {
                   sidebarVisible={flexibleLayoutConfig.elements.find(el => el.id === 'sidebar')?.visible ?? true}
                   propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
                   canvasVisible={flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible ?? true}
-                  onOpenMobileSidebar={handleOpenMobileSidebar}
+                  mobilePalette={isMobile ? mobileSidebar : undefined}
+                  onOpenMobileSidebar={isMobile ? undefined : handleOpenMobileSidebar}
                   onActionLog={handleActionLog}
                   actionHistory={actionHistory}
                   onActionHistoryRemove={(ids) => setActionHistory((prev: ActionHistoryItem[]) => prev.filter(a => !ids.has(a.id)))}
@@ -2571,46 +2613,13 @@ export default function Editor() {
 
 
       {/* Мобильный sidebar */}
-      <Sheet open={showMobileSidebar && currentTab === 'editor'} onOpenChange={setShowMobileSidebar}>
+      <Sheet open={!isMobile && showMobileSidebar && currentTab === 'editor'} onOpenChange={setShowMobileSidebar}>
         <SheetContent side="left" className="p-0 w-80 [&>button[data-testid='button-sheet-close']]:hidden" aria-describedby={undefined}>
           <SheetHeader className="sr-only">
             <SheetTitle>Компоненты</SheetTitle>
           </SheetHeader>
           <div className="h-full overflow-auto">
-            <ComponentsSidebar
-              onComponentDrag={handleComponentDrag}
-              onComponentAdd={handleComponentAdd}
-              onLayoutChange={updateLayoutConfig}
-              onGoToProjects={handleGoToProjects}
-              onProjectSelect={handleProjectSelect}
-              currentProjectId={activeProject?.id}
-              activeSheetId={botDataWithSheets?.activeSheetId}
-              onToggleCanvas={handleToggleCanvas}
-              onToggleHeader={handleToggleHeader}
-              onToggleProperties={handleToggleProperties}
-              onShowFullLayout={() => {
-                setFlexibleLayoutConfig(prev => ({
-                  ...prev,
-                  elements: prev.elements.map(element => ({ ...element, visible: true }))
-                }))
-              }}
-              canvasVisible={flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible ?? true}
-              headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
-              propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
-              showLayoutButtons={!flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible && !flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible}
-              onSheetAdd={handleSheetAdd}
-              onSheetDelete={handleSheetDelete}
-              onSheetRename={handleSheetRename}
-              onSheetDuplicate={handleSheetDuplicate}
-              onSheetSelect={handleSheetSelect}
-              isMobile={isMobile}
-              onClose={() => setShowMobileSidebar(false)}
-              onNodeFocus={(nodeId, buttonId) => {
-                handleNodeFocusWithUrl(nodeId, buttonId);
-                setShowMobileSidebar(false);
-                setShowMobileProperties(true);
-              }}
-            />
+            {mobileSidebar}
           </div>
         </SheetContent>
       </Sheet>

@@ -28,7 +28,7 @@ import { useSidebarTouch } from './hooks/use-sidebar-touch';
 import { useSidebarFileUpload } from './hooks/use-sidebar-file-upload';
 import { useProjectsQuery } from './hooks/use-projects-query';
 import { useArchiveProjectMutation } from './hooks/use-archive-project-mutation';
-import type { ProjectsViewMode } from './components/projects-view-toggle';
+import { ProjectsViewToggle, type ProjectsViewMode } from './components/projects-view-toggle';
 import { useCreateProjectMutation } from './hooks/use-create-project-mutation';
 import { useDeleteProjectMutation } from './hooks/use-delete-project-mutation';
 import { useDuplicateProjectMutation } from './hooks/use-duplicate-project-mutation';
@@ -40,9 +40,10 @@ import { ComponentsTab } from './components/components-tab';
 import { SidebarHeader } from './components/sidebar-header';
 import { ImportDialog } from './components/import-dialog';
 
+import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
-import { Home, Plus } from 'lucide-react';
+import { Blocks, Home, Play, Plus, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useDisabledNodeTypes } from '@/hooks/use-disabled-node-types';
 import { apiRequest } from '@/queryClient';
@@ -74,6 +75,8 @@ export function ComponentsSidebar({
   onSheetDuplicate,
   onSheetSelect,
   isMobile = false,
+  mobilePaletteOpen,
+  onMobilePaletteChange,
   onClose,
   onNodeFocus,
 }: ComponentsSidebarProps) {
@@ -142,14 +145,13 @@ export function ComponentsSidebar({
 
   // Рефы для импорта файлов
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const pythonFileInputRef = useRef<HTMLInputElement>(null);
 
   const isActuallyMobile = useIsMobile();
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
   // Хук загрузки файлов
-  const { handleFileUpload, handlePythonFileUpload } = useSidebarFileUpload({
+  const { handleFileUpload } = useSidebarFileUpload({
     setImportJsonText,
     setImportPythonText,
     setImportError,
@@ -325,12 +327,59 @@ export function ComponentsSidebar({
     }
   }, [projects, queryClient, toast]);
 
+  /** Помнит, что проекты открыли из плавающей строки поиска. */
+  const projectsFromSearch = useRef(false);
+  /** Сохраняет состояние раскрытия списка проектов в мини-панели. */
+  const [desktopProjectsOpen, setDesktopProjectsOpen] = useState(true);
+  const [desktopSearchOpen, setDesktopSearchOpen] = useState(false);
+
+  /** На телефоне обе вкладки раскрываются в одной панели над холстом. */
+  const mobilePalette = mobilePaletteOpen !== undefined;
+  const projectsOpen = mobilePaletteOpen ?? desktopProjectsOpen;
+  const paletteSearchOpen = mobilePaletteOpen ?? desktopSearchOpen;
+  const setProjectsOpen = mobilePalette && onMobilePaletteChange || setDesktopProjectsOpen;
+  const setPaletteSearchOpen = mobilePalette && onMobilePaletteChange || setDesktopSearchOpen;
+
+  /** На десктопе свёрнутая палитра занимает высоту списка, включая результаты поиска. */
+  const fitPalette = !isActuallyMobile && !isMobile && currentTab === 'elements'
+    && visibleCategories.every(category => collapsedCategories.has(category.title));
+
+  const floatingProjects = currentTab === 'projects' && (mobilePalette || (!isActuallyMobile && !isMobile && projectsFromSearch.current));
+  /** Фильтрует названия в выбранном списке активных или архивных проектов. */
+  const [projectQuery, setProjectQuery] = useState('');
+  const query = floatingProjects ? projectQuery.trim().toLowerCase() : '';
+  const visibleProjects = projects.filter(project => project.name.toLowerCase().includes(query));
+  /** Возвращает из проектов к раскрытому списку элементов. */
+  function showElements() {
+    projectsFromSearch.current = false;
+    setPaletteSearchOpen(true);
+    setCurrentTab('elements');
+  }
   const sidebarContent = (
-    <div className="h-full flex flex-col overflow-hidden">
+    <div className={`flex min-h-0 flex-col overflow-hidden ${fitPalette ? "max-h-full" : "h-full"}`}>
       {/* Sidebar Header */}
-      <SidebarHeader
+      {floatingProjects ? (
+        <div data-component-search className="relative flex shrink-0 items-center gap-1 p-2">
+          <Search aria-hidden="true" className="pointer-events-none absolute left-4 size-3.5 text-muted-foreground" />
+          <Input type="search" aria-label="Поиск проектов" placeholder="Поиск проектов..."
+            className="h-8 min-w-0 pl-7 pr-1 text-xs" value={projectQuery}
+            onFocus={() => setProjectsOpen(true)} onClick={() => setProjectsOpen(true)}
+            onChange={event => setProjectQuery(event.target.value)} />
+          <Button type="button" variant="ghost" size="icon" className="size-8 shrink-0" onClick={showElements}
+            aria-label="К элементам" title="К элементам">
+            <Blocks aria-hidden="true" className="size-4" />
+          </Button>
+          <button type="button" aria-expanded={projectsOpen}
+            aria-label={projectsOpen ? 'Свернуть список проектов' : 'Раскрыть список проектов'}
+            title={projectsOpen ? 'Свернуть список проектов' : 'Раскрыть список проектов'}
+            className="inline-flex h-8 w-7 shrink-0 items-center justify-center rounded bg-muted text-muted-foreground hover:text-foreground"
+            onClick={() => setProjectsOpen(!projectsOpen)}>
+            <Play aria-hidden="true" className={projectsOpen ? 'size-3 rotate-180 fill-current' : 'size-3 fill-current'} />
+          </button>
+        </div>
+      ) : <SidebarHeader
         currentTab={currentTab}
-        onTabChange={setCurrentTab}
+        onTabChange={(tab) => { if (tab === 'elements') projectsFromSearch.current = false; setPaletteSearchOpen(false); setCurrentTab(tab); }}
         showLayoutButtons={showLayoutButtons}
         canvasVisible={canvasVisible}
         headerVisible={headerVisible}
@@ -339,38 +388,43 @@ export function ComponentsSidebar({
         onToggleHeader={onToggleHeader}
         onToggleProperties={onToggleProperties}
         onShowFullLayout={onShowFullLayout}
-        onClose={onClose}
+        onClose={projectsFromSearch.current ? () => {
+          projectsFromSearch.current = false;
+          setPaletteSearchOpen(false);
+          setCurrentTab('elements');
+        } : onClose}
         projectsView={projectsView}
         onProjectsViewChange={setProjectsView}
-      />
+      />}
 
-      {/* Components List — скролл-контейнер без padding-top, чтобы sticky-заголовки прилипали вплотную к табам */}
-      <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-4">
+      {/** Боковые отступы палитры задаёт вкладка элементов. */}
+      <div hidden={floatingProjects && !projectsOpen} className={`min-h-0 overflow-y-auto space-y-4 ${fitPalette ? '' : 'flex-1'} ${currentTab === 'elements' ? '' : 'px-4 pb-4'}`}>
         {currentTab === 'projects' && (
           <div className="space-y-4 pt-3">
-            {/* Заголовок и кнопки управления */}
+            {floatingProjects && <ProjectsViewToggle value={projectsView} onChange={setProjectsView} />}
+            {/** Действия над списком располагаются под заголовком и переносятся по ширине панели. */}
             <div className="space-y-3 mb-4">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
-                <h3 className="text-base font-bold bg-gradient-to-r from-slate-700 to-slate-600 dark:from-slate-300 dark:to-slate-400 bg-clip-text text-transparent whitespace-nowrap">
-                  Проекты ({projects.length})
+              <div className="flex flex-col gap-2">
+                <h3 className="text-sm font-semibold text-foreground">
+                  Проекты ({visibleProjects.length})
                 </h3>
                 <div className="flex items-center gap-2 flex-wrap">
                   <Button
                     size="default"
                     variant="outline"
-                    className="h-9 px-3 flex items-center gap-1.5 font-semibold text-xs bg-gradient-to-r from-green-500/10 to-green-400/5 hover:from-green-600/20 hover:to-green-500/15 border-green-400/30 dark:border-green-500/30 hover:border-green-500/50 dark:hover:border-green-400/50 text-green-700 dark:text-green-300 rounded-lg transition-all hover:shadow-md hover:shadow-green-500/20"
+                    className="min-w-0 flex-1 h-8 px-2 gap-1.5 text-xs font-medium rounded-md"
                     onClick={handleCreateProject}
                     disabled={isCreatingProject}
                     title="Создать новый проект"
                     data-testid="button-create-project"
                   >
                     <Plus className="h-4 w-4" />
-                    <span>Новый</span>
+                    <span>Создать</span>
                   </Button>
                   <Button
                     size="default"
                     variant="outline"
-                    className="h-9 px-3 flex items-center gap-1.5 font-semibold text-xs bg-gradient-to-r from-blue-500/10 to-blue-400/5 hover:from-blue-600/20 hover:to-blue-500/15 border-blue-400/30 dark:border-blue-500/30 hover:border-blue-500/50 dark:hover:border-blue-400/50 text-blue-700 dark:text-blue-300 rounded-lg transition-all hover:shadow-md hover:shadow-blue-500/20"
+                    className="min-w-0 flex-1 h-8 px-2 gap-1.5 text-xs font-medium rounded-md"
                     onClick={() => {
                       openImportDialog();
                       setImportJsonText('');
@@ -397,9 +451,7 @@ export function ComponentsSidebar({
               onErrorChange={setImportError}
               onImport={handleImportProject}
               fileInputRef={fileInputRef}
-              pythonFileInputRef={pythonFileInputRef}
               onFileUpload={handleFileUpload}
-              onPythonFileUpload={handlePythonFileUpload}
             />
 
             {/* Список проектов */}
@@ -430,12 +482,14 @@ export function ComponentsSidebar({
                 </Button>
                 )}
               </div>
+            ) : visibleProjects.length === 0 ? (
+              <p className="py-3 text-sm text-muted-foreground" role="status">По вашему запросу проектов не найдено</p>
             ) : (
               <div
                 className="space-y-3"
                 onDragLeave={() => handleContainerDragLeave(setDragOverProject, setDragOverSheet)}
               >
-                {[...projects].sort((a, b) => {
+                {visibleProjects.sort((a, b) => {
                   if (a.id === currentProjectId) return -1;
                   if (b.id === currentProjectId) return 1;
                   return 0;
@@ -589,6 +643,9 @@ export function ComponentsSidebar({
             collapsedCategories={collapsedCategories}
             touchState={touchHook.touchState}
             onToggleCategory={toggleCategory}
+            searchOpen={paletteSearchOpen}
+            onSearchOpenChange={setPaletteSearchOpen}
+            onShowProjects={() => { projectsFromSearch.current = true; setPaletteSearchOpen(false); setProjectsOpen(true); setCurrentTab('projects'); }}
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
@@ -601,13 +658,15 @@ export function ComponentsSidebar({
   );
 
   // На мобильных устройствах возвращаем содержимое для использования в Sheet из editor.tsx
-  if (isActuallyMobile || isMobile) {
+  if (!mobilePalette && (isActuallyMobile || isMobile)) {
     return <>{sidebarContent}</>;
   }
 
   // Десктопная версия
   return (
-    <aside data-node-palette className="w-full bg-background h-full flex flex-col overflow-hidden">
+    <aside data-node-palette data-compact-palette={currentTab === 'elements' || floatingProjects || undefined} data-floating-projects={floatingProjects || undefined}
+      data-search-open={paletteSearchOpen || undefined}
+      className={`w-full bg-background flex flex-col overflow-hidden ${fitPalette ? 'max-h-full' : 'h-full'}`}>
       {sidebarContent}
     </aside>
   );

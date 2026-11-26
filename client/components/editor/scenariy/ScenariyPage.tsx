@@ -86,7 +86,7 @@ export default function ScenariyPage() {
 
   if (isError || isFeaturedError || isMyError) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-background dark:bg-[#08080a] flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-xl font-bold text-destructive mb-2">Ошибка загрузки сценариев</h2>
           <p className="text-muted-foreground mb-4">Обновите страницу и попробуйте снова.</p>
@@ -97,7 +97,7 @@ export default function ScenariyPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background dark:bg-[#08080a]">
       <ScenariyPageHeader
         backLabel={backLabel}
         learnActive={learn.active}

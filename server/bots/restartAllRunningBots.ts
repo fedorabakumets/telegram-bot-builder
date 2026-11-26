@@ -29,7 +29,7 @@ export interface TokenRestartResult {
 
 /** Итог перезапуска всех запущенных ботов проекта */
 export interface RestartAllRunningBotsResult {
-  /** У проекта нет подключённых ботов */
+  /** У проекта есть подключённые боты */
   ok: boolean;
   /** Сколько ботов снова запущено */
   restarted: number;
@@ -46,6 +46,7 @@ export interface RestartAllRunningBotsResult {
  * Выключенных не трогает. После остановки одна пауза, затем до пяти попыток параллельно.
  * Общий лимит пяти запусков и интервал допуска 250 мс применяет startBot.
  * @param projectId - Идентификатор проекта
+ * @param options - Наблюдатель за этапами перезапуска
  * @returns Итог: нет ботов, некого перезапускать или сводка по каждому
  */
 export async function restartAllRunningBots(

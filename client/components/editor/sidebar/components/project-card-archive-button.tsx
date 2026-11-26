@@ -1,5 +1,5 @@
 /**
- * @fileoverview Кнопка архивации/возврата проекта в карточке сайдбара
+ * @fileoverview Постоянно видимая кнопка архивации/возврата проекта в карточке сайдбара
  * @module components/editor/sidebar/components/project-card-archive-button
  */
 
@@ -44,7 +44,7 @@ export function ProjectCardArchiveButton({
           onArchive();
         }
       }}
-      className="h-6 w-6 xs:h-7 xs:w-7 sm:h-8 sm:w-8 p-0 text-slate-400 dark:text-slate-500 hover:text-amber-600 dark:hover:text-amber-400 opacity-0 group-hover:opacity-100 transition-all hover:bg-amber-500/20 rounded-md flex-shrink-0"
+      className="h-6 w-6 xs:h-7 xs:w-7 sm:h-8 sm:w-8 p-0 text-slate-400 dark:text-slate-500 hover:text-amber-600 dark:hover:text-amber-400 transition-colors hover:bg-amber-500/20 rounded-md flex-shrink-0"
       title={isArchivedView ? 'Вернуть из архива' : 'В архив'}
     >
       {isArchivedView ? (

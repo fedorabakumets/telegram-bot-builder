@@ -44,50 +44,51 @@ export function PaletteCategoryHeader({
   const isMain = variant === 'main';
   return (
     <button
+      aria-expanded={!collapsed}
       onClick={onToggle}
       className={cn(
-        'w-full flex items-start justify-between gap-2 sm:gap-3 px-2 sm:px-3 py-2 sm:py-2.5',
+        'w-full [container-type:inline-size] grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-1 gap-y-0.5 px-2 py-1.5',
         'rounded-lg sm:rounded-xl transition-all duration-200 group relative text-left',
-        'border hover:border-primary/30',
+        'border border-zinc-200 hover:border-zinc-300 dark:border-zinc-800 dark:hover:border-zinc-700 focus-visible:outline-zinc-500',
         isMain
-          ? 'bg-slate-200/90 dark:bg-slate-800 hover:bg-slate-300/80 dark:hover:bg-slate-700 border-slate-300/50 dark:border-slate-600/50'
-          : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border-slate-200/40 dark:border-slate-700/40 ml-1',
+          ? 'bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-900 dark:hover:bg-zinc-800'
+          : 'bg-zinc-50 hover:bg-zinc-100 dark:bg-zinc-950 dark:hover:bg-zinc-900',
       )}
       data-testid={testId}
     >
-      <div className="flex items-start gap-2 flex-1 min-w-0">
+      {/** В узкой карточке название получает всю строку, счётчик и стрелка располагаются ниже. */}
+      <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 min-w-0 [@container(max-width:9rem)]:contents">
         {icon && (
           <i
             className={cn(
               icon,
-              'text-sm flex-shrink-0 mt-0.5',
-              isMain ? 'text-primary' : 'text-muted-foreground',
+              'text-sm flex-shrink-0 mt-0.5 [@container(max-width:9rem)]:hidden',
+              'text-muted-foreground',
             )}
           />
         )}
-        <div className="min-w-0 flex-1 space-y-0.5">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className={cn('font-semibold break-words', isMain ? 'text-sm' : 'text-xs sm:text-sm')}>
+
+
+            <span className={cn('min-w-0 font-semibold [@container(max-width:9rem)]:col-span-full [@container(max-width:9rem)]:row-start-1 [overflow-wrap:anywhere]', isMain ? 'text-sm' : 'text-xs sm:text-sm')}>
               {title}
             </span>
-            <span className="text-xs normal-case bg-muted/60 dark:bg-slate-700/60 px-2 py-0.5 rounded-full font-semibold text-muted-foreground whitespace-nowrap flex-shrink-0 group-hover:bg-primary/20 group-hover:text-primary transition-colors">
+            <span className="justify-self-start text-xs normal-case bg-zinc-200 dark:bg-zinc-800 px-2 py-0.5 rounded-full font-semibold text-muted-foreground whitespace-nowrap flex-shrink-0 group-hover:text-foreground transition-colors">
               {count}
             </span>
-          </div>
-          {description ? (
-            <p className="text-[11px] sm:text-xs font-normal text-muted-foreground leading-snug break-words whitespace-normal">
-              {description}
-            </p>
-          ) : null}
-        </div>
       </div>
-      <div className="flex-shrink-0 p-1 rounded-md group-hover:bg-muted/50 transition-colors mt-0.5">
+      <div className="flex-shrink-0 rounded-md group-hover:bg-muted/50 transition-colors mt-0.5">
         {collapsed ? (
           <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
         ) : (
           <ChevronDown className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
         )}
       </div>
+      {/** Описание занимает всю ширину карточки, включая пространство под иконками. */}
+      {description && (
+        <span className="col-span-full text-xs font-normal leading-snug text-muted-foreground">
+          {description}
+        </span>
+      )}
     </button>
   );
 }

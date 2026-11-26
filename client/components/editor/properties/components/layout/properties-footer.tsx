@@ -69,11 +69,11 @@ export function PropertiesFooter({
   const applyDisabled = propertiesView === 'json' && Boolean(jsonError);
 
   return (
-    <div className="sticky bottom-0 p-2.5 sm:p-3 lg:p-4 border-t border-border/50 bg-gradient-to-r from-background via-background to-muted/5 dark:from-background dark:via-background dark:to-muted/2 backdrop-blur-sm">
-      <div className="flex flex-col xs:flex-row gap-2 xs:space-x-2">
+    <div className="sticky bottom-0 px-2 py-1.5 border-t border-border/50 bg-gradient-to-r from-background via-background to-muted/5 dark:from-background dark:via-background dark:to-muted/2 backdrop-blur-sm">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,6rem),1fr))] gap-1">
         <button
           type="button"
-          className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-medium rounded-md border border-input bg-background hover:bg-muted/80 dark:hover:bg-muted/60 transition-all duration-200 h-8 sm:h-9"
+          className="flex-1 inline-flex items-center justify-center gap-1.5 px-1 py-1 text-xs font-medium rounded-md border border-input bg-background hover:bg-muted/80 dark:hover:bg-muted/60 transition-all duration-200 h-8 sm:h-9"
           onClick={handleReset}
         >
           <i className="fas fa-redo-alt"></i>

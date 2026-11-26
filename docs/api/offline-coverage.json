@@ -159,56 +159,56 @@
     },
     {
       "file": "server/routes/projectTelegramAccounts/project-telegram-accounts-routes.ts",
-      "line": 108,
+      "line": 109,
       "method": "GET",
       "expression": "path",
       "resolvedPath": "/api/projects/{projectId}/telegram-accounts"
     },
     {
       "file": "server/routes/projectTelegramAccounts/project-telegram-accounts-routes.ts",
-      "line": 114,
+      "line": 115,
       "method": "POST",
       "expression": "path",
       "resolvedPath": "/api/projects/{projectId}/telegram-accounts"
     },
     {
       "file": "server/routes/projectTelegramAccounts/project-telegram-accounts-routes.ts",
-      "line": 116,
+      "line": 117,
       "method": "PUT",
       "expression": "`${path}/:accountId/bots`",
       "resolvedPath": "/api/projects/{projectId}/telegram-accounts/{accountId}/bots"
     },
     {
       "file": "server/routes/projectTelegramAccounts/project-telegram-accounts-routes.ts",
-      "line": 118,
+      "line": 119,
       "method": "PUT",
       "expression": "`${path}/:accountId/proxy`",
       "resolvedPath": "/api/projects/{projectId}/telegram-accounts/{accountId}/proxy"
     },
     {
       "file": "server/routes/projectTelegramAccounts/project-telegram-accounts-routes.ts",
-      "line": 124,
+      "line": 125,
       "method": "DELETE",
       "expression": "`${path}/:accountId`",
       "resolvedPath": "/api/projects/{projectId}/telegram-accounts/{accountId}"
     },
     {
       "file": "server/routes/projectTelegramAccounts/register-legacy-migration-cutover.ts",
-      "line": 51,
+      "line": 52,
       "method": "GET",
       "expression": "`${path}/operations`",
       "resolvedPath": "/api/projects/{projectId}/telegram-accounts/migration/operations"
     },
     {
       "file": "server/routes/projectTelegramAccounts/register-legacy-migration-cutover.ts",
-      "line": 63,
+      "line": 64,
       "method": "POST",
       "expression": "`${path}/apply`",
       "resolvedPath": "/api/projects/{projectId}/telegram-accounts/migration/apply"
     },
     {
       "file": "server/routes/projectTelegramAccounts/register-legacy-migration-cutover.ts",
-      "line": 109,
+      "line": 110,
       "method": "POST",
       "expression": "`${path}/rollback`",
       "resolvedPath": "/api/projects/{projectId}/telegram-accounts/migration/rollback"
@@ -320,7 +320,14 @@
     },
     {
       "file": "server/routes/setupBotManagementRoutes.ts",
-      "line": 102,
+      "line": 99,
+      "method": "POST",
+      "expression": "\"/api/projects/:id/bot/restart-all/jobs\"",
+      "resolvedPath": "/api/projects/{id}/bot/restart-all/jobs"
+    },
+    {
+      "file": "server/routes/setupBotManagementRoutes.ts",
+      "line": 104,
       "method": "PUT",
       "expression": "'/api/projects/:projectId/bot/launch-inheritance'",
       "resolvedPath": "/api/projects/{projectId}/bot/launch-inheritance"
@@ -1263,56 +1270,56 @@
     },
     {
       "file": "server/routes/projectTelegramAccounts/project-telegram-accounts-routes.ts",
-      "line": 108,
+      "line": 109,
       "method": "GET",
       "expression": "path",
       "resolvedPath": "/api/projects/{projectId}/telegram-accounts"
     },
     {
       "file": "server/routes/projectTelegramAccounts/project-telegram-accounts-routes.ts",
-      "line": 114,
+      "line": 115,
       "method": "POST",
       "expression": "path",
       "resolvedPath": "/api/projects/{projectId}/telegram-accounts"
     },
     {
       "file": "server/routes/projectTelegramAccounts/project-telegram-accounts-routes.ts",
-      "line": 116,
+      "line": 117,
       "method": "PUT",
       "expression": "`${path}/:accountId/bots`",
       "resolvedPath": "/api/projects/{projectId}/telegram-accounts/{accountId}/bots"
     },
     {
       "file": "server/routes/projectTelegramAccounts/project-telegram-accounts-routes.ts",
-      "line": 118,
+      "line": 119,
       "method": "PUT",
       "expression": "`${path}/:accountId/proxy`",
       "resolvedPath": "/api/projects/{projectId}/telegram-accounts/{accountId}/proxy"
     },
     {
       "file": "server/routes/projectTelegramAccounts/project-telegram-accounts-routes.ts",
-      "line": 124,
+      "line": 125,
       "method": "DELETE",
       "expression": "`${path}/:accountId`",
       "resolvedPath": "/api/projects/{projectId}/telegram-accounts/{accountId}"
     },
     {
       "file": "server/routes/projectTelegramAccounts/register-legacy-migration-cutover.ts",
-      "line": 51,
+      "line": 52,
       "method": "GET",
       "expression": "`${path}/operations`",
       "resolvedPath": "/api/projects/{projectId}/telegram-accounts/migration/operations"
     },
     {
       "file": "server/routes/projectTelegramAccounts/register-legacy-migration-cutover.ts",
-      "line": 63,
+      "line": 64,
       "method": "POST",
       "expression": "`${path}/apply`",
       "resolvedPath": "/api/projects/{projectId}/telegram-accounts/migration/apply"
     },
     {
       "file": "server/routes/projectTelegramAccounts/register-legacy-migration-cutover.ts",
-      "line": 109,
+      "line": 110,
       "method": "POST",
       "expression": "`${path}/rollback`",
       "resolvedPath": "/api/projects/{projectId}/telegram-accounts/migration/rollback"
@@ -2291,34 +2298,41 @@
     {
       "file": "server/routes/setupBotManagementRoutes.ts",
       "line": 99,
+      "method": "POST",
+      "expression": "\"/api/projects/:id/bot/restart-all/jobs\"",
+      "resolvedPath": "/api/projects/{id}/bot/restart-all/jobs"
+    },
+    {
+      "file": "server/routes/setupBotManagementRoutes.ts",
+      "line": 101,
       "method": "GET",
       "expression": "\"/api/projects/:id/bot/restart-all/jobs/:jobId\"",
       "resolvedPath": "/api/projects/{id}/bot/restart-all/jobs/{jobId}"
     },
     {
       "file": "server/routes/setupBotManagementRoutes.ts",
-      "line": 100,
+      "line": 102,
       "method": "POST",
       "expression": "\"/api/projects/:id/bot/start-offline-all\"",
       "resolvedPath": "/api/projects/{id}/bot/start-offline-all"
     },
     {
       "file": "server/routes/setupBotManagementRoutes.ts",
-      "line": 102,
+      "line": 104,
       "method": "PUT",
       "expression": "'/api/projects/:projectId/bot/launch-inheritance'",
       "resolvedPath": "/api/projects/{projectId}/bot/launch-inheritance"
     },
     {
       "file": "server/routes/setupBotManagementRoutes.ts",
-      "line": 104,
+      "line": 106,
       "method": "GET",
       "expression": "\"/api/projects/:id/bot/statuses\"",
       "resolvedPath": "/api/projects/{id}/bot/statuses"
     },
     {
       "file": "server/routes/setupBotManagementRoutes.ts",
-      "line": 105,
+      "line": 107,
       "method": "DELETE",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId/logs\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/logs"

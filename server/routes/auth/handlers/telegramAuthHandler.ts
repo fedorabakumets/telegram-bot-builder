@@ -25,6 +25,12 @@ export async function handleTelegramAuth(req: Request, res: Response): Promise<v
       res.status(400).json({ success: false, error: "User ID обязателен" });
       return;
     }
+    /** Виджет может передать числовой идентификатор строкой. */
+    const userId = typeof id === "string" && /^\d+$/.test(id) ? Number(id) : id;
+    if (!Number.isSafeInteger(userId) || userId <= 0) {
+      res.status(400).json({ success: false, error: "Некорректный Telegram ID" });
+      return;
+    }
 
     const strict = isStrictAuthMode();
     if (strict && !id_token) {
@@ -49,8 +55,8 @@ export async function handleTelegramAuth(req: Request, res: Response): Promise<v
     }
 
     const { user: userData, switched } = await applyTelegramLogin(req, {
-      id,
-      firstName: first_name,
+      id: userId,
+      firstName: first_name || username || "User",
       lastName: last_name,
       username,
       photoUrl: photo_url,

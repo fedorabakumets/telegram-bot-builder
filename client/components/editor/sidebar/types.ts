@@ -263,6 +263,10 @@ export interface ComponentsSidebarProps {
 
   /** Флаг мобильного режима */
   isMobile?: boolean;
+  /** Раскрытие списка мини-панели телефона. */
+  mobilePaletteOpen?: boolean;
+  /** Изменяет раскрытие мобильной мини-панели. */
+  onMobilePaletteChange?: (open: boolean) => void;
 
   /** Колбэк для закрытия панели */
   onClose?: () => void;

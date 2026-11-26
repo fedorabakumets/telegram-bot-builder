@@ -73,17 +73,7 @@ export function SaveAnswerProperties({
   const variableName = data.inputVariable || '';
 
   return (
-    <div className="w-full bg-gradient-to-br from-cyan-50/40 to-sky-50/20 dark:from-cyan-950/30 dark:to-sky-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-cyan-200/40 dark:border-cyan-800/40 backdrop-blur-sm space-y-4">
-      <div className="space-y-1">
-        <div className="flex items-center gap-2">
-          <i className="fas fa-save text-cyan-500 dark:text-cyan-400 text-sm" />
-          <span className="text-sm font-semibold text-cyan-700 dark:text-cyan-300">
-            Сохранение ответа
-          </span>
-        </div>
-        <SaveAnswerStorageHint inputType={inputType} />
-      </div>
-
+    <div className="min-w-0 space-y-4">
       <div className="space-y-2">
         <Label htmlFor="inputType" className="text-sm font-medium">Источник ответа</Label>
         <Select
@@ -155,6 +145,7 @@ export function SaveAnswerProperties({
           )}
         </div>
       )}
+      <SaveAnswerStorageHint inputType={inputType} />
     </div>
   );
 }

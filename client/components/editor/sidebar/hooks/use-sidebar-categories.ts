@@ -7,7 +7,7 @@
 import { useState, useCallback } from 'react';
 
 /** Главные категории, свёрнутые при первом открытии палитры */
-const INITIALLY_COLLAPSED_MAINS = ['Userbot Telegram API', 'Остальное'];
+const INITIALLY_COLLAPSED_MAINS = ['Личный аккаунт Telegram', 'Остальное'];
 
 /**
  * Результат работы хука категорий

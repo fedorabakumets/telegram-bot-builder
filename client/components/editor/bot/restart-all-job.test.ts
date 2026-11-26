@@ -21,7 +21,9 @@ describe('restart-all job', () => {
     const promise = runRestartAllJob(12, progress);
     await vi.advanceTimersByTimeAsync(1500);
     expect(await promise).toEqual(completed.result);
-    expect(fetcher.mock.calls.map(call => call[1].method)).toEqual(['POST', 'GET']);
+    expect(fetcher).toHaveBeenCalledTimes(2);
+    expect(fetcher).toHaveBeenNthCalledWith(1, '/api/projects/12/bot/restart-all/jobs', expect.objectContaining({ method: 'POST' }));
+    expect(fetcher).toHaveBeenNthCalledWith(2, '/api/projects/12/bot/restart-all/jobs/job-1', expect.objectContaining({ method: 'GET' }));
     expect(savedRestartJob()).toBeNull();
   });
 
@@ -32,7 +34,7 @@ describe('restart-all job', () => {
     vi.stubGlobal('fetch', fetcher);
     await runRestartAllJob(12, vi.fn());
     expect(fetcher).toHaveBeenCalledTimes(1);
-    expect(fetcher.mock.calls[0][0]).toContain('/jobs/job-1');
+    expect(fetcher).toHaveBeenCalledWith('/api/projects/12/bot/restart-all/jobs/job-1', expect.objectContaining({ method: 'GET' }));
   });
 
   it('сохраняет ID при потерянном статусе и не выдаёт успех', async () => {

@@ -8,6 +8,7 @@
  * Зум к курсору/щипку использует ref-зеркала pan/zoom для синхронности.
  */
 
+import { useEditorAppearance } from '@/components/editor/shared/use-editor-appearance';
 import { useRef, useCallback, useState, useEffect, useMemo } from 'react';
 import { CanvasSheets } from '@/components/editor/canvas/canvas-sheets';
 import { CanvasSheetsFrame } from '@/components/editor/canvas/canvas-sheets-frame';
@@ -181,6 +182,8 @@ interface CanvasProps {
 
   // Мобильные функции
   /** Открытие мобильной боковой панели */
+  /** Компактная палитра над рабочей областью телефона. */
+  mobilePalette?: React.ReactNode;
   onOpenMobileSidebar?: () => void;
   /** Открытие мобильной панели свойств */
   onOpenMobileProperties?: () => void;
@@ -283,6 +286,7 @@ export function Canvas({
   suppressAutoFit,
   projectId,
   projects = [],
+  mobilePalette,
   onOpenMobileSidebar,
   onOpenMobileProperties,
   onPortalNavigate,
@@ -297,6 +301,7 @@ export function Canvas({
   }, [learn.active]);
   const canvasRef = useRef<HTMLDivElement>(null);
   const mainRef = useRef<HTMLElement | null>(null);
+  const blockLabels = useEditorAppearance('blockLabels');
   const sheetsPosition = useCanvasSheetsPosition();
   const sheetsVertical = sheetsPosition === 'left' || sheetsPosition === 'right';
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -1778,9 +1783,9 @@ export function Canvas({
   }, [selectedNodeIds, moveNodesToNewSheet, addAction, clearSelection, botData]);
 
   return (
-    <main ref={mainRef} className={`relative flex h-full w-full overflow-hidden bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 dark:from-slate-950 dark:via-gray-950 dark:to-slate-900 ${sheetsVertical ? 'flex-row' : 'flex-col'}${cssFullscreen ? ' !fixed inset-0 z-[200]' : ''}`}>
+    <main ref={mainRef} className={`${blockLabels ? '' : '[&_[data-block-label]]:hidden'} relative flex h-full w-full overflow-hidden bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 dark:from-slate-950 dark:via-gray-950 dark:to-slate-900 ${sheetsVertical ? 'flex-row' : 'flex-col'}${cssFullscreen ? ' !fixed inset-0 z-[200]' : ''}`}>
       <div className="relative grid min-h-0 min-w-0 flex-1 grid-cols-[minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)] overflow-hidden [&>[data-canvas-toolbar]]:relative [&>[data-canvas-toolbar]]:col-start-1 [&>[data-canvas-toolbar]]:row-start-1">
-      <div ref={scrollContainerRef} className="col-start-1 row-start-2 min-h-0 overflow-auto">
+      <div ref={scrollContainerRef} className="editor-canvas-scroll col-start-1 row-start-2 min-h-0 overflow-auto">
 
         {/* Enhanced Canvas Grid */}
         <div
@@ -1954,7 +1959,11 @@ export function Canvas({
       />
 
       {/* Плавающая панель для мобильных устройств */}
+      {mobilePalette && <div data-mobile-palette className="absolute left-2 right-2 top-2 z-40 row-start-2 max-h-[80%] max-w-sm flex flex-col">{mobilePalette}</div>}
       <MobileCanvasFab
+        sidebarVisible={sidebarVisible}
+        propertiesVisible={propertiesVisible}
+        isMessage={nodes.find(node => node.id === selectedNodeId)?.type === "message"}
         onOpenMobileSidebar={onOpenMobileSidebar}
         onOpenMobileProperties={onOpenMobileProperties}
         selectedNodeId={selectedNodeId}

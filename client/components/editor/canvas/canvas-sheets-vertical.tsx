@@ -1,4 +1,5 @@
 /** @fileoverview Вертикальный список листов у боковой границы холста. */
+import { useSheetAppearance } from '../shared/use-editor-appearance';
 import { useEffect, useRef, useState } from 'react';
 import { FileText, Plus } from 'lucide-react';
 import type { CanvasSheet } from '@shared/schema';
@@ -32,6 +33,7 @@ interface CanvasSheetsVerticalProps {
 export function CanvasSheetsVertical({
   sheets, activeSheetId, onSheetSelect, onAdd, onSheetRename, onSheetDuplicate, onSheetDelete,
 }: CanvasSheetsVerticalProps) {
+  const appearance = useSheetAppearance();
   const [draft, setDraft] = useState<{ id: string; name: string } | null>(null);
   const activeRow = useRef<HTMLDivElement>(null);
   const active = sheets.find(sheet => sheet.id === activeSheetId);
@@ -63,11 +65,11 @@ export function CanvasSheetsVertical({
                   }}
                   className="h-9 min-w-0" />
               ) : (
-                <Button variant={selected ? 'secondary' : 'ghost'} type="button" aria-current={selected || undefined}
+                <Button variant="ghost" type="button" aria-current={selected || undefined}
                   onClick={() => onSheetSelect(sheet.id)} title={sheet.name}
-                  className="h-auto min-h-9 min-w-0 flex-1 items-start justify-start gap-1.5 whitespace-normal px-2 py-2 text-left leading-5">
-                  <FileText className="size-4 shrink-0" aria-hidden="true" />
-                  <span className="min-w-0 [overflow-wrap:anywhere]">{sheet.name}</span>
+                  className={`${selected ? appearance.active : ""} h-auto min-h-8 min-w-0 flex-1 items-start justify-start gap-1.5 whitespace-normal px-2 py-1 text-left leading-5`}>
+                  <FileText className={`size-4 shrink-0 ${appearance.icon}`} aria-hidden="true" />
+                  <span className={`min-w-0 [overflow-wrap:anywhere] ${selected ? appearance.name : ""}`}>{sheet.name}</span>
                 </Button>
               )}
             </div>

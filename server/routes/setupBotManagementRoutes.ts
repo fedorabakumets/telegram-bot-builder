@@ -95,6 +95,8 @@ export function setupBotManagementRoutes(app: Express): void {
     app.post("/api/projects/:id/bot/stop", requireProjectAccess, handleBotStop);
     app.post("/api/projects/:id/bot/restart", requireProjectAccess, handleBotRestart);
     app.post("/api/projects/:id/bot/restart-all", requireProjectAccess, handleBotRestartAll);
+    /** Принимает задание из мини-панели через тот же обработчик очереди. */
+    app.post("/api/projects/:id/bot/restart-all/jobs", runtimeWriteLimit, requireProjectAccess, handleBotRestartAll);
     /** Опрос проверяет доступ заново и не раскрывает чужие результаты по UUID. */
     app.get("/api/projects/:id/bot/restart-all/jobs/:jobId", runtimeReadLimit, requireProjectAccess, handleBotRestartAllJob);
     app.post("/api/projects/:id/bot/start-offline-all", requireProjectAccess, handleBotStartOfflineAll);

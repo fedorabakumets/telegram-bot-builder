@@ -26,7 +26,7 @@ export interface PaletteComponentCardProps {
 }
 
 /**
- * Карточка ноды в палитре
+ * Карточка узла с перетаскиванием и видимой кнопкой добавления на холст
  * @param props - Свойства
  * @returns JSX элемент
  */
@@ -47,25 +47,26 @@ export function PaletteComponentCard({
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
       className={cn(
-        'component-item group/item flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3',
-        'bg-gradient-to-br from-muted/40 to-muted/20 dark:from-slate-800/50 dark:to-slate-900/30',
-        'hover:from-muted/70 hover:to-muted/40 dark:hover:from-slate-700/60 dark:hover:to-slate-800/40',
+        'component-item group/item [container-type:inline-size] grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2 gap-y-1 pl-1.5 pr-2 py-1.5',
+        'bg-white dark:bg-zinc-950',
+        'hover:bg-zinc-100 dark:hover:bg-zinc-900',
         'relative rounded-lg sm:rounded-xl cursor-move transition-all duration-200 touch-action-none no-select',
-        'border border-border/30 hover:border-primary/30',
+        'border border-border/30 hover:border-zinc-500',
         isTouchDragging ? 'opacity-50 scale-95' : '',
       )}
       data-testid={`component-${component.id}`}
     >
-      <div
+      {/** Вся площадка иконки доступна как одно именованное изображение. */}
+      <div data-palette-icon-color role="img" aria-label={`Иконка: ${component.name}`} data-testid={`component-icon-${component.id}`}
         className={cn(
-          'w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center flex-shrink-0',
+          '[@container(max-width:12rem)]:hidden w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0',
           'transition-transform group-hover/item:scale-110',
           component.color,
         )}
       >
-        <i className={`${component.icon} text-xs sm:text-sm`} />
+        <i aria-hidden="true" className={`${component.icon} pointer-events-none text-xs sm:text-sm`} />
       </div>
-      <div className={cn('flex-1 min-w-0', onComponentAdd && 'pr-2')}>
+      <div className="min-w-0 col-start-2 [@container(max-width:12rem)]:col-span-full">
         <p className="text-xs sm:text-sm font-semibold text-foreground break-normal whitespace-normal overflow-hidden [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
           {component.name}
         </p>
@@ -77,16 +78,18 @@ export function PaletteComponentCard({
       </div>
       {onComponentAdd && (
         <button
+          type="button"
+          onTouchStart={(e) => e.stopPropagation()}
           onClick={(e) => {
             e.stopPropagation();
             onComponentAdd(component);
           }}
           className={cn(
-            'absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 sm:w-8 sm:h-8 rounded-lg',
-            'bg-primary/10 hover:bg-primary/20 text-primary',
-            'dark:bg-primary/15 dark:hover:bg-primary/25',
-            'flex items-center justify-center opacity-0 pointer-events-none group-hover/item:opacity-100 group-hover/item:pointer-events-auto',
-            'transition-opacity duration-200 hover:shadow-md hover:shadow-primary/20',
+            'justify-self-end [@container(max-width:12rem)]:col-span-full w-7 h-7 sm:w-8 sm:h-8 rounded-lg',
+            'bg-zinc-100 text-zinc-700 hover:bg-zinc-200',
+            'dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800',
+            'flex items-center justify-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-current',
+            'transition-opacity duration-200 ',
           )}
           title={`Добавить ${component.name} на холст`}
           data-testid={`button-add-${component.id}`}

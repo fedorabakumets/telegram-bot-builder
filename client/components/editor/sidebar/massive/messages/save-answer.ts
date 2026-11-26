@@ -7,8 +7,8 @@ import { ComponentDefinition } from "@shared/schema";
 /** Нода сохранения ответа пользователя в переменную */
 export const saveAnswerNode: ComponentDefinition = {
   id: 'save-answer-node',
-  name: 'Сохранить ответ в переменную',
-  description: 'Сохраняет ответ пользователя в выбранную переменную',
+  name: 'Запомнить ответ',
+  description: 'Бот сохранит ответ в переменную, например имя для приветствия.',
   icon: 'fas fa-edit',
   color: 'bg-cyan-100 text-cyan-600',
   type: 'input',

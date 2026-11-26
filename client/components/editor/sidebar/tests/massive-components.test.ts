@@ -9,7 +9,7 @@ import { saveAnswerNode } from '../massive/messages/save-answer';
 
 describe('sidebar massive components', () => {
   it('содержит save-answer в подкатегории Сообщения у Telegram Bot API', () => {
-    const botApi = componentCategories.find((c) => c.title === 'Telegram Bot API');
+    const botApi = componentCategories.find((c) => c.title === 'Telegram-бот');
     expect(botApi).toBeTruthy();
     const messages = botApi?.subcategories.find((s) => s.title === 'Сообщения');
     expect(messages).toBeTruthy();
@@ -21,14 +21,14 @@ describe('sidebar massive components', () => {
 
   it('имеет ровно три главные категории', () => {
     expect(componentCategories.map((c) => c.title)).toEqual([
-      'Telegram Bot API',
-      'Userbot Telegram API',
+      'Telegram-бот',
+      'Личный аккаунт Telegram',
       'Остальное',
     ]);
   });
 
   it('юзербот-ноды лежат во второй главной категории', () => {
-    const userbot = componentCategories.find((c) => c.title === 'Userbot Telegram API');
+    const userbot = componentCategories.find((c) => c.title === 'Личный аккаунт Telegram');
     const types = flattenPaletteSubcategories([userbot!]).flatMap((s) =>
       s.components.map((c) => c.type),
     );
@@ -38,7 +38,7 @@ describe('sidebar massive components', () => {
 
   it('defines save-answer node with input defaults', () => {
     expect(saveAnswerNode.type).toBe('input');
-    expect(saveAnswerNode.name).toBe('Сохранить ответ в переменную');
+    expect(saveAnswerNode.name).toBe('Запомнить ответ');
     expect(saveAnswerNode.defaultData.inputType).toBe('any');
     expect(saveAnswerNode.defaultData.inputVariable).toBe('');
     expect(saveAnswerNode.defaultData.appendVariable).toBe(false);

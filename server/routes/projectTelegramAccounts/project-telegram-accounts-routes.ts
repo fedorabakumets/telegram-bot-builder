@@ -104,6 +104,7 @@ function mutation<T>(schema: z.ZodType<T>, apply: (project: number, account: num
  * @param app - Приложение Express.
  */
 export function registerProjectTelegramAccountsRoutes(app: Express): void {
+  /** Общая цепочка проверок доступа для операций записи. */
   const write = [requireTelegramAccountsAccess, requireTelegramAccountsManager];
   app.get(path, requireTelegramAccountsAccess, (req, res) => {
     res.set('Cache-Control', 'no-store');
@@ -111,11 +112,11 @@ export function registerProjectTelegramAccountsRoutes(app: Express): void {
       .then(([accounts, canManage]) => res.json({ enabled: true, canManage, accounts }))
       .catch(() => res.status(500).json({ message: 'Не удалось загрузить аккаунты проекта' }));
   });
-  app.post(path, write, mutation(newProjectTelegramAccount, (project, _account, body) =>
+  app.post(path, ...write, mutation(newProjectTelegramAccount, (project, _account, body) =>
     createProjectTelegramAccount(project, body)));
-  app.put(`${path}/:accountId/bots`, write, mutation(projectTelegramAccountBots, (project, account, body) =>
+  app.put(`${path}/:accountId/bots`, ...write, mutation(projectTelegramAccountBots, (project, account, body) =>
     setProjectTelegramAccountBots(project, account, [...new Set(body.botIds)])));
-  app.put(`${path}/:accountId/proxy`, write, mutation(projectTelegramAccountProxy, async (project, account, body) => {
+  app.put(`${path}/:accountId/proxy`, ...write, mutation(projectTelegramAccountProxy, async (project, account, body) => {
     const proxy = normalizeProjectTelegramProxy(body.proxy);
     if (proxy) await resolveProjectTelegramProxy(proxy);
     return setProjectTelegramAccountProxy(project, account, proxy);

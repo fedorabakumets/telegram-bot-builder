@@ -20,11 +20,11 @@ export function CanvasToolbarMore({ children, learnTargets }: {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <button type="button" aria-label="Ещё действия холста" title="Ещё"
+        <button type="button" aria-label="Действия холста" title="Действия холста"
           data-learn-toolbar={learnTargets}
           className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-md px-2 hover:bg-muted">
           <Ellipsis className="size-4" aria-hidden="true" />
-          <span className="hidden @[360px]:inline">Ещё</span>
+          <span className="hidden @[360px]:inline">Действия холста</span>
         </button>
       </PopoverTrigger>
       <PopoverContent align="end" aria-label="Дополнительные команды холста"

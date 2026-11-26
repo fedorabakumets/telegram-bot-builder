@@ -56,12 +56,12 @@ export function TemplateFilters({
       >
         <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
           <div className="relative flex-1 min-w-0">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-blue-500 dark:text-blue-400" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Найти шаблон по названию…"
               value={searchTerm}
               onChange={(e) => onSearchChange(e.target.value)}
-              className="h-10 rounded-xl border border-blue-500/35 bg-background pl-10 pr-9 text-sm shadow-none placeholder:text-muted-foreground/60 ring-1 ring-blue-500/20 focus-visible:ring-blue-500/35 focus-visible:border-blue-500/50"
+              className="h-10 rounded-lg border-border bg-background pl-10 pr-9 text-sm shadow-none focus-visible:ring-ring"
             />
             {searchTerm ? (
               <button

@@ -161,7 +161,7 @@ export function BasicSettingsSection({
               <SynonymEditor
                 synonyms={displaySynonyms}
                 onUpdate={handleSynonymsUpdate}
-                description="Дополнительные текстовые варианты для вызова этого экрана. Например: старт, привет, начать"
+                description="Слова для запуска блока: «старт», «привет»."
                 placeholder="Например: старт, привет, начать"
               />
             </div>

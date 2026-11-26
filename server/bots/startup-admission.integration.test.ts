@@ -91,6 +91,7 @@ it('настоящий startBot использует общий допуск д�
   const source = readFileSync(new URL('./startBot.ts', import.meta.url), 'utf8');
   const acquire = source.indexOf('await acquireBotStartupSlot(');
   expect(acquire).toBeGreaterThan(0);
+  expect(acquire).toBeLessThan(source.indexOf('await acquireTelegramAccountNormalStartPermit('));
   expect(acquire).toBeLessThan(source.indexOf("await resolveBotCommandFence(tokenId, 'start')"));
   expect(source.lastIndexOf('releaseStartupSlot?.()')).toBeGreaterThan(source.lastIndexOf('finally'));
 });

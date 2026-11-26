@@ -12,8 +12,8 @@ import { ComponentDefinition } from "@shared/schema";
 /** Триггер команды — точка входа без контента */
 export const commandTrigger: ComponentDefinition = {
   id: 'command-trigger',
-  name: 'Триггер команды',
-  description: 'Команда без контента — точка входа в сценарий',
+  name: 'Когда вводят команду',
+  description: 'Запускает сценарий по команде, например /start',
   icon: 'fas fa-bolt',
   color: 'bg-yellow-100 text-yellow-600',
   type: 'command_trigger',

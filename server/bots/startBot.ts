@@ -164,7 +164,8 @@ export async function startBot(
   let releaseTelegramStartPermit: (() => Promise<void>) | undefined;
   let releaseStartupSlot: (() => void) | undefined;
   try {
-    /** Общий лимит ожидается до разрешения переноса аккаунта и блокировок БД. */
+    // Общий лимит действует для ручного запуска, восстановления и автоперезапуска.
+    // Ожидание очереди не удерживает разрешение переноса аккаунта или блокировку БД.
     releaseStartupSlot = await acquireBotStartupSlot(projectId, tokenId, startRevision);
     if (!releaseStartupSlot || isServerShuttingDown() || getBotStartRevision(tokenId) !== startRevision) {
       return { success: false, error: BOT_START_CANCELLED_ERROR };

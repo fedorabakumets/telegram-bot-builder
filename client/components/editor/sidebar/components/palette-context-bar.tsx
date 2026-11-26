@@ -47,7 +47,7 @@ export function PaletteContextBar({
       <div
         className={cn(
           'flex flex-wrap items-center gap-x-1 gap-y-0.5 px-2 py-1 rounded-lg w-full min-w-0',
-          'bg-slate-200/90 dark:bg-slate-800 border border-slate-300/40 dark:border-slate-600/40',
+          'bg-zinc-200/90 dark:bg-zinc-800 border border-zinc-300/40 dark:border-zinc-600/40',
           'text-xs sm:text-sm shadow-sm',
         )}
       >
@@ -60,7 +60,7 @@ export function PaletteContextBar({
           onClick={onToggleMain}
           className={cn(
             'inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md max-w-full',
-            'font-semibold text-foreground hover:bg-slate-300/70 dark:hover:bg-slate-700',
+            'font-semibold text-foreground hover:bg-zinc-300/70 dark:hover:bg-zinc-700',
             'transition-colors text-left',
           )}
           title={mainCollapsed ? `Развернуть «${context.main}»` : `Свернуть «${context.main}»`}
@@ -81,7 +81,7 @@ export function PaletteContextBar({
             className={cn(
               'inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md max-w-full',
               'font-medium text-muted-foreground hover:text-foreground',
-              'hover:bg-slate-300/70 dark:hover:bg-slate-700',
+              'hover:bg-zinc-300/70 dark:hover:bg-zinc-700',
               'transition-colors text-left',
             )}
             title={subCollapsed ? `Развернуть «${context.sub}»` : `Свернуть «${context.sub}»`}

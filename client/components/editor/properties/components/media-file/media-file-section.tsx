@@ -148,22 +148,49 @@ export function MediaFileSection({
             </div>
           )}
 
-          <div className="flex justify-end gap-2">
+          <MultiMediaSelector
+            projectId={projectId}
+            value={attachedFiles}
+            onChange={(urls) => {
+              const gifUrls: string[] = selectedNode.data.sendAsGifUrls || [];
+              onNodeUpdate(selectedNode.id, {
+                attachedMedia: urls,
+                sendAsGifUrls: gifUrls.filter((item: string) => urls.includes(item)),
+              });
+            }}
+            nodeName={selectedNode.id}
+            label={attachedFiles.length > 0 ? 'Прикреплённые файлы' : ''}
+            placeholder="Ссылка на файл"
+            keyboardType={selectedNode.data.keyboardType}
+            onNodeUpdate={onNodeUpdate}
+            nodeId={selectedNode.id}
+            thumbnailsMap={selectedNode.data.attachedMediaThumbnails || {}}
+            onThumbnailsChange={(thumbnails) =>
+              onNodeUpdate(selectedNode.id, { attachedMediaThumbnails: thumbnails })
+            }
+            sendAsGifUrls={selectedNode.data.sendAsGifUrls || []}
+            onSendAsGifUrlsChange={(urls) =>
+              onNodeUpdate(selectedNode.id, { sendAsGifUrls: urls })
+            }
+          />
+          <details className="text-xs">
+            <summary className="cursor-pointer py-2 font-medium">Другие способы</summary>
+            <div className="grid gap-1">
             <VariableSelector
               availableVariables={mediaVariables}
               onSelect={handleVariableSelect}
               trigger={
-                <button className="text-xs px-2.5 py-1 rounded-lg border border-rose-300/60 dark:border-rose-700/60 bg-rose-50/60 dark:bg-rose-900/20 text-rose-700 dark:text-rose-300 hover:bg-rose-100/80 dark:hover:bg-rose-800/30 transition-colors">
-                  + Переменная
+                <button type="button" className="rounded-md border px-2 py-1.5 text-left hover:bg-muted">
+                  Из переменной
                 </button>
               }
             />
             {/* Кнопка открытия блока ввода Telegram file_id */}
             <button
               onClick={() => setShowFileIdInput((v) => !v)}
-              className="text-xs px-2.5 py-1 rounded-lg border border-violet-300/60 dark:border-violet-700/60 bg-violet-50/60 dark:bg-violet-900/20 text-violet-700 dark:text-violet-300 hover:bg-violet-100/80 dark:hover:bg-violet-800/30 transition-colors"
+              type="button" className="rounded-md border px-2 py-1.5 text-left hover:bg-muted"
             >
-              + Telegram file_id
+              По ID файла
             </button>
           </div>
 
@@ -177,31 +204,7 @@ export function MediaFileSection({
             />
           )}
 
-          <MultiMediaSelector
-            projectId={projectId}
-            value={attachedFiles}
-            onChange={(urls) => {
-              const gifUrls: string[] = selectedNode.data.sendAsGifUrls || [];
-              onNodeUpdate(selectedNode.id, {
-                attachedMedia: urls,
-                sendAsGifUrls: gifUrls.filter((item: string) => urls.includes(item)),
-              });
-            }}
-            nodeName={selectedNode.id}
-            label="Прикреплённые файлы"
-            placeholder="Перетащи файл или вставь ссылку"
-            keyboardType={selectedNode.data.keyboardType}
-            onNodeUpdate={onNodeUpdate}
-            nodeId={selectedNode.id}
-            thumbnailsMap={selectedNode.data.attachedMediaThumbnails || {}}
-            onThumbnailsChange={(thumbnails) =>
-              onNodeUpdate(selectedNode.id, { attachedMediaThumbnails: thumbnails })
-            }
-            sendAsGifUrls={selectedNode.data.sendAsGifUrls || []}
-            onSendAsGifUrlsChange={(urls) =>
-              onNodeUpdate(selectedNode.id, { sendAsGifUrls: urls })
-            }
-          />
+          </details>
         </div>
       )}
     </div>

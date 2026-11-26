@@ -61,7 +61,7 @@ export function runRestartAllJob(pid: number, progress: (job: RestartAllJob) => 
     if (saved?.projectId === pid) {
       job = await requestJob(`/api/projects/${pid}/bot/restart-all/jobs/${encodeURIComponent(saved.jobId)}`);
     } else {
-      job = await requestJob(`/api/projects/${pid}/bot/restart-all`, 'POST');
+      job = await requestJob(`/api/projects/${pid}/bot/restart-all/jobs`, 'POST');
     }
     if (!job.jobId) throw new Error('Сервер не вернул идентификатор задания. Проверьте состояние ботов перед повторным запуском.');
     sessionStorage.setItem(storageKey, JSON.stringify({ projectId: pid, jobId: job.jobId }));

@@ -1,26 +1,20 @@
 /**
- * @fileoverview Экран «нет проектов» — онбординг с диалогом проводника
+ * @fileoverview Экран приветствия с тремя карточками создания проекта
  * @module components/editor/no-projects/NoProjectsScreen
  */
 
-import { useCallback, useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Bot } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { apiRequest } from '@/queryClient';
-import { TypewriterDialogue } from '@/components/editor/auth/TypewriterDialogue';
 import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
-import { isGuest, isTelegramUser } from '@/types/telegram-user';
-import { cn } from '@/utils/utils';
+import { isTelegramUser } from '@/types/telegram-user';
+import { useNoProjectsImport } from './use-no-projects-import';
 import { useNoProjects } from './hooks/use-no-projects';
 import { NoProjectsActions } from './NoProjectsActions';
 import { NoProjectsCreateDialog } from './NoProjectsCreateDialog';
-import {
-  isNoProjectsIntroSeen,
-  markNoProjectsIntroSeen,
-} from './no-projects-intro-storage';
-
 /**
  * Экран приветствия для пользователя без проектов
  * @returns JSX элемент экрана
@@ -29,43 +23,17 @@ export function NoProjectsScreen() {
   const [projectName, setProjectName] = useState('');
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
+  const { openImport, importDialog } = useNoProjectsImport();
   const { user } = useTelegramAuth();
-
-  const userId =
-    user && !isGuest(user) && isTelegramUser(user) ? user.id : 'anon';
-
-  const [introSeen] = useState(() => isNoProjectsIntroSeen(userId));
-  const [actionsReady, setActionsReady] = useState(introSeen);
-
+  /** Имя для приветствия; при отсутствии имени используем нейтральное обращение. */
+  const firstName = user && isTelegramUser(user) ? user.firstName?.trim() : '';
   const {
     isCreateOpen,
     setIsCreateOpen,
     handleCreateProject,
-    handleImport,
     handleTemplates,
     handleLogout,
-    isImporting,
   } = useNoProjects();
-
-  const firstName =
-    user && !isGuest(user) && isTelegramUser(user) ? user.firstName?.trim() : '';
-
-  const lines = useMemo(
-    () => [
-      firstName
-        ? { text: `${firstName}, тут пока пусто — проектов ещё нет.` }
-        : { text: 'Тут пока пусто — проектов ещё нет.' },
-      { text: 'Можно с нуля, с готового шаблона или закинуть JSON.' },
-      { text: 'С чего начнём?' },
-    ],
-    [firstName],
-  );
-
-  /** После диалога — кнопки и пометка в localStorage */
-  const handleAllDone = useCallback(() => {
-    markNoProjectsIntroSeen(userId);
-    setActionsReady(true);
-  }, [userId]);
 
   const createMutation = useMutation({
     mutationFn: (name: string) =>
@@ -82,47 +50,32 @@ export function NoProjectsScreen() {
   });
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background">
-      <Card className="w-full max-w-sm mx-4 shadow-2xl border-border/50">
-        <CardHeader className="items-center text-center space-y-3 pb-4">
-          <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20">
-            <Bot className="h-8 w-8 text-primary" />
+    <div className="flex items-center justify-center min-h-dvh bg-background py-4 dark:bg-[#08080a]">
+      <Card className="w-full max-w-[44rem] mx-4 rounded-xl border-0 shadow-none dark:bg-[#0d0d10]">
+        <CardHeader className="items-center text-center space-y-2 px-4 pb-6 pt-6">
+          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-transparent">
+            <Bot className="size-7 text-primary" />
           </div>
-          <div className="rounded-xl border border-primary/20 bg-primary/5 px-3 py-2.5 w-full">
-            {introSeen ? (
-              <div className={cn('space-y-2 text-center')} role="status">
-                {lines.map((line) => (
-                  <p key={line.text} className="text-sm text-foreground/90 leading-relaxed">
-                    {line.text}
-                  </p>
-                ))}
-              </div>
-            ) : (
-              <TypewriterDialogue
-                lines={lines}
-                startDelayMs={200}
-                gapMs={380}
-                speedMs={28}
-                lineClassName="text-sm text-foreground/90"
-                onAllDone={handleAllDone}
-              />
-            )}
-          </div>
+          <h1 className="text-2xl font-medium text-balance">{firstName ? `Привет, ${firstName}!` : 'Привет!'} </h1>
+          <p className="text-base text-muted-foreground">
+            Что хотите сделать?
+          </p>
         </CardHeader>
 
-        <CardContent className="pt-2">
+        <CardContent className="px-4 pb-5 pt-0">
           <NoProjectsActions
-            ready={actionsReady}
-            instant={introSeen}
+            ready={true}
+            instant={true}
             onCreate={handleCreateProject}
-            onImport={handleImport}
+            onImport={openImport}
             onTemplates={handleTemplates}
             onLogout={handleLogout}
-            isImporting={isImporting}
+            isImporting={false}
           />
         </CardContent>
       </Card>
 
+      {importDialog}
       <NoProjectsCreateDialog
         open={isCreateOpen}
         onOpenChange={setIsCreateOpen}

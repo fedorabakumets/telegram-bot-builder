@@ -47,6 +47,7 @@ const requireCutoverRuntime: RequestHandler = (_req, res, next) => {
 export function registerLegacyTelegramMigrationCutover(
   app: Express, requireAccess: RequestHandler, requireManager: RequestHandler,
 ): void {
+  /** Проверки доступа и готовности среды для переноса и отката. */
   const middleware = [requireAccess, requireManager, requireCutoverRuntime];
   app.get(`${path}/operations`, requireAccess, requireManager, async (req, res) => {
     res.set('Cache-Control', 'no-store');
