@@ -81,19 +81,33 @@ class PollingLifecycleTest(unittest.IsolatedAsyncioTestCase):
     async def test_commit_failure_does_not_publish_ready_and_can_retry(self):
         """Не подтверждает готовность при сбое состояния и разрешает повтор запуска."""
         calls = []
+        dispatcher, bot = object(), object()
+
+        async def drain(actual_dispatcher, actual_bot, stop_event):
+            """Проверяет передачу зависимостей и выполнение drain до commit."""
+            self.assertIs(actual_dispatcher, dispatcher)
+            self.assertIs(actual_bot, bot)
+            self.assertFalse(stop_event.is_set())
+            self.assertTrue(draining.cell_contents)
+            calls.append('drain')
 
         async def commit():
             """Имитирует временную недоступность сохранённого состояния."""
             calls.append('commit')
-            if len(calls) == 1:
+            if calls.count('commit') == 1:
                 raise ConnectionError('Redis недоступен')
 
-        callback = startup_callback(asyncio.Event(), lambda: calls.append('ready'), commit)
+        callback = startup_callback(asyncio.Event(), lambda: calls.append('ready'), commit,
+                                    drain=drain, dispatcher=dispatcher, bot=bot)
+        # Проверяем настоящее nonlocal-состояние, которое читает stale-фильтр.
+        draining = dict(zip(callback.__code__.co_freevars, callback.__closure__))['_direct_draining']
         with self.assertRaisesRegex(ConnectionError, 'Redis недоступен'):
             await callback()
-        self.assertEqual(calls, ['commit'])
+        self.assertEqual(calls, ['drain', 'commit'])
+        self.assertFalse(draining.cell_contents)
         await callback()
-        self.assertEqual(calls, ['commit', 'commit', 'ready'])
+        self.assertEqual(calls, ['drain', 'commit', 'drain', 'commit', 'ready'])
+        self.assertFalse(draining.cell_contents)
 
     async def test_other_transports_do_not_commit_direct_state(self):
         """Webhook и внешний приёмник не подтверждают состояние прямого polling."""

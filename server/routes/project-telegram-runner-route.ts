@@ -1,5 +1,6 @@
 /** @fileoverview Передаёт разрешённые команды привязанных ботов общему клиенту Telegram. */
-import type { Express } from 'express';
+import type { Express, Request } from 'express';
+import { ipKeyGenerator, rateLimit } from 'express-rate-limit';
 import { projectTelegramExecutionSchema } from '../../shared/project-telegram-execution';
 import { authorizeProjectTelegramRunner } from '../bots/project-telegram-runner-auth';
 import { callProjectTelegramBroker, ProjectTelegramBrokerError } from '../bots/project-telegram-broker-client';
@@ -7,11 +8,30 @@ import { getProjectTelegramAccountForBot } from '../database/project-telegram-ac
 import { storage } from '../storages/storage';
 
 /**
+ * Разделяет квоты подписанных ботов, объединяя неподписанные попытки по адресу источника.
+ * @param req - Запрос внутреннего исполнителя.
+ * @returns Ключ квоты без токенов и секретов.
+ */
+function runnerRateLimitKey(req: Request): string {
+  const projectId = Number(req.params.projectId);
+  const tokenId = Number(req.params.tokenId);
+  if (Number.isSafeInteger(projectId) && projectId > 0 && Number.isSafeInteger(tokenId) && tokenId > 0
+    && authorizeProjectTelegramRunner(req.get('Authorization'), projectId, tokenId)) {
+    return `runner:${projectId}:${tokenId}`;
+  }
+  return `ip:${ipKeyGenerator(req.ip ?? req.socket.remoteAddress ?? 'unknown')}`;
+}
+
+/**
  * Регистрирует внутренний маршрут раннера, изолированный от браузерного API.
  * @param app - Приложение панели.
  */
 export function registerProjectTelegramRunnerRoute(app: Express): void {
-  app.post('/internal/project-telegram/:projectId/:tokenId/execute', async (req, res) => {
+  /** Ограничивает обращения до чтения БД; общий адрес runtime не объединяет квоты разных ботов. */
+  const limit = rateLimit({ windowMs: 60_000, limit: 600, keyGenerator: runnerRateLimitKey,
+    standardHeaders: 'draft-8', legacyHeaders: false,
+    message: { code: 'RUNNER_RATE_LIMITED' } });
+  app.post('/internal/project-telegram/:projectId/:tokenId/execute', limit, async (req, res) => {
     if (process.env.PROJECT_TELEGRAM_ACCOUNTS_ENABLED !== '1') {
       res.sendStatus(404);
       return;

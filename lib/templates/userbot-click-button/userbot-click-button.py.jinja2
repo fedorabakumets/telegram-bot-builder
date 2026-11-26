@@ -153,6 +153,37 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
         # Нажимаем кнопку (fire-and-forget — не ждём answerCallbackQuery)
         from telethon.tl.functions.messages import GetBotCallbackAnswerRequest
 
+        def _button_callback_data(button):
+            """Читает callback из нового типа Telethon либо совместимого объекта брокера."""
+            payload = getattr(button, 'type', button)
+            return getattr(payload, 'data', None)
+
+        def _serialize_userbot_button(button):
+            """Сохраняет тип и полезную нагрузку кнопок Telethon 1.46 и прежнего формата."""
+            payload = getattr(button, 'type', button)
+            kind = type(payload).__name__
+            entry = {"text": button.text}
+            callback = _button_callback_data(button)
+            if callback is not None:
+                entry.update(type="callback", data=callback.decode('utf-8', errors='replace'))
+            elif kind in ('KeyboardButtonSwitchInline', 'InlineButtonTypeSwitchInline'):
+                entry.update(type="switch_inline", query=getattr(payload, 'query', ''))
+            elif kind in ('KeyboardButtonWebView', 'KeyboardButtonSimpleWebView', 'InlineButtonTypeWebView', 'ButtonTypeSimpleWebView'):
+                entry.update(type="web_app", url=getattr(payload, 'url', ''))
+            elif getattr(payload, 'url', None):
+                entry.update(type="url", url=payload.url)
+            elif kind in ('KeyboardButtonRequestPhone', 'ButtonTypeRequestPhone'):
+                entry["type"] = "request_phone"
+            elif kind in ('KeyboardButtonRequestGeoLocation', 'ButtonTypeRequestGeoLocation'):
+                entry["type"] = "request_location"
+            elif kind in ('KeyboardButtonBuy', 'InlineButtonTypeBuy'):
+                entry["type"] = "buy"
+            elif kind in ('KeyboardButtonGame', 'InlineButtonTypeGame'):
+                entry["type"] = "game"
+            else:
+                entry["type"] = "text"
+            return entry
+
         _click_btn = None
 {%- if clickMode == 'text' %}
         # Поиск кнопки по тексту
@@ -169,7 +200,7 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
         if _msg.reply_markup:
             for _row in _msg.reply_markup.rows:
                 for _btn in _row.buttons:
-                    if hasattr(_btn, 'data') and _btn.data and _click_val.encode('utf-8') in _btn.data:
+                    if _button_callback_data(_btn) and _click_val.encode('utf-8') in _button_callback_data(_btn):
                         _click_btn = _btn
                         break
                 if _click_btn:
@@ -199,7 +230,7 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
 {%- endif %}
 
         # Telethon click(text=) — только точное совпадение; click_val часто подстрока («Купить» в «💎 Купить 💎»)
-        _btn_click_data = getattr(_click_btn, 'data', None) if _click_btn else None
+        _btn_click_data = _button_callback_data(_click_btn) if _click_btn else None
         _btn_click_text = (getattr(_click_btn, 'text', '') or _click_val) if _click_btn else _click_val
 
 {%- if saveAlertTo %}
@@ -208,262 +239,281 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
         await set_user_var(user_id, "{{ saveAlertTo }}", '')
 {%- endif %}
 
-{%- if responseStrategy == 'new_message' %}
-        # Регистрируем event handler ДО нажатия кнопки (чтобы не пропустить быстрый ответ)
-        _updated = None
-        _new_msg_future = asyncio.get_event_loop().create_future()
-{%- if responseFilterRegex %}
-        import re as _re_new_{{ nodeId | replace('-', '_') }}
-        _new_resp_re = {{ responseFilterRegex | tojson }}
-{%- endif %}
-
-        @userbot_client.on(events.NewMessage(chats=_target))
-        async def _on_new_msg_{{ nodeId | replace('-', '_') }}(event):
-            if event.message.id <= _msg_id or _new_msg_future.done():
-                return
-{%- if responseFilterRegex %}
-            _new_txt = event.message.text or ''
-            if not _re_new_{{ nodeId | replace('-', '_') }}.search(_new_resp_re, _new_txt, _re_new_{{ nodeId | replace('-', '_') }}.I):
-                return
-{%- endif %}
-            _new_msg_future.set_result(event.message)
-
-
-{%- else %}
-        # Регистрируем event handler ДО нажатия кнопки (чтобы не пропустить быстрый ответ)
-        _updated = None
-        _edit_future = asyncio.get_event_loop().create_future()
-{%- if responseFilterRegex %}
-        import re as _re_edit_{{ nodeId | replace('-', '_') }}
-
-        def _re_text_ok_{{ nodeId | replace('-', '_') }}(msg):
-            if not msg:
-                return False
-            return bool(_re_edit_{{ nodeId | replace('-', '_') }}.search({{ responseFilterRegex | tojson }}, msg.text or '', _re_edit_{{ nodeId | replace('-', '_') }}.I))
-
-        def _re_edit_ok_{{ nodeId | replace('-', '_') }}(msg):
-            if not msg or msg.id != _msg_id:
-                return False
-            return _re_text_ok_{{ nodeId | replace('-', '_') }}(msg)
-
-        # Доп. future на НОВОЕ сообщение (Vortex может отвечать new, а не edit)
-        _new_resp_future_{{ nodeId | replace('-', '_') }} = asyncio.get_event_loop().create_future()
-
-        @userbot_client.on(events.NewMessage(chats=_target))
-        async def _on_new_resp_{{ nodeId | replace('-', '_') }}(event):
-            if (
-                event.message.id > _msg_id
-                and not _new_resp_future_{{ nodeId | replace('-', '_') }}.done()
-                and _re_text_ok_{{ nodeId | replace('-', '_') }}(event.message)
-            ):
-                _new_resp_future_{{ nodeId | replace('-', '_') }}.set_result(event.message)
-{%- endif %}
-
-        @userbot_client.on(events.MessageEdited(chats=_target))
-        async def _on_edit_{{ nodeId | replace('-', '_') }}(event):
-{%- if responseFilterRegex %}
-            if (
-                event.message.id == _msg_id
-                and not _edit_future.done()
-                and _re_edit_ok_{{ nodeId | replace('-', '_') }}(event.message)
-            ):
-                _edit_future.set_result(event.message)
-{%- else %}
-            if event.message.id == _msg_id and not _edit_future.done():
-                _edit_future.set_result(event.message)
-{%- endif %}
-{%- endif %}
-
-        async def _dispatch_callback_click_{{ nodeId | replace('-', '_') }}():
-            """Отправляет callback-клик; ждём answer до 2с, но не отменяем запрос при таймауте."""
-            _cb_task_{{ nodeId | replace('-', '_') }} = asyncio.create_task(
-                userbot_client(GetBotCallbackAnswerRequest(
-                    peer=_target,
-                    msg_id=_msg.id,
-                    data=_click_btn.data
-                ))
+        if _PROJECT_TELEGRAM_ACCOUNT:
+            if _btn_click_data is None:
+                raise ValueError("В режиме Telegram-аккаунта проекта доступна только callback-кнопка сообщения")
+            _shared_click = await userbot_client.click_button(
+                _target, _msg_id, _btn_click_data,
+                wait_seconds={{ responseWaitSeconds | default(14) }},
+                response_mode={{ ('new_message' if responseStrategy == 'new_message' else 'edited_message') | tojson }},
             )
-            try:
-                await asyncio.wait_for(
-                    asyncio.shield(_cb_task_{{ nodeId | replace('-', '_') }}),
-                    timeout=2.0
+            _updated = _shared_click.response
+{%- if responseFilterRegex %}
+            if _updated and not re.search({{ responseFilterRegex | tojson }}, _updated.text or '', re.I):
+                _updated = None
+{%- endif %}
+{%- if saveAlertTo %}
+            if _shared_click.message:
+                user_data[user_id]["{{ saveAlertTo }}"] = _shared_click.message
+                await set_user_var(user_id, "{{ saveAlertTo }}", _shared_click.message)
+{%- endif %}
+        else:
+{%- if responseStrategy == 'new_message' %}
+            # Регистрируем event handler ДО нажатия кнопки (чтобы не пропустить быстрый ответ)
+            _updated = None
+            _new_msg_future = asyncio.get_event_loop().create_future()
+{%- if responseFilterRegex %}
+            import re as _re_new_{{ nodeId | replace('-', '_') }}
+            _new_resp_re = {{ responseFilterRegex | tojson }}
+{%- endif %}
+
+            @userbot_client.on(events.NewMessage(chats=_target))
+            async def _on_new_msg_{{ nodeId | replace('-', '_') }}(event):
+                if event.message.id <= _msg_id or _new_msg_future.done():
+                    return
+{%- if responseFilterRegex %}
+                _new_txt = event.message.text or ''
+                if not _re_new_{{ nodeId | replace('-', '_') }}.search(_new_resp_re, _new_txt, _re_new_{{ nodeId | replace('-', '_') }}.I):
+                    return
+{%- endif %}
+                _new_msg_future.set_result(event.message)
+
+
+{%- else %}
+            # Регистрируем event handler ДО нажатия кнопки (чтобы не пропустить быстрый ответ)
+            _updated = None
+            _edit_future = asyncio.get_event_loop().create_future()
+{%- if responseFilterRegex %}
+            import re as _re_edit_{{ nodeId | replace('-', '_') }}
+
+            def _re_text_ok_{{ nodeId | replace('-', '_') }}(msg):
+                if not msg:
+                    return False
+                return bool(_re_edit_{{ nodeId | replace('-', '_') }}.search({{ responseFilterRegex | tojson }}, msg.text or '', _re_edit_{{ nodeId | replace('-', '_') }}.I))
+
+            def _re_edit_ok_{{ nodeId | replace('-', '_') }}(msg):
+                if not msg or msg.id != _msg_id:
+                    return False
+                return _re_text_ok_{{ nodeId | replace('-', '_') }}(msg)
+
+            # Доп. future на НОВОЕ сообщение (Vortex может отвечать new, а не edit)
+            _new_resp_future_{{ nodeId | replace('-', '_') }} = asyncio.get_event_loop().create_future()
+
+            @userbot_client.on(events.NewMessage(chats=_target))
+            async def _on_new_resp_{{ nodeId | replace('-', '_') }}(event):
+                if (
+                    event.message.id > _msg_id
+                    and not _new_resp_future_{{ nodeId | replace('-', '_') }}.done()
+                    and _re_text_ok_{{ nodeId | replace('-', '_') }}(event.message)
+                ):
+                    _new_resp_future_{{ nodeId | replace('-', '_') }}.set_result(event.message)
+{%- endif %}
+
+            @userbot_client.on(events.MessageEdited(chats=_target))
+            async def _on_edit_{{ nodeId | replace('-', '_') }}(event):
+{%- if responseFilterRegex %}
+                if (
+                    event.message.id == _msg_id
+                    and not _edit_future.done()
+                    and _re_edit_ok_{{ nodeId | replace('-', '_') }}(event.message)
+                ):
+                    _edit_future.set_result(event.message)
+{%- else %}
+                if event.message.id == _msg_id and not _edit_future.done():
+                    _edit_future.set_result(event.message)
+{%- endif %}
+{%- endif %}
+
+            async def _dispatch_callback_click_{{ nodeId | replace('-', '_') }}():
+                """Отправляет callback-клик; ждём answer до 2с, но не отменяем запрос при таймауте."""
+                _cb_task_{{ nodeId | replace('-', '_') }} = asyncio.create_task(
+                    userbot_client(GetBotCallbackAnswerRequest(
+                        peer=_target,
+                        msg_id=_msg.id,
+                        data=_btn_click_data
+                    ))
                 )
-            except asyncio.TimeoutError:
-                logging.info(f"ℹ️ [{{ nodeId }}] callback answer timeout 2с (клик уходит в фоне, ждём edit/new)")
-            except Exception as _click_err:
-                if "TimeoutError" not in type(_click_err).__name__:
-                    logging.warning(f"⚠️ [{{ nodeId }}] callback click error: {_click_err}")
+                try:
+                    await asyncio.wait_for(
+                        asyncio.shield(_cb_task_{{ nodeId | replace('-', '_') }}),
+                        timeout=2.0
+                    )
+                except asyncio.TimeoutError:
+                    logging.info(f"ℹ️ [{{ nodeId }}] callback answer timeout 2с (клик уходит в фоне, ждём edit/new)")
+                except Exception as _click_err:
+                    if "TimeoutError" not in type(_click_err).__name__:
+                        logging.warning(f"⚠️ [{{ nodeId }}] callback click error: {_click_err}")
 
 {%- if clickDelivery == 'await' %}
-        # await: Telethon msg.click (как scrape_lucky.py; надёжнее GetBotCallbackAnswerRequest)
-        if _click_btn:
-            try:
+            # await: Telethon msg.click (как scrape_lucky.py; надёжнее GetBotCallbackAnswerRequest)
+            if _click_btn:
+                try:
 {%- if clickMode == 'index' %}
-                _idx_click = [int(x.strip()) for x in _click_val.split(',') if x.strip().isdigit()]
-                if len(_idx_click) >= 2:
-                    await asyncio.wait_for(_msg.click(_idx_click[0], _idx_click[1]), timeout=5.0)
-                elif len(_idx_click) == 1:
-                    await asyncio.wait_for(_msg.click(i=_idx_click[0]), timeout=5.0)
-                else:
-                    await asyncio.wait_for(_msg.click(i=0), timeout=5.0)
+                    _idx_click = [int(x.strip()) for x in _click_val.split(',') if x.strip().isdigit()]
+                    if len(_idx_click) >= 2:
+                        await asyncio.wait_for(_msg.click(_idx_click[0], _idx_click[1]), timeout=5.0)
+                    elif len(_idx_click) == 1:
+                        await asyncio.wait_for(_msg.click(i=_idx_click[0]), timeout=5.0)
+                    else:
+                        await asyncio.wait_for(_msg.click(i=0), timeout=5.0)
 {%- elif clickMode == 'data' %}
-                await asyncio.wait_for(_msg.click(data=_click_btn.data), timeout=5.0)
-{%- else %}
-                if _btn_click_data:
                     await asyncio.wait_for(_msg.click(data=_btn_click_data), timeout=5.0)
-                else:
-                    await asyncio.wait_for(_msg.click(text=_btn_click_text), timeout=5.0)
-{%- endif %}
-            except asyncio.TimeoutError:
-                logging.info(f"ℹ️ [{{ nodeId }}] click timeout 5с (ждём edit/new)")
-            except Exception as _click_err:
-                if "TimeoutError" not in type(_click_err).__name__:
-                    logging.warning(f"⚠️ [{{ nodeId }}] await click error: {_click_err}")
-            logging.info(f"✅ Userbot нажал кнопку в {_entity} msg={_msg_id} (узел {{ nodeId }}) [await]")
-        else:
-            logging.warning(f"⚠️ Узел {{ nodeId }}: кнопка не найдена (mode={{ clickMode }}, value={_click_val!r})")
 {%- else %}
-        # fire-and-forget: msg.click в фоне (как scrape), не блокируем на answerCallbackQuery
-        async def _fire_click_{{ nodeId | replace('-', '_') }}():
-            """Фоновый клик через Telethon msg.click."""
-            try:
+                    if _btn_click_data:
+                        await asyncio.wait_for(_msg.click(data=_btn_click_data), timeout=5.0)
+                    else:
+                        await asyncio.wait_for(_msg.click(text=_btn_click_text), timeout=5.0)
+{%- endif %}
+                except asyncio.TimeoutError:
+                    logging.info(f"ℹ️ [{{ nodeId }}] click timeout 5с (ждём edit/new)")
+                except Exception as _click_err:
+                    if "TimeoutError" not in type(_click_err).__name__:
+                        logging.warning(f"⚠️ [{{ nodeId }}] await click error: {_click_err}")
+                logging.info(f"✅ Userbot нажал кнопку в {_entity} msg={_msg_id} (узел {{ nodeId }}) [await]")
+            else:
+                logging.warning(f"⚠️ Узел {{ nodeId }}: кнопка не найдена (mode={{ clickMode }}, value={_click_val!r})")
+{%- else %}
+            # fire-and-forget: msg.click в фоне (как scrape), не блокируем на answerCallbackQuery
+            async def _fire_click_{{ nodeId | replace('-', '_') }}():
+                """Фоновый клик через Telethon msg.click."""
+                try:
 {%- if clickMode == 'index' %}
-                _idx_fire = [int(x.strip()) for x in _click_val.split(',') if x.strip().isdigit()]
-                if len(_idx_fire) >= 2:
-                    await _msg.click(_idx_fire[0], _idx_fire[1])
-                elif len(_idx_fire) == 1:
-                    await _msg.click(i=_idx_fire[0])
-                else:
-                    await _msg.click(i=0)
+                    _idx_fire = [int(x.strip()) for x in _click_val.split(',') if x.strip().isdigit()]
+                    if len(_idx_fire) >= 2:
+                        await _msg.click(_idx_fire[0], _idx_fire[1])
+                    elif len(_idx_fire) == 1:
+                        await _msg.click(i=_idx_fire[0])
+                    else:
+                        await _msg.click(i=0)
 {%- elif clickMode == 'data' %}
-                if _click_btn and getattr(_click_btn, 'data', None):
-                    await _msg.click(data=_click_btn.data)
+                    if _click_btn and _button_callback_data(_click_btn):
+                        await _msg.click(data=_btn_click_data)
 {%- else %}
-                if _btn_click_data:
-                    await _msg.click(data=_btn_click_data)
-                else:
-                    await _msg.click(text=_btn_click_text)
+                    if _btn_click_data:
+                        await _msg.click(data=_btn_click_data)
+                    else:
+                        await _msg.click(text=_btn_click_text)
 {%- endif %}
-            except Exception as _fire_err:
-                if "TimeoutError" not in type(_fire_err).__name__:
-                    logging.warning(f"⚠️ [{{ nodeId }}] fire click error: {_fire_err}")
+                except Exception as _fire_err:
+                    if "TimeoutError" not in type(_fire_err).__name__:
+                        logging.warning(f"⚠️ [{{ nodeId }}] fire click error: {_fire_err}")
 
-        if _click_btn:
-            asyncio.create_task(_fire_click_{{ nodeId | replace('-', '_') }}())
-            logging.info(f"✅ Userbot нажал кнопку в {_entity} msg={_msg_id} (узел {{ nodeId }}) [fire-and-forget]")
-        else:
-            logging.warning(f"⚠️ Узел {{ nodeId }}: кнопка не найдена (mode={{ clickMode }}, value={_click_val!r})")
+            if _click_btn:
+                asyncio.create_task(_fire_click_{{ nodeId | replace('-', '_') }}())
+                logging.info(f"✅ Userbot нажал кнопку в {_entity} msg={_msg_id} (узел {{ nodeId }}) [fire-and-forget]")
+            else:
+                logging.warning(f"⚠️ Узел {{ nodeId }}: кнопка не найдена (mode={{ clickMode }}, value={_click_val!r})")
 {%- endif %}
 
 {%- if responseStrategy == 'new_message' %}
-        # Ждём НОВОЕ сообщение от бота (не edit)
-        try:
-            _updated = await asyncio.wait_for(
-                _new_msg_future, timeout={{ responseWaitSeconds | default(14) }}
-            )
-            logging.info(f"📖 [{{ nodeId }}] Получено новое сообщение id={_updated.id}")
-        except asyncio.TimeoutError:
-            logging.info(f"📖 [{{ nodeId }}] Таймаут ожидания нового сообщения, читаем историю")
-            # Fallback: читаем последние сообщения и ищем новое (id > _msg_id)
-            await asyncio.sleep(1)
-            _fresh_msgs = await userbot_client.get_messages(_target, limit=8)
-            _fresh_list = _fresh_msgs if isinstance(_fresh_msgs, list) else [_fresh_msgs]
-            _my_id_cb = (await userbot_client.get_me()).id
-            _bot_new = [
-                m for m in _fresh_list
-                if m and hasattr(m, 'sender_id') and m.sender_id != _my_id_cb and m.id > _msg_id
-            ]
-{%- if responseFilterRegex %}
-            _bot_new = [
-                m for m in _bot_new
-                if _re_new_{{ nodeId | replace('-', '_') }}.search(
-                    _new_resp_re, m.text or '', _re_new_{{ nodeId | replace('-', '_') }}.I
-                )
-            ]
-{%- endif %}
-            _updated = _bot_new[0] if _bot_new else None
-        finally:
-            userbot_client.remove_event_handler(_on_new_msg_{{ nodeId | replace('-', '_') }})
-{%- else %}
-        # Ждём edit того же msg (как scrape poll_need same_id)
-{%- if responseFilterRegex %}
-        import time as _time_edit_{{ nodeId | replace('-', '_') }}
-        try:
-            # Гонка: edit того же msg ИЛИ новое сообщение, прошедшее regex (как scrape watch new+edit)
-            _wait_tasks_{{ nodeId | replace('-', '_') }} = [
-                asyncio.ensure_future(_edit_future),
-                asyncio.ensure_future(_new_resp_future_{{ nodeId | replace('-', '_') }}),
-            ]
-            _done_{{ nodeId | replace('-', '_') }}, _pending_{{ nodeId | replace('-', '_') }} = await asyncio.wait(
-                _wait_tasks_{{ nodeId | replace('-', '_') }},
-                timeout={{ responseWaitSeconds | default(14) }},
-                return_when=asyncio.FIRST_COMPLETED,
-            )
-            for _t_{{ nodeId | replace('-', '_') }} in _pending_{{ nodeId | replace('-', '_') }}:
-                _t_{{ nodeId | replace('-', '_') }}.cancel()
-            _updated = None
-            for _t_{{ nodeId | replace('-', '_') }} in _done_{{ nodeId | replace('-', '_') }}:
-                try:
-                    _updated = _t_{{ nodeId | replace('-', '_') }}.result()
-                    break
-                except Exception:
-                    pass
-            if _updated is not None:
-                logging.info(f"📖 [{{ nodeId }}] Получен ответ msg={_updated.id} (edit/new по regex)")
-            else:
-                raise asyncio.TimeoutError()
-        except asyncio.TimeoutError:
-            logging.info(f"📖 [{{ nodeId }}] Таймаут ожидания ответа msg={_msg_id}, читаем историю")
-            # [TEMP DEBUG] Дамп последних сообщений — понять edit это или new
+            # Ждём НОВОЕ сообщение от бота (не edit)
             try:
-                _dump_msgs_{{ nodeId | replace('-', '_') }} = await userbot_client.get_messages(_target, limit=6)
-                _dump_list_{{ nodeId | replace('-', '_') }} = _dump_msgs_{{ nodeId | replace('-', '_') }} if isinstance(_dump_msgs_{{ nodeId | replace('-', '_') }}, list) else [_dump_msgs_{{ nodeId | replace('-', '_') }}]
-                for _dm_{{ nodeId | replace('-', '_') }} in _dump_list_{{ nodeId | replace('-', '_') }}:
-                    if _dm_{{ nodeId | replace('-', '_') }}:
-                        logging.info(
-                            f"🔎 [TEMP {{ nodeId }}] hist id={_dm_{{ nodeId | replace('-', '_') }}.id} "
-                            f"out={getattr(_dm_{{ nodeId | replace('-', '_') }}, 'out', None)} "
-                            f"text={(_dm_{{ nodeId | replace('-', '_') }}.text or '')[:70]!r}"
-                        )
-            except Exception as _dump_err_{{ nodeId | replace('-', '_') }}:
-                logging.info(f"🔎 [TEMP {{ nodeId }}] dump error: {_dump_err_{{ nodeId | replace('-', '_') }}}")
-            # Поллинг: и edit того же msg, и любое новое сообщение, прошедшее regex
-            _edit_poll_t0 = _time_edit_{{ nodeId | replace('-', '_') }}.monotonic()
-            _updated = None
-            while _time_edit_{{ nodeId | replace('-', '_') }}.monotonic() - _edit_poll_t0 < 3.0:
-                try:
-                    _hm_{{ nodeId | replace('-', '_') }} = await userbot_client.get_messages(_target, limit=6)
-                    _hm_list_{{ nodeId | replace('-', '_') }} = _hm_{{ nodeId | replace('-', '_') }} if isinstance(_hm_{{ nodeId | replace('-', '_') }}, list) else [_hm_{{ nodeId | replace('-', '_') }}]
-                    for _cm_{{ nodeId | replace('-', '_') }} in _hm_list_{{ nodeId | replace('-', '_') }}:
-                        if not _cm_{{ nodeId | replace('-', '_') }} or getattr(_cm_{{ nodeId | replace('-', '_') }}, 'out', False):
-                            continue
-                        _is_edit_{{ nodeId | replace('-', '_') }} = _cm_{{ nodeId | replace('-', '_') }}.id == _msg_id
-                        _is_new_{{ nodeId | replace('-', '_') }} = _cm_{{ nodeId | replace('-', '_') }}.id > _msg_id
-                        if (_is_edit_{{ nodeId | replace('-', '_') }} or _is_new_{{ nodeId | replace('-', '_') }}) and _re_text_ok_{{ nodeId | replace('-', '_') }}(_cm_{{ nodeId | replace('-', '_') }}):
-                            _updated = _cm_{{ nodeId | replace('-', '_') }}
-                            logging.info(f"📖 [{{ nodeId }}] poll ok msg={_updated.id} ({'edit' if _is_edit_{{ nodeId | replace('-', '_') }} else 'new'})")
-                            break
-                    if _updated is not None:
-                        break
-                except Exception:
-                    pass
-                await asyncio.sleep(0.25)
-        finally:
-            userbot_client.remove_event_handler(_on_edit_{{ nodeId | replace('-', '_') }})
-            userbot_client.remove_event_handler(_on_new_resp_{{ nodeId | replace('-', '_') }})
+                _updated = await asyncio.wait_for(
+                    _new_msg_future, timeout={{ responseWaitSeconds | default(14) }}
+                )
+                logging.info(f"📖 [{{ nodeId }}] Получено новое сообщение id={_updated.id}")
+            except asyncio.TimeoutError:
+                logging.info(f"📖 [{{ nodeId }}] Таймаут ожидания нового сообщения, читаем историю")
+                # Fallback: читаем последние сообщения и ищем новое (id > _msg_id)
+                await asyncio.sleep(1)
+                _fresh_msgs = await userbot_client.get_messages(_target, limit=8)
+                _fresh_list = _fresh_msgs if isinstance(_fresh_msgs, list) else [_fresh_msgs]
+                _my_id_cb = (await userbot_client.get_me()).id
+                _bot_new = [
+                    m for m in _fresh_list
+                    if m and hasattr(m, 'sender_id') and m.sender_id != _my_id_cb and m.id > _msg_id
+                ]
+{%- if responseFilterRegex %}
+                _bot_new = [
+                    m for m in _bot_new
+                    if _re_new_{{ nodeId | replace('-', '_') }}.search(
+                        _new_resp_re, m.text or '', _re_new_{{ nodeId | replace('-', '_') }}.I
+                    )
+                ]
+{%- endif %}
+                _updated = _bot_new[0] if _bot_new else None
+            finally:
+                userbot_client.remove_event_handler(_on_new_msg_{{ nodeId | replace('-', '_') }})
 {%- else %}
-        try:
-            _updated = await asyncio.wait_for(_edit_future, timeout=5)
-            logging.info(f"📖 [{{ nodeId }}] Получено событие редактирования msg={_msg_id}")
-        except asyncio.TimeoutError:
-            logging.info(f"📖 [{{ nodeId }}] Таймаут ожидания редактирования msg={_msg_id}, читаем историю")
-            _fresh_msgs = await userbot_client.get_messages(_target, limit=5)
-            _fresh_list = _fresh_msgs if isinstance(_fresh_msgs, list) else [_fresh_msgs]
-            _my_id_cb = (await userbot_client.get_me()).id
-            _bot_fallback = [m for m in _fresh_list if m and hasattr(m, 'sender_id') and m.sender_id != _my_id_cb]
-            _updated = _bot_fallback[0] if _bot_fallback else None
-        finally:
-            userbot_client.remove_event_handler(_on_edit_{{ nodeId | replace('-', '_') }})
+            # Ждём edit того же msg (как scrape poll_need same_id)
+{%- if responseFilterRegex %}
+            import time as _time_edit_{{ nodeId | replace('-', '_') }}
+            try:
+                # Гонка: edit того же msg ИЛИ новое сообщение, прошедшее regex (как scrape watch new+edit)
+                _wait_tasks_{{ nodeId | replace('-', '_') }} = [
+                    asyncio.ensure_future(_edit_future),
+                    asyncio.ensure_future(_new_resp_future_{{ nodeId | replace('-', '_') }}),
+                ]
+                _done_{{ nodeId | replace('-', '_') }}, _pending_{{ nodeId | replace('-', '_') }} = await asyncio.wait(
+                    _wait_tasks_{{ nodeId | replace('-', '_') }},
+                    timeout={{ responseWaitSeconds | default(14) }},
+                    return_when=asyncio.FIRST_COMPLETED,
+                )
+                for _t_{{ nodeId | replace('-', '_') }} in _pending_{{ nodeId | replace('-', '_') }}:
+                    _t_{{ nodeId | replace('-', '_') }}.cancel()
+                _updated = None
+                for _t_{{ nodeId | replace('-', '_') }} in _done_{{ nodeId | replace('-', '_') }}:
+                    try:
+                        _updated = _t_{{ nodeId | replace('-', '_') }}.result()
+                        break
+                    except Exception:
+                        pass
+                if _updated is not None:
+                    logging.info(f"📖 [{{ nodeId }}] Получен ответ msg={_updated.id} (edit/new по regex)")
+                else:
+                    raise asyncio.TimeoutError()
+            except asyncio.TimeoutError:
+                logging.info(f"📖 [{{ nodeId }}] Таймаут ожидания ответа msg={_msg_id}, читаем историю")
+                # [TEMP DEBUG] Дамп последних сообщений — понять edit это или new
+                try:
+                    _dump_msgs_{{ nodeId | replace('-', '_') }} = await userbot_client.get_messages(_target, limit=6)
+                    _dump_list_{{ nodeId | replace('-', '_') }} = _dump_msgs_{{ nodeId | replace('-', '_') }} if isinstance(_dump_msgs_{{ nodeId | replace('-', '_') }}, list) else [_dump_msgs_{{ nodeId | replace('-', '_') }}]
+                    for _dm_{{ nodeId | replace('-', '_') }} in _dump_list_{{ nodeId | replace('-', '_') }}:
+                        if _dm_{{ nodeId | replace('-', '_') }}:
+                            logging.info(
+                                f"🔎 [TEMP {{ nodeId }}] hist id={_dm_{{ nodeId | replace('-', '_') }}.id} "
+                                f"out={getattr(_dm_{{ nodeId | replace('-', '_') }}, 'out', None)} "
+                                f"text={(_dm_{{ nodeId | replace('-', '_') }}.text or '')[:70]!r}"
+                            )
+                except Exception as _dump_err_{{ nodeId | replace('-', '_') }}:
+                    logging.info(f"🔎 [TEMP {{ nodeId }}] dump error: {_dump_err_{{ nodeId | replace('-', '_') }}}")
+                # Поллинг: и edit того же msg, и любое новое сообщение, прошедшее regex
+                _edit_poll_t0 = _time_edit_{{ nodeId | replace('-', '_') }}.monotonic()
+                _updated = None
+                while _time_edit_{{ nodeId | replace('-', '_') }}.monotonic() - _edit_poll_t0 < 3.0:
+                    try:
+                        _hm_{{ nodeId | replace('-', '_') }} = await userbot_client.get_messages(_target, limit=6)
+                        _hm_list_{{ nodeId | replace('-', '_') }} = _hm_{{ nodeId | replace('-', '_') }} if isinstance(_hm_{{ nodeId | replace('-', '_') }}, list) else [_hm_{{ nodeId | replace('-', '_') }}]
+                        for _cm_{{ nodeId | replace('-', '_') }} in _hm_list_{{ nodeId | replace('-', '_') }}:
+                            if not _cm_{{ nodeId | replace('-', '_') }} or getattr(_cm_{{ nodeId | replace('-', '_') }}, 'out', False):
+                                continue
+                            _is_edit_{{ nodeId | replace('-', '_') }} = _cm_{{ nodeId | replace('-', '_') }}.id == _msg_id
+                            _is_new_{{ nodeId | replace('-', '_') }} = _cm_{{ nodeId | replace('-', '_') }}.id > _msg_id
+                            if (_is_edit_{{ nodeId | replace('-', '_') }} or _is_new_{{ nodeId | replace('-', '_') }}) and _re_text_ok_{{ nodeId | replace('-', '_') }}(_cm_{{ nodeId | replace('-', '_') }}):
+                                _updated = _cm_{{ nodeId | replace('-', '_') }}
+                                logging.info(f"📖 [{{ nodeId }}] poll ok msg={_updated.id} ({'edit' if _is_edit_{{ nodeId | replace('-', '_') }} else 'new'})")
+                                break
+                        if _updated is not None:
+                            break
+                    except Exception:
+                        pass
+                    await asyncio.sleep(0.25)
+            finally:
+                userbot_client.remove_event_handler(_on_edit_{{ nodeId | replace('-', '_') }})
+                userbot_client.remove_event_handler(_on_new_resp_{{ nodeId | replace('-', '_') }})
+{%- else %}
+            try:
+                _updated = await asyncio.wait_for(_edit_future, timeout=5)
+                logging.info(f"📖 [{{ nodeId }}] Получено событие редактирования msg={_msg_id}")
+            except asyncio.TimeoutError:
+                logging.info(f"📖 [{{ nodeId }}] Таймаут ожидания редактирования msg={_msg_id}, читаем историю")
+                _fresh_msgs = await userbot_client.get_messages(_target, limit=5)
+                _fresh_list = _fresh_msgs if isinstance(_fresh_msgs, list) else [_fresh_msgs]
+                _my_id_cb = (await userbot_client.get_me()).id
+                _bot_fallback = [m for m in _fresh_list if m and hasattr(m, 'sender_id') and m.sender_id != _my_id_cb]
+                _updated = _bot_fallback[0] if _bot_fallback else None
+            finally:
+                userbot_client.remove_event_handler(_on_edit_{{ nodeId | replace('-', '_') }})
 {%- endif %}
 {%- endif %}
 
@@ -503,31 +553,7 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
         if _updated and _updated.reply_markup:
             for _row in _updated.reply_markup.rows:
                 for _btn in _row.buttons:
-                    _btn_entry = {"text": _btn.text}
-                    _btn_type = type(_btn).__name__
-                    if hasattr(_btn, 'data') and _btn.data:
-                        _btn_entry["data"] = _btn.data.decode('utf-8', errors='replace')
-                        _btn_entry["type"] = "callback"
-                    elif hasattr(_btn, 'url') and _btn.url:
-                        _btn_entry["url"] = _btn.url
-                        _btn_entry["type"] = "url"
-                    elif _btn_type == 'KeyboardButtonSwitchInline':
-                        _btn_entry["query"] = getattr(_btn, 'query', '')
-                        _btn_entry["type"] = "switch_inline"
-                    elif _btn_type == 'KeyboardButtonWebView':
-                        _btn_entry["url"] = getattr(_btn, 'url', '')
-                        _btn_entry["type"] = "web_app"
-                    elif _btn_type == 'KeyboardButtonRequestPhone':
-                        _btn_entry["type"] = "request_phone"
-                    elif _btn_type == 'KeyboardButtonRequestGeoLocation':
-                        _btn_entry["type"] = "request_location"
-                    elif _btn_type == 'KeyboardButtonBuy':
-                        _btn_entry["type"] = "buy"
-                    elif _btn_type == 'KeyboardButtonGame':
-                        _btn_entry["type"] = "game"
-                    else:
-                        _btn_entry["type"] = "text"
-                    _btns_list.append(_btn_entry)
+                    _btns_list.append(_serialize_userbot_button(_btn))
         import json as _json
         _btns_json = _json.dumps(_btns_list, ensure_ascii=False)
         user_data[user_id]["{{ saveButtonsTo }}"] = _btns_json
@@ -543,7 +569,7 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
 
 {%- if saveMediaTo %}
         # Сохраняем медиа-объект (для пересылки через userbot)
-        if _updated and _updated.media:
+        if not _PROJECT_TELEGRAM_ACCOUNT and _updated and _updated.media:
             user_data[user_id]["{{ saveMediaTo }}"] = _updated.media
 {%- endif %}
 

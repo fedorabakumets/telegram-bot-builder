@@ -4,8 +4,9 @@
  */
 
 import Ansi from 'ansi-to-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useLaunchLogs } from '../hooks/use-launch-logs';
+import { LaunchHistoryStatus } from '../../terminal/LaunchHistoryStatus';
 
 /** Пропсы модального окна логов запуска */
 interface LaunchLogsModalProps {
@@ -40,7 +41,7 @@ function formatTitle(date: Date | string | null): string {
  * @returns JSX элемент
  */
 export function LaunchLogsModal({ launchId, startedAt, isOpen, onClose }: LaunchLogsModalProps) {
-  const { logs, isLoading } = useLaunchLogs(launchId ?? undefined);
+  const { logs, isLoading, isError, isRefreshing, retry } = useLaunchLogs(launchId ?? undefined);
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -49,14 +50,12 @@ export function LaunchLogsModal({ launchId, startedAt, isOpen, onClose }: Launch
           <DialogTitle className="text-sm font-medium">
             Логи запуска · {formatTitle(startedAt)}
           </DialogTitle>
+          <DialogDescription className="sr-only">Сохранённые строки выбранного запуска бота.</DialogDescription>
         </DialogHeader>
-        <div className="flex-1 overflow-y-auto rounded-md bg-black/90 p-3 font-mono text-xs min-h-[200px]">
-          {isLoading && (
-            <span className="text-muted-foreground">Загрузка логов...</span>
-          )}
-          {!isLoading && logs.length === 0 && (
-            <span className="text-muted-foreground">Логи не сохранены</span>
-          )}
+        <div aria-busy={isLoading || isRefreshing} className="flex flex-col flex-1 overflow-y-auto rounded-md bg-black/90 p-3 font-mono text-xs min-h-[200px]">
+          {/* Один контракт состояний сохраняет строки при сбое и отличает ошибку от пустого ответа. */}
+          <LaunchHistoryStatus isLoading={isLoading} isError={isError} isRefreshing={isRefreshing}
+            hasLogs={logs.length > 0} textClassName="text-muted-foreground" onRetry={retry} />
           {logs.map((log) => (
             <div
               key={log.id}

@@ -169,6 +169,13 @@ test('A07', 'содержит Telethon импорт и StringSession', () => {
   ok(code.includes('StringSession'), 'StringSession должен быть в коде');
 });
 
+test('A08', 'общий аккаунт выбирает и отправляет результат inline одной командой', () => {
+  const code = gen(makeCleanProject([makeUserbotInlineQueryNode('uiq1', { saveResponseIdTo: 'sent' })]), 'a08');
+  ok(code.includes('await userbot_client.inline_send(_bot, _query, _target, _idx)'), 'Нужна явная команда общей сессии');
+  ok(code.includes('if not _PROJECT_TELEGRAM_ACCOUNT:\n            _sent = await _result.click(_target)'), 'Прямое нажатие сохраняется для отдельной сессии');
+  syntax(code, 'a08');
+});
+
 // ════════════════════════════════════════════════════════════════════════════
 // БЛОК B: Параметры запроса
 // ════════════════════════════════════════════════════════════════════════════

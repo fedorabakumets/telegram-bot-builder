@@ -185,6 +185,8 @@ test('B05', 'broadcast-client: без роли user_telegram_settings, с рол
   ok(!off.includes('USERBOT_SESSION_STRING'), 'без роли USERBOT_* нет');
   ok(on.includes('USERBOT_SESSION_STRING'), 'с ролью сессия из USERBOT_*');
   ok(!on.includes('user_telegram_settings'), 'с ролью таблица не читается');
+  ok(on.includes('app = userbot_client'), 'текстовая рассылка использует общий клиент');
+  ok(on.includes('if not _shared_account:\n            await app.disconnect()'), 'рассылка не закрывает общий клиент');
 });
 
 test('B06', 'group_activity пишется только без роли', () => {

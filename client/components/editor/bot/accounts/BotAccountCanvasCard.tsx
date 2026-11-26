@@ -21,7 +21,7 @@ interface BotAccountCanvasCardProps {
   /** Открывает настройки аккаунта. */
   onSelect: () => void;
   /** Меняет положение карточки. */
-  onMove: (position: NodePos) => void;
+  onMove?: (position: NodePos, persist?: boolean) => void;
 }
 
 /**
@@ -52,17 +52,18 @@ export function BotAccountCanvasCard({
   /**
    * Перемещает карточку с учётом масштаба, если указатель вышел за порог нажатия.
    * @param event - Событие движения указателя.
+   * @param persist - Сохраняет итоговую позицию при отпускании указателя.
    */
-  const moveCard = (event: PointerEvent<HTMLButtonElement>) => {
+  const moveCard = (event: PointerEvent<HTMLButtonElement>, persist = false) => {
     const active = drag.current;
     if (active?.id !== event.pointerId) return;
     const dx = event.clientX - active.x;
     const dy = event.clientY - active.y;
     if (Math.abs(dx) > 4 || Math.abs(dy) > 4) active.moved = true;
-    if (active.moved) onMove({
+    if (active.moved) onMove?.({
       left: Math.max(0, active.origin.left + dx / scale),
       top: Math.max(0, active.origin.top + dy / scale),
-    });
+    }, persist);
   };
 
   return (
@@ -80,15 +81,15 @@ export function BotAccountCanvasCard({
         selected ? 'z-10 border-primary/70 ring-1 ring-primary/30' : 'border-border/70 hover:border-primary/50',
       ].join(' ')}
       onPointerDown={(event) => {
-        if (event.button !== 0) return;
+        if (event.button !== 0 || !onMove) return;
         suppressClick.current = false;
         drag.current = { id: event.pointerId, x: event.clientX, y: event.clientY, origin: position, moved: false };
         event.currentTarget.setPointerCapture(event.pointerId);
       }}
-      onPointerMove={moveCard}
+      onPointerMove={event => moveCard(event)}
       onPointerUp={(event) => {
         if (drag.current?.id !== event.pointerId) return;
-        moveCard(event);
+        moveCard(event, true);
         suppressClick.current = drag.current.moved;
         drag.current = null;
       }}
@@ -98,7 +99,7 @@ export function BotAccountCanvasCard({
         suppressClick.current = false;
       }}
     >
-      <span className="flex items-center gap-3 px-3 py-3">
+      <span className="flex items-center gap-3 px-3 py-2">
         <Avatar className="size-9 shrink-0 rounded-lg">
           <AvatarImage src={account.avatarUrl} alt="" className="object-cover" />
           <AvatarFallback className="rounded-lg text-muted-foreground">
@@ -108,6 +109,12 @@ export function BotAccountCanvasCard({
         <span className="min-w-0">
           <span className="block truncate text-sm font-semibold" title={account.name}>{account.name}</span>
           <span className="block truncate text-xs text-muted-foreground">{account.maskedPhone || 'Telegram'}</span>
+          {(account.telegramUsername || account.telegramId) && (
+            <span className="flex flex-wrap gap-x-2 text-xs text-muted-foreground">
+              {account.telegramUsername && <span className="truncate">@{account.telegramUsername.replace(/^@/, '')}</span>}
+              {account.telegramId && <span>ID {account.telegramId}</span>}
+            </span>
+          )}
         </span>
       </span>
       <span className="flex items-center justify-between gap-2 border-t border-border/70 px-3 py-2 text-xs">

@@ -2,7 +2,7 @@
 import { beforeEach, expect, it, vi } from 'vitest';
 import type { Request, Response } from 'express';
 import { RestartAllJobs, restartAllJobs } from './restart-all-jobs';
-import { handleCreateBotRestartAllJob, handleBotRestartAllJob } from './handlers/botRestartAllHandler';
+import { handleBotRestartAll, handleBotRestartAllJob } from './handlers/botRestartAllHandler';
 import type { RestartAllRunningBotsResult } from '../../bots/restartAllRunningBots';
 
 vi.mock('../../bots/restartAllRunningBots', () => ({
@@ -74,7 +74,7 @@ it('HTTP возвращает 202 с ID задания, а опрос чужог
   vi.spyOn(restartAllJobs, 'get').mockReturnValue(undefined);
   const response = { status: vi.fn(), json: vi.fn(), setHeader: vi.fn() };
   response.status.mockReturnValue(response);
-  await handleCreateBotRestartAllJob({ params: { id: '12' } } as unknown as Request, response as unknown as Response);
+  await handleBotRestartAll({ params: { id: '12' } } as unknown as Request, response as unknown as Response);
   expect(response.status).toHaveBeenCalledWith(202);
   expect(response.json).toHaveBeenCalledWith(payload);
   await handleBotRestartAllJob({ params: { id: '13', jobId: 'opaque-id' } } as unknown as Request,

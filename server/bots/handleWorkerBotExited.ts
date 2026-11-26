@@ -15,6 +15,7 @@ import { isExpectedStop } from './expectedStops';
 import { isServerShuttingDown } from './serverShutdownState';
 import { scheduleBotRestart } from './scheduleBotRestart';
 import { isInfrastructureHostCrash, resolveWorkerExitError } from './workerExitDiagnostic';
+import { isMemoryRefusalReason } from './workerMemoryRefusal';
 
 /**
  * Смерть всего python-процесса (exit code / signal), а не штатный bot_exited из asyncio.
@@ -109,7 +110,8 @@ export async function handleWorkerBotExited(
     projectId,
     tokenId,
     timestamp: new Date().toISOString(),
-    data: { exitStatus: statusStr },
+    // UI получает ту же подтверждённую причину, которая записана в историю запуска.
+    data: { exitStatus: statusStr, ...(errorMessage ? { errorMessage } : {}) },
   });
 
   console.log(
@@ -119,7 +121,7 @@ export async function handleWorkerBotExited(
   );
 
   if (
-    !unauthorized && !isFrozenBotError(runtimeError) && isUnexpectedBotExit({
+    !unauthorized && !isFrozenBotError(runtimeError) && !isMemoryRefusalReason(runtimeError) && isUnexpectedBotExit({
       tokenId,
       exitStatus,
       intentionalWorkerKill,

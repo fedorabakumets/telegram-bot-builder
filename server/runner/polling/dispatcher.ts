@@ -119,11 +119,11 @@ export class NodePollingDispatcher {
       const result = await entry.child.done;
       if (result && typeof result === "object" && "code" in result && result.code !== 0)
         throw new Error("Обработчик завершился с ошибкой");
-    } catch {
+    } catch (error) {
       if (!entry.abort.signal.aborted && !entry.quiescing)
         failChildRegistration(entry, this.dependencies, () => {
           if (this.entries.get(entry.bot.tokenId) === entry) this.entries.delete(entry.bot.tokenId);
-        });
+        }, error);
     } finally {
       entry.child = undefined;
       entry.task = undefined;

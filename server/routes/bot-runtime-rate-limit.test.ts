@@ -2,12 +2,14 @@
 import express from 'express';
 import { once } from 'node:events';
 import { describe, expect, it, vi } from 'vitest';
+import { registerRestartJobRateLimitCases } from './bot-restart-job-rate-limit-cases';
 
 /** Счётчик подтверждает, что превышение квоты отсекается до проверки доступа к БД. */
-const ownership = vi.hoisted(() => ({ calls: 0, statsCalls: 0 }));
+const ownership = vi.hoisted(() => ({ calls: 0, statsCalls: 0, projectCalls: 0, jobCalls: 0 }));
 /** Моделирует результат проверки членства в проекте перед обработчиком. */
 vi.mock('../middleware/requireProjectAccess', () => ({
   requireProjectAccess: (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    ownership.projectCalls++;
     if (req.headers['x-test-project-member'] !== 'yes') { res.status(403).end(); return; }
     next();
   },
@@ -39,7 +41,14 @@ vi.mock('./botManagement/handlers/projectBotSettingDefaultsHandler', () => ({
 vi.mock('./botManagement/handlers/botStartHandler', () => ({ handleBotStart: vi.fn() }));
 vi.mock('./botManagement/handlers/botStopHandler', () => ({ handleBotStop: vi.fn() }));
 vi.mock('./botManagement/handlers/botRestartHandler', () => ({ handleBotRestart: vi.fn() }));
-vi.mock('./botManagement/handlers/botRestartAllHandler', () => ({ handleBotRestartAll: vi.fn(), handleCreateBotRestartAllJob: vi.fn(), handleBotRestartAllJob: vi.fn() }));
+/** Опрос задания остаётся за проверкой членства, сам обработчик не обращается к БД. */
+vi.mock('./botManagement/handlers/botRestartAllHandler', () => ({
+  handleBotRestartAll: vi.fn(),
+  handleBotRestartAllJob: (_req: express.Request, res: express.Response) => {
+    ownership.jobCalls++;
+    res.json({ status: 'running' });
+  },
+}));
 vi.mock('./botManagement/handlers/botStartOfflineAllHandler', () => ({ handleBotStartOfflineAll: vi.fn() }));
 vi.mock('./botManagement/handlers/botProjectStatusesHandler', () => ({ handleBotProjectStatuses: vi.fn() }));
 vi.mock('./botManagement/handlers/botStatusByTokenHandler', () => ({ handleBotStatusByToken: vi.fn() }));
@@ -76,6 +85,7 @@ async function withRuntimeApi(check: (url: string) => Promise<void>): Promise<vo
 }
 
 describe('ограничения настроек режима бота', () => {
+  registerRestartJobRateLimitCases(withRuntimeApi, ownership);
   it.each(['launch-default', 'runtime-defaults', 'setting-defaults'])('проверяет доступ к проекту для GET и PUT %s', async (endpoint) => {
     await withRuntimeApi(async url => {
       const projectUrl = `${new URL(url).origin}/api/projects/1/bot/${endpoint}`;

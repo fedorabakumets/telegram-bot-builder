@@ -4,6 +4,7 @@ import { and, eq, inArray, sql } from 'drizzle-orm';
 import { resolveBotInheritedSettings } from '@shared/bot-inherited-settings';
 import { botEnvVariables, botProjects, botTokens } from '@shared/schema';
 import { db } from '../database/db';
+import { withProjectSettingsInvalidation } from './projectSettingsCache';
 import { resolveRuntimeModeSettings, RuntimeModeValidationError, validateRuntimeMode } from './runtimeModePolicy';
 import { resolveWebhookBaseUrl } from './webhookBaseUrl';
 
@@ -49,7 +50,8 @@ export async function getProjectLaunchDefault(projectId: number): Promise<Projec
  * @returns Сохранённые настройки проекта либо null, если он удалён.
  */
 export async function saveProjectLaunchDefault(projectId: number, launchMode: ProjectLaunchMode): Promise<ProjectLaunchDefault | null> {
-  return db.transaction(async (tx) => {
+  /** Инвалидация выполняется после commit, чтобы следующий запуск не получил старые настройки. */
+  return withProjectSettingsInvalidation(projectId, () => db.transaction(async (tx) => {
     const [project] = await tx.select({ sleepMode: botProjects.defaultSleepMode, botSettingDefaults: botProjects.botSettingDefaults }).from(botProjects)
       .where(eq(botProjects.id, projectId)).for('update');
     if (!project) return null;
@@ -85,5 +87,5 @@ export async function saveProjectLaunchDefault(projectId: number, launchMode: Pr
     }
     await tx.update(botProjects).set({ defaultLaunchMode: launchMode }).where(eq(botProjects.id, projectId));
     return { launchMode, inheritedCount: inherited.length, overrideCount: tokens.length - inherited.length };
-  });
+  }));
 }

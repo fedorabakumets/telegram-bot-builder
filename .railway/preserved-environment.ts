@@ -34,6 +34,8 @@ export const backendEnvironment = {
 /** Фиксирует имена существующих переменных, сохраняя их значения на стороне Railway. */
 export const runtimeEnvironment = {
   BOT_BUILDS_BUCKET_REF: preserve(),
+  /** Сохраняет действующее ограничение возраста входящих обновлений. */
+  MAX_UPDATE_AGE_SECONDS: preserve(),
   DATABASE_URL: preserve(),
   NODE_ENV: preserve(),
   REDIS_URL: preserve(),

@@ -3,7 +3,7 @@
  * @module shared/schema/tables/bot-tokens
  */
 
-import { pgTable, text, serial, integer, timestamp, bigint, boolean, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, timestamp, bigint, boolean, jsonb, uniqueIndex } from "drizzle-orm/pg-core";
 import { z } from "zod";
 import { BOT_INHERITED_SETTING_KEYS } from "../../bot-inherited-settings";
 
@@ -116,7 +116,10 @@ export const botTokens = pgTable("bot_tokens", {
   createdAt: timestamp("created_at").defaultNow(),
   /** Дата последнего обновления токена */
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, table => [
+  /** Составной ключ гарантирует, что привязка использует токен из того же проекта. */
+  uniqueIndex('bot_tokens_project_id_id').on(table.projectId, table.id),
+]);
 
 /**
  * Флаг 0/1 из JSON: допускает null (как в ответах API/БД).

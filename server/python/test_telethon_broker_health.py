@@ -33,4 +33,3 @@ class BrokerHealthTest(unittest.IsolatedAsyncioTestCase):
             redis.available = True
             self.assertEqual((await http.get("/healthz")).status, 503)
             factory.assert_not_called()
-

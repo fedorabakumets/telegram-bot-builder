@@ -21,12 +21,15 @@ export interface McpActionPolicy {
 /** Явные связи запуска с наблюдением, без угадывания по подстроке имени. */
 const JOBS = new Map([
   ['db_start_bot', 'db_bot_status'], ['db_restart_bot', 'db_bot_status'],
-  ['db_start_offline_bots', 'db_bot_status'], ['db_restart_all_bots', 'db_bot_status'],
+  ['db_start_offline_bots', 'db_bot_status'], ['db_restart_all_bots', 'db_get_restart_all_job'],
   ['db_start_chat_access_check', 'db_get_chat_access_check'], ['db_start_broadcast', 'db_get_broadcast'],
 ]);
 
 /** Явные назначения старых операций; новые регистрации передают такую же политику через _meta.botcraft. */
 const POLICIES = new Map<string, McpActionPolicy>();
+// Прогресс задания читается без побочных эффектов.
+POLICIES.set('db_get_restart_all_job', { section: 'runtime', effect: 'read', destructive: false,
+  runtimeApply: 'not_applicable', completionMode: 'immediate' });
 
 /**
  * Назначает проверенную группу действий, не анализируя подстроки их имён.

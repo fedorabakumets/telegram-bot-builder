@@ -1,4 +1,4 @@
-/** @fileoverview План локального запуска четырёх сервисов без побочных действий при импорте. */
+/** @fileoverview План локальных сервисов с отдельным или встроенным общим брокером. */
 import { join } from 'node:path';
 
 /** Проверяет порт до запуска любого процесса. */
@@ -17,6 +17,10 @@ function port(value, fallback) {
  * @returns План процессов, который сам ничего не запускает.
  */
 export function createDevServicePlan(env, root) {
+  const brokerMode = env.TELETHON_BROKER_MODE?.trim() || 'external';
+  if (!['external', 'embedded'].includes(brokerMode)) {
+    throw new Error('TELETHON_BROKER_MODE должен быть external или embedded');
+  }
   const backendPort = port(env.BACKEND_PORT, '5001');
   const frontendPort = port(env.FRONTEND_PORT, '5000');
   const brokerUrl = new URL(env.TELETHON_BROKER_URL?.trim() || 'http://127.0.0.1:8765');
@@ -35,6 +39,7 @@ export function createDevServicePlan(env, root) {
     NODE_ENV: 'development', WORKER_RUNNER_ID: runnerId, RUNNER_ID: runnerId,
     PROJECT_TELEGRAM_API_BASE: `http://127.0.0.1:${backendPort}`,
     TELETHON_BROKER_URL: brokerUrl.origin,
+    TELETHON_BROKER_MODE: 'external',
     TELETHON_BROKER_HOST: '127.0.0.1', TELETHON_BROKER_PORT: brokerPort,
     TELETHON_BROKER_LOCK_FILE: env.TELETHON_BROKER_LOCK_FILE?.trim()
       || join(root, '.local', 'telethon-broker.lock'),
@@ -42,12 +47,18 @@ export function createDevServicePlan(env, root) {
   /** Без watch авария API или runtime видна управляющей группе, а не скрыта живым наблюдателем. */
   const tsx = ['node_modules/tsx/dist/cli.mjs', '--tsconfig', 'tsconfig.node.json'];
   return [
-    { name: 'broker', command: python, args: ['server/python/telethon_account_broker.py'], env: shared },
+    ...(brokerMode === 'external' ? [{ name: 'broker', command: python,
+      args: ['server/python/telethon_account_broker.py'], env: shared }] : []),
     { name: 'api', command: process.execPath, args: [...tsx, 'server/index.ts'], env: {
       ...shared, PORT: backendPort, APP_MODE: 'backend', BOT_RUNTIME_MODE: 'api', WORKER_RUNTIME: 'remote',
     } },
-    { name: 'runtime', command: process.execPath, args: [...tsx, 'server/runner/index.ts'], env: {
-      ...shared, RUNNER_REQUIRE_FENCE: 'true',
+    { name: 'runtime', command: process.execPath,
+      /** Прямая загрузка раннера сохраняет IPC в процессе, который владеет вложенным брокером. */
+      args: brokerMode === 'embedded' ? ['--import', 'tsx', 'server/runner/index.ts'] : [...tsx, 'server/runner/index.ts'],
+      /** Управляющая группа дожидается готовности и штатного закрытия вложенного брокера. */
+      ownsBroker: brokerMode === 'embedded', env: {
+      ...shared, RUNNER_REQUIRE_FENCE: 'true', TELETHON_BROKER_MODE: brokerMode,
+      ...(brokerMode === 'embedded' ? { TSX_TSCONFIG_PATH: join(root, 'tsconfig.node.json') } : {}),
     } },
     { name: 'frontend', command: process.execPath, args: ['node_modules/vite/bin/vite.js', '--config', 'vite.config.ts'], env: {
       ...shared, SPLIT_FRONTEND: '1', FRONTEND_PORT: frontendPort,

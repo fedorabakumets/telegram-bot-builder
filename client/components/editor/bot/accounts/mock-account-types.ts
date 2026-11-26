@@ -42,6 +42,10 @@ export interface MockTelegramAccount {
   avatarUrl?: string;
   /** Маскированный демонстрационный номер телефона. */
   maskedPhone: string;
+  /** Имя пользователя подключённого аккаунта. */
+  telegramUsername?: string | null;
+  /** Идентификатор подключённого пользователя Telegram. */
+  telegramId?: string | null;
   /** Данные профиля после демонстрационного подключения. */
   profile?: MockAccountProfile;
   /** Состояние подключения аккаунта в прототипе. */

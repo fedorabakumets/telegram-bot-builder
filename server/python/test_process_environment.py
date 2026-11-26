@@ -1,4 +1,4 @@
-"""@fileoverview Проверяет домашний каталог Windows в изолированном окружении обработчика."""
+"""@fileoverview Проверяет домашний каталог и путь очереди изолированного обработчика."""
 import json
 import os
 import subprocess
@@ -30,6 +30,22 @@ class ProcessEnvironmentTests(unittest.TestCase):
         result = subprocess.run([sys.executable, "-c", "import pathlib,json;print(json.dumps(str(pathlib.Path.home())))"],
                                 env=child_environment(), capture_output=True, text=True, timeout=15, check=True)
         self.assertEqual(Path(json.loads(result.stdout)), Path.home())
+
+    def test_real_child_preserves_analytics_spool_without_bot_override(self):
+        """Сохраняет путь очереди в дочернем процессе без наследования секретов панели."""
+        values = {"ANALYTICS_SPOOL_DIR": str(Path.cwd() / "private-analytics-spool"),
+                  "DATABASE_URL": "secret-db", "BOT_TOKEN": "secret-token",
+                  "SESSION_SECRET": "secret-session"}
+        with patch.dict(os.environ, values):
+            env = child_environment()
+        # В настройках конкретного бота пути может не быть: его даёт исполнитель.
+        env.update({"PROJECT_ID": "12", "TOKEN_ID": "8"})
+        script = ("import os,json;print(json.dumps({'spool':os.getenv('ANALYTICS_SPOOL_DIR'),"
+                  "'secrets':[key for key in ('DATABASE_URL','BOT_TOKEN','SESSION_SECRET') if key in os.environ]}))")
+        result = subprocess.run([sys.executable, "-c", script], env=env,
+                                capture_output=True, text=True, timeout=15, check=True)
+        self.assertEqual(json.loads(result.stdout),
+                         {"spool": values["ANALYTICS_SPOOL_DIR"], "secrets": []})
 
 
 if __name__ == "__main__":

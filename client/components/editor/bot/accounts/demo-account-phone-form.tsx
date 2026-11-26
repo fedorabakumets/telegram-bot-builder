@@ -22,6 +22,9 @@ interface DemoAccountPhoneFormProps {
  */
 export function DemoAccountPhoneForm({ onCancel, onConnect }: DemoAccountPhoneFormProps) {
   const id = useId();
+  /** Реквизиты для локальной проверки формы. */
+  const [apiId, setApiId] = useState<string>(String(demoTelegramApp.id));
+  const [apiHash, setApiHash] = useState<string>(demoTelegramApp.hash);
   const [phone, setPhone] = useState('+1 202 555 0142');
   const [code, setCode] = useState('');
   const [confirmedPhone, setConfirmedPhone] = useState('');
@@ -51,11 +54,11 @@ export function DemoAccountPhoneForm({ onCancel, onConnect }: DemoAccountPhoneFo
         <div className="grid grid-cols-2 gap-2">
           <div className="min-w-0 space-y-1">
             <Label htmlFor={`${id}-api-id`} className="text-xs">API ID</Label>
-            <Input id={`${id}-api-id`} value={demoTelegramApp.id} readOnly className="h-8 text-xs" />
+            <Input id={`${id}-api-id`} value={apiId} inputMode="numeric" onChange={event => setApiId(event.target.value)} className="h-8 text-xs" />
           </div>
           <div className="min-w-0 space-y-1">
             <Label htmlFor={`${id}-api-hash`} className="text-xs">API Hash</Label>
-            <Input id={`${id}-api-hash`} type="password" value={demoTelegramApp.hash} readOnly className="h-8 text-xs" />
+            <Input id={`${id}-api-hash`} type="password" value={apiHash} onChange={event => setApiHash(event.target.value)} className="h-8 text-xs" />
           </div>
           <p className="col-span-2 text-xs text-muted-foreground">Тестовые реквизиты подставлены автоматически.</p>
         </div>

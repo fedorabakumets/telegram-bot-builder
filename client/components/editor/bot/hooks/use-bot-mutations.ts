@@ -13,6 +13,7 @@
  */
 
 import { useState } from 'react';
+import { useRestartAllJob } from './use-restart-all-job';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/queryClient';
@@ -186,24 +187,8 @@ export function useBotMutations({
     },
   });
 
-  /** Мутация перезапуска всех ботов проекта */
-  const restartAllBotsMutation = useMutation({
-    mutationFn: (pid: number) =>
-      apiRequest('POST', `/api/projects/${pid}/bot/restart-all`),
-    onSuccess: (data: { restarted: number; results?: { tokenId: number }[] }, pid: number) => {
-      queryClient.invalidateQueries({ queryKey: [`/api/projects/${pid}/tokens`] });
-      invalidateBotStatusQueries(queryClient, pid);
-      if (data.results) {
-        data.results.forEach(r => {
-          onBotStarted?.(pid, r.tokenId, '');
-        });
-      }
-      toast({ title: 'Боты перезапущены', description: `Перезапущено: ${data.restarted}` });
-    },
-    onError: (error: Error) => {
-      toast({ title: 'Ошибка перезапуска', description: error.message, variant: 'destructive' });
-    },
-  });
+  /** Перезапуск отслеживается отдельным заданием без долгого HTTP-запроса. */
+  const restartAllBotsMutation = useRestartAllJob(onBotStarted);
 
   /** Мутация массового запуска офлайн-ботов проекта */
   const startOfflineAllMutation = useMutation({

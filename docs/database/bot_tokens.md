@@ -61,6 +61,12 @@
 | fk_project_id_bot_projects | FOREIGN KEY | (project_id) → bot_projects(id) |
 | fk_owner_id_telegram_users | FOREIGN KEY | (owner_id) → telegram_users(id) |
 
+### Indexes
+
+| Name | Columns | Unique | Type |
+|------|---------|--------|------|
+| bot_tokens_project_id_id | project_id, id | YES | - |
+
 ### Relations
 
 | Parent | Child | Type |

@@ -7,6 +7,7 @@
  * Модуль для запуска дочерних процессов
  * @external child_process
  */
+import { readProjectForLaunch } from "./projectSettingsCache";
 import { spawn } from "node:child_process";
 import { workerManager } from './botWorkerManager';
 import { isWorkerPoolEnabled } from './isWorkerPoolEnabled';
@@ -194,7 +195,8 @@ export async function startBot(
       return { success: false, error: inactiveError };
     }
 
-    const project = await storage.getBotProject(projectId);
+    /** Запуск читает свежие настройки, независимо от кэшей процессов панели. */
+    const project = await readProjectForLaunch(projectId);
     if (!project) return { success: false, error: "Проект не найден" };
 
     /** Совместимость проверяется до getMe, остановки процессов и генерации любого запуска. */

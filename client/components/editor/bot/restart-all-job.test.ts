@@ -29,7 +29,8 @@ describe('restart-all job', () => {
 
   it('после обновления страницы читает сохранённое задание без нового POST', async () => {
     sessionStorage.setItem('bot-restart-all-active', JSON.stringify({ projectId: 12, jobId: 'job-1' }));
-    const fetcher = vi.fn(() => response(completed));
+    // Сигнатура fetch сохраняет тип аргумента URL при проверке истории вызовов.
+    const fetcher = vi.fn<typeof fetch>(() => response(completed));
     vi.stubGlobal('fetch', fetcher);
     await runRestartAllJob(12, vi.fn());
     expect(fetcher).toHaveBeenCalledTimes(1);

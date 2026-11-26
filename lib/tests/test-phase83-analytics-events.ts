@@ -19,6 +19,8 @@ try {
   execFileSync('python', [resolve('lib/tests/analytics-log-filter-resources-runtime.py'), middleware], { stdio: 'inherit' });
   // Ошибки SQL и commit не должны удерживать SQLite-соединения и их кеш.
   execFileSync('python', [resolve('lib/tests/analytics-spool-resources-runtime.py'), middleware], { stdio: 'inherit' });
+  // Отказ прав не раскрывает текст исключения; повторы замедляются и переживают восстановление.
+  execFileSync('python', [resolve('lib/tests/analytics-spool-permissions-runtime.py'), middleware], { stdio: 'inherit' });
   // Последовательность middleware → обёртка сохраняет reply/inline и не удваивает сообщения.
   execFileSync('python', [resolve('lib/tests/analytics-reply-history-runtime.py'), middleware], { stdio: 'inherit' });
   // Настоящий локальный Dispatcher проверяет фильтры и middleware без сети Telegram.

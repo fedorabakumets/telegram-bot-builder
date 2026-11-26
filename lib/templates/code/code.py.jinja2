@@ -10,6 +10,7 @@ import types as _code_types
 import math
 import datetime as _datetime_mod
 import json
+from contextlib import asynccontextmanager as _code_asynccontextmanager
 try:
     from telethon.tl.custom import Button
 except Exception:
@@ -28,6 +29,25 @@ _CODE_SKIP_KEYS = {
     'asyncio', 'json', 're', 'math', 'datetime', 'logging', 'Button', 'events',
     '__code_entry', '__builtins__',
 }
+
+@_code_asynccontextmanager
+async def _code_shared_account_scope(client, source):
+    """Сериализует отмеченные процессы одного аккаунта до начала таймера выполнения кода."""
+    _first_line = (source or '').splitlines()[:1]
+    _account_id = getattr(client, '_account_id', None)
+    if not _account_id or _first_line != ['# botcraft:shared-account-workflow']:
+        yield
+        return
+    _redis_url = os.getenv('REDIS_URL', '').strip()
+    if not _redis_url:
+        raise RuntimeError('Для последовательного процесса общего аккаунта нужен REDIS_URL')
+    from redis.asyncio import Redis as _CodeWorkflowRedis
+    _redis = _CodeWorkflowRedis.from_url(_redis_url)
+    try:
+        async with _redis.lock(f'tbb:telegram:code-workflow:account:{_account_id}', timeout=240, blocking_timeout=900):
+            yield
+    finally:
+        await _redis.aclose()
 
 async def _run_code_node(user_id, source, callback_query=None, state=None, node_id=""):
     """Выполняет пользовательский async-код узла code с таймаутом и записью переменных."""
@@ -78,7 +98,8 @@ async def _run_code_node(user_id, source, callback_query=None, state=None, node_
             _ns['_ns'] = _ns
             exec(compile(_wrapped, f"<code:{node_id}>", "exec"), _ns, _ns)
             async with _get_code_node_lock(user_id):
-                await asyncio.wait_for(_ns["__code_entry"](), timeout=_CODE_NODE_TIMEOUT)
+                async with _code_shared_account_scope(_ub, source):
+                    await asyncio.wait_for(_ns["__code_entry"](), timeout=_CODE_NODE_TIMEOUT)
         except asyncio.TimeoutError:
             logging.error(f"❌ code [{node_id}]: таймаут {_CODE_NODE_TIMEOUT}с")
         except Exception as _code_err:

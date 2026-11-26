@@ -1,6 +1,7 @@
 /** @fileoverview Единый запрет автоматического запуска замороженного или явно остановленного бота. */
 import { storage } from '../storages/storage';
 import { isBotFrozen } from './frozenBotStatus';
+import { isManualDevBotStart } from './manual-dev-bot-start';
 
 /**
  * Сверяет актуальную личность бота и сохранённое намерение непосредственно перед автоматическим запуском.
@@ -9,6 +10,8 @@ import { isBotFrozen } from './frozenBotStatus';
  * @returns Разрешён ли автоматический запуск; ручной запуск не использует этот запрет.
  */
 export async function automaticBotStartAllowed(projectId: number, tokenId: number): Promise<boolean> {
+  /** В ручном dev-режиме запрещены также отложенные повторы и аварийное восстановление. */
+  if (isManualDevBotStart()) return false;
   const token = await storage.getBotToken(tokenId);
   if (!token?.token || isBotFrozen(projectId, tokenId, token.token)) return false;
   const instance = await storage.getBotInstanceByToken(tokenId);

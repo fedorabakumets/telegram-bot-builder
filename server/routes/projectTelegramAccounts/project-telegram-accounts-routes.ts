@@ -121,7 +121,8 @@ export function registerProjectTelegramAccountsRoutes(app: Express): void {
     if (proxy) await resolveProjectTelegramProxy(proxy);
     return setProjectTelegramAccountProxy(project, account, proxy);
   }));
-  app.delete(`${path}/:accountId`, ...write, (req, res) => {
+  /** Явные типы сохраняют контекст Express при массиве промежуточных обработчиков. */
+  app.delete(`${path}/:accountId`, write, (req: Request, res: Response) => {
     void deleteProjectTelegramAccount(Number(req.params.projectId), Number(req.params.accountId)).then(deleted => {
       if (deleted) res.json({ success: true });
       else res.status(404).json({ message: 'Аккаунт не найден' });

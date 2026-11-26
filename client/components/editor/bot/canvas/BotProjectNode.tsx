@@ -14,6 +14,8 @@ interface BotProjectNodeProps {
   selected: boolean;
   /** Открывает панель проекта. */
   onSelect: () => void;
+  /** Положение над центром группы карточек. */
+  left?: number;
 }
 
 /**
@@ -21,7 +23,7 @@ interface BotProjectNodeProps {
  * @param props - Свойства карточки.
  * @returns Кнопка открытия настроек проекта.
  */
-export function BotProjectNode({ name, botCount, launchMode, selected, onSelect }: BotProjectNodeProps) {
+export function BotProjectNode({ name, botCount, launchMode, selected, onSelect, left = 48 }: BotProjectNodeProps) {
   return (
     <button
       type="button"
@@ -30,8 +32,9 @@ export function BotProjectNode({ name, botCount, launchMode, selected, onSelect 
       aria-pressed={selected}
       aria-label={`Настройки ботов проекта «${name}»`}
       onClick={onSelect}
+      style={{ left }}
       className={[
-        'absolute left-12 top-12 flex w-[240px] items-center gap-3 rounded-xl border bg-card p-3 text-left shadow-sm',
+        'absolute top-12 flex w-[240px] items-center gap-3 rounded-xl border bg-card p-3 text-left shadow-sm',
         'hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
         selected ? 'border-primary/70 ring-1 ring-primary/30' : 'border-border',
       ].join(' ')}

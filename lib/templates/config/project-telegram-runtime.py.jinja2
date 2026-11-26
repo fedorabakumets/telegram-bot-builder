@@ -184,4 +184,3 @@ class _ProjectTelegramBridge(_ProjectTelegramEventBridge):
         """Выполняет inline-запрос и отправляет выбранный результат одной командой."""
         await self.ensure_event_subscription()
         return SimpleNamespace(**await self._execute("inline_send", bot=bot, query=query, target=target, index=index))
-

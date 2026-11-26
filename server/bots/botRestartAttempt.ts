@@ -7,6 +7,7 @@ import { refuseInactiveBotStart } from './refuse-inactive-bot-start';
 import { isServerShuttingDown } from './serverShutdownState';
 import { getRestartCounter } from './botRestartManager';
 import { resolveStoredBotAutoRestart } from './resolveStoredBotAutoRestart';
+import { isMemoryRefusalReason } from './workerMemoryRefusal';
 
 /** Токены, для которых уже запланирована или выполняется попытка. */
 const pending = new Set<number>();
@@ -60,6 +61,8 @@ export function queueBotRestart(attempt: BotRestartAttempt): void {
       try {
         if (isServerShuttingDown() || getBotStartRevision(tokenId) !== attempt.revision) return;
         const current = await storage.getBotInstanceByToken(tokenId);
+        // Уже поставленная попытка тоже отменяется после отказа вместимости.
+        if (isMemoryRefusalReason(current?.errorMessage ?? undefined)) return;
         if (current?.desiredStatus === 'stopped' ||
             (infrastructure && current?.desiredStatus !== 'running') ||
             (attempt.generation !== undefined && current?.desiredGeneration !== attempt.generation)) return;
@@ -73,6 +76,7 @@ export function queueBotRestart(attempt: BotRestartAttempt): void {
         const { autoRestart, maxRestartAttempts } = await resolveStoredBotAutoRestart(projectId, latestToken);
         if ((!infrastructure && !autoRestart) || (getRestartCounter(tokenId)?.attempts ?? 0) > maxRestartAttempts) return;
         const final = await storage.getBotInstanceByToken(tokenId);
+        if (isMemoryRefusalReason(final?.errorMessage ?? undefined)) return;
         // Ручное действие во время проверок БД отменяет уже подготовленную попытку.
         if (getBotStartRevision(tokenId) !== attempt.revision || isServerShuttingDown() ||
             final?.desiredStatus === 'stopped' || final?.status === 'running' ||
@@ -82,14 +86,15 @@ export function queueBotRestart(attempt: BotRestartAttempt): void {
         const result = await startBotAfterStop(projectId, token.token, tokenId, false);
         if (!result.success) {
           console.error(`[AutoRestart] Не удалось поднять token=${tokenId}: ${result.error}`);
-          retry = infrastructure;
+          retry = infrastructure && !isMemoryRefusalReason(result.error);
         }
       } catch (error) {
         console.error(`[AutoRestart] Ошибка рестарта token=${tokenId}:`, error);
-        retry = infrastructure;
+        retry = infrastructure && !isMemoryRefusalReason(error instanceof Error ? error.message : undefined);
       } finally { pending.delete(tokenId); }
       if (retry) {
         const current = await storage.getBotInstanceByToken(tokenId);
+        if (isMemoryRefusalReason(current?.errorMessage ?? undefined)) return;
         if (getBotStartRevision(tokenId) === attempt.revision && current?.desiredStatus === 'running' &&
             (attempt.generation === undefined || current?.desiredGeneration === attempt.generation)) await attempt.retry();
       }

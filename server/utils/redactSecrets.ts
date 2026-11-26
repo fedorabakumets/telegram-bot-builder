@@ -18,6 +18,8 @@ const SECRET_JSON_FIELDS = [
   "apiHash",
   "userbotApiHash",
   "USERBOT_API_HASH",
+  "PROJECT_TELEGRAM_RUNNER_KEY",
+  "TELETHON_BROKER_SECRET",
   "password",
   "AGENT_AUTO_AUTH_SECRET",
   "X-Agent-Signature",
@@ -29,7 +31,7 @@ const SECRET_JSON_FIELDS = [
 const SECRET_FIELD_RE = new RegExp(`"(${SECRET_JSON_FIELDS.join("|")})"\\s*:\\s*"[^"]*"`, "g");
 
 /** Поле=значение (строки .env) для секретных полей */
-const SECRET_ENV_RE = /\b(USERBOT_SESSION_STRING|USERBOT_API_HASH|BOT_TOKEN)=\S+/g;
+const SECRET_ENV_RE = /\b(USERBOT_SESSION_STRING|USERBOT_API_HASH|PROJECT_TELEGRAM_RUNNER_KEY|TELETHON_BROKER_SECRET|BOT_TOKEN)=\S+/g;
 
 /** StringSession Telethon: версия "1" и base64 ключа авторизации (~350 символов) */
 const TELETHON_SESSION_RE = /\b1[A-Za-z0-9_-]{300,}={0,2}/g;

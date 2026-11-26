@@ -1,47 +1,7 @@
-/**
- * @fileoverview Хендлер перезапуска всех запущенных ботов проекта
- * @module botManagement/handlers/botRestartAllHandler
- */
-
+/** @fileoverview Быстрый приём и опрос фонового массового перезапуска. */
 import type { Request, Response } from 'express';
 import { restartAllJobs } from '../restart-all-jobs';
-import { RestartAllInProgressError, restartAllRunningBots } from '../../../bots/restartAllRunningBots';
-
-/**
- * Обрабатывает запрос на перезапуск всех запущенных ботов проекта.
- * Фазы выполняет restartAllRunningBots: остановка, пауза, запуск по очереди.
- * @param req - Запрос с params.id
- * @param res - Ответ
- */
-export async function handleBotRestartAll(req: Request, res: Response): Promise<void> {
-  try {
-    const projectId = parseInt(req.params.id);
-    const result = await restartAllRunningBots(projectId);
-
-    if (!result.ok) {
-      res.status(404).json({ message: result.message });
-      return;
-    }
-
-    if (result.message) {
-      res.json({ message: result.message, restarted: result.restarted, failed: result.failed, results: result.results });
-      return;
-    }
-
-    res.json({
-      restarted: result.restarted,
-      failed: result.failed,
-      results: result.results,
-    });
-  } catch (error) {
-    if (error instanceof RestartAllInProgressError) {
-      res.status(409).json({ message: error.message });
-      return;
-    }
-    console.error('Ошибка перезапуска всех ботов:', error);
-    res.status(500).json({ message: 'Не удалось перезапустить ботов' });
-  }
-}
+import { RestartAllInProgressError } from '../../../bots/restartAllRunningBots';
 
 /** Проверяет ID проекта до обращения к очереди. */
 function projectId(req: Request): number | undefined {
@@ -50,7 +10,7 @@ function projectId(req: Request): number | undefined {
 }
 
 /** Принимает работу и сразу возвращает 202; повтор получает то же активное задание. */
-export async function handleCreateBotRestartAllJob(req: Request, res: Response): Promise<void> {
+export async function handleBotRestartAll(req: Request, res: Response): Promise<void> {
   const id = projectId(req);
   if (!id) { res.status(400).json({ message: 'Неверный ID проекта' }); return; }
   try {

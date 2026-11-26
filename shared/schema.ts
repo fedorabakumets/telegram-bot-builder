@@ -12,8 +12,7 @@ export type { BotProject, InsertBotProject } from "./schema/tables/bot-projects"
 
 export { botTokens, insertBotTokenSchema } from "./schema/tables/bot-tokens";
 export type { BotToken, InsertBotToken } from "./schema/tables/bot-tokens";
-
-/** Таблицы аккаунтов Telegram проекта и привязанных к ним ботов. */
+/** Проектные Telegram-аккаунты и связи с ботами. */
 export { projectTelegramAccounts, projectTelegramAccountBots } from "./schema/tables/project-telegram-accounts";
 
 export { botInstances, insertBotInstanceSchema } from "./schema/tables/bot-instances";

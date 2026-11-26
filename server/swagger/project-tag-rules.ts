@@ -86,7 +86,9 @@ export function inferProjectTag(openApiPath: string): string | null {
   }
 
   // Lifecycle / профиль бота
-  if (new RegExp(`^/api/projects/[^/]+/bot/(?:${BOT_LIFECYCLE_ACTIONS})$`).test(openApiPath)) {
+  // Опрос задания относится к тому же lifecycle API, что и запуск перезапуска.
+  if (new RegExp(`^/api/projects/[^/]+/bot/(?:${BOT_LIFECYCLE_ACTIONS})$`).test(openApiPath)
+      || /^\/api\/projects\/[^/]+\/bot\/restart-all\/jobs\/[^/]+$/.test(openApiPath)) {
     return "project-bot";
   }
 

@@ -6,6 +6,8 @@ on:
     paths:
       - 'server/**'
       - 'client/components/editor/inline-rich/**'
+      - 'client/components/editor/header/hooks/use-mini-app-auth*'
+      - 'client/types/telegram-mini-app.ts'
       - 'package*.json'
       - '.github/workflows/security-regressions.yml'
   pull_request:
@@ -28,6 +30,11 @@ jobs:
       - run: npm ci
       - run: npx vitest run --config server/admin/admin-login-rate-limit.vitest.config.ts
       - run: npx vitest run --config server/middleware/cookie-csrf.vitest.config.ts
+      # Проверяем перенос Telegram-сессии и позднюю загрузку Mini App без настоящего Telegram.
+      - name: Авторизация Telegram и установка сессии
+        run: npx vitest run --config server/routes/auth/vitest.config.ts utils/applyTelegramLogin.test.ts handlers/telegramAuthHandler.test.ts
+      - name: Ожидание SDK Telegram в Mini App
+        run: npx vitest run --project client client/components/editor/header/hooks/use-mini-app-auth.test.ts
       # Проверяем защиту до авторизации, безопасное логирование и изолированный webhook.
       - run: npx vitest run --config server/admin/runtime-settings-rate-limit.vitest.config.ts
       - run: npx vitest run --config server/routes/bot-runtime-rate-limit.vitest.config.ts

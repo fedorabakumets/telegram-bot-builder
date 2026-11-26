@@ -30,13 +30,12 @@ export const PROJECT_BOT_START_OK_EXAMPLE = {
   tokenUsed: true,
 };
 
-/** POST restart-all 200 */
+/** POST restart-all 202: принятие без обещания успешного перезапуска. */
 export const PROJECT_BOT_RESTART_ALL_EXAMPLE = {
-  restarted: 2,
-  results: [
-    { tokenId: 7, success: true, processId: "12345" },
-    { tokenId: 8, success: true, processId: "12346" },
-  ],
+  jobId: "6c93054e-074a-4d15-9d72-c2e09f8eb7dc", projectId: 42, status: "queued",
+  progress: { phase: "queued", total: 0, completed: 0, stopped: 0, stopFailed: 0,
+    attempted: 0, restarted: 0, failed: 0, results: [] },
+  createdAt: "2026-11-21T09:00:00.000Z", updatedAt: "2026-11-21T09:00:00.000Z",
 };
 
 /** 403 */

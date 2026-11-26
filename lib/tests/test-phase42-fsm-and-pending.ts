@@ -252,15 +252,19 @@ test('D06', 'middleware возвращает None для устаревших а
   ok(codeNoDb.includes('return  # не передаём дальше') || codeNoDb.includes('return\n'), 'return None для устаревших апдейтов не найден');
 });
 
-test('D07', 'dp.message.middleware(stale_update_filter_middleware) регистрируется в main()', () => {
-  ok(codeNoDb.includes('dp.message.middleware(stale_update_filter_middleware)'), 'регистрация stale_update_filter_middleware не найдена');
+/** Фильтр возраста включается через обёртку, чтобы не отбрасывать надёжно сохранённую очередь. */
+test('D07', 'фильтр возраста регистрируется через обёртку переноса в main()', () => {
+  ok(codeNoDb.includes('dp.message.middleware(_direct_stale_filter)'), 'обёртка фильтра возраста не зарегистрирована');
+  ok(codeNoDb.includes('return await stale_update_filter_middleware(handler, event, data)'), 'обычные сообщения не передаются фильтру возраста');
+  ok(/if _direct_draining:\s+return await handler\(event, data\)/.test(codeNoDb), 'сохранённая очередь не обходит фильтр возраста');
 });
 
 // ══ Блок E: Порядок регистрации middleware ════════════════════════════════════
 console.log('\n══ Блок E: Порядок регистрации middleware ════════════════════════════');
 
 test('E01', 'stale_update_filter_middleware регистрируется ДО message_logging_middleware', () => {
-  const staleIdx   = codeWithDb.indexOf('dp.message.middleware(stale_update_filter_middleware)');
+  // Порядок проверяем по регистрации обёртки, а не по определению базового фильтра.
+  const staleIdx   = codeWithDb.indexOf('dp.message.middleware(_direct_stale_filter)');
   const loggingIdx = codeWithDb.indexOf('dp.message.middleware(message_logging_middleware)');
   ok(staleIdx   !== -1, 'stale_update_filter_middleware не зарегистрирован');
   ok(loggingIdx !== -1, 'message_logging_middleware не зарегистрирован (нужен userDatabaseEnabled=true)');
@@ -269,7 +273,7 @@ test('E01', 'stale_update_filter_middleware регистрируется ДО me
 
 test('E02', 'stale_update_filter_middleware регистрируется ДО register_user_middleware (если есть)', () => {
   // register_user_middleware появляется только при autoRegisterUsers — проверяем в реальном проекте
-  const staleIdx    = codeReal.indexOf('dp.message.middleware(stale_update_filter_middleware)');
+  const staleIdx    = codeReal.indexOf('dp.message.middleware(_direct_stale_filter)');
   ok(staleIdx !== -1, 'stale_update_filter_middleware не зарегистрирован в реальном проекте');
   const registerIdx = codeReal.indexOf('dp.message.middleware(register_user_middleware)');
   if (registerIdx !== -1) {

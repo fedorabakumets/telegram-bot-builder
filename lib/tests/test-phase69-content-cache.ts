@@ -26,6 +26,7 @@
 import fs from 'fs';
 import { execSync } from 'child_process';
 import { generatePythonCode } from '../bot-generator.ts';
+import { checkContentCacheRuntime } from './content-cache-runtime-check';
 
 // ─── Вспомогательные узлы ────────────────────────────────────────────────────
 
@@ -331,6 +332,9 @@ test('E04', 'contentCache=true + БД выкл → аксессор get_content 
 test('E05', 'Синтаксис OK: contentCache=true + БД выкл', () => {
   syntax(gen('E05', true, { userDatabaseEnabled: false }), 'E05');
 });
+
+// Перезагрузка не удерживает все исходные строки и не собирает два снимка сразу.
+test('F01', 'Потоковый кэш: порции, последовательность, атомарность при ошибке', checkContentCacheRuntime);
 
 // ─── Итог ────────────────────────────────────────────────────────────────────
 

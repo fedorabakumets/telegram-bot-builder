@@ -63,7 +63,11 @@ async function launch(entry, env, health = '/api/health') {
   const base = `http://127.0.0.1:${entry === 'scripts/dev-split.mjs' ? env.FRONTEND_PORT : env.PORT}`;
   for (let i = 0; i < 240; i++) {
     assert.equal(child.exitCode, null, `Процесс ${entry} завершился`);
-    try { if ((await fetch(base + health, { signal: AbortSignal.timeout(1000) })).ok) return { child, base }; }
+    try {
+      const response = await fetch(base + health, { signal: AbortSignal.timeout(1000) });
+      /** HTTP 200 подтверждает живой сервер; миграции и готовность БД проверяются отдельно. */
+      if (response.ok && (await response.json()).ready === true) return { child, base };
+    }
     catch { /* Первый запуск выполняет миграции новой БД. */ }
     await delay(500);
   }

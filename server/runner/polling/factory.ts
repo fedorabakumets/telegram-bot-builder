@@ -15,6 +15,7 @@ import { PollingTiming } from "./timing";
 import { SharedPollingHost } from "./sharedHost";
 import { WebhookIngress } from "./webhookIngress";
 import { runtimeFailureEvent } from "./runtimeFailureEvent";
+import { runnerMemoryAdmission } from "./memoryAdmission";
 /** Реальный диспетчер группы без постоянного Python-процесса. */
 export class ProcessPollingRuntime {
   /** Соединения для каждого явно настроенного хранилища бота. */
@@ -85,6 +86,8 @@ export class ProcessPollingRuntime {
 
   /** Создаёт обработчик с секретами в stdin и отфильтрованным жизненным циклом. */
   private async startChild(bot: PollingBot, signal: AbortSignal): Promise<PythonPollingChild> {
+    // Общий хост резервирует сам; отдельный Python проходит тот же контейнерный допуск.
+    const reservation = this.shared ? undefined : await runnerMemoryAdmission.acquire();
     const memory = this.memory.register(bot.tokenId);
     const started = Date.now();
     this.timing.record(bot.tokenId, "child_start");
@@ -101,6 +104,7 @@ export class ProcessPollingRuntime {
         onLog: (content) => this.emit(JSON.stringify({ type: "stderr", token_id: bot.tokenId, content })),
       });
       this.children.set(bot.tokenId, child);
+      reservation?.settled(); void child.done.then(() => reservation?.release());
       this.timing.record(bot.tokenId, "child_ready", { startupMs: Date.now() - started });
       child.pauseOutput?.(this.paused);
       void child.done.then(() => {
@@ -111,7 +115,7 @@ export class ProcessPollingRuntime {
       return child;
     } catch (error) {
       this.timing.record(bot.tokenId, "child_start_failed", { startupMs: Date.now() - started });
-      memory.close(); throw error;
+      reservation?.release(); memory.close(); throw error;
     }
   }
 

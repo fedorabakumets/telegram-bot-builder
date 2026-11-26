@@ -36,7 +36,7 @@ class BrokerOwnership:
             self.failed = True
             raise
 
-    def watch(self, close_clients):
+    def watch(self, close_clients, on_lost=None):
         """Проверяет владение даже без HTTP-запросов и закрывает клиентов при потере связи."""
         async def monitor():
             """Не разрешает автоматическое возобновление после неопределённого состояния."""
@@ -45,7 +45,11 @@ class BrokerOwnership:
                 try:
                     await self.check()
                 except Exception:
-                    await close_clients()
+                    try:
+                        await close_clients()
+                    finally:
+                        if on_lost:
+                            on_lost()
                     return
         self.task = asyncio.create_task(monitor())
 

@@ -65,8 +65,15 @@ export async function handleBotStop(req: Request, res: Response): Promise<void> 
         }
 
         const instance = await storage.getBotInstanceByToken(tokenId);
-        if (instance) await setBotDesiredStatus(instance.id, 'stopped');
-        const result = await stopBot(projectId, tokenId);
+        /** Передаём версию именно этого запроса, чтобы не остановить более новый запуск. */
+        const expectedDesiredGeneration = instance ? await setBotDesiredStatus(instance.id, 'stopped') : undefined;
+        if (expectedDesiredGeneration === null) {
+            res.status(409).json({ message: "Экземпляр бота изменился. Повторите остановку." });
+            return;
+        }
+        const result = expectedDesiredGeneration === undefined
+            ? await stopBot(projectId, tokenId)
+            : await stopBot(projectId, tokenId, { expectedDesiredGeneration });
         if (result.success) {
             res.json({ message: "Бот успешно остановлен" });
         } else {
