@@ -1,4 +1,5 @@
 /** @fileoverview Понятный выбор способа создания первого проекта BotCraft. */
+import { Download, PanelsTopLeft, Plus, type LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TELEGRAM_CHAT_URL } from '../header/components/telegram-chat-invite';
 
@@ -22,8 +23,8 @@ export interface NoProjectsActionsProps {
 
 /** Свойства одного способа начала работы. */
 interface StartOptionProps {
-  /** Цвет заголовка плитки в светлой и тёмной теме. */
-  titleColor: string;
+  /** Контурная иконка действия. */
+  icon: LucideIcon;
   /** Заголовок действия. */
   title: string;
   /** Пояснение результата. */
@@ -39,16 +40,17 @@ interface StartOptionProps {
  * @param props - Текст, состояние и обработчик выбора.
  * @returns Кнопка способа начала работы.
  */
-function StartOption({ title, titleColor, description, onClick, disabled }: StartOptionProps) {
+function StartOption({ title, icon: Icon, description, onClick, disabled }: StartOptionProps) {
   return (
     <button type="button" onClick={onClick} disabled={disabled}
-      className={`group flex w-full items-start gap-3 rounded-lg border px-3 py-3 text-center
+      className={`flex w-full items-start gap-3 rounded-xl px-5 py-4 text-left sm:flex-col sm:gap-4 sm:px-6 sm:py-5
         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
         active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50
-        border-border bg-background hover:bg-card`}>
+        bg-zinc-100 hover:bg-zinc-200 dark:bg-[#1e1e22] dark:hover:bg-zinc-800`}>
+      <Icon aria-hidden="true" strokeWidth={1.5} className="size-6 shrink-0" />
       <span className="min-w-0 flex-1 space-y-1">
-        <span className={`block text-base font-semibold ${titleColor}`}>{title}</span>
-        <span className="block text-sm text-foreground opacity-70 text-pretty">{description}</span>
+        <span className="block text-base font-medium">{title}</span>
+        <span className="block max-w-[19ch] text-sm leading-snug text-muted-foreground">{description}</span>
       </span>
     </button>
   );
@@ -61,26 +63,26 @@ function StartOption({ title, titleColor, description, onClick, disabled }: Star
  */
 export function NoProjectsActions({ ready, onCreate, onImport, onTemplates, onLogout, isImporting }: NoProjectsActionsProps) {
   return (
-    <div className="space-y-3">
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-        <StartOption title="Выбрать шаблон" titleColor="text-sky-700 dark:text-sky-300"
+    <div className="flex flex-col items-center">
+      <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-3">
+        <StartOption title="Выбрать шаблон" icon={PanelsTopLeft}
           description="Выберите бота и настройте под себя."
           onClick={onTemplates} disabled={!ready} />
-        <StartOption title="Создать с нуля" titleColor="text-emerald-700 dark:text-emerald-300" description="Соберите свой сценарий."
+        <StartOption title="Создать с нуля" icon={Plus} description="Соберите свой сценарий."
           onClick={onCreate} disabled={!ready} />
-        <StartOption titleColor="text-violet-700 dark:text-violet-300" title={isImporting ? 'Загружаем файл…' : 'Импорт проекта'}
+        <StartOption icon={Download} title={isImporting ? 'Загружаем файл…' : 'Импорт проекта'}
           description="Вставьте JSON или загрузите файл."
           onClick={onImport} disabled={!ready || isImporting} />
       </div>
-      <div className="w-full rounded-lg bg-[color-mix(in_srgb,var(--background)_35%,var(--card))] px-4 py-3 text-center text-sm text-pretty">
+      <div className="mt-6 w-full max-w-sm rounded-lg bg-zinc-50 px-4 py-4 dark:bg-[#121316] sm:mt-8 text-center text-sm text-pretty">
         <p className="font-medium">Бот в другом конструкторе?</p>
         <p className="mt-1 text-foreground opacity-70">Напишите в группу, поможем с переносом.</p>
         <a href={TELEGRAM_CHAT_URL} target="_blank" rel="noopener noreferrer"
-          className="mt-1 inline-flex rounded-sm font-semibold text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          className="mt-1 inline-flex rounded-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
           Написать в группу
         </a>
       </div>
-      <Button className="h-8 w-full text-foreground opacity-70" variant="ghost" onClick={onLogout} disabled={!ready}>Выйти</Button>
+      <Button className="mt-5 h-8 px-4 font-normal text-muted-foreground" variant="ghost" onClick={onLogout} disabled={!ready}>Выйти</Button>
     </div>
   );
 }

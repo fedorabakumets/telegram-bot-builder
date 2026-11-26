@@ -32,16 +32,9 @@ interface TemplateTabsFullProps extends TemplateTabsProps {
   showCards?: boolean;
 }
 
-/** Классы активной вкладки */
-const AKTIVNYE_KLASSY: Record<string, string> = {
-  all: 'data-[state=active]:from-blue-500/20 data-[state=active]:to-cyan-500/20 data-[state=active]:border-blue-500/40 data-[state=active]:text-blue-700 dark:data-[state=active]:text-blue-300',
-  featured: 'data-[state=active]:from-amber-500/20 data-[state=active]:to-yellow-500/20 data-[state=active]:border-amber-500/40 data-[state=active]:text-amber-700 dark:data-[state=active]:text-amber-300',
-  popular: 'data-[state=active]:from-red-500/20 data-[state=active]:to-orange-500/20 data-[state=active]:border-red-500/40 data-[state=active]:text-red-700 dark:data-[state=active]:text-red-300',
-  my: 'data-[state=active]:from-purple-500/20 data-[state=active]:to-pink-500/20 data-[state=active]:border-purple-500/40 data-[state=active]:text-purple-700 dark:data-[state=active]:text-purple-300',
-};
-
+/** Активную подборку выделяет линия под названием. */
 const BAZOVYE_KLASSY =
-  'flex items-center justify-center gap-1.5 px-2.5 py-2 sm:px-3 sm:py-2.5 text-xs sm:text-sm font-semibold rounded-lg transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:border hover:bg-muted/60 active:scale-[0.98] whitespace-normal text-center leading-tight';
+  'gap-1.5 rounded-none border-b-2 border-transparent px-2 py-2 text-xs sm:text-sm data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none hover:text-foreground';
 
 /** Вкладки по порядку */
 const TAB_ITEMS = [
@@ -78,8 +71,8 @@ export function TemplateTabs({
         <TabsList
           className={cn(
             'flex w-full flex-wrap sm:flex-nowrap items-stretch gap-1.5',
-            'bg-background/50 dark:bg-background/30 p-1.5 h-auto rounded-xl',
-            'border border-border/40 hover:border-border/60 transition-colors',
+            'bg-transparent p-0 h-auto rounded-none',
+            'border-b border-border/60',
           )}
         >
           {visibleItems.map(({ value, label, Icon }) => (
@@ -88,7 +81,6 @@ export function TemplateTabs({
               value={value}
               className={cn(
                 BAZOVYE_KLASSY,
-                AKTIVNYE_KLASSY[value],
                 visibleItems.length === 1
                   ? 'w-full'
                   : 'flex-1 basis-[calc(50%-0.375rem)] sm:basis-0',
