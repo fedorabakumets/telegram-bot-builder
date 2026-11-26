@@ -109,6 +109,118 @@
       "resolvedPath": "/api/runtime/media/incoming-photo"
     },
     {
+      "file": "server/routes/projectTelegramAccounts/project-telegram-account-connection-routes.ts",
+      "line": 85,
+      "method": "POST",
+      "expression": "`${path}/auth/send-code`",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/{accountId}/auth/send-code"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/project-telegram-account-connection-routes.ts",
+      "line": 100,
+      "method": "POST",
+      "expression": "`${path}/auth/sign-in`",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/{accountId}/auth/sign-in"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/project-telegram-account-connection-routes.ts",
+      "line": 101,
+      "method": "POST",
+      "expression": "`${path}/auth/sign-in-2fa`",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/{accountId}/auth/sign-in-2fa"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/project-telegram-account-connection-routes.ts",
+      "line": 102,
+      "method": "POST",
+      "expression": "`${path}/import`",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/{accountId}/import"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/project-telegram-account-connection-routes.ts",
+      "line": 106,
+      "method": "POST",
+      "expression": "`${path}/auth/verify`",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/{accountId}/auth/verify"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/project-telegram-account-connection-routes.ts",
+      "line": 108,
+      "method": "POST",
+      "expression": "`${path}/profile`",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/{accountId}/profile"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/project-telegram-account-connection-routes.ts",
+      "line": 124,
+      "method": "POST",
+      "expression": "`${path}/proxy/test`",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/{accountId}/proxy/test"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/project-telegram-accounts-routes.ts",
+      "line": 109,
+      "method": "GET",
+      "expression": "path",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/project-telegram-accounts-routes.ts",
+      "line": 115,
+      "method": "POST",
+      "expression": "path",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/project-telegram-accounts-routes.ts",
+      "line": 117,
+      "method": "PUT",
+      "expression": "`${path}/:accountId/bots`",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/{accountId}/bots"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/project-telegram-accounts-routes.ts",
+      "line": 119,
+      "method": "PUT",
+      "expression": "`${path}/:accountId/proxy`",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/{accountId}/proxy"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/project-telegram-accounts-routes.ts",
+      "line": 124,
+      "method": "DELETE",
+      "expression": "`${path}/:accountId`",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/{accountId}"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/register-legacy-migration-cutover.ts",
+      "line": 52,
+      "method": "GET",
+      "expression": "`${path}/operations`",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/migration/operations"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/register-legacy-migration-cutover.ts",
+      "line": 63,
+      "method": "POST",
+      "expression": "`${path}/apply`",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/migration/apply"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/register-legacy-migration-cutover.ts",
+      "line": 108,
+      "method": "POST",
+      "expression": "`${path}/rollback`",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/migration/rollback"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/register-legacy-migration-preview.ts",
+      "line": 14,
+      "method": "GET",
+      "expression": "'/api/projects/:projectId/telegram-accounts/migration/preview'",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/migration/preview"
+    },
+    {
       "file": "server/routes/routes.ts",
       "line": 1439,
       "method": "GET",
@@ -208,7 +320,21 @@
     },
     {
       "file": "server/routes/setupBotManagementRoutes.ts",
+      "line": 99,
+      "method": "POST",
+      "expression": "\"/api/projects/:id/bot/restart-all/jobs\"",
+      "resolvedPath": "/api/projects/{id}/bot/restart-all/jobs"
+    },
+    {
+      "file": "server/routes/setupBotManagementRoutes.ts",
       "line": 100,
+      "method": "GET",
+      "expression": "\"/api/projects/:id/bot/restart-all/jobs/:jobId\"",
+      "resolvedPath": "/api/projects/{id}/bot/restart-all/jobs/{jobId}"
+    },
+    {
+      "file": "server/routes/setupBotManagementRoutes.ts",
+      "line": 103,
       "method": "PUT",
       "expression": "'/api/projects/:projectId/bot/launch-inheritance'",
       "resolvedPath": "/api/projects/{projectId}/bot/launch-inheritance"
@@ -1092,6 +1218,125 @@
       "line": 91,
       "method": "GET",
       "expression": "`${S3_PROXY_BASE}/:configId/*`"
+    },
+    {
+      "file": "server/routes/project-telegram-runner-route.ts",
+      "line": 14,
+      "method": "POST",
+      "expression": "'/internal/project-telegram/:projectId/:tokenId/execute'",
+      "resolvedPath": "/internal/project-telegram/{projectId}/{tokenId}/execute"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/project-telegram-account-connection-routes.ts",
+      "line": 85,
+      "method": "POST",
+      "expression": "`${path}/auth/send-code`",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/{accountId}/auth/send-code"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/project-telegram-account-connection-routes.ts",
+      "line": 100,
+      "method": "POST",
+      "expression": "`${path}/auth/sign-in`",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/{accountId}/auth/sign-in"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/project-telegram-account-connection-routes.ts",
+      "line": 101,
+      "method": "POST",
+      "expression": "`${path}/auth/sign-in-2fa`",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/{accountId}/auth/sign-in-2fa"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/project-telegram-account-connection-routes.ts",
+      "line": 102,
+      "method": "POST",
+      "expression": "`${path}/import`",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/{accountId}/import"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/project-telegram-account-connection-routes.ts",
+      "line": 106,
+      "method": "POST",
+      "expression": "`${path}/auth/verify`",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/{accountId}/auth/verify"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/project-telegram-account-connection-routes.ts",
+      "line": 108,
+      "method": "POST",
+      "expression": "`${path}/profile`",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/{accountId}/profile"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/project-telegram-account-connection-routes.ts",
+      "line": 124,
+      "method": "POST",
+      "expression": "`${path}/proxy/test`",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/{accountId}/proxy/test"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/project-telegram-accounts-routes.ts",
+      "line": 109,
+      "method": "GET",
+      "expression": "path",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/project-telegram-accounts-routes.ts",
+      "line": 115,
+      "method": "POST",
+      "expression": "path",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/project-telegram-accounts-routes.ts",
+      "line": 117,
+      "method": "PUT",
+      "expression": "`${path}/:accountId/bots`",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/{accountId}/bots"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/project-telegram-accounts-routes.ts",
+      "line": 119,
+      "method": "PUT",
+      "expression": "`${path}/:accountId/proxy`",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/{accountId}/proxy"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/project-telegram-accounts-routes.ts",
+      "line": 124,
+      "method": "DELETE",
+      "expression": "`${path}/:accountId`",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/{accountId}"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/register-legacy-migration-cutover.ts",
+      "line": 52,
+      "method": "GET",
+      "expression": "`${path}/operations`",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/migration/operations"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/register-legacy-migration-cutover.ts",
+      "line": 63,
+      "method": "POST",
+      "expression": "`${path}/apply`",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/migration/apply"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/register-legacy-migration-cutover.ts",
+      "line": 108,
+      "method": "POST",
+      "expression": "`${path}/rollback`",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/migration/rollback"
+    },
+    {
+      "file": "server/routes/projectTelegramAccounts/register-legacy-migration-preview.ts",
+      "line": 14,
+      "method": "GET",
+      "expression": "'/api/projects/:projectId/telegram-accounts/migration/preview'",
+      "resolvedPath": "/api/projects/{projectId}/telegram-accounts/migration/preview"
     },
     {
       "file": "server/routes/routes.ts",
@@ -2059,28 +2304,42 @@
     },
     {
       "file": "server/routes/setupBotManagementRoutes.ts",
-      "line": 98,
+      "line": 99,
+      "method": "POST",
+      "expression": "\"/api/projects/:id/bot/restart-all/jobs\"",
+      "resolvedPath": "/api/projects/{id}/bot/restart-all/jobs"
+    },
+    {
+      "file": "server/routes/setupBotManagementRoutes.ts",
+      "line": 100,
+      "method": "GET",
+      "expression": "\"/api/projects/:id/bot/restart-all/jobs/:jobId\"",
+      "resolvedPath": "/api/projects/{id}/bot/restart-all/jobs/{jobId}"
+    },
+    {
+      "file": "server/routes/setupBotManagementRoutes.ts",
+      "line": 101,
       "method": "POST",
       "expression": "\"/api/projects/:id/bot/start-offline-all\"",
       "resolvedPath": "/api/projects/{id}/bot/start-offline-all"
     },
     {
       "file": "server/routes/setupBotManagementRoutes.ts",
-      "line": 100,
+      "line": 103,
       "method": "PUT",
       "expression": "'/api/projects/:projectId/bot/launch-inheritance'",
       "resolvedPath": "/api/projects/{projectId}/bot/launch-inheritance"
     },
     {
       "file": "server/routes/setupBotManagementRoutes.ts",
-      "line": 102,
+      "line": 105,
       "method": "GET",
       "expression": "\"/api/projects/:id/bot/statuses\"",
       "resolvedPath": "/api/projects/{id}/bot/statuses"
     },
     {
       "file": "server/routes/setupBotManagementRoutes.ts",
-      "line": 103,
+      "line": 106,
       "method": "DELETE",
       "expression": "\"/api/projects/:projectId/tokens/:tokenId/logs\"",
       "resolvedPath": "/api/projects/{projectId}/tokens/{tokenId}/logs"

@@ -38,6 +38,8 @@
 | [telegram_users](./telegram_users.md) | 8 | Таблица аутентифицированных пользователей Telegram |
 | [user_project_archives](./user_project_archives.md) | 3 | Личный архив проектов: каждый пользователь может скрыть проект только у себя. |
 | [user_telegram_settings](./user_telegram_settings.md) | 9 | Таблица пользовательских настроек для Telegram Client API |
+| [project_telegram_account_bots](./project_telegram_account_bots.md) | 3 | Связь нескольких ботов с одним аккаунтом внутри проекта. |
+| [project_telegram_accounts](./project_telegram_accounts.md) | 15 | Telegram-аккаунты, принадлежащие проекту. |
 | [worker_processes](./worker_processes.md) | 8 | Таблица процессов воркеров — мониторинг Python worker pool |
 
 ---
@@ -98,4 +100,7 @@ erDiagram
     support_threads }o--|| telegram_users : "user_id"
     user_project_archives }o--|| telegram_users : "user_id"
     user_project_archives }o--|| bot_projects : "project_id"
+    project_telegram_account_bots }o--|| project_telegram_accounts : "project_id, account_id"
+    project_telegram_account_bots }o--|| bot_tokens : "project_id, bot_token_id"
+    project_telegram_accounts }o--|| bot_projects : "project_id"
 ```
