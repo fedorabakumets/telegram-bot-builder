@@ -40,9 +40,10 @@ import { ComponentsTab } from './components/components-tab';
 import { SidebarHeader } from './components/sidebar-header';
 import { ImportDialog } from './components/import-dialog';
 
+import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
-import { ArrowLeft, Home, Play, Plus } from 'lucide-react';
+import { Blocks, Home, Play, Plus, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useDisabledNodeTypes } from '@/hooks/use-disabled-node-types';
 import { apiRequest } from '@/queryClient';
@@ -344,6 +345,10 @@ export function ComponentsSidebar({
     && visibleCategories.every(category => collapsedCategories.has(category.title));
 
   const floatingProjects = currentTab === 'projects' && (mobilePalette || (!isActuallyMobile && !isMobile && projectsFromSearch.current));
+  /** Фильтрует названия в выбранном списке активных или архивных проектов. */
+  const [projectQuery, setProjectQuery] = useState('');
+  const query = floatingProjects ? projectQuery.trim().toLowerCase() : '';
+  const visibleProjects = projects.filter(project => project.name.toLowerCase().includes(query));
   /** Возвращает из проектов к раскрытому списку элементов. */
   function showElements() {
     projectsFromSearch.current = false;
@@ -354,11 +359,15 @@ export function ComponentsSidebar({
     <div className={`flex min-h-0 flex-col overflow-hidden ${fitPalette ? "max-h-full" : "h-full"}`}>
       {/* Sidebar Header */}
       {floatingProjects ? (
-        <div className="flex shrink-0 flex-wrap items-center justify-between gap-1 border-b border-border px-2 py-1">
-          <ProjectsViewToggle value={projectsView} onChange={setProjectsView} />
-          <Button type="button" variant="ghost" size="sm" className="h-8 gap-1 px-2 text-xs" onClick={showElements}>
-            <ArrowLeft aria-hidden="true" className="size-4" />
-            К элементам
+        <div data-component-search className="relative flex shrink-0 items-center gap-1 p-2">
+          <Search aria-hidden="true" className="pointer-events-none absolute left-4 size-3.5 text-muted-foreground" />
+          <Input type="search" aria-label="Поиск проектов" placeholder="Поиск проектов..."
+            className="h-8 min-w-0 pl-7 pr-1 text-xs" value={projectQuery}
+            onFocus={() => setProjectsOpen(true)} onClick={() => setProjectsOpen(true)}
+            onChange={event => setProjectQuery(event.target.value)} />
+          <Button type="button" variant="ghost" size="icon" className="size-8 shrink-0" onClick={showElements}
+            aria-label="К элементам" title="К элементам">
+            <Blocks aria-hidden="true" className="size-4" />
           </Button>
           <button type="button" aria-expanded={projectsOpen}
             aria-label={projectsOpen ? 'Свернуть список проектов' : 'Раскрыть список проектов'}
@@ -392,11 +401,12 @@ export function ComponentsSidebar({
       <div hidden={floatingProjects && !projectsOpen} className={`min-h-0 overflow-y-auto space-y-4 ${fitPalette ? '' : 'flex-1'} ${currentTab === 'elements' ? '' : 'px-4 pb-4'}`}>
         {currentTab === 'projects' && (
           <div className="space-y-4 pt-3">
+            {floatingProjects && <ProjectsViewToggle value={projectsView} onChange={setProjectsView} />}
             {/** Действия над списком располагаются под заголовком и переносятся по ширине панели. */}
             <div className="space-y-3 mb-4">
               <div className="flex flex-col gap-2">
                 <h3 className="text-sm font-semibold text-foreground">
-                  Проекты ({projects.length})
+                  Проекты ({visibleProjects.length})
                 </h3>
                 <div className="flex items-center gap-2 flex-wrap">
                   <Button
@@ -472,12 +482,14 @@ export function ComponentsSidebar({
                 </Button>
                 )}
               </div>
+            ) : visibleProjects.length === 0 ? (
+              <p className="py-3 text-sm text-muted-foreground" role="status">По вашему запросу проектов не найдено</p>
             ) : (
               <div
                 className="space-y-3"
                 onDragLeave={() => handleContainerDragLeave(setDragOverProject, setDragOverSheet)}
               >
-                {[...projects].sort((a, b) => {
+                {visibleProjects.sort((a, b) => {
                   if (a.id === currentProjectId) return -1;
                   if (b.id === currentProjectId) return 1;
                   return 0;

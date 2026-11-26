@@ -1,12 +1,13 @@
 /** @fileoverview Адаптивные действия обучения, поддержки и сообщества в редакторе. */
-import { CircleHelp, Ellipsis, Github, GraduationCap, MessageCircle, Send } from 'lucide-react';
-import { useRef } from 'react';
+import { ChevronDown, CircleHelp, Ellipsis, Github, GraduationCap, MessageCircle, Send } from 'lucide-react';
+import { useRef, useState } from 'react';
 import { WorkspaceHeaderActionItems } from '@/components/ui/workspace-header-action-items';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuPortal,
   DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useMediaQuery } from '@/components/editor/properties/hooks/use-media-query';
 import { EditorLearnButton } from '@/components/editor/canvas/learn/EditorLearnButton';
 import { EditorLearnMenuItems } from '@/components/editor/canvas/learn/EditorLearnMenuItems';
 import { requestEditorLearn, useEditorLearnActive } from '@/components/editor/canvas/learn/editor-learn-bridge';
@@ -44,6 +45,10 @@ function HelpLinks() {
  * @returns Адаптивная группа помощи.
  */
 export function EditorHelpActions({ compact = false, canUseSupport, showLearning }: EditorHelpActionsProps) {
+  /** На телефоне уроки размещаются в основном меню, где хватает ширины для описаний. */
+  const inlineLessons = useMediaQuery('(max-width: 480px)');
+  /** При каждом открытии помощи список уроков изначально свёрнут. */
+  const [lessonsOpen, setLessonsOpen] = useState(false);
   const learnActive = useEditorLearnActive();
   const helpTriggerRef = useRef<HTMLButtonElement>(null);
   /** Использует один экземпляр панели поддержки для обоих вариантов шапки. */
@@ -79,23 +84,32 @@ export function EditorHelpActions({ compact = false, canUseSupport, showLearning
         </div>}
         <div className={compact ? 'shrink-0' : 'shrink-0 @[480px]:hidden'}>
           {/* На узкой панели действия помощи собраны в одну кнопку. */}
-          <WorkspaceHeaderActionItems items={[{ id: 'help', content: <DropdownMenu modal={false}>
+          <WorkspaceHeaderActionItems items={[{ id: 'help', content: <DropdownMenu modal={false} onOpenChange={() => setLessonsOpen(false)}>
             <DropdownMenuTrigger asChild>
               <Button ref={helpTriggerRef} type="button" variant="outline" size="sm" className="h-8 shrink-0 gap-1.5 px-2">
                 <CircleHelp className="h-4 w-4" aria-hidden="true" /> Помощь
                 {unreadLabel && <span className="tabular-nums text-primary" aria-label={`Непрочитанных ответов: ${unread}`}>{unreadLabel}</span>}
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" collisionPadding={8} className={inlineLessons && showLearning ? 'w-72 max-w-[calc(100vw-1rem)] overflow-y-auto max-h-[var(--radix-dropdown-menu-content-available-height)]' : undefined}>
               <WorkspaceHeaderActionItems items={[
-              { id: 'learning', content: showLearning && <DropdownMenuSub>
+              { id: 'learning', content: showLearning && (inlineLessons ? <>
+                <DropdownMenuItem aria-expanded={lessonsOpen} onSelect={event => {
+                  event.preventDefault();
+                  setLessonsOpen(open => !open);
+                }}>
+                  <GraduationCap aria-hidden="true" /> Обучение
+                  <ChevronDown aria-hidden="true" className={lessonsOpen ? 'ml-auto rotate-180' : 'ml-auto'} />
+                </DropdownMenuItem>
+                {lessonsOpen && <EditorLearnMenuItems onStart={requestEditorLearn} />}
+              </> : <DropdownMenuSub>
                 <DropdownMenuSubTrigger><GraduationCap aria-hidden="true" /> Обучение</DropdownMenuSubTrigger>
                 <DropdownMenuPortal>
                   <DropdownMenuSubContent className="max-h-[var(--radix-dropdown-menu-content-available-height)] w-64 max-w-[calc(100vw-1rem)] overflow-y-auto">
                     <EditorLearnMenuItems onStart={requestEditorLearn} />
                   </DropdownMenuSubContent>
                 </DropdownMenuPortal>
-              </DropdownMenuSub> },
+              </DropdownMenuSub>) },
               { id: 'support', content: openSupport && <DropdownMenuItem onSelect={() => openSupport(helpTriggerRef.current ?? undefined)}>
                 <MessageCircle aria-hidden="true" /> Поддержка
               </DropdownMenuItem> },
