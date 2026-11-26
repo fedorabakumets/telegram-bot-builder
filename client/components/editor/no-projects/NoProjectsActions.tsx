@@ -51,7 +51,7 @@ function StartOption({ title, icon: Icon, iconColor, description, onClick, disab
         bg-zinc-100 hover:bg-zinc-200 dark:bg-[#1e1e22] dark:hover:bg-zinc-800`}>
       <Icon aria-hidden="true" strokeWidth={1.5} className={`size-6 shrink-0 ${iconColor}`} />
       <span className="min-w-0 flex-1 space-y-1">
-        <span className="block text-base font-medium">{title}</span>
+        <span className="block text-base font-normal">{title}</span>
         <span className="block sm:max-w-[19ch] text-sm leading-snug text-muted-foreground">{description}</span>
       </span>
     </button>
@@ -77,7 +77,7 @@ export function NoProjectsActions({ ready, onCreate, onImport, onTemplates, onLo
           onClick={onImport} disabled={!ready || isImporting} />
       </div>
       <div className="mt-6 w-full max-w-sm rounded-lg bg-zinc-50 px-4 py-4 dark:bg-[#121316] sm:mt-8 text-center text-sm text-pretty">
-        <p className="font-medium">Бот в другом конструкторе?</p>
+        <p className="font-normal">Бот в другом конструкторе?</p>
         <p className="mt-1 opacity-70">Напишите в группу, поможем с переносом.</p>
         <a href={TELEGRAM_CHAT_URL} target="_blank" rel="noopener noreferrer"
           className="mt-1 inline-flex rounded-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
