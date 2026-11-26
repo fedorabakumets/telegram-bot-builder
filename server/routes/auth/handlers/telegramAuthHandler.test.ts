@@ -69,13 +69,15 @@ describe("handleTelegramAuth", () => {
 
   it("guest → user: без regenerate, switched false", async () => {
     const req = {
-      body: { id: 100, first_name: "Bob" },
+      body: { id: "100", username: "Bob" },
       session: { id: "sid-1", telegramUser: undefined },
     } as unknown as Request;
     const res = mockRes();
 
     await handleTelegramAuth(req, res);
 
+    /** Виджет передал строковый ID и только публичное имя. */
+    expect(getTelegramUserOrCreate).toHaveBeenCalledWith(expect.objectContaining({ id: 100, firstName: "Bob" }));
     expect(regenerateSession).not.toHaveBeenCalled();
     expect(saveSession).toHaveBeenCalled();
     expect(migrateGuestProjects).toHaveBeenCalledWith("sid-1", 100);

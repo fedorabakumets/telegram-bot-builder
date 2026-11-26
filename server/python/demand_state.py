@@ -57,8 +57,17 @@ class DemandState:
         """Удаляет устаревший снимок при явном возврате к обычному polling."""
         await self.queue._client().delete(self.key)
 
-    async def save_and_ack(self, module, update_id):
-        """Атомарно сохраняет обработанное состояние и подтверждает исходное обновление."""
+    async def save_and_ack(self, module, update_id, lease_key=None, lease_owner=None):
+        """Атомарно сохраняет состояние и ACK; direct дополнительно проверяет lease."""
         payload = self._snapshot(module)
         keys = [*self.queue.keys, self.key]
-        await self.queue._client().eval(SAVE_AND_ACK, len(keys), *keys, str(update_id), payload)
+        script = SAVE_AND_ACK
+        args = [str(update_id), payload]
+        if lease_key is not None:
+            # Проверка владельца внутри Lua исключает запись после смены lease.
+            keys.append(lease_key)
+            args.append(lease_owner)
+            script = "if redis.call('GET', KEYS[8]) ~= ARGV[3] then return -1 end\n" + script
+        result = await self.queue._client().eval(script, len(keys), *keys, *args)
+        if result == -1:
+            raise RuntimeError("Потеряна блокировка перед сохранением состояния direct")

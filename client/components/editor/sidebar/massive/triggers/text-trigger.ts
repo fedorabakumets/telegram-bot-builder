@@ -12,8 +12,8 @@ import { ComponentDefinition } from "@shared/schema";
 /** Текстовый триггер — точка входа по тексту сообщения */
 export const textTrigger: ComponentDefinition = {
   id: 'text-trigger',
-  name: 'Текстовый триггер',
-  description: 'Срабатывает когда пользователь отправляет заданный текст',
+  name: 'Когда пишут заданное слово',
+  description: 'Запускает сценарий по слову, например «привет»',
   icon: 'fas fa-comment-dots',
   color: 'bg-blue-100 text-blue-600',
   type: 'text_trigger',

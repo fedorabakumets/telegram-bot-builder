@@ -16,7 +16,7 @@ import { handleBotRuntimeSettings } from './botManagement/handlers/botRuntimeSet
 import { handleBotStart } from './botManagement/handlers/botStartHandler';
 import { handleBotStop } from './botManagement/handlers/botStopHandler';
 import { handleBotRestart } from './botManagement/handlers/botRestartHandler';
-import { handleBotRestartAll } from './botManagement/handlers/botRestartAllHandler';
+import { handleBotRestartAll, handleCreateBotRestartAllJob, handleBotRestartAllJob } from './botManagement/handlers/botRestartAllHandler';
 import { handleBotStartOfflineAll } from './botManagement/handlers/botStartOfflineAllHandler';
 import { handleBotProjectStatuses } from './botManagement/handlers/botProjectStatusesHandler';
 import { handleBotStatusByToken } from './botManagement/handlers/botStatusByTokenHandler';
@@ -95,6 +95,9 @@ export function setupBotManagementRoutes(app: Express): void {
     app.post("/api/projects/:id/bot/stop", requireProjectAccess, handleBotStop);
     app.post("/api/projects/:id/bot/restart", requireProjectAccess, handleBotRestart);
     app.post("/api/projects/:id/bot/restart-all", requireProjectAccess, handleBotRestartAll);
+    /** Фоновый запуск и опрос результата доступны участникам проекта. */
+    app.post("/api/projects/:id/bot/restart-all/jobs", requireProjectAccess, handleCreateBotRestartAllJob);
+    app.get("/api/projects/:id/bot/restart-all/jobs/:jobId", requireProjectAccess, handleBotRestartAllJob);
     app.post("/api/projects/:id/bot/start-offline-all", requireProjectAccess, handleBotStartOfflineAll);
     /** Ограничивает массовое изменение до проверки доступа и записи в БД. */
     app.put('/api/projects/:projectId/bot/launch-inheritance', runtimeWriteLimit,

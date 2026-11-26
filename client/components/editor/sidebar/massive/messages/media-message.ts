@@ -7,8 +7,8 @@ import { ComponentDefinition } from "@shared/schema";
 /** Медиа-нода: фото, видео, аудио или документ */
 export const mediaMessage: ComponentDefinition = {
   id: 'media-message',
-  name: 'Медиафайл',
-  description: 'Фото, видео, аудио или документ',
+  name: 'Отправить файл',
+  description: 'Бот пришлёт в чат фото, видео, аудио или документ.',
   icon: 'fas fa-photo-video',
   color: 'bg-fuchsia-100 text-fuchsia-600',
   type: 'media',

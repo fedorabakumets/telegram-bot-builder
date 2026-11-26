@@ -12,8 +12,8 @@ import type { ComponentDefinition } from '@shared/schema';
 export const editMessageNode: ComponentDefinition = {
   id: 'edit_message',
   type: 'edit_message' as any,
-  name: 'Редактировать сообщение',
-  description: 'Редактирует текст или кнопки уже отправленного сообщения',
+  name: 'Изменить сообщение',
+  description: 'Бот обновит текст или кнопки уже отправленного сообщения.',
   icon: 'fas fa-pen',
   color: 'bg-blue-100 text-blue-600',
   defaultData: {

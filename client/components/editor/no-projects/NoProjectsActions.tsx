@@ -22,6 +22,8 @@ export interface NoProjectsActionsProps {
 
 /** Свойства одного способа начала работы. */
 interface StartOptionProps {
+  /** Цвет заголовка плитки в светлой и тёмной теме. */
+  titleColor: string;
   /** Заголовок действия. */
   title: string;
   /** Пояснение результата. */
@@ -37,7 +39,7 @@ interface StartOptionProps {
  * @param props - Текст, состояние и обработчик выбора.
  * @returns Кнопка способа начала работы.
  */
-function StartOption({ title, description, onClick, disabled }: StartOptionProps) {
+function StartOption({ title, titleColor, description, onClick, disabled }: StartOptionProps) {
   return (
     <button type="button" onClick={onClick} disabled={disabled}
       className={`group flex w-full items-start gap-3 rounded-lg border px-3 py-3 text-center
@@ -45,7 +47,7 @@ function StartOption({ title, description, onClick, disabled }: StartOptionProps
         active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50
         border-border bg-background hover:bg-card`}>
       <span className="min-w-0 flex-1 space-y-1">
-        <span className="block text-base font-semibold text-foreground">{title}</span>
+        <span className={`block text-base font-semibold ${titleColor}`}>{title}</span>
         <span className="block text-sm text-foreground opacity-70 text-pretty">{description}</span>
       </span>
     </button>
@@ -61,12 +63,12 @@ export function NoProjectsActions({ ready, onCreate, onImport, onTemplates, onLo
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-        <StartOption title="Выбрать шаблон"
+        <StartOption title="Выбрать шаблон" titleColor="text-sky-700 dark:text-sky-300"
           description="Выберите бота и настройте под себя."
           onClick={onTemplates} disabled={!ready} />
-        <StartOption title="Создать с нуля" description="Соберите свой сценарий."
+        <StartOption title="Создать с нуля" titleColor="text-emerald-700 dark:text-emerald-300" description="Соберите свой сценарий."
           onClick={onCreate} disabled={!ready} />
-        <StartOption title={isImporting ? 'Загружаем файл…' : 'Импорт проекта'}
+        <StartOption titleColor="text-violet-700 dark:text-violet-300" title={isImporting ? 'Загружаем файл…' : 'Импорт проекта'}
           description="Вставьте JSON или загрузите файл."
           onClick={onImport} disabled={!ready || isImporting} />
       </div>

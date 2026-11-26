@@ -276,7 +276,7 @@ export function CanvasToolbar({
   const view = ordered.find(tool => tool.key === 'view');
   const available = width - (roomy ? 32 : 16);
   const total = ordered.reduce((sum, tool) => sum + tool.size + gap, 0) - gap;
-  let remaining = available - (total > available ? (width >= 360 ? 64 : 34) : -gap);
+  let remaining = available - (total > available ? (width >= 360 ? 154 : 34) : -gap);
   if (search) remaining -= search.size + gap;
   if (view) remaining -= view.size + gap;
   const visible = [];

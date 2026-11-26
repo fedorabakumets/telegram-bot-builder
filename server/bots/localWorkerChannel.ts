@@ -6,6 +6,7 @@
 import { spawn, type ChildProcess } from "node:child_process";
 import { EventEmitter } from "node:events";
 import { LineSplitter, type WorkerChannel } from "./workerChannel";
+import { DockerCutoverExitProof } from "./docker-cutover-exit-proof";
 
 /** Как запустить процесс воркера */
 export interface LocalWorkerSpawn {
@@ -15,6 +16,8 @@ export interface LocalWorkerSpawn {
   args: string[];
   /** Окружение процесса */
   env: NodeJS.ProcessEnv;
+  /** Файл идентификатора контейнера, если процесс запускается через Docker CLI. */
+  dockerCidFile?: string;
 }
 
 /**
@@ -25,6 +28,8 @@ export class LocalWorkerChannel extends EventEmitter implements WorkerChannel {
   private readonly child: ChildProcess;
   /** Разделитель stdout, доступный для измерения незавершённой строки. */
   private readonly splitter = new LineSplitter();
+  /** Подтверждение состояния контейнера от Docker Engine. */
+  readonly dockerExitProof?: DockerCutoverExitProof;
 
   /**
    * Запускает процесс воркера
@@ -33,6 +38,10 @@ export class LocalWorkerChannel extends EventEmitter implements WorkerChannel {
   constructor(launch: LocalWorkerSpawn) {
     super();
     this.child = spawn(launch.command, launch.args, { stdio: ["pipe", "pipe", "pipe"], env: launch.env });
+    if (launch.dockerCidFile) {
+      this.dockerExitProof = new DockerCutoverExitProof(launch.dockerCidFile, launch.env);
+      this.child.once("close", () => this.dockerExitProof?.onCliClose());
+    }
     this.child.stdin?.on("error", (error: Error) => this.emit("stderr", `Ошибка ввода воркера: ${error.message}`));
     this.child.stdout?.setEncoding("utf8");
     this.child.stdout?.on("data", (chunk: string) => {

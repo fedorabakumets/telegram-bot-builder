@@ -4,6 +4,7 @@
  * @module components/editor/sidebar/components/sidebar-header
  */
 
+import { useEditorAppearance } from '@/components/editor/shared/use-editor-appearance';
 import { Button } from '@/components/ui/button';
 import { LayoutButtons } from '@/components/layout/layout-buttons';
 import { X } from 'lucide-react';
@@ -61,10 +62,11 @@ export function SidebarHeader({
   projectsView = 'active',
   onProjectsViewChange,
 }: SidebarHeaderProps) {
+  const activeStyle = useEditorAppearance('underlineTabs') ? 'text-foreground underline decoration-2 underline-offset-4' : 'bg-blue-600 text-white';
   return (
-    <div className="p-4 border-b border-border/30 bg-gradient-to-r from-slate-50/50 dark:from-slate-900/30 to-transparent">
-      <div className="flex items-center justify-between gap-2 mb-4">
-        <h2 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-cyan-500 dark:from-blue-400 dark:to-cyan-300 bg-clip-text text-transparent">
+    <div className="px-4 py-2 border-b border-border/30 bg-gradient-to-r from-zinc-50/50 dark:from-zinc-900/30 to-transparent">
+      <div className="flex items-center justify-between gap-2 mb-1">
+        <h2 className="text-lg font-bold text-foreground">
           Компоненты
         </h2>
         <div className="flex items-center gap-1">
@@ -94,30 +96,32 @@ export function SidebarHeader({
           )}
         </div>
       </div>
-      <div className="flex space-x-1 bg-gradient-to-r from-slate-200/40 to-slate-100/20 dark:from-slate-800/40 dark:to-slate-700/20 rounded-lg p-1 backdrop-blur-sm border border-slate-300/20 dark:border-slate-600/20">
+      <div className="flex gap-1 px-1">
         <button
+          aria-pressed={currentTab === 'elements'}
           onClick={() => onTabChange('elements')}
-          className={`flex-1 px-2 py-2 text-xs font-semibold rounded-md transition-all duration-200 ${
+          className={`flex-1 px-2 py-1 text-xs font-semibold rounded-md transition-colors duration-200 ${
             currentTab === 'elements'
-              ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/30'
-              : 'text-muted-foreground hover:text-foreground hover:bg-white/40 dark:hover:bg-slate-700/30'
+              ? activeStyle
+              : 'text-muted-foreground hover:text-foreground'
           }`}
         >
           Элементы
         </button>
         <button
+          aria-pressed={currentTab === 'projects'}
           onClick={() => onTabChange('projects')}
-          className={`flex-1 px-2 py-2 text-xs font-semibold rounded-md transition-all duration-200 ${
+          className={`flex-1 px-2 py-1 text-xs font-semibold rounded-md transition-colors duration-200 ${
             currentTab === 'projects'
-              ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/30'
-              : 'text-muted-foreground hover:text-foreground hover:bg-white/40 dark:hover:bg-slate-700/30'
+              ? activeStyle
+              : 'text-muted-foreground hover:text-foreground'
           }`}
         >
           Проекты
         </button>
       </div>
       {currentTab === 'projects' && onProjectsViewChange && (
-        <div className="mt-3">
+        <div className="mt-1.5">
           <ProjectsViewToggle value={projectsView} onChange={onProjectsViewChange} />
         </div>
       )}

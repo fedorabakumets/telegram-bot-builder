@@ -4,7 +4,7 @@ from bot_env_overlay import get_base_environ
 
 
 async def prepare_direct(ctx):
-    """Отказывает при backlog; снимок переносится только под polling lease."""
+    """Проверяет поддержку безопасного переноса очереди и состояния."""
     values = {**get_base_environ(), **(ctx.env or {})}
     address = values.get("REDIS_URL")
     if not address:
@@ -14,16 +14,21 @@ async def prepare_direct(ctx):
     queue = DemandQueue(address, int(ctx.token.split(":", 1)[0]))
     try:
         await queue.open()
-        if await queue.peek() is not None:
-            raise ValueError("Очередь ondemand не пуста: сначала включите ondemand и обработайте backlog")
+        pending = await queue.peek() is not None
         state = DemandState(queue, ctx.project_id, ctx.token_id)
         # Активный владелец ещё может записать снимок; менять его состояние запрещено.
         if await queue.redis.exists(f"bot:lock:{ctx.token[-10:]}"):
             raise ValueError("Другой polling-процесс ещё владеет ботом; повторите запуск после остановки")
-        if await queue.redis.exists(state.key):
+        saved = await queue.redis.exists(state.key)
+        if pending or saved:
             from demand_settings import build_markers
-            if not build_markers(ctx.bot_file).get("_WORKER_DIRECT_STATE_PROTOCOL"):
+            markers = build_markers(ctx.bot_file)
+            if not markers.get("_WORKER_DIRECT_STATE_PROTOCOL"):
                 raise ValueError("Для переноса состояния в direct требуется пересборка бота")
+            if not markers.get("_WORKER_DIRECT_DRAIN_PROTOCOL"):
+                raise ValueError("Для обработки очереди ondemand в direct требуется пересборка бота")
+            if getattr(ctx, "webhook_url", None):
+                raise ValueError("Для переноса очереди ondemand сначала выберите polling вместо webhook")
     except ValueError:
         raise
     except Exception as exc:
@@ -44,8 +49,12 @@ async def transfer_direct(ctx, module, lease_owned):
     queue = DemandQueue(values["REDIS_URL"], int(ctx.token.split(":", 1)[0]))
     try:
         await queue.open()
-        if await queue.peek() is not None:
-            raise RuntimeError("Появилась очередь ondemand: запуск direct отменён")
+        # Запоминаем владельца, чтобы остановить обработку при потере lease.
+        ctx._direct_lease_owner = lease_owned
+        if await queue.redis.get(f"bot:lock:{ctx.token[-10:]}") != lease_owned:
+            raise RuntimeError("Потеряна блокировка: перенос состояния direct запрещён")
+        if await queue.peek() is not None and not getattr(module, "_WORKER_DIRECT_DRAIN_PROTOCOL", False):
+            raise RuntimeError("Пересоберите бота для обработки очереди ondemand")
         state = DemandState(queue, ctx.project_id, ctx.token_id)
         await state.load_into(module)
     finally:
@@ -62,6 +71,17 @@ async def commit_direct(ctx):
     queue = DemandQueue(values["REDIS_URL"], int(ctx.token.split(":", 1)[0]))
     try:
         await queue.open()
-        await DemandState(queue, ctx.project_id, ctx.token_id).clear()
+        # Проверка владельца, пустоты очереди и удаление снимка неделимы.
+        script = """
+        if redis.call('GET', KEYS[1]) ~= ARGV[1] then return -1 end
+        if redis.call('ZCARD', KEYS[2]) ~= 0 then return -2 end
+        redis.call('DEL', KEYS[3])
+        return 1
+        """
+        state = DemandState(queue, ctx.project_id, ctx.token_id)
+        result = await queue.redis.eval(script, 3, f"bot:lock:{ctx.token[-10:]}",
+            queue.keys[0], state.key, getattr(ctx, "_direct_lease_owner", ""))
+        if result != 1:
+            raise RuntimeError("Изменились очередь или владелец перед подтверждением direct")
     finally:
         await queue.close()

@@ -67,14 +67,14 @@ export function CommandPresetCard({ preset }: CommandPresetCardProps) {
       }}
       className={cn(
         'component-item group/item flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3',
-        'bg-gradient-to-br from-muted/40 to-muted/20 dark:from-slate-800/50 dark:to-slate-900/30',
-        'hover:from-muted/70 hover:to-muted/40 dark:hover:from-slate-700/60 dark:hover:to-slate-800/40',
+        'bg-white dark:bg-zinc-950',
+        'hover:bg-zinc-100 dark:hover:bg-zinc-900',
         'rounded-lg sm:rounded-xl cursor-move transition-all duration-200 touch-action-none no-select',
-        'border border-border/30 hover:border-primary/30',
+        'border border-border/30 hover:border-zinc-500',
       )}
       data-testid={`command-preset-${preset.id}`}
     >
-      <div
+      <div data-palette-icon-color
         className={cn(
           'w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center flex-shrink-0',
           'transition-transform group-hover/item:scale-110',
@@ -83,6 +83,7 @@ export function CommandPresetCard({ preset }: CommandPresetCardProps) {
       >
         <i className={`${preset.icon} text-xs sm:text-sm`} />
       </div>
+
       <div className="flex-1 min-w-0">
         <p className="text-xs sm:text-sm font-semibold text-foreground break-words whitespace-normal">
           {preset.name}

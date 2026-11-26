@@ -343,33 +343,33 @@ export function ComponentsSidebar({
         onProjectsViewChange={setProjectsView}
       />
 
-      {/* Components List — скролл-контейнер без padding-top, чтобы sticky-заголовки прилипали вплотную к табам */}
-      <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-4">
+      {/** Боковые отступы палитры задаёт вкладка элементов. */}
+      <div className={`flex-1 overflow-y-auto pb-4 space-y-4 ${currentTab === 'elements' ? '' : 'px-4'}`}>
         {currentTab === 'projects' && (
           <div className="space-y-4 pt-3">
-            {/* Заголовок и кнопки управления */}
+            {/** Действия над списком располагаются под заголовком и переносятся по ширине панели. */}
             <div className="space-y-3 mb-4">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
-                <h3 className="text-base font-bold bg-gradient-to-r from-slate-700 to-slate-600 dark:from-slate-300 dark:to-slate-400 bg-clip-text text-transparent whitespace-nowrap">
+              <div className="flex flex-col gap-2">
+                <h3 className="text-sm font-semibold text-foreground">
                   Проекты ({projects.length})
                 </h3>
                 <div className="flex items-center gap-2 flex-wrap">
                   <Button
                     size="default"
                     variant="outline"
-                    className="h-9 px-3 flex items-center gap-1.5 font-semibold text-xs bg-gradient-to-r from-green-500/10 to-green-400/5 hover:from-green-600/20 hover:to-green-500/15 border-green-400/30 dark:border-green-500/30 hover:border-green-500/50 dark:hover:border-green-400/50 text-green-700 dark:text-green-300 rounded-lg transition-all hover:shadow-md hover:shadow-green-500/20"
+                    className="min-w-0 flex-1 h-8 px-2 gap-1.5 text-xs font-medium rounded-md"
                     onClick={handleCreateProject}
                     disabled={isCreatingProject}
                     title="Создать новый проект"
                     data-testid="button-create-project"
                   >
                     <Plus className="h-4 w-4" />
-                    <span>Новый</span>
+                    <span>Создать</span>
                   </Button>
                   <Button
                     size="default"
                     variant="outline"
-                    className="h-9 px-3 flex items-center gap-1.5 font-semibold text-xs bg-gradient-to-r from-blue-500/10 to-blue-400/5 hover:from-blue-600/20 hover:to-blue-500/15 border-blue-400/30 dark:border-blue-500/30 hover:border-blue-500/50 dark:hover:border-blue-400/50 text-blue-700 dark:text-blue-300 rounded-lg transition-all hover:shadow-md hover:shadow-blue-500/20"
+                    className="min-w-0 flex-1 h-8 px-2 gap-1.5 text-xs font-medium rounded-md"
                     onClick={() => {
                       openImportDialog();
                       setImportJsonText('');

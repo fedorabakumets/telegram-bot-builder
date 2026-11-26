@@ -28,6 +28,7 @@ import { isPsqlBuiltinEnabled } from "../utils/isPsqlBuiltinEnabled";
 import { isPsqlPanelDsnDenied } from "../utils/isPsqlPanelDsnDenied";
 import { isBotRuntimeActive } from "./resolveBotDatabaseUrl";
 import { generatePythonCode } from "../../lib/bot-generator";
+import type { TelegramAccountCutoverAuthorization } from "../database/project-telegram-account-cutover-guard";
 import {
   buildStartBlockedByDisabledTypesError,
   findDisabledNodesInProject,
@@ -98,9 +99,13 @@ import { resolveBotLaunchMode } from '../../shared/bot-launch-mode';
 import { resolveBotInheritedSettings } from '../../shared/bot-inherited-settings';
 import { botGeneratorSettings } from './botGeneratorSettings';
 import { recordBotInstanceLaunch, recordBotInstanceLaunchFailure } from './recordBotInstanceLaunch';
+import { prepareLocalTelegramRunnerGeneration } from './prepare-local-telegram-generation';
 import type { BotCommandFence } from './botWorkerManager';
 import { resolveWebhookBaseUrl } from './webhookBaseUrl';
 import { resolveStoredBotAutoRestart } from './resolveStoredBotAutoRestart';
+import { acquireBotStartupSlot } from './acquireBotStartupSlot';
+import { isServerShuttingDown } from './serverShutdownState';
+import { sharedTelegramStartError } from './shared-telegram-start-check';
 
 
 
@@ -144,15 +149,40 @@ export async function startBot(
   projectId: number,
   token: string,
   tokenId: number,
-  options?: { clearLogs?: boolean; reuseGeneratedCode?: boolean; waitForExistingLock?: boolean },
+  options?: { clearLogs?: boolean; reuseGeneratedCode?: boolean; waitForExistingLock?: boolean;
+    /** Разрешение контролируемого запуска во время переноса аккаунта. */
+    telegramCutover?: TelegramAccountCutoverAuthorization },
 ): Promise<{ success: boolean; error?: string; processId?: string | undefined; }> {
   const shouldClearLogs = options?.clearLogs !== false; // по умолчанию true
+  if (isServerShuttingDown()) return { success: false, error: BOT_START_CANCELLED_ERROR };
   if (!beginBotStart(tokenId)) return { success: false, error: 'Бот уже запускается' };
   const startRevision = getBotStartRevision(tokenId);
   let pendingInstanceId: number | undefined;
   let commandFence: BotCommandFence | undefined;
   let launchError = BOT_START_CANCELLED_ERROR;
+  let releaseTelegramStartPermit: (() => Promise<void>) | undefined;
+  let releaseStartupSlot: (() => void) | undefined;
   try {
+    // Общий лимит действует для ручного запуска, восстановления и автоперезапуска.
+    // Ожидание очереди не удерживает разрешение переноса аккаунта или блокировку БД.
+    releaseStartupSlot = await acquireBotStartupSlot(projectId, tokenId, startRevision);
+    if (!releaseStartupSlot || isServerShuttingDown() || getBotStartRevision(tokenId) !== startRevision) {
+      return { success: false, error: BOT_START_CANCELLED_ERROR };
+    }
+    /** Уже начатый перенос защищён даже после отключения интерфейса аккаунтов. */
+    if (!options?.telegramCutover) {
+      const { acquireTelegramAccountNormalStartPermit } = await import('../database/project-telegram-account-cutover-guard');
+      const permit = await acquireTelegramAccountNormalStartPermit(projectId);
+      if (!permit) return { success: false, error: 'Выполняется перенос Telegram-аккаунта проекта' };
+      releaseTelegramStartPermit = permit;
+    }
+    /**
+     * Повторно проверяет перенос, поскольку сборка может продолжаться после его начала.
+     * @returns Идёт ли перенос, который блокирует этот запуск.
+     */
+    const blockedByTelegramCutover = async () => (await import('../database/project-telegram-account-cutover-guard'))
+        .isTelegramAccountCutoverStartBlocked(projectId, tokenId, options?.telegramCutover);
+    if (await blockedByTelegramCutover()) return { success: false, error: 'Выполняется перенос Telegram-аккаунта бота' };
     /** Версия намерения фиксируется до подготовки сборки бота. */
     commandFence = await resolveBotCommandFence(tokenId, 'start');
     const tokenRecord = await storage.getBotToken(tokenId);
@@ -166,6 +196,12 @@ export async function startBot(
 
     const project = await storage.getBotProject(projectId);
     if (!project) return { success: false, error: "Проект не найден" };
+
+    /** Совместимость проверяется до getMe, остановки процессов и генерации любого запуска. */
+    const sharedAccountError = await sharedTelegramStartError(projectId, tokenId, project.data);
+    if (sharedAccountError) return { success: false, error: sharedAccountError };
+    /** Новый локальный запуск отзывает прежний ключ до подготовки окружения. */
+    await prepareLocalTelegramRunnerGeneration(projectId, tokenId, token);
 
     /** Сохранённые настройки определяют режим нового экземпляра на весь цикл запуска. */
     const launchMode = resolveBotLaunchMode(project.defaultLaunchMode, tokenRecord?.launchMode, tokenRecord?.inheritLaunchMode);
@@ -518,6 +554,7 @@ export async function startBot(
         if (getBotStartRevision(tokenId) !== startRevision) throw new Error(BOT_START_CANCELLED_ERROR);
         pendingInstanceId = await recordBotInstanceLaunch({ projectId, tokenId, token, launchMode, status: 'starting' }, commandFence);
         if (getBotStartRevision(tokenId) !== startRevision) throw new Error(BOT_START_CANCELLED_ERROR);
+        if (await blockedByTelegramCutover()) throw new Error('Выполняется перенос Telegram-аккаунта бота');
         await workerManager.startBot(projectId, token, tokenId, mainFile, {
           fence: commandFence,
           webhook: { webhookUrl: effectiveWebhookUrl ?? undefined, webhookPort: 9000 + tokenId },
@@ -565,6 +602,7 @@ export async function startBot(
     if (getBotStartRevision(tokenId) !== startRevision) return { success: false, error: BOT_START_CANCELLED_ERROR };
     pendingInstanceId = await recordBotInstanceLaunch({ projectId, tokenId, token, launchMode, status: 'starting' }, commandFence);
     if (getBotStartRevision(tokenId) !== startRevision) return { success: false, error: BOT_START_CANCELLED_ERROR };
+    if (await blockedByTelegramCutover()) throw new Error('Выполняется перенос Telegram-аккаунта бота');
     const botProcess = spawn(pythonPath, [mainFile], {
       stdio: ['pipe', 'pipe', 'pipe'],
       detached: false,
@@ -770,6 +808,11 @@ export async function startBot(
         console.error('Ошибка сохранения состояния запуска бота:', error);
       });
     }
-    finishBotStart(tokenId);
+    try {
+      await releaseTelegramStartPermit?.();
+    } finally {
+      releaseStartupSlot?.();
+      finishBotStart(tokenId);
+    }
   }
 }

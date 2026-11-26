@@ -98,10 +98,14 @@ export async function processPendingVersions(limit = 20, concurrency = 1): Promi
  * @returns Число удалённых объектов
  */
 export async function processVersionObjectDeletions(limit = 20, graceMs = 24 * 60 * 60 * 1000): Promise<number> {
-  const result = await pool.query<{ id: string; storage_id: string; object_key: string }>(
-    'SELECT id, storage_id, object_key FROM project_version_object_deletions WHERE created_at <= NOW() - ($2::bigint * INTERVAL \'1 millisecond\') ORDER BY id LIMIT $1',
-    [limit, graceMs]);
   const registry = await ensureStorageRegistryLoaded();
+  /** Недоступные конфигурации остаются в очереди и не занимают лимит доступных заданий. */
+  const storageIds = registry.listWritable().filter(backend => backend.backend === 's3')
+    .map(backend => backend.configId);
+  if (storageIds.length === 0) return 0;
+  const result = await pool.query<{ id: string; storage_id: string; object_key: string }>(
+    'SELECT id, storage_id, object_key FROM project_version_object_deletions WHERE storage_id = ANY($3::text[]) AND created_at <= NOW() - ($2::bigint * INTERVAL \'1 millisecond\') ORDER BY id LIMIT $1',
+    [limit, graceMs, storageIds]);
   for (const row of result.rows) {
     const backend = registry.resolveBackend(row.storage_id);
     if (backend.backend !== 's3') throw new Error('Неверный тип хранилища удаляемого снимка');

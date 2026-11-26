@@ -69,11 +69,22 @@ import { cancelBotStart } from './botStartState';
  * }
  * ```
  */
-export async function stopBot(projectId: number, tokenId: number, options?: { /** Запуск, который ещё разрешено остановить. */ expectedLaunchId?: number; /** Версия зафиксированного намерения остановки. */ expectedDesiredGeneration?: number }): Promise<{ success: boolean; error?: string; }> {
+export async function stopBot(projectId: number, tokenId: number, options?: {
+  /** Запуск, который ещё разрешено остановить. */
+  expectedLaunchId?: number;
+  /** Версия зафиксированного намерения остановки. */
+  expectedDesiredGeneration?: number;
+  /** Требует подтверждения выхода от известного воркера. */
+  requireWorkerConfirmation?: boolean;
+}): Promise<{ success: boolean; error?: string; }> {
   /** Запоздавшая ошибка старого запуска не останавливает новый процесс. */
   if (options?.expectedLaunchId !== undefined && getActiveLaunchId(tokenId) !== options.expectedLaunchId) {
     return { success: true };
   }
+  if (options?.requireWorkerConfirmation && !isWorkerPoolEnabled()) return {
+    success: false,
+    error: 'Остановка требует подтверждения воркера',
+  };
   try {
     /** Автоостановка не отменяет более новое намерение пользователя даже при прежнем launchId. */
     if (options?.expectedDesiredGeneration !== undefined) {
@@ -97,7 +108,7 @@ export async function stopBot(projectId: number, tokenId: number, options?: { /*
     markExpectedStop(tokenId);
     // ─── Режим воркера: остановка бота через worker pool ───
     if (isWorkerPoolEnabled()) {
-      const confirmed = await workerManager.stopBot(projectId, tokenId, commandFence);
+      const confirmed = await workerManager.stopBot(projectId, tokenId, commandFence, options?.requireWorkerConfirmation);
       if (!confirmed) {
         console.error(
           `[stopBot] Таймаут подтверждения остановки project=${projectId} token=${tokenId}`,
@@ -127,6 +138,11 @@ export async function stopBot(projectId: number, tokenId: number, options?: { /*
       return { success: true };
     }
 
+    /** Повторно проверяем выбор пути после асинхронного чтения состояния. */
+    if (options?.requireWorkerConfirmation) return {
+      success: false,
+      error: 'Остановка требует подтверждения воркера',
+    };
     const processKey = `${projectId}_${tokenId}`;
     const botProcess = botProcesses.get(processKey);
 

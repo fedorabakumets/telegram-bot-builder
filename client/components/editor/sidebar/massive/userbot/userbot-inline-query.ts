@@ -3,11 +3,11 @@
  */
 import { ComponentDefinition } from "@shared/schema";
 
-/** Inline-запрос через юзербот (Telethon) */
+/** Ищет у бота и отправляет результат от имени личного аккаунта. */
 export const userbotInlineQuery: ComponentDefinition = {
   id: 'userbot-inline-query',
-  name: 'Inline-запрос (юзербот)',
-  description: 'Inline-запрос к боту и отправка результата через Telethon',
+  name: 'Отправить результат поиска',
+  description: 'Ищет у бота по фразе и отправляет выбранный результат в чат.',
   icon: 'fas fa-at',
   color: 'bg-violet-100 text-violet-600',
   type: 'userbot_inline_query' as any,

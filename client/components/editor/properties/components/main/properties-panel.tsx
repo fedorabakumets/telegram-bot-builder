@@ -168,7 +168,6 @@ export function PropertiesPanel({
   allNodes = [],
   onNodeUpdate,
   onNodeDataReplace,
-  onNodeTypeChange,
   onNodeIdChange,
   onButtonAdd,
   onButtonUpdate,
@@ -354,7 +353,6 @@ export function PropertiesPanel({
       <aside className="w-full h-full bg-background border-l border-border flex flex-col shadow-lg md:shadow-none overflow-hidden" data-properties-panel>
         <PropertiesHeader
           selectedNode={selectedNode}
-          onNodeTypeChange={onNodeTypeChange}
           onClose={onClose}
           displayNodeId={displayNodeId}
           {...headerFooterProps}
@@ -395,7 +393,6 @@ export function PropertiesPanel({
       <aside className="w-full h-full bg-background border-l border-border flex flex-col shadow-lg md:shadow-none overflow-hidden" data-properties-panel>
         <PropertiesHeader
           selectedNode={selectedNode}
-          onNodeTypeChange={onNodeTypeChange}
           onClose={onClose}
           displayNodeId={displayNodeId}
           {...headerFooterProps}
@@ -436,7 +433,6 @@ export function PropertiesPanel({
       {/* Properties Header */}
       <PropertiesHeader
         selectedNode={selectedNode}
-        onNodeTypeChange={onNodeTypeChange}
         onClose={onClose}
         displayNodeId={displayNodeId}
         {...headerFooterProps}

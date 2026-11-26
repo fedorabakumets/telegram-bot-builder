@@ -9,8 +9,11 @@ import { join } from 'node:path';
 
 /** Каталоги и файлы, влияющие на generatePythonCode */
 const GENERATOR_PATHS = [
+  // Корневые точки входа не входят в одноимённые каталоги и тоже меняют сборку.
+  'lib/bot-generator.ts',
   'lib/bot-generator',
   'lib/templates',
+  'lib/scaffolding.ts',
   'lib/scaffolding',
   'shared/scaffolding-wrapper.ts',
   'server/utils/normalizeProjectData.ts',

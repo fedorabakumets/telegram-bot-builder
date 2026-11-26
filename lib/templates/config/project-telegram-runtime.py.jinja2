@@ -1,0 +1,187 @@
+{#
+  @fileoverview Типизированный клиент сервиса Telegram-аккаунтов проекта в раннере.
+#}
+import base64 as _project_telegram_base64
+import aiohttp as _project_telegram_http
+import copy as _project_telegram_copy
+import inspect as _project_telegram_inspect
+from telethon import events as _project_telegram_events
+
+{% include "config/project-telegram-events.py.jinja2" %}
+
+
+class _ProjectTelegramRequestError(RuntimeError):
+    """Сохраняет безопасный код отказа без приватного ответа Telegram."""
+
+    def __init__(self, operation, code, status):
+        """Различает перегрузку, ограничение Telegram и сбой сервиса."""
+        self.code = code
+        super().__init__(f"Telegram-аккаунт проекта: {operation}: {code} ({status})")
+
+
+class _ProjectTelegramBridge(_ProjectTelegramEventBridge):
+    """Передаёт ограниченные операции клиента единственному владельцу Telegram-сессии."""
+
+    def __init__(self):
+        self._init_events()
+        self._account_id = int(os.getenv("PROJECT_TELEGRAM_ACCOUNT_ID", "0") or "0")
+        self._connected = False
+        base = os.getenv("PROJECT_TELEGRAM_API_BASE", "").rstrip("/")
+        self._credential = os.getenv("PROJECT_TELEGRAM_RUNNER_KEY", "")
+        project_id = int(os.getenv("PROJECT_ID", "0"))
+        token_id = int(os.getenv("BOT_TOKEN_ID", str(TOKEN_ID)))
+        self._endpoint = f"{base}/internal/project-telegram/{project_id}/{token_id}/execute"
+        if not base or not self._credential or not project_id or not token_id:
+            raise RuntimeError("Не настроен доступ раннера к Telegram-аккаунту проекта")
+
+    async def _execute(self, operation, **args):
+        """Отправляет одну команду и не передаёт полномочия при перенаправлении."""
+        timeout = _project_telegram_http.ClientTimeout(total=75)
+        headers = {"Authorization": f"Bearer {self._credential}"}
+        try:
+            async with _project_telegram_http.ClientSession(timeout=timeout) as session:
+                async with session.post(
+                    self._endpoint,
+                    headers=headers,
+                    json={"operation": operation, "args": args},
+                    allow_redirects=False,
+                ) as response:
+                    payload = await response.json()
+                    if not 200 <= response.status < 300:
+                        code = payload.get("code", "BROKER_UNAVAILABLE") if isinstance(payload, dict) else "BROKER_UNAVAILABLE"
+                        raise _ProjectTelegramRequestError(operation, code, response.status)
+        except (_project_telegram_http.ClientError, asyncio.TimeoutError, ValueError):
+            raise RuntimeError("Сервис Telegram-аккаунта проекта недоступен") from None
+        if not isinstance(payload, dict) or "result" not in payload:
+            raise RuntimeError("Некорректный ответ сервиса Telegram-аккаунта проекта")
+        return payload["result"]
+
+    async def connect(self):
+        """Проверяет привязку и состояние авторизации в сервисе."""
+        status = await self._execute("status")
+        self._connected = bool(status.get("authorized"))
+        await self.ensure_event_subscription()
+
+    async def is_user_authorized(self):
+        """Возвращает результат проверки, полученный при запуске."""
+        return self._connected
+
+    def is_connected(self):
+        """Возвращает состояние локального подключения к сервису."""
+        return self._connected
+
+    async def disconnect(self):
+        """Завершает связь раннера, сохраняя общую сессию для других ботов."""
+        self._connected = False
+        await self._stop_events()
+
+    def _message(self, value, target=None):
+        """Преобразует DTO сообщения в формат, ожидаемый встроенными узлами."""
+        if value is None:
+            return None
+        rows = []
+        for row in value.get("buttons") or []:
+            buttons = []
+            for item in row:
+                button = {"text": item.get("text", ""), "data": None, "url": None}
+                if item.get("data_b64"):
+                    button["data"] = _project_telegram_base64.b64decode(item["data_b64"], validate=True)
+                if item.get("url"):
+                    button["url"] = item["url"]
+                async def click(data=button["data"], text=button["text"], url=button["url"]):
+                    """Нажимает callback исходного сообщения либо отправляет текст reply-кнопки."""
+                    if target is None or url:
+                        raise RuntimeError("Эта кнопка недоступна для нажатия через общий аккаунт")
+                    if data is not None:
+                        return await self.click_button(target, value["id"], data)
+                    return await self.send_message(target, text)
+                buttons.append(SimpleNamespace(**button, click=click))
+            rows.append(SimpleNamespace(buttons=buttons))
+        message = {"text": "", "raw_text": "", "out": True, **value}
+        message["buttons"] = [row.buttons for row in rows]
+        message["reply_markup"] = SimpleNamespace(rows=rows) if rows else None
+        return SimpleNamespace(**message)
+
+    async def send_message(self, target, text, parse_mode=None, link_preview=True, wait_seconds=None, response_target=None):
+        """Отправляет текст от имени аккаунта проекта."""
+        await self.ensure_event_subscription()
+        args = {"target": target, "text": text, "parse_mode": parse_mode, "link_preview": link_preview}
+        if wait_seconds is not None:
+            args["wait_seconds"] = max(0, min(25, wait_seconds))
+        if response_target is not None:
+            args["response_target"] = response_target
+        value = await self._execute("send_message", **args)
+        result = self._message(value, target)
+        result.responses = [self._message(item, response_target or target) for item in value.get("responses", [])]
+        return result
+
+    @staticmethod
+    def choose_response(responses, strategy, pattern=""):
+        """Выбирает ответ по настройкам узла, учитывая подписи кнопок."""
+        ordered = sorted((message for message in responses if message), key=lambda message: message.id)
+        if not ordered:
+            return None
+        if strategy == "regex_match" and pattern:
+            def matches(message):
+                labels = [
+                    button.text
+                    for row in (message.reply_markup.rows if message.reply_markup else [])
+                    for button in row.buttons
+                ]
+                return any(re.search(pattern, part) for part in [message.text or "", *labels])
+
+            return next((message for message in reversed(ordered) if matches(message)), None)
+        if strategy == "first":
+            return ordered[0]
+        if strategy == "longest":
+            return max(ordered, key=lambda message: len(message.text or ""))
+        return ordered[-1]
+
+    async def send_file(self, *_args, **_kwargs):
+        """Отклоняет локальные файлы и URL в режиме общего аккаунта."""
+        raise RuntimeError("Вложения пока недоступны через Telegram-аккаунт проекта")
+
+    async def get_me(self):
+        """Возвращает идентификатор владельца общей сессии."""
+        return SimpleNamespace(**await self._execute("get_me"))
+
+    async def get_messages(self, target, limit=8, ids=None, wait_seconds=None, after_id=None):
+        """Читает отдельное сообщение или ограниченную выборку сообщений."""
+        args = {"target": target, "limit": limit}
+        if ids is not None:
+            args["ids"] = ids
+        if wait_seconds is not None:
+            args["wait_seconds"] = max(0, min(25, wait_seconds))
+        if after_id is not None:
+            args["after_id"] = after_id
+        for attempt in range(3):
+            try:
+                result = await self._execute("get_messages", **args)
+                break
+            except _ProjectTelegramRequestError as error:
+                if error.code != "ACCOUNT_BUSY" or attempt == 2:
+                    raise
+                # Повторяем только чтение при занятой очереди, не отправку и не FloodWait.
+                await asyncio.sleep(0.75 * (attempt + 1))
+        return [self._message(item, target) for item in result] if isinstance(result, list) else self._message(result, target)
+
+    async def click_button(self, target, message_id, data, wait_seconds=None, response_mode=None):
+        """Нажимает callback-кнопку текущего сообщения."""
+        await self.ensure_event_subscription()
+        args = {"target": target, "message_id": message_id, "data_b64": _project_telegram_base64.b64encode(data).decode("ascii")}
+        if wait_seconds is not None:
+            args["wait_seconds"] = max(0, min(25, wait_seconds))
+        if response_mode is not None:
+            args["response_mode"] = response_mode
+        result = await self._execute("click_button", **args)
+        return SimpleNamespace(message=result.get("message"), response=self._message(result.get("response"), target))
+
+    async def inline_query(self, bot, query):
+        """Читает только заголовки inline-результатов, не отправляя их в чат."""
+        return [SimpleNamespace(**item) for item in await self._execute("inline_query", bot=bot, query=query)]
+
+    async def inline_send(self, bot, query, target, index):
+        """Выполняет inline-запрос и отправляет выбранный результат одной командой."""
+        await self.ensure_event_subscription()
+        return SimpleNamespace(**await self._execute("inline_send", bot=bot, query=query, target=target, index=index))
+

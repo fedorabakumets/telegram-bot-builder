@@ -230,13 +230,17 @@ class BotWorker:
         webhook_url = data.get("webhook_url")
         webhook_port = data.get("webhook_port")
 
-        if not token_id or not token or not bot_file:
-            emit_log(token_id or 0, "Ошибка: не указаны token_id, token или bot_file", "stderr")
+        # Ранний отказ тоже подтверждает завершение незарегистрированного запуска.
+        from worker_start_rejection import reject_start
+        if type(token_id) is not int or token_id <= 0 or not token or not bot_file:
+            reject_start(token_id, self.bots,
+                "Ошибка: не указаны корректные token_id, token или bot_file", emit_log, emit_system)
             return
         try:
             bot_env = iso.parse_env_payload(data.get("env"))
-        except ValueError as e:
-            emit_log(token_id, f"Ошибка: {e}", "stderr")
+        except ValueError:
+            reject_start(token_id, self.bots,
+                "Ошибка: env должен быть объектом строк", emit_log, emit_system)
             return
 
         # Файловый и встроенный способы передачи настроек имеют одинаковый приоритет.
@@ -466,8 +470,13 @@ class BotWorker:
                 async def direct_commit():
                     """Подтверждает перенос после успешного запуска ordinary polling."""
                     await commit_direct(ctx)
+                async def direct_drain(dispatcher, bot, stop_event):
+                    """Обрабатывает сохранённые события после подготовки всех сервисов."""
+                    from demand_direct_drain import drain_direct
+                    await drain_direct(ctx, module, dispatcher, bot, stop_event)
                 module._worker_direct_prepare = direct_prepare
                 module._worker_direct_commit = direct_commit
+                module._worker_direct_drain = direct_drain
 
             if hasattr(module, "main"):
                 if not getattr(module, "_WORKER_READY_PROTOCOL", False):

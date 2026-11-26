@@ -34,7 +34,7 @@ export const nodeRegistry: Record<string, NodeMeta> = {
     canvasColor: 'bg-gradient-to-br from-indigo-50 to-violet-100 dark:from-indigo-900/30 dark:to-violet-900/30 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800',
   },
   message: {
-    name: 'Текстовое сообщение',
+    name: 'Отправить текст в чат',
     icon: 'fas fa-comment',
     color: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
     canvasColor: 'bg-gradient-to-br from-blue-50 to-sky-100 dark:from-blue-900/30 dark:to-sky-900/30 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800',
@@ -46,7 +46,7 @@ export const nodeRegistry: Record<string, NodeMeta> = {
     canvasColor: 'bg-gradient-to-br from-amber-50 to-yellow-100 dark:from-amber-900/30 dark:to-yellow-900/30 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800',
   },
   input: {
-    name: 'Сохранить ответ',
+    name: 'Запомнить ответ',
     icon: 'fas fa-edit',
     color: 'bg-cyan-100 text-cyan-600 dark:bg-cyan-900/30 dark:text-cyan-400',
     canvasColor: 'bg-gradient-to-br from-gray-50 to-slate-100 dark:from-gray-900/30 dark:to-slate-900/30 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-800',
@@ -58,13 +58,13 @@ export const nodeRegistry: Record<string, NodeMeta> = {
     canvasColor: 'bg-gradient-to-br from-indigo-50 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800',
   },
   media: {
-    name: 'Медиафайл',
+    name: 'Отправить файл',
     icon: 'fas fa-photo-video',
     color: 'bg-fuchsia-100 text-fuchsia-600 dark:bg-fuchsia-900/30 dark:text-fuchsia-400',
     canvasColor: 'bg-gradient-to-br from-fuchsia-50 to-purple-100 dark:from-fuchsia-900/30 dark:to-purple-900/30 text-fuchsia-600 dark:text-fuchsia-400 border-2 border-fuchsia-300 dark:border-fuchsia-700/50 shadow-lg shadow-fuchsia-500/20',
   },
   sticker: {
-    name: 'Стикер',
+    name: 'Отправить стикер',
     icon: 'fas fa-laugh',
     color: 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400',
     canvasColor: 'bg-gradient-to-br from-pink-50 to-fuchsia-100 dark:from-pink-900/30 dark:to-fuchsia-900/30 text-pink-600 dark:text-pink-400 border border-pink-200 dark:border-pink-800',
@@ -131,19 +131,19 @@ export const nodeRegistry: Record<string, NodeMeta> = {
   },
   // Триггеры
   command_trigger: {
-    name: 'Триггер команды',
+    name: 'Когда вводят команду',
     icon: 'fas fa-bolt',
     color: 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400',
     canvasColor: 'bg-gradient-to-br from-yellow-50 to-amber-100 dark:from-yellow-900/30 dark:to-amber-900/30 text-yellow-600 dark:text-yellow-400 border-2 border-yellow-300 dark:border-yellow-700/50 shadow-lg shadow-yellow-500/20',
   },
   text_trigger: {
-    name: 'Текстовый триггер',
+    name: 'Когда пишут заданное слово',
     icon: 'fas fa-comment-dots',
     color: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
     canvasColor: 'bg-gradient-to-br from-blue-50 to-sky-100 dark:from-blue-900/30 dark:to-sky-900/30 text-blue-600 dark:text-blue-400 border-2 border-blue-300 dark:border-blue-700/50 shadow-lg shadow-blue-500/20',
   },
   incoming_message_trigger: {
-    name: 'Триггер входящего сообщения',
+    name: 'Когда приходит любое сообщение',
     icon: 'fas fa-inbox',
     color: 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
     canvasColor: 'bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 text-green-600 dark:text-green-400 border-2 border-green-300 dark:border-green-700/50 shadow-lg shadow-green-500/20',
@@ -173,7 +173,7 @@ export const nodeRegistry: Record<string, NodeMeta> = {
     canvasColor: 'bg-gradient-to-br from-orange-50 to-amber-100 dark:from-orange-900/30 dark:to-amber-900/30 text-orange-600 dark:text-orange-400 border-2 border-orange-300 dark:border-orange-700/50 shadow-lg shadow-orange-500/20',
   },
   outgoing_message_trigger: {
-    name: 'Триггер исходящего сообщения',
+    name: 'Когда бот отправляет сообщение',
     icon: 'fas fa-paper-plane',
     color: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400',
     canvasColor: 'bg-gradient-to-br from-purple-50 to-violet-100 dark:from-purple-900/30 dark:to-violet-900/30 text-purple-600 dark:text-purple-400 border-2 border-purple-300 dark:border-purple-700/50 shadow-lg shadow-purple-500/20',
@@ -234,7 +234,7 @@ export const nodeRegistry: Record<string, NodeMeta> = {
     canvasColor: 'bg-gradient-to-br from-teal-100 to-cyan-200 dark:from-teal-900/40 dark:to-cyan-800/40 text-teal-700 dark:text-teal-300 border-2 border-teal-300 dark:border-teal-700/50 shadow-lg shadow-teal-500/20',
   },
   edit_message: {
-    name: 'Редактировать сообщение',
+    name: 'Изменить сообщение',
     icon: 'fas fa-pen',
     color: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
     canvasColor: 'bg-gradient-to-br from-blue-50 to-sky-100 dark:from-blue-900/30 dark:to-sky-900/30 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800',
@@ -385,7 +385,7 @@ export const nodeRegistry: Record<string, NodeMeta> = {
     canvasColor: 'bg-gradient-to-br from-violet-50 to-purple-100 dark:from-violet-900/30 dark:to-purple-900/30 text-violet-600 dark:text-violet-400 border-2 border-violet-300 dark:border-violet-700/50 shadow-lg shadow-violet-500/20',
   },
   userbot_inline_query: {
-    name: 'Inline-запрос (юзербот)',
+    name: 'Отправить результат поиска',
     icon: 'fas fa-at',
     color: 'bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400',
     canvasColor: 'bg-gradient-to-br from-violet-50 to-purple-100 dark:from-violet-900/30 dark:to-purple-900/30 text-violet-600 dark:text-violet-400 border-2 border-violet-300 dark:border-violet-700/50 shadow-lg shadow-violet-500/20',

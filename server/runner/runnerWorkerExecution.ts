@@ -10,6 +10,7 @@ import { validateProcessBuild } from "./polling/validateBuild";
 import { RunnerLegacyRoutes } from "./runnerLegacyRoutes";
 import { SharedPollingHost } from "./polling/sharedHost";
 import { RunnerMemoryTotals } from "./runnerMemoryTotals";
+import { encodeWorkerExitCode } from "../redis/workerExitCode";
 /** Разделяет маршруты выполнения без выдачи виртуальной группы за Python-процесс. */
 export class RunnerWorkerExecution {
   /** Старый общий Python запускается только при необходимости. */
@@ -30,6 +31,10 @@ export class RunnerWorkerExecution {
   private closed = false;
   /** Ожидание фактического завершения всех процессов. */
   private terminating?: Promise<void>;
+  /** Отвечает после завершения настоящих процессов, только по запросу переноса. */
+  private retirementProof?: () => void;
+  /** Результат очистки реальных процессов, передаваемый владельцу группы. */
+  private verifiedExit = false;
   /** Суммарные измерения постоянного и временных Python-процессов смешанной группы. */
   private readonly memoryTotals = new RunnerMemoryTotals();
   /** @param config - Настройки исполнителя. @param base - Идентичность группы. @param emit - События панели. @param gone - Удаление группы. */
@@ -40,13 +45,16 @@ export class RunnerWorkerExecution {
       this.emit({ ...this.base, k: "line", l: JSON.stringify(event) });
     }, memoryKb => this.emit({ ...this.base, k: "line", l: JSON.stringify({ type: "system", content: `memory_kb:${memoryKb}` }) }));
     if (this.unified) this.unified.onPermanentCrash = result => {
-      void this.finish({ ...this.base, k: "exit", c: String(result.code), s: result.signal ?? undefined });
+      // Отсутствующий код при сигнале не сериализуется строкой «null».
+      void this.finish({ ...this.base, k: "exit", c: encodeWorkerExitCode(result.code), s: result.signal ?? undefined });
     };
     if (config.processPolling !== "node") this.ensureLegacy();
     else queueMicrotask(() => { if (!this.closed) this.system("worker_ready"); });
   }
   /** PID только действительно запущенного общего Python; виртуальная группа PID не имеет. */
   get pid(): number | undefined { return this.unified?.counters().pid ?? this.legacy?.pid; }
+  /** Показывает, что завершение всех известных процессов подтверждено. */
+  get exitConfirmed(): boolean { return this.verifiedExit; }
   /** Сохраняет обновление спящего webhook-сценария; false оставляет прежнюю прямую доставку Python. */
   enqueueWebhook(projectId: number, tokenId: number, update: unknown, secret: string): Promise<boolean> {
     return this.runtime?.webhook.enqueue(projectId, tokenId, update, secret) ?? Promise.resolve(false);
@@ -133,9 +141,14 @@ export class RunnerWorkerExecution {
     if (this.terminating) return this.terminating;
     this.closed = true;
     this.terminating = (async () => {
-      try { await this.runtime?.shutdown(); await this.unified?.shutdown(); }
-      catch { console.error("Не удалось штатно завершить временные обработчики группы"); }
-      finally { this.gone(); this.emit(event); }
+      let clean = true;
+      try { await this.runtime?.shutdown(); } catch { clean = false; }
+      try { await this.unified?.shutdown(); } catch { clean = false; }
+      if (!clean) console.error("Не удалось штатно завершить временные обработчики группы");
+      this.verifiedExit = clean && event.k === "exit";
+      this.gone();
+      if (this.verifiedExit) this.retirementProof?.();
+      this.emit(event);
     })();
     return this.terminating;
   }
@@ -153,5 +166,16 @@ export class RunnerWorkerExecution {
     this.closed = true;
     if (this.legacy) await stopWorker(this.legacy, 5_000);
     await this.finish({ ...this.base, k: "exit", c: "0" });
+  }
+
+  /**
+   * Штатно завершает группу и сигнализирует подтверждение перед обычным выходом.
+   * @param onProven - Публикует подтверждение только после очистки группы.
+   */
+  async shutdownForCutover(onProven: () => void): Promise<void> {
+    if (this.closed) return;
+    this.retirementProof = onProven;
+    try { await this.shutdown(); }
+    finally { this.retirementProof = undefined; }
   }
 }

@@ -19,7 +19,7 @@ import {
   WORKER_START_CONFIRM_TIMEOUT_MS,
 } from "./waitForWorkerBotStart";
 import { formatBotRuntimeErrorShort } from "./formatBotRuntimeError";
-import { resolveWorkerKey } from "./workerGrouping";
+import { getWorkerGroupingMode, resolveWorkerKey } from "./workerGrouping";
 import { resolveProjectWorkerKey } from "./resolveProjectWorkerKey";
 import { collectWorkerStats, type WorkerPoolStats } from "./workerStats";
 import { prepareWorkerLaunch, stageBotFile, unstageBotFile, type WorkerLaunch } from "./workerLaunch";
@@ -34,6 +34,7 @@ import { openWorkerChannel } from "./openWorkerChannel";
 import { workerReadyTimeout } from "./workerReadyTimeout";
 import { RemoteRunnerHub } from "./remoteRunnerHub";
 import { RemoteWorkerChannel } from "./remoteWorkerChannel";
+import { LocalWorkerChannel } from "./localWorkerChannel";
 import { getWorkerRunnerId } from "./workerRuntime";
 import { resolveRunnerRedisUrl } from "./resolveRunnerRedisUrl";
 import { storage } from "../storages/storage";
@@ -43,6 +44,7 @@ import { isFrozenBotError } from './frozenBotStatus';
 import { handleRuntimeTokenFrozen } from './handle-runtime-token-frozen';
 import { getActiveLaunchId } from '../terminal/activeLaunchIds';
 import { isBotDiagnosticError, parseWorkerHostCrash } from './workerBotDiagnostics';
+import { confirmCutoverWorkerExit } from './confirm-cutover-worker-exit';
 
 /** Задержка перед killWorker когда activeBots пуст (мс) */
 const WORKER_DRAIN_MS = 2_000;
@@ -220,6 +222,16 @@ class BotWorkerManager extends EventEmitter {
 
   /** Отложенный killWorker при пустом activeBots */
   private drainTimers = new Map<number, ReturnType<typeof setTimeout>>();
+  /** При переносе выход процесса подтверждается явно, а не таймером освобождения. */
+  private readonly cutoverWorkerHolds = new Set<number>();
+  /** Запуски, ожидающие готовности или отправки команды по ключу воркера. */
+  private readonly cutoverWorkerStarts = new Map<number, number>();
+  /** Метка последнего запущенного процесса отделяет поздние события старых воркеров. */
+  private readonly localWorkerCutoverIncarnations = new Map<number, symbol>();
+  /** Незавершённые локальные процессы, включая вытесненные неизвестным исходом. */
+  private readonly unresolvedLocalCutoverIncarnations = new Map<number, Set<symbol>>();
+  /** Подтверждённый выход последнего выделенного процесса, пока не появился следующий. */
+  private readonly localWorkerCutoverExits = new Set<number>();
 
   /** Путь к Python worker скрипту */
   private workerScript: string;
@@ -334,6 +346,7 @@ class BotWorkerManager extends EventEmitter {
 
   /** Планирует killWorker через WORKER_DRAIN_MS если activeBots пуст */
   private scheduleWorkerDrain(projectId: number): void {
+    if (this.cutoverWorkerHolds.has(projectId)) return;
     this.cancelWorkerDrain(projectId);
     const timer = setTimeout(() => {
       this.drainTimers.delete(projectId);
@@ -343,6 +356,93 @@ class BotWorkerManager extends EventEmitter {
       }
     }, WORKER_DRAIN_MS);
     this.drainTimers.set(projectId, timer);
+  }
+
+  /**
+   * Проверяет наличие события ОС об остановке последнего выделенного локального процесса.
+   * @param projectId - Проект с выделенной группой воркера.
+   * @returns Известно ли, что процесс завершился и новый пока не создаётся.
+   */
+  hasTelegramCutoverWorkerExitProof(projectId: number): boolean {
+    return getWorkerGroupingMode() === 'project' && this.keyOf(projectId) === projectId
+      && this.localWorkerCutoverExits.has(projectId) && !this.unresolvedLocalCutoverIncarnations.has(projectId)
+      && !this.workers.has(projectId) && !this.creating.has(projectId);
+  }
+
+  /**
+   * Удерживает подтверждённое офлайн-состояние, пока выполняются действия переноса.
+   * @param projectId - Проект с подтверждённым выходом последнего воркера.
+   * @param work - Условное подтверждение внешних подключений старого аккаунта.
+   * @returns Подтверждено ли офлайн-состояние до и после действия.
+   */
+  async withOfflineTelegramCutover(projectId: number, work: () => Promise<boolean>): Promise<boolean> {
+    if (this.cutoverWorkerHolds.has(projectId) || !this.hasTelegramCutoverWorkerExitProof(projectId)) return false;
+    this.cutoverWorkerHolds.add(projectId);
+    try {
+      return await work() && this.hasTelegramCutoverWorkerExitProof(projectId);
+    } finally {
+      this.cutoverWorkerHolds.delete(projectId);
+    }
+  }
+
+  /**
+   * Проверяет, что можно завершить выделенный воркер, не задев других работающих ботов.
+   * @param projectId - Проект с известной группой воркера.
+   * @param botIds - Боты, для которых получено разрешение на перенос.
+   * @returns Можно ли безопасно подтвердить освобождение соединений.
+   */
+  canRetireWorkerForTelegramCutover(projectId: number, botIds: readonly number[]): boolean {
+    const workerKey = this.keyOf(projectId);
+    const worker = this.workers.get(workerKey);
+    if (!worker || worker.status !== 'ready' || this.creating.has(workerKey)
+      || this.cutoverWorkerStarts.has(workerKey)) return false;
+    const channel = worker.channel;
+    const unresolvedLocal = this.unresolvedLocalCutoverIncarnations.get(workerKey)?.size ?? 0;
+    if (unresolvedLocal > (worker.remote || worker.docker ? 0 : 1)) return false;
+    const supported = worker.remote ? channel instanceof RemoteWorkerChannel
+      : worker.docker ? channel instanceof LocalWorkerChannel && !!channel.dockerExitProof
+        : !!channel.pid;
+    return supported
+      && [...worker.activeBots].every(id => botIds.includes(id) && this.projectOf(id, workerKey) === projectId);
+  }
+
+  /**
+   * Останавливает ботов и проверяет выход точного экземпляра воркера.
+   * @param projectId - Проект с известным воркером.
+   * @param botIds - Полный набор ботов переноса.
+   * @param stop - Остановка с подтверждениями задач.
+   * @returns Доказательство закрытия старого процесса.
+   */
+  async retireWorkerForTelegramCutover(
+    projectId: number, botIds: readonly number[], stop: () => Promise<boolean>,
+  ): Promise<boolean> {
+    const workerKey = this.keyOf(projectId);
+    if (this.cutoverWorkerHolds.has(workerKey) || !this.canRetireWorkerForTelegramCutover(projectId, botIds)) return false;
+    const worker = this.workers.get(workerKey)!;
+    this.cutoverWorkerHolds.add(workerKey);
+    this.cancelWorkerDrain(workerKey);
+    try {
+      if (worker.channel instanceof RemoteWorkerChannel && !await worker.channel.canConfirmCutoverExit(5_000, botIds)) return false;
+      if (this.workers.get(workerKey) !== worker || !this.canRetireWorkerForTelegramCutover(projectId, botIds)) return false;
+      if (!await stop() || this.workers.get(workerKey) !== worker || worker.activeBots.size !== 0) return false;
+      this.intentionalKills.add(workerKey);
+      if (worker.channel instanceof RemoteWorkerChannel) return await worker.channel.confirmCutoverExit(35_000);
+      /** Отправляет завершение исключительно каналу, для которого проверяем выход. */
+      const shutdown = () => worker.channel.send(JSON.stringify({ cmd: 'shutdown' }));
+      if (worker.channel instanceof LocalWorkerChannel && worker.channel.dockerExitProof) {
+        const confirmed = await worker.channel.dockerExitProof.confirm(shutdown, 5_000);
+        /** Docker уже подтвердил выход; зависший клиент Docker не должен принимать следующий запуск. */
+        if (confirmed && this.workers.get(workerKey) === worker) {
+          this.workers.delete(workerKey);
+          worker.channel.kill();
+        }
+        return confirmed;
+      }
+      return await confirmCutoverWorkerExit(worker.channel, shutdown);
+    } finally {
+      this.cutoverWorkerHolds.delete(workerKey);
+      if (this.workers.get(workerKey) === worker && worker.activeBots.size === 0) this.scheduleWorkerDrain(workerKey);
+    }
   }
 
   /**
@@ -357,6 +457,7 @@ class BotWorkerManager extends EventEmitter {
     botProjectId: number = projectId,
     memberProjectIds?: readonly number[],
   ): Promise<ProjectWorker> {
+    if (this.cutoverWorkerHolds.has(projectId)) throw new Error("Воркер удерживается переносом Telegram-аккаунта");
     const existing = this.workers.get(projectId);
     if (existing && existing.status === "ready") {
       return existing;
@@ -413,6 +514,17 @@ class BotWorkerManager extends EventEmitter {
         memoryMb: launch.docker || remote ? 0 : undefined,
       };
 
+      /** Наблюдаем только процесс, непосредственно принадлежащий панели, без Docker CLI и удалённой прокси-сессии. */
+      const localCutoverIncarnation = Symbol();
+      const isLocalProcess = !worker.docker && !worker.remote && !!channel.pid;
+      const trackLocalProcessExit = isLocalProcess && getWorkerGroupingMode() === 'project';
+      if (isLocalProcess) {
+        const unresolved = this.unresolvedLocalCutoverIncarnations.get(projectId) ?? new Set<symbol>();
+        unresolved.add(localCutoverIncarnation);
+        this.unresolvedLocalCutoverIncarnations.set(projectId, unresolved);
+      }
+      this.localWorkerCutoverIncarnations.set(projectId, localCutoverIncarnation);
+      this.localWorkerCutoverExits.delete(projectId);
       this.workers.set(projectId, worker);
 
       // Учитываем холодный импорт Python на Windows, старт контейнера и сеть исполнителя.
@@ -460,6 +572,14 @@ class BotWorkerManager extends EventEmitter {
 
       // Процесс завершился
       channel.on("exit", (code: number | null, signal: string | null) => {
+        const unresolved = this.unresolvedLocalCutoverIncarnations.get(projectId);
+        if (unresolved?.delete(localCutoverIncarnation) && unresolved.size === 0) {
+          this.unresolvedLocalCutoverIncarnations.delete(projectId);
+        }
+        if (this.localWorkerCutoverIncarnations.get(projectId) === localCutoverIncarnation) {
+          this.localWorkerCutoverIncarnations.delete(projectId);
+          if (trackLocalProcessExit) this.localWorkerCutoverExits.add(projectId);
+        }
         console.log(`🏭 [WorkerPool:${projectId}] Воркер завершился: code=${code}, signal=${signal}`);
         clearTimeout(timeout);
         const wasReady = worker.status === "ready";
@@ -699,7 +819,17 @@ class BotWorkerManager extends EventEmitter {
       this.projectWorkerKeys.set(projectId, workerKey);
       this.tokenProjects.set(tokenId, projectId);
       this.cancelWorkerDrain(workerKey);
-      const run = () => this.launchBotOnWorker(workerKey, projectId, token, tokenId, botFile, options);
+      /** Отмечает старт до любых ожиданий, чтобы перенос не завершил используемую группу. */
+      const run = async () => {
+        if (this.cutoverWorkerHolds.has(workerKey)) throw new Error('Воркер занят переносом Telegram-аккаунта');
+        this.cutoverWorkerStarts.set(workerKey, (this.cutoverWorkerStarts.get(workerKey) ?? 0) + 1);
+        try { await this.launchBotOnWorker(workerKey, projectId, token, tokenId, botFile, options); }
+        finally {
+          const remaining = (this.cutoverWorkerStarts.get(workerKey) ?? 1) - 1;
+          if (remaining) this.cutoverWorkerStarts.set(workerKey, remaining);
+          else this.cutoverWorkerStarts.delete(workerKey);
+        }
+      };
       // Очередь только при изоляции: контейнер не пересоздаётся, пока бот ещё стартует
       if (!isDockerWorkerRuntime() || !isWorkerDockerIsolate()) return run();
       return withWorkerKeyLock(workerKey, run);
@@ -852,15 +982,16 @@ class BotWorkerManager extends EventEmitter {
    * @param projectId - ID проекта
    * @param tokenId - ID токена
    * @param fence - Версия намерения остановки для удалённого исполнителя
+   * @param requireKnownWorker - Требовать ответ от зарегистрированного воркера.
    * @returns true если Python подтвердил выход, false при таймауте
    */
-  async stopBot(projectId: number, tokenId: number, fence?: BotCommandFence): Promise<boolean> {
+  async stopBot(projectId: number, tokenId: number, fence?: BotCommandFence, requireKnownWorker = false): Promise<boolean> {
     return this.withTokenLock(projectId, tokenId, async () => {
       const lastStart = this.startArgs.get(tokenId);
       this.startArgs.delete(tokenId);
       const workerKey = this.keyOf(projectId);
       const worker = this.workers.get(workerKey);
-      if (!worker) return true;
+      if (!worker) return !requireKnownWorker;
 
       // Нельзя направлять подтверждение в другой проект даже при устаревшем соответствии.
       const knownProject = this.tokenProjects.get(tokenId);

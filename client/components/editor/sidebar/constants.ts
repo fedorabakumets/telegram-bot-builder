@@ -62,13 +62,13 @@ export interface PaletteMainCategory {
  */
 export const componentCategories: PaletteMainCategory[] = [
   {
-    title: 'Telegram Bot API',
+    title: 'Telegram-бот',
     icon: 'fab fa-telegram-plane',
-    description: 'Обычный бот: входящие события и ответы через Bot API',
+    description: 'Команды, сообщения и кнопки вашего бота',
     subcategories: [
       {
         title: 'Сообщения',
-        description: 'Триггеры и отправка сообщений',
+        description: 'Получение и отправка сообщений',
         components: [
           commandTrigger, textTrigger, anyMessageTrigger, outgoingMessageTrigger,
           textMessage, mediaMessage, stickerMessage, saveAnswerNode, editMessageNode, deleteMessage, forwardMessage,
@@ -76,7 +76,7 @@ export const componentCategories: PaletteMainCategory[] = [
       },
       {
         title: 'Клавиатура',
-        description: 'Кнопки и callback',
+        description: 'Кнопки и обработка нажатий',
         components: [callbackTrigger, incomingCallbackTrigger, keyboardMessage, answerCallbackQueryNode],
       },
       {
@@ -100,13 +100,13 @@ export const componentCategories: PaletteMainCategory[] = [
     ],
   },
   {
-    title: 'Userbot Telegram API',
+    title: 'Личный аккаунт Telegram',
     icon: 'fas fa-user-secret',
-    description: 'Действия от имени пользовательского аккаунта (MTProto)',
+    description: 'Действия от имени вашего аккаунта',
     subcategories: [
       {
-        title: 'Юзербот',
-        description: 'Сообщения, кнопки и реакции юзербота',
+        title: 'Действия аккаунта',
+        description: 'Сообщения, кнопки и реакции',
         components: [userbotMessage, userbotClickButton, userbotInlineQuery, userbotEditTrigger],
       },
     ],

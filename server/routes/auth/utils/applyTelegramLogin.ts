@@ -7,16 +7,10 @@ import { storage } from "../../../storages/storage";
 import { regenerateSession, saveSession } from "./sessionUtils";
 import { registerSession, removeSession } from "../../../auth/session-registry";
 import type { TelegramUserDB } from "@shared/schema";
+import type { CreateTelegramUserInput } from "../types";
 
-/** Входные поля профиля после OIDC / widget */
-export interface TelegramLoginProfile {
-  id: number | string;
-  firstName?: string;
-  lastName?: string;
-  username?: string;
-  photoUrl?: string;
-  authDate?: number;
-}
+/** Нормализованные поля профиля Telegram перед записью в сессию и БД. */
+export type TelegramLoginProfile = CreateTelegramUserInput;
 
 /** Результат применения логина к сессии */
 export interface ApplyTelegramLoginResult {

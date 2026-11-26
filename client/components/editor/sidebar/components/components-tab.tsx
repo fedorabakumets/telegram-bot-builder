@@ -3,6 +3,7 @@
  * @module components/editor/sidebar/components/components-tab
  */
 
+import { useEditorAppearance } from '@/components/editor/shared/use-editor-appearance';
 import { useRef, useState } from 'react';
 import { ComponentDefinition } from '@shared/schema';
 import type { CommandPreset } from '../massive/commands';
@@ -76,6 +77,7 @@ export function ComponentsTab({
    * @param e - Событие
    * @param component - Компонент
    */
+  const coloredIcons = useEditorAppearance('coloredIcons');
   const handleDragStart = (e: React.DragEvent, component: ComponentDefinition) => {
     e.dataTransfer.effectAllowed = 'copy';
     e.dataTransfer.setData('application/json', JSON.stringify(component));
@@ -84,7 +86,7 @@ export function ComponentsTab({
   };
 
   return (
-    <div className="px-2 pb-2 pt-3 space-y-2 sm:space-y-3">
+    <div className={`px-2 pb-2 pt-2 space-y-1.5 ${coloredIcons ? '' : '[&_[data-palette-icon-color]]:grayscale'}`}>
       <div className="relative mb-2">
         <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
         <Input
@@ -100,7 +102,7 @@ export function ComponentsTab({
       )}
 
       {filtered && filtered.hasResults && (
-        <div className="space-y-1.5 sm:space-y-2">
+        <div className="space-y-1">
           {filtered.components.map((component) => (
             <PaletteComponentCard
               key={component.id}
@@ -139,10 +141,10 @@ export function ComponentsTab({
               onToggleCategory(paletteSubCollapseKey(scrollCtx.main, scrollCtx.sub));
             }}
           />
-          <div ref={listRef} className="space-y-2 sm:space-y-3">
+          <div ref={listRef} className="space-y-1.5">
             {categories.map((main) => {
               const mainCount = main.subcategories.reduce((n, s) => n + s.components.length, 0)
-                + (main.title === 'Telegram Bot API' && commandPresets ? commandPresets.length : 0);
+                + (main.title === 'Telegram-бот' && commandPresets ? commandPresets.length : 0);
               const mainCollapsed = collapsedCategories.has(main.title);
 
               return (
@@ -165,7 +167,7 @@ export function ComponentsTab({
                     />
                   </div>
                   {!mainCollapsed && (
-                    <div className="space-y-2 pl-1 sm:pl-2">
+                    <div className="space-y-1 pl-1 sm:pl-2">
                       {main.subcategories.map((sub) => {
                         const subKey = paletteSubCollapseKey(main.title, sub.title);
                         const subCollapsed = collapsedCategories.has(subKey);
@@ -187,7 +189,7 @@ export function ComponentsTab({
                               testId={`category-${subKey}`}
                             />
                             {!subCollapsed && (
-                              <div className="space-y-1.5 sm:space-y-2 mt-2 sm:mt-3">
+                              <div className="space-y-1 mt-1">
                                 {sub.components.map((component) => (
                                   <PaletteComponentCard
                                     key={component.id}
@@ -209,7 +211,7 @@ export function ComponentsTab({
                         );
                       })}
 
-                      {main.title === 'Telegram Bot API'
+                      {main.title === 'Telegram-бот'
                         && commandPresets
                         && commandPresets.length > 0 && (
                         <div

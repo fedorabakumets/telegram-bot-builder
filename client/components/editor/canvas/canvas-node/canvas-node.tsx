@@ -28,6 +28,7 @@ import { ImageAttachment } from './image-attachment';
 import { MediaAttachmentsPreview } from './media-attachments-preview';
 import { NodeActions } from './node-actions';
 import { AdminRightsPreview } from './admin-rights-preview';
+import { getNodeName } from '../../shared/node-registry';
 import { NodeHeader } from './node-header';
 import { ButtonsPreview } from './buttons-preview';
 import { ClientAuthCard } from './client-auth-card';
@@ -653,9 +654,11 @@ export function CanvasNode({ node, allNodes, isSelected, isMultiSelected, onClic
             : undefined,
         }}
       >
-        {/* Заголовок узла — скрыт для триггеров, узла сообщения и узла условия */}
-        {node.type !== 'command_trigger' && node.type !== 'text_trigger' && node.type !== 'incoming_message_trigger' && node.type !== 'group_message_trigger' && (node.type as any) !== 'member_trigger' && (node.type as any) !== 'callback_trigger' && (node.type as any) !== 'incoming_callback_trigger' && (node.type as any) !== 'outgoing_message_trigger' && (node.type as any) !== 'managed_bot_updated_trigger' && (node.type as any) !== 'successful_payment_trigger' && (node.type as any) !== 'schedule_trigger' && (node.type as any) !== 'api_trigger' && (node.type as any) !== 'userbot_edit_trigger' && (node.type as any) !== 'get_managed_bot_token' && (node.type as any) !== 'answer_callback_query' && (node.type as any) !== 'edit_message' && (node.type as any) !== 'set_variable' && node.type !== 'message' && node.type !== 'condition' && node.type !== 'keyboard' && node.type !== 'input' && (node.type as any) !== 'loop' && (node.type as any) !== 'delay' && (node.type as any) !== 'send_invoice' && (node.type as any) !== 'create_invoice_link' && (node.type as any) !== 'refund_stars' && (node.type as any) !== 'edit_star_subscription' && (node.type as any) !== 'get_star_balance' && (node.type as any) !== 'stop_processing' && (node.type as any) !== 'rate_counter' && (node.type as any) !== 'code' && (node.type as any) !== 'userbot_message' && (node.type as any) !== 'userbot_click_button' && (node.type as any) !== 'userbot_inline_query' && (node.type as any) !== 'parallel_split' && (node.type as any) !== 'comment' && (
+        {/** Компактные блоки показывают название типа над содержимым. */}
+        {node.type !== 'command_trigger' && node.type !== 'text_trigger' && node.type !== 'incoming_message_trigger' && node.type !== 'group_message_trigger' && (node.type as any) !== 'member_trigger' && (node.type as any) !== 'callback_trigger' && (node.type as any) !== 'incoming_callback_trigger' && (node.type as any) !== 'outgoing_message_trigger' && (node.type as any) !== 'managed_bot_updated_trigger' && (node.type as any) !== 'successful_payment_trigger' && (node.type as any) !== 'schedule_trigger' && (node.type as any) !== 'api_trigger' && (node.type as any) !== 'userbot_edit_trigger' && (node.type as any) !== 'get_managed_bot_token' && (node.type as any) !== 'answer_callback_query' && (node.type as any) !== 'edit_message' && (node.type as any) !== 'set_variable' && node.type !== 'message' && node.type !== 'condition' && node.type !== 'keyboard' && node.type !== 'input' && (node.type as any) !== 'loop' && (node.type as any) !== 'delay' && (node.type as any) !== 'send_invoice' && (node.type as any) !== 'create_invoice_link' && (node.type as any) !== 'refund_stars' && (node.type as any) !== 'edit_star_subscription' && (node.type as any) !== 'get_star_balance' && (node.type as any) !== 'stop_processing' && (node.type as any) !== 'rate_counter' && (node.type as any) !== 'code' && (node.type as any) !== 'userbot_message' && (node.type as any) !== 'userbot_click_button' && (node.type as any) !== 'userbot_inline_query' && (node.type as any) !== 'parallel_split' && (node.type as any) !== 'comment' ? (
           <NodeHeader node={node} onMove={!!onMove} />
+        ) : (
+          <p data-block-label className="mb-1.5 text-xs font-semibold leading-tight text-muted-foreground">{getNodeName(node.type)}</p>
         )}
 
         {/* Image attachment (старый формат - одиночное изображение) */}

@@ -7,8 +7,8 @@ import { ComponentDefinition } from "@shared/schema";
 /** Сообщение со стикером */
 export const stickerMessage: ComponentDefinition = {
   id: 'sticker-message',
-  name: 'Стикер',
-  description: 'Анимированный стикер',
+  name: 'Отправить стикер',
+  description: 'Бот пришлёт выбранный стикер, например в ответ на приветствие.',
   icon: 'fas fa-laugh',
   color: 'bg-pink-100 text-pink-600',
   type: 'sticker',

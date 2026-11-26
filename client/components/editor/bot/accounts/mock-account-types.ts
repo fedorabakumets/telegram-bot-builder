@@ -34,6 +34,10 @@ export interface MockTelegramAccount {
   id: string;
   /** Отображаемое название аккаунта. */
   name: string;
+  /** Имя пользователя связанного аккаунта проекта. */
+  telegramUsername?: string | null;
+  /** Идентификатор пользователя Telegram связанного аккаунта проекта. */
+  telegramId?: string | null;
   /** Локальная фотография демонстрационного профиля. */
   avatarUrl?: string;
   /** Маскированный демонстрационный номер телефона. */
