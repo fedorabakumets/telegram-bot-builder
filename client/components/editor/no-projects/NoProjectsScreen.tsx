@@ -14,6 +14,7 @@ import { isTelegramUser } from '@/types/telegram-user';
 import { useNoProjectsImport } from './use-no-projects-import';
 import { useNoProjects } from './hooks/use-no-projects';
 import { NoProjectsActions } from './NoProjectsActions';
+import { StartPet } from './StartPet';
 import { NoProjectsCreateDialog } from './NoProjectsCreateDialog';
 /**
  * Экран приветствия для пользователя без проектов
@@ -75,6 +76,7 @@ export function NoProjectsScreen() {
         </CardContent>
       </Card>
 
+      <StartPet />
       {importDialog}
       <NoProjectsCreateDialog
         open={isCreateOpen}

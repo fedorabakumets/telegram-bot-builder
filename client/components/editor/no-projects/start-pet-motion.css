@@ -1,0 +1,25 @@
+/** @fileoverview Движение питомца стартового экрана в покое и при перетаскивании. */
+.start-pet .start-pet-art {
+  animation: start-pet-float 3.8s ease-in-out infinite;
+}
+
+.start-pet[data-dragging="true"] .start-pet-art {
+  animation: none;
+  translate: 0 -2px;
+  rotate: -4deg;
+}
+
+/** Небольшой подъём оставляет активную область кнопки неподвижной. */
+@keyframes start-pet-float {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -2px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .start-pet .start-pet-art,
+  .start-pet[data-dragging="true"] .start-pet-art {
+    animation: none;
+    translate: none;
+    rotate: none;
+  }
+}
