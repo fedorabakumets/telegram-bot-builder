@@ -76,7 +76,7 @@ export function NoProjectsScreen() {
         </CardContent>
       </Card>
 
-      <StartPet />
+      <StartPet tab="start" />
       {importDialog}
       <NoProjectsCreateDialog
         open={isCreateOpen}
