@@ -1785,7 +1785,7 @@ export function Canvas({
   return (
     <main ref={mainRef} className={`${blockLabels ? '' : '[&_[data-block-label]]:hidden'} relative flex h-full w-full overflow-hidden bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 dark:from-slate-950 dark:via-gray-950 dark:to-slate-900 ${sheetsVertical ? 'flex-row' : 'flex-col'}${cssFullscreen ? ' !fixed inset-0 z-[200]' : ''}`}>
       <div className="relative grid min-h-0 min-w-0 flex-1 grid-cols-[minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)] overflow-hidden [&>[data-canvas-toolbar]]:relative [&>[data-canvas-toolbar]]:col-start-1 [&>[data-canvas-toolbar]]:row-start-1">
-      <div ref={scrollContainerRef} className="col-start-1 row-start-2 min-h-0 overflow-auto">
+      <div ref={scrollContainerRef} className="editor-canvas-scroll col-start-1 row-start-2 min-h-0 overflow-auto">
 
         {/* Enhanced Canvas Grid */}
         <div

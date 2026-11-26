@@ -2,6 +2,7 @@
  * @fileoverview Узкая панель листов: один активный лист, стрелки и меню действий
  */
 
+import { useSheetAppearance } from '../shared/use-editor-appearance';
 import { useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, FileText, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -42,6 +43,7 @@ export function CanvasSheetsCompact({
   onSheetRename,
   onSheetDuplicate,
 }: CanvasSheetsCompactProps) {
+  const appearance = useSheetAppearance();
   const [draft, setDraft] = useState<string | null>(null);
   const swipeStart = useRef<number | null>(null);
   const active = sheets.find((sheet) => sheet.id === activeSheetId) ?? sheets[0];
@@ -65,11 +67,11 @@ export function CanvasSheetsCompact({
   };
 
   return (
-    <div className="flex @[28rem]:hidden items-center gap-2 w-full px-3 py-2 bg-gradient-to-r from-white via-slate-50 to-white dark:from-slate-950/95 dark:via-slate-900/95 dark:to-slate-950/95 backdrop-blur-md border-t border-slate-200/50 dark:border-slate-600/50">
+    <div className="flex @[28rem]:hidden items-center gap-1 w-full px-2 py-1 bg-background border-t border-border">
       <Button
         variant="ghost"
         size="sm"
-        className="flex-shrink-0 p-0 h-9 w-9 rounded-xl"
+        className="h-8 w-8 shrink-0 p-0 text-muted-foreground hover:text-foreground"
         disabled={index <= 0}
         onClick={() => selectRelative(-1)}
         title="Предыдущий лист"
@@ -78,7 +80,7 @@ export function CanvasSheetsCompact({
       </Button>
 
       <div
-        className="flex-1 min-w-0 flex items-center gap-2 h-9 px-3 rounded-lg bg-gradient-to-r from-blue-600 to-blue-500 text-white"
+        className={`flex min-w-0 flex-1 items-center gap-1.5 rounded px-1 h-8 ${appearance.active} [&_.sheet-name-marquee]:decoration-2 [&_.sheet-name-marquee]:underline-offset-4 ${appearance.name ? "[&_.sheet-name-marquee]:underline" : ""}`}
         onDoubleClick={() => active && setDraft(active.name)}
         onTouchStart={(event) => { swipeStart.current = event.targetTouches[0].clientX; }}
         onTouchEnd={(event) => {
@@ -89,7 +91,7 @@ export function CanvasSheetsCompact({
           else if (dx < -50) selectRelative(1);
         }}
       >
-        <FileText className="h-4 w-4 flex-shrink-0" />
+        <FileText className={`size-4 shrink-0 ${appearance.icon}`} />
         {draft != null && active ? (
           <Input
             autoFocus
@@ -100,13 +102,13 @@ export function CanvasSheetsCompact({
               if (event.key === 'Enter') confirmRename();
               if (event.key === 'Escape') setDraft(null);
             }}
-            className="h-7 bg-transparent border-none text-white text-sm px-1"
+            className="h-7 bg-transparent border-none text-current text-sm px-1"
           />
         ) : (
           <CanvasSheetName name={active?.name ?? 'Нет листов'} />
         )}
         {active && (
-          <span className="flex-shrink-0 text-[11px] text-white/80">{index + 1}/{sheets.length}</span>
+          <span className="flex-shrink-0 text-[11px] opacity-75">{index + 1}/{sheets.length}</span>
         )}
       </div>
 
@@ -123,16 +125,16 @@ export function CanvasSheetsCompact({
         variant="ghost"
         size="sm"
         onClick={onAdd}
-        className="flex-shrink-0 p-0 h-9 w-9 rounded-lg border border-emerald-500/30"
+        className="h-8 w-8 shrink-0 p-0 text-muted-foreground hover:text-foreground"
         title="Добавить новый лист"
       >
-        <Plus className="h-4 w-4 text-emerald-400" />
+        <Plus className="h-4 w-4 " />
       </Button>
 
       <Button
         variant="ghost"
         size="sm"
-        className="flex-shrink-0 p-0 h-9 w-9 rounded-xl"
+        className="h-8 w-8 shrink-0 p-0 text-muted-foreground hover:text-foreground"
         disabled={index < 0 || index >= sheets.length - 1}
         onClick={() => selectRelative(1)}
         title="Следующий лист"

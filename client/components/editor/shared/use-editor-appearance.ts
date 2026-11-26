@@ -34,3 +34,14 @@ export function setEditorAppearance(key: AppearanceKey, enabled: boolean) {
   catch { /* До перезагрузки настройка доступна в памяти. */ }
   window.dispatchEvent(new Event(prefix));
 }
+
+/** Возвращает оформление листов с учётом настроек профиля. */
+export function useSheetAppearance() {
+  const underline = useEditorAppearance('underlineTabs');
+  const colored = useEditorAppearance('coloredIcons');
+  return {
+    active: underline ? 'text-foreground' : 'bg-blue-600 text-white',
+    name: underline ? 'underline decoration-2 underline-offset-4' : '',
+    icon: colored ? 'text-blue-500 dark:text-blue-400' : 'text-current',
+  };
+}

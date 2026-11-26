@@ -1,10 +1,11 @@
 /**
- * @fileoverview Компонент карточки проекта для sidebar
+ * @fileoverview Компактная карточка проекта и его листов в боковой панели
  * Отображает информацию о проекте с поддержкой drag-and-drop и управления листами
  * @module components/editor/sidebar/components/project-card
  */
 
 import React, { useEffect, useRef, useState } from 'react';
+import { useEditorAppearance } from '../../shared/use-editor-appearance';
 import { BotProject } from '@shared/schema';
 import { SheetsManager } from '@/utils/sheets/sheets-manager';
 import { cn } from '@/utils/utils';
@@ -22,7 +23,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 import {
-  User, Users,
   Calendar,
   ChevronDown,
   ChevronRight,
@@ -621,6 +621,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
     };
   }, [onTouchStart, onTouchMove, onTouchEnd]);
 
+  const underlineSelection = useEditorAppearance('underlineTabs');
   const isEditingName = projectEditingState?.editingProjectId === project.id;
 
   return (
@@ -649,18 +650,18 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
       className={cn(
-        'group rounded-lg border p-3 cursor-pointer transition-colors',
+        'group rounded-md border p-2 cursor-pointer transition-colors',
         isActive
-          ? 'bg-card border-primary/40'
-          : 'bg-card border-border hover:border-foreground/30',
+          ? 'bg-background border-border'
+          : 'bg-background border-border hover:border-foreground/30',
         dragState.dragOverProject === project.id || dragState.dragOverSheet === `project-${project.id}`
-          ? 'border-blue-500 border-2 shadow-xl shadow-blue-500/50 bg-gradient-to-br from-blue-600/25 to-cyan-600/20 dark:from-blue-600/40 dark:to-cyan-600/30'
+          ? 'ring-2 ring-ring'
           : '',
         dragState.draggedProject?.id === project.id ? 'opacity-50 scale-95' : ''
       )}
     >
       {/* Заголовок проекта */}
-      <div className="flex flex-wrap gap-1.5 mb-2 items-center">
+      <div className="flex flex-wrap gap-1 mb-1 items-center">
         <div
           data-grip="true"
           className="hidden xs:flex cursor-grab active:cursor-grabbing opacity-50 group-hover:opacity-100 transition-opacity text-slate-400 dark:text-slate-500 hover:text-blue-500 dark:hover:text-blue-400 flex-shrink-0 mt-0.5"
@@ -685,7 +686,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
             />
           ) : (
             <h4
-              className="text-xs xs:text-sm sm:text-base font-bold text-slate-800 dark:text-slate-100 break-words leading-tight line-clamp-2 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+              className={cn("text-sm font-semibold text-foreground break-words leading-tight line-clamp-2", isActive && (underlineSelection ? "underline decoration-2 underline-offset-4" : "text-primary"))}
               onDoubleClick={handleProjectDoubleClick}
               title="Двойной клик для редактирования названия"
             >
@@ -699,9 +700,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
           )}
         </div>
         <div className="flex items-center gap-1 flex-shrink-0">
-          <span className="text-muted-foreground" title={project.ownerId === null ? 'Общий проект' : 'Личный проект'}>
-            {project.ownerId === null ? <Users size={14} aria-label="Общий проект" /> : <User size={14} aria-label="Личный проект" />}
-          </span>          {(onArchiveProject || onUnarchiveProject) && (
+          {(onArchiveProject || onUnarchiveProject) && (
             <ProjectCardArchiveButton
               isArchivedView={isArchivedView}
               disabled={isArchivePending}
@@ -734,7 +733,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
       </div>
 
       {/** Подписанные счётчики помогают прочитать состав проекта. */}
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground mb-3">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground mb-2">
         <span className="inline-flex items-center gap-1 whitespace-nowrap">
           Блоки
           <span className="text-xs">{nodeCount}</span>
@@ -794,11 +793,11 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
               <div key={sheetId || index} className="relative" data-sheet-id={sheetId}>
               <div
                 className={cn(
-                  'w-full flex items-center justify-between gap-2 sm:gap-3 px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg sm:rounded-xl',
+                  'w-full flex items-center justify-between gap-1 px-1 py-1 rounded-md',
                   'sticky top-0 z-10',
-                  'bg-zinc-100 dark:bg-zinc-900',
-                  'hover:bg-zinc-200 dark:hover:bg-zinc-800',
-                  'transition-all duration-200 group/sheet border border-zinc-200 dark:border-zinc-800 hover:border-zinc-500',
+                  'bg-background',
+                  'hover:bg-muted/40',
+                  'transition-colors group/sheet border-t border-border',
                   dragOverSheetIndex === index && draggingSheetIndex !== index
                     ? 'ring-2 ring-zinc-500'
                     : ''
@@ -874,7 +873,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
                       }}
                       className={cn(
                         'truncate cursor-grab active:cursor-grabbing text-sm',
-                        isActiveSheet ? 'font-semibold text-foreground' : 'font-medium text-muted-foreground',
+                        isActiveSheet ? (underlineSelection ? 'font-semibold text-foreground underline underline-offset-4' : 'font-semibold text-primary') : 'font-medium text-muted-foreground',
                         isDraggedSheet ? 'opacity-50' : ''
                       )}
                       onClick={() => {
@@ -903,7 +902,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
 
                 {/* Правая часть: кнопки управления */}
                 {currentProjectId === project.id && !isEditing && sheetId && (
-                  <div className="flex gap-0.5 sm:gap-1 opacity-0 group-hover/sheet:opacity-100 transition-opacity flex-shrink-0">
+                  <div className="flex gap-0.5 sm:gap-1 opacity-0 group-hover/sheet:opacity-100 group-focus-within/sheet:opacity-100 transition-opacity flex-shrink-0">
                     <Button
                       variant="ghost"
                       size="sm"

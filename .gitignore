@@ -149,3 +149,12 @@ output/runner-memory-profiles/
 output/local-runtime/
 output/runner-memory-research/
 scripts/local-webhook/results/
+
+# Локальные материалы и инструменты рабочего окружения
+/.playwright-cli/
+/_tmp_media/
+/output/
+/tools/bot-compare/
+/server/runner/polling/fixtures/.botcode/*.bin
+/.railway/postgres-cache-cleaner.ts
+/client/components/editor/canvas/use-sheet-appearance.ts
