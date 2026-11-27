@@ -77,9 +77,9 @@ export function extractButtonsFromNode(nodeData: Record<string, unknown>): Inlin
       return { id: b.id, text: b.text, copyText: b.copyText, ...styleField };
     }
 
-    // goto, command, selection, complete, default — используют callbackData
+    /** Для перехода передаём ID узла без префикса, как ожидают обработчики сгенерированного бота. */
     const callbackData = b.customCallbackData
-      || (action === 'goto' && b.target ? `node:${b.target}` : undefined)
+      || (action === 'goto' && b.target ? b.target : undefined)
       || b.id;
 
     return { id: b.id, text: b.text, callbackData, ...styleField };
