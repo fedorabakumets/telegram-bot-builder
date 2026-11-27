@@ -27,7 +27,34 @@ jobs:
       - name: Приватность и ограничения диагностики
         run: python -m unittest discover -s server/python -p test_worker_runtime_counters.py
 
-  generator-phases:
+  # Выясняет необходимость фаз без установки зависимостей.
+  generator-phase-plan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      needed: ${{ steps.classify.outputs.needed }}
+    steps:
+      - uses: actions/checkout@v7
+        id: history
+        if: github.event_name == 'pull_request' || (github.event_name == 'push' && startsWith(github.ref, 'refs/heads/') && github.ref != 'refs/heads/main')
+        continue-on-error: true
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Проверить полный список изменённых путей
+        id: classify
+        env:
+          HISTORY_OUTCOME: ${{ steps.history.outcome }}
+        run: |
+          needed=true
+          if [[ "$HISTORY_OUTCOME" == success ]] && result="$(python3 scripts/ci/generator-phase-paths.py)" && [[ "$result" == false ]]; then
+            needed=false
+          fi
+          echo "needed=$needed" >> "$GITHUB_OUTPUT"
+
+  generator-phase-shards:
+    needs: generator-phase-plan
+    if: ${{ !cancelled() && (needs.generator-phase-plan.result != 'success' || needs.generator-phase-plan.outputs.needed != 'false') }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
@@ -52,6 +79,28 @@ jobs:
         env:
           PHASE_TEST_SHARDS: '8'
           PHASE_TEST_SHARD: ${{ matrix.shard }}
+
+  # Одно стабильное имя проверки для правил защиты ветки, включая штатный пропуск фаз.
+  generator-phases:
+    needs: [generator-phase-plan, generator-phase-shards]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Подтвердить выполнение или штатный пропуск фаз
+        env:
+          PLAN_RESULT: ${{ needs.generator-phase-plan.result }}
+          PHASES_NEEDED: ${{ needs.generator-phase-plan.outputs.needed }}
+          SHARDS_RESULT: ${{ needs.generator-phase-shards.result }}
+        run: |
+          if [[ "$SHARDS_RESULT" == success ]]; then
+            echo 'Фазовые тесты прошли.'
+          elif [[ "$PLAN_RESULT" == success && "$PHASES_NEEDED" == false && "$SHARDS_RESULT" == skipped ]]; then
+            echo 'Изменены только документированные пути интерфейса или документации.'
+          else
+            echo 'Обязательные фазовые тесты не завершились успешно.' >&2
+            exit 1
+          fi
 
   react-hooks:
     runs-on: ubuntu-latest
