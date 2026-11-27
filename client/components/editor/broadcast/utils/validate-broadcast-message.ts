@@ -47,7 +47,7 @@ export interface BroadcastMessageValidation {
 }
 
 /**
- * Возвращает callback_data для кнопки (как на сервере в extractButtonsFromNode)
+ * Возвращает callback_data как на сервере: для перехода используется ID целевого узла без префикса.
  * @param button - Кнопка из формы
  * @returns Строка callback_data или пустая для не-callback кнопок
  */
@@ -55,7 +55,7 @@ function resolveCallbackData(button: Button): string {
   const action = button.action ?? 'default';
   if (action === 'url' || action === 'web_app' || action === 'copy_text') return '';
   return button.customCallbackData
-    || (action === 'goto' && button.target ? `node:${button.target}` : button.id);
+    || (action === 'goto' && button.target ? button.target : button.id);
 }
 
 /**
