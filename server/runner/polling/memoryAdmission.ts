@@ -37,8 +37,23 @@ export class MemoryAdmission {
   /** @param read - Источник cgroup. @param env - Настройки резерва и оценки запуска в МиБ. */
   constructor(private readonly read: () => Promise<AdmissionMemory | null> = readContainerMemory,
     private readonly env: NodeJS.ProcessEnv = process.env) {}
+  /** Ждёт до 12 секунд только временный стартовый резерв, не занимая очередь измерений. */
+  async acquire(): Promise<MemoryReservation> {
+    const deadline = Date.now() + 12_000;
+    for (;;) {
+      try { return await this.acquireOnce(); }
+      catch (error) {
+        if (!isMemoryPressure(error)) throw error;
+        const { currentBytes, limitBytes, reservedBytes, estimatedStartBytes, headroomBytes } = error.diagnostics;
+        /** Реальная нехватка памяти не маскируется ожиданием и не ослабляет защитный запас. */
+        if (!(reservedBytes > 0) || currentBytes + estimatedStartBytes + headroomBytes > limitBytes
+          || Date.now() >= deadline) throw error;
+        await new Promise<void>(resolve => setTimeout(resolve, Math.min(250, deadline - Date.now())));
+      }
+    }
+  }
   /** Атомарно проверяет место до запуска процесса или загрузки сценария. */
-  acquire(): Promise<MemoryReservation> {
+  private acquireOnce(): Promise<MemoryReservation> {
     const next = this.queue.then(() => this.reserve());
     this.queue = next.then(() => {}, () => {});
     return next;

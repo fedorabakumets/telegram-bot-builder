@@ -26,7 +26,9 @@ test("параллельные старты разделяют ещё не из�
   const first = results[0]; assert.equal(first.status, "fulfilled");
   if (first.status !== "fulfilled") return;
   first.value.settled();
-  await assert.rejects(gate.acquire(), MemoryPressureError);
+  /** Готовый запуск освобождает временный резерв, после чего ожидающий старт допускается. */
+  const next = await gate.acquire();
+  next.release();
   first.value.release();
   (await gate.acquire()).release();
 });
