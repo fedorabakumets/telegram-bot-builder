@@ -352,6 +352,9 @@ export class RunnerWorkers {
             worker.builds.stopped(command.token_id, true);
             this.cachePruner.request();
             if (this.current(workerKey, instance) === worker && (!checksFence || await isCurrent().catch(() => false))) {
+              /** Отказ нового запуска завершает учёт прежнего процесса, остановленного при перезапуске. */
+              worker.tokenIds.delete(command.token_id);
+              worker.webhookProjects.delete(command.token_id);
               botFailedEvents({ w: workerKey, i: instance }, command.token_id, String(error)).forEach(this.emitEvent);
             }
             return;
